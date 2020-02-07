@@ -139,11 +139,6 @@ enum GeneralViewItemPosition : Equatable {
     
 }
 
-extension NSEdgeInsets : Equatable {
-    public static func ==(lhs: NSEdgeInsets, rhs: NSEdgeInsets) -> Bool {
-        return lhs.left == rhs.left && lhs.top == rhs.top && lhs.right == rhs.right && lhs.bottom == rhs.bottom
-    }
-}
 
 enum GeneralViewType : Equatable {
     case legacy

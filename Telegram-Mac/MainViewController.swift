@@ -368,10 +368,10 @@ class MainViewController: TelegramViewController {
     private func _showFastChatSettings(_ control: Control, items: [SPopoverItem]) {
         
         switch self.chatList.mode {
-        case .plain:
+        case .plain, .filter:
             if self.tabController.current == chatListNavigation, !items.isEmpty {
                 showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxX, inset: NSMakePoint(control.frame.width + 40, 0))
-            }
+            }            
         default:
             break
         }

@@ -231,6 +231,23 @@ final class RevealAllChatsView : Control {
     }
 }
 
+final class FilterTabsView : View {
+    let tabs: ScrollableSegmentView = ScrollableSegmentView(frame: NSZeroRect)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(tabs)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        tabs.frame = bounds
+    }
+}
+
 class PeerListContainerView : View {
     private let backgroundView = BackgroundView(frame: NSZeroRect)
     var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
@@ -239,55 +256,15 @@ class PeerListContainerView : View {
             addSubview(tableView)
         }
     }
+    private let searchContainer: View = View()
+    
     let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
     let compose:ImageButton = ImageButton()
     fileprivate let proxyButton:ImageButton = ImageButton()
     private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
     private var searchState: SearchFieldState = .None
     
-//    private var revealView: RevealAllChatsView?
-//
-//
-//    func setNeedShowReveal(_ showReveal: Bool, animated: Bool, callback: @escaping()->Void) -> Void {
-//        if showReveal {
-//            if self.revealView == nil {
-//                self.revealView = RevealAllChatsView(frame: NSMakeRect(0, 0, frame.width - 60, 30))
-//                self.addSubview(self.revealView!)
-//
-//                guard let revealView = self.revealView else {
-//                    return
-//                }
-//                revealView.frame = NSMakeRect(30, frame.height - revealView.frame.height - 10, revealView.textView.frame.width + 40, 30)
-//
-//
-//                if animated {
-//                    revealView.layer?.animatePosition(from: NSMakePoint(revealView.frame.minX, frame.height), to: revealView.frame.origin, timingFunction: .spring)
-//                    revealView.layer?.animateAlpha(from: 0, to: 0.1, duration: 0.4, timingFunction: .spring)
-//                }
-//            }
-//
-//            revealView?.removeAllHandlers()
-//            revealView?.set(handler: { _ in
-//                callback()
-//            }, for: .Click)
-//
-//        } else {
-//            if animated {
-//                if let revealView = self.revealView {
-//                    self.revealView = nil
-//                    revealView.change(pos: NSMakePoint(revealView.frame.minX, frame.height), animated: true, timingFunction: .spring)
-//                    revealView.layer?.animateAlpha(from: 1, to: 0, duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak revealView] _ in
-//                        revealView?.removeFromSuperview()
-//
-//                    })
-//                }
-//            } else {
-//                self.revealView?.removeFromSuperview()
-//                self.revealView = nil
-//            }
-//        }
-//    }
-//
+
     var mode: PeerListMode = .plain {
         didSet {
             switch mode {
@@ -295,6 +272,8 @@ class PeerListContainerView : View {
                 compose.isHidden = true
             case .plain:
                 compose.isHidden = false
+            case .filter:
+                compose.isHidden = true
             }
             needsLayout = true
         }
@@ -304,10 +283,11 @@ class PeerListContainerView : View {
         self.border = [.Right]
         compose.autohighlight = false
         autoresizesSubviews = false
+        addSubview(searchContainer)
         addSubview(tableView)
-        addSubview(compose)
-        addSubview(proxyButton)
-        addSubview(searchView)
+        searchContainer.addSubview(compose)
+        searchContainer.addSubview(proxyButton)
+        searchContainer.addSubview(searchView)
         proxyButton.addSubview(proxyConnecting)
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme(theme: theme)
@@ -343,7 +323,7 @@ class PeerListContainerView : View {
     
     func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
         self.searchState = state
-        searchView.change(size: NSMakeSize(state == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
+        searchView.change(size: NSMakeSize(state == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
     }
@@ -391,16 +371,21 @@ class PeerListContainerView : View {
             }
         }
         
-        searchView.setFrameSize(NSMakeSize(searchState == .Focus || mode.isFolder ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
+        searchContainer.frame = NSMakeRect(0, 0, frame.width, offset)
+
+        
+        searchView.setFrameSize(NSMakeSize(searchState == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
+        
+        
         tableView.setFrameSize(frame.width, frame.height - offset)
         
         searchView.isHidden = frame.width < 200
         if searchView.isHidden {
-            compose.centerX(y: floorToScreenPixels(backingScaleFactor, (49 - compose.frame.height)/2.0))
+            compose.center()
             proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
         } else {
-            compose.setFrameOrigin(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (offset - compose.frame.height)/2.0))
-            proxyButton.setFrameOrigin(frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (offset - proxyButton.frame.height)/2.0))
+            compose.setFrameOrigin(searchContainer.frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (searchContainer.frame.height - compose.frame.height)/2.0))
+            proxyButton.setFrameOrigin(searchContainer.frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (searchContainer.frame.height - proxyButton.frame.height)/2.0))
         }
         searchView.setFrameOrigin(10, floorToScreenPixels(backingScaleFactor, (offset - searchView.frame.height)/2.0))
         tableView.setFrameOrigin(0, offset)
@@ -419,10 +404,11 @@ class PeerListContainerView : View {
 enum PeerListMode {
     case plain
     case folder(PeerGroupId)
+    case filter(Int32)
     
-    var isFolder:Bool {
+    var isPlain:Bool {
         switch self {
-        case .folder:
+        case .plain:
             return true
         default:
             return false
@@ -434,6 +420,14 @@ enum PeerListMode {
             return groupId
         default:
             return .root
+        }
+    }
+    var filterId: Int32? {
+        switch self {
+        case let .filter(id):
+            return id
+        default:
+            return nil
         }
     }
 }
@@ -471,7 +465,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         self.mode = mode
         self.searchOptions = searchOptions
         super.init(context)
-        self.bar = .init(height: mode.isFolder ? 50 : 0)
+        self.bar = .init(height: !mode.isPlain ? 50 : 0)
     }
     
     override var redirectUserInterfaceCalls: Bool {
@@ -680,6 +674,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
                     self?.genericView.tableView.isHidden = true
                 })
+                searchController.defaultQuery = self.genericView.searchView.query
                 searchController.navigationController = self.navigationController
                 searchController.viewWillAppear(true)
                 
@@ -779,6 +774,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
         case .reveal:
+            break
+        case .empty:
             break
         }
         if close {

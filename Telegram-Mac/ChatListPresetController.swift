@@ -69,7 +69,12 @@ private final class ChatListPresetArguments {
 
 private let _id_name_input = InputDataIdentifier("_id_name_input")
 private let _id_private_chats = InputDataIdentifier("_id_private_chats")
-private let _id_groups = InputDataIdentifier("_id_groups")
+
+private let _id_public_groups = InputDataIdentifier("_id_public_groups")
+private let _id_private_groups = InputDataIdentifier("_id_private_groups")
+private let _id_secret_chats = InputDataIdentifier("_id_secret_chats")
+
+
 private let _id_channels = InputDataIdentifier("_id_channels")
 private let _id_bots = InputDataIdentifier("_id_bots")
 private let _id_exclude_muted = InputDataIdentifier("_id_exclude_muted")
@@ -91,22 +96,33 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("NAME"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FILTER NAME"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.preset.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "preset name", filter: { $0 }, limit: 144))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.preset.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Filter Name", filter: { $0 }, limit: 144))
     index += 1
    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INCLUDE CHAT TYPES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    index += 1
+    
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_private_chats, data: .init(name: L10n.chatListFilterPrivateChats, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.privateChats)), viewType: .firstItem, enabled: true, action: {
         arguments.toggleOption(.privateChats)
     })))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_groups, data: .init(name: L10n.chatListFilterGroups, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.groups)), viewType: .innerItem, enabled: true, action: {
-        arguments.toggleOption(.groups)
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_secret_chats, data: .init(name: L10n.chatListFilterSecretChat, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.secretChats)), viewType: .innerItem, enabled: true, action: {
+        arguments.toggleOption(.secretChats)
+    })))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_public_groups, data: .init(name: L10n.chatListFilterPublicGroups, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.publicGroups)), viewType: .innerItem, enabled: true, action: {
+        arguments.toggleOption(.publicGroups)
+    })))
+    index += 1
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_private_groups, data: .init(name: L10n.chatListFilterPrivateGroups, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.privateGroups)), viewType: .innerItem, enabled: true, action: {
+        arguments.toggleOption(.privateGroups)
     })))
     index += 1
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_channels, data: .init(name: L10n.chatListFilterChannels, color: theme.colors.text, type: .selectable(state.preset.includeCategories.contains(.channels)), viewType: .innerItem, enabled: true, action: {
@@ -127,53 +143,25 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
     })))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_read, data: .init(name: "Exclude Read", color: theme.colors.text, type: .switchable(!state.preset.includeCategories.contains(.read)), viewType: .innerItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_read, data: .init(name: "Exclude Read", color: theme.colors.text, type: .switchable(!state.preset.includeCategories.contains(.read)), viewType: .lastItem, enabled: true, action: {
         arguments.toggleOption(.read)
     })))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_apply_exception, data: .init(name: "Apply for Exceptions", color: theme.colors.text, type: .switchable(state.preset.applyReadMutedForExceptions), viewType: .lastItem, enabled: true, action: {
-        arguments.toggleApplyForExceptions(!state.preset.applyReadMutedForExceptions)
-    })))
-    index += 1
-    
-    var applyText: String? = nil
-    if state.preset.applyReadMutedForExceptions {
-        if !state.preset.includeCategories.contains(.read) {
-            applyText = "All **Read** chats including the exceptions will be excluded from exceptions list."
-            if !state.preset.includeCategories.contains(.muted) {
-                applyText = "All **Read** and **Muted** chats including the exceptions will be excluded from chat list."
-            }
-        } else if !state.preset.includeCategories.contains(.muted) {
-            applyText = "All **Muted** chats including the exceptions will be excluded from chat list."
-        }
-        if applyText == nil {
-            applyText = "You can exclude **Read** or **Muted** chats even if a chat in the exceptions."
-        }
-    } else {
-        applyText = "You can exclude **Read** or **Muted** chats even if a chat in the exceptions."
-    }
-    if let applyText = applyText {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(applyText), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
-    }
    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("EXCEPTIONS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ALWAYS INCLUDE"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_exception, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Add", nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 46, thumbInset: 5))
+        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Add Chats", nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 46, thumbInset: 5))
     }))
     index += 1
-    
-    
-    
     
     
     var fake:[Int] = []

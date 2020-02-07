@@ -12,6 +12,8 @@
 		9F6281292037389200B2D3C9 /* CheckBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F6281282037389200B2D3C9 /* CheckBox.swift */; };
 		9F9B5EAF2255FEDA00728CDC /* TooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */; };
 		9FC76CAD20DBDDA30050CE3B /* SegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */; };
+		A789ECFE23EAE99100AEB34A /* ScrollableSegmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789ECFD23EAE99100AEB34A /* ScrollableSegmentView.swift */; };
+		A789ED0023EAFDE600AEB34A /* MergeLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789ECFF23EAFDE600AEB34A /* MergeLists.swift */; };
 		A7C41DB92359E69400CF9402 /* CatalinaStyledSegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB82359E69400CF9402 /* CatalinaStyledSegmentController.swift */; };
 		A7D28203236C3B5D0000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28202236C3B5D0000A9BF /* SwiftSignalKit.framework */; };
 		A7D49478235F226C003E9A25 /* SpinningProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D49477235F226C003E9A25 /* SpinningProgressView.swift */; };
@@ -117,6 +119,8 @@
 		9F6281282037389200B2D3C9 /* CheckBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBox.swift; sourceTree = "<group>"; };
 		9F9B5EAE2255FEDA00728CDC /* TooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TooltipController.swift; sourceTree = "<group>"; };
 		9FC76CAC20DBDDA30050CE3B /* SegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentController.swift; sourceTree = "<group>"; };
+		A789ECFD23EAE99100AEB34A /* ScrollableSegmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableSegmentView.swift; sourceTree = "<group>"; };
+		A789ECFF23EAFDE600AEB34A /* MergeLists.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MergeLists.swift; sourceTree = "<group>"; };
 		A7C41DB82359E69400CF9402 /* CatalinaStyledSegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalinaStyledSegmentController.swift; sourceTree = "<group>"; };
 		A7D28202236C3B5D0000A9BF /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D49477235F226C003E9A25 /* SpinningProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpinningProgressView.swift; sourceTree = "<group>"; };
@@ -248,6 +252,14 @@
 			name = segment;
 			sourceTree = "<group>";
 		};
+		A789ECFC23EAE97800AEB34A /* scrollable-segment */ = {
+			isa = PBXGroup;
+			children = (
+				A789ECFD23EAE99100AEB34A /* ScrollableSegmentView.swift */,
+			);
+			name = "scrollable-segment";
+			sourceTree = "<group>";
+		};
 		A7C41DB72359E66800CF9402 /* catalina */ = {
 			isa = PBXGroup;
 			children = (
@@ -333,6 +345,7 @@
 		C22E062A1D7F3C2700A11C88 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				A789ECFF23EAFDE600AEB34A /* MergeLists.swift */,
 				C2271DEC1DAFE4D0001792B6 /* TransformImageArguments.swift */,
 				C2CBCAC11D81593B00142EC0 /* extensions */,
 				C22E062D1D7F3CC000A11C88 /* TGColor.swift */,
@@ -465,6 +478,7 @@
 		C2E0DEA91D7EF51C00EF1C8D /* TGUIKit */ = {
 			isa = PBXGroup;
 			children = (
+				A789ECFC23EAE97800AEB34A /* scrollable-segment */,
 				D05F391E22FB377E0040F341 /* date */,
 				9FC76CAB20DBDD370050CE3B /* segment */,
 				C2449A0F1F0E475200DF5650 /* thrid-party */,
@@ -636,6 +650,7 @@
 				C234CA8F1D97DF26003023F7 /* Image.swift in Sources */,
 				C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */,
 				C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */,
+				A789ED0023EAFDE600AEB34A /* MergeLists.swift in Sources */,
 				C2E0DEBB1D7F05AB00EF1C8D /* View.swift in Sources */,
 				C2271DD41DAF766A001792B6 /* WeakReference.swift in Sources */,
 				C22E06351D804C8200A11C88 /* TableView.swift in Sources */,
@@ -671,6 +686,7 @@
 				C230B9181DD3A6350057F596 /* ProgressModal.swift in Sources */,
 				C21178021F17E78E00AC706D /* TimableProgressView.swift in Sources */,
 				C2E0DEB91D7EF7F300EF1C8D /* ViewController.swift in Sources */,
+				A789ECFE23EAE99100AEB34A /* ScrollableSegmentView.swift in Sources */,
 				C2303E841D9A69BD00098E12 /* TabBarView.swift in Sources */,
 				C22E063B1D8067A000A11C88 /* TableRowView.swift in Sources */,
 				C2303E7A1D9987FE00098E12 /* Popover.swift in Sources */,

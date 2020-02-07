@@ -103,15 +103,15 @@ private func entries(state: WalletTransactionState, arguments: WalletTransaction
         return DynamicHeightRowItem(initialSize, stableId: stableId, side: .top)
     }))
     
-    let animation: WalletAnimatedSticker?
+    let animation: LocalAnimatedSticker?
     
     switch state.mode {
     case .passcode:
-        animation = WalletAnimatedSticker.keychain
+        animation = LocalAnimatedSticker.keychain
     case .sending:
-        animation = WalletAnimatedSticker.fly_dollar
+        animation = LocalAnimatedSticker.fly_dollar
     case .sent:
-        animation = WalletAnimatedSticker.gift
+        animation = LocalAnimatedSticker.gift
     case .none:
         animation = nil
     }

@@ -114,7 +114,7 @@ private final class WalletTransactionTextView : TableRowView {
         self.textView.update(item.textLayout)
         self.subTextView.update(item.subTextLayout)
         
-        crystalView.update(with: WalletAnimatedSticker.brilliant_static.file, size: NSMakeSize(40, 40), context: item.context, parent: nil, table: nil, parameters: WalletAnimatedSticker.brilliant_static.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
+        crystalView.update(with: LocalAnimatedSticker.brilliant_static.file, size: NSMakeSize(40, 40), context: item.context, parent: nil, table: nil, parameters: LocalAnimatedSticker.brilliant_static.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
         
         needsLayout = true
     }

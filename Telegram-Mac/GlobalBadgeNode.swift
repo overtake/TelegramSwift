@@ -95,68 +95,184 @@ class GlobalBadgeNode: Node {
             let total:Int32
         }
         
-        let signal:Signal<Result, NoError> = chatListFilterPreferences(postbox: account.postbox) |> mapToSignal { settings -> Signal<Result, NoError> in
-            var items:[UnreadMessageCountsItem] = []
-            let peerSignal: Signal<(Peer, Bool)?, NoError>
-            
-            
-            
-            
-            if let peerId = excludePeerId {
-                items.append(.peer(peerId))
-                let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
-                peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
-                    return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount ?? false
+        var items:[UnreadMessageCountsItem] = []
+        let peerSignal: Signal<(Peer, Bool)?, NoError>
+        
+        
+        
+        
+        if let peerId = excludePeerId {
+            items.append(.peer(peerId))
+            let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
+            peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
+                return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount ?? false
                 }) |> map {Optional($0)}
-            } else {
-                peerSignal = .single(nil)
+        } else {
+            peerSignal = .single(nil)
+        }
+        
+        let signal: Signal<[(Int32, RenderedTotalUnreadCountType)], NoError>
+        if collectAllAccounts {
+            signal = sharedContext.activeAccountsWithInfo |> mapToSignal { primaryId, accounts in
+                return combineLatest(accounts.filter { $0.account.id != account.id }.map { renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: $0.account.postbox) })
             }
-            
-            let signal: Signal<[(Int32, RenderedTotalUnreadCountType)], NoError>
-            if collectAllAccounts {
-                signal = sharedContext.activeAccountsWithInfo |> mapToSignal { primaryId, accounts in
-                    return combineLatest(accounts.filter { $0.account.id != account.id }.map { renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: $0.account.postbox) })
-                }
-            } else {
-                signal = renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: account.postbox) |> map { [$0] }
-            }
-            
-            var unreadCountItems: [UnreadMessageCountsItem] = []
-            unreadCountItems.append(.total(nil))
-            var keys: [PostboxViewKey] = []
-            let unreadKey: PostboxViewKey
-            if let current = preset ?? settings.current, applyFilter {
-                if !current.additionallyIncludePeers.isEmpty {
-                    for peerId in current.additionallyIncludePeers {
-                        unreadCountItems.append(.peer(peerId))
-                    }
-                }
-                unreadKey = .unreadCounts(items: unreadCountItems)
-                keys.append(unreadKey)
+        } else {
+            signal = renderedTotalUnreadCount(accountManager: sharedContext.accountManager, postbox: account.postbox) |> map { [$0] }
+        }
+        
+        var unreadCountItems: [UnreadMessageCountsItem] = []
+        unreadCountItems.append(.total(nil))
+        var keys: [PostboxViewKey] = []
+        let unreadKey: PostboxViewKey
+        if let current = preset, applyFilter {
+            if !current.additionallyIncludePeers.isEmpty {
                 for peerId in current.additionallyIncludePeers {
-                    keys.append(.basicPeer(peerId))
-                    
+                    unreadCountItems.append(.peer(peerId))
                 }
-                keys.append(.peerNotificationSettings(peerIds: Set(current.additionallyIncludePeers)))
-            } else {
-                unreadKey = .unreadCounts(items: [])
             }
-            
-            return combineLatest(signal, account.postbox.unreadMessageCountsView(items: items), account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: sharedContext.accountManager), peerSignal) |> map { (counts, view, keysView, inAppSettings, peerSettings) in
+            unreadKey = .unreadCounts(items: unreadCountItems)
+            keys.append(unreadKey)
+            for peerId in current.additionallyIncludePeers {
+                keys.append(.basicPeer(peerId))
                 
-                if !applyFilter || (settings.current == nil && preset == nil) {
-                    var excludeTotal: Int32 = 0
-                    
-                    var dockText: String?
-                    let totalValue = !inAppSettings.badgeEnabled  ? 0 : (collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 })))
-                    if totalValue > 0 {
-                        dockText = "\(totalValue)"
+            }
+            keys.append(.peerNotificationSettings(peerIds: Set(current.additionallyIncludePeers)))
+        } else {
+            unreadKey = .unreadCounts(items: [])
+        }
+        
+        let s:Signal<Result, NoError> = combineLatest(signal, account.postbox.unreadMessageCountsView(items: items), account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: sharedContext.accountManager), peerSignal) |> map { (counts, view, keysView, inAppSettings, peerSettings) in
+            
+            if !applyFilter || preset == nil {
+                var excludeTotal: Int32 = 0
+                
+                var dockText: String?
+                let totalValue = !inAppSettings.badgeEnabled  ? 0 : (collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 })))
+                if totalValue > 0 {
+                    dockText = "\(totalValue)"
+                }
+                
+                excludeTotal = totalValue
+                
+                if items.count == 1, let peerSettings = peerSettings {
+                    if let count = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), count > 0 {
+                        var removable = false
+                        switch inAppSettings.totalUnreadCountDisplayStyle {
+                        case .raw:
+                            removable = true
+                        case .filtered:
+                            if !peerSettings.1 {
+                                removable = true
+                            }
+                        }
+                        if removable {
+                            switch inAppSettings.totalUnreadCountDisplayCategory {
+                            case .chats:
+                                excludeTotal -= 1
+                            case .messages:
+                                excludeTotal -= count
+                            }
+                        }
+                    }
+                }
+                return Result(dockText: dockText, total: excludeTotal)
+            } else if let preset = preset {
+                if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
+                    var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
+                    var totalState: ChatListTotalUnreadState?
+                    for entry in unreadCounts.entries {
+                        switch entry {
+                        case let .total(_, totalStateValue):
+                            totalState = totalStateValue
+                        case let .peer(peerId, state):
+                            if let state = state, state.isUnread {
+                                let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(preset.additionallyIncludePeers))] as? PeerNotificationSettingsView
+                                if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
+                                    let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer)
+                                    var peerCount = Int(state.count)
+                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
+                                    var removable = false
+                                    switch inAppSettings.totalUnreadCountDisplayStyle {
+                                    case .raw:
+                                        removable = true
+                                    case .filtered:
+                                        if !isRemoved {
+                                            removable = true
+                                        }
+                                    }
+                                    if !preset.includeCategories.contains(.muted), isRemoved {
+                                        removable = false
+                                    }
+                                    if removable, state.isUnread {
+                                        switch inAppSettings.totalUnreadCountDisplayCategory {
+                                        case .chats:
+                                            peerCount = 1
+                                        case .messages:
+                                            peerCount = max(1, peerCount)
+                                        }
+                                        peerTagAndCount[peerId] = (tag, peerCount)
+                                    }
+                                    
+                                }
+                            }
+                        }
                     }
                     
-                    excludeTotal = totalValue
+                    var tags: [PeerSummaryCounterTags] = []
+                    if preset.includeCategories.contains(.privateChats) {
+                        tags.append(.privateChat)
+                    }
+                    
+                    if preset.includeCategories.contains(.publicGroups) {
+                        tags.append(.publicGroup)
+                    }
+                    if preset.includeCategories.contains(.privateGroups) {
+                        tags.append(.privateGroup)
+                    }
+                    if preset.includeCategories.contains(.secretChats) {
+                        tags.append(.secretChat)
+                    }
+                    if preset.includeCategories.contains(.bots) {
+                        tags.append(.bot)
+                    }
+                    if preset.includeCategories.contains(.channels) {
+                        tags.append(.channel)
+                    }
+                    
+                    
+                    var count:Int32 = 0
+                    if let totalState = totalState {
+                        for tag in tags {
+                            
+                            if let value = totalState.filteredCounters[tag] {
+                                var removable = false
+                                switch inAppSettings.totalUnreadCountDisplayStyle {
+                                case .raw:
+                                    removable = true
+                                case .filtered:
+                                    removable = true
+                                }
+                                if removable {
+                                    switch inAppSettings.totalUnreadCountDisplayCategory {
+                                    case .chats:
+                                        count += value.chatCount
+                                    case .messages:
+                                        count += value.messageCount
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for peerId in preset.additionallyIncludePeers {
+                        if let (tag, peerCount) = peerTagAndCount[peerId] {
+                            if !tags.contains(tag) {
+                                count += Int32(peerCount)
+                            }
+                        }
+                    }
                     
                     if items.count == 1, let peerSettings = peerSettings {
-                        if let count = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), count > 0 {
+                        if let current = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), current > 0 {
                             var removable = false
                             switch inAppSettings.totalUnreadCountDisplayStyle {
                             case .raw:
@@ -169,136 +285,23 @@ class GlobalBadgeNode: Node {
                             if removable {
                                 switch inAppSettings.totalUnreadCountDisplayCategory {
                                 case .chats:
-                                    excludeTotal -= 1
+                                    count -= 1
                                 case .messages:
-                                    excludeTotal -= count
+                                    count -= current
                                 }
                             }
                         }
                     }
-                    return Result(dockText: dockText, total: excludeTotal)
-                } else if let preset = preset ?? settings.current {
-                    if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
-                        var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
-                        var totalState: ChatListTotalUnreadState?
-                        for entry in unreadCounts.entries {
-                            switch entry {
-                            case let .total(_, totalStateValue):
-                                totalState = totalStateValue
-                            case let .peer(peerId, state):
-                                if let state = state, state.isUnread {
-                                    let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(preset.additionallyIncludePeers))] as? PeerNotificationSettingsView
-                                    if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
-                                        let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer)
-                                        var peerCount = Int(state.count)
-                                        let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
-                                        var removable = false
-                                        switch inAppSettings.totalUnreadCountDisplayStyle {
-                                        case .raw:
-                                            removable = true
-                                        case .filtered:
-                                            if !isRemoved {
-                                                removable = true
-                                            }
-                                        }
-                                        if !preset.includeCategories.contains(.muted), isRemoved {
-                                            removable = false
-                                        }
-                                        if removable, state.isUnread {
-                                            switch inAppSettings.totalUnreadCountDisplayCategory {
-                                            case .chats:
-                                                peerCount = 1
-                                            case .messages:
-                                                peerCount = max(1, peerCount)
-                                            }
-                                            peerTagAndCount[peerId] = (tag, peerCount)
-                                        }
-        
-                                    }
-                                }
-                            }
-                        }
-                        
-                        var tags: [PeerSummaryCounterTags] = []
-                        if preset.includeCategories.contains(.privateChats) {
-                            tags.append(.privateChat)
-                        }
-                        
-                        if preset.includeCategories.contains(.groups) {
-                            tags.append(.privateGroup)
-                            tags.append(.publicGroup)
-                        }
-                        if preset.includeCategories.contains(.bots) {
-                            tags.append(.bot)
-                        }
-                        if preset.includeCategories.contains(.channels) {
-                            tags.append(.channel)
-                        }
-                        
-                        
-                        var count:Int32 = 0
-                        if let totalState = totalState {
-                            for tag in tags {
-                                
-                                if let value = totalState.filteredCounters[tag] {
-                                    var removable = false
-                                    switch inAppSettings.totalUnreadCountDisplayStyle {
-                                    case .raw:
-                                        removable = true
-                                    case .filtered:
-                                        removable = true
-                                    }
-                                    if removable {
-                                        switch inAppSettings.totalUnreadCountDisplayCategory {
-                                        case .chats:
-                                            count += value.chatCount
-                                        case .messages:
-                                            count += value.messageCount
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for peerId in preset.additionallyIncludePeers {
-                            if let (tag, peerCount) = peerTagAndCount[peerId] {
-                                if !tags.contains(tag) {
-                                    count += Int32(peerCount)
-                                }
-                            }
-                        }
-                        
-                        if items.count == 1, let peerSettings = peerSettings {
-                            if let current = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), current > 0 {
-                                var removable = false
-                                switch inAppSettings.totalUnreadCountDisplayStyle {
-                                case .raw:
-                                    removable = true
-                                case .filtered:
-                                    if !peerSettings.1 {
-                                        removable = true
-                                    }
-                                }
-                                if removable {
-                                    switch inAppSettings.totalUnreadCountDisplayCategory {
-                                    case .chats:
-                                        count -= 1
-                                    case .messages:
-                                        count -= current
-                                    }
-                                }
-                            }
-                        }
-                        
-                        return Result(dockText: nil, total: count)
-                    }
+                    
+                    return Result(dockText: nil, total: count)
                 }
-                return Result(dockText: nil, total: 0)
             }
+            return Result(dockText: nil, total: 0)
         } |> deliverOnMainQueue
         
         
         
-        self.disposable.set(signal.start(next: { [weak self] result in
+        self.disposable.set(s.start(next: { [weak self] result in
             if let strongSelf = self {
                 
                 if result.total == 0 {

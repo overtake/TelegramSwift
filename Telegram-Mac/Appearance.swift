@@ -2018,7 +2018,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                poll_selected_incorrect_incoming: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_incoming) },
                                                poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
                                                poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
-                                               poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) }
+                                               poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) },
+                                               chat_filter_add: { NSImage(named: "Icon_FilterAdd")!.precomposed(palette.accentIcon) },
+                                               chat_filter_bots:  { NSImage(named: "Icon_FilterBots")!.precomposed(palette.accentIcon) },
+                                               chat_filter_channels:  { NSImage(named: "Icon_FilterChannels")!.precomposed(palette.accentIcon) },
+                                               chat_filter_custom:  { NSImage(named: "Icon_FilterCustom")!.precomposed(palette.accentIcon) },
+                                               chat_filter_groups:  { NSImage(named: "Icon_FilterGroups")!.precomposed(palette.accentIcon) },
+                                               chat_filter_muted: { NSImage(named: "Icon_FilterMuted")!.precomposed(palette.accentIcon) },
+                                               chat_filter_private_chats: { NSImage(named: "Icon_FilterPrivateChats")!.precomposed(palette.accentIcon) },
+                                               chat_filter_read: { NSImage(named: "Icon_FilterRead")!.precomposed(palette.accentIcon) },
+                                               chat_filter_secret_chats: { NSImage(named: "Icon_FilterSecretChats")!.precomposed(palette.accentIcon) },
+                                               chat_filter_unmuted: { NSImage(named: "Icon_FilterUnmuted")!.precomposed(palette.accentIcon) },
+                                               chat_filter_unread: { NSImage(named: "Icon_FilterUnread")!.precomposed(palette.accentIcon) }
     )
 
 }

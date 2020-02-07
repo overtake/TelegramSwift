@@ -419,6 +419,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     
+    var defaultQuery: String? = nil
+    
     private let context:AccountContext
     private var marked: Bool = false
     private let arguments:SearchControllerArguments
@@ -928,7 +930,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        request(with: nil)
+        request(with: self.defaultQuery)
     }
     
     override func viewDidDisappear(_ animated: Bool) {

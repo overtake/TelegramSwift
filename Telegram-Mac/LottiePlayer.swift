@@ -406,7 +406,7 @@ private final class PlayerRenderer {
                                 framesTask?.cancel()
                             }
                         case .onceEnd:
-                            if current.frame == currentState(stateValue)?.endFrame {
+                            if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()

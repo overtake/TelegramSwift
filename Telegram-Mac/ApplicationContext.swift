@@ -350,15 +350,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         let applyChatPreset:(Int?)->Void = { atIndex in
-            if let index = atIndex {
-                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-                    $0.withSelectedAtIndex(index)
-                }).start()
-            } else {
-                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-                    $0.withUpdatedCurrentPreset(nil)
-                }).start()
-            }
+            
         }
         
         

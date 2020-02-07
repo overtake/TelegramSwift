@@ -16,10 +16,10 @@ import SyncCore
 class WalletSplashRowItem: GeneralRowItem {
     fileprivate let descLayout: TextViewLayout
     fileprivate let titleLayout: TextViewLayout
-    fileprivate let animation: WalletAnimatedSticker?
+    fileprivate let animation: LocalAnimatedSticker?
     fileprivate let context: AccountContext
     private var h: CGFloat = 0
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, title: String, desc: String, animation: WalletAnimatedSticker?, viewType: GeneralViewType, action:@escaping(String)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, title: String, desc: String, animation: LocalAnimatedSticker?, viewType: GeneralViewType, action:@escaping(String)->Void) {
         self.context = context
         self.animation = animation
         

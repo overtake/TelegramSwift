@@ -10,7 +10,7 @@ import Cocoa
 import Postbox
 import TelegramCore
 import SyncCore
-
+import TGUIKit
 
 
 

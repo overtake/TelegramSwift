@@ -12,20 +12,32 @@ import SwiftSignalKit
 import Postbox
 
 class ChatListEmptyRowItem: TableRowItem {
-    private let _stableId: UInt32 = arc4random()
+    private let _stableId: AnyHashable
     
     override var stableId: AnyHashable {
         return _stableId
     }
     let context: AccountContext
-    init(_ initialSize: NSSize, context: AccountContext) {
+    let filter: ChatListFilterPreset?
+    let openFilterSettings: ()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilterPreset?, context: AccountContext, openFilterSettings: @escaping()->Void) {
         self.context = context
+        self.filter = filter
+        self._stableId = stableId
+        self.openFilterSettings = openFilterSettings
         super.init(initialSize)
     }
     
     override var height: CGFloat {
         if let table = table {
-            return table.frame.height
+            var tableHeight: CGFloat = 0
+            table.enumerateItems { item -> Bool in
+                if item.index < self.index {
+                    tableHeight += item.height
+                }
+                return true
+            }
+            return table.frame.height - tableHeight
         }
         return initialSize.height
     }
@@ -40,30 +52,34 @@ private class ChatListEmptyRowView : TableRowView {
     private let disposable = MetaDisposable()
     private let textView = TextView()
     private let separator = View()
-    private var preset: ChatListFilterPreset? = nil {
-        didSet {
-            if preset != oldValue {
-                needsLayout = true
-            }
-        }
-    }
+    private let sticker: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
         textView.isSelectable = false
         
         addSubview(separator)
+        addSubview(sticker)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
-        if let item = item as? ChatListEmptyRowItem {
-            let signal = chatListFilterPreferences(postbox: item.context.account.postbox) |> deliverOnMainQueue
-            disposable.set(signal.start(next: { [weak self] settings in
-                self?.preset = settings.current
-            }))
+        
+        guard let item = item as? ChatListEmptyRowItem else {
+            return
         }
+        
+        let animatedSticker: LocalAnimatedSticker
+        
+        if let _ = item.filter {
+            animatedSticker = .think_spectacular
+        } else {
+            animatedSticker = .chiken_born
+        }
+        sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        
+        needsLayout = true
     }
     
     deinit {
@@ -76,27 +92,30 @@ private class ChatListEmptyRowView : TableRowView {
         
         separator.background = theme.colors.border
         
+        guard let item = item as? ChatListEmptyRowItem else {
+            return
+        }
+        
+        
         let text: String
-        if let _ = self.preset {
+        if let _ = item.filter {
             text = L10n.chatListFilterEmpty
         } else {
             text = L10n.chatListEmptyText
         }
 
         
-        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { [weak self] contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak self] _ in
-                guard let item = self?.item as? ChatListEmptyRowItem else {
-                   return
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { [weak item] contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak item] value in
+                if value == "filter" {
+                    item?.openFilterSettings()
                 }
-                _ = updateChatListFilterPreferencesInteractively(postbox: item.context.account.postbox, {
-                    $0.withUpdatedCurrentPreset(nil)
-                }).start()
+               
             }))
         })).mutableCopy() as! NSMutableAttributedString
         
         
-        attr.detectBoldColorInString(with: .bold(.text))
+        attr.detectBoldColorInString(with: .medium(.title))
         
         let layout = TextViewLayout(attr, alignment: .center)
 
@@ -106,8 +125,11 @@ private class ChatListEmptyRowView : TableRowView {
         textView.center()
         
         textView.isHidden = frame.width <= 70
+        sticker.isHidden = frame.width <= 70
         
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
+        
+        sticker.centerX(y: textView.frame.minY - sticker.frame.height - 20)
     }
     
     required init?(coder: NSCoder) {

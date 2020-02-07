@@ -12,6 +12,7 @@ import TelegramCore
 import SyncCore
 import Postbox
 import SwiftSignalKit
+import TGUIKit
 
 enum SpotlightIdentifierSource : Equatable {
     case peerId(PeerId)

@@ -16,7 +16,9 @@ public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
     case unmuted
     case unread
     case channels
-    case groups
+    case publicGroups
+    case privateGroups
+    case secretChats
     case privateChats
     case bots
     case custom(String)
@@ -30,10 +32,14 @@ public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
         case 2:
             self = .privateChats
         case 3:
-            self = .groups
+            self = .publicGroups
         case 4:
-            self = .bots
+            self = .privateGroups
         case 5:
+            self = .secretChats
+        case 6:
+            self = .bots
+        case 7:
             self = .unread
         case 10:
             self = .custom(decoder.decodeStringForKey("title", orElse: "Preset"))
@@ -51,12 +57,16 @@ public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
             encoder.encodeInt32(1, forKey: "_t")
         case .privateChats:
             encoder.encodeInt32(2, forKey: "_t")
-        case .groups:
+        case .publicGroups:
             encoder.encodeInt32(3, forKey: "_t")
-        case .bots:
+        case .privateGroups:
             encoder.encodeInt32(4, forKey: "_t")
-        case .unread:
+        case .secretChats:
             encoder.encodeInt32(5, forKey: "_t")
+        case .bots:
+            encoder.encodeInt32(6, forKey: "_t")
+        case .unread:
+            encoder.encodeInt32(7, forKey: "_t")
         case let .custom(title):
             encoder.encodeInt32(10, forKey: "_t")
             encoder.encodeString(title, forKey: "title")
@@ -70,8 +80,12 @@ public enum ChatListFilterPresetName: Equatable, Hashable, PostboxCoding {
             return L10n.chatListFilterUnmutedChats
         case .channels:
             return L10n.chatListFilterChannels
-        case .groups:
-            return L10n.chatListFilterGroups
+        case .publicGroups:
+            return L10n.chatListFilterPublicGroups
+        case .privateGroups:
+            return L10n.chatListFilterPrivateGroups
+        case .secretChats:
+            return L10n.chatListFilterSecretChat
         case .privateChats:
             return L10n.chatListFilterPrivateChats
         case .unread:
@@ -118,7 +132,54 @@ struct ChatListFilterPreset: Equatable, PostboxCoding {
         return name.title
     }
     var desc: String {
-        return self.includeCategories.string
+        var text: String = L10n.chatListFilterDescCustomized
+        if includeCategories == [.muted, .read] {
+            return "\(self.additionallyIncludePeers.count)"
+        } else if includeCategories == ._unmuted {
+           text = L10n.chatListFilterDescUnmuted
+        } else if includeCategories == ._unread {
+            text = L10n.chatListFilterDescUnread
+        } else if includeCategories == ._privateChats {
+            text = L10n.chatListFilterDescPrivateChats
+        } else if includeCategories == ._groups {
+            text = L10n.chatListFilterDescGroups
+        } else if includeCategories == ._privateGroups {
+            text = L10n.chatListFilterDescPrivateGroups
+        } else if includeCategories == ._publicGroups {
+            text = L10n.chatListFilterDescPublicGroups
+        } else if includeCategories == ._channels {
+            text = L10n.chatListFilterDescChannels
+        } else if includeCategories == ._bots {
+            text = L10n.chatListFilterDescBots
+        } else if includeCategories == ._secretChats {
+            text = L10n.chatListFilterDescSecretChats
+        }
+        
+        if !self.additionallyIncludePeers.isEmpty {
+            text = ", +\(self.additionallyIncludePeers.count)"
+        }
+        return text
+    }
+    
+    var icon: CGImage {
+        
+        if includeCategories == ._unmuted {
+            return theme.icons.chat_filter_unmuted
+        } else if includeCategories == ._unread {
+            return theme.icons.chat_filter_unread
+        } else if includeCategories == ._groups || includeCategories == ._publicGroups || includeCategories == ._privateGroups {
+            return theme.icons.chat_filter_groups
+        } else if includeCategories == ._channels {
+            return theme.icons.chat_filter_channels
+        } else if includeCategories == ._privateChats {
+            return theme.icons.chat_filter_private_chats
+        } else if includeCategories == ._bots {
+            return theme.icons.chat_filter_bots
+        } else if includeCategories == ._secretChats {
+            return theme.icons.chat_filter_secret_chats
+        }
+        
+        return theme.icons.chat_filter_custom
     }
     
     static var new: ChatListFilterPreset {
@@ -163,21 +224,27 @@ struct ChatListFilter: OptionSet {
     
     static let muted = ChatListFilter(rawValue: 1 << 1)
     static let privateChats = ChatListFilter(rawValue: 1 << 2)
-    static let groups = ChatListFilter(rawValue: 1 << 3)
-    static let bots = ChatListFilter(rawValue: 1 << 4)
-    static let channels = ChatListFilter(rawValue: 1 << 5)
-    static let read = ChatListFilter(rawValue: 1 << 6)
+    static let publicGroups = ChatListFilter(rawValue: 1 << 3)
+    static let privateGroups = ChatListFilter(rawValue: 1 << 4)
+    static let secretChats = ChatListFilter(rawValue: 1 << 5)
+    static let bots = ChatListFilter(rawValue: 1 << 6)
+    static let channels = ChatListFilter(rawValue: 1 << 7)
+    static let read = ChatListFilter(rawValue: 1 << 8)
     static let all: ChatListFilter = [
         .muted,
         .privateChats,
-        .groups,
+        .privateGroups,
+        .publicGroups,
+        .secretChats,
         .bots,
         .channels,
         .read
     ]
-    static let _workMode: ChatListFilter = [
+    static let _unmuted: ChatListFilter = [
         .privateChats,
-        .groups,
+        .privateGroups,
+        .publicGroups,
+        .secretChats,
         .bots,
         .channels,
         .read]
@@ -185,7 +252,9 @@ struct ChatListFilter: OptionSet {
     static let _unread: ChatListFilter = [
         .muted,
         .privateChats,
-        .groups,
+        .privateChats,
+        .privateGroups,
+        .secretChats,
         .bots,
         .channels]
     
@@ -196,7 +265,23 @@ struct ChatListFilter: OptionSet {
     ]
     static let _groups: ChatListFilter = [
         .muted,
-        .groups,
+        .publicGroups,
+        .privateGroups,
+        .read
+    ]
+    static let _privateGroups: ChatListFilter = [
+        .muted,
+        .privateGroups,
+        .read
+    ]
+    static let _publicGroups: ChatListFilter = [
+        .muted,
+        .publicGroups,
+        .read
+    ]
+    static let _secretChats: ChatListFilter = [
+        .muted,
+        .secretChats,
         .read
     ]
     static let _privateChats: ChatListFilter = [
@@ -215,9 +300,9 @@ struct ChatListFilter: OptionSet {
 }
 
 struct ChatListFilterPreferences: PreferencesEntry, Equatable {
-    let current: ChatListFilterPreset?
     let presets: [ChatListFilterPreset]
     let needShowTooltip: Bool
+    let tabsIsEnabled: Bool
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
         
@@ -226,31 +311,27 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
 //        presets.append(ChatListFilterPreset(name: .groups, includeCategories: ._groups, additionallyIncludePeers: [], uniqueId: 2))
 //        presets.append(ChatListFilterPreset(name: .bots, includeCategories: ._bots, additionallyIncludePeers: [], uniqueId: 3))
         presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 4))
-        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._workMode, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
+        presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._unmuted, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
         
-        return ChatListFilterPreferences(current: nil, presets: presets, needShowTooltip: true)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: true, tabsIsEnabled: false)
     }
     
-    init(current: ChatListFilterPreset?, presets: [ChatListFilterPreset], needShowTooltip: Bool) {
-        self.current = current
+    init(presets: [ChatListFilterPreset], needShowTooltip: Bool, tabsIsEnabled: Bool) {
         self.presets = presets
         self.needShowTooltip = needShowTooltip
+        self.tabsIsEnabled = tabsIsEnabled
     }
     
     init(decoder: PostboxDecoder) {
-        self.current = decoder.decodeObjectForKey("current") as? ChatListFilterPreset
         self.presets = decoder.decodeObjectArrayWithDecoderForKey("presets")
         self.needShowTooltip = decoder.decodeBoolForKey("needShowTooltip", orElse: true)
+        self.tabsIsEnabled = decoder.decodeBoolForKey("tabsIsEnabled", orElse: true)
     }
     
     func encode(_ encoder: PostboxEncoder) {
-        if let current = current {
-            encoder.encodeObject(current, forKey: "current")
-        } else {
-            encoder.encodeNil(forKey: "current")
-        }
         encoder.encodeObjectArray(self.presets, forKey: "presets")
         encoder.encodeBool(self.needShowTooltip, forKey: "needShowTooltip")
+        encoder.encodeBool(self.tabsIsEnabled, forKey: "tabsIsEnabled")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -262,12 +343,9 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     }
     
     static func ==(lhs: ChatListFilterPreferences, rhs: ChatListFilterPreferences) -> Bool {
-        return lhs.current == rhs.current && lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip
+        return lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip && lhs.tabsIsEnabled == rhs.tabsIsEnabled
     }
     
-    func withUpdatedCurrentPreset(_ current: ChatListFilterPreset?) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(current: current, presets: self.presets, needShowTooltip: false)
-    }
     func withAddedPreset(_ preset: ChatListFilterPreset, onlyReplace: Bool = false) -> ChatListFilterPreferences {
         var presets = self.presets
         if let index = presets.firstIndex(where: {$0.uniqueId == preset.uniqueId}) {
@@ -275,40 +353,30 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         } else if !onlyReplace {
             presets.append(preset)
         }
-        var current = self.current
-        if current?.uniqueId == preset.uniqueId {
-            current = preset
-        }
-        return ChatListFilterPreferences(current: current, presets: presets, needShowTooltip: false)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
     }
     
     func withRemovedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.removeAll(where: {$0.uniqueId == preset.uniqueId })
-        var current = self.current
-        if current?.uniqueId == preset.uniqueId {
-            current = nil
-        }
-        return ChatListFilterPreferences(current: current, presets: presets, needShowTooltip: false)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
     }
     
     func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.insert(presets.remove(at: from), at: to)
-        return ChatListFilterPreferences(current: self.current, presets: presets, needShowTooltip: false)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
     }
     func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
-        var current = self.current
-        if index < self.presets.count {
-            current = self.presets[index]
-        }
-        return ChatListFilterPreferences(current: current, presets: self.presets, needShowTooltip: false)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
     }
     
     func withUpdatedNeedShowTooltip(_ needShowTooltip: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(current: self.current, presets: self.presets, needShowTooltip: needShowTooltip)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: needShowTooltip, tabsIsEnabled: self.tabsIsEnabled)
     }
-    
+    func withUpdatedTabEnable(_ tabsIsEnabled: Bool) -> ChatListFilterPreferences {
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: tabsIsEnabled)
+    }
     func shortcut(for preset: ChatListFilterPreset?) -> String {
         if let preset = preset {
             for (i, value) in self.presets.enumerated() {
@@ -345,5 +413,136 @@ func updateChatListFilterPreferencesInteractively(postbox: Postbox, _ f: @escapi
             }
             return f(currentSettings)
         })
+    }
+}
+
+
+
+func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count: Int32)], NoError>  {
+    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0.presets } |> mapToSignal { filters -> Signal<[(id: Int32, count: Int32)], NoError> in
+        
+        var signals:[Signal<(id: Int32, count: Int32), NoError>] = []
+        for current in filters {
+            
+            var unreadCountItems: [UnreadMessageCountsItem] = []
+            unreadCountItems.append(.total(nil))
+            var keys: [PostboxViewKey] = []
+            let unreadKey: PostboxViewKey
+            
+            if !current.additionallyIncludePeers.isEmpty {
+                for peerId in current.additionallyIncludePeers {
+                    unreadCountItems.append(.peer(peerId))
+                }
+            }
+            unreadKey = .unreadCounts(items: unreadCountItems)
+            keys.append(unreadKey)
+            for peerId in current.additionallyIncludePeers {
+                keys.append(.basicPeer(peerId))
+                
+            }
+            keys.append(.peerNotificationSettings(peerIds: Set(current.additionallyIncludePeers)))
+            
+            let s:Signal<(id: Int32, count: Int32), NoError> = combineLatest(context.account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> map { keysView, inAppSettings -> (id: Int32, count: Int32) in
+                
+                if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
+                    var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
+                    var totalState: ChatListTotalUnreadState?
+                    for entry in unreadCounts.entries {
+                        switch entry {
+                        case let .total(_, totalStateValue):
+                            totalState = totalStateValue
+                        case let .peer(peerId, state):
+                            if let state = state, state.isUnread {
+                                let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(current.additionallyIncludePeers))] as? PeerNotificationSettingsView
+                                if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
+                                    let tag = context.account.postbox.seedConfiguration.peerSummaryCounterTags(peer)
+                                    var peerCount = Int(state.count)
+                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
+                                    var removable = false
+                                    switch inAppSettings.totalUnreadCountDisplayStyle {
+                                    case .raw:
+                                        removable = true
+                                    case .filtered:
+                                        if !isRemoved {
+                                            removable = true
+                                        }
+                                    }
+                                    if !current.includeCategories.contains(.muted), isRemoved {
+                                        removable = false
+                                    }
+                                    if removable, state.isUnread {
+                                        switch inAppSettings.totalUnreadCountDisplayCategory {
+                                        case .chats:
+                                            peerCount = 1
+                                        case .messages:
+                                            peerCount = max(1, peerCount)
+                                        }
+                                        peerTagAndCount[peerId] = (tag, peerCount)
+                                    }
+                                    
+                                }
+                            }
+                        }
+                    }
+                    
+                    var tags: [PeerSummaryCounterTags] = []
+                    if current.includeCategories.contains(.privateChats) {
+                        tags.append(.privateChat)
+                    }
+                    
+                    if current.includeCategories.contains(.publicGroups) {
+                        tags.append(.publicGroup)
+                    }
+                    if current.includeCategories.contains(.privateGroups) {
+                        tags.append(.privateGroup)
+                    }
+                    if current.includeCategories.contains(.secretChats) {
+                        tags.append(.secretChat)
+                    }
+                    if current.includeCategories.contains(.bots) {
+                        tags.append(.bot)
+                    }
+                    if current.includeCategories.contains(.channels) {
+                        tags.append(.channel)
+                    }
+                    
+                    var count:Int32 = 0
+                    if let totalState = totalState {
+                        for tag in tags {
+                            
+                            if let value = totalState.filteredCounters[tag] {
+                                var removable = false
+                                switch inAppSettings.totalUnreadCountDisplayStyle {
+                                case .raw:
+                                    removable = true
+                                case .filtered:
+                                    removable = true
+                                }
+                                if removable {
+                                    switch inAppSettings.totalUnreadCountDisplayCategory {
+                                    case .chats:
+                                        count += value.chatCount
+                                    case .messages:
+                                        count += value.messageCount
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for peerId in current.additionallyIncludePeers {
+                        if let (tag, peerCount) = peerTagAndCount[peerId] {
+                            if !tags.contains(tag) {
+                                count += Int32(peerCount)
+                            }
+                        }
+                    }
+                    return (id: current.uniqueId, count: count)
+                } else {
+                    return (id: current.uniqueId, count: 0)
+                }
+            }
+            signals.append(s)
+        }
+        return combineLatest(signals)
     }
 }
