@@ -37,7 +37,8 @@ class ChatListEmptyRowItem: TableRowItem {
                 }
                 return true
             }
-            return table.frame.height - tableHeight
+            let height = table.frame.height == 0 ? initialSize.height : table.frame.height
+            return height - tableHeight
         }
         return initialSize.height
     }
