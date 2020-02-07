@@ -28,9 +28,10 @@ public struct SPopoverItem : Equatable {
     let height: CGFloat
     let handler:()->Void
     let isSeparator: Bool
+    let drawSeparatorBorder: Bool
     let additionView: SPopoverAdditionItemView?
     
-    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text, height: CGFloat = 40.0, isSeparator: Bool = false, additionView: SPopoverAdditionItemView? = nil) {
+    public init(_ title:String, _ handler:@escaping ()->Void, _ image:CGImage? = nil, _ textColor: NSColor = presentation.colors.text, height: CGFloat = 40.0, isSeparator: Bool = false, drawSeparatorBorder: Bool = true, additionView: SPopoverAdditionItemView? = nil) {
         self.title = title
         self.image = image
         self.textColor = textColor
@@ -38,15 +39,17 @@ public struct SPopoverItem : Equatable {
         self.height = height
         self.isSeparator = false
         self.additionView = additionView
+        self.drawSeparatorBorder = drawSeparatorBorder
     }
     
-    public init() {
+    public init(_ drawSeparatorBorder: Bool = true) {
         self.title = ""
         self.image = nil
         self.textColor = presentation.colors.text
         self.handler = {}
         self.height = 10
         self.isSeparator = true
+        self.drawSeparatorBorder = drawSeparatorBorder
         self.additionView = nil
     }
     
@@ -75,7 +78,7 @@ public class SPopoverViewController: GenericViewController<TableView> {
         let alignAsImage = !items.filter({$0.image != nil}).isEmpty
         let items = items.map { item -> TableRowItem in
             if item.isSeparator {
-                return SPopoverSeparatorItem()
+                return SPopoverSeparatorItem(item.drawSeparatorBorder)
             } else {
                 return SPopoverRowItem(NSZeroSize, height: item.height, image: item.image, alignAsImage: alignAsImage, title: item.title, textColor: item.textColor, additionView: item.additionView, clickHandler: {
                     Queue.mainQueue().justDispatch {

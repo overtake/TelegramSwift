@@ -24,6 +24,10 @@ class SImageView: NSView {
         fatalError("init(frame:) has not been implemented")
     }
     
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
+    }
+    
     var data: (CGImage, NSEdgeInsets)? {
         didSet {
             if let image = data {

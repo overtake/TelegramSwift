@@ -63,46 +63,46 @@ extension WalletSplashMode {
     var animationFile: TelegramMediaFile? {
         switch self {
         case .intro:
-            return WalletAnimatedSticker.brilliant_loading.file
+            return LocalAnimatedSticker.brilliant_loading.file
         case .success:
-            return WalletAnimatedSticker.success.file
+            return LocalAnimatedSticker.success.file
         case .save24Words:
-            return WalletAnimatedSticker.write_words.file
+            return LocalAnimatedSticker.write_words.file
         case .created:
-            return WalletAnimatedSticker.gift.file
+            return LocalAnimatedSticker.gift.file
         case .restoreFailed:
-            return WalletAnimatedSticker.sad.file
+            return LocalAnimatedSticker.sad.file
         case .testWords:
-            return WalletAnimatedSticker.write_words.file
+            return LocalAnimatedSticker.write_words.file
         case .importExist:
             return nil
         case .createPasscode:
-            return WalletAnimatedSticker.keychain.file
+            return LocalAnimatedSticker.keychain.file
         case .unavailable:
-            return WalletAnimatedSticker.sad.file
+            return LocalAnimatedSticker.sad.file
         }
     }
     
-    var animation: WalletAnimatedSticker? {
+    var animation: LocalAnimatedSticker? {
         switch self {
         case .intro:
-            return WalletAnimatedSticker.brilliant_loading
+            return LocalAnimatedSticker.brilliant_loading
         case .success:
-            return WalletAnimatedSticker.success
+            return LocalAnimatedSticker.success
         case .save24Words:
-            return WalletAnimatedSticker.write_words
+            return LocalAnimatedSticker.write_words
         case .created:
-            return WalletAnimatedSticker.gift
+            return LocalAnimatedSticker.gift
         case .restoreFailed:
-            return WalletAnimatedSticker.sad
+            return LocalAnimatedSticker.sad
         case .testWords:
-            return WalletAnimatedSticker.smart_guy
+            return LocalAnimatedSticker.smart_guy
         case .importExist:
             return nil
         case .createPasscode:
-            return WalletAnimatedSticker.keychain
+            return LocalAnimatedSticker.keychain
         case .unavailable:
-            return WalletAnimatedSticker.sad
+            return LocalAnimatedSticker.sad
         }
     }
     
@@ -304,7 +304,7 @@ func formatBalanceText(_ value: Int64) -> String {
 }
 
 
-enum WalletAnimatedSticker {
+enum LocalAnimatedSticker {
     case brilliant_static
     case brilliant_loading
     case smart_guy
@@ -319,6 +319,7 @@ enum WalletAnimatedSticker {
     case success
     case monkey_unsee
     case monkey_see
+    case think_spectacular
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -350,6 +351,8 @@ enum WalletAnimatedSticker {
             resource = LocalBundleResource(name: "monkey_unsee", ext: "tgs")
         case .monkey_see:
             resource = LocalBundleResource(name: "monkey_see", ext: "tgs")
+        case .think_spectacular:
+            resource = LocalBundleResource(name: "think_spectacular", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -378,7 +381,7 @@ enum WalletAnimatedSticker {
         case .write_words:
             playPolicy = .once
         case .chiken_born:
-            playPolicy = .loop
+            playPolicy = .onceEnd
         case .sad:
             playPolicy = .once
         case .success:
@@ -386,6 +389,8 @@ enum WalletAnimatedSticker {
         case .monkey_unsee:
             playPolicy = .once
         case .monkey_see:
+            playPolicy = .once
+        case .think_spectacular:
             playPolicy = .once
         }
         return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, media: self.file)

@@ -128,7 +128,7 @@ private func WalletSendEntries(state: WalletSendState, arguments: WalletSendArgu
         
         let range = balance.nsstring.range(of: ":")
         if range.location != NSNotFound {
-            text?.addAttributes([InputDataTextInsertAnimatedViewData.attributeKey : InputDataTextInsertAnimatedViewData(context: arguments.context, file: WalletAnimatedSticker.brilliant_static.file)], range: NSMakeRange(range.location + 1, 3))
+            text?.addAttributes([InputDataTextInsertAnimatedViewData.attributeKey : InputDataTextInsertAnimatedViewData(context: arguments.context, file: LocalAnimatedSticker.brilliant_static.file)], range: NSMakeRange(range.location + 1, 3))
         }
     } else {
         text = nil

@@ -324,7 +324,7 @@ private final class WalletBalanceView : TableRowView {
             return
         }
         
-        crystalView.update(with: WalletAnimatedSticker.brilliant_static.file, size: NSMakeSize(44, 44), context: item.context, parent: nil, table: nil, parameters: WalletAnimatedSticker.brilliant_static.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
+        crystalView.update(with: LocalAnimatedSticker.brilliant_static.file, size: NSMakeSize(44, 44), context: item.context, parent: nil, table: nil, parameters: LocalAnimatedSticker.brilliant_static.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
         
         sendButton.isHidden = item.walletState?.balance == -1
         

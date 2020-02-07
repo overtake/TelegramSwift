@@ -306,9 +306,9 @@ private final class WalletInfoTransactionView: TableRowView {
             }
         }
         
-        let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .once, media: WalletAnimatedSticker.brilliant_static.file)
+        let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .once, media: LocalAnimatedSticker.brilliant_static.file)
         
-        crystalView.update(with: WalletAnimatedSticker.brilliant_static.file, size: NSMakeSize(16, 16), context: item.context, parent: nil, table: nil, parameters: parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
+        crystalView.update(with: LocalAnimatedSticker.brilliant_static.file, size: NSMakeSize(16, 16), context: item.context, parent: nil, table: nil, parameters: parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: true)
 
         
         needsLayout = true

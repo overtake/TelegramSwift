@@ -32,7 +32,7 @@ final class WalletSendProccessingView : Control {
     }
     
     func setup(context: AccountContext) {
-        self.animationView.update(with: WalletAnimatedSticker.fly_dollar.file, size: NSMakeSize(200, 200), context: context, parent: nil, table: nil, parameters: WalletAnimatedSticker.fly_dollar.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
+        self.animationView.update(with: LocalAnimatedSticker.fly_dollar.file, size: NSMakeSize(200, 200), context: context, parent: nil, table: nil, parameters: LocalAnimatedSticker.fly_dollar.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
         
         needsLayout = true
     }
@@ -101,7 +101,7 @@ final class WalletSentView : Control {
     
     func setup(context: AccountContext, amount: String, callback: @escaping()->Void) {
         self.amount = amount
-        self.animationView.update(with: WalletAnimatedSticker.success.file, size: NSMakeSize(150, 150), context: context, parent: nil, table: nil, parameters: WalletAnimatedSticker.success.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
+        self.animationView.update(with: LocalAnimatedSticker.success.file, size: NSMakeSize(150, 150), context: context, parent: nil, table: nil, parameters: LocalAnimatedSticker.success.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
         
         walletButton.removeAllHandlers()
         
@@ -187,7 +187,7 @@ final class WalletPasscodeView : Control {
     }
     
     func setup(context: AccountContext, decryptedKey: @escaping(Data)->Void) {
-        self.animationView.update(with: WalletAnimatedSticker.keychain.file, size: NSMakeSize(150, 150), context: context, parent: nil, table: nil, parameters: WalletAnimatedSticker.success.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
+        self.animationView.update(with: LocalAnimatedSticker.keychain.file, size: NSMakeSize(150, 150), context: context, parent: nil, table: nil, parameters: LocalAnimatedSticker.success.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: true)
         
         let inputItem = InputDataRowItem(NSMakeSize(350, 40), stableId: 0, mode: .secure, error: nil, viewType: .singleItem, currentText: "", placeholder: nil, inputPlaceholder: "Passcode", filter: { $0 }, updated: { updated in
             

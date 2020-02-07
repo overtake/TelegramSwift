@@ -157,14 +157,18 @@ private class SPopoverRowView: TableRowView {
 
 public final class SPopoverSeparatorItem : TableRowItem {
     
+    let drawBorder: Bool
+    
     override public var stableId: AnyHashable {
         return arc4random()
     }
     
     override public init(_ initialSize: NSSize) {
+        self.drawBorder = true
         super.init(initialSize)
     }
-    public init() {
+    public init(_ drawBorder: Bool = true) {
+        self.drawBorder = drawBorder
         super.init(NSZeroSize)
     }
     
@@ -173,7 +177,7 @@ public final class SPopoverSeparatorItem : TableRowItem {
     }
     
     override public var height: CGFloat {
-        return 10
+        return drawBorder ? 10 : 1
     }
 }
 
@@ -187,6 +191,15 @@ private final class SPopoverSeparatorView : TableRowView {
     override func updateColors() {
         super.updateColors()
         separator.backgroundColor = presentation.colors.border
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? SPopoverSeparatorItem else {
+            return
+        }
+      //  separator.isHidden = !item.drawBorder
     }
     
     override func layout() {

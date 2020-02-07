@@ -2011,7 +2011,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let message = message {
                 self?.chatInteraction.update({$0.withEditMessage(message)})
             } else {
-                self?.chatInteraction.cancelEditing()
+                self?.chatInteraction.cancelEditing(true)
             }
             self?.chatInteraction.focusInputField()
         }

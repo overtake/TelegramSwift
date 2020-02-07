@@ -11,6 +11,7 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 import SyncCore
+import TGUIKit
 
 struct ChatHistoryViewTransition {
     let historyView: ChatHistoryView

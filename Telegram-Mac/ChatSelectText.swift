@@ -214,6 +214,7 @@ class ChatSelectText : NSObject {
     private var startMessageId:MessageId? = nil
     private var lastPressureEventStage = 0
     private var inPressedState = false
+    private var locationInWindow: NSPoint? = nil
     
     private var lastSelectdMessageId: MessageId?
     
@@ -249,6 +250,7 @@ class ChatSelectText : NSObject {
             
             self?.started = false
             self?.inPressedState = false
+            self?.locationInWindow = event.locationInWindow
             
             if let table = self?.table, let superview = table.superview, let documentView = table.documentView {
                 let point = superview.convert(event.locationInWindow, from: nil)
@@ -297,6 +299,7 @@ class ChatSelectText : NSObject {
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             
             self?.beginInnerLocation = NSZeroPoint
+            self?.locationInWindow = nil
             
             Queue.mainQueue().justDispatch {
                 guard let table = self?.table else {return}
@@ -337,7 +340,15 @@ class ChatSelectText : NSObject {
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             
             guard let `self` = self else {return .rejected}
-
+            
+            if let locationInWindow = self.locationInWindow {
+                let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
+                let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
+                if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
+                    return .rejected
+                }
+            }
+            
             self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
 //            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {

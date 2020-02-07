@@ -642,6 +642,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var beforeSetupItem:((TableRowView, TableRowItem)->Void)?
     public var afterSetupItem:((TableRowView, TableRowItem)->Void)?
+    
+    private var nextScrollEventIsAnimated: Bool = false
 
     public var emptyItem:TableRowItem? {
         didSet {
@@ -945,8 +947,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if let strongSelf = self {
                     let reqCount = strongSelf.count / 6
                     
-                    strongSelf.updateStickAfterScroll(false)
-                    
+                    strongSelf.updateStickAfterScroll(strongSelf.nextScrollEventIsAnimated)
+                    strongSelf.nextScrollEventIsAnimated = false
                     let scroll = strongSelf.scrollPosition(strongSelf.visibleRows())
                     
                     if (!strongSelf.updating && !strongSelf.clipView.isAnimateScrolling) {
@@ -1168,13 +1170,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     
                     if stickView?.item != item {
-                        stickView?.set(item: someItem, animated: false)
-                        stickView?.updateIsVisible(!firstTime, animated: false)
+                        stickView?.set(item: someItem, animated: animated)
+                        stickView?.updateIsVisible(!firstTime, animated: animated)
                     }
                     
                     if let item = stickItem {
                         if let view = (viewNecessary(at: item.index) as? TableStickView) {
-                            view.updateIsVisible((!firstTime || !view.header), animated: false)
+                            view.updateIsVisible((!firstTime || !view.header), animated: animated)
                         }
                     }
                     
@@ -1207,7 +1209,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         if yTopOffset <= -rect.height {
                             yTopOffset = 0
                         }
-                        
                         
                         stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
                         stickView.header = abs(dif) <= item.heightValue
@@ -1248,7 +1249,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                         
                         if tableView.isFlipped {
-                            stickView.isHidden = documentOffset.y <= 0
+                            
+                            stickView.isHidden = documentOffset.y <= 0// && !stickView.isAlwaysUp
                         }
 
                         stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
@@ -1262,10 +1264,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                 } else  {
                     if index == -1 {
-                        stickView?.removeFromSuperview()
+                        if animated, let stickView = self.stickView {
+                            stickView.change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
+                                stickView?.removeFromSuperview()
+                            })
+                        } else {
+                            stickView?.removeFromSuperview()
+                        }
+                    } else {
+                        stickView?.setFrameOrigin(0, 0)
+                        stickView?.header = true
                     }
-                    stickView?.setFrameOrigin(0, 0)
-                    stickView?.header = true
                     
                      self.enumerateViews(with: { view in
                         (view as? TableStickView)?.updateIsVisible(true, animated: false)
@@ -2076,6 +2085,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         var view: NSView? = item.isUniqueView ? nil : self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
+
         if(view == nil) {
             view = makeView(at: item.index)
             view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
@@ -2470,7 +2480,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         first = false
-        performScrollEvent()
+        performScrollEvent(transition.animated)
     }
     
     public func updateEmpties(animated: Bool = false) {
@@ -2951,7 +2961,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-    public func performScrollEvent() -> Void {
+    public func performScrollEvent(_ animated: Bool = false) -> Void {
+        self.nextScrollEventIsAnimated = animated
         self.updateScroll(visibleRows())
         NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: self.contentView)
     }

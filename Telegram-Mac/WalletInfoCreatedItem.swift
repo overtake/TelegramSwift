@@ -17,7 +17,7 @@ class WalletInfoCreatedItem: GeneralRowItem {
     fileprivate let headerView: TextViewLayout
     fileprivate let yourWalletAddress: TextViewLayout
     fileprivate let context: AccountContext
-    fileprivate let animation: TelegramMediaFile = WalletAnimatedSticker.chiken_born.file
+    fileprivate let animation: TelegramMediaFile = LocalAnimatedSticker.chiken_born.file
     private var _h: CGFloat = 0
     
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, address: String, viewType: GeneralViewType) {

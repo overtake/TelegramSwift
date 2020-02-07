@@ -458,6 +458,18 @@ func initialize() -> [String] {
     array.append("poll_selected_correct_outgoing")
     array.append("poll_selected_incorrect_outgoing")
     
+    array.append("chat_filter_add")
+    array.append("chat_filter_bots")
+    array.append("chat_filter_channels")
+    array.append("chat_filter_custom")
+    array.append("chat_filter_groups")
+    array.append("chat_filter_muted")
+    array.append("chat_filter_private_chats")
+    array.append("chat_filter_read")
+    array.append("chat_filter_secret_chats")
+    array.append("chat_filter_unmuted")
+    array.append("chat_filter_unread")
+
     return array
 }
 

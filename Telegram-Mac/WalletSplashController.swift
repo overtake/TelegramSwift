@@ -105,14 +105,14 @@ private func splashEntries(state: WalletSplashState, arguments: WalletSplashArgu
     
   
     
-    let animation: WalletAnimatedSticker?
+    let animation: LocalAnimatedSticker?
     switch state.mode {
     case .createPasscode:
         switch state.passcodeState {
         case .secure:
-            animation = WalletAnimatedSticker.keychain
+            animation = LocalAnimatedSticker.keychain
         case .plain:
-            animation = WalletAnimatedSticker.keychain
+            animation = LocalAnimatedSticker.keychain
         }
     default:
         animation = state.mode.animation
@@ -125,7 +125,7 @@ private func splashEntries(state: WalletSplashState, arguments: WalletSplashArgu
     
     struct WalletSplashEquatable : Equatable {
         let mode: WalletSplashMode
-        let animation: WalletAnimatedSticker?
+        let animation: LocalAnimatedSticker?
     }
     let splashEquatable = WalletSplashEquatable(mode: state.mode, animation: animation)
     

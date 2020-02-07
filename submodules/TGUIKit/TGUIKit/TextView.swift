@@ -992,7 +992,12 @@ public enum CursorSelectAlignment {
 public struct TextSelectedRange: Equatable {
     
     
-    public var range:NSRange = NSMakeRange(NSNotFound, 0)
+    public var range:NSRange = NSMakeRange(NSNotFound, 0) {
+        didSet {
+            var bp:Int = 0
+            bp += 1
+        }
+    }
     public var color:NSColor = presentation.colors.selectText
     public var def:Bool = true
     
@@ -1169,6 +1174,13 @@ public class TextView: Control, NSViewToolTipOwner {
                             let endOffset = CTLineGetOffsetForStringIndex(line, endLineIndex, nil);
                             
                             width = endOffset - startOffset;
+                            
+                            
+                            if beginLineIndex == -1 {
+                                beginLineIndex = 0
+                            } else if beginLineIndex >= layout.attributedString.length {
+                                beginLineIndex = layout.attributedString.length - 1
+                            }
                             
                             let blockValue:CGFloat = layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
                             
@@ -1430,7 +1442,11 @@ public class TextView: Control, NSViewToolTipOwner {
         needsDisplay = true
     }
     
+    private var locationInWindow:NSPoint? = nil
+    
     func _mouseDown(with event: NSEvent) -> Void {
+        
+        self.locationInWindow = event.locationInWindow
         
         if !isSelectable || !userInteractionEnabled || event.modifierFlags.contains(.shift) {
             super.mouseDown(with: event)
@@ -1455,6 +1471,13 @@ public class TextView: Control, NSViewToolTipOwner {
     func _mouseDragged(with event: NSEvent) -> Void {
         if !isSelectable || !userInteractionEnabled {
             return
+        }
+        if let locationInWindow = self.locationInWindow {
+            let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
+            let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
+            if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
+                return
+            }
         }
         
         endSelect = self.convert(event.locationInWindow, from: nil)
@@ -1494,6 +1517,8 @@ public class TextView: Control, NSViewToolTipOwner {
     
     
     public override func mouseUp(with event: NSEvent) {
+        
+        self.locationInWindow = nil
         
         if let layout = layout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)

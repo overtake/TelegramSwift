@@ -1934,3 +1934,8 @@ public extension String {
         return result
     }
 }
+extension NSEdgeInsets : Equatable {
+    public static func ==(lhs: NSEdgeInsets, rhs: NSEdgeInsets) -> Bool {
+        return lhs.left == rhs.left && lhs.right == rhs.right && lhs.bottom == rhs.bottom && lhs.top == rhs.top
+    }
+}

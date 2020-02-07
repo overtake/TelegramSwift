@@ -18,6 +18,10 @@ open class TableStickView: TableRowView {
         }
     }
     
+    open var isAlwaysUp: Bool {
+        return false
+    }
+    
     open func updateIsVisible(_ visible: Bool, animated: Bool) {
         
     }

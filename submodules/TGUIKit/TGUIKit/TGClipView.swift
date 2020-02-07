@@ -231,11 +231,16 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 } else {
                     _ = destination.x - o.x
                     let ydif = destination.y - o.y
-                    
+                    let xdif = destination.x - o.x
+
          
                     if ydif != 0 {
                         let incY = abs(ydif) - abs(ydif + 1)
                         o.y -= incY
+                    }
+                    if xdif != 0 {
+                        let incX = abs(xdif) - abs(xdif + 1)
+                        o.x -= incX
                     }
                     super.scroll(to: o)
                 }
