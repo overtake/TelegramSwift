@@ -486,7 +486,7 @@ class ChatListController : PeersListController {
                 signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), count: count)
                 scroll = st
             case let .Index(index, st):
-                signal = context.account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), index: index, count: 150)
+                signal = context.account.viewTracker.aroundChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), index: index, count: 100)
                 scroll = st
                 removeNextAnimation = st != nil
             }
