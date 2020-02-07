@@ -252,7 +252,7 @@ struct ChatListFilter: OptionSet {
     static let _unread: ChatListFilter = [
         .muted,
         .privateChats,
-        .privateChats,
+        .publicGroups,
         .privateGroups,
         .secretChats,
         .bots,
