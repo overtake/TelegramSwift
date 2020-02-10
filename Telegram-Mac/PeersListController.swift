@@ -651,7 +651,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     func changeSelection(_ location: ChatLocation?) {
         if let location = location {
-            self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId))
+            self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, nil))
         } else {
             self.genericView.tableView.changeSelection(stableId: nil)
         }
@@ -663,7 +663,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 let rect = self.genericView.tableView.frame
                 let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                     if let peerId = peerId {
-                        self?.open(with: .chatId(peerId), messageId: messageId, close:close)
+                        self?.open(with: .chatId(peerId, nil), messageId: messageId, close:close)
                     } else {
                         self?.genericView.searchView.cancel(true)
                     }
@@ -760,7 +760,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
         
         switch entryId {
-        case let .chatId(peerId):
+        case let .chatId(peerId, _):
             let navigation = context.sharedContext.bindings.rootNavigation()
             
             if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
