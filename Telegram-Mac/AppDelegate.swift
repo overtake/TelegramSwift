@@ -59,8 +59,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if self.tokenRequestRetries < 3 {
             let signal = self.context.get() |> take(1) |> delay(1.0, queue: .mainQueue())
             |> mapToSignal { context -> Signal<Void, NoError> in
-                self.tokenRequestRetries += 1
                 if let context = context {
+                    self.tokenRequestRetries += 1
                     return Circles.requestToken(postbox: context.context.account.postbox, account: context.context.account)
                 } else {
                     return .single(Void())
