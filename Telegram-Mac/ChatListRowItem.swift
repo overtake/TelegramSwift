@@ -119,7 +119,7 @@ class ChatListRowItem: TableRowItem {
         if groupId != .root {
             return .groupId(groupId)
         } else if let index = chatListIndex {
-            return .chatId(index.messageIndex.id.peerId)
+            return .chatId(index.messageIndex.id.peerId, nil)
         } else {
             preconditionFailure()
         }

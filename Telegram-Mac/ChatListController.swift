@@ -108,7 +108,7 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
 
 
 enum UIChatListEntryId : Hashable {
-    case chatId(PeerId)
+    case chatId(PeerId, Int32?)
     case groupId(PeerGroupId)
     case reveal
     case empty
@@ -143,14 +143,14 @@ struct ChatListState: Equatable {
 }
 
 enum UIChatListEntry : Identifiable, Comparable {
-    case chat(ChatListEntry, [ChatListInputActivity], isSponsored: Bool)
+    case chat(ChatListEntry, [ChatListInputActivity], isSponsored: Bool, filterId: Int32?)
     case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
     case reveal([ChatListFilterPreset], ChatListFilterPreset?, [Int32: Int32])
     case empty(ChatListFilterPreset?)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
-        case let .chat(entry, activity, isSponsored):
-            if case .chat(entry, activity, isSponsored) = rhs {
+        case let .chat(entry, activity, isSponsored, filterId):
+            if case .chat(entry, activity, isSponsored, filterId) = rhs {
                 return true
             } else {
                 return false
@@ -184,7 +184,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var index: ChatListIndex {
         switch self {
-        case let .chat(entry, _, _):
+        case let .chat(entry, _, _, _):
             switch entry {
             case let .HoleEntry(hole):
                 return ChatListIndex(pinningIndex: nil, messageIndex: hole.index)
@@ -210,8 +210,8 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var stableId: UIChatListEntryId {
         switch self {
-        case let .chat(entry, _, _):
-            return .chatId(entry.index.messageIndex.id.peerId)
+        case let .chat(entry, _, _, filterId):
+            return .chatId(entry.index.messageIndex.id.peerId, filterId)
         case let .group(_, groupId, _, _, _, _, _, _):
             return .groupId(groupId)
         case .reveal:
@@ -233,7 +233,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .chat(inner, activities, isSponsored):
+            case let .chat(inner, activities, isSponsored, _):
                 switch inner {
                 case let .HoleEntry(hole):
                     return ChatListHoleRowItem(initialSize, context, hole)
@@ -556,7 +556,7 @@ class ChatListController : PeersListController {
                 }
             }
             var mapped: [UIChatListEntry] = prepare.map {
-                return .chat($0, state.activities.activities[$0.index.messageIndex.id.peerId] ?? [], isSponsored: $1)
+                return .chat($0, state.activities.activities[$0.index.messageIndex.id.peerId] ?? [], isSponsored: $1, filterId: value.3.filter?.uniqueId)
             }
             
             if value.3.filter != nil, mapped.isEmpty {} else {
@@ -593,7 +593,7 @@ class ChatListController : PeersListController {
             
             let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
                 switch entry {
-                case let .chat(inner, activities, isSponsored):
+                case let .chat(inner, activities, isSponsored, filterId):
                     switch inner {
                     case .HoleEntry:
                         return nil
@@ -602,7 +602,7 @@ class ChatListController : PeersListController {
                             return nil
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
                             let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7, values.8)
-                            return AppearanceWrapperEntry(entry: .chat(entry, activities, isSponsored: isSponsored), appearance: appearance)
+                            return AppearanceWrapperEntry(entry: .chat(entry, activities, isSponsored: isSponsored, filterId: filterId), appearance: appearance)
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.archiveChat]) {
                             if groupId == .root {
                                 return nil
