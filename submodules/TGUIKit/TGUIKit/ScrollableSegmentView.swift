@@ -170,7 +170,7 @@ private final class SegmentItemView : Control {
     private var textLayout: TextViewLayout
     private var imageView: ImageView?
     private let textView = TextView()
-    init(item: ScrollableSegmentItem) {
+    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme) {
         self.item = item
         self.textLayout = buildText(for: item)
         super.init(frame: NSZeroRect)
@@ -179,7 +179,7 @@ private final class SegmentItemView : Control {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         textView.isEventLess = true
-        self.updateItem(item, animated: false)
+        self.updateItem(item, theme: theme, animated: false)
         
         set(handler: { [weak self] _ in
             if self?.item.selected == false {
@@ -214,7 +214,7 @@ private final class SegmentItemView : Control {
         return NSMakeSize(width, frame.height)
     }
     
-    func updateItem(_ item: ScrollableSegmentItem, animated: Bool) {
+    func updateItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, animated: Bool) {
         self.item = item
         self.textLayout = buildText(for: item)
         textView.update(self.textLayout)
@@ -245,6 +245,8 @@ private final class SegmentItemView : Control {
         }
         
         change(size: size, animated: animated, duration: duration)
+        self.backgroundColor = presentation.colors.background
+        textView.backgroundColor = presentation.colors.background
         needsLayout = true
     }
     
@@ -446,12 +448,12 @@ public class ScrollableSegmentView: View {
             self.removeItem(at: rdx, animated: animated)
         }
         for (idx, item, _) in indicesAndItems {
-            self.insertItem(item, at: idx, animated: animated, callback: { [weak self] item in
+            self.insertItem(item, theme: self.theme, at: idx, animated: animated, callback: { [weak self] item in
                 self?.didChangeSelectedItem?(item)
             })
         }
         for (idx, item, _) in updateIndices {
-            self.updateItem(item, at: idx, animated: animated, callback: { [weak self] item in
+            self.updateItem(item, theme: self.theme, at: idx, animated: animated, callback: { [weak self] item in
                 self?.didChangeSelectedItem?(item)
             })
         }
@@ -480,9 +482,9 @@ public class ScrollableSegmentView: View {
         
         self.items.remove(at: index)
     }
-    private func updateItem(_ item: ScrollableSegmentItem, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
+    private func updateItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
         item.view = self.items[index].view
-        item.view?.updateItem(item, animated: animated)
+        item.view?.updateItem(item, theme: theme, animated: animated)
         
         _ = item.view?.removeLastHandler()
         
@@ -492,8 +494,8 @@ public class ScrollableSegmentView: View {
         
         self.items[index] = item
     }
-    private func insertItem(_ item: ScrollableSegmentItem, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
-        let view = SegmentItemView(item: item)
+    private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
+        let view = SegmentItemView(item: item, theme: theme)
         view.setFrameSize(NSMakeSize(view.frame.width, frame.height))
         view.set(handler: { _ in
             callback(item)
@@ -532,6 +534,9 @@ public class ScrollableSegmentView: View {
         selectorView.theme = self.theme
         borderView.backgroundColor = self.theme.border
         backgroundColor = presentation.colors.background
+        for item in self.items {
+            item.view?.updateItem(item, theme: self.theme, animated: false)
+        }
     }
     
     required public init?(coder: NSCoder) {

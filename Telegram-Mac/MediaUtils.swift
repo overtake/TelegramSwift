@@ -323,7 +323,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
-            let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
+            let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true, checkDealloc: true)
             
             let fullSizeData = data.fullSizeData
             let thumbnailData = data.thumbnailData
@@ -377,7 +377,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 let initialThumbnailContextFittingSize = fittedSize.fitted(CGSize(width: 90.0, height: 90.0))
                 
                 let thumbnailContextSize = thumbnailSize.aspectFitted(initialThumbnailContextFittingSize)
-                let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
+                let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0, checkDealloc: true)
                 thumbnailContext.withFlippedContext { c in
                     c.draw(thumbnailImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
                 }
@@ -390,7 +390,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                 
                 if thumbnailContextFittingSize.width > thumbnailContextSize.width {
                     let additionalContextSize = thumbnailContextFittingSize
-                    let additionalBlurContext = DrawingContext(size: additionalContextSize, scale: 1.0)
+                    let additionalBlurContext = DrawingContext(size: additionalContextSize, scale: 1.0, checkDealloc: true)
                     additionalBlurContext.withFlippedContext { c in
                         c.interpolationQuality = .default
                         if let image = thumbnailContext.generateImage() {
@@ -415,7 +415,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                         if let fullSizeImage = blurSourceImage {
                             let thumbnailSize = CGSize(width: fullSizeImage.width, height: fullSizeImage.height)
                             let thumbnailContextSize = thumbnailSize.aspectFitted(CGSize(width: 74.0, height: 74.0))
-                            let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
+                            let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0, checkDealloc: true)
                             thumbnailContext.withFlippedContext { c in
                                 c.interpolationQuality = .none
                                 c.draw(fullSizeImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))

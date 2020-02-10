@@ -558,6 +558,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 //            return
 //        }
         
+        if controller.abolishWhenNavigationSame, controller.className == self.controller.className {
+            return
+        }
 
         controller.navigationController = self
         controller.loadViewIfNeeded(self.bounds)

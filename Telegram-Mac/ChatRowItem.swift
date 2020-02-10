@@ -1829,29 +1829,31 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                             saveAs(file, account: account)
                         }))
                         
-                        if !file.isVoice {
-                            let path: String
-                            if FileManager.default.fileExists(atPath: downloadPath.1) {
-                                path = downloadPath.1
-                            } else {
-                                path = data.path + "." + fileExtenstion(file)
-                                try? FileManager.default.removeItem(atPath: path)
-                                try? FileManager.default.linkItem(atPath: data.path, toPath: path)
-                            }
-                            let result = ObjcUtils.apps(forFileUrl: path)
-                            if let result = result, !result.isEmpty {
-                                let item = ContextMenuItem(L10n.messageContextOpenWith, handler: {})
-                                let menu = NSMenu()
-                                item.submenu = menu
-                                for item in result {
-                                    menu.addItem(ContextMenuItem(item.fullname, handler: {
-                                        NSWorkspace.shared.openFile(path, withApplication: item.app.path)
-                                    }, image: item.icon))
+                        if let downloadPath = downloadPath {
+                            if !file.isVoice {
+                                let path: String
+                                if FileManager.default.fileExists(atPath: downloadPath.1) {
+                                    path = downloadPath.1
+                                } else {
+                                    path = data.path + "." + fileExtenstion(file)
+                                    try? FileManager.default.removeItem(atPath: path)
+                                    try? FileManager.default.linkItem(atPath: data.path, toPath: path)
                                 }
-                                items.append(item)
+                                let result = ObjcUtils.apps(forFileUrl: path)
+                                if let result = result, !result.isEmpty {
+                                    let item = ContextMenuItem(L10n.messageContextOpenWith, handler: {})
+                                    let menu = NSMenu()
+                                    item.submenu = menu
+                                    for item in result {
+                                        menu.addItem(ContextMenuItem(item.fullname, handler: {
+                                            NSWorkspace.shared.openFile(path, withApplication: item.app.path)
+                                        }, image: item.icon))
+                                    }
+                                    items.append(item)
+                                }
                             }
-                            
                         }
+                        
                     }
                     
                     if file.isStaticSticker, let fileId = file.id {

@@ -1058,7 +1058,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 -(void)scrollToCursor {
     NSRect lineRect = [self highlightRectForRange:self.selectedRange];
     
-    [self.scrollView.contentView scrollToPoint:lineRect.origin];
+    CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
+    maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);
+    
+    [self.scrollView.contentView scrollToPoint:NSMakePoint(lineRect.origin.x, maxY)];
 }
 
 -(void)updatePlaceholder:(BOOL)animated newSize:(NSSize)newSize {

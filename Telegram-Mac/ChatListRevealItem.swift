@@ -97,6 +97,8 @@ private final class ChatListRevealView : TableStickView {
     
     override func updateColors() {
         super.updateColors()
+        segmentView.updateLocalizationAndTheme(theme: theme)
+        needsDisplay = true
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -122,7 +124,7 @@ private final class ChatListRevealView : TableStickView {
                 let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.text), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 
-                icon = generateImage(NSMakeSize(textLayout.0.size.width + 12, textLayout.0.size.height + 4), rotatedContext: { size, ctx in
+                icon = generateImage(NSMakeSize(textLayout.0.size.width + 10, textLayout.0.size.height + 2), rotatedContext: { size, ctx in
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
                     
@@ -133,7 +135,7 @@ private final class ChatListRevealView : TableStickView {
                     ctx.fill(rect)
                     
                     let focus = NSMakePoint((rect.width - textLayout.0.size.width) / 2, (rect.height - textLayout.0.size.height) / 2)
-                    textLayout.1.draw(NSMakeRect(focus.x, 2, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
+                    textLayout.1.draw(NSMakeRect(focus.x, 1, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
                     
                 })!
             } else {

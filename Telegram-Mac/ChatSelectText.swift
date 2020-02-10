@@ -341,13 +341,13 @@ class ChatSelectText : NSObject {
             
             guard let `self` = self else {return .rejected}
             
-            if let locationInWindow = self.locationInWindow {
-                let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
-                let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
-                if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
-                    return .rejected
-                }
-            }
+//            if let locationInWindow = self.locationInWindow {
+//                let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
+//                let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
+//                if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
+//                    return .rejected
+//                }
+//            }
             
             self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             

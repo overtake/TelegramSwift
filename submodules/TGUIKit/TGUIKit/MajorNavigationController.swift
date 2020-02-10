@@ -140,6 +140,10 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         
         assertOnMainThread()
         
+        if controller.abolishWhenNavigationSame, controller.className == self.controller.className {
+            return
+        }
+        
         controller.navigationController = self
         
         

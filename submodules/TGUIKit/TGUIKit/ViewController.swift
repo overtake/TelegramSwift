@@ -491,6 +491,10 @@ open class ViewController : NSObject {
         return BarView(controller: self)
     }
     
+    open var abolishWhenNavigationSame: Bool {
+        return false
+    }
+    
     open func viewClass() ->AnyClass {
         return View.self
     }

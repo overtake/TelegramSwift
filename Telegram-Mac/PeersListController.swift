@@ -298,6 +298,7 @@ class PeerListContainerView : View {
         tableView.getBackgroundColor = {
             .clear
         }
+        layout()
     }
     
     fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {

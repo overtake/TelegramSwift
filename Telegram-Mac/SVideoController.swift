@@ -378,6 +378,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         genericView.rewindForward()
     }
     
+    var isFullscreen: Bool {
+        return self.fullScreenRestoreState != nil
+    }
+    
     func toggleFullScreen() {
         if let screen = NSScreen.main {
             if let window = fullScreenWindow, let state = fullScreenRestoreState {
