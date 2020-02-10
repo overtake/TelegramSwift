@@ -26,7 +26,7 @@ mas install 747648890
 
 ### Manual download
 
-If you would like, you can [download the non-MAS version](https://telegram.org/dl/macos). It removes some restrictions (like banned chats), but also lacks some functionality (like the share extension and sandboxing).
+If you would like, you can [download the non-MAS version](https://telegram.org/dl/macos).
 
 You can also [download the beta version](https://telegram.org/dl/macos/beta) if you want to try the latest features and you are prepared for bugs and crashes. If you are running the beta, join the [beta testing chat on Telegram](https://t.me/macswift) to report bugs.
 
