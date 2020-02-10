@@ -2,3 +2,4 @@ fastlane/README.md
 fastlane/report.xml
 xcuserdata
 xcuserstate
+.DS_Store
