@@ -673,6 +673,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 }
             }
             
+            
             let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
             if result {
                 if let data = pasteboard.data(forType: .rtf) {
@@ -693,7 +694,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                             let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                             self.textView.addSimpleItem(item)
                         }
-                        
+                        Queue.mainQueue().async { [weak self] in
+                            self?.textView.scrollToCursor()
+                        }
                         return true
                     }
                 }

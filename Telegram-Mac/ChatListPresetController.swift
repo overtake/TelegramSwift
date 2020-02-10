@@ -99,7 +99,7 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FILTER NAME"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.preset.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Filter Name", filter: { $0 }, limit: 144))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.preset.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Filter Name", filter: { $0 }, limit: 20))
     index += 1
    
     entries.append(.sectionId(sectionId, type: .normal))
@@ -253,7 +253,8 @@ func ChatListPresetController(context: AccountContext, preset: ChatListFilterPre
         context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     })
     
-    let dataSignal = statePromise.get() |> mapToSignal { state -> Signal<(ChatListPresetState, [Peer]), NoError> in
+    
+    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, statePromise.get()) |> mapToSignal { _, state -> Signal<(ChatListPresetState, [Peer]), NoError> in
         return context.account.postbox.transaction { transaction -> [Peer] in
             return state.preset.additionallyIncludePeers.compactMap { transaction.getPeer($0) }
         } |> map {

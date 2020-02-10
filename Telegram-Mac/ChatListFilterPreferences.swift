@@ -183,7 +183,7 @@ struct ChatListFilterPreset: Equatable, PostboxCoding {
     }
     
     static var new: ChatListFilterPreset {
-        return ChatListFilterPreset(name: .custom(L10n.chatListFilterPresetNewName), includeCategories: .all, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: Int32(bitPattern: arc4random()))
+        return ChatListFilterPreset(name: .custom(""), includeCategories: .all, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: Int32(bitPattern: arc4random()))
     }
     
     func withToggleOption(_ option: ChatListFilter) -> ChatListFilterPreset {

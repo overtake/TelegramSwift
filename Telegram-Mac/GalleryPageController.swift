@@ -476,6 +476,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func next() {
         if !lockedTransition {
+            if let item = self.selectedItem as? MGalleryVideoItem, item.isFullscreen {
+                return
+            }
             let item = self.item(at: min(controller.selectedIndex + 1, controller.arrangedObjects.count - 1))
             item.request()
             
@@ -487,6 +490,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func prev() {
         if !lockedTransition {
+            if let item = self.selectedItem as? MGalleryVideoItem, item.isFullscreen {
+                return
+            }
             let item = self.item(at: max(controller.selectedIndex - 1, 0))
             item.request()
             if let index = self.items.firstIndex(of: item) {

@@ -24,82 +24,84 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
     let includePeers = Set(preset.additionallyIncludePeers)
     filterPredicate = { peer, notificationSettings, isUnread in
         
-        if includePeers.contains(peer.id) && !preset.applyReadMutedForExceptions {
-            return true
-        }
-        
-        if !preset.includeCategories.contains(.read) {
-            if !isUnread {
-                return false
-            }
-        }
-        if !preset.includeCategories.contains(.muted) {
-            if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
-                if case let .muted(until) = notificationSettings.muteState {
-                    return until < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+        let check:()->Bool = {
+            if !preset.includeCategories.contains(.muted) {
+                if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
+                    if case let .muted(until) = notificationSettings.muteState {
+                        return until < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                    }
+                } else {
+                    return false
                 }
-            } else {
-                return false
             }
+            
+            
+            if !preset.includeCategories.contains(.privateChats) {
+                if let user = peer as? TelegramUser {
+                    if user.botInfo == nil {
+                        return false
+                    }
+                } else if let _ = peer as? TelegramSecretChat {
+                    return false
+                }
+            }
+            
+            if !preset.includeCategories.contains(.secretChats) {
+                if let _ = peer as? TelegramSecretChat {
+                    return false
+                }
+            }
+            
+            if !preset.includeCategories.contains(.bots) {
+                if let user = peer as? TelegramUser {
+                    if user.botInfo != nil {
+                        return false
+                    }
+                }
+            }
+            if !preset.includeCategories.contains(.privateGroups) {
+                if let _ = peer as? TelegramGroup {
+                    return false
+                } else if let channel = peer as? TelegramChannel {
+                    if case .group = channel.info {
+                        if channel.username == nil {
+                            return false
+                        }
+                    }
+                }
+            }
+            if !preset.includeCategories.contains(.publicGroups) {
+                if let channel = peer as? TelegramChannel {
+                    if case .group = channel.info {
+                        if channel.username != nil {
+                            return false
+                        }
+                    }
+                }
+            }
+            
+            if !preset.includeCategories.contains(.channels) {
+                if let channel = peer as? TelegramChannel {
+                    if case .broadcast = channel.info {
+                        return false
+                    }
+                }
+            }
+            return true
         }
         
         if includePeers.contains(peer.id) {
             return true
         }
         
-        if !preset.includeCategories.contains(.privateChats) {
-            if let user = peer as? TelegramUser {
-                if user.botInfo == nil {
-                    return false
-                }
-            } else if let _ = peer as? TelegramSecretChat {
+        if !preset.includeCategories.contains(.read) {
+          
+            if !isUnread {
                 return false
             }
         }
         
-        if !preset.includeCategories.contains(.secretChats) {
-            if let _ = peer as? TelegramSecretChat {
-                return false
-            }
-        }
-        
-        if !preset.includeCategories.contains(.bots) {
-            if let user = peer as? TelegramUser {
-                if user.botInfo != nil {
-                    return false
-                }
-            }
-        }
-        if !preset.includeCategories.contains(.privateGroups) {
-            if let _ = peer as? TelegramGroup {
-                return false
-            } else if let channel = peer as? TelegramChannel {
-                if case .group = channel.info {
-                    if channel.username == nil {
-                        return false
-                    }
-                }
-            }
-        }
-        if !preset.includeCategories.contains(.publicGroups) {
-            if let channel = peer as? TelegramChannel {
-                if case .group = channel.info {
-                    if channel.username != nil {
-                        return false
-                    }
-                }
-            }
-        }
-
-        if !preset.includeCategories.contains(.channels) {
-            if let channel = peer as? TelegramChannel {
-                if case .broadcast = channel.info {
-                    return false
-                }
-            }
-        }
-        
-        return true
+        return check()
     }
     return filterPredicate
 }
@@ -360,6 +362,10 @@ class ChatListController : PeersListController {
         hiddenArchiveState.set(result)
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -473,6 +479,22 @@ class ChatListController : PeersListController {
                     }
                 }
             })
+        
+        let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
+        globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
+            if previousLocation.swap(location) != location {
+                self?.removeRevealStateIfNeeded(nil)
+            }
+            
+            self?.removeHighlightEvents()
+            
+            if let searchController = self?.searchController {
+                searchController.updateHighlightEvents(location != nil)
+            }
+            if location == nil {
+                self?.setHighlightEvents()
+            }
+        }))
 
         
         let signal = combineLatest(request.get() |> distinctUntilChanged, filter.get())
@@ -502,6 +524,8 @@ class ChatListController : PeersListController {
         let openFilterSettings:()->Void = {
             context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
         }
+        
+        
 
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), filtersBadgeCounters(context: context)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
@@ -677,21 +701,7 @@ class ChatListController : PeersListController {
         
         
         
-        let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
-        globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
-            if previousLocation.swap(location) != location {
-                self?.removeRevealStateIfNeeded(nil)
-            }
-            
-            self?.removeHighlightEvents()
-            
-            if let searchController = self?.searchController {
-                searchController.updateHighlightEvents(location != nil)
-            }
-            if location == nil {
-                self?.setHighlightEvents()
-            }
-        }))
+ 
         
         let filterView = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue
         switch mode {

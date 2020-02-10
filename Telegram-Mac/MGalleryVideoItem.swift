@@ -171,6 +171,9 @@ class MGalleryVideoItem: MGalleryItem {
         controller.rewindForward()
     }
     
+    var isFullscreen: Bool {
+        return controller.isFullscreen
+    }
     
     
     override func request(immediately: Bool) {

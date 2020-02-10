@@ -108,7 +108,7 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
         }).start()
     })
     
-    let dataSignal = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnPrepareQueue |> map { state in
+    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, chatListFilterPreferences(postbox: context.account.postbox)) |> map { _, state in
         return chatListPresetEntries(state: state, arguments: arguments)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
@@ -116,6 +116,8 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
     
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false)
+    
+    controller._abolishWhenNavigationSame = true
     
     controller.updateDatas = { data in
         return .none

@@ -1937,7 +1937,7 @@ internal final class L10n {
   internal static var chatListFilterBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Bots") }
   /// Channels
   internal static var chatListFilterChannels: String  { return L10n.tr("Localizable", "ChatList.Filter.Channels") }
-  /// The filter is empty.\n[Show All Chats]()
+  /// **No chats currently match this filter.**\n\n[Edit Filters](filter)
   internal static var chatListFilterEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.Empty") }
   /// Private Chats
   internal static var chatListFilterPrivateChats: String  { return L10n.tr("Localizable", "ChatList.Filter.PrivateChats") }
@@ -1949,6 +1949,8 @@ internal final class L10n {
   internal static var chatListFilterSecretChat: String  { return L10n.tr("Localizable", "ChatList.Filter.SecretChat") }
   /// Filters
   internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
+  /// You can organize your chats by right click.
+  internal static var chatListFilterTooltip: String  { return L10n.tr("Localizable", "ChatList.Filter.Tooltip") }
   /// Unmuted Chats
   internal static var chatListFilterUnmutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmutedChats") }
   /// Unread Chats
@@ -1967,7 +1969,7 @@ internal final class L10n {
   internal static var chatListFilterDescPrivateGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.PrivateGroups") }
   /// All Public Groups
   internal static var chatListFilterDescPublicGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.PublicGroups") }
-  /// All SecretChats
+  /// All Secret Chats
   internal static var chatListFilterDescSecretChats: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.SecretChats") }
   /// All Unmuted
   internal static var chatListFilterDescUnmuted: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Unmuted") }

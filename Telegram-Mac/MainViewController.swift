@@ -341,7 +341,7 @@ class MainViewController: TelegramViewController {
     }
     
     private func showFilterTooltip() {
-        tabController.showTooltip(text: "You can organize your chats by right click.", for: showCallTabs ? 2 : 1)
+        tabController.showTooltip(text: L10n.chatListFilterTooltip, for: showCallTabs ? 2 : 1)
     }
     
     private var showCallTabs: Bool = true

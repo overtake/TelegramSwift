@@ -152,6 +152,8 @@ public func generateImagePixel(_ size: CGSize, scale: CGFloat, pixelGenerator: (
 public enum DrawingContextBltMode {
     case Alpha
 }
+private var allocCounter: Int = 0
+private var deallocCounter: Int = 0
 
 public class DrawingContext {
     public let size: CGSize
@@ -160,7 +162,9 @@ public class DrawingContext {
     public let bytesPerRow: Int
     private let bitmapInfo: CGBitmapInfo
     public let length: Int
+    
     public let bytes: UnsafeMutableRawPointer
+    private let checkDealloc: Bool
     let provider: CGDataProvider?
     
     private var _context: CGContext?
@@ -182,8 +186,6 @@ public class DrawingContext {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
     }
     
     public func withFlippedContext(isHighQuality: Bool = true, horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
@@ -209,10 +211,12 @@ public class DrawingContext {
         }
     }
     
-    public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
+    public init(size: CGSize, scale: CGFloat, clear: Bool = false, checkDealloc: Bool = false) {
         self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
         self.scale = scale
+        self.checkDealloc = checkDealloc
         self.scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
+        
         
         self.bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
         self.length = bytesPerRow * Int(scaledSize.height)

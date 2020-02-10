@@ -444,10 +444,12 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     })
 }
 
-func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<String, NoError>  {
+func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<String?, NoError>  {
     let path = downloadFilePath(file, postbox)
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
-        let (boxPath, adopted) = expanded
+        guard let (boxPath, adopted) = expanded else {
+            return nil
+        }
         if let id = file.id {
             if let path = paths.path(for: id) {
                 let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
@@ -505,8 +507,8 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Stri
 //
 }
 
-func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String), NoError> {
-    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String), NoError> in
+func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String)?, NoError> {
+    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
         if data.complete {
             var ext:String = ""
             let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
@@ -514,16 +516,16 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
             } else {
-                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String), NoError> in
+                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
                     if let folder = FastSettings.downloadsFolder {
                         let ext = ext == "*" || ext == nil ? "file" : ext!
                         return .single((data.path, "\(folder)/\(fileName).\( ext )"))
                     }
-                    return .complete()
+                    return .single(nil)
                 }
             }
         } else {
-            return .complete()
+            return .single(nil)
         }
     }
 }
@@ -533,7 +535,9 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     
     _ = combineLatest(path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
         
-        let (boxPath, adopted) = expanded
+        guard let (boxPath, adopted) = expanded else {
+            return
+        }
         if let id = file.id {
             do {
                 
