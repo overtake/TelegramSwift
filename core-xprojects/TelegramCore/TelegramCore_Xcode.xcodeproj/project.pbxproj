@@ -27,7 +27,7 @@
 		A71DC83D2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */; };
 		A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */; };
 		A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972723A3A8C80091F293 /* InactiveChannels.swift */; };
-		A767DD4523F2F7FE00366F76 /* ChatListFiltering.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4423F2F7FE00366F76 /* ChatListFiltering.swift */; };
+		A767DD4723F2FBD000366F76 /* ChatListFiltering.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */; };
 		A7D281DE236C25500000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281DD236C25500000A9BF /* SwiftSignalKit.framework */; };
 		A7D281E2236C25710000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E1236C25710000A9BF /* Postbox.framework */; };
 		A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E3236C257C0000A9BF /* TelegramApi.framework */; };
@@ -379,7 +379,7 @@
 		A71DC83C2387CC4C000EEDE2 /* UnauthorizedAccountStateManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnauthorizedAccountStateManager.swift; sourceTree = "<group>"; };
 		A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthTransfer.swift; sourceTree = "<group>"; };
 		A754972723A3A8C80091F293 /* InactiveChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannels.swift; sourceTree = "<group>"; };
-		A767DD4423F2F7FE00366F76 /* ChatListFiltering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ChatListFiltering.swift; path = "../../../../../../../../builds/jAXw2Tf8/0/overtake/telegrammacos/submodules/telegram-ios/submodules/TelegramCore/Sources/ChatListFiltering.swift"; sourceTree = "<group>"; };
+		A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListFiltering.swift; sourceTree = "<group>"; };
 		A7D281D7236C25370000A9BF /* libphonenumber.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libphonenumber.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D9236C253C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281DB236C25440000A9BF /* MtProtoKitMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1446,7 +1446,7 @@
 		D0DF0C881D819C5F008AEB01 /* Peers */ = {
 			isa = PBXGroup;
 			children = (
-				A767DD4423F2F7FE00366F76 /* ChatListFiltering.swift */,
+				A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */,
 				D0C26D6B1FE286C3004ABF18 /* FetchChatList.swift */,
 				D0BC386F1E40853E0044D6FE /* UpdatePeers.swift */,
 				D0DF0C891D819C7E008AEB01 /* JoinChannel.swift */,
@@ -1769,7 +1769,7 @@
 				D099D74A1EEF418D00A3128C /* HistoryViewStateValidation.swift in Sources */,
 				A7D281F8236C32AA0000A9BF /* Crypto.m in Sources */,
 				D0AF32231FAC95C20097362B /* StandaloneUploadedMedia.swift in Sources */,
-				A767DD4523F2F7FE00366F76 /* ChatListFiltering.swift in Sources */,
+				A767DD4723F2FBD000366F76 /* ChatListFiltering.swift in Sources */,
 				D04554A721B43440007A6DD9 /* CancelAccountReset.swift in Sources */,
 				D001F3EC1E128A1C007A8C60 /* Holes.swift in Sources */,
 				D0B4189B1D7E0580004562A4 /* TelegramMediaWebpage.swift in Sources */,
