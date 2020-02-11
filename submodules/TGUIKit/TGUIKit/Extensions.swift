@@ -373,7 +373,18 @@ public extension NSView {
         }
         return size
     }
-    
+    private func isInSuperclassView(_ superclass: AnyClass, view: NSView) -> Bool {
+        if view.isKind(of: superclass) {
+            return true
+        } else if let view = view.superview {
+            return isInSuperclassView(superclass, view: view)
+        } else {
+            return false
+        }
+    }
+    func isInSuperclassView(_ superclass: AnyClass) -> Bool {
+        return isInSuperclassView(superclass, view: self)
+    }
     
     func _mouseInside() -> Bool {
         if let window = self.window {
@@ -1939,3 +1950,5 @@ extension NSEdgeInsets : Equatable {
         return lhs.left == rhs.left && lhs.right == rhs.right && lhs.bottom == rhs.bottom && lhs.top == rhs.top
     }
 }
+
+

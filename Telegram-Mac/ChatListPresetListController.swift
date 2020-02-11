@@ -81,9 +81,11 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add up to 10 filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add more \(10 - state.presets.count) filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
-
+    } else {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Drag and drop filter to sort it. Right click to remove."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
     }
     
     

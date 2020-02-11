@@ -148,8 +148,11 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     let index = subviews.firstIndex(where: { $0 is GIFContainerView})
                     if let index = index {
                         view = subviews.remove(at: index) as! GIFContainerView
-                        if view.subviews.last?.className == "TGUIKit.View" {
-                            view.subviews.last?.removeFromSuperview()
+                        inner: for view in view.subviews {
+                            if view.identifier == NSUserInterfaceItemIdentifier("gif-separator") {
+                                view.removeFromSuperview()
+                                break inner
+                            }
                         }
                     } else {
                         view = GIFContainerView()
@@ -165,6 +168,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
                         let layer = View()
+                        layer.identifier = NSUserInterfaceItemIdentifier("gif-separator")
                         layer.frame = NSMakeRect(view.frame.width - 2.0, 0, 2.0, view.frame.height)
                         layer.background = theme.colors.background
                         view.addSubview(layer)

@@ -110,7 +110,7 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
 private final class LocationPlaceSuggestionRowView : TableRowView {
     private let thumbHolder: View = View()
     private let textView: TextView = TextView()
-    private let imageView: TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 40, 40))
+    private let imageView: TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 50, 50))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(thumbHolder)
@@ -151,7 +151,7 @@ private final class LocationPlaceSuggestionRowView : TableRowView {
         imageView.isHidden = item.image == nil
         if let image = item.image {
             imageView.setSignal(chatWebpageSnippetPhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, small: true))
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(40, 40), boundingSize: NSMakeSize(40, 40), intrinsicInsets: NSEdgeInsetsZero, resizeMode: .imageColor(theme.colors.grayIcon)))
+            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 25), imageSize: NSMakeSize(50, 50), boundingSize: NSMakeSize(50, 50), intrinsicInsets: NSEdgeInsetsZero))
         }
     }
     

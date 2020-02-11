@@ -20,13 +20,15 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilterPreset?
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: [Int32: Int32]
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilterPreset], selected: ChatListFilterPreset?, counters: [Int32 : Int32], action: ((ChatListFilterPreset?)->Void)? = nil, openSettings: (()->Void)? = nil) {
+    fileprivate let _menuItems: ((ChatListFilterPreset)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilterPreset], selected: ChatListFilterPreset?, counters: [Int32 : Int32], action: ((ChatListFilterPreset?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilterPreset)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
         self.selected = selected
         self.openSettings = openSettings
         self.counters = counters
+        self._menuItems = menuItems
         super.init(initialSize)
     }
     
@@ -36,8 +38,13 @@ class ChatListRevealItem: TableStickItem {
         self.tabs = []
         self.selected = nil
         self.openSettings = nil
+        self._menuItems = nil
         self.counters = [:]
         super.init(initialSize)
+    }
+    
+    func menuItems(for item: ChatListFilterPreset) -> [ContextMenuItem] {
+        return self._menuItems?(item) ?? []
     }
     
     override var stableId: AnyHashable {
@@ -58,20 +65,37 @@ class ChatListRevealItem: TableStickItem {
 }
 
 
-private final class ChatListRevealView : TableStickView {
+final class ChatListRevealView : TableStickView {
     private let containerView = View()
     private var animated: Bool = false
-    private let segmentView: ScrollableSegmentView = ScrollableSegmentView(frame: NSZeroRect)
+    let segmentView: ScrollableSegmentView = ScrollableSegmentView(frame: NSZeroRect)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)
         containerView.addSubview(segmentView)
         border = [.Right]
+        
+        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: segmentView.scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification  in
+            guard let `self` = self else {
+                return
+            }
+            guard let item = self.item else {
+                return
+            }
+            guard let view = item.view as? ChatListRevealView else {
+                return
+            }
+            if !self.segmentView.scrollView.clipView.isAnimateScrolling {
+                if view !== self {
+                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
+                } else if let view = item.table?.p_stickView as? ChatListRevealView, view !== self {
+                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
+                }
+            }
+        })
+        
     }
     
-    override func scrollWheel(with event: NSEvent) {
-        segmentView.scrollWheel(with: event)
-    }
     
     override func mouseUp(with event: NSEvent) {
        
@@ -84,6 +108,7 @@ private final class ChatListRevealView : TableStickView {
     
     override func updateIsVisible(_ visible: Bool, animated: Bool) {
         super.updateIsVisible(visible, animated: animated)
+                
 //        var visible = visible
 //        if let table = item?.table {
 //            visible = visible && table.documentOffset.y > 0
@@ -166,8 +191,16 @@ private final class ChatListRevealView : TableStickView {
                 }
             }
         }
+        segmentView.menuItems = { [weak item] selected in
+            if let item = item, selected.uniqueId != -1 && selected.uniqueId != -2 {
+                return item.menuItems(for: item.tabs[selected.index - 1])
+            } else {
+                return []
+            }
+        }
       
     }
+    
     
     override var isHidden: Bool {
         didSet {
@@ -191,8 +224,7 @@ private final class ChatListRevealView : TableStickView {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func layout() {

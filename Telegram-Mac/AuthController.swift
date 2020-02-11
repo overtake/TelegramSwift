@@ -1089,7 +1089,8 @@ class AuthController : GenericViewController<AuthHeaderView> {
                             }
                             strongSelf.refreshQrToken()
                         }))
-                case .passwordRequested:
+                case let .passwordRequested(account):
+                    strongSelf.account = account
                     strongSelf.genericView.isQrEnabled = false
                     strongSelf.exportTokenDisposable.set(nil)
                     strongSelf.tokenEventsDisposable.set(nil)

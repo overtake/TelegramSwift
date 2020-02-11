@@ -184,12 +184,16 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var index: ChatListIndex {
         switch self {
-        case let .chat(entry, _, _, _):
+        case let .chat(entry, _, isSponsored, _):
             switch entry {
             case let .HoleEntry(hole):
                 return ChatListIndex(pinningIndex: nil, messageIndex: hole.index)
             case let .MessageEntry(values):
-                return values.0
+                if isSponsored {
+                    return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor().predecessor())
+                } else {
+                    return values.0
+                }
             }
         case .reveal:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
@@ -225,7 +229,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilterPreset?)->Void, openFilterSettings: @escaping()->Void) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilterPreset?)->Void, openFilterSettings: @escaping()->Void, tabsMenuItems: @escaping(ChatListFilterPreset)->[ContextMenuItem]) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
@@ -249,7 +253,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             case let .reveal(tabs, selected, counters):
-                return ChatListRevealItem(initialSize, context: context, tabs: tabs, selected: selected, counters: counters, action: setupFilter, openSettings: openFilterSettings)
+                return ChatListRevealItem(initialSize, context: context, tabs: tabs, selected: selected, counters: counters, action: setupFilter, openSettings: openFilterSettings, menuItems: tabsMenuItems)
             case let .empty(filter):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context, openFilterSettings: openFilterSettings)
             }
@@ -550,7 +554,7 @@ class ChatListController : PeersListController {
             for value in  value.0.entries {
                 prepare.append((value, false))
             }
-            if value.0.laterIndex == nil {
+            if value.0.laterIndex == nil, value.3.filter == nil {
                 if let value = value.0.additionalItemEntries.first {
                     prepare.append((value, true))
                 }
@@ -628,7 +632,20 @@ class ChatListController : PeersListController {
 //            if value.3 != previousFilter.swap(value.3) {
 //                animated = false
 //            }
-            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, setupFilter: setupFilter, openFilterSettings: openFilterSettings)
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, setupFilter: setupFilter, openFilterSettings: openFilterSettings, tabsMenuItems: { filter in
+                
+                var items:[ContextMenuItem] = []
+                
+                items.append(.init(L10n.chatListFilterEdit, handler: {
+                    context.sharedContext.bindings.rootNavigation().push(ChatListPresetController(context: context, preset: filter))
+                }))
+                items.append(.init(L10n.chatListFilterDelete, handler: {
+                    _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                        $0.withRemovedPreset(filter)
+                    }).start()
+                }))
+                return items
+            })
         }
         
         
@@ -1055,6 +1072,11 @@ class ChatListController : PeersListController {
             var checkFolder: Bool = true
             let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
             if row != -1 {
+                
+                let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+                if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
+                    return .failed
+                }
                 let item = self.genericView.tableView.item(at: row) as? ChatListRowItem
                 if let item = item {
                     let view = item.view as? ChatListRowView
