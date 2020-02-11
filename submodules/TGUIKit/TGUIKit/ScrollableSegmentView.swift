@@ -170,8 +170,12 @@ private final class SegmentItemView : Control {
     private var textLayout: TextViewLayout
     private var imageView: ImageView?
     private let textView = TextView()
-    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme) {
+    private let callback: (ScrollableSegmentItem)->Void
+    private let menuItems:(ScrollableSegmentItem)->[ContextMenuItem]
+    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, callback: @escaping(ScrollableSegmentItem)->Void, menuItems:@escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
         self.item = item
+        self.callback = callback
+        self.menuItems = menuItems
         self.textLayout = buildText(for: item)
         super.init(frame: NSZeroRect)
         self.handleLongEvent = false
@@ -181,22 +185,45 @@ private final class SegmentItemView : Control {
         textView.isEventLess = true
         self.updateItem(item, theme: theme, animated: false)
         
+        updateHandlers()
+    }
+    
+    private func updateHandlers() {
         set(handler: { [weak self] _ in
             if self?.item.selected == false {
-                self?.textView.layer?.opacity = 0.8
-                self?.imageView?.layer?.opacity = 0.8
+                self?.textView.change(opacity: 0.8, animated: true)
+                self?.imageView?.change(opacity: 0.8, animated: true)
             }
-        }, for: .Highlight)
+            }, for: .Highlight)
         
         set(handler: { [weak self] _ in
-            self?.textView.layer?.opacity = 1.0
-            self?.imageView?.layer?.opacity = 1.0
-        }, for: .Normal)
+            self?.textView.change(opacity: 1.0, animated: true)
+            self?.imageView?.change(opacity: 1.0, animated: true)
+            }, for: .Normal)
         
         set(handler: { [weak self] _ in
-            self?.textView.layer?.opacity = 1.0
-            self?.imageView?.layer?.opacity = 1.0
+            self?.textView.change(opacity: 1.0, animated: true)
+            self?.imageView?.change(opacity: 1.0, animated: true)
         }, for: .Hover)
+        
+        
+        set(handler: { [weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            self.callback(self.item)
+        }, for: .Click)
+        
+        
+        set(handler: { [weak self] control in
+            guard let `self` = self else {
+                return
+            }
+            if let event = NSApp.currentEvent {
+                ContextMenu.show(items: self.menuItems(self.item), view: control, event: event)
+            }
+            
+        }, for: .RightDown)
     }
     
     override func scrollWheel(with event: NSEvent) {
@@ -206,7 +233,7 @@ private final class SegmentItemView : Control {
     var size: NSSize {
         var width: CGFloat = self.textLayout.layoutSize.width + item.insets.left + item.insets.right
         if let imageView = imageView {
-            width += item.insets.left + imageView.frame.width
+            width += 5 + imageView.frame.width
         }
         if self.textLayout.layoutSize.width == 0 {
             width -= (item.insets.left * 2)
@@ -259,8 +286,8 @@ private final class SegmentItemView : Control {
             textView.centerY(x: 0)
         }
         if let imageView = imageView {
-            imageView.centerY(x: textView.frame.maxX + item.insets.left)
-            imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - item.insets.bottom + item.insets.top))
+            imageView.centerY(x: textView.frame.maxX + 5)
+            imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
         }
         
     }
@@ -346,7 +373,7 @@ private class Scroll : ScrollView {
 
 
 public class ScrollableSegmentView: View {
-    private let scrollView:Scroll = Scroll()
+    public let scrollView:ScrollView = Scroll()
     
     private let selectorView: SelectorView = SelectorView(frame: NSZeroRect)
     private let borderView = View()
@@ -355,7 +382,8 @@ public class ScrollableSegmentView: View {
     private var items: [ScrollableSegmentItem] = []
     private var selected:Int = 0
     
-    
+    public var menuItems:((ScrollableSegmentItem)->[ContextMenuItem])?
+
     
     public var didChangeSelectedItem:((ScrollableSegmentItem)->Void)?
     
@@ -450,12 +478,15 @@ public class ScrollableSegmentView: View {
         for (idx, item, _) in indicesAndItems {
             self.insertItem(item, theme: self.theme, at: idx, animated: animated, callback: { [weak self] item in
                 self?.didChangeSelectedItem?(item)
+            }, menuItems: { [weak self] item in
+                guard let menuItems = self?.menuItems else {
+                    return []
+                }
+                return menuItems(item)
             })
         }
         for (idx, item, _) in updateIndices {
-            self.updateItem(item, theme: self.theme, at: idx, animated: animated, callback: { [weak self] item in
-                self?.didChangeSelectedItem?(item)
-            })
+            self.updateItem(item, theme: self.theme, at: idx, animated: animated)
         }
         layoutItems(animated: animated)
        
@@ -467,6 +498,15 @@ public class ScrollableSegmentView: View {
             }
         }
         moveSelector(animated)
+    }
+    
+    public func scrollToSelected(animated: Bool) {
+        if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view {
+            let point = NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0)
+            if point != scrollView.documentOffset, frame != .zero {
+                scrollView.clipView.scroll(to: point, animated: true)
+            }
+        }
     }
     
     private func removeItem(at index: Int, animated: Bool) {
@@ -482,27 +522,16 @@ public class ScrollableSegmentView: View {
         
         self.items.remove(at: index)
     }
-    private func updateItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
+    private func updateItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool) {
         item.view = self.items[index].view
         item.view?.updateItem(item, theme: theme, animated: animated)
         
-        _ = item.view?.removeLastHandler()
-        
-        item.view?.set(handler: { _ in
-            callback(item)
-        }, for: .Click)
-        
         self.items[index] = item
     }
-    private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void) {
-        let view = SegmentItemView(item: item, theme: theme)
+    private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void, menuItems: @escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
+        let view = SegmentItemView(item: item, theme: theme, callback: callback, menuItems: menuItems)
         view.setFrameSize(NSMakeSize(view.frame.width, frame.height))
-        view.set(handler: { _ in
-            callback(item)
-        }, for: .Click)
-        
         item.view = view
-        
         
         var subviews = self.documentView.subviews
         

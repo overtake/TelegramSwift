@@ -105,7 +105,7 @@ public class SPopoverViewController: GenericViewController<TableView> {
         
         
         
-        self.items = headerItems + (headerItems.isEmpty ? [] : [SPopoverSeparatorItem(NSZeroSize)]) + items
+        self.items = headerItems + (headerItems.isEmpty ? [] : [SPopoverSeparatorItem(false)]) + items
         
         var height: CGFloat = 0
         for (i, item) in self.items.enumerated() {

@@ -156,7 +156,7 @@ struct ChatListFilterPreset: Equatable, PostboxCoding {
         }
         
         if !self.additionallyIncludePeers.isEmpty {
-            text = ", +\(self.additionallyIncludePeers.count)"
+            text += ", +\(self.additionallyIncludePeers.count)"
         }
         return text
     }

@@ -904,14 +904,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let autohide = self.autohide {
             if let autohideItem = autohide.item {
                 let rect = self.rectOf(item: autohideItem)
-                if (documentOffset.y > rect.maxY / 2) && documentOffset.y < rect.maxY {
-                    scroll(to: .top(id: autohideItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: autohideItem.height), completion: { [weak self] _ in
-                        self?.liveScrollStartPosition = nil
-                    })
+                if (documentOffset.y > (rect.minY + (rect.height / 2))) && documentOffset.y < rect.maxY {
+//                    scroll(to: .top(id: autohideItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: autohideItem.height), completion: { [weak self] _ in
+//                        self?.liveScrollStartPosition = nil
+//                    })
                 } else if documentOffset.y > 0 && documentOffset.y < rect.maxY {
-                    scroll(to: .top(id: autohideItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), completion: { [weak self] _ in
-                        self?.liveScrollStartPosition = nil
-                    })
+//                    scroll(to: .top(id: autohideItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), completion: { [weak self] _ in
+//                        self?.liveScrollStartPosition = nil
+//                    })
                 } else {
                     liveScrollStartPosition = nil
                 }
@@ -1003,6 +1003,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var stickClass:AnyClass?
     private var stickView:TableStickView?
+    
+    public var p_stickView: NSView? {
+        return stickView
+    }
+    
     private var stickItem:TableStickItem? {
         didSet {
             if stickItem != oldValue {

@@ -208,6 +208,7 @@
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
+		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
 		A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2923C75F1100DD307B /* Confetti.swift */; };
 		A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC2D23C77AD800DD307B /* confetti.mp3 */; };
 		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
@@ -1250,6 +1251,7 @@
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
+		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
 		A778DC2923C75F1100DD307B /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		A778DC2D23C77AD800DD307B /* confetti.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = confetti.mp3; sourceTree = "<group>"; };
 		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
@@ -2869,6 +2871,7 @@
 				C2A71CE21DDB2EBD00C69F73 /* GeneralSettingsViewController.swift */,
 				C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */,
 				D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */,
+				A767DD4023F2BB3200366F76 /* ShortcutListController.swift */,
 			);
 			name = "settings-controllers";
 			sourceTree = "<group>";
@@ -5409,6 +5412,7 @@
 				9F3EAB4420A5ED2F003FE7E3 /* ocr.mm in Sources */,
 				C2BB120A1ED87C5A00BDE46A /* ControllerExtension.swift in Sources */,
 				A7B5031323B62E1A00C9838E /* Svg.m in Sources */,
+				A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */,
 				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,

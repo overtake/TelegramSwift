@@ -141,13 +141,13 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v1-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v2-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v1-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v2-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
     init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int) {
@@ -255,10 +255,10 @@ final class TRLotFileSupplyment {
                             return body
                         })
                         
-                        length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZFSE)
+                        length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZ4)
                         dstDelta.deallocate()
                     } else {
-                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZFSE)
+                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
                     }
                     let _ = self.data.writeFrame(frame: Int(current.frame), data: Data(bytesNoCopy: dst, count: length, deallocator: .none), endFrame: endFrame)
                     dst.deallocate()
@@ -282,7 +282,7 @@ final class TRLotFileSupplyment {
                         let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
                         let unsafePointer = unsafeBufferPointer.baseAddress!
                         
-                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZFSE)
+                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
                         
                         if let previous = previous {
                             
