@@ -298,6 +298,11 @@ static NSError *YouTubeError(NSError *error, NSSet *regionsAllowed, NSString *la
 	[self finish];
 }
 
+-(void)dealloc {
+    int bp = 0;
+    bp += 1;
+}
+
 - (void) finish
 {
 	self.isExecuting = NO;
