@@ -530,6 +530,51 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
     }
 }
 
+func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<String?, NoError> {
+    return combineLatest(downloadFilePath(file, postbox), downloadedFilePaths(postbox)) |> map { (expanded, paths) in
+        guard let (boxPath, adopted) = expanded else {
+            return nil
+        }
+        if let id = file.id {
+            do {
+                
+                if let path = paths.path(for: id) {
+                    let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                       return path.downloadedPath
+                    }
+                }
+                
+                var adopted = adopted
+                var i:Int = 1
+                let deletedPathExt = adopted.nsstring.deletingPathExtension
+                while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+                    let ext = adopted.nsstring.pathExtension
+                    adopted = "\(deletedPathExt) (\(i)).\(ext)"
+                    i += 1
+                }
+                
+                try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+                
+                let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+                
+                let fs = fileSize(boxPath)
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
+                
+                
+                
+                _ = updateDownloadedFilePaths(postbox, {
+                    $0.withAddedPath(path)
+                }).start()
+                
+                return adopted
+            }
+        } else {
+            return nil
+        }
+    }
+}
+
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     

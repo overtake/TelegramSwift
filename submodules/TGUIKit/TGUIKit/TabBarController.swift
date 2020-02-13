@@ -106,6 +106,10 @@ public class TabBarController: ViewController, TabViewDelegate {
         current?.scrollup()
     }
     
+    public func control(for index: Int) -> Control {
+        return self.genericView.tabView.control(for: index)
+    }
+    
     public func hideTabView(_ hide:Bool) {
         genericView.tabView.isHidden = hide
         current?.view.frame = hide ? bounds : NSMakeRect(0, 0, bounds.width, bounds.height - genericView.tabView.frame.height)

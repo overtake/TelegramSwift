@@ -37,13 +37,15 @@ public class BadgeNode: Node {
         
     }
     
+    public var additionSize: NSSize = NSMakeSize(8, 7)
+    
     public init(_ attributedString:NSAttributedString, _ fillColor:NSColor) {
         textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
         self.fillColor = fillColor
         super.init()
         
         
-        size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 7)
+        size = NSMakeSize(textLayout.0.size.width + additionSize.width, textLayout.0.size.height + additionSize.height)
         size = NSMakeSize(max(size.height,size.width), size.height)
         
     }

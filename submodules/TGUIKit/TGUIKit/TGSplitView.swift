@@ -284,6 +284,39 @@ public class SplitView : View {
         }
     }
     
+    public var nextLayout: SplitViewState {
+        
+        let single:SplitProportion! = _layoutProportions[.single]
+        let dual:SplitProportion! = _layoutProportions[.dual]
+        let triple:SplitProportion! = _layoutProportions[.triple]
+        
+        if acceptLayout(prop: single) && canChangeState && !mustMinimisize {
+            if frame.width < single.max  {
+                if self.state != .single {
+                    return .single;
+                }
+            } else if acceptLayout(prop: dual) {
+                if acceptLayout(prop: triple) {
+                    if frame.width >= dual.min && frame.width <= dual.max {
+                        if state != .dual {
+                            return .dual;
+                        }
+                    } else if state != .triple {
+                        return .triple;
+                    }
+                } else {
+                    if state != .dual && frame.width >= dual.min {
+                        return .dual;
+                    }
+                }
+                
+            }
+        } else if mustMinimisize, self.state != .minimisize {
+            return .minimisize
+        }
+        return self.state
+    }
+    
     public override func layout() {
         super.layout()
         

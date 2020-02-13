@@ -336,10 +336,8 @@ final class ChatInteraction : InterfaceObserver  {
                 update({
                     $0.withoutInitialAction()
                 })
-            default:
-                update({
-                    $0.withoutInitialAction()
-                })
+            case .ad:
+                break
             }
            
         }

@@ -1931,8 +1931,10 @@ internal final class L10n {
   internal static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }
   /// All
   internal static var chatListFilterAll: String  { return L10n.tr("Localizable", "ChatList.Filter.All") }
-  /// Chats
+  /// All Chats
   internal static var chatListFilterAllChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AllChats") }
+  /// All
+  internal static var chatListFilterAllChatsShort: String  { return L10n.tr("Localizable", "ChatList.Filter.AllChatsShort") }
   /// Chats
   internal static var chatListFilterBack: String  { return L10n.tr("Localizable", "ChatList.Filter.Back") }
   /// Bots
@@ -1957,9 +1959,9 @@ internal final class L10n {
   internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
   /// You can organize your chats by right click.
   internal static var chatListFilterTooltip: String  { return L10n.tr("Localizable", "ChatList.Filter.Tooltip") }
-  /// Unmuted Chats
+  /// Unmuted
   internal static var chatListFilterUnmutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmutedChats") }
-  /// Unread Chats
+  /// Unread
   internal static var chatListFilterUnreadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnreadChats") }
   /// All Bots
   internal static var chatListFilterDescBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Bots") }
@@ -2721,6 +2723,8 @@ internal final class L10n {
   internal static var generalSettingsAccentColor: String  { return L10n.tr("Localizable", "GeneralSettings.AccentColor") }
   /// Accept Secret Chats
   internal static var generalSettingsAcceptSecretChats: String  { return L10n.tr("Localizable", "GeneralSettings.AcceptSecretChats") }
+  /// ADVANCED
+  internal static var generalSettingsAdvancedHeader: String  { return L10n.tr("Localizable", "GeneralSettings.AdvancedHeader") }
   /// APPEARANCE SETTINGS
   internal static var generalSettingsAppearanceSettings: String  { return L10n.tr("Localizable", "GeneralSettings.AppearanceSettings") }
   /// Autoplay GIFs
@@ -2733,6 +2737,8 @@ internal final class L10n {
   internal static var generalSettingsCopyRTF: String  { return L10n.tr("Localizable", "GeneralSettings.CopyRTF") }
   /// Dark Mode
   internal static var generalSettingsDarkMode: String  { return L10n.tr("Localizable", "GeneralSettings.DarkMode") }
+  /// EMOJI & STICKERS
+  internal static var generalSettingsEmojiAndStickers: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiAndStickers") }
   /// Suggest Emoji
   internal static var generalSettingsEmojiPrediction: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiPrediction") }
   /// Automatically replace emojis
@@ -2749,9 +2755,11 @@ internal final class L10n {
   internal static var generalSettingsInputSettings: String  { return L10n.tr("Localizable", "GeneralSettings.InputSettings") }
   /// INSTANT VIEW
   internal static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
+  /// INTERFACE
+  internal static var generalSettingsInterfaceHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InterfaceHeader") }
   /// Handle media keys for in-app player
   internal static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
-  /// Automatically Open Latest Chat
+  /// Reopen Last Chat On Launch
   internal static var generalSettingsOpenLatestChatOnLaunch: String  { return L10n.tr("Localizable", "GeneralSettings.OpenLatestChatOnLaunch") }
   /// Use ⌘ + Enter to send
   internal static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
@@ -5717,6 +5725,8 @@ internal final class L10n {
   internal static var shareModalSearchPlaceholder: String  { return L10n.tr("Localizable", "ShareModal.Search.Placeholder") }
   /// The sidebar is only available while chatting
   internal static var sidebarAvalability: String  { return L10n.tr("Localizable", "Sidebar.Avalability") }
+  /// Hide Panel
+  internal static var sidebarHide: String  { return L10n.tr("Localizable", "Sidebar.Hide") }
   /// Sidebar is not available in this chat
   internal static var sidebarPeerRestricted: String  { return L10n.tr("Localizable", "Sidebar.Peer.Restricted") }
   /// Slow mode is enabled. You can't forward a message with a comment
@@ -6943,6 +6953,8 @@ internal final class L10n {
   internal static var ns77Title: String  { return L10n.tr("Localizable", "_NS:77.title") }
   /// Edit
   internal static var ns99Title: String  { return L10n.tr("Localizable", "_NS:99.title") }
+  /// Global Search
+  internal static var aMaRbKjVTitle: String  { return L10n.tr("Localizable", "aMa-rb-kjV.title") }
   /// Window
   internal static var aufd15bRTitle: String  { return L10n.tr("Localizable", "aUF-d1-5bR.title") }
   /// Transformations

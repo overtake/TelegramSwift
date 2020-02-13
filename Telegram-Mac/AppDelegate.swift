@@ -994,6 +994,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.makeKeyAndOrderFront(sender)
 
     }
+    @IBAction func globalSearch(_ sender: Any) {
+        if let context = contextValue?.context {
+            context.sharedContext.bindings.mainController().focusSearch(animated: true)
+        }
+    }
     @IBAction func closeWindow(_ sender: Any) {
         NSApp.keyWindow?.close()
     }
