@@ -236,7 +236,7 @@ private final class SegmentItemView : Control {
             width += 5 + imageView.frame.width
         }
         if self.textLayout.layoutSize.width == 0 {
-            width -= (item.insets.left * 2)
+            width -= (5 + (item.insets.left + item.insets.right) / 2)
         }
         return NSMakeSize(width, frame.height)
     }
@@ -286,7 +286,11 @@ private final class SegmentItemView : Control {
             textView.centerY(x: 0)
         }
         if let imageView = imageView {
-            imageView.centerY(x: textView.frame.maxX + 5)
+            if textView.frame.width > 0 {
+                imageView.centerY(x: textView.frame.maxX + 5)
+            } else {
+                imageView.center()
+            }
             imageView.setFrameOrigin(NSMakePoint(imageView.frame.minX, imageView.frame.minY - (item.insets.bottom + item.insets.top) + 1))
         }
         

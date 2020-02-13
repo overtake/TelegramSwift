@@ -39,7 +39,9 @@ public class TabBarView: View {
         ctx.fill(self.bounds)
     }
     
-    
+    func control(for index: Int) -> Control {
+        return subviews[index] as! Control
+    }
     
     func addTab(_ tab: TabItem) {
         self.tabs.append(tab)

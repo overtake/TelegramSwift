@@ -1334,7 +1334,7 @@ class ChatRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
-        
+                
         let result = super.makeSize(width, oldWidth: oldWidth)
         
         isForceRightLine = false
@@ -1815,7 +1815,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             } |> mapToSignal { items in
                 var items = items
                 
-                return combineLatest(queue: .mainQueue(), account.postbox.mediaBox.resourceData(file.resource), downloadFilePath(file, context.account.postbox)) |> mapToSignal { data, downloadPath in
+                return combineLatest(queue: .mainQueue(), account.postbox.mediaBox.resourceData(file.resource), fileFinderPath(file, context.account.postbox)) |> mapToSignal { data, downloadPath in
                     if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile {
                         let quickLook = ContextMenuItem(L10n.contextOpenInQuickLook, handler: {
                             FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
@@ -1832,8 +1832,8 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         if let downloadPath = downloadPath {
                             if !file.isVoice {
                                 let path: String
-                                if FileManager.default.fileExists(atPath: downloadPath.1) {
-                                    path = downloadPath.1
+                                if FileManager.default.fileExists(atPath: downloadPath) {
+                                    path = downloadPath
                                 } else {
                                     path = data.path + "." + fileExtenstion(file)
                                     try? FileManager.default.removeItem(atPath: path)

@@ -298,11 +298,19 @@ struct ChatListFilter: OptionSet {
         return ""
     }
 }
+private var defaultFiltersIsEnabled: Bool {
+    #if BETA || ALPHA || DEBUG
+        return true
+    #else
+        return false
+    #endif
+}
 
 struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     let presets: [ChatListFilterPreset]
     let needShowTooltip: Bool
     let tabsIsEnabled: Bool
+    let isEnabled: Bool
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
         
@@ -313,25 +321,29 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 4))
         presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._unmuted, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
         
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: true, tabsIsEnabled: false)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: true, tabsIsEnabled: false, isEnabled: defaultFiltersIsEnabled)
     }
     
-    init(presets: [ChatListFilterPreset], needShowTooltip: Bool, tabsIsEnabled: Bool) {
+    init(presets: [ChatListFilterPreset], needShowTooltip: Bool, tabsIsEnabled: Bool, isEnabled: Bool) {
         self.presets = presets
         self.needShowTooltip = needShowTooltip
         self.tabsIsEnabled = tabsIsEnabled
+        self.isEnabled = isEnabled
     }
     
     init(decoder: PostboxDecoder) {
         self.presets = decoder.decodeObjectArrayWithDecoderForKey("presets")
         self.needShowTooltip = decoder.decodeBoolForKey("needShowTooltip", orElse: true)
         self.tabsIsEnabled = decoder.decodeBoolForKey("tabsIsEnabled", orElse: true)
+        self.isEnabled = decoder.decodeBoolForKey("isEnabled", orElse: defaultFiltersIsEnabled)
+        
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeObjectArray(self.presets, forKey: "presets")
         encoder.encodeBool(self.needShowTooltip, forKey: "needShowTooltip")
         encoder.encodeBool(self.tabsIsEnabled, forKey: "tabsIsEnabled")
+        encoder.encodeBool(self.isEnabled, forKey: "isEnabled")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -343,7 +355,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     }
     
     static func ==(lhs: ChatListFilterPreferences, rhs: ChatListFilterPreferences) -> Bool {
-        return lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip && lhs.tabsIsEnabled == rhs.tabsIsEnabled
+        return lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip && lhs.tabsIsEnabled == rhs.tabsIsEnabled && lhs.isEnabled == rhs.isEnabled
     }
     
     func withAddedPreset(_ preset: ChatListFilterPreset, onlyReplace: Bool = false) -> ChatListFilterPreferences {
@@ -353,29 +365,32 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         } else if !onlyReplace {
             presets.append(preset)
         }
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
     }
     
     func withRemovedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.removeAll(where: {$0.uniqueId == preset.uniqueId })
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
     }
     
     func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.insert(presets.remove(at: from), at: to)
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
     }
     func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
     }
     
     func withUpdatedNeedShowTooltip(_ needShowTooltip: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: needShowTooltip, tabsIsEnabled: self.tabsIsEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: needShowTooltip, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
     }
     func withUpdatedTabEnable(_ tabsIsEnabled: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: tabsIsEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: tabsIsEnabled, isEnabled: self.isEnabled)
+    }
+    func withUpdatedEnabled(_ isEnabled: Bool) -> ChatListFilterPreferences {
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: isEnabled ? self.tabsIsEnabled : false, isEnabled: isEnabled)
     }
     func shortcut(for preset: ChatListFilterPreset?) -> String {
         if let preset = preset {
@@ -543,6 +558,12 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
             }
             signals.append(s)
         }
-        return combineLatest(signals)
+        return combineLatest(signals) |> mapToSignal { values in
+            return renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox) |> map { total in
+                var values = values
+                values.append((id: -1, count: total.0))
+                return values
+            }
+        }
     }
 }

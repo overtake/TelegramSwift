@@ -46,7 +46,7 @@ class SidebarCapView : View {
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
         self.background = theme.colors.background.withAlphaComponent(0.97)
         close.set(color: theme.colors.accent, for: .Normal)
-        close.set(text: tr(L10n.navigationClose), for: .Normal)
+        close.set(text: tr(L10n.sidebarHide), for: .Normal)
         _ = close.sizeToFit()
         needsLayout = true
     }

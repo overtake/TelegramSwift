@@ -1051,6 +1051,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.historyState = historyState.withClearReplies()
     }
 
+    override var navigationController: NavigationViewController? {
+        didSet {
+            updateSidebar()
+        }
+    }
 
     override func scrollup() -> Void {
         if let reply = historyState.reply() {
@@ -1158,7 +1163,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
         genericView.tableView.delegate = self
-        updateSidebar()
         
         
         switch chatLocation {

@@ -147,18 +147,20 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         controller.navigationController = self
         
         
-        if genericView.state == .dual {
+        if genericView.nextLayout == .dual {
             controller.loadViewIfNeeded(NSMakeRect(0, 0, genericView.frame.width - 350, genericView.frame.height))
         } else {
             controller.loadViewIfNeeded(genericView.bounds)
         }
         
-        genericView.update()
-        
+        self.genericView.update()
+
         self.controller.ableToNextController(controller, { [weak self] controller, result in
             if result {
                 self?.pushDisposable.set((controller.ready.get() |> deliverOnMainQueue |> take(1)).start(next: {[weak self] _ in
                     if let strongSelf = self {
+                        
+                       
                         let isMajorController = controller.className == NSStringFromClass(strongSelf.majorClass)
                         let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
                         

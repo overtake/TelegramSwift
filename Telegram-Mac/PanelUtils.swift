@@ -152,6 +152,13 @@ func alert(for window:Window, header:String = appName, info:String?, runModal: B
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
+    alert.addButton(withTitle: L10n.alertOK)
+    
+    
+    alert.addButton(withTitle: L10n.alertCancel)
+    alert.buttons.last?.wantsLayer = true
+    alert.buttons.last?.layer?.opacity = 0
+    alert.buttons.last?.keyEquivalent = "\u{1b}"
     if runModal {
         alert.runModal()
     } else {
@@ -183,6 +190,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     alert.addButton(withTitle: okTitle ?? L10n.alertOK)
     if !cancelTitle.isEmpty {
         alert.addButton(withTitle: cancelTitle)
+        alert.buttons.last?.keyEquivalent = "\u{1b}"
     }
     
 

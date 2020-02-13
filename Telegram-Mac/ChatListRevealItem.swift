@@ -126,6 +126,8 @@ final class ChatListRevealView : TableStickView {
         needsDisplay = true
     }
     
+    private var splitViewState: SplitViewState?
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
@@ -133,49 +135,73 @@ final class ChatListRevealView : TableStickView {
             return
         }
         
-        let animated = self.animated || animated
+        var animated = self.animated || animated
         self.animated = true
         
-        let segmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
-        var index: Int = 0
-        let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
-        var items:[ScrollableSegmentItem] = [.init(title: L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: nil, theme: segmentTheme, equatable: UIEquatable(0))]
-        index += 1
-        for tab in item.tabs {
-            
-            let unreadCount = item.counters[tab.uniqueId]
+        
+        guard let context = item.context else {
+            return
+        }
+        
+        let generateIcon:(ChatListFilterPreset?)->CGImage? = { tab in
+            let unreadCount = item.counters[tab != nil ? tab!.uniqueId : -1]
             let icon: CGImage?
-            if let unreadCount = unreadCount, unreadCount > 0 {
+            if let unreadCount = unreadCount, unreadCount > 0, context.sharedContext.layout != .minimisize {
                 let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.text), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
+                var size = NSMakeSize(textLayout.0.size.width + 2, textLayout.0.size.height + 3)
+                size = NSMakeSize(max(size.height,size.width), size.height)
                 
-                icon = generateImage(NSMakeSize(textLayout.0.size.width + 10, textLayout.0.size.height + 2), rotatedContext: { size, ctx in
+                icon = generateImage(size, rotatedContext: { size, ctx in
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
-                    
-                    ctx.setFillColor(theme.colors.accent.cgColor)
+                    if item.selected == tab {
+                        ctx.setFillColor(theme.colors.accent.cgColor)
+                    } else {
+                        ctx.setFillColor(theme.colors.grayText.cgColor)
+                    }
                     
                     
                     ctx.round(size, size.height/2.0)
                     ctx.fill(rect)
                     
-                    let focus = NSMakePoint((rect.width - textLayout.0.size.width) / 2, (rect.height - textLayout.0.size.height) / 2)
-                    textLayout.1.draw(NSMakeRect(focus.x, 1, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
+                    let focus = rect.focus(textLayout.0.size)
+                    textLayout.1.draw(focus.offsetBy(dx: 0, dy: -1), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
                     
                 })!
+            } else if let tab = tab {
+                if context.sharedContext.layout == .minimisize {
+                    icon = tab.icon
+                } else {
+                    icon = nil
+                }
             } else {
                 icon = nil
             }
-          
-            
-            items.append(ScrollableSegmentItem(title: tab.title, index: index, uniqueId: tab.uniqueId, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount ?? 0)))
+            return icon
+        }
+        
+        animated = animated && splitViewState == context.sharedContext.layout
+        self.splitViewState = context.sharedContext.layout
+        
+        let segmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        var index: Int = 0
+        let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
+        var items:[ScrollableSegmentItem] = [.init(title: context.sharedContext.layout == .minimisize ? L10n.chatListFilterAllChatsShort : L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(item.counters[-1] ?? 0))]
+        index += 1
+        for tab in item.tabs {
+            let unreadCount = item.counters[tab.uniqueId]
+            let icon: CGImage? = generateIcon(tab)
+            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title
+           
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount ?? 0)))
             index += 1
         }
-        if let _ = item.openSettings {
-            items.append(.init(title: "", index: index, uniqueId: -2, selected: false, insets: NSEdgeInsets(left: 5, right: 10, bottom: 6), icon: theme.icons.chat_filter_add, theme: segmentTheme, equatable: UIEquatable(0)))
-            index += 1
-        }
-       
+//        if let _ = item.openSettings {
+//            items.append(.init(title: "", index: index, uniqueId: -2, selected: false, insets: NSEdgeInsets(left: 5, right: 10, bottom: 6), icon: theme.icons.chat_filter_add, theme: segmentTheme, equatable: UIEquatable(0)))
+//            index += 1
+//        }
+//       
         
         
         segmentView.updateItems(items, animated: animated)

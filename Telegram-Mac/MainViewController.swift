@@ -296,7 +296,7 @@ class MainViewController: TelegramViewController {
         } |> delay(10 * 10, queue: .mainQueue()) |> restart)
         |> filter { $0 }
         |> mapToSignal { _ in
-            return chatListFilterPreferences(postbox: context.account.postbox) |> take(1) |> map { $0.needShowTooltip }
+            return chatListFilterPreferences(postbox: context.account.postbox) |> take(1) |> map { $0.needShowTooltip && $0.isEnabled }
         } |> filter { $0 }
         |> deliverOnMainQueue
         
@@ -375,8 +375,10 @@ class MainViewController: TelegramViewController {
         default:
             break
         }
-        
-        
+    }
+    
+    func showFastChatSettings() {
+        self.showFastChatSettings(tabController.control(for: self.chatIndex))
     }
     
     private func showFastChatSettings(_ control: Control) {
@@ -479,9 +481,7 @@ class MainViewController: TelegramViewController {
             
         }, notifications.muteUntil < time ? theme.icons.fastSettingsMute : theme.icons.fastSettingsUnmute))
         let controller = SPopoverViewController(items: items, visibility: 10, headerItems: headerItems)
-        if self.tabController.current != settings {
-            showPopover(for: control, with: controller, edge: .maxX, inset: NSMakePoint(control.frame.width - 12, 0))
-        }
+        showPopover(for: control, with: controller, edge: .maxX, inset: NSMakePoint(control.frame.width - 12, 0))
         self.quickController = controller
     }
     private var previousTheme:TelegramPresentationTheme?
@@ -610,8 +610,10 @@ class MainViewController: TelegramViewController {
         return {}
     }
     
-    func openChat(_ index: Int) {
-        chatList.openChat(index)
+    func openChat(_ index: Int, force: Bool = false) {
+        if self.tabController.current == chatListNavigation {
+            chatList.openChat(index, force: force)
+        }
     }
     
     var chatList: ChatListController {

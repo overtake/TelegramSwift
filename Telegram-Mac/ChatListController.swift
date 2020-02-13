@@ -940,7 +940,11 @@ class ChatListController : PeersListController {
                 _ = self.first.swap(true)
                 self.request.set(.single(.Initial(50, .up(true))))
             } else {
-                self.genericView.tableView.scroll(to: .up(true))
+                if self.genericView.tableView.documentOffset.y == 0 {
+                    self.context.sharedContext.bindings.mainController().showFastChatSettings()
+                } else {
+                    self.genericView.tableView.scroll(to: .up(true))
+                }
             }
         }
         
@@ -986,41 +990,40 @@ class ChatListController : PeersListController {
             |> deliverOnMainQueue
             |> map { [weak self] settings -> [SPopoverItem] in
                 var items:[SPopoverItem] = []
-                
-                
-                items.append(SPopoverItem(L10n.chatListFilterSetup, {
-                    context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
-                }, theme.icons.chat_filter_add))
-
-                if !settings.presets.isEmpty {
-                    if (settings.presets.count == 1 && settings.presets.first != self?.filterValue?.filter) || settings.presets.count > 1 {
-                        items.append(SPopoverItem(false))
+                if settings.isEnabled {
+                    items.append(SPopoverItem(L10n.chatListFilterSetup, {
+                        context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
+                    }, theme.icons.chat_filter_add))
+                    
+                    if !settings.presets.isEmpty {
+                        if (settings.presets.count == 1 && settings.presets.first != self?.filterValue?.filter) || settings.presets.count > 1 {
+                            items.append(SPopoverItem(false))
+                        }
                     }
-                }
-                
-                for preset in settings.presets {
-                    if preset.uniqueId != self?.filterValue?.filter?.uniqueId {
-                        let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
+                    for preset in settings.presets {
+                        if preset.uniqueId != self?.filterValue?.filter?.uniqueId {
+                            let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
+                                
+                            }, getColor: { isSelected in
+                                return isSelected ? .white : theme.colors.accent
+                            }, preset: preset)
+                            let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
+                                badge?.isSelected = isSelected
+                            })
                             
-                        }, getColor: { isSelected in
-                            return isSelected ? .white : theme.colors.accent
-                        }, preset: preset)
-                        let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
-                            badge?.isSelected = isSelected
-                        })
-                        
-                        items.append(SPopoverItem(preset.title, { [weak self] in
-                            guard let `self` = self else {
-                                return
-                            }
-                            if settings.tabsIsEnabled {
-                                self.updateFilter {
-                                    $0.withUpdatedFilter(preset)
+                            items.append(SPopoverItem(preset.title, { [weak self] in
+                                guard let `self` = self else {
+                                    return
                                 }
-                            } else {
-                                self.navigationController?.push(ChatListController(context, modal: false, filterId: preset.uniqueId))
-                            }
-                        }, preset.icon, additionView: additionView))
+                                if settings.tabsIsEnabled {
+                                    self.updateFilter {
+                                        $0.withUpdatedFilter(preset)
+                                    }
+                                } else {
+                                    self.navigationController?.push(ChatListController(context, modal: false, filterId: preset.uniqueId))
+                                }
+                            }, preset.icon, additionView: additionView))
+                        }
                     }
                 }
                 return items
@@ -1238,7 +1241,7 @@ class ChatListController : PeersListController {
         }
     }
     
-    func openChat(_ index: Int) {
+    private func _openChat(_ index: Int) {
         if !genericView.tableView.isEmpty {
             let archiveItem = genericView.tableView.item(at: 0) as? ChatListRowItem
             var index: Int = index
@@ -1258,6 +1261,33 @@ class ChatListController : PeersListController {
             if genericView.tableView.count > index {
                 _ = genericView.tableView.select(item: genericView.tableView.item(at: index), notify: true, byClick: true)
             }
+        }
+    }
+    
+    func openChat(_ index: Int, force: Bool = false) {
+        
+        if force {
+            _openChat(index)
+        } else {
+            let prefs = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1)
+            
+            _ = prefs.start(next: { [weak self] settings in
+                if settings.tabsIsEnabled {
+                    if index == 0 {
+                        self?.updateFilter {
+                            $0.withUpdatedFilter(nil)
+                        }
+                    } else if settings.presets.count >= index {
+                        self?.updateFilter {
+                            $0.withUpdatedFilter(settings.presets[index - 1])
+                        }
+                    } else {
+                        self?._openChat(index)
+                    }
+                } else {
+                    self?._openChat(index)
+                }
+            })
         }
     }
     
