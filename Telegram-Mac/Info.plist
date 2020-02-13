@@ -36,7 +36,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>181254</string>
+	<string>181258</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -63,16 +63,12 @@
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/Shimbo/TelegramSwift/circles/updates/appcast.xml</string>
 	<key>SUPublicDSAKeyFile</key>
-<<<<<<< HEAD
-	<string>${DSA_PEM_FILE}</string>
+	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
+	<key>SUPublicEDKey</key>
+	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>SFCompactRounded-Semibold.otf</string>
 	</array>
-=======
-	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
-	<key>SUPublicEDKey</key>
-	<string>VshxSqMMRC72uUfMQSIGE6fyrXEvdYeBznTzuHRN5d8=</string>
->>>>>>> delta updates and release script
 </dict>
 </plist>

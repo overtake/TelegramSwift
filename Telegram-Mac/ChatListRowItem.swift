@@ -191,9 +191,6 @@ class ChatListRowItem: TableRowItem {
     }
     
     var canArchive: Bool {
-        /*if groupId != .root {
-            return false
-        }*/
         if context.peerId == peerId {
             return false
         }
@@ -324,15 +321,7 @@ class ChatListRowItem: TableRowItem {
         self.isScam = false
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        switch groupId {
-        case Namespaces.PeerGroup.archive:
-            let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
-            photo = .ArchivedChats
-        default:
-            let _ = titleText.append(string: groupName, color: theme.chatList.textColor, font: .medium(.title))
-            photo = .Circles
-        }
-        
+        let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         self.titleText = titleText
@@ -376,6 +365,7 @@ class ChatListRowItem: TableRowItem {
         
         
         
+        photo = .ArchivedChats
         
         super.init(initialSize)
         
@@ -657,9 +647,7 @@ class ChatListRowItem: TableRowItem {
                     }
                  }))
             default:
-                _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
-                context.sharedContext.bindings.mainController().chatList.addArchiveTooltip(peerId)
-            context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
+                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
             }
         }
     }
@@ -752,7 +740,6 @@ class ChatListRowItem: TableRowItem {
             let toggleArchive:()->Void = { [weak self] in
                 self?.toggleArchive()
             }
-            
             
             let toggleMute:()->Void = { [weak self] in
                 self?.toggleMuted()

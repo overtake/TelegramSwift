@@ -94,8 +94,6 @@ final class UpdateTabView : Control {
         progressView.center()
         imageView.center()
         
-        //canDrawSubviewsIntoLayer = true
-        
     }
     
     required init?(coder: NSCoder) {
@@ -262,7 +260,10 @@ class MainViewController: TelegramViewController {
         let (splice, remainder) = bounds.divided(atDistance: 80, from: .minXEdge)
         circlesController.view.frame = splice
         tabController.view.frame = remainder
+        
+        #if !APP_STORE
         updateController.updateLayout(context.sharedContext.layout, parentSize: size, isChatList: true)
+        #endif
     }
     
     override func loadView() {

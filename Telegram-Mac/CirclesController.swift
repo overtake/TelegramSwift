@@ -1,8 +1,11 @@
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SwiftSignalKit
+import TelegramApi
+import MtProtoKit
+import SyncCore
 
 /*fileprivate func prepareEntries() -> Signal<TableUpdateTransition, NoError>{
     return Signal { subscriber in
@@ -53,7 +56,7 @@ enum CirclesTableEntry : TableItemListNodeEntry {
     func item(_ arguments: CirclesArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 10, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 0, stableId: stableId)
         case let .group(groupId, title, unread):
             return CirclesRowItem(initialSize, stableId: stableId, groupId: groupId, title: title, unread: Int(unread))
             
@@ -517,10 +520,12 @@ private func circlesEntries(settings: Circles, arguments: CirclesSettingsArgumen
     
     entries.append(.sectionId(0, type: .normal))
     
-    entries.append(InputDataEntry.general(sectionId: 1, index: 0, value: .none, error: nil, identifier: _development_mode, data: InputDataGeneralData(name: "Development mode", color: theme.colors.text, type: .switchable(settings.dev), action: {
-        arguments.toggleDev()
-    })))
-
+    entries.append(InputDataEntry.custom(sectionId: 1, index: 0, value: .none, identifier: _development_mode, equatable: nil, item: { initialSize, stableId in
+        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Development mode", type: .switchable(settings.dev), viewType: .singleItem, action: {
+            arguments.toggleDev()
+        })
+    }))
+    
     return entries
 }
 
@@ -572,7 +577,7 @@ private func newCircleModalEntries() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("CIRCLE NAME"), color: theme.colors.text, detectBold: true))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("CIRCLE NAME"), data: InputDataGeneralTextData(color: theme.colors.text, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
     entries.append(
@@ -583,12 +588,17 @@ private func newCircleModalEntries() -> [InputDataEntry] {
             error: nil,
             identifier: _id_circle_name,
             mode: .plain,
+            data: InputDataRowData(viewType: .singleItem),
             placeholder: nil,
             inputPlaceholder: "",
             filter: { $0 },
             limit: 255)
     )
     index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+
     return entries
 }
 func NewCircleModalController(_ context: AccountContext) -> InputDataModalController {

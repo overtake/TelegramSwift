@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		886138D523F587E300671D83 /* CirclesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 886138D423F587E200671D83 /* CirclesController.swift */; };
+		8893A20723F4ECDC008E9F40 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8893A20623F4ECDB008E9F40 /* Config.swift */; };
+		8893A20823F4ECDC008E9F40 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8893A20623F4ECDB008E9F40 /* Config.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -201,7 +204,7 @@
 		A71DC82F2386AADF000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
 		A71DC8322386C845000EEDE2 /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A71DC8342386D512000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
-		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
+		A71DC8352386D512000EEDE2 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
@@ -929,6 +932,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		886138D423F587E200671D83 /* CirclesController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CirclesController.swift; sourceTree = "<group>"; };
+		8893A20623F4ECDB008E9F40 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -2468,7 +2473,6 @@
 			isa = PBXGroup;
 			children = (
 				A71DC82E2386AADF000EEDE2 /* Signature.swift */,
-				C2BB2DAF1F8BDF6700520255 /* Config.swift */,
 			);
 			name = "api-credentials";
 			sourceTree = "<group>";
@@ -2996,7 +3000,6 @@
 				C22E06301D8043A000A11C88 /* chatlist */,
 				C2303E891D9A76D800098E12 /* MainViewController.swift */,
 				C232EA0D1E155E9400C4D38C /* PeersListController.swift */,
-				88DFE94D238A0D98005A07EE /* CirclesController.swift */,
 			);
 			name = left;
 			sourceTree = "<group>";
@@ -4549,6 +4552,8 @@
 		D098C7171D7E175A007784E4 /* Telegram-Mac */ = {
 			isa = PBXGroup;
 			children = (
+				886138D423F587E200671D83 /* CirclesController.swift */,
+				8893A20623F4ECDB008E9F40 /* Config.swift */,
 				A71DC8332386D0C4000EEDE2 /* api-credentials */,
 				D05F392122FB448E0040F341 /* experemental */,
 				9FDA713020E64541001ED8ED /* media */,
@@ -4568,7 +4573,6 @@
 				D098C71F1D7E175A007784E4 /* Info.plist */,
 				C253A9721D92F9F100CDC850 /* Localizable.strings */,
 				C252532B1DF043D800ADBC98 /* resources */,
-				8824DB12236E7194000649B7 /* Config.swift */,
 			);
 			path = "Telegram-Mac";
 			sourceTree = "<group>";
@@ -4729,6 +4733,7 @@
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = WDEGJM2L33;
 						LastSwiftMigration = 0800;
+						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
 								enabled = 1;
@@ -4906,7 +4911,7 @@
 			files = (
 				A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */,
 				A71DC8342386D512000EEDE2 /* Signature.swift in Sources */,
-				A71DC8352386D512000EEDE2 /* Config.swift in Sources */,
+				A71DC8352386D512000EEDE2 /* (null) in Sources */,
 				D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */,
 				D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */,
 				D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */,
@@ -4942,6 +4947,7 @@
 				C291E2741E8B051100D397BA /* ImageUtils.swift in Sources */,
 				C232EABF1E1D13F500C4D38C /* ChatListNothingItem.swift in Sources */,
 				C232EABC1E1D134C00C4D38C /* AvatarLayer.swift in Sources */,
+				8893A20823F4ECDC008E9F40 /* Config.swift in Sources */,
 				C232EABA1E1D12B100C4D38C /* GeneralRowItem.swift in Sources */,
 				C232EABB1E1D12B100C4D38C /* GeneralRowView.swift in Sources */,
 				C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */,
@@ -5076,7 +5082,6 @@
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */,
 				C20CAD151FE436E300EFF8BF /* TextSizeSettingsRowItem.swift in Sources */,
-				8824DB13236E7194000649B7 /* Config.swift in Sources */,
 				D01C731722A9814C000DA008 /* InputPasswordController.swift in Sources */,
 				9F10CE922061BE19002DD61A /* InputDataController.swift in Sources */,
 				9F10CE9820626B1B002DD61A /* PassportDocumentRowItem.swift in Sources */,
@@ -5161,6 +5166,7 @@
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
 				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				D071E8AA214BC589001B6024 /* TouchBarStickerItemView.swift in Sources */,
+				886138D523F587E300671D83 /* CirclesController.swift in Sources */,
 				9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				D014AA262317D07D00CE5362 /* EditThemeController.swift in Sources */,
@@ -5227,7 +5233,6 @@
 				C21B24651EDB115700FC6CDA /* StringPluralization.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				9F77B3982211979B003B65B8 /* AutoplayPreferences.swift in Sources */,
-				88DFE94E238A0D98005A07EE /* CirclesController.swift in Sources */,
 				C2DF47BE1DE79574003AA6C0 /* opus_header.c in Sources */,
 				A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */,
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
@@ -5270,6 +5275,7 @@
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
 				9FDA713B20EA9532001ED8ED /* ReadArticlesListPreferences.swift in Sources */,
 				D07B558223338AA300F076A8 /* WalletInfoController.swift in Sources */,
+				8893A20723F4ECDC008E9F40 /* Config.swift in Sources */,
 				C25C13331E8A433700AE26A1 /* TableUtils.swift in Sources */,
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
@@ -5815,7 +5821,7 @@
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D GITHUB";
-				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
+				PRODUCT_BUNDLE_IDENTIFIER = com.circlescollective.circlesfortelegram;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;

@@ -107,7 +107,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, state: ChatListRowState, groupId: PeerGroupId, circlesSettings: Circles) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, circlesSettings: Circles) -> Signal<TableUpdateTransition, NoError> {
     
     
     return Signal { subscriber in
@@ -140,10 +140,10 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                             )
                             }).start()
                     }
-                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, state: state,  activities: activities, associatedGroupId: circlesSettings.inclusions[renderedPeer.peerId] ?? groupId, hasFailed: hasFailed)
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: circlesSettings.inclusions[renderedPeer.peerId] ?? groupId, hasFailed: hasFailed)
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
-                return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus, groupName: circlesSettings.groupNames[groupId] ?? "unnamed circle")
+                return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             }
         }
         
@@ -425,13 +425,14 @@ class ChatListController : PeersListController {
                         }
                     }
                 case .group:
-                    return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                    //return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                    return nil
                 }
             }
             
             let prev = previousEntries.swap(entries)
             
-            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, state: state, groupId: groupId, circlesSettings: circlesSettings)
+            return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.modify({$0}), animated: animated.swap(true), scrollState: scroll, groupId: groupId, circlesSettings: circlesSettings)
         }
         
         
