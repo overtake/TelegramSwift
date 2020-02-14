@@ -236,7 +236,7 @@ final class ChatInteraction : InterfaceObserver  {
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: NSAttributedString(string: text))
             selectedRange = selectedRange.lowerBound ..< selectedRange.lowerBound
         } else {
-            inputText.insert(NSAttributedString(string: text), at: selectedRange.lowerBound)
+            inputText.insert(NSAttributedString(string: text, font: .normal(theme.fontSize)), at: selectedRange.lowerBound)
         }
         
 

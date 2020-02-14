@@ -278,7 +278,18 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 
             } else  {
                 
-                let foundLocalPeers = context.account.postbox.searchPeers(query: search.request.lowercased()) |> map {
+                var all = search.request.transformKeyboard
+                all.insert(search.request.lowercased(), at: 0)
+                all = all.uniqueElements
+                let localPeers = combineLatest(all.map {
+                    return context.account.postbox.searchPeers(query: $0)
+                }) |> map { result in
+                    return result.reduce([], {
+                        return $0 + $1
+                    })
+                }
+                
+                let foundLocalPeers = localPeers |> map {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 }
                 

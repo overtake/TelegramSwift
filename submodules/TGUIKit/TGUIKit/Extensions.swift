@@ -290,6 +290,16 @@ public extension NSMutableAttributedString {
         
     }
     
+    func fixEmojiesFont(_ fontSize: CGFloat) {
+        let nsString = self.string.nsstring
+        for i in 0 ..< nsString.length {
+            let sub = nsString.substring(with: NSMakeRange(i, 1))
+            if sub.isSingleEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
+                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
+            }
+        }
+    }
+    
     func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
         self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
