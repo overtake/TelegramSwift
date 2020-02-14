@@ -20,8 +20,8 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilterPreset?
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: [Int32: Int32]
-    fileprivate let _menuItems: ((ChatListFilterPreset)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilterPreset], selected: ChatListFilterPreset?, counters: [Int32 : Int32], action: ((ChatListFilterPreset?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilterPreset)->[ContextMenuItem])? = nil) {
+    fileprivate let _menuItems: ((ChatListFilterPreset?)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilterPreset], selected: ChatListFilterPreset?, counters: [Int32 : Int32], action: ((ChatListFilterPreset?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilterPreset?)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -43,7 +43,7 @@ class ChatListRevealItem: TableStickItem {
         super.init(initialSize)
     }
     
-    func menuItems(for item: ChatListFilterPreset) -> [ContextMenuItem] {
+    func menuItems(for item: ChatListFilterPreset?) -> [ContextMenuItem] {
         return self._menuItems?(item) ?? []
     }
     
@@ -144,12 +144,12 @@ final class ChatListRevealView : TableStickView {
         }
         
         let generateIcon:(ChatListFilterPreset?)->CGImage? = { tab in
-            let unreadCount = item.counters[tab != nil ? tab!.uniqueId : -1]
+            let unreadCount:Int32? = item.counters[tab != nil ? tab!.uniqueId : -1]
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount > 0, context.sharedContext.layout != .minimisize {
                 let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.text), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
-                var size = NSMakeSize(textLayout.0.size.width + 2, textLayout.0.size.height + 3)
+                var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 3)
                 size = NSMakeSize(max(size.height,size.width), size.height)
                 
                 icon = generateImage(size, rotatedContext: { size, ctx in
@@ -220,6 +220,8 @@ final class ChatListRevealView : TableStickView {
         segmentView.menuItems = { [weak item] selected in
             if let item = item, selected.uniqueId != -1 && selected.uniqueId != -2 {
                 return item.menuItems(for: item.tabs[selected.index - 1])
+            } else if let item = item, selected.uniqueId == -1 {
+                return item.menuItems(for: nil)
             } else {
                 return []
             }

@@ -202,6 +202,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activity = theme.activity(key: 12 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
                 } else if contextMenu != nil {
                     activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityContextMenuColor, backgroundColor: theme.chatList.contextMenuBackgroundColor)
+                } else if self.containerView.activeDragging || item.isHighlighted {
+                    activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else {
                     activity = theme.activity(key: 14 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
                 }
@@ -278,7 +280,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 return theme.colors.grayBackground
             }
             if item.isHighlighted && !item.isSelected {
-                return theme.colors.grayForeground
+                return theme.chatList.activeDraggingBackgroundColor
             }
             if item.context.sharedContext.layout == .single, item.isSelected {
                 return theme.chatList.singleLayoutSelectedBackgroundColor
@@ -455,6 +457,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
     override func updateColors() {
         super.updateColors()
+        let inputActivities = self.inputActivities
+        self.inputActivities = inputActivities
         self.containerView.background = backdorColor
         expandView?.backgroundColor = theme.colors.grayBackground
     }

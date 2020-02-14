@@ -1035,7 +1035,16 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 
                 _ = previousChatList.swap(nil)
                 
-                let localPeers = context.account.postbox.searchPeers(query: query.request.lowercased())
+                var all = query.request.transformKeyboard
+                all.insert(query.request.lowercased(), at: 0)
+                all = all.uniqueElements
+                let localPeers = combineLatest(all.map {
+                    return context.account.postbox.searchPeers(query: $0)
+                }) |> map { result in
+                    return result.reduce([], {
+                        return $0 + $1
+                    })
+                }
                 
                 let remotePeers = Signal<[RenderedPeer], NoError>.single([]) |> then( searchPeers(account: context.account, query: query.request.lowercased()) |> map { $0.0.map {RenderedPeer($0)} + $0.1.map {RenderedPeer($0)} } )
                 

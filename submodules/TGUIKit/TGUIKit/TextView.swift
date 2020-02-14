@@ -580,8 +580,10 @@ public final class TextViewLayout : Equatable {
             }
             
             for i in 0 ..< rects.count {
-                rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - 20.0) / 2.0))
-                rects[i].size.height = 22
+                let height = rects[i].size.height + 7
+                rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
+                rects[i].size.height = height
+                
                 rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
                 rects[i].size.width += 20
             }

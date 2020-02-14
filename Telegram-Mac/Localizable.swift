@@ -1945,6 +1945,8 @@ internal final class L10n {
   internal static var chatListFilterDelete: String  { return L10n.tr("Localizable", "ChatList.Filter.Delete") }
   /// Edit
   internal static var chatListFilterEdit: String  { return L10n.tr("Localizable", "ChatList.Filter.Edit") }
+  /// Edit Filters
+  internal static var chatListFilterEditFilters: String  { return L10n.tr("Localizable", "ChatList.Filter.EditFilters") }
   /// **No chats currently match this filter.**\n\n[Edit Filters](filter)
   internal static var chatListFilterEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.Empty") }
   /// Private Chats
@@ -5823,6 +5825,12 @@ internal final class L10n {
   internal static var stickersSuggestNone: String  { return L10n.tr("Localizable", "Stickers.SuggestNone") }
   /// Suggest Stickers by Emoji
   internal static var stickersSuggestStickers: String  { return L10n.tr("Localizable", "Stickers.SuggestStickers") }
+  /// Clear Recent Stickers
+  internal static var stickersConfirmClearRecentHeader: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentHeader") }
+  /// Clear
+  internal static var stickersConfirmClearRecentOK: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentOK") }
+  /// Are you sure you want to clear recent stickers?
+  internal static var stickersConfirmClearRecentText: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentText") }
   /// Archive
   internal static var stickersContextArchive: String  { return L10n.tr("Localizable", "Stickers.Context.Archive") }
   /// %d
