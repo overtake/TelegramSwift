@@ -13,10 +13,10 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 
-private func cloudThemeData(context: AccountContext, file: TelegramMediaFile) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
+private func cloudThemeData(context: AccountContext, theme: TelegramTheme, file: TelegramMediaFile) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
     return Signal { subscriber in
         
-        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.theme(theme: ThemeReference.slug(theme.slug), resource: file.resource)).start()
         let wallpaperDisposable = DisposableSet()
         
         let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
@@ -247,7 +247,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
     switch source {
     case let .cloud(cloud):
         if let file = cloud.file {
-            return cloudThemeData(context: context, file: file) |> mapToSignal { data in
+            return cloudThemeData(context: context, theme: cloud, file: file) |> mapToSignal { data in
                 return generateThumb(palette: data.0, bubbled: bubbled, wallpaper: data.1) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
                 }

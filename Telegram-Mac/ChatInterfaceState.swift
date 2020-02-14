@@ -240,6 +240,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
         
+        string.fixEmojiesFont(theme.fontSize)
         
         var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
         

@@ -912,6 +912,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
     
+    
     NSSize size = newRect.size;
     size.width = NSWidth(self.frame);
     
@@ -1412,7 +1413,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     }];
     
     
+    
     [_textView.textStorage setAttributedString:attr];
+    
     BOOL o = self.animates;
     self.animates = animated;
     [self update:animated];
