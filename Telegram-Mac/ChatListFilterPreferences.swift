@@ -524,22 +524,19 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
                     var count:Int32 = 0
                     if let totalState = totalState {
                         for tag in tags {
-                            
-                            if let value = totalState.filteredCounters[tag] {
-                                var removable = false
-                                switch inAppSettings.totalUnreadCountDisplayStyle {
-                                case .raw:
-                                    removable = true
-                                case .filtered:
-                                    removable = true
-                                }
-                                if removable {
-                                    switch inAppSettings.totalUnreadCountDisplayCategory {
-                                    case .chats:
-                                        count += value.chatCount
-                                    case .messages:
-                                        count += value.messageCount
-                                    }
+                            let state:[PeerSummaryCounterTags: ChatListTotalUnreadCounters]
+                            switch inAppSettings.totalUnreadCountDisplayStyle {
+                            case .raw:
+                                state = totalState.absoluteCounters
+                            case .filtered:
+                                state = totalState.filteredCounters
+                            }
+                            if let value = state[tag] {
+                                switch inAppSettings.totalUnreadCountDisplayCategory {
+                                case .chats:
+                                    count += value.chatCount
+                                case .messages:
+                                    count += value.messageCount
                                 }
                             }
                         }
