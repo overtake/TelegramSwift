@@ -229,7 +229,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilterPreset?)->Void, openFilterSettings: @escaping()->Void, tabsMenuItems: @escaping(ChatListFilterPreset)->[ContextMenuItem]) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilterPreset?)->Void, openFilterSettings: @escaping()->Void, tabsMenuItems: @escaping(ChatListFilterPreset?)->[ContextMenuItem]) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
@@ -635,15 +635,30 @@ class ChatListController : PeersListController {
             return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, setupFilter: setupFilter, openFilterSettings: openFilterSettings, tabsMenuItems: { filter in
                 
                 var items:[ContextMenuItem] = []
+                if let filter = filter {
+                    items.append(.init(L10n.chatListFilterEdit, handler: {
+                        context.sharedContext.bindings.rootNavigation().push(ChatListPresetController(context: context, preset: filter))
+                    }))
+                    items.append(.init(L10n.chatListFilterAddChats, handler: {
+                        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(filter.additionallyIncludePeers), callback: { peerIds in
+                            let preset = filter.withAddedPeerIds(peerIds)
+                            return updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                                $0.withAddedPreset(preset, onlyReplace: true)
+                            }) |> ignoreValues
+                            
+                        })), for: context.window)
+                    }))
+                    items.append(.init(L10n.chatListFilterDelete, handler: {
+                        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+                            $0.withRemovedPreset(filter)
+                        }).start()
+                    }))
+                } else {
+                    items.append(.init(L10n.chatListFilterEditFilters, handler: {
+                        context.sharedContext.bindings.rootNavigation().push(ChatListPresetListController(context: context))
+                    }))
+                }
                 
-                items.append(.init(L10n.chatListFilterEdit, handler: {
-                    context.sharedContext.bindings.rootNavigation().push(ChatListPresetController(context: context, preset: filter))
-                }))
-                items.append(.init(L10n.chatListFilterDelete, handler: {
-                    _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-                        $0.withRemovedPreset(filter)
-                    }).start()
-                }))
                 return items
             })
         }
@@ -835,7 +850,7 @@ class ChatListController : PeersListController {
         
         var pinnedRange: NSRange = NSMakeRange(NSNotFound, 0)
         self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem else {return false}
+            guard let item = item as? ChatListRowItem else {return true}
             switch item.pinnedType {
             case .some, .last:
                 if pinnedRange.location == NSNotFound {
@@ -861,7 +876,10 @@ class ChatListController : PeersListController {
 
         
         self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem else {return false}
+            guard let item = item as? ChatListRowItem else {
+                offset += 1
+                return true
+            }
             if item.groupId != .root || item.pinnedType == .ad {
                 offset += 1
             }
@@ -1001,29 +1019,28 @@ class ChatListController : PeersListController {
                         }
                     }
                     for preset in settings.presets {
-                        if preset.uniqueId != self?.filterValue?.filter?.uniqueId {
-                            let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
-                                
-                            }, getColor: { isSelected in
-                                return isSelected ? .white : theme.colors.accent
-                            }, preset: preset)
-                            let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
-                                badge?.isSelected = isSelected
-                            })
+                        let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
                             
-                            items.append(SPopoverItem(preset.title, { [weak self] in
-                                guard let `self` = self else {
-                                    return
+                        }, getColor: { isSelected in
+                            return isSelected ? .white : theme.colors.accent
+                        }, preset: preset)
+                        let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
+                            badge?.isSelected = isSelected
+                        })
+                        
+                        items.append(SPopoverItem(preset.title, { [weak self] in
+                            guard let `self` = self, preset.uniqueId != self.filterValue?.filter?.uniqueId else {
+                                return
+                            }
+                            if settings.tabsIsEnabled {
+                                self.updateFilter {
+                                    $0.withUpdatedFilter(preset)
                                 }
-                                if settings.tabsIsEnabled {
-                                    self.updateFilter {
-                                        $0.withUpdatedFilter(preset)
-                                    }
-                                } else {
-                                    self.navigationController?.push(ChatListController(context, modal: false, filterId: preset.uniqueId))
-                                }
-                            }, preset.icon, additionView: additionView))
-                        }
+                            } else {
+                                self.navigationController?.push(ChatListController(context, modal: false, filterId: preset.uniqueId))
+                            }
+                        }, preset.icon, additionView: additionView))
+                       
                     }
                 }
                 return items

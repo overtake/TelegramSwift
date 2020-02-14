@@ -701,7 +701,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         return .complete()
                     }
                 }
-                |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] result in
+                |> deliverOnMainQueue, for: context.window).start(next: { [weak self] result in
                     if let `self` = self {
                         if !self.searchState.request.isEmpty {
                             self.makeSearchCommand?(.close)
@@ -712,9 +712,11 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
         }, clearRecent: {
-            _ = context.account.postbox.transaction({ transaction in
-                clearRecentlyUsedStickers(transaction: transaction)
-            }).start()
+            confirm(for: context.window, header: L10n.stickersConfirmClearRecentHeader, information: L10n.stickersConfirmClearRecentText, okTitle: L10n.stickersConfirmClearRecentOK, successHandler: { _ in
+                _ = context.account.postbox.transaction({ transaction in
+                    clearRecentlyUsedStickers(transaction: transaction)
+                }).start()
+            })
         })
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer, NoError> in
