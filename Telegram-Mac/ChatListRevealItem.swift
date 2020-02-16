@@ -122,6 +122,7 @@ final class ChatListRevealView : TableStickView {
     
     override func updateColors() {
         super.updateColors()
+        backgroundColor = backdorColor
         segmentView.updateLocalizationAndTheme(theme: theme)
         needsDisplay = true
     }
