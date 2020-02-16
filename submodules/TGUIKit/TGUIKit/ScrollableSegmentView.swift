@@ -567,6 +567,7 @@ public class ScrollableSegmentView: View {
         selectorView.theme = self.theme
         borderView.backgroundColor = self.theme.border
         backgroundColor = presentation.colors.background
+        scrollView.background = presentation.colors.background
         for item in self.items {
             item.view?.updateItem(item, theme: self.theme, animated: false)
         }

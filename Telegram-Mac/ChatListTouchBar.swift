@@ -342,37 +342,37 @@ class ChatListTouchBar: NSTouchBar, NSTouchBarDelegate {
         customizationAllowedItemIdentifiers = defaultItemIdentifiers
         
         
-        let recent:Signal<[TouchBarPeerItem], NoError> = recentlySearchedPeers(postbox: context.account.postbox) |> map { recent in
-            return recent.prefix(10).compactMap { $0.peer.peer != nil ? TouchBarPeerItem(peer: $0.peer.peer!, unreadCount: $0.unreadCount, muted: $0.notificationSettings?.isMuted ?? false) : nil }
-        }
-        let top:Signal<[TouchBarPeerItem], NoError> = recentPeers(account: context.account) |> mapToSignal { top in
-            switch top {
-            case .disabled:
-                return .single([])
-            case let .peers(peers):
-                let peers = Array(peers.prefix(7))
-                return combineLatest(peers.map {context.account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<[TouchBarPeerItem], NoError> in
-                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
-                        var peers:[TouchBarPeerItem] = []
-                        for peerView in peerViews {
-                            if let peer = peerViewMainPeer(peerView) {
-                                let isMuted = peerView.isMuted
-                                let unreadCount = values.count(for: .peer(peerView.peerId))
-                                peers.append(TouchBarPeerItem(peer: peer, unreadCount: unreadCount ?? 0, muted: isMuted))
-                            }
-                        }
-                        return peers
-                    }
-                }
-            }
-        }
-        
+//        let recent:Signal<[TouchBarPeerItem], NoError> = recentlySearchedPeers(postbox: context.account.postbox) |> map { recent in
+//            return recent.prefix(10).compactMap { $0.peer.peer != nil ? TouchBarPeerItem(peer: $0.peer.peer!, unreadCount: $0.unreadCount, muted: $0.notificationSettings?.isMuted ?? false) : nil }
+//        }
+//        let top:Signal<[TouchBarPeerItem], NoError> = recentPeers(account: context.account) |> mapToSignal { top in
+//            switch top {
+//            case .disabled:
+//                return .single([])
+//            case let .peers(peers):
+//                let peers = Array(peers.prefix(7))
+//                return combineLatest(peers.map {context.account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<[TouchBarPeerItem], NoError> in
+//                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
+//                        var peers:[TouchBarPeerItem] = []
+//                        for peerView in peerViews {
+//                            if let peer = peerViewMainPeer(peerView) {
+//                                let isMuted = peerView.isMuted
+//                                let unreadCount = values.count(for: .peer(peerView.peerId))
+//                                peers.append(TouchBarPeerItem(peer: peer, unreadCount: unreadCount ?? 0, muted: isMuted))
+//                            }
+//                        }
+//                        return peers
+//                    }
+//                }
+//            }
+//        }
+//
 
-        let signal = combineLatest(queue: .mainQueue(), recent, top)
-        disposable.set(signal.start(next: { [weak self] recent, top in
-            self?.peers = (top + recent).prefix(14).uniqueElements
-            self?.updateInterface()
-        }))
+//        let signal = combineLatest(queue: .mainQueue(), recent, top)
+//        disposable.set(signal.start(next: { [weak self] recent, top in
+//            self?.peers = (top + recent).prefix(14).uniqueElements
+//            self?.updateInterface()
+//        }))
     }
     
     private func identifiers() -> [NSTouchBarItem.Identifier] {
