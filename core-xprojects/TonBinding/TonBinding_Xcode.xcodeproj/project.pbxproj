@@ -251,7 +251,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nsh ./TonBinding/build.sh ${BUILT_PRODUCTS_DIR}/ton-lib ${PROJECT_DIR}/../../submodules/ton /usr/local/Cellar/openssl@1.1/1.1.1d\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nsh ./TonBinding/build.sh \"${BUILT_PRODUCTS_DIR}/ton-lib\" \"${PROJECT_DIR}/../../submodules/ton\" \"/usr/local/Cellar/openssl@1.1/1.1.1d\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
