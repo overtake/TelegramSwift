@@ -1014,12 +1014,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     [self setNeedsDisplay:YES];
     
-    if (_textView.selectedRange.location != NSNotFound) {
-        [self setSelectedRange:_textView.selectedRange];
-    }
-    
-    [self setNeedsDisplay:YES];
-    
     
     [_textView setNeedsDisplay:YES];
     
@@ -1567,7 +1561,7 @@ static int64_t nextId = 0;
 
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
-    if(range.location != NSNotFound)
+    if(range.location != NSNotFound && (_textView.selectedRange.location != range.location || _textView.selectedRange.length != range.length))
         [_textView setSelectedRange:range];
 }
 

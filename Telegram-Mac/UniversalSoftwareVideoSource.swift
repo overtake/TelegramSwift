@@ -374,9 +374,7 @@ final class UniversalSoftwareVideoSource {
     init(mediaBox: MediaBox, fileReference: FileMediaReference) {
         self.thread = WrapThread(target: UniversalSoftwareVideoSourceThread.self, selector: #selector(UniversalSoftwareVideoSourceThread.entryPoint(_:)), object: UniversalSoftwareVideoSourceThreadParams(mediaBox: mediaBox, fileReference: fileReference, state: self.stateValue, cancelInitialization: self.cancelInitialization.get()))
         self.thread.name = "UniversalSoftwareVideoSource"
-        autoreleasepool {
-             self.thread.start()
-        }
+        self.thread.start()
        
     }
     
