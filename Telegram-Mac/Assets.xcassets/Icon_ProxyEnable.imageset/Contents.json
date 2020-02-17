@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "TurnOn@1x.png",
+      "filename" : "ic_proxy2.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "TurnOn@2x.png",
+      "filename" : "ic_proxy2@2x.png",
       "scale" : "2x"
     },
     {

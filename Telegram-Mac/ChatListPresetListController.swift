@@ -76,7 +76,7 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     }
     
     if state.presets.count < 10 {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, icon: theme.icons.peerInfoAddMember, type: .next, viewType: state.presets.isEmpty ? .singleItem : .lastItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: state.presets.isEmpty ? .singleItem : .lastItem, action: {
             arguments.openPreset(ChatListFilterPreset.new)
         })))
         index += 1

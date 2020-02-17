@@ -292,7 +292,7 @@ public extension NSMutableAttributedString {
     
     func fixEmojiesFont(_ fontSize: CGFloat) {
         let nsString = self.string.nsstring
-        for i in 0 ..< nsString.length {
+        for i in 0 ..< min(nsString.length, 300) {
             let sub = nsString.substring(with: NSMakeRange(i, 1))
             if sub.isSingleEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
                 self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))

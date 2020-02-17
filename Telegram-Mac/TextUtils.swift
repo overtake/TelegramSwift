@@ -170,6 +170,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             _ = attributedText.append(string: text, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor,range: attributedText.range)
         }
+        
         return attributedText
 
     }

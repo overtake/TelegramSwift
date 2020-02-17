@@ -136,7 +136,7 @@ fileprivate class PreviewSenderView : Control {
         collageButton.appTooltip = L10n.previewSenderCollageTooltip
         archiveButton.appTooltip = L10n.previewSenderArchiveTooltip
 
-        photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachPhoto), for: .Normal)
+        photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderPhoto), for: .Normal)
         _ = photoButton.sizeToFit()
         
         photoButton.set(handler: { [weak self] _ in
@@ -176,10 +176,10 @@ fileprivate class PreviewSenderView : Control {
             self?.controller?.close()
         }, for: .Click)
         
-        fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.chatAttachFile), for: .Normal)
+        fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderFile), for: .Normal)
         _ = fileButton.sizeToFit()
         
-        collageButton.set(image: theme.icons.previewCollage, for: .Normal)
+        collageButton.set(image: theme.icons.previewSenderCollage, for: .Normal)
         _ = collageButton.sizeToFit()
         
         archiveButton.set(image: theme.icons.previewSenderArchive, for: .Normal)

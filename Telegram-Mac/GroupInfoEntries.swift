@@ -1189,7 +1189,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .addMember(_, inviteViaLink, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { () in
                 arguments.addMember(inviteViaLink)
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 9))
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
         case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, enabled, viewType):
             let label: String
             switch memberStatus {

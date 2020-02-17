@@ -23,7 +23,7 @@ private final class AvatarTabContainer : View {
         avatar.userInteractionEnabled = false
         circle.setFrameSize(frameRect.size)
         circle.layer?.cornerRadius = frameRect.height / 2
-        circle.layer?.borderWidth = .borderSize
+        circle.layer?.borderWidth = 1.33
         circle.layer?.borderColor = theme.colors.accentIcon.cgColor
         addSubview(circle)
         addSubview(avatar)

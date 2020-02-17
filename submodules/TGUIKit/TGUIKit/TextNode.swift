@@ -88,7 +88,7 @@ public class TextNode: NSObject {
     }
     
     
-    private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment) -> TextNodeLayout {
+    private class func getlayout(attributedString: NSAttributedString?, maximumNumberOfLines: Int, truncationType: CTLineTruncationType, backgroundColor: NSColor?, constrainedSize: NSSize, cutout: TextNodeCutout?, selected:Bool, alignment:NSTextAlignment, lineSpacing: CGFloat? = nil) -> TextNodeLayout {
         
         var attr = attributedString
         let isPerfectSized = false
@@ -124,7 +124,7 @@ public class TextNode: NSObject {
             
             let fontAscent = CTFontGetAscent(font)
             let fontDescent = CTFontGetDescent(font)
-            let fontLineHeight = floor(fontAscent + fontDescent)
+            let fontLineHeight = floor(fontAscent + fontDescent) + (lineSpacing ?? 0)
             let fontLineSpacing = floor(fontLineHeight * 0.12)
             
             var lines: [TextNodeLine] = []
@@ -321,7 +321,7 @@ public class TextNode: NSObject {
     
 
     
-    open class func layoutText(maybeNode:TextNode? = nil, _ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool, _ alignment:NSTextAlignment) -> (TextNodeLayout, TextNode) {
+    open class func layoutText(maybeNode:TextNode? = nil, _ attributedString: NSAttributedString?, _ backgroundColor: NSColor?, _ maximumNumberOfLines: Int, _ truncationType: CTLineTruncationType, _ constrainedSize: NSSize, _ cutout: TextNodeCutout?,_ selected:Bool, _ alignment:NSTextAlignment, _ lineSpacing: CGFloat? = nil) -> (TextNodeLayout, TextNode) {
         
         let existingLayout: TextNodeLayout? = maybeNode?.currentLayout
         
@@ -340,10 +340,10 @@ public class TextNode: NSObject {
             if stringMatch {
                 layout = existingLayout
             } else {
-                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
+                layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment: alignment, lineSpacing: lineSpacing)
             }
         } else {
-            layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment:alignment)
+            layout = TextNode.getlayout(attributedString: attributedString, maximumNumberOfLines: maximumNumberOfLines, truncationType: truncationType, backgroundColor: backgroundColor, constrainedSize: constrainedSize, cutout: cutout,selected:selected, alignment: alignment, lineSpacing: lineSpacing)
         }
         
         let node = maybeNode ?? TextNode()

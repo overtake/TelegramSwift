@@ -1538,19 +1538,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var mediaDropdown: CGImage {
-      if let image = cached.with({ $0["mediaDropdown"] }) {
-          return image
-      } else {
-          let image = _mediaDropdown()
-          _ = cached.modify { current in 
-              var current = current
-              current["mediaDropdown"] = image
-              return current
-          }
-          return image
-      }
-  }
   var stickersAddFeatured: CGImage {
       if let image = cached.with({ $0["stickersAddFeatured"] }) {
           return image
@@ -3488,14 +3475,92 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var previewCollage: CGImage {
-      if let image = cached.with({ $0["previewCollage"] }) {
+  var previewSenderCollage: CGImage {
+      if let image = cached.with({ $0["previewSenderCollage"] }) {
           return image
       } else {
-          let image = _previewCollage()
+          let image = _previewSenderCollage()
           _ = cached.modify { current in 
               var current = current
-              current["previewCollage"] = image
+              current["previewSenderCollage"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderPhoto: CGImage {
+      if let image = cached.with({ $0["previewSenderPhoto"] }) {
+          return image
+      } else {
+          let image = _previewSenderPhoto()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderPhoto"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderFile: CGImage {
+      if let image = cached.with({ $0["previewSenderFile"] }) {
+          return image
+      } else {
+          let image = _previewSenderFile()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderFile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderCrop: CGImage {
+      if let image = cached.with({ $0["previewSenderCrop"] }) {
+          return image
+      } else {
+          let image = _previewSenderCrop()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderCrop"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderDelete: CGImage {
+      if let image = cached.with({ $0["previewSenderDelete"] }) {
+          return image
+      } else {
+          let image = _previewSenderDelete()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderDelete"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderDeleteFile: CGImage {
+      if let image = cached.with({ $0["previewSenderDeleteFile"] }) {
+          return image
+      } else {
+          let image = _previewSenderDeleteFile()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderDeleteFile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var previewSenderArchive: CGImage {
+      if let image = cached.with({ $0["previewSenderArchive"] }) {
+          return image
+      } else {
+          let image = _previewSenderArchive()
+          _ = cached.modify { current in 
+              var current = current
+              current["previewSenderArchive"] = image
               return current
           }
           return image
@@ -4541,32 +4606,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var previewSenderCrop: CGImage {
-      if let image = cached.with({ $0["previewSenderCrop"] }) {
-          return image
-      } else {
-          let image = _previewSenderCrop()
-          _ = cached.modify { current in 
-              var current = current
-              current["previewSenderCrop"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var previewSenderDelete: CGImage {
-      if let image = cached.with({ $0["previewSenderDelete"] }) {
-          return image
-      } else {
-          let image = _previewSenderDelete()
-          _ = cached.modify { current in 
-              var current = current
-              current["previewSenderDelete"] = image
-              return current
-          }
-          return image
-      }
-  }
   var editMessageCurrentPhoto: CGImage {
       if let image = cached.with({ $0["editMessageCurrentPhoto"] }) {
           return image
@@ -4575,32 +4614,6 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["editMessageCurrentPhoto"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var previewSenderDeleteFile: CGImage {
-      if let image = cached.with({ $0["previewSenderDeleteFile"] }) {
-          return image
-      } else {
-          let image = _previewSenderDeleteFile()
-          _ = cached.modify { current in 
-              var current = current
-              current["previewSenderDeleteFile"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var previewSenderArchive: CGImage {
-      if let image = cached.with({ $0["previewSenderArchive"] }) {
-          return image
-      } else {
-          let image = _previewSenderArchive()
-          _ = cached.modify { current in 
-              var current = current
-              current["previewSenderArchive"] = image
               return current
           }
           return image
@@ -5906,6 +5919,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var group_invite_via_link: CGImage {
+      if let image = cached.with({ $0["group_invite_via_link"] }) {
+          return image
+      } else {
+          let image = _group_invite_via_link()
+          _ = cached.modify { current in 
+              var current = current
+              current["group_invite_via_link"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6025,7 +6051,6 @@ final class TelegramIconsTheme {
   private let _mediaEmptyFiles: ()->CGImage
   private let _mediaEmptyMusic: ()->CGImage
   private let _mediaEmptyLinks: ()->CGImage
-  private let _mediaDropdown: ()->CGImage
   private let _stickersAddFeatured: ()->CGImage
   private let _stickersAddedFeatured: ()->CGImage
   private let _stickersRemove: ()->CGImage
@@ -6175,7 +6200,13 @@ final class TelegramIconsTheme {
   private let _inputChannelUnmute: ()->CGImage
   private let _changePhoneNumberIntro: ()->CGImage
   private let _peerSavedMessages: ()->CGImage
-  private let _previewCollage: ()->CGImage
+  private let _previewSenderCollage: ()->CGImage
+  private let _previewSenderPhoto: ()->CGImage
+  private let _previewSenderFile: ()->CGImage
+  private let _previewSenderCrop: ()->CGImage
+  private let _previewSenderDelete: ()->CGImage
+  private let _previewSenderDeleteFile: ()->CGImage
+  private let _previewSenderArchive: ()->CGImage
   private let _chatGoMessage: ()->CGImage
   private let _chatGroupToggleSelected: ()->CGImage
   private let _chatGroupToggleUnselected: ()->CGImage
@@ -6256,11 +6287,7 @@ final class TelegramIconsTheme {
   private let _galleryRotate: ()->CGImage
   private let _galleryZoomIn: ()->CGImage
   private let _galleryZoomOut: ()->CGImage
-  private let _previewSenderCrop: ()->CGImage
-  private let _previewSenderDelete: ()->CGImage
   private let _editMessageCurrentPhoto: ()->CGImage
-  private let _previewSenderDeleteFile: ()->CGImage
-  private let _previewSenderArchive: ()->CGImage
   private let _chatSwipeReply: ()->CGImage
   private let _chatSwipeReplyWallpaper: ()->CGImage
   private let _videoPlayerPlay: ()->CGImage
@@ -6361,6 +6388,7 @@ final class TelegramIconsTheme {
   private let _chat_filter_secret_chats: ()->CGImage
   private let _chat_filter_unmuted: ()->CGImage
   private let _chat_filter_unread: ()->CGImage
+  private let _group_invite_via_link: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6481,7 +6509,6 @@ final class TelegramIconsTheme {
       mediaEmptyFiles: @escaping()->CGImage,
       mediaEmptyMusic: @escaping()->CGImage,
       mediaEmptyLinks: @escaping()->CGImage,
-      mediaDropdown: @escaping()->CGImage,
       stickersAddFeatured: @escaping()->CGImage,
       stickersAddedFeatured: @escaping()->CGImage,
       stickersRemove: @escaping()->CGImage,
@@ -6631,7 +6658,13 @@ final class TelegramIconsTheme {
       inputChannelUnmute: @escaping()->CGImage,
       changePhoneNumberIntro: @escaping()->CGImage,
       peerSavedMessages: @escaping()->CGImage,
-      previewCollage: @escaping()->CGImage,
+      previewSenderCollage: @escaping()->CGImage,
+      previewSenderPhoto: @escaping()->CGImage,
+      previewSenderFile: @escaping()->CGImage,
+      previewSenderCrop: @escaping()->CGImage,
+      previewSenderDelete: @escaping()->CGImage,
+      previewSenderDeleteFile: @escaping()->CGImage,
+      previewSenderArchive: @escaping()->CGImage,
       chatGoMessage: @escaping()->CGImage,
       chatGroupToggleSelected: @escaping()->CGImage,
       chatGroupToggleUnselected: @escaping()->CGImage,
@@ -6712,11 +6745,7 @@ final class TelegramIconsTheme {
       galleryRotate: @escaping()->CGImage,
       galleryZoomIn: @escaping()->CGImage,
       galleryZoomOut: @escaping()->CGImage,
-      previewSenderCrop: @escaping()->CGImage,
-      previewSenderDelete: @escaping()->CGImage,
       editMessageCurrentPhoto: @escaping()->CGImage,
-      previewSenderDeleteFile: @escaping()->CGImage,
-      previewSenderArchive: @escaping()->CGImage,
       chatSwipeReply: @escaping()->CGImage,
       chatSwipeReplyWallpaper: @escaping()->CGImage,
       videoPlayerPlay: @escaping()->CGImage,
@@ -6816,7 +6845,8 @@ final class TelegramIconsTheme {
       chat_filter_read: @escaping()->CGImage,
       chat_filter_secret_chats: @escaping()->CGImage,
       chat_filter_unmuted: @escaping()->CGImage,
-      chat_filter_unread: @escaping()->CGImage
+      chat_filter_unread: @escaping()->CGImage,
+      group_invite_via_link: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6936,7 +6966,6 @@ final class TelegramIconsTheme {
       self._mediaEmptyFiles = mediaEmptyFiles
       self._mediaEmptyMusic = mediaEmptyMusic
       self._mediaEmptyLinks = mediaEmptyLinks
-      self._mediaDropdown = mediaDropdown
       self._stickersAddFeatured = stickersAddFeatured
       self._stickersAddedFeatured = stickersAddedFeatured
       self._stickersRemove = stickersRemove
@@ -7086,7 +7115,13 @@ final class TelegramIconsTheme {
       self._inputChannelUnmute = inputChannelUnmute
       self._changePhoneNumberIntro = changePhoneNumberIntro
       self._peerSavedMessages = peerSavedMessages
-      self._previewCollage = previewCollage
+      self._previewSenderCollage = previewSenderCollage
+      self._previewSenderPhoto = previewSenderPhoto
+      self._previewSenderFile = previewSenderFile
+      self._previewSenderCrop = previewSenderCrop
+      self._previewSenderDelete = previewSenderDelete
+      self._previewSenderDeleteFile = previewSenderDeleteFile
+      self._previewSenderArchive = previewSenderArchive
       self._chatGoMessage = chatGoMessage
       self._chatGroupToggleSelected = chatGroupToggleSelected
       self._chatGroupToggleUnselected = chatGroupToggleUnselected
@@ -7167,11 +7202,7 @@ final class TelegramIconsTheme {
       self._galleryRotate = galleryRotate
       self._galleryZoomIn = galleryZoomIn
       self._galleryZoomOut = galleryZoomOut
-      self._previewSenderCrop = previewSenderCrop
-      self._previewSenderDelete = previewSenderDelete
       self._editMessageCurrentPhoto = editMessageCurrentPhoto
-      self._previewSenderDeleteFile = previewSenderDeleteFile
-      self._previewSenderArchive = previewSenderArchive
       self._chatSwipeReply = chatSwipeReply
       self._chatSwipeReplyWallpaper = chatSwipeReplyWallpaper
       self._videoPlayerPlay = videoPlayerPlay
@@ -7272,5 +7303,6 @@ final class TelegramIconsTheme {
       self._chat_filter_secret_chats = chat_filter_secret_chats
       self._chat_filter_unmuted = chat_filter_unmuted
       self._chat_filter_unread = chat_filter_unread
+      self._group_invite_via_link = group_invite_via_link
   }
 }

@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "NewContact.png",
+      "filename" : "ic_add.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "NewContact@2x.png",
+      "filename" : "ic_add@2x.png",
       "scale" : "2x"
     },
     {

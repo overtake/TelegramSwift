@@ -240,6 +240,7 @@ struct ChatTextInputState: PostboxCoding, Equatable {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
         
+        
         string.fixEmojiesFont(theme.fontSize)
         
         var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
@@ -683,6 +684,7 @@ final class ChatEditState : Equatable {
     static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
         return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia && lhs.editedData == rhs.editedData
     }
+    
 }
 
 

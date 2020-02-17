@@ -145,7 +145,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
         case let .add(_, _, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { () in
                 arguments.addPeer()
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 9))
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
           
         case let .peerItem(_, _, participant, _, enabled, canOpen, defaultBannedRights, viewType):
             var text: String?
