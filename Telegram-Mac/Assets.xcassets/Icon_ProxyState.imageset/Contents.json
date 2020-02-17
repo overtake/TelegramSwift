@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "Proxy@1x.png",
+      "filename" : "ic_proxy3.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "Proxy@2x.png",
+      "filename" : "ic_proxy3@2x.png",
       "scale" : "2x"
     },
     {

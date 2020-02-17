@@ -859,10 +859,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 self.genericView.cancelSelection()
                 self.genericView.selectNext()
                 self.closeNext = true
+                return .invoked
             }
             
             return .rejected
-        }, with: self, for: .Return, priority: .low)
+        }, with: self, for: .Return, priority: .modal)
         
         
         setHighlightEvents()

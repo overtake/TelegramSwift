@@ -267,7 +267,7 @@ final class ChatInteraction : InterfaceObserver  {
                     self.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(.none)})})})
                     return
                 default:
-                    if oldState != editState {
+                    if oldState.inputState.attributedString != editState.inputState.attributedString {
                         confirm(for: context.window, information: L10n.chatEditCancelText, okTitle: L10n.alertDiscard, cancelTitle: L10n.alertNO, successHandler: { [weak self] _ in
                             self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
                         })

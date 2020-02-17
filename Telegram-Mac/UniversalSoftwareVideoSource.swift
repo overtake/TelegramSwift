@@ -299,25 +299,26 @@ private final class UniversalSoftwareVideoSourceTakeFrameParams: NSObject {
 
 private final class UniversalSoftwareVideoSourceThread: NSObject {
     @objc static func entryPoint(_ params: UniversalSoftwareVideoSourceThreadParams) {
-        let runLoop = RunLoop.current
-        
-        let timer = Timer(fireAt: .distantFuture, interval: 0.0, target: UniversalSoftwareVideoSourceThread.self, selector: #selector(UniversalSoftwareVideoSourceThread.none), userInfo: nil, repeats: false)
-        runLoop.add(timer, forMode: .common)
-        
-        let source = UniversalSoftwareVideoSourceImpl(mediaBox: params.mediaBox, fileReference: params.fileReference, state: params.state, cancelInitialization: params.cancelInitialization)
-        Thread.current.threadDictionary["source"] = source
-        
-        while true {
-            runLoop.run(mode: .default, before: .distantFuture)
-            if Thread.current.threadDictionary["UniversalSoftwareVideoSourceThread_stop"] != nil {
-                break
+        autoreleasepool {
+            let runLoop = RunLoop.current
+            let timer = Timer(fireAt: .distantFuture, interval: 0.0, target: UniversalSoftwareVideoSourceThread.self, selector: #selector(UniversalSoftwareVideoSourceThread.none), userInfo: nil, repeats: false)
+            runLoop.add(timer, forMode: .common)
+            let source = UniversalSoftwareVideoSourceImpl(mediaBox: params.mediaBox, fileReference: params.fileReference, state: params.state, cancelInitialization: params.cancelInitialization)
+            Thread.current.threadDictionary["source"] = source
+            while true {
+                runLoop.run(mode: .default, before: .distantFuture)
+                if Thread.current.threadDictionary["UniversalSoftwareVideoSourceThread_stop"] != nil {
+                    timer.invalidate()
+                    break
+                }
+                
             }
+            Thread.current.threadDictionary.removeObject(forKey: "source")
         }
-        
-        Thread.current.threadDictionary.removeObject(forKey: "source")
     }
     
     @objc static func none() {
+        
     }
     
     @objc static func stop() {
@@ -329,19 +330,28 @@ private final class UniversalSoftwareVideoSourceThread: NSObject {
             params.completion(nil)
             return
         }
-        source.cancelRead = params.cancel
-        source.requiredDataIsNotLocallyAvailable = params.requiredDataIsNotLocallyAvailable
-        source.state.set(.generatingFrame)
-        let startTime = CFAbsoluteTimeGetCurrent()
-        let image = source.readImage(at: params.timestamp).0
-        params.completion(image)
-        source.state.set(.ready)
+        autoreleasepool {
+            source.cancelRead = params.cancel
+            source.requiredDataIsNotLocallyAvailable = params.requiredDataIsNotLocallyAvailable
+            source.state.set(.generatingFrame)
+            let startTime = CFAbsoluteTimeGetCurrent()
+            let image = source.readImage(at: params.timestamp).0
+            params.completion(image)
+            source.state.set(.ready)
+        }
     }
 }
 
 enum UniversalSoftwareVideoSourceTakeFrameResult {
     case waitingForData
     case image(CGImage?)
+}
+
+private final class WrapThread : Thread {
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
 }
 
 final class UniversalSoftwareVideoSource {
@@ -362,9 +372,12 @@ final class UniversalSoftwareVideoSource {
     }
     
     init(mediaBox: MediaBox, fileReference: FileMediaReference) {
-        self.thread = Thread(target: UniversalSoftwareVideoSourceThread.self, selector: #selector(UniversalSoftwareVideoSourceThread.entryPoint(_:)), object: UniversalSoftwareVideoSourceThreadParams(mediaBox: mediaBox, fileReference: fileReference, state: self.stateValue, cancelInitialization: self.cancelInitialization.get()))
+        self.thread = WrapThread(target: UniversalSoftwareVideoSourceThread.self, selector: #selector(UniversalSoftwareVideoSourceThread.entryPoint(_:)), object: UniversalSoftwareVideoSourceThreadParams(mediaBox: mediaBox, fileReference: fileReference, state: self.stateValue, cancelInitialization: self.cancelInitialization.get()))
         self.thread.name = "UniversalSoftwareVideoSource"
-        self.thread.start()
+        autoreleasepool {
+             self.thread.start()
+        }
+       
     }
     
     deinit {
@@ -373,9 +386,13 @@ final class UniversalSoftwareVideoSource {
     }
     
     public func takeFrame(at timestamp: Double) -> Signal<UniversalSoftwareVideoSourceTakeFrameResult, NoError> {
-        return Signal { subscriber in
+        return Signal { [weak thread] subscriber in
             let cancel = ValuePromise<Bool>(false)
-            UniversalSoftwareVideoSourceThread.self.perform(#selector(UniversalSoftwareVideoSourceThread.takeFrame(_:)), on: self.thread, with: UniversalSoftwareVideoSourceTakeFrameParams(timestamp: timestamp, completion: { image in
+            guard let thread = thread else {
+                cancel.set(true)
+                return EmptyDisposable
+            }
+            UniversalSoftwareVideoSourceThread.self.perform(#selector(UniversalSoftwareVideoSourceThread.takeFrame(_:)), on: thread, with: UniversalSoftwareVideoSourceTakeFrameParams(timestamp: timestamp, completion: { image in
                 subscriber.putNext(.image(image))
                 subscriber.putCompletion()
             }, cancel: cancel.get(), requiredDataIsNotLocallyAvailable: {

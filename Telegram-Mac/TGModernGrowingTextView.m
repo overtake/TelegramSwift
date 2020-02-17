@@ -1062,7 +1062,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
     maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);
     
-    [self.scrollView.contentView scrollToPoint:NSMakePoint(lineRect.origin.x, maxY)];
+    NSPoint point = NSMakePoint(lineRect.origin.x, maxY);
+    if (!NSPointInRect(lineRect.origin, _scrollView.documentVisibleRect)) {
+        [self.scrollView.contentView scrollToPoint:point];
+    }
 }
 
 -(void)updatePlaceholder:(BOOL)animated newSize:(NSSize)newSize {
@@ -1413,13 +1416,15 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     }];
     
     
-    
-    [_textView.textStorage setAttributedString:attr];
-    
-    BOOL o = self.animates;
-    self.animates = animated;
-    [self update:animated];
-    self.animates = o;
+    NSAttributedString *current = _textView.attributedString;
+    if (![current isEqualToAttributedString:attr]) {
+        [_textView.textStorage setAttributedString:attr];
+        BOOL o = self.animates;
+        self.animates = animated;
+        [self update:animated];
+        self.animates = o;
+    }
+   
 }
 
 -(NSString *)textWithDefault:(NSString *)string {

@@ -847,6 +847,14 @@ class ChatRowItem: TableRowItem {
             renderType = _renderType
         }
         
+        var stateOverlayTextColor: NSColor {
+            if let media = message?.media.first, media.isInteractiveMedia {
+                 return NSColor(0xffffff)
+            } else {
+                return theme.chatServiceItemTextColor
+            }
+        }
+        
         var isStateOverlayLayout: Bool {
             if renderType == .bubble, let message = captionMessage, let media = message.media.first {
                 if let file = media as? TelegramMediaFile {
@@ -942,7 +950,7 @@ class ChatRowItem: TableRowItem {
                 for attr in message.attributes {
                     if let attr = attr as? AuthorSignatureMessageAttribute {
                         if !message.flags.contains(.Failed) {
-                            postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                         }
                         break
                     }
@@ -950,7 +958,7 @@ class ChatRowItem: TableRowItem {
             }
             if postAuthorAttributed == nil, ChatRowItem.authorIsChannel(message: message, account: context.account) {
                 if let author = message.forwardInfo?.authorSignature {
-                    postAuthorAttributed = .initialize(string: author, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    postAuthorAttributed = .initialize(string: author, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 }
             }
             
@@ -1152,7 +1160,7 @@ class ChatRowItem: TableRowItem {
             dateFormatter.dateStyle = .none
             dateFormatter.timeZone = NSTimeZone.local
             
-            date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? .white : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
 
         } else {
             self.isIncoming = false
@@ -1190,7 +1198,7 @@ class ChatRowItem: TableRowItem {
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
-                    channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
                     if attribute.count >= 1000 {
                         fullDate = "\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
@@ -1198,7 +1206,7 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {
-                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? .white : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                     }
                     
                     let formatterEdited = DateFormatter()
@@ -1667,6 +1675,30 @@ class ChatRowItem: TableRowItem {
         }
         return super.menuItems(in: location)
     }
+    
+    var stateOverlayBackgroundColor: NSColor {
+        guard let media = self.message?.media.first else {
+            return self.presentation.colors.blackTransparent
+        }
+        if media is TelegramMediaImage {
+            return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
+        } else if let media = media as? TelegramMediaFile, media.isVideo {
+            return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
+        } else {
+            return self.presentation.chatServiceItemColor
+        }
+    }
+    
+    var stateOverlayTextColor: NSColor {
+           guard let media = self.message?.media.first else {
+               return NSColor(0xffffff)
+           }
+           if media.isInteractiveMedia {
+                return NSColor(0xffffff)
+           } else {
+               return self.presentation.chatServiceItemTextColor
+           }
+       }
 }
 
 func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {

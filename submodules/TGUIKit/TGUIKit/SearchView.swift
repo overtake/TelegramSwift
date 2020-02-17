@@ -125,7 +125,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         clear.set(image: presentation.search.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
         
-        placeholder.centerY(x: placeholderTextInset + 2, addition: -1)
+        placeholder.centerY(x: placeholderTextInset, addition: -1)
         search.centerY()
         input.insertionPointColor = presentation.search.textColor
         progressIndicator.progressColor = presentation.colors.text
@@ -134,7 +134,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open var startTextInset: CGFloat {
-        return search.frame.width + inset
+        return search.frame.width + inset / 2
     }
     
     open var placeholderTextInset: CGFloat {
@@ -184,9 +184,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         animateContainer.addSubview(search)
         
-        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset, max(21, search.frame.height)))
+        self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset / 2, max(21, search.frame.height)))
         
-        placeholder.centerY(nil, x: NSWidth(search.frame) + inset)
+        placeholder.centerY(nil, x: NSWidth(search.frame) + inset / 2)
         search.centerY()
         
         inputContainer.addSubview(input)

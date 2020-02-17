@@ -186,6 +186,10 @@ public class DrawingContext {
     }
     
     deinit {
+        if checkDealloc {
+            deallocCounter += 1
+            NSLog("deallocated: \(deallocCounter)")
+        }
     }
     
     public func withFlippedContext(isHighQuality: Bool = true, horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
@@ -217,6 +221,11 @@ public class DrawingContext {
         self.checkDealloc = checkDealloc
         self.scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
         
+        
+        if checkDealloc {
+            allocCounter += 1
+            NSLog("allocCounter: \(allocCounter)")
+        }
         
         self.bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
         self.length = bytesPerRow * Int(scaledSize.height)

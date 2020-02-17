@@ -386,7 +386,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
                 arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
                 
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 33, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left:21))
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left:15))
         case .general:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)

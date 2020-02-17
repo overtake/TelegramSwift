@@ -137,7 +137,7 @@ class ChatRightView: View {
             
             if item.isStateOverlayLayout {
                 ctx.round(frame.size, frame.height/2)
-                ctx.setFillColor(theme.colors.blackTransparent.cgColor)
+                ctx.setFillColor(item.stateOverlayBackgroundColor.cgColor)
                 ctx.fill(layer.bounds)
             }
             

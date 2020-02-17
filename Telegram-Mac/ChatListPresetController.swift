@@ -159,7 +159,7 @@ private func chatListPresetEntries(state: ChatListPresetState, peers: [Peer], ar
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_exception, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Add Chats", nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 46, thumbInset: 5))
+        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Add Chats", nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
     }))
     index += 1
     

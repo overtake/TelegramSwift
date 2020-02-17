@@ -2621,8 +2621,45 @@ func requestAudioPermission() -> Signal<Bool, NoError> {
     }
 }
 
+
+func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, NoError> {
+    if #available(OSX 10.14, *) {
+        return Signal { subscriber in
+            let status = AVCaptureDevice.authorizationStatus(for: type)
+            var cancelled: Bool = false
+            switch status {
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: type, completionHandler: { completed in
+                    if !cancelled {
+                        subscriber.putNext(completed)
+                        subscriber.putCompletion()
+                    }
+                })
+            case .authorized:
+                subscriber.putNext(true)
+                subscriber.putCompletion()
+            case .denied:
+                subscriber.putNext(false)
+                subscriber.putCompletion()
+            case .restricted:
+                subscriber.putNext(false)
+                subscriber.putCompletion()
+            @unknown default:
+                subscriber.putNext(false)
+                subscriber.putCompletion()
+            }
+            return ActionDisposable {
+                cancelled = true
+            }
+        }
+    } else {
+        return .single(true)
+    }
+}
+
 enum SystemSettingsCategory : String {
     case microphone = "Privacy_Microphone"
+    case none = ""
 }
 
 func openSystemSettings(_ category: SystemSettingsCategory) {

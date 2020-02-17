@@ -25,78 +25,82 @@ private var capHolder:[String : CGImage] = [:]
 private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
         return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
-            if let cached = cached {
-                return .single((cached, false))
-            } else {
-                let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
-                let imageData = resourceData
-                    |> take(1)
-                    |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
-                        if maybeData.complete {
-                            return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
-                        } else {
-                            return Signal { subscriber in
-                                let resourceDataDisposable = resourceData.start(next: { data in
-                                    if data.complete {
-                                        subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))
-                                        subscriber.putCompletion()
-                                    }
-                                }, error: { error in
-                                    subscriber.putError(error)
-                                }, completed: {
-                                    subscriber.putCompletion()
-                                })
-                                
-                                let fetchedDataDisposable: Disposable
-                                if let reference = PeerReference(peer) {
-                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
-                                } else if let message = message {
-                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
-                                } else {
-                                    fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
-                                }
-                                return ActionDisposable {
-                                    resourceDataDisposable.dispose()
-                                    fetchedDataDisposable.dispose()
-                                }
-                            }
-                        }
-                }
-                
-                let def = deferred({ () -> Signal<(CGImage?, Bool), NoError> in
-                    let key = NSStringFromSize(displayDimensions)
-                    if let image = capHolder[key] {
-                        return .single((image, false))
-                    } else {
-                        let size = NSMakeSize(max(30, displayDimensions.width), max(30, displayDimensions.height))
-                        capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
-                        return .single((capHolder[key]!, false))
-                    }
-                }) |> deliverOnMainQueue
-                
-                let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(graphicsThreadPool)
-                
-                let img = loadDataSignal |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
-                        
-                        let image:CGImage?
-                        if let data = data {
-                            image = roundImage(data, displayDimensions, scale:scale)
-                        } else {
-                            image = nil
-                        }
-                        if let image = image {
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
-                                return (image, animated)
-                            }
-                        } else {
-                            return .single((image, animated))
-                        }
-                        
-                }
-                if genCap {
-                    return def |> then(img)
+            return autoreleasepool {
+                if let cached = cached {
+                    return .single((cached, false))
                 } else {
-                    return img
+                    let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
+                    let imageData = resourceData
+                        |> take(1)
+                        |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
+                            return autoreleasepool {
+                               if maybeData.complete {
+                                   return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
+                               } else {
+                                   return Signal { subscriber in
+                                       let resourceDataDisposable = resourceData.start(next: { data in
+                                           if data.complete {
+                                               subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))
+                                               subscriber.putCompletion()
+                                           }
+                                       }, error: { error in
+                                           subscriber.putError(error)
+                                       }, completed: {
+                                           subscriber.putCompletion()
+                                       })
+                                       
+                                       let fetchedDataDisposable: Disposable
+                                       if let reference = PeerReference(peer) {
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                       } else if let message = message {
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                       } else {
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
+                                       }
+                                       return ActionDisposable {
+                                           resourceDataDisposable.dispose()
+                                           fetchedDataDisposable.dispose()
+                                       }
+                                   }
+                               }
+                            }
+                    }
+                    
+                    let def = deferred({ () -> Signal<(CGImage?, Bool), NoError> in
+                        let key = NSStringFromSize(displayDimensions)
+                        if let image = capHolder[key] {
+                            return .single((image, false))
+                        } else {
+                            let size = NSMakeSize(max(30, displayDimensions.width), max(30, displayDimensions.height))
+                            capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
+                            return .single((capHolder[key]!, false))
+                        }
+                    }) |> deliverOnMainQueue
+                    
+                    let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(graphicsThreadPool)
+                    
+                    let img = loadDataSignal |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
+                            
+                            let image:CGImage?
+                            if let data = data {
+                                image = roundImage(data, displayDimensions, scale:scale)
+                            } else {
+                                image = nil
+                            }
+                            if let image = image {
+                                return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
+                                    return (image, animated)
+                                }
+                            } else {
+                                return .single((image, animated))
+                            }
+                            
+                    }
+                    if genCap {
+                        return def |> then(img)
+                    } else {
+                        return img
+                    }
                 }
             }
         }

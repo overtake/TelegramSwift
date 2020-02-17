@@ -198,7 +198,6 @@ class ChatMessageAccessoryView: Control {
         addSubview(progress)
         addSubview(download)
         addSubview(unread)
-        bufferingIndicator.alwaysAnimate = true
         bufferingIndicator.background = .clear
         bufferingIndicator.progressColor = .white
         bufferingIndicator.layer?.cornerRadius = bufferingIndicator.frame.height / 2

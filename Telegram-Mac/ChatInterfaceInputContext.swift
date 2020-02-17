@@ -92,7 +92,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         var index = inputText.index(before: maxIndex)
         
-        if inputText.isSingleEmoji {
+        if inputText.length == 1, inputText.isSingleEmoji {
             var inputText = inputText
             if inputText.canHaveSkinToneModifier {
                 inputText = inputText.emojiUnmodified
@@ -143,7 +143,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         characterSet.insert(atScalar.unicodeScalars.first!)
         characterSet.insert(slashScalar.unicodeScalars.first!)
         characterSet.insert(emojiScalar.unicodeScalars.first!)
-        while true {
+        for _ in 0 ..< 4 {
             let c = inputText[index]
             
             

@@ -344,7 +344,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
+        if textView.string() != state.effectiveInput.inputText {
             textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)

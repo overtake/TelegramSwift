@@ -124,25 +124,27 @@ public class SpinningProgressView: View {
         let size = bounds.size
         let length = min(size.height, size.width)
 
-
         ctx.translateBy(x: size.width / 2, y: size.height / 2)
-        let path = CGMutablePath()
-        let lineWidth = 0.0859375 * length
-        let lineStart = 0.234375 * length
-        let lineEnd = 0.421875 * length
-        path.move(to: NSPoint(x: 0, y: lineStart))
-        path.addLine(to: NSPoint(x: 0, y: lineEnd))
-        for i in 0 ..< numberOfFins {
-            let c = isAnimating ? finColors[i] : color.withAlphaComponent(alphaWhenStopped)
-            ctx.setLineWidth(lineWidth)
-            ctx.setLineCap(.round)
-            ctx.setLineJoin(.round)
-            ctx.setStrokeColor(c.cgColor)
-            ctx.addPath(path)
-            ctx.closePath()
-            ctx.strokePath()
-            ctx.rotate(by: 2 * .pi / CGFloat(numberOfFins))
+        autoreleasepool {
+            let path = CGMutablePath()
+            let lineWidth = 0.0859375 * length
+            let lineStart = 0.234375 * length
+            let lineEnd = 0.421875 * length
+            path.move(to: NSPoint(x: 0, y: lineStart))
+            path.addLine(to: NSPoint(x: 0, y: lineEnd))
+            for i in 0 ..< numberOfFins {
+                let c = isAnimating ? finColors[i] : color.withAlphaComponent(alphaWhenStopped)
+                ctx.setLineWidth(lineWidth)
+                ctx.setLineCap(.round)
+                ctx.setLineJoin(.round)
+                ctx.setStrokeColor(c.cgColor)
+                ctx.addPath(path)
+                ctx.closePath()
+                ctx.strokePath()
+                ctx.rotate(by: 2 * .pi / CGFloat(numberOfFins))
+            }
         }
+        
     }
     
 }

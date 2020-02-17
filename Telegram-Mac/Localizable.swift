@@ -4937,6 +4937,10 @@ internal final class L10n {
   internal static var requestAccesErrorConirmSettings: String  { return L10n.tr("Localizable", "RequestAcces.Error.Conirm.Settings") }
   /// Telegram needs access to your microphone to make calls
   internal static var requestAccesErrorHaveNotAccessCall: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.Call") }
+  /// Telegram needs access to your microphone and camera to record video messages
+  internal static var requestAccesErrorHaveNotAccessVideoMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VideoMessages") }
+  /// Telegram needs access to your microphone to record voice messages
+  internal static var requestAccesErrorHaveNotAccessVoiceMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VoiceMessages") }
   /// Select All
   internal static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }
   /// Send on %@ at %@

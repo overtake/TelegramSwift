@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "UsernameCheck.png",
+      "filename" : "ic_check.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "UsernameCheck@2x.png",
+      "filename" : "ic_check@2x.png",
       "scale" : "2x"
     },
     {

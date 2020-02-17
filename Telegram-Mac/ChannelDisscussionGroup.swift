@@ -233,7 +233,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 let viewType: GeneralViewType = state.filteredPeers.isEmpty ? .singleItem : .firstItem
                 
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_create_group, equatable: InputDataEquatable(viewType), item: { initialSize, stableId in
-                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, viewType: viewType, action: arguments.createGroup, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 9))
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, viewType: viewType, action: arguments.createGroup, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
                 }))
                 index += 1
             }

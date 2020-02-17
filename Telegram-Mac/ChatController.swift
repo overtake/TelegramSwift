@@ -199,7 +199,7 @@ class ChatControllerView : View, ChatInputDelegate {
             case let .peer(peerId):
                 location = .peer(peerId: peerId, fromId: fromId, tags: nil)
             }
-            return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages, $0.1)}
+            return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
         })
         
         
@@ -982,6 +982,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let slowModeInProgressDisposable = MetaDisposable()
     private let forwardMessagesDisposable = MetaDisposable()
     private let shiftSelectedDisposable = MetaDisposable()
+    private let updateUrlDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1448,18 +1449,56 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return
                 }
                 if chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                    let state: ChatRecordingState
+                    
+                    
                     
                     switch FastSettings.recordingState {
                     case .voice:
-                        state = ChatRecordingAudioState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
-                        state.start()
+                        let permission: Signal<Bool, NoError> = requestMediaPermission(.audio) |> deliverOnMainQueue
+                       _ = permission.start(next: { [weak chatInteraction] access in
+                            guard let chatInteraction = chatInteraction else {
+                                return
+                            }
+                            if access {
+                                let state = ChatRecordingAudioState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                                state.start()
+                                chatInteraction.update({$0.withRecordingState(state)})
+                            } else {
+                                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessVoiceMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                                   switch result {
+                                   case .thrid:
+                                       openSystemSettings(.none)
+                                   default:
+                                       break
+                                   }
+                               })
+                            }
+                        })
                     case .video:
-                        state = ChatRecordingVideoState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
-                        showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: context.window)
+                        let permission: Signal<Bool, NoError> = combineLatest(requestMediaPermission(.video), requestMediaPermission(.audio)) |> map { $0 && $1 } |> deliverOnMainQueue
+                        _ = permission.start(next: { [weak chatInteraction] access in
+                            guard let chatInteraction = chatInteraction else {
+                                return
+                            }
+                            if access {
+                                let state = ChatRecordingVideoState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                                showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
+                                chatInteraction.update({$0.withRecordingState(state)})
+                            } else {
+                                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessVideoMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                                    switch result {
+                                    case .thrid:
+                                        openSystemSettings(.none)
+                                    default:
+                                        break
+                                    }
+                                })
+                            }
+                           
+                        })
                     }
                     
-                    chatInteraction.update({$0.withRecordingState(state)})
+                   
                 }
             }
         }
@@ -3779,6 +3818,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         shiftSelectedDisposable.dispose()
         failedMessageIdsDisposable.dispose()
         hasScheduledMessagesDisposable.dispose()
+        updateUrlDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -4372,38 +4412,44 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                     }
                     
-
-                    if let (updatedUrlPreviewUrl, updatedUrlPreviewSignal) = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, account: context.account, currentQuery: self.urlPreviewQueryState?.0) {
-                        self.urlPreviewQueryState?.1.dispose()
-                        var inScope = true
-                        var inScopeResult: ((TelegramMediaWebpage?) -> TelegramMediaWebpage?)?
-                        self.urlPreviewQueryState = (updatedUrlPreviewUrl, (updatedUrlPreviewSignal |> deliverOnMainQueue).start(next: { [weak self] result in
-                            if let strongSelf = self {
-                                if Thread.isMainThread && inScope {
-                                    inScope = false
-                                    inScopeResult = result
-                                } else {
-                                    strongSelf.chatInteraction.update(animated: true, {
-                                        if let updatedUrlPreviewUrl = updatedUrlPreviewUrl, let webpage = result($0.urlPreview?.1) {
-                                            return $0.updatedUrlPreview((updatedUrlPreviewUrl, webpage))
-                                        } else {
-                                            return $0.updatedUrlPreview(nil)
-                                        }
-                                    })
+                    
+                    let updateUrl = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, account: context.account, currentQuery: self.urlPreviewQueryState?.0) |> deliverOnMainQueue
+                    
+                    updateUrlDisposable.set(updateUrl.start(next: { [weak self] result in
+                        if let `self` = self, let (updatedUrlPreviewUrl, updatedUrlPreviewSignal) = result {
+                            self.urlPreviewQueryState?.1.dispose()
+                            var inScope = true
+                            var inScopeResult: ((TelegramMediaWebpage?) -> TelegramMediaWebpage?)?
+                            self.urlPreviewQueryState = (updatedUrlPreviewUrl, (updatedUrlPreviewSignal |> deliverOnMainQueue).start(next: { [weak self] result in
+                                if let strongSelf = self {
+                                    if Thread.isMainThread && inScope {
+                                        inScope = false
+                                        inScopeResult = result
+                                    } else {
+                                        strongSelf.chatInteraction.update(animated: true, {
+                                            if let updatedUrlPreviewUrl = updatedUrlPreviewUrl, let webpage = result($0.urlPreview?.1) {
+                                                return $0.updatedUrlPreview((updatedUrlPreviewUrl, webpage))
+                                            } else {
+                                                return $0.updatedUrlPreview(nil)
+                                            }
+                                        })
+                                    }
                                 }
+                            }))
+                            inScope = false
+                            if let inScopeResult = inScopeResult {
+                                self.chatInteraction.update(animated: true, {
+                                    if let updatedUrlPreviewUrl = updatedUrlPreviewUrl, let webpage = inScopeResult($0.urlPreview?.1) {
+                                        return $0.updatedUrlPreview((updatedUrlPreviewUrl, webpage))
+                                    } else {
+                                        return $0.updatedUrlPreview(nil)
+                                    }
+                                })
                             }
-                        }))
-                        inScope = false
-                        if let inScopeResult = inScopeResult {
-                            chatInteraction.update(animated: true, {
-                                if let updatedUrlPreviewUrl = updatedUrlPreviewUrl, let webpage = inScopeResult($0.urlPreview?.1) {
-                                    return $0.updatedUrlPreview((updatedUrlPreviewUrl, webpage))
-                                } else {
-                                    return $0.updatedUrlPreview(nil)
-                                }
-                            })
                         }
-                    }
+                    }))
+
+                    
                 }
             }
             
