@@ -148,9 +148,9 @@ final class ChatListRevealView : TableStickView {
             let unreadCount:Int32? = item.counters[tab != nil ? tab!.uniqueId : -1]
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount > 0, context.sharedContext.layout != .minimisize {
-                let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.text), coreText: true)
+                let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
-                var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 3)
+                var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
                 size = NSMakeSize(max(size.height,size.width), size.height)
                 
                 icon = generateImage(size, rotatedContext: { size, ctx in
