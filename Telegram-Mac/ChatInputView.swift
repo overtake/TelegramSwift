@@ -551,7 +551,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let range = self.textView.selectedRange()
         
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        doNotUpdateNext = !state.inputText.isEmpty
+        doNotUpdateNext = !state.inputText.isEmpty && state != chatInteraction.presentation.effectiveInput
         self.chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
     }
     
