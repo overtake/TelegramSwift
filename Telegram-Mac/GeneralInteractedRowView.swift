@@ -203,7 +203,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
                     var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
                     textRect.origin.x = item.inset.left + textXAdditional
-                    textRect.origin.y -= 1
+                    textRect.origin.y -= 2
                     if item.descLayout != nil {
                         textRect.origin.y = 10
                     }
@@ -347,7 +347,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6 + (insets.right == 0 ? 10 : 0)
                 
                 if let switchView = switchView {
-                    switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset)
+                    switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
                 }
                 if let textView = textView {
                     var width:CGFloat = 100
@@ -356,14 +356,14 @@ class GeneralInteractedRowView: GeneralRowView {
                     }
                     textView.layout?.measure(width: width)
                     textView.update(textView.layout)
-                    textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset)
+                    textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
                     }
                 }
                 nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
                 if let progressView = progressView {
-                    progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width)
+                    progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
                 }
             case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)

@@ -228,6 +228,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 textViewHeightChanged(defaultContentHeight, animated: animated)
             }
             
+            update()
         }
     }
     
