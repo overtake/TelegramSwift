@@ -502,7 +502,7 @@ func chatContextQueryForSearchMention(peer: Peer, _ inputQuery: ChatPresentation
 
 private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType([.link]).rawValue)
 
-func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, account: Account, currentQuery: String?) -> Signal<(String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)?, NoError> {
+func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: String?) -> Signal<(String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)?, NoError> {
     
     return Signal { subscriber in
         
@@ -550,9 +550,16 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
             
             if detectedUrl != currentQuery {
                 if let detectedUrl = detectedUrl {
-                    subscriber.putNext((detectedUrl, webpagePreview(account: account, url: detectedUrl) |> map { value in
-                        return { _ in return value }
-                    }))
+                    let link = inApp(for: detectedUrl.nsstring, context: context, peerId: nil, openInfo: { _, _, _, _ in }, hashtag: { _ in }, command: { _ in }, applyProxy: { _ in }, confirm: false)
+                    switch link {
+                    case let .external(detectedUrl, _):
+                        subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
+                            return { _ in return value }
+                        }))
+                    default:
+                        subscriber.putNext((nil, .single({ _ in return nil })))
+                        subscriber.putCompletion()
+                    }
                 } else {
                     subscriber.putNext((nil, .single({ _ in return nil })))
                     subscriber.putCompletion()

@@ -4413,7 +4413,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     
                     
-                    let updateUrl = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, account: context.account, currentQuery: self.urlPreviewQueryState?.0) |> delay(0.5, queue: .mainQueue()) |> deliverOnMainQueue
+                    let updateUrl = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, context: context, currentQuery: self.urlPreviewQueryState?.0) |> delay(value.effectiveInput.inputText.isEmpty ? 0.0 : 0.1, queue: .mainQueue()) |> deliverOnMainQueue
                     
                     updateUrlDisposable.set(updateUrl.start(next: { [weak self] result in
                         if let `self` = self, let (updatedUrlPreviewUrl, updatedUrlPreviewSignal) = result {
