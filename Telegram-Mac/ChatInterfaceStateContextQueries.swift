@@ -524,10 +524,10 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
             var detectedUrl: String?
 
             var detectedRange: NSRange = NSMakeRange(NSNotFound, 0)
-            let text = chatPresentationInterfaceState.effectiveInput.inputText
+            let text = chatPresentationInterfaceState.effectiveInput.inputText.prefix(4096)
             
-            let attr = chatPresentationInterfaceState.effectiveInput.attributedString
-            
+            var attr = chatPresentationInterfaceState.effectiveInput.attributedString
+            attr = attr.attributedSubstring(from: NSMakeRange(0, min(attr.length, 4096)))
             attr.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                 
                 if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
@@ -569,7 +569,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
         return ActionDisposable {
             
         }
-    } |> runOn(prepareQueue)
+    }
     
     
 }

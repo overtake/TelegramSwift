@@ -152,7 +152,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
-           modalController?.closePopover()
+           modalController?.close()
     })
     
     return modalController

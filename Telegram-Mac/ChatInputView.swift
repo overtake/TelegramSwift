@@ -345,13 +345,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if !doNotUpdateNext {
             if prevState.effectiveInput.inputText != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
                 textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
-                self.textView.scrollToCursor()
-                
             }
             
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-            if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+            if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length || (range.location == 0 && range.length == 0) {
                 textView.setSelectedRange(range)
+               
+            }
+            if prevState.effectiveInput.inputText.isEmpty {
+                 self.textView.scrollToCursor()
             }
         }
         doNotUpdateNext = false
@@ -541,7 +543,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         if state.attributes != self.chatInteraction.presentation.effectiveInput.attributes || state.inputText != self.chatInteraction.presentation.effectiveInput.inputText {
-            doNotUpdateNext = true
+            doNotUpdateNext = !state.inputText.isEmpty
             self.chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
             
         }
