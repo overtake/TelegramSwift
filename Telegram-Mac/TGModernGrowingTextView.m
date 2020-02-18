@@ -908,7 +908,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     self.scrollView.verticalScrollElasticity = NSHeight(_scrollView.contentView.documentRect) <= NSHeight(_scrollView.frame) ? NSScrollElasticityNone : NSScrollElasticityAllowed;
     
-    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+    //[_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
     
     
@@ -937,7 +937,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             }
         };
         
-        [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+//        [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
         newSize.width = [_delegate textViewSize: self].width;
         
@@ -1050,16 +1050,14 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)scrollToCursor {
-    
-    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
-    
+        
     NSRect lineRect = [self highlightRectForRange:self.selectedRange];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
     maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);
     
     NSPoint point = NSMakePoint(lineRect.origin.x, maxY);
-    if (!NSPointInRect(lineRect.origin, _scrollView.documentVisibleRect)) {
+    if (!NSPointInRect(lineRect.origin, _scrollView.documentVisibleRect) && _scrollView.documentVisibleRect.size.width > 0) {
         [self.scrollView.contentView scrollToPoint:point];
     }
 }
