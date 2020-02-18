@@ -356,7 +356,13 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                
             }
             if prevState.effectiveInput.inputText.isEmpty {
-                 self.textView.scrollToCursor()
+                self.textView.scrollToCursor()
+               
+            }
+            if state.effectiveInput.inputText.isEmpty {
+                DispatchQueue.main.async { [weak self] in
+                    self?.textView.inputView.setSelectedRange(NSMakeRange(0, 0))
+                }
             }
         }
         doNotUpdateNext = false
