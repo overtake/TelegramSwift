@@ -342,15 +342,19 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-            if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
+        if !doNotUpdateNext {
+            if prevState.effectiveInput.inputText != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
                 textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
                 self.textView.scrollToCursor()
                 
             }
+            
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
             if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
                 textView.setSelectedRange(range)
             }
+        }
+        doNotUpdateNext = false
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
@@ -528,7 +532,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func makeFirstResponder()  {
         self.window?.makeFirstResponder(self.textView.inputView)
     }
-    private var previousString: String = ""
+    private var doNotUpdateNext: Bool = false
     func textViewTextDidChange(_ string: String) {
 
         
@@ -536,7 +540,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let range = self.textView.selectedRange()
         
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        self.chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+        if state.attributes != self.chatInteraction.presentation.effectiveInput.attributes || state.inputText != self.chatInteraction.presentation.effectiveInput.inputText {
+            doNotUpdateNext = true
+            self.chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+            
+        }
         
     }
     
