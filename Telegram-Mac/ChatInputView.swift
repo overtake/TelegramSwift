@@ -116,6 +116,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
        
         self.addSubview(_ts)
         updateLocalizationAndTheme(theme: theme)
+        
+        layout()
     }
     
     public override var responder:NSResponder? {

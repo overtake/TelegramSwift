@@ -937,9 +937,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
             }
         };
         
-//        [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+        [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize: self].width;
+        newSize.width = _delegate != nil ? [_delegate textViewSize: self].width : self.frame.size.width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         
@@ -1050,7 +1050,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)scrollToCursor {
-        
+    
+    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+    
     NSRect lineRect = [self highlightRectForRange:self.selectedRange];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
