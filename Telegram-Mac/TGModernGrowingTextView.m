@@ -130,8 +130,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         #ifdef __MAC_10_12_2
           //  self.allowsCharacterPickerTouchBarItem = false;
         #endif
-        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
-        self.layoutManager.allowsNonContiguousLayout = true;
+//        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+//        self.layoutManager.allowsNonContiguousLayout = true;
     }
     return self;
 }
@@ -180,21 +180,21 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 }
 
--(void)drawRect:(NSRect)dirtyRect {
-
-
-    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
-                                          graphicsPort];
-
-    BOOL isRetina = self.window.backingScaleFactor == 2.0;
-
-    CGContextSetAllowsAntialiasing(context, true);
-    CGContextSetShouldSmoothFonts(context, !isRetina);
-    CGContextSetAllowsFontSmoothing(context,!isRetina);
-
-    [super drawRect:dirtyRect];
-
-}
+//-(void)drawRect:(NSRect)dirtyRect {
+//
+//
+//    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
+//                                          graphicsPort];
+//
+//    BOOL isRetina = self.window.backingScaleFactor == 2.0;
+//
+//    CGContextSetAllowsAntialiasing(context, true);
+//    CGContextSetShouldSmoothFonts(context, !isRetina);
+//    CGContextSetAllowsFontSmoothing(context,!isRetina);
+//
+//    [super drawRect:dirtyRect];
+//
+//}
 
 -(void)rightMouseDown:(NSEvent *)event {
     [self.window makeFirstResponder:self];
@@ -915,7 +915,7 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
     self.scrollView.verticalScrollElasticity = NSHeight(_scrollView.contentView.documentRect) <= NSHeight(_scrollView.frame) ? NSScrollElasticityNone : NSScrollElasticityAllowed;
     
-    //[_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     NSRect newRect = [_textView.layoutManager usedRectForTextContainer:_textView.textContainer];
     
     
