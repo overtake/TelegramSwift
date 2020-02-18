@@ -130,7 +130,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         #ifdef __MAC_10_12_2
           //  self.allowsCharacterPickerTouchBarItem = false;
         #endif
-//        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
 //        self.layoutManager.allowsNonContiguousLayout = true;
     }
     return self;
@@ -180,21 +180,26 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 }
 
-//-(void)drawRect:(NSRect)dirtyRect {
-//
-//
-//    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
-//                                          graphicsPort];
-//
-//    BOOL isRetina = self.window.backingScaleFactor == 2.0;
-//
-//    CGContextSetAllowsAntialiasing(context, true);
-//    CGContextSetShouldSmoothFonts(context, !isRetina);
-//    CGContextSetAllowsFontSmoothing(context,!isRetina);
-//
-//    [super drawRect:dirtyRect];
-//
-//}
+-(void)drawRect:(NSRect)dirtyRect {
+
+
+    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
+                                          graphicsPort];
+
+    BOOL isRetina = self.window.backingScaleFactor == 2.0;
+
+    CGContextSetAllowsAntialiasing(context, true);
+    CGContextSetShouldSmoothFonts(context, !isRetina);
+    CGContextSetAllowsFontSmoothing(context,!isRetina);
+
+    if (dirtyRect.size.width == 1) {
+        int bp = 0;
+        bp += 1;
+    }
+    
+    [super drawRect:dirtyRect];
+
+}
 
 -(void)rightMouseDown:(NSEvent *)event {
     [self.window makeFirstResponder:self];
@@ -1570,7 +1575,7 @@ static int64_t nextId = 0;
 
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
-    if(range.location != NSNotFound)
+    if(range.location != NSNotFound && (range.location != _textView.selectedRange.location || range.length != _textView.selectedRange.length))
         [_textView setSelectedRange:range];
 }
 
