@@ -202,7 +202,7 @@ private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexForma
 
 final class ChatTextInputState: PostboxCoding, Equatable {
     static func == (lhs: ChatTextInputState, rhs: ChatTextInputState) -> Bool {
-        return lhs === rhs//lhs.selectionRange == rhs.selectionRange && lhs.attributes == rhs.attributes && lhs.inputText == rhs.inputText 
+        return lhs.selectionRange == rhs.selectionRange && lhs.attributes == rhs.attributes && lhs.inputText == rhs.inputText 
     }
     
     let inputText: String
