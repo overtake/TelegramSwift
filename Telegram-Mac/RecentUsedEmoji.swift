@@ -142,12 +142,14 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
             }
             
             for emoji in list.reversed() {
-                let emoji = emoji.emojiString.emojiUnmodified
-                if !emoji.isEmpty && emoji.count == 1 {
-                    if let index = emojies.firstIndex(of: emoji) {
-                        emojies.remove(at: index)
+                if emoji.containsOnlyEmoji {
+                    let emoji = emoji.emojiString.emojiUnmodified
+                    if !emoji.isEmpty && emoji.count == 1 {
+                        if let index = emojies.firstIndex(of: emoji) {
+                            emojies.remove(at: index)
+                        }
+                        emojies.insert(emoji, at: 0)
                     }
-                    emojies.insert(emoji, at: 0)
                 }
             }
             emojies = Array(emojies.filter({$0.containsEmoji}).prefix(35))

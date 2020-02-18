@@ -130,6 +130,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         #ifdef __MAC_10_12_2
           //  self.allowsCharacterPickerTouchBarItem = false;
         #endif
+        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+        self.layoutManager.allowsNonContiguousLayout = true;
     }
     return self;
 }
@@ -151,6 +153,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     } else {
         return nil;
     }
+}
+
+-(void)setFrameSize:(NSSize)newSize {
+    [super setFrameSize:newSize];
 }
 
 -(BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard {
@@ -175,17 +181,17 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)drawRect:(NSRect)dirtyRect {
-    
-    
+
+
     CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext]
                                           graphicsPort];
-    
+
     BOOL isRetina = self.window.backingScaleFactor == 2.0;
-    
+
     CGContextSetAllowsAntialiasing(context, true);
     CGContextSetShouldSmoothFonts(context, !isRetina);
     CGContextSetAllowsFontSmoothing(context,!isRetina);
-    
+
     [super drawRect:dirtyRect];
 
 }
@@ -605,10 +611,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
     
 }
 
--(void)setFrameSize:(NSSize)newSize {
-    [super setFrameSize:newSize];
-}
-
 
 
 
@@ -677,7 +679,6 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         _textView = [[[self _textViewClass] alloc] initWithFrame:self.bounds];
         [_textView setRichText:NO];
         [_textView setImportsGraphics:NO];
-        _textView.backgroundColor = [NSColor clearColor];
         _textView.insertionPointColor = _cursorColor;
         [_textView setAllowsUndo:YES];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectionDidChanged:) name:NSTextViewDidChangeSelectionNotification object:_textView];
@@ -695,12 +696,10 @@ BOOL isEnterEvent(NSEvent *theEvent) {
         } else {
             self.scrollView = [[GrowingScrollView alloc] initWithFrame:self.bounds];
         }
-        self.scrollView.backgroundColor = [NSColor clearColor];
 
         
         [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
         self.scrollView.documentView = _textView;
-        [self.scrollView setDrawsBackground:NO];
         [self.scrollView setFrame:NSMakeRect(0, 0, NSWidth(self.frame), NSHeight(self.frame))];
         [self addSubview:self.scrollView];
         
@@ -1051,6 +1050,9 @@ BOOL isEnterEvent(NSEvent *theEvent) {
 }
 
 -(void)scrollToCursor {
+    
+    [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
+    
     NSRect lineRect = [self highlightRectForRange:self.selectedRange];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
@@ -1561,7 +1563,7 @@ static int64_t nextId = 0;
 
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
-    if(range.location != NSNotFound && (_textView.selectedRange.location != range.location || _textView.selectedRange.length != range.length))
+    if(range.location != NSNotFound)
         [_textView setSelectedRange:range];
 }
 
@@ -1582,6 +1584,11 @@ static int64_t nextId = 0;
 
 -(int)_endXPlaceholder {
     return self._startXPlaceholder + 30;
+}
+
+-(void)setBackgroundColor:(NSColor * __nonnull)color {
+    self.scrollView.backgroundColor = color;
+    self.textView.backgroundColor = color;
 }
 
 @end

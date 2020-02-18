@@ -126,7 +126,7 @@ fileprivate class PreviewSenderView : Control {
         backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
         textContainerView.backgroundColor = theme.colors.background
-        
+        textView.setBackgroundColor(theme.colors.background)
         closeButton.set(image: theme.icons.modalClose, for: .Normal)
         _ = closeButton.sizeToFit()
         

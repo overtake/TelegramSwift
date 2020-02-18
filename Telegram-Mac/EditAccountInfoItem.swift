@@ -193,6 +193,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     override func updateColors() {
         firstNameTextView.textColor = theme.colors.text
         lastNameTextView.textColor = theme.colors.text
+        
+        firstNameTextView.setBackgroundColor(backdorColor)
+        lastNameTextView.setBackgroundColor(backdorColor)
+        
         nameSeparator.backgroundColor = theme.colors.border
         secondSeparator.backgroundColor = theme.colors.border
         containerView.background = backdorColor

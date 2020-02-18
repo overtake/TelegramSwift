@@ -1678,7 +1678,7 @@ class ChatRowItem: TableRowItem {
     
     var stateOverlayBackgroundColor: NSColor {
         guard let media = self.message?.media.first else {
-            return self.presentation.colors.blackTransparent
+            return self.presentation.chatServiceItemColor
         }
         if media is TelegramMediaImage {
             return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
@@ -1691,7 +1691,7 @@ class ChatRowItem: TableRowItem {
     
     var stateOverlayTextColor: NSColor {
            guard let media = self.message?.media.first else {
-               return NSColor(0xffffff)
+               return self.presentation.chatServiceItemTextColor
            }
            if media.isInteractiveMedia {
                 return NSColor(0xffffff)

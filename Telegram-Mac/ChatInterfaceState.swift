@@ -200,7 +200,11 @@ private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n
 
 private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
 
-struct ChatTextInputState: PostboxCoding, Equatable {
+final class ChatTextInputState: PostboxCoding, Equatable {
+    static func == (lhs: ChatTextInputState, rhs: ChatTextInputState) -> Bool {
+        return lhs === rhs
+    }
+    
     let inputText: String
     let attributes:[ChatTextInputAttribute]
     let selectionRange: Range<Int>

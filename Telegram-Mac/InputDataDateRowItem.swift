@@ -338,6 +338,10 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         dayInput.textColor = theme.colors.text
         monthInput.textColor = theme.colors.text
         yearInput.textColor = theme.colors.text
+        
+        dayInput.setBackgroundColor(backdorColor)
+        monthInput.setBackgroundColor(backdorColor)
+        yearInput.setBackgroundColor(backdorColor)
     }
     
     override func set(item: TableRowItem, animated: Bool) {

@@ -1583,6 +1583,7 @@ public extension NSTextView {
 }
 
 
+
 public extension String {
     var emojiSkinToneModifiers: [String] {
         return [ "🏻", "🏼", "🏽", "🏾", "🏿" ]
@@ -1697,7 +1698,32 @@ public extension String {
     }
     
     var containsOnlyEmoji: Bool {
-        return !isEmpty && unicodeScalars.first(where: { !$0.isEmoji && !$0.isZeroWidthJoiner }) == nil
+        guard !self.isEmpty else {
+            return false
+        }
+        if self.unicodeScalars.first == UnicodeScalar.ZeroWidthJoiner || self.unicodeScalars.first == UnicodeScalar.VariationSelector {
+            return false
+        }
+        
+        var nextShouldBeVariationSelector = false
+        for scalar in self.unicodeScalars {
+            if nextShouldBeVariationSelector {
+                if scalar == UnicodeScalar.VariationSelector {
+                    nextShouldBeVariationSelector = false
+                    continue
+                } else {
+                    return false
+                }
+            }
+            if !scalar.isEmoji && scalar.maybeEmoji {
+                nextShouldBeVariationSelector = true
+            }
+            else if !scalar.isEmoji && scalar != UnicodeScalar.ZeroWidthJoiner {
+                return false
+            }
+        }
+        return !nextShouldBeVariationSelector
+
     }
     
 
@@ -1707,30 +1733,13 @@ public extension String {
     }
     
     var emojis: [String] {
-        
-        var scalars: [[UnicodeScalar]] = []
-        var currentScalarSet: [UnicodeScalar] = []
-        var previousScalar: UnicodeScalar?
-        
-        for scalar in emojiScalars {
-            
-            if let prev = previousScalar, !prev.isZeroWidthJoiner && !scalar.isZeroWidthJoiner {
-                
-                scalars.append(currentScalarSet)
-                currentScalarSet = []
+        var emojis: [String] = []
+        self.enumerateSubstrings(in: self.startIndex ..< self.endIndex, options: .byComposedCharacterSequences) { substring, _, _, _ in
+            if let substring = substring {
+                emojis.append(substring)
             }
-            currentScalarSet.append(scalar)
-            
-            previousScalar = scalar
         }
-        
-
-        scalars.append(currentScalarSet)
-        let value = scalars.map({ $0.map{ String($0) } }).reduce("", { current, value in
-            return current + value.reduce("", +)
-        })
-        
-        return value.components(separatedBy: "")//scalars.map { $0.map{ String($0) } .reduce("", +) }
+        return emojis
     }
     
     
@@ -1738,7 +1747,7 @@ public extension String {
         var chars: [UnicodeScalar] = []
         var previous: UnicodeScalar?
         for cur in unicodeScalars {
-            if let previous = previous, previous.isZeroWidthJoiner, cur.isEmoji {
+            if let previous = previous, previous != UnicodeScalar.ZeroWidthJoiner && previous != UnicodeScalar.VariationSelector, cur.isEmoji {
                 chars.append(previous)
                 chars.append(cur)
                 
@@ -1751,34 +1760,73 @@ public extension String {
         
         return chars
     }
+    
+    var normalizedEmoji: String {
+        var string = ""
+        
+        var nextShouldBeVariationSelector = false
+        for scalar in self.unicodeScalars {
+            if nextShouldBeVariationSelector {
+                if scalar != UnicodeScalar.VariationSelector {
+                    string.unicodeScalars.append(UnicodeScalar.VariationSelector)
+                }
+                nextShouldBeVariationSelector = false
+            }
+            string.unicodeScalars.append(scalar)
+            if !scalar.isEmoji && scalar.maybeEmoji {
+                nextShouldBeVariationSelector = true
+            }
+        }
+        
+        if nextShouldBeVariationSelector {
+            string.unicodeScalars.append(UnicodeScalar.VariationSelector)
+        }
+        
+        return string
+    }
+
+    
+    var strippedEmoji: (String) {
+        var string = ""
+        for scalar in self.unicodeScalars {
+            if scalar.value != 0xfe0f {
+                string.unicodeScalars.append(scalar)
+            }
+        }
+        return string
+    }
+
 }
 
 public extension UnicodeScalar {
-    
     var isEmoji: Bool {
         switch self.value {
         case 0x1F600...0x1F64F, 0x1F300...0x1F5FF, 0x1F680...0x1F6FF, 0x1F1E6...0x1F1FF, 0xE0020...0xE007F, 0xFE00...0xFE0F, 0x1F900...0x1F9FF, 0x1F018...0x1F0F5, 0x1F200...0x1F270, 65024...65039, 9100...9300, 8400...8447, 0x1F004, 0x1F18E, 0x1F191...0x1F19A, 0x1F5E8:
             return true
-        case 0x265F, 0x267E, 0x2692, 0x26C8, 0x26CE, 0x26CF, 0x26D1...0x26D3, 0x26E9, 0x26F0...0x26F9, 0x2705, 0x270A, 0x270B, 0x2728, 0x274E, 0x2753...0x2755, 0x274C, 0x2795...0x2797, 0x27B0, 0x27BF:
+        case 0x2603, 0x265F, 0x267E, 0x2692, 0x26C4, 0x26C8, 0x26CE, 0x26CF, 0x26D1...0x26D3, 0x26E9, 0x26F0...0x26F9, 0x2705, 0x270A, 0x270B, 0x2728, 0x274E, 0x2753...0x2755, 0x274C, 0x2795...0x2797, 0x27B0, 0x27BF:
             return true
         default:
             return false
         }
     }
-
-    var isEmojiFlag: Bool {
-        switch value {
-        case 0x1F1E6...0x1F1FF: // Flags
+    
+    var maybeEmoji: Bool {
+        switch self.value {
+        case 0x2A, 0x23, 0x30...0x39, 0xA9, 0xAE:
             return true
-            
-        default: return false
+        case 0x2600...0x26FF, 0x2700...0x27BF, 0x1F100...0x1F1FF:
+            return true
+        case 0x203C, 0x2049, 0x2122, 0x2194...0x2199, 0x21A9, 0x21AA, 0x2139, 0x2328, 0x231A, 0x231B, 0x24C2, 0x25AA, 0x25AB, 0x25B6, 0x25FB...0x25FE, 0x25C0, 0x2934, 0x2935, 0x2B05...0x2B07, 0x2B1B...0x2B1E, 0x2B50, 0x2B55, 0x3030, 0x3297, 0x3299:
+            return true
+        default:
+            return false
         }
     }
     
-    var isZeroWidthJoiner: Bool {
-        return value == 8205
-    }
+    static var ZeroWidthJoiner = UnicodeScalar(0x200D)!
+    static var VariationSelector = UnicodeScalar(0xFE0F)!
 }
+
 
 
 

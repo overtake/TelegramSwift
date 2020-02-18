@@ -57,8 +57,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private(set) var attachView:ChatInputAttachView!
     
     
-    private let emojiReplacementDisposable:MetaDisposable = MetaDisposable()
-
     
     private let slowModeUntilDisposable = MetaDisposable()
     
@@ -176,6 +174,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         accessory.update(with: chatInteraction.presentation, account: chatInteraction.context.account, animated: false)
         accessoryView.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
+        textView.setBackgroundColor(theme.colors.background)
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
@@ -227,7 +226,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 textViewHeightChanged(defaultContentHeight, animated: animated)
             }
             
-            update()
         }
     }
     
@@ -344,13 +342,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        if textView.string() != state.effectiveInput.inputText {
-            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
-        }
-        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-            textView.setSelectedRange(range)
-        }
+            if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
+                textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+                self.textView.scrollToCursor()
+                
+            }
+            let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+            if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+                textView.setSelectedRange(range)
+            }
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
@@ -416,7 +416,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         guard let superview = superview else {return}
         textView.max_height = Int32(superview.frame.height / 2 + 50)
-        
     }
     
     override func layout() {
@@ -428,7 +427,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         actionsView.setFrameOrigin(frame.width - actionsView.frame.width, 0)
         attachView.setFrameOrigin(0, 0)
         _ts.setFrameOrigin(0, frame.height - .borderSize)
-
+        
     }
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {
@@ -492,17 +491,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewEnterPressed(_ event: NSEvent) -> Bool {
         
         if FastSettings.checkSendingAbility(for: event) {
-            if FastSettings.isPossibleReplaceEmojies {
-                let text = textView.string().stringEmojiReplacements
-                if textView.string() != text {
-                    self.textView.setString(text)
-                    let attributed = self.textView.attributedString()
-                    let range = self.textView.selectedRange()
-                    let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-                    chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-                }
-            }
-            
             if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
                 chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
@@ -542,26 +530,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     private var previousString: String = ""
     func textViewTextDidChange(_ string: String) {
-        if FastSettings.isPossibleReplaceEmojies {
-            
-            if previousString != string {
-                let difference = string.replacingOccurrences(of: previousString, with: "")
-                if difference.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
-                    let replacedEmojies = string.stringEmojiReplacements
-                    if string != replacedEmojies {
-                        self.textView.setString(replacedEmojies)
-                    }
-                }
-            }
-           
-            previousString = string
-        }
+
         
         let attributed = self.textView.attributedString()
         let range = self.textView.selectedRange()
+        
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-
+        self.chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
+        
     }
     
     func canTransformInputText() -> Bool {
@@ -605,7 +581,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     deinit {
         chatInteraction.remove(observer: self)
         self.accessoryDispose.dispose()
-        emojiReplacementDisposable.dispose()
         rtfAttachmentsDisposable.dispose()
         slowModeUntilDisposable.dispose()
     }

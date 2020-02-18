@@ -336,6 +336,7 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
         addSubview(colorBulb)
         
         colorBulb.backgroundColor = defaultColor
+        textView.setBackgroundColor(theme.colors.background)
         layout()
     }
     
