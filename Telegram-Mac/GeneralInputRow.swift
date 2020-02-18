@@ -180,13 +180,18 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
         _ = becomeFirstResponder()
     }
     
+    override func updateColors() {
+        super.updateColors()
+        textView.setBackgroundColor(theme.colors.background)
+        separator.backgroundColor = theme.colors.border
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.animates = false
         
         if let item = item as? GeneralInputRowItem {
             
-            separator.backgroundColor = theme.colors.border
 
             
             cleanImage.set(image: theme.icons.recentDismiss, for: .Normal)

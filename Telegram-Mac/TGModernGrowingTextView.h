@@ -121,4 +121,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 - (void)addSimpleItem:(SimpleUndoItem *)item;
+
+-(void)setBackgroundColor:(NSColor * __nonnull)color;
+
 @end

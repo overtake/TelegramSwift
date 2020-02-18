@@ -325,8 +325,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             editableContainer.backgroundColor = backdorColor
             firstNameTextView.textColor = theme.colors.text
             lastNameTextView.textColor = theme.colors.text
-            firstNameTextView.background = backdorColor
-            lastNameTextView.background = backdorColor
+            firstNameTextView.setBackgroundColor(backdorColor)
+            lastNameTextView.setBackgroundColor(backdorColor)
             firstNameSeparator.backgroundColor = theme.colors.border
             separatorView.backgroundColor = theme.colors.border
             self.background = item.viewType.rowBackground

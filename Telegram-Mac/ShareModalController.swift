@@ -97,6 +97,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         backgroundColor = theme.colors.background
         textContainerView.backgroundColor = theme.colors.background
         actionsContainerView.backgroundColor = theme.colors.background
+        textView.setBackgroundColor(theme.colors.background)
         
         addSubview(tokenizedView)
         addSubview(basicSearchView)

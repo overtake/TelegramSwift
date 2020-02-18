@@ -233,7 +233,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
                     var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
                     textRect.origin.x = insets.left + textXAdditional
-                    textRect.origin.y = insets.top
+                    textRect.origin.y = insets.top - 1
                     
                     nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
@@ -374,7 +374,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
                 
                 if let switchView = switchView {
-                    switchView.centerY(x: containerView.frame.width - innerInsets.right - switchView.frame.width - nextInset)
+                    switchView.centerY(x: containerView.frame.width - innerInsets.right - switchView.frame.width - nextInset, addition: -1)
                 }
                 if let textView = textView {
                     var width:CGFloat = 100
@@ -388,9 +388,9 @@ class GeneralInteractedRowView: GeneralRowView {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
                     }
                 }
-                nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width)
+                nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width, addition: -1)
                 if let progressView = progressView {
-                    progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width)
+                    progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width, addition: -1)
                 }
             }
         }

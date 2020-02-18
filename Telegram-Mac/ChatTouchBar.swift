@@ -218,15 +218,19 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         loadStickersDisposable.dispose()
         layoutStateDisposable.dispose()
     }
+    private var prevIsKeyWindow: Bool? = nil
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        if let value = value as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
-            let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
-            self.defaultItemIdentifiers = result.items
-            self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
-            self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
-            self.textView.updateTouchBarItemIdentifiers()
-            updateUserInterface()
+        if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
+            if oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult {
+                self.prevIsKeyWindow = textView.window?.isKeyWindow
+                let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
+                self.defaultItemIdentifiers = result.items
+                self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
+                self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
+                self.textView.updateTouchBarItemIdentifiers()
+                updateUserInterface()
+            }
         }
     }
     

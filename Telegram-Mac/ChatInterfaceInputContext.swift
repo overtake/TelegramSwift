@@ -143,7 +143,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         characterSet.insert(atScalar.unicodeScalars.first!)
         characterSet.insert(slashScalar.unicodeScalars.first!)
         characterSet.insert(emojiScalar.unicodeScalars.first!)
-        for _ in 0 ..< 4 {
+        for _ in 0 ..< 20 {
             let c = inputText[index]
             
             

@@ -616,7 +616,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
-        textView.background = backdorColor
+        textView.setBackgroundColor(backdorColor)
         secureField.font = .normal(13)
         secureField.backgroundColor = backdorColor
         secureField.textColor = theme.colors.text

@@ -126,7 +126,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
        _ =  clear.sizeToFit()
         
         placeholder.centerY(x: placeholderTextInset, addition: -1)
-        search.centerY()
+        search.centerY(addition: -1)
         input.insertionPointColor = presentation.search.textColor
         progressIndicator.progressColor = presentation.colors.text
         needsLayout = true
@@ -186,8 +186,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset / 2, max(21, search.frame.height)))
         
-        placeholder.centerY(nil, x: NSWidth(search.frame) + inset / 2)
-        search.centerY()
+        placeholder.centerY(x: NSWidth(search.frame) + inset / 2, addition: -1)
+        search.centerY(addition: -1)
         
         inputContainer.addSubview(input)
         addSubview(animateContainer)
@@ -525,11 +525,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         case .Focus:
             animateContainer.centerY(x: leftInset)
         }
-        placeholder.centerY()
+        placeholder.centerY(addition: -1)
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
-        search.centerY()
+        search.centerY(addition: -1)
     }
 
     public func changeResponder(_ animated:Bool = true) -> Bool {
