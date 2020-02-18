@@ -297,7 +297,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)boldWord:(id)sender {
-    
+    if(self.selectedRange.length == 0) {
+        return;
+    }
     NSRange effectiveRange;
     NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
 
@@ -321,7 +323,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 }
 
 -(void)italicWord:(id)sender {
-    
+    if(self.selectedRange.length == 0) {
+        return;
+    }
     NSRange effectiveRange;
     NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
     
@@ -334,6 +338,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 
 -(void)codeWord:(id)sender {
+    if(self.selectedRange.length == 0) {
+        return;
+    }
     [self changeFontMarkdown:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize] makeBold:NO makeItalic:NO];
 //    [self.textStorage addAttribute:NSFontAttributeName value:[NSFont fontWithName:@"Menlo-Regular" size:self.font.pointSize] range:self.selectedRange];
 //    [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];

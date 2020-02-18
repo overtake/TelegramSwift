@@ -1390,7 +1390,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         } else if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if value == self.contextChatInteraction.presentation {
-                if value.effectiveInput != oldValue.effectiveInput {
+                if value.effectiveInput.inputText != oldValue.effectiveInput.inputText {
                     updateInput(value, prevState: oldValue, animated)
                 }
             } else if value == self.chatInteraction.presentation {
