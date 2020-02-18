@@ -556,6 +556,15 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                         subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                             return { _ in return value }
                         }))
+                    case let .followResolvedName(_, username, _, _, _, _):
+                        if username.hasPrefix("_private_") {
+                            subscriber.putNext((nil, .single({ _ in return nil })))
+                            subscriber.putCompletion()
+                        } else {
+                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
+                                return { _ in return value }
+                            }))
+                        }
                     default:
                         subscriber.putNext((nil, .single({ _ in return nil })))
                         subscriber.putCompletion()
