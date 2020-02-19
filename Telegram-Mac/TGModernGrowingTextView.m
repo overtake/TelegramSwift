@@ -643,8 +643,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     if (isRetina) {
         CGContextSetAllowsAntialiasing(context, true);
-        CGContextSetShouldSmoothFonts(context, !isRetina);
-        CGContextSetAllowsFontSmoothing(context,!isRetina);
+        CGContextSetShouldSmoothFonts(context, false);
+        CGContextSetAllowsFontSmoothing(context, false);
     }
     [super drawRect:dirtyRect];
     

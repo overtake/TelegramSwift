@@ -961,7 +961,7 @@ class ChatListController : PeersListController {
                 if self.genericView.tableView.documentOffset.y == 0 {
                     self.context.sharedContext.bindings.mainController().showFastChatSettings()
                 } else {
-                    self.genericView.tableView.scroll(to: .up(true))
+                    self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
                 }
             }
         }
@@ -1036,6 +1036,7 @@ class ChatListController : PeersListController {
                                 self.updateFilter {
                                     $0.withUpdatedFilter(preset)
                                 }
+                                self.scrollup()
                             } else {
                                 self.navigationController?.push(ChatListController(context, modal: false, filterId: preset.uniqueId))
                             }
@@ -1294,10 +1295,12 @@ class ChatListController : PeersListController {
                         self?.updateFilter {
                             $0.withUpdatedFilter(nil)
                         }
+                        self?.scrollup()
                     } else if settings.presets.count >= index {
                         self?.updateFilter {
                             $0.withUpdatedFilter(settings.presets[index - 1])
                         }
+                        self?.scrollup()
                     } else {
                         self?._openChat(index)
                     }
