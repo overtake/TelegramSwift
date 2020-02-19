@@ -2697,7 +2697,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, _ toVisible:Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
+    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, _ toVisible:Bool = false, ignoreLayerAnimation: Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
        // if let index = self.index(of: item) {
         
         var rowRect:NSRect = bounds
@@ -2843,7 +2843,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //                self?.removeScroll(listener: scrollListener)
 //            })
             
-            if abs(bounds.minY - clipView.bounds.minY) < height {
+            if abs(bounds.minY - clipView.bounds.minY) < height || ignoreLayerAnimation {
                 if animate {
                     areSuspended = shouldSuspend
                     clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
