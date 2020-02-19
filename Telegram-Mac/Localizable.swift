@@ -2715,12 +2715,12 @@ internal final class L10n {
   internal static var galleryWaitDownloadPhoto: String  { return L10n.tr("Localizable", "Gallery.WaitDownload.Photo") }
   /// Please wait for the video to be fully downloaded.
   internal static var galleryWaitDownloadVideo: String  { return L10n.tr("Localizable", "Gallery.WaitDownload.Video") }
-  /// GIF saved to your [Download]() folder
-  internal static var galleryViewFastSaveGif: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Gif") }
-  /// Image saved to your [Download]() folder
-  internal static var galleryViewFastSaveImage: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Image") }
-  /// Video saved to your [Download]() folder
-  internal static var galleryViewFastSaveVideo: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Video") }
+  /// GIF saved to\n[Download]() folder
+  internal static var galleryViewFastSaveGif1: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Gif1") }
+  /// Image saved to\n[Download]() folder
+  internal static var galleryViewFastSaveImage1: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Image1") }
+  /// Video saved to\n[Download]() folder
+  internal static var galleryViewFastSaveVideo1: String  { return L10n.tr("Localizable", "GalleryView.FastSave.Video1") }
   /// Accent Color
   internal static var generalSettingsAccentColor: String  { return L10n.tr("Localizable", "GeneralSettings.AccentColor") }
   /// Accept Secret Chats
@@ -4937,9 +4937,9 @@ internal final class L10n {
   internal static var requestAccesErrorConirmSettings: String  { return L10n.tr("Localizable", "RequestAcces.Error.Conirm.Settings") }
   /// Telegram needs access to your microphone to make calls
   internal static var requestAccesErrorHaveNotAccessCall: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.Call") }
-  /// Telegram needs access to your microphone and camera to record video messages
+  /// Telegram needs access to your microphone and camera to record video messages.
   internal static var requestAccesErrorHaveNotAccessVideoMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VideoMessages") }
-  /// Telegram needs access to your microphone to record voice messages
+  /// Telegram needs access to your microphone to record voice messages.
   internal static var requestAccesErrorHaveNotAccessVoiceMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VoiceMessages") }
   /// Select All
   internal static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }

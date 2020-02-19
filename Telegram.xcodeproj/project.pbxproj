@@ -226,6 +226,9 @@
 		A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1379D23DF21EA00803ED3 /* ChatListRevealItem.swift */; };
 		A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */; };
 		A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */; };
+		A7C7215723FD45D300CE3F75 /* SaveModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C7215623FD45D300CE3F75 /* SaveModalController.swift */; };
+		A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7C7215823FD473D00CE3F75 /* success_saved.tgs */; };
+		A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C7215A23FD4BAA00CE3F75 /* LottieLocalAnimations.swift */; };
 		A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 9F0BCD9E2087BABC001D8D8A /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7D28205236C3C0B0000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28204236C3C0B0000A9BF /* Postbox.framework */; };
@@ -1269,6 +1272,9 @@
 		A7C1379D23DF21EA00803ED3 /* ChatListRevealItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListRevealItem.swift; sourceTree = "<group>"; };
 		A7C41DB3235862BB00CF9402 /* PeerMediaPhotosController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaPhotosController.swift; sourceTree = "<group>"; };
 		A7C41DB523586DC100CF9402 /* PeerPhotosMonthItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotosMonthItem.swift; sourceTree = "<group>"; };
+		A7C7215623FD45D300CE3F75 /* SaveModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveModalController.swift; sourceTree = "<group>"; };
+		A7C7215823FD473D00CE3F75 /* success_saved.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = success_saved.tgs; sourceTree = "<group>"; };
+		A7C7215A23FD4BAA00CE3F75 /* LottieLocalAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieLocalAnimations.swift; sourceTree = "<group>"; };
 		A7D28204236C3C0B0000A9BF /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D28206236C3C0F0000A9BF /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D28208236C3C150000A9BF /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3100,6 +3106,7 @@
 				C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */,
 				D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */,
 				D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */,
+				A7C7215A23FD4BAA00CE3F75 /* LottieLocalAnimations.swift */,
 			);
 			name = video;
 			sourceTree = "<group>";
@@ -3956,6 +3963,7 @@
 				C2A1054A1E0163D500B01F48 /* GalleryPageController.swift */,
 				9F6B54C721369B4000748FC1 /* GalleryModernControls.swift */,
 				C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */,
+				A7C7215623FD45D300CE3F75 /* SaveModalController.swift */,
 			);
 			name = gallery;
 			sourceTree = "<group>";
@@ -4486,6 +4494,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A7C7215823FD473D00CE3F75 /* success_saved.tgs */,
 				A7B6DDD623ED8FDF00B8E01C /* think_spectacular.tgs */,
 				D07C6D7F2346A42F00468B1A /* monkey_see.tgs */,
 				D07C6D7E2346A42E00468B1A /* monkey_unsee.tgs */,
@@ -4851,6 +4860,7 @@
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
+				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
@@ -5008,6 +5018,7 @@
 				C218FF981F41FF2300DD7D35 /* InstantPageAnchorItem.swift in Sources */,
 				A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */,
 				9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */,
+				A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
 				D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */,
@@ -5556,6 +5567,7 @@
 				C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */,
 				C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */,
 				D071E8A421496F38001B6024 /* ChatListTouchBar.swift in Sources */,
+				A7C7215723FD45D300CE3F75 /* SaveModalController.swift in Sources */,
 				9F147F6F223014EB00D71BD1 /* PasscodeControllers.swift in Sources */,
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,

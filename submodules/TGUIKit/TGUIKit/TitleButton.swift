@@ -204,7 +204,9 @@ public class TitleButton: ImageButton {
             return NSZeroSize
         }
         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
-        var size:NSSize = attributedString.CTSize(CGFloat.greatestFiniteMagnitude, framesetter: nil).1
+        let layout = TextViewLayout(attributedString)
+        layout.measure(width: .greatestFiniteMagnitude)
+        var size:NSSize = layout.layoutSize
         size.width = ceil(size.width) + (size.width == 0 ? 0 : 10)
         size.height = ceil(size.height)
         return size

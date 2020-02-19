@@ -371,11 +371,11 @@ private class ModalContainerView: View {
         
     }
     fileprivate override func mouseDown(with event: NSEvent) {
-        
+        super.mouseDown(with: event)
     }
     
     fileprivate override func mouseUp(with event: NSEvent) {
-        
+        super.mouseUp(with: event)
     }
 }
 
