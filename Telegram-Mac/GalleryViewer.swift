@@ -1052,11 +1052,11 @@ class GalleryViewer: NSResponder {
                                    
                                     let text: String
                                     if item is MGalleryVideoItem {
-                                         text = L10n.galleryViewFastSaveVideo
+                                         text = L10n.galleryViewFastSaveVideo1
                                     } else if item is MGalleryGIFItem {
-                                        text = L10n.galleryViewFastSaveGif
+                                        text = L10n.galleryViewFastSaveGif1
                                     } else {
-                                        text = L10n.galleryViewFastSaveImage
+                                        text = L10n.galleryViewFastSaveImage1
                                     }
                                     
                                     let dateFormatter = DateFormatter()
@@ -1077,21 +1077,22 @@ class GalleryViewer: NSResponder {
                                     }
                                     
                                     let context = strongSelf.context
-                                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(18), textColor: .white), bold: MarkdownAttributeSet(font: .bold(18), textColor: .white), link: MarkdownAttributeSet(font: .bold(18), textColor: theme.colors.link), linkAttribute: { contents in
+                                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: theme.colors.link), linkAttribute: { contents in
                                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))
                                     })).mutableCopy() as! NSMutableAttributedString
                                     
-                                    let layout = TextViewLayout(attributedText, alwaysStaticItems: true)
-                                    layout.interactions = TextViewInteractions.init(processURL: { [weak strongSelf] url  in
+                                    let layout = TextViewLayout(attributedText, alignment: .center, lineSpacing: 5.0, alwaysStaticItems: true)
+                                    layout.interactions = TextViewInteractions(processURL: { [weak strongSelf] url  in
                                          if let file = file {
                                             showInFinder(file, account: context.account)
                                             strongSelf?.close(false)
                                         }
                                     })
-                                    layout.measure(width: strongSelf.window.frame.width - 100)
+                                    layout.measure(width: 160)
                                     
                                     if let file = file {
-                                        _ = (copyToDownloads(file, postbox: context.account.postbox) |> map { _ in } |> deliverOnMainQueue |> take(1) |> then (showModalSuccess(for: strongSelf.window, icon: theme.icons.successModalProgress, text: layout, background: .blackTransparent, delay: 2.0))).start()
+                                        
+                                        _ = (copyToDownloads(file, postbox: context.account.postbox) |> map { _ in } |> deliverOnMainQueue |> take(1) |> then (showSaveModal(for: strongSelf.window, context: context, animation: LocalAnimatedSticker.success_saved, text: layout, delay: 3.0))).start()
                                     } else {
                                         savePanel(file: path.nsstring.deletingPathExtension, ext: path.nsstring.pathExtension, for: strongSelf.window)
                                     }
