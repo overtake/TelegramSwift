@@ -61,8 +61,10 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
 private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
     
     var bottom = bottom
+    var top = top
     if !System.supportsTransparentFontDrawing {
         bottom = top.blended(withFraction: 0.5, of: bottom)!
+        top = bottom
     }
     
     return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
