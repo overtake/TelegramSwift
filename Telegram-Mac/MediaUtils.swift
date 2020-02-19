@@ -61,7 +61,7 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
 
 
 //
-func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageRenderData, NoError> {
+func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil) -> Signal<ImageRenderData, NoError> {
     if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(fullRepresentationSize)) {
         
         
@@ -86,9 +86,21 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                     if let _ = decodedThumbnailData {
                         fetchedThumbnail = .complete()
                     } else {
-                        fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(smallestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() }
+                        let reference: MediaResourceReference
+                        if let peer = peer, let peerReference = PeerReference(peer) {
+                            reference = MediaResourceReference.avatar(peer: peerReference, resource: smallestRepresentation.resource)
+                        } else {
+                            reference = imageReference.resourceReference(smallestRepresentation.resource)
+                        }
+                        fetchedThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference, statsCategory: .image) |> `catch` { _ in return .complete() }
                     }
-                    let fetchedFullSize = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(largestRepresentation.resource), statsCategory: .image)
+                    let reference: MediaResourceReference
+                    if let peer = peer, let peerReference = PeerReference(peer) {
+                        reference = MediaResourceReference.avatar(peer: peerReference, resource: largestRepresentation.resource)
+                    } else {
+                        reference = imageReference.resourceReference(largestRepresentation.resource)
+                    }
+                    let fetchedFullSize = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference, statsCategory: .image)
 
                     let anyThumbnail: [Signal<MediaResourceData, NoError>]
                     if tryAdditionalRepresentations {
@@ -262,8 +274,8 @@ private func chatMessageFileDatas(account: Account, fileReference: FileMediaRefe
 }
 
 
-func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize:toRepresentationSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
+func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, secureIdAccessContext: SecureIdAccessContext? = nil, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> CGImage?, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize:toRepresentationSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext, peer: peer)
     
     return signal |> map { data in
         return { arguments in
@@ -318,8 +330,8 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
     }
 }
 
-func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), scale:CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: toRepresentationSize, synchronousLoad: synchronousLoad)
+func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: toRepresentationSize, synchronousLoad: synchronousLoad, peer: peer)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in

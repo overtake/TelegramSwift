@@ -723,42 +723,42 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let fontSizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
             
-            
-            window.set(handler: { () -> KeyHandlerResult in
-                _ = updateThemeInteractivetly(accountManager: accountManager, f: { current -> ThemePaletteSettings in
-                    if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
-                        if index == fontSizes.count - 1 {
-                            return current
-                        } else {
-                            return current.withUpdatedFontSize(CGFloat(fontSizes[index + 1]))
-                        }
-                    } else {
-                        return current
-                    }
-                }).start()
-                if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == fontSizes.count - 1 {
-                    return .rejected
-                }
-                return .invoked
-            }, with: self, for: .Equal, modifierFlags: [.command])
-            
-            window.set(handler: { () -> KeyHandlerResult in
-                _ = updateThemeInteractivetly(accountManager: accountManager, f: { current -> ThemePaletteSettings in
-                    if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
-                        if index == 0 {
-                            return current
-                        } else {
-                            return current.withUpdatedFontSize(CGFloat(fontSizes[index - 1]))
-                        }
-                    } else {
-                        return current
-                    }
-                }).start()
-                if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == 0 {
-                    return .rejected
-                }
-                return  .invoked
-            }, with: self, for: .Minus, modifierFlags: [.command])
+//            
+//            window.set(handler: { () -> KeyHandlerResult in
+//                _ = updateThemeInteractivetly(accountManager: accountManager, f: { current -> ThemePaletteSettings in
+//                    if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
+//                        if index == fontSizes.count - 1 {
+//                            return current
+//                        } else {
+//                            return current.withUpdatedFontSize(CGFloat(fontSizes[index + 1]))
+//                        }
+//                    } else {
+//                        return current
+//                    }
+//                }).start()
+//                if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == fontSizes.count - 1 {
+//                    return .rejected
+//                }
+//                return .invoked
+//            }, with: self, for: .Equal, modifierFlags: [.command])
+//            
+//            window.set(handler: { () -> KeyHandlerResult in
+//                _ = updateThemeInteractivetly(accountManager: accountManager, f: { current -> ThemePaletteSettings in
+//                    if let index = fontSizes.firstIndex(of: Int32(current.fontSize)) {
+//                        if index == 0 {
+//                            return current
+//                        } else {
+//                            return current.withUpdatedFontSize(CGFloat(fontSizes[index - 1]))
+//                        }
+//                    } else {
+//                        return current
+//                    }
+//                }).start()
+//                if let index = fontSizes.firstIndex(of: Int32(theme.fontSize)), index == 0 {
+//                    return .rejected
+//                }
+//                return  .invoked
+//            }, with: self, for: .Minus, modifierFlags: [.command])
             
             self.window.contentView?.wantsLayer = true
         })

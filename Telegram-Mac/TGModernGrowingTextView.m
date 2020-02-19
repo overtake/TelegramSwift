@@ -232,6 +232,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                                 [self.transformItems enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
                                     [item.submenu insertItem:obj atIndex:0];
                                 }];
+                                 [item.submenu insertItem:[NSMenuItem separatorItem] atIndex: self.transformItems.count];
                                 //     [item.submenu insertItem:[[NSMenuItem alloc] initWithTitle:@"Remove All Transformations" action:nil keyEquivalent:nil] atIndex:0];
                             }
                         } else {
@@ -269,7 +270,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     NSMenuItem *removeAll = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.RemoveAll", nil) action:@selector(removeAll:) keyEquivalent:@""];
     
     
-    return @[removeAll, code, italic, bold, url];
+    return @[removeAll, [NSMenuItem separatorItem], code, italic, bold, url];
 }
     
     

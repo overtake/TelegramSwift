@@ -197,6 +197,15 @@ enum GalleryEntry : Comparable, Identifiable {
         }
     }
     
+    var peer: Peer? {
+        switch self {
+        case let .photo(_, _, _, _, peer, _, _):
+            return peer
+        default:
+            return nil
+        }
+    }
+    
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
         case let .photo(_, _, image, _, peer, message, _):
