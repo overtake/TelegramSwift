@@ -60,7 +60,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             }
             return .single((newSize, orientation))
          } |> mapToSignal { size, orientation -> Signal<(NSImage?, ImageOrientation?), NoError> in
-                return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(1280, 1280), scale: System.backingScale, synchronousLoad: true)
+            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(1280, 1280), peer: entry.peer, scale: System.backingScale, synchronousLoad: true)
                     |> map { transform in
                         let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
                         if let orientation = orientation {
@@ -76,31 +76,6 @@ class MGalleryPeerPhotoItem: MGalleryItem {
                         }
                 }
         }
-        
-//        let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
-//            guard let `self` = self else {return .complete()}
-//
-//            return self.smallestValue(for: size) |> map { size in
-//                var newSize = size
-//                if let orientation = orientation {
-//                    if orientation == .right || orientation == .left {
-//                        newSize = NSMakeSize(newSize.height, newSize.width)
-//                    }
-//                }
-//                return (newSize, orientation)
-//            }
-//
-//        } |> mapToSignal { size, orientation -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments, ImageOrientation?), NoError> in
-//            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(640, 640), scale: System.backingScale, secureIdAccessContext: nil, synchronousLoad: true)
-//                |> map { transform in
-//                    let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
-//                    if let orientation = orientation {
-//                        return image?.createMatchingBackingDataWithImage(orienation: orientation)
-//                    }
-//                    return image
-//            }
-//        }
-        
 
         if let representation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))  {
             path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in

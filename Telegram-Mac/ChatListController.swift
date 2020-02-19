@@ -1428,6 +1428,9 @@ class ChatListController : PeersListController {
                 return false
             }
         }
+        if item is ChatListRevealItem {
+            return false
+        }
         return true
     }
     
