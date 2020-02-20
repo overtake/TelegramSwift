@@ -590,7 +590,7 @@ public struct TableAutohide {
 open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,SelectDelegate,InteractionContentViewProtocol, AppearanceViewProtocol {
     
     private var searchView: TableSearchView?
-    
+    private var rightBorder: View? = nil
     public var separator:TableSeparator = .none
     
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
@@ -681,6 +681,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if super.layer?.backgroundColor != .clear {
             super.layer?.backgroundColor = self.getBackgroundColor().cgColor
         }
+        rightBorder?.backgroundColor = theme.colors.border
         //tableView.background = .clear
       //  super.layer?.backgroundColor = .clear
         self.needsDisplay = true
@@ -745,6 +746,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         didSet {
             self.clipView.border = border
             self.tableView.border = border
+            
+            if border == [.Right] {
+                if rightBorder == nil {
+                    rightBorder = View()
+                    rightBorder?.backgroundColor = presentation.colors.border
+                    addSubview(rightBorder!)
+                    needsLayout = true
+                }
+            } else {
+                rightBorder?.removeFromSuperview()
+                rightBorder = nil
+            }
         }
     }
     
@@ -841,6 +854,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
        
         if needsLayouItemsOnNextTransition {
             layoutItems()
+        }
+        if let rightBorder = rightBorder {
+            rightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         }
     }
     
