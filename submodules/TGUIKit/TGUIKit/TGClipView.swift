@@ -318,16 +318,12 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.destinationOrigin = newOrigin;
             self.beginScroll()
         } else {
-            
-            if !isAnimateScrolling {
-                self.destinationOrigin = newOrigin;
-                self.endScroll()
-                super.scroll(to: newOrigin)
-                Queue.mainQueue().justDispatch {
-                    self.handleCompletionIfNeeded(withSuccess: true)
-                }
+            self.destinationOrigin = newOrigin;
+            self.endScroll()
+            super.scroll(to: newOrigin)
+            Queue.mainQueue().justDispatch {
+                self.handleCompletionIfNeeded(withSuccess: true)
             }
-            
         }
         
     }
