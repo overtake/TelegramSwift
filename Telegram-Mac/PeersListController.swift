@@ -685,6 +685,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
                         if complete {
                             self?.searchController?.viewDidAppear(animated)
+                             self?.genericView.tableView.isHidden = true
                         }
                     })
                     searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)

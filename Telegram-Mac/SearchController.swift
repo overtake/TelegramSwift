@@ -451,7 +451,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.border = [.Right]
         
         genericView.getBackgroundColor = {
-            .clear
+            theme.colors.background
         }
         
         let context = self.context
