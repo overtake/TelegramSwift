@@ -1117,7 +1117,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let range = self.visibleRows()
         
         if let stickClass = stickClass {
-            if documentSize.height > frame.height {
+         //   if documentSize.height > frame.height {
                 
                 let flipped = tableView.isFlipped
 
@@ -1287,7 +1287,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                      })
                 }
 
-            }
+          //  }
         }
     }
 
