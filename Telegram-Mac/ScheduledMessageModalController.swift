@@ -63,14 +63,14 @@ private func formatTime(_ date: Date) -> String {
 final class ScheduledMessageModalView : View {
     fileprivate let dayPicker: DatePicker<Date>
     private let atView = TextView()
-    fileprivate let timePicker: DatePicker<Date>
+    fileprivate let timePicker: TimePicker
     private let containerView = View()
     fileprivate let sendOn = TitleButton()
     fileprivate let sendWhenOnline = TitleButton()
     required init(frame frameRect: NSRect) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: formatDay(Date()), value: Date()))
-        self.timePicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: "22:00", value: Date()))
+        self.timePicker = TimePicker(selected: TimePickerOption(left: 12, right: 0))
         super.init(frame: frameRect)
         containerView.addSubview(self.dayPicker)
         containerView.addSubview(self.atView)
@@ -135,6 +135,15 @@ final class ScheduledMessageModalView : View {
     }
 }
 
+
+private extension TimePickerOption {
+    var interval: TimeInterval {
+        let hour = Double(self.left) * 60.0 * 60
+        let minutes = Double(self.right) * 60.0
+        
+        return hour + minutes
+    }
+}
 class ScheduledMessageModalController: ModalViewController {
     private let context: AccountContext
     private let scheduleAt: (Date)->Void
@@ -177,7 +186,7 @@ class ScheduledMessageModalController: ModalViewController {
     
     private func applyDay(_ date: Date) {
         genericView.dayPicker.selected = DatePickerOption(name: formatDay(date), value: date)
-        let current = self.genericView.timePicker.selected.value
+        let current = date.addingTimeInterval(self.genericView.timePicker.selected.interval)
 
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
             
@@ -206,8 +215,14 @@ class ScheduledMessageModalController: ModalViewController {
     }
     
     private func applyTime(_ date: Date) {
-        genericView.timePicker.selected = DatePickerOption(name: formatTime(date), value: date)
         
+        
+        var t: time_t = time_t(date.timeIntervalSince1970)
+        var timeinfo: tm = tm()
+        localtime_r(&t, &timeinfo)
+        
+        genericView.timePicker.selected = TimePickerOption(left: timeinfo.tm_hour, right: timeinfo.tm_min)
+
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
             genericView.sendOn.set(text: L10n.scheduleSendToday(formatTime(date)), for: .Normal)
         } else {
@@ -215,10 +230,19 @@ class ScheduledMessageModalController: ModalViewController {
         }
     }
     
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
     private func schedule() {
-        
-        let date = self.genericView.timePicker.selected.value
-        
+        let day = self.genericView.dayPicker.selected.value
+        let date = day.startOfDay.addingTimeInterval(self.genericView.timePicker.selected.interval)
+        if CalendarUtils.isSameDate(Date(), date: day, checkDay: true) {
+            if Date() > date {
+                genericView.timePicker.shake()
+                return
+            }
+        }
         self.scheduleAt(date.addingTimeInterval(-context.timeDifference))
         self.close()
     }
@@ -228,17 +252,60 @@ class ScheduledMessageModalController: ModalViewController {
         return .invoked
     }
     
+    override func firstResponder() -> NSResponder? {
+        return genericView.timePicker.firstResponder
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        window?.set(handler: { () -> KeyHandlerResult in
+            
+            return .invokeNext
+        }, with: self, for: .Tab, priority: .modal)
+        window?.set(handler: { () -> KeyHandlerResult in
+            
+            return .invokeNext
+        }, with: self, for: .LeftArrow, priority: .modal)
+        window?.set(handler: { () -> KeyHandlerResult in
+            
+            return .invokeNext
+        }, with: self, for: .RightArrow, priority: .modal)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeAllHandlers(for: self)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
         let date = self.defaultDate ?? Date()
         
+        var t: time_t = time_t(date.timeIntervalSince1970)
+        var timeinfo: tm = tm()
+        localtime_r(&t, &timeinfo)
+        
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: formatDay(date), value: date)
-        self.genericView.timePicker.selected = DatePickerOption<Date>(name: formatTime(date), value: date)
+        self.genericView.timePicker.selected = TimePickerOption(left: 0, right: 0)
         
         self.genericView.possibleSendWhenOnline(self.sendWhenOnline)
         
         self.applyDay(date)
+        
+        self.genericView.timePicker.update = { [weak self] updated in
+            guard let `self` = self else {
+                return false
+            }
+            
+            let day = self.genericView.dayPicker.selected.value
+            
+            let date = day.startOfDay.addingTimeInterval(updated.interval)
+
+            self.applyTime(date)
+            return true
+        }
         
         self.genericView.sendOn.set(handler: { [weak self] _ in
             self?.schedule()

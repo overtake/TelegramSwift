@@ -659,7 +659,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
-            delay(0.15, closure: {
+           // delay(0.15, closure: {
                 let rect = self.genericView.tableView.frame
                 let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                     if let peerId = peerId {
@@ -672,9 +672,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 searchController.pinnedItems = self.collectPinnedItems
                 
                 self.searchController = searchController
-                self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
-                    self?.genericView.tableView.isHidden = true
-                })
+//                self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
+//                    self?.genericView.tableView.isHidden = true
+//                })
                 searchController.defaultQuery = self.genericView.searchView.query
                 searchController.navigationController = self.navigationController
                 searchController.viewWillAppear(true)
@@ -687,11 +687,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             self?.searchController?.viewDidAppear(animated)
                         }
                     })
+                    searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
+                    searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
+
                 } else {
                     searchController.viewDidAppear(animated)
                 }
                 self.addSubview(searchController.view)
-            })
+           // })
         }
     }
     
@@ -709,6 +712,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
                 view?.removeFromSuperview()
             })
+            searchController.view.layer?.animateScaleSpring(from: 1.0, to: 1.05, duration: 0.4, removeOnCompletion: false, bounce: false)
+            genericView.tableView.layer?.animateScaleSpring(from: 0.95, to: 1.00, duration: 0.4, removeOnCompletion: false, bounce: false)
+
         }
     }
     

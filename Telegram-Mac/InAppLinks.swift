@@ -298,7 +298,7 @@ func execute(inapp:inAppLink) {
                             messageId = nil
                         }
                         if let peer = peer as? TelegramChannel {
-                            if peer.participationStatus != .member {
+                            if peer.participationStatus == .kicked {
                                 alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
                                 return
                             }
