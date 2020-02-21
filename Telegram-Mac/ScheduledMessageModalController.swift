@@ -55,7 +55,7 @@ private func formatDay(_ date: Date) -> String {
 
 private func formatTime(_ date: Date) -> String {
     let timeFormatter = DateFormatter()
-    timeFormatter.timeStyle = .short
+    timeFormatter.timeStyle = .medium
    // timeFormatter.timeZone = TimeZone(abbreviation: "UTC")!
     return timeFormatter.string(from: date)
 }
@@ -70,7 +70,7 @@ final class ScheduledMessageModalView : View {
     required init(frame frameRect: NSRect) {
         
         self.dayPicker = DatePicker<Date>(selected: DatePickerOption<Date>(name: formatDay(Date()), value: Date()))
-        self.timePicker = TimePicker(selected: TimePickerOption(left: 12, right: 0))
+        self.timePicker = TimePicker(selected: TimePickerOption(hours: 0, minutes: 0, seconds: 0))
         super.init(frame: frameRect)
         containerView.addSubview(self.dayPicker)
         containerView.addSubview(self.atView)
@@ -138,10 +138,10 @@ final class ScheduledMessageModalView : View {
 
 private extension TimePickerOption {
     var interval: TimeInterval {
-        let hour = Double(self.left) * 60.0 * 60
-        let minutes = Double(self.right) * 60.0
-        
-        return hour + minutes
+        let hours = Double(self.hours) * 60.0 * 60
+        let minutes = Double(self.minutes) * 60.0
+        let seconds = Double(self.seconds)
+        return hours + minutes + seconds
     }
 }
 class ScheduledMessageModalController: ModalViewController {
@@ -221,7 +221,7 @@ class ScheduledMessageModalController: ModalViewController {
         var timeinfo: tm = tm()
         localtime_r(&t, &timeinfo)
         
-        genericView.timePicker.selected = TimePickerOption(left: timeinfo.tm_hour, right: timeinfo.tm_min)
+        genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: timeinfo.tm_sec)
 
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
             genericView.sendOn.set(text: L10n.scheduleSendToday(formatTime(date)), for: .Normal)
@@ -288,7 +288,7 @@ class ScheduledMessageModalController: ModalViewController {
         localtime_r(&t, &timeinfo)
         
         self.genericView.dayPicker.selected = DatePickerOption<Date>(name: formatDay(date), value: date)
-        self.genericView.timePicker.selected = TimePickerOption(left: 0, right: 0)
+        self.genericView.timePicker.selected = TimePickerOption(hours: 0, minutes: 0, seconds: 0)
         
         self.genericView.possibleSendWhenOnline(self.sendWhenOnline)
         
