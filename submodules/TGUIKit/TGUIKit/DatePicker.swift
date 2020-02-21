@@ -3,7 +3,7 @@
 //  TGUIKit
 //
 //  Created by Mikhail Filimonov on 07/08/2019.
-//  Copyright © 2019 Telegram. All rights reserved.
+//  Copyminutes © 2019 Telegram. All minutess reserved.
 //
 
 import Cocoa
@@ -121,18 +121,15 @@ public class DatePicker<T>: Control where T: Equatable {
 
 
 
-public final class TimePickerOption : Equatable {
-    public let left: Int32
-    public let right: Int32
-    public init(left: Int32, right: Int32) {
-        self.left = left
-        self.right = right
+public struct TimePickerOption : Equatable {
+    public let hours: Int32
+    public let minutes: Int32
+    public let seconds: Int32
+    public init(hours: Int32, minutes: Int32, seconds: Int32) {
+        self.hours = hours
+        self.minutes = minutes
+        self.seconds = seconds
     }
-    
-    public static func ==(lhs: TimePickerOption, rhs: TimePickerOption) -> Bool {
-        return lhs.left == rhs.left && lhs.right == rhs.right
-    }
-    
 }
 
 private final class TimeOptionView: View {
@@ -143,13 +140,13 @@ private final class TimeOptionView: View {
     private var isFirst: Bool = false
     
     var keyDown:((Int32, Bool)->Void)? = nil
-    var next:(()->Void)? = nil
+    var next:((Bool)->Void)? = nil
     
     private func updateLayout() {
         
         let value: String = self.value < 10 ? "0\(self.value)" : "\(self.value)"
         
-        textNode = TextNode.layoutText(.initialize(string: value, color: presentation.colors.grayText, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+        textNode = TextNode.layoutText(.initialize(string: value, color: presentation.colors.text, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
         textNodeSelected = TextNode.layoutText(.initialize(string: value, color: presentation.colors.underSelectedColor, font: .normal(.text)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
         
         setFrameSize(NSMakeSize(textNode!.0.size.width + 6,  textNode!.0.size.height + 4))
@@ -173,28 +170,30 @@ private final class TimeOptionView: View {
             return
         }
         switch keyCode {
-        case KeyboardKey.Zero, KeyboardKey.Keypad0:
+        case .Zero, .Keypad0:
             self.keyDown?(0, isFirst)
-        case KeyboardKey.One, KeyboardKey.Keypad1:
+        case .One, .Keypad1:
             self.keyDown?(1, isFirst)
-        case KeyboardKey.Two, KeyboardKey.Keypad2:
+        case .Two, .Keypad2:
             self.keyDown?(2, isFirst)
-        case KeyboardKey.Three, KeyboardKey.Keypad3:
+        case .Three, .Keypad3:
             self.keyDown?(3, isFirst)
-        case KeyboardKey.Four, KeyboardKey.Keypad4:
+        case .Four, .Keypad4:
             self.keyDown?(4, isFirst)
-        case KeyboardKey.Five, KeyboardKey.Keypad5:
+        case .Five, .Keypad5:
             self.keyDown?(5, isFirst)
-        case KeyboardKey.Six, KeyboardKey.Keypad6:
+        case .Six, .Keypad6:
             self.keyDown?(6, isFirst)
-        case KeyboardKey.Seven, KeyboardKey.Keypad7:
+        case .Seven, .Keypad7:
             self.keyDown?(7, isFirst)
-        case KeyboardKey.Eight, KeyboardKey.Keypad8:
+        case .Eight, .Keypad8:
             self.keyDown?(8, isFirst)
-        case KeyboardKey.Nine, KeyboardKey.Keypad9:
+        case .Nine, .Keypad9:
             self.keyDown?(9, isFirst)
-        case KeyboardKey.Tab, .RightArrow, .LeftArrow:
-            self.next?()
+        case .Tab, .RightArrow:
+            self.next?(true)
+        case .LeftArrow:
+            self.next?(false)
         case .Escape:
             self.window?.makeFirstResponder(nil)
         default:
@@ -252,16 +251,19 @@ public class TimePicker: Control {
     
     public var update:((TimePickerOption)->Bool)?
     
-    private let leftView:TimeOptionView
-    private let rightView:TimeOptionView
-    private let separatorView: TextView = TextView()
+    private let hoursView:TimeOptionView
+    private let minutesView:TimeOptionView
+    private let secondsView:TimeOptionView
+    private let separatorView1: TextView = TextView()
+    private let separatorView2: TextView = TextView()
     private let borderView = View()
     
     public var selected: TimePickerOption {
         didSet {
             if oldValue != selected {
-                self.leftView.value = selected.left
-                self.rightView.value = selected.right
+                self.hoursView.value = selected.hours
+                self.minutesView.value = selected.minutes
+                self.secondsView.value = selected.seconds
                 needsLayout = true
                 self.updateSelected(animated: true)
             }
@@ -272,22 +274,29 @@ public class TimePicker: Control {
     
     public init(selected: TimePickerOption) {
         self.selected = selected
-        self.leftView = TimeOptionView(value: selected.left)
-        self.rightView = TimeOptionView(value: selected.right)
+        self.hoursView = TimeOptionView(value: selected.hours)
+        self.minutesView = TimeOptionView(value: selected.minutes)
+        self.secondsView = TimeOptionView(value: selected.seconds)
         super.init(frame: NSZeroRect)
         
         
-        separatorView.userInteractionEnabled = false
-        separatorView.isSelectable = false
-        separatorView.isEventLess = true
+        separatorView1.userInteractionEnabled = false
+        separatorView1.isSelectable = false
+        separatorView1.isEventLess = true
         
-        self.addSubview(self.separatorView)
+        separatorView2.userInteractionEnabled = false
+        separatorView2.isSelectable = false
+        separatorView2.isEventLess = true
+        
+        self.addSubview(self.separatorView1)
+        self.addSubview(self.separatorView2)
         self.addSubview(self.borderView)
-        self.addSubview(self.leftView)
-        self.addSubview(self.rightView)
+        self.addSubview(self.hoursView)
+        self.addSubview(self.minutesView)
+        self.addSubview(self.secondsView)
         self.updateLocalizationAndTheme(theme: presentation)
         
-        leftView.keyDown = { [weak self] value, isFirst in
+        hoursView.keyDown = { [weak self] value, isFirst in
             guard let selected = self?.selected else {
                 return
             }
@@ -295,20 +304,20 @@ public class TimePicker: Control {
             if isFirst {
                 updatedValue = value
             } else {
-                if selected.left > 0, selected.left < 10 {
-                    updatedValue = min(Int32("\(selected.left)\(updatedValue)")!, 23)
+                if selected.hours > 0, selected.hours < 10 {
+                    updatedValue = min(Int32("\(selected.hours)\(updatedValue)")!, 23)
                     self?.switchToRight()
                 }
             }
             
-            let new = TimePickerOption(left: updatedValue, right: selected.right)
+            let new = TimePickerOption(hours: updatedValue, minutes: selected.minutes, seconds: selected.seconds)
             if let result = self?.update?(new), result {
                 self?.selected = new
             } else {
                 self?.shake()
             }
         }
-        rightView.keyDown = { [weak self] value, isFirst in
+        minutesView.keyDown = { [weak self] value, isFirst in
             guard let selected = self?.selected else {
                 return
             }
@@ -316,12 +325,12 @@ public class TimePicker: Control {
             if isFirst {
                 updatedValue = value
             } else {
-                if selected.right > 0, selected.right < 10 {
-                    updatedValue = min(Int32("\(selected.right)\(updatedValue)")!, 59)
-                    self?.switchToLeft()
+                if selected.minutes > 0, selected.minutes < 10 {
+                    updatedValue = min(Int32("\(selected.minutes)\(updatedValue)")!, 59)
+                    self?.switchToRight()
                 }
             }
-            let new = TimePickerOption(left: selected.left, right: updatedValue)
+            let new = TimePickerOption(hours: selected.hours, minutes: updatedValue, seconds: selected.seconds)
             self?.selected = new
             if let result = self?.update?(new), result {
                 self?.selected = new
@@ -329,15 +338,43 @@ public class TimePicker: Control {
                 self?.shake()
             }
         }
-        rightView.next = { [weak self] in
-            if self?.firstResponder == self?.rightView {
+        secondsView.keyDown = { [weak self] value, isFirst in
+            guard let selected = self?.selected else {
+                return
+            }
+            var updatedValue = value
+            if isFirst {
+                updatedValue = value
+            } else {
+                if selected.seconds > 0, selected.seconds < 10 {
+                    updatedValue = min(Int32("\(selected.seconds)\(updatedValue)")!, 59)
+                    self?.switchToRight()
+                }
+            }
+            let new = TimePickerOption(hours: selected.hours, minutes: selected.minutes, seconds: updatedValue)
+            self?.selected = new
+            if let result = self?.update?(new), result {
+                self?.selected = new
+            } else {
+                self?.shake()
+            }
+        }
+        minutesView.next = { [weak self] toRight in
+            if !toRight {
                 self?.switchToLeft()
             } else {
                 self?.switchToRight()
             }
         }
-        leftView.next = { [weak self] in
-            if self?.firstResponder == self?.rightView {
+        hoursView.next = { [weak self] toRight in
+            if !toRight {
+                self?.switchToLeft()
+            } else {
+                self?.switchToRight()
+            }
+        }
+        secondsView.next = { [weak self] toRight in
+            if !toRight {
                 self?.switchToLeft()
             } else {
                 self?.switchToRight()
@@ -346,22 +383,42 @@ public class TimePicker: Control {
     }
     
     func switchToRight() {
-        self.window?.makeFirstResponder(self.rightView)
+        if self.window?.firstResponder == self.hoursView {
+            self.window?.makeFirstResponder(self.minutesView)
+        } else if self.window?.firstResponder == self.minutesView {
+            self.window?.makeFirstResponder(self.secondsView)
+        } else {
+            self.window?.makeFirstResponder(self.hoursView)
+        }
     }
     func switchToLeft() {
-        self.window?.makeFirstResponder(self.leftView)
+        if self.window?.firstResponder == self.secondsView {
+            self.window?.makeFirstResponder(self.minutesView)
+        } else if self.window?.firstResponder == self.minutesView {
+            self.window?.makeFirstResponder(self.hoursView)
+        } else {
+            self.window?.makeFirstResponder(self.secondsView)
+        }
     }
     
     public var firstResponder: NSResponder? {
-        return self.rightView == self.window?.firstResponder ? self.rightView : self.leftView
+        if self.window?.firstResponder == self.secondsView {
+            return self.secondsView
+        } else if self.window?.firstResponder == self.minutesView {
+            return self.minutesView
+        } else {
+            return self.hoursView
+        }
     }
     
     public override func layout() {
         super.layout()
         
-        leftView.centerY(x: bounds.midX - leftView.frame.width - 2)
-        rightView.centerY(x: bounds.midX + 3)
-        separatorView.center()
+        minutesView.center()
+        separatorView1.centerY(x: minutesView.frame.minX - separatorView1.frame.width - 2)
+        hoursView.centerY(x: minutesView.frame.minX - hoursView.frame.width - separatorView1.frame.width - 5)
+        separatorView2.centerY(x: minutesView.frame.maxX + 3)
+        secondsView.centerY(x: minutesView.frame.maxX + separatorView1.frame.width + 5)
         self.borderView.frame = bounds
     }
     
@@ -376,7 +433,9 @@ public class TimePicker: Control {
         
         let layout = TextViewLayout(.initialize(string: ":", color: presentation.colors.grayText, font: .normal(.text)))
         layout.measure(width: .greatestFiniteMagnitude)
-        separatorView.update(layout)
+        separatorView1.update(layout)
+        
+        separatorView2.update(layout)
         
         needsLayout = true
     }
