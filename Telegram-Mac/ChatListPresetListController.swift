@@ -19,11 +19,13 @@ private final class ChatListPresetArguments {
     let openPreset:(ChatListFilterPreset)->Void
     let removePreset: (ChatListFilterPreset)->Void
     let toggleTabsIsEnabled:(Bool)->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilterPreset)->Void, removePreset: @escaping(ChatListFilterPreset)->Void, toggleTabsIsEnabled: @escaping(Bool)->Void) {
+    let toggleTabsBadge: (Bool)->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilterPreset)->Void, removePreset: @escaping(ChatListFilterPreset)->Void, toggleTabsIsEnabled: @escaping(Bool)->Void, toggleTabsBadge: @escaping(Bool)->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.toggleTabsIsEnabled = toggleTabsIsEnabled
+        self.toggleTabsBadge = toggleTabsBadge
     }
 }
 private func _id_preset(_ preset: ChatListFilterPreset) -> InputDataIdentifier {
@@ -31,6 +33,7 @@ private func _id_preset(_ preset: ChatListFilterPreset) -> InputDataIdentifier {
 }
 private let _id_add_new = InputDataIdentifier("_id_add_new")
 private let _id_add_tabs = InputDataIdentifier("_id_add_tabs")
+private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
 
 private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
@@ -43,10 +46,19 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     
     
     if !state.presets.isEmpty {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_tabs, data: InputDataGeneralData(name: "Show Tabs", color: theme.colors.text, type: .switchable(state.tabsIsEnabled), viewType: .singleItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_tabs, data: InputDataGeneralData(name: "Show Tabs", color: theme.colors.text, type: .switchable(state.tabsIsEnabled), viewType: state.tabsIsEnabled ? .firstItem : .singleItem, action: {
             arguments.toggleTabsIsEnabled(!state.tabsIsEnabled)
         })))
         index += 1
+
+        if state.tabsIsEnabled {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_badge_tabs, data: InputDataGeneralData(name: "Unread Badge", color: theme.colors.text, type: .switchable(state.badge), viewType: .lastItem, action: {
+                arguments.toggleTabsBadge(!state.badge)
+            })))
+            index += 1
+        }
+        
+        
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Display filter tabs on main screen for quick switching."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
@@ -107,6 +119,10 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
     }, toggleTabsIsEnabled: { value in
         _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
             $0.withUpdatedTabEnable(value)
+        }).start()
+    }, toggleTabsBadge: { value in
+        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
+            $0.withUpdatedBadge(value)
         }).start()
     })
     

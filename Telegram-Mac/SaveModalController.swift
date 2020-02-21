@@ -22,7 +22,7 @@ private final class SaveModalView : NSVisualEffectView {
         self.layer?.cornerRadius = 10.0
         self.autoresizingMask = []
         self.autoresizesSubviews = false
-        self.material = presentation.colors.isDark ? .dark : .light
+        self.material = .ultraDark
         self.blendingMode = .withinWindow
     }
     

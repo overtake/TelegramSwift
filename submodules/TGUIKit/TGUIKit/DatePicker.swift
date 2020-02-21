@@ -228,7 +228,7 @@ private final class TimeOptionView: View {
         } else {
             ctx.setFillColor(presentation.colors.grayBackground.cgColor)
             ctx.fill(bounds)
-            if let textNode = textNodeSelected {
+            if let textNode = self.textNode {
                 textNode.1.draw(focus(textNode.0.size), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
             }
         }

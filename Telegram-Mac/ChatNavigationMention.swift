@@ -25,6 +25,12 @@ class ChatNavigationMention: ImageButton {
         set(image: theme.icons.chatMentionActive, for: .Highlight)
         self.setFrameSize(60,60)
         
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow
+        
     }
     
     func updateCount(_ count: Int32) {

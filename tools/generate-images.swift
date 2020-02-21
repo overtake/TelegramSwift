@@ -19,6 +19,7 @@ func initialize() -> [String] {
     array.append("errorImage")
     array.append("errorImageSelected")
     array.append("chatSearch")
+    array.append("chatSearchActive")
     array.append("chatCall")
     array.append("chatActions")
     array.append("chatFailedCall_incoming")
@@ -322,10 +323,6 @@ func initialize() -> [String] {
     array.append("locationMapPin")
     array.append("locationMapLocate")
     array.append("locationMapLocated")
-    array.append("chatTabIconSelected")
-    array.append("chatTabIconSelectedUp")
-    array.append("chatTabIconSelectedDown")
-    array.append("chatTabIcon")
     array.append("passportSettings")
     array.append("passportInfo")
     array.append("editMessageMedia")
@@ -473,6 +470,16 @@ func initialize() -> [String] {
     array.append("group_invite_via_link")
     
 
+    array.append("tab_contacts")
+    array.append("tab_contacts_active")
+    array.append("tab_calls")
+    array.append("tab_calls_active")
+    array.append("tab_chats")
+    array.append("tab_chats_active")
+    array.append("tab_chats_active_filters")
+    array.append("tab_settings")
+    array.append("tab_settings_active")
+    
     return array
 }
 

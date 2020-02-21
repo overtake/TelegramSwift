@@ -195,9 +195,9 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     func updateChatInteraction(_ chatInteraction: ChatInteraction, textView: NSTextView) -> Void {
         self.chatInteraction?.remove(observer: self)
+        prevIsKeyWindow = nil
         chatInteraction.add(observer: self)
         self.chatInteraction = chatInteraction
-        
         textView.updateTouchBarItemIdentifiers()
         self.textView = textView
     }

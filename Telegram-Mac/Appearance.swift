@@ -78,6 +78,37 @@ private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImag
     })!
 }
 
+private func generateChatTabFiltersIcon(_ image: CGImage) -> CGImage {
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        
+        ctx.setBlendMode(.clear)
+        
+        var x: CGFloat = 14
+        ctx.fillEllipse(in: NSMakeRect(x, 17, 3, 3))
+        x += (3 + 2)
+        ctx.fillEllipse(in: NSMakeRect(x, 17, 3, 3))
+        x += (3 + 2)
+        ctx.fillEllipse(in: NSMakeRect(x, 17, 3, 3))
+
+    })!
+}
+
+private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(36, 36), contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setFillColor(background.cgColor)
+        ctx.fillEllipse(in: rect)
+        ctx.draw(image, in: rect.focus(image.backingSize))
+        
+    })!
+}
+
 private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
     return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -615,7 +646,7 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         ctx.setLineWidth(1.0)
         ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
-        ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+      //  ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
 
         let icon = #imageLiteral(resourceName: "Icon_ChatMention").precomposed(foregroundColor)
         let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
@@ -631,7 +662,7 @@ private func generateChatFailed(backgroundColor: NSColor, border: NSColor, foreg
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         ctx.setLineWidth(1.0)
         ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
-        ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        //ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         
         let icon = NSImage(named: "Icon_DialogSendingError")!.precomposed(foregroundColor)
         let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
@@ -840,7 +871,7 @@ private func generateChatScrolldownImage(backgroundColor: NSColor, borderColor: 
         context.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         context.setLineWidth(1.0)
         context.setStrokeColor(borderColor.withAlphaComponent(0.7).cgColor)
-        context.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+       // context.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         context.setStrokeColor(arrowColor.cgColor)
         context.setLineWidth(1.0)
         
@@ -1580,8 +1611,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                errorImage: { #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true) },
                                                errorImageSelected: { #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true) },
                                                chatSearch: { #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon) },
+                                               chatSearchActive: { #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon) },
                                                chatCall: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.accentIcon) },
-                                               chatActions: { #imageLiteral(resourceName: "Icon_ChatActions").precomposed(palette.accentIcon) },
+                                               chatActions: { generateChatAction(#imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.accentIcon), background: palette.background) },
                                                chatFailedCall_incoming: { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redUI) },
                                                chatFailedCall_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redUI) },
                                                chatCall_incoming:  { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenUI) },
@@ -1613,17 +1645,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatBubble_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .both) },
                                                chatBubbleBorder_both_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .both) },
                                                chatBubbleBorder_both_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .clear, strokeColor: palette.bubbleBorder_outgoing, neighbors: .both) },
-                                               /*
-         array.append("chatBubble_none_incoming")
-         array.append("chatBubble_none_outgoing")
-         array.append("chatBubbleBorder_none_incoming")
-         array.append("chatBubbleBorder_none_outgoing")
-         array.append("chatBubble_both_incoming")
-         array.append("chatBubble_both_outgoing")
-         array.append("chatBubbleBorder_both_incoming")
-         array.append("chatBubbleBorder_both_outgoing")
- */
-                                               
                                                composeNewChat: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.accentIcon) },
                                                composeNewChatActive: { #imageLiteral(resourceName: "Icon_NewMessage").precomposed(palette.underSelectedColor) },
                                                composeNewGroup: { #imageLiteral(resourceName: "Icon_NewGroup").precomposed(palette.accentIcon) },
@@ -1778,7 +1799,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatActionClearHistory: { #imageLiteral(resourceName: "Icon_ClearChat").precomposed(palette.accentIcon) },
                                                chatActionDeleteChat: { #imageLiteral(resourceName: "Icon_MessageActionPanelDelete").precomposed(palette.accentIcon) },
                                                dismissPinned: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
-                                               chatActionsActive: { #imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.accentIcon) },
+                                               chatActionsActive: { generateChatAction(#imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
                                                chatEntertainmentSticker: { #imageLiteral(resourceName: "Icon_ChatEntertainmentSticker").precomposed(palette.grayIcon) },
                                                chatEmpty: { #imageLiteral(resourceName: "Icon_EmptyChat").precomposed(palette.grayForeground) },
                                                stickerPackClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
@@ -1898,10 +1919,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                locationMapPin: { generateLocationMapPinIcon(palette.accentIcon) },
                                                locationMapLocate: { #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.grayIcon) },
                                                locationMapLocated: { #imageLiteral(resourceName: "Icon_MapLocate").precomposed(palette.accentIcon) },
-                                               chatTabIconSelected: { #imageLiteral(resourceName: "Icon_TabChatList_Highlighted").precomposed(palette.accentIcon) },
-                                               chatTabIconSelectedUp: { generateChatTabSelected(palette.accentIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background, flipVertical: true)) },
-                                               chatTabIconSelectedDown: { generateChatTabSelected(palette.accentIcon, #imageLiteral(resourceName: "Icon_ChatListScrollUnread").precomposed(palette.background)) },
-                                               chatTabIcon: { #imageLiteral(resourceName: "Icon_TabChatList").precomposed(palette.grayIcon) },
                                                passportSettings: { #imageLiteral(resourceName: "Icon_PassportSettings").precomposed(palette.grayIcon) },
                                                passportInfo: { #imageLiteral(resourceName: "Icon_SettingsBio").precomposed(palette.accentIcon) },
                                                editMessageMedia: { generateEditMessageMediaIcon(#imageLiteral(resourceName: "Icon_ReplaceMessageMedia").precomposed(palette.accentIcon), background: palette.background) },
@@ -2033,7 +2050,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_filter_secret_chats: { NSImage(named: "Icon_FilterSecretChats")!.precomposed(palette.accentIcon) },
                                                chat_filter_unmuted: { NSImage(named: "Icon_FilterUnmuted")!.precomposed(palette.accentIcon) },
                                                chat_filter_unread: { NSImage(named: "Icon_FilterUnread")!.precomposed(palette.accentIcon) },
-                                               group_invite_via_link: { NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.accentIcon) }
+                                               group_invite_via_link: { NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.accentIcon) },
+                                               tab_contacts: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.grayIcon) },
+                                               tab_contacts_active: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.accentIcon) },
+                                               tab_calls: { NSImage(named: "Icon_TabRecentCalls")!.precomposed(palette.grayIcon) },
+                                               tab_calls_active: { NSImage(named: "Icon_TabRecentCalls")!.precomposed(palette.accentIcon) },
+                                               tab_chats: { NSImage(named: "Icon_TabChatList")!.precomposed(palette.grayIcon) },
+                                               tab_chats_active: { NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon) },
+                                               tab_chats_active_filters: { generateChatTabFiltersIcon(NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon)) },
+                                               tab_settings: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.grayIcon) },
+                                               tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) }
     )
 
 }

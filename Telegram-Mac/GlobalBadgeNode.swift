@@ -176,7 +176,7 @@ class GlobalBadgeNode: Node {
                     }
                 }
                 return Result(dockText: dockText, total: excludeTotal)
-            } else if let preset = preset {
+            } else if let preset = preset, inAppSettings.badgeEnabled {
                 if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
                     var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
                     var totalState: ChatListTotalUnreadState?

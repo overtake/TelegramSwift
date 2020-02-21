@@ -55,6 +55,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 switchView?.stateChanged = item.action
                 switchView?.userInteractionEnabled = item.enabled
+                switchView?.isEnabled = item.enabled
             } else {
                 switchView?.removeFromSuperview()
                 switchView = nil

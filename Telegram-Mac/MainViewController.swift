@@ -237,17 +237,11 @@ class MainViewController: TelegramViewController {
     var isUpChatList: Bool = false {
         didSet {
             if isUpChatList != oldValue {
-                updateLocalizationAndTheme(theme: theme)
+                tabController.replace(tab: tabController.tab(at: chatIndex).withUpdatedImages(theme.icons.tab_chats, isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active), at: chatIndex)
             }
         }
     }
-    private var hasScollThumb: Bool = false {
-        didSet {
-            if hasScollThumb != oldValue {
-               updateLocalizationAndTheme(theme: theme)
-            }
-        }
-    }
+
     
     override var navigationController: NavigationViewController? {
         didSet {
@@ -277,15 +271,15 @@ class MainViewController: TelegramViewController {
         #endif
         
         
-        tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), selectedImage: theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true), controller: contacts))
+        tabController.add(tab: TabItem(image: theme.icons.tab_contacts, selectedImage: theme.icons.tab_contacts_active, controller: contacts))
         
-        tabController.add(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls))
+        tabController.add(tab: TabItem(image: theme.icons.tab_calls, selectedImage: theme.icons.tab_calls_active, controller: phoneCalls))
         
-        tabController.add(tab: TabBadgeItem(context, controller: chatListNavigation, image: theme.icons.chatTabIcon, selectedImage: hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected, longHoverHandler: { [weak self] control in
+        tabController.add(tab: TabBadgeItem(context, controller: chatListNavigation, image: theme.icons.tab_chats, selectedImage: isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active, longHoverHandler: { [weak self] control in
             self?.showFastChatSettings(control)
         }))
         
-        tabController.add(tab: TabAllBadgeItem(context, image: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), selectedImage: theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true), controller: settings, longHoverHandler: { [weak self] control in
+        tabController.add(tab: TabAllBadgeItem(context, image: theme.icons.tab_settings, selectedImage: theme.icons.tab_settings_active, controller: settings, longHoverHandler: { [weak self] control in
             self?.showFastSettings(control)
         }))
         
@@ -486,7 +480,7 @@ class MainViewController: TelegramViewController {
     }
     private var previousTheme:TelegramPresentationTheme?
     private var previousIconColor:NSColor?
-
+    private var previousIsUpChatList: Bool?
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         tabController.updateLocalizationAndTheme(theme: theme)
@@ -495,22 +489,27 @@ class MainViewController: TelegramViewController {
         updateController.updateLocalizationAndTheme(theme: theme)
         #endif
         
-        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.accentIcon)  {
+        updateTabsIfNeeded()
+        self.tabController.view.needsLayout = true
+    }
+    
+    private func updateTabsIfNeeded() {
+        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.accentIcon || self.isUpChatList != self.previousIsUpChatList) {
             var index: Int = 0
-            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts"), selected: false), theme.tabBar.icon(key: 0, image: #imageLiteral(resourceName: "Icon_TabContacts_Highlighted"), selected: true)), at: index)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_contacts, theme.icons.tab_contacts_active), at: index)
             index += 1
             if showCallTabs {
-                tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true)), at: index)
+                tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_calls, theme.icons.tab_calls_active), at: index)
                 index += 1
             }
             
-            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.chatTabIcon, hasScollThumb ? isUpChatList ? theme.icons.chatTabIconSelectedUp : theme.icons.chatTabIconSelectedDown : theme.icons.chatTabIconSelected), at: index)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_chats, isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active), at: index)
             index += 1
-            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings"), selected: false), theme.tabBar.icon(key: 3, image: #imageLiteral(resourceName: "Icon_TabSettings_Highlighted"), selected: true)), at: index)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_settings, theme.icons.tab_settings_active), at: index)
         }
-        self.tabController.view.needsLayout = true
         self.previousTheme = theme
         self.previousIconColor = theme.colors.accentIcon
+        self.previousIsUpChatList = self.isUpChatList
     }
     
     private var previousIndex: Int? = nil

@@ -486,6 +486,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         searchButton.set(image: theme.icons.chatSearch, for: .Normal)
+        searchButton.set(image: theme.icons.chatSearchActive, for: .Highlight)
+
+        
         _ = searchButton.sizeToFit()
         
         callButton.set(image: theme.icons.chatCall, for: .Normal)

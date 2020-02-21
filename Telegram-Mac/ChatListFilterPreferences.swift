@@ -310,6 +310,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     let presets: [ChatListFilterPreset]
     let needShowTooltip: Bool
     let tabsIsEnabled: Bool
+    let badge: Bool
     let isEnabled: Bool
     static var defaultSettings: ChatListFilterPreferences {
         var presets: [ChatListFilterPreset] = []
@@ -321,14 +322,15 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         presets.append(ChatListFilterPreset(name: .unread, includeCategories: ._unread, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 4))
         presets.append(ChatListFilterPreset(name: .unmuted, includeCategories: ._unmuted, additionallyIncludePeers: [], applyReadMutedForExceptions: false, uniqueId: 5))
         
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: true, tabsIsEnabled: false, isEnabled: defaultFiltersIsEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: true, tabsIsEnabled: false, isEnabled: defaultFiltersIsEnabled, badge: true)
     }
     
-    init(presets: [ChatListFilterPreset], needShowTooltip: Bool, tabsIsEnabled: Bool, isEnabled: Bool) {
+    init(presets: [ChatListFilterPreset], needShowTooltip: Bool, tabsIsEnabled: Bool, isEnabled: Bool, badge: Bool) {
         self.presets = presets
         self.needShowTooltip = needShowTooltip
         self.tabsIsEnabled = tabsIsEnabled
         self.isEnabled = isEnabled
+        self.badge = badge
     }
     
     init(decoder: PostboxDecoder) {
@@ -336,7 +338,8 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         self.needShowTooltip = decoder.decodeBoolForKey("needShowTooltip", orElse: true)
         self.tabsIsEnabled = decoder.decodeBoolForKey("tabsIsEnabled", orElse: true)
         self.isEnabled = decoder.decodeBoolForKey("isEnabled", orElse: defaultFiltersIsEnabled)
-        
+        self.badge = decoder.decodeBoolForKey("badge", orElse: true)
+
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -344,6 +347,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         encoder.encodeBool(self.needShowTooltip, forKey: "needShowTooltip")
         encoder.encodeBool(self.tabsIsEnabled, forKey: "tabsIsEnabled")
         encoder.encodeBool(self.isEnabled, forKey: "isEnabled")
+        encoder.encodeBool(self.badge, forKey: "badge")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -355,7 +359,7 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
     }
     
     static func ==(lhs: ChatListFilterPreferences, rhs: ChatListFilterPreferences) -> Bool {
-        return lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip && lhs.tabsIsEnabled == rhs.tabsIsEnabled && lhs.isEnabled == rhs.isEnabled
+        return lhs.presets == rhs.presets && lhs.needShowTooltip == rhs.needShowTooltip && lhs.tabsIsEnabled == rhs.tabsIsEnabled && lhs.isEnabled == rhs.isEnabled && lhs.badge == rhs.badge
     }
     
     func withAddedPreset(_ preset: ChatListFilterPreset, onlyReplace: Bool = false) -> ChatListFilterPreferences {
@@ -365,32 +369,35 @@ struct ChatListFilterPreferences: PreferencesEntry, Equatable {
         } else if !onlyReplace {
             presets.append(preset)
         }
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     
     func withRemovedPreset(_ preset: ChatListFilterPreset) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.removeAll(where: {$0.uniqueId == preset.uniqueId })
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     
     func withMovePreset(_ from: Int, _ to: Int) -> ChatListFilterPreferences {
         var presets = self.presets
         presets.insert(presets.remove(at: from), at: to)
-        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     func withSelectedAtIndex(_ index: Int) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: false, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     
     func withUpdatedNeedShowTooltip(_ needShowTooltip: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: needShowTooltip, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: needShowTooltip, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     func withUpdatedTabEnable(_ tabsIsEnabled: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: tabsIsEnabled, isEnabled: self.isEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: tabsIsEnabled, isEnabled: self.isEnabled, badge: self.badge)
     }
     func withUpdatedEnabled(_ isEnabled: Bool) -> ChatListFilterPreferences {
-        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: isEnabled ? self.tabsIsEnabled : false, isEnabled: isEnabled)
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: isEnabled ? self.tabsIsEnabled : false, isEnabled: isEnabled, badge: self.badge)
+    }
+    func withUpdatedBadge(_ badge: Bool) -> ChatListFilterPreferences {
+        return ChatListFilterPreferences(presets: self.presets, needShowTooltip: self.needShowTooltip, tabsIsEnabled: self.tabsIsEnabled, isEnabled: self.isEnabled, badge: badge)
     }
     func shortcut(for preset: ChatListFilterPreset?) -> String {
         if let preset = preset {
@@ -434,7 +441,9 @@ func updateChatListFilterPreferencesInteractively(postbox: Postbox, _ f: @escapi
 
 
 func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count: Int32)], NoError>  {
-    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0.presets } |> mapToSignal { filters -> Signal<[(id: Int32, count: Int32)], NoError> in
+    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0 } |> mapToSignal { settings -> Signal<[(id: Int32, count: Int32)], NoError> in
+        
+        let filters = settings.presets
         
         var signals:[Signal<(id: Int32, count: Int32), NoError>] = []
         for current in filters {
@@ -459,7 +468,7 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
             
             let s:Signal<(id: Int32, count: Int32), NoError> = combineLatest(context.account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> map { keysView, inAppSettings -> (id: Int32, count: Int32) in
                 
-                if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
+                if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView, inAppSettings.badgeEnabled, settings.badge {
                     var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
                     var totalState: ChatListTotalUnreadState?
                     for entry in unreadCounts.entries {
@@ -556,11 +565,16 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
             signals.append(s)
         }
         return combineLatest(signals) |> mapToSignal { values in
-            return renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox) |> map { total in
-                var values = values
-                values.append((id: -1, count: total.0))
-                return values
+            if settings.badge {
+                return renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox) |> map { total in
+                    var values = values
+                    values.append((id: -1, count: total.0))
+                    return values
+                }
+            } else {
+                return .single(values)
             }
+           
         }
     }
 }

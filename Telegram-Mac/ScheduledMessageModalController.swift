@@ -243,7 +243,7 @@ class ScheduledMessageModalController: ModalViewController {
                 return
             }
         }
-        self.scheduleAt(date.addingTimeInterval(-context.timeDifference))
+        self.scheduleAt(date)
         self.close()
     }
     
