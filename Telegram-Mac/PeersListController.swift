@@ -196,7 +196,7 @@ final class RevealAllChatsView : Control {
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 5
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
         shadow.shadowOffset = NSMakeSize(0, 2)
         self.shadow = shadow
         set(background: theme.colors.accent, for: .Normal)

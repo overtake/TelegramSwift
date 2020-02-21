@@ -1533,6 +1533,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.jumpToDate = { [weak self] date in
             if let strongSelf = self, let window = self?.window, let peerId = self?.chatInteraction.peerId {
                 
+                
                 switch strongSelf.mode {
                 case .history:
                     let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970))
@@ -3484,6 +3485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         editButton?.set(image: theme.icons.chatActions, for: .Normal)
         editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
 
+        
         editButton?.setFrameSize(70, 50)
         editButton?.center()
         doneButton?.set(color: theme.colors.accent, for: .Normal)
@@ -3504,6 +3506,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
+        
+        
         _ = doneButton.sizeToFit()
         back.addSubview(doneButton)
         doneButton.center()

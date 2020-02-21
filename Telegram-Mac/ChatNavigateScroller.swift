@@ -43,6 +43,12 @@ class ChatNavigateScroller: ImageButton {
 
             }
         }))
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

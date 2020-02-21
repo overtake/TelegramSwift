@@ -55,7 +55,11 @@ func renderedTotalUnreadCount(accountManager: AccountManager, postbox: Postbox) 
             case .filtered:
                 type = .filtered
             }
-            return (totalUnreadState.count(for: inAppSettings.totalUnreadCountDisplayStyle.category, in: inAppSettings.totalUnreadCountDisplayCategory.statsType, with: inAppSettings.totalUnreadCountIncludeTags), type)
+            if inAppSettings.badgeEnabled {
+                return (totalUnreadState.count(for: inAppSettings.totalUnreadCountDisplayStyle.category, in: inAppSettings.totalUnreadCountDisplayCategory.statsType, with: inAppSettings.totalUnreadCountIncludeTags), type)
+            } else {
+                return (0, type)
+            }
         }
         |> distinctUntilChanged(isEqual: { lhs, rhs in
             return lhs == rhs

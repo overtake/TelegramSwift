@@ -239,7 +239,7 @@ class GalleryViewer: NSResponder {
             self.window.level = .popUpMenu
             self.window.isOpaque = false
             self.window.backgroundColor = .clear
-            self.window.appearance = theme.appearance
+          //  self.window.appearance = theme.appearance
             backgroundView.wantsLayer = true
             backgroundView.background = NSColor.black.withAlphaComponent(0.9)
             backgroundView.frame = bounds
@@ -1077,7 +1077,7 @@ class GalleryViewer: NSResponder {
                                     }
                                     
                                     let context = strongSelf.context
-                                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: theme.colors.link), linkAttribute: { contents in
+                                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: .link), linkAttribute: { contents in
                                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))
                                     })).mutableCopy() as! NSMutableAttributedString
                                     

@@ -115,7 +115,7 @@ class ReplyModel: ChatAccessoryModel {
     }
     
     private func updateImageIfNeeded() {
-        if let message = self.replyMessage, let view = self.view, view.frame != NSZeroRect {
+        if let message = self.replyMessage, let view = self.view {
             var updatedMedia: Media?
             var imageDimensions: CGSize?
             var hasRoundImage = false

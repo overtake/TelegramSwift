@@ -690,17 +690,19 @@ class ChatListController : PeersListController {
         })
         
         
-        genericView.tableView.addScroll(listener: TableScrollListener({ [weak self] scroll in
-
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] scroll in
+            guard let `self` = self else {
+                return
+            }
 //            #if !STABLE && !APP_STORE
 //            if scroll.visibleRows.location == 0 && view.laterIndex != nil {
 //                self.lastScrolledIndex = nil
 //            }
 //            self.account.context.mainViewController.isUpChatList = scroll.visibleRows.location > 0 || view.laterIndex != nil
 //            #else
-            context.sharedContext.bindings.mainController().isUpChatList = false
             //#endif
-            self?.removeRevealStateIfNeeded(nil)
+            context.sharedContext.bindings.mainController().isUpChatList = self.genericView.tableView.documentOffset.y <= 0 && self.previousChatList.with { $0?.laterIndex == nil} && self.mode.groupId == .root
+            self.removeRevealStateIfNeeded(nil)
         }))
         
         genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in

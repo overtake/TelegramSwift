@@ -225,6 +225,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatSearchActive: CGImage {
+      if let image = cached.with({ $0["chatSearchActive"] }) {
+          return image
+      } else {
+          let image = _chatSearchActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatSearchActive"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatCall: CGImage {
       if let image = cached.with({ $0["chatCall"] }) {
           return image
@@ -4164,58 +4177,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var chatTabIconSelected: CGImage {
-      if let image = cached.with({ $0["chatTabIconSelected"] }) {
-          return image
-      } else {
-          let image = _chatTabIconSelected()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatTabIconSelected"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatTabIconSelectedUp: CGImage {
-      if let image = cached.with({ $0["chatTabIconSelectedUp"] }) {
-          return image
-      } else {
-          let image = _chatTabIconSelectedUp()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatTabIconSelectedUp"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatTabIconSelectedDown: CGImage {
-      if let image = cached.with({ $0["chatTabIconSelectedDown"] }) {
-          return image
-      } else {
-          let image = _chatTabIconSelectedDown()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatTabIconSelectedDown"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatTabIcon: CGImage {
-      if let image = cached.with({ $0["chatTabIcon"] }) {
-          return image
-      } else {
-          let image = _chatTabIcon()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatTabIcon"] = image
-              return current
-          }
-          return image
-      }
-  }
   var passportSettings: CGImage {
       if let image = cached.with({ $0["passportSettings"] }) {
           return image
@@ -5932,6 +5893,123 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var tab_contacts: CGImage {
+      if let image = cached.with({ $0["tab_contacts"] }) {
+          return image
+      } else {
+          let image = _tab_contacts()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_contacts"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_contacts_active: CGImage {
+      if let image = cached.with({ $0["tab_contacts_active"] }) {
+          return image
+      } else {
+          let image = _tab_contacts_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_contacts_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_calls: CGImage {
+      if let image = cached.with({ $0["tab_calls"] }) {
+          return image
+      } else {
+          let image = _tab_calls()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_calls"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_calls_active: CGImage {
+      if let image = cached.with({ $0["tab_calls_active"] }) {
+          return image
+      } else {
+          let image = _tab_calls_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_calls_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_chats: CGImage {
+      if let image = cached.with({ $0["tab_chats"] }) {
+          return image
+      } else {
+          let image = _tab_chats()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_chats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_chats_active: CGImage {
+      if let image = cached.with({ $0["tab_chats_active"] }) {
+          return image
+      } else {
+          let image = _tab_chats_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_chats_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_chats_active_filters: CGImage {
+      if let image = cached.with({ $0["tab_chats_active_filters"] }) {
+          return image
+      } else {
+          let image = _tab_chats_active_filters()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_chats_active_filters"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_settings: CGImage {
+      if let image = cached.with({ $0["tab_settings"] }) {
+          return image
+      } else {
+          let image = _tab_settings()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_settings"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var tab_settings_active: CGImage {
+      if let image = cached.with({ $0["tab_settings_active"] }) {
+          return image
+      } else {
+          let image = _tab_settings_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["tab_settings_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -5950,6 +6028,7 @@ final class TelegramIconsTheme {
   private let _errorImage: ()->CGImage
   private let _errorImageSelected: ()->CGImage
   private let _chatSearch: ()->CGImage
+  private let _chatSearchActive: ()->CGImage
   private let _chatCall: ()->CGImage
   private let _chatActions: ()->CGImage
   private let _chatFailedCall_incoming: ()->CGImage
@@ -6253,10 +6332,6 @@ final class TelegramIconsTheme {
   private let _locationMapPin: ()->CGImage
   private let _locationMapLocate: ()->CGImage
   private let _locationMapLocated: ()->CGImage
-  private let _chatTabIconSelected: ()->CGImage
-  private let _chatTabIconSelectedUp: ()->CGImage
-  private let _chatTabIconSelectedDown: ()->CGImage
-  private let _chatTabIcon: ()->CGImage
   private let _passportSettings: ()->CGImage
   private let _passportInfo: ()->CGImage
   private let _editMessageMedia: ()->CGImage
@@ -6389,6 +6464,15 @@ final class TelegramIconsTheme {
   private let _chat_filter_unmuted: ()->CGImage
   private let _chat_filter_unread: ()->CGImage
   private let _group_invite_via_link: ()->CGImage
+  private let _tab_contacts: ()->CGImage
+  private let _tab_contacts_active: ()->CGImage
+  private let _tab_calls: ()->CGImage
+  private let _tab_calls_active: ()->CGImage
+  private let _tab_chats: ()->CGImage
+  private let _tab_chats_active: ()->CGImage
+  private let _tab_chats_active_filters: ()->CGImage
+  private let _tab_settings: ()->CGImage
+  private let _tab_settings_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6408,6 +6492,7 @@ final class TelegramIconsTheme {
       errorImage: @escaping()->CGImage,
       errorImageSelected: @escaping()->CGImage,
       chatSearch: @escaping()->CGImage,
+      chatSearchActive: @escaping()->CGImage,
       chatCall: @escaping()->CGImage,
       chatActions: @escaping()->CGImage,
       chatFailedCall_incoming: @escaping()->CGImage,
@@ -6711,10 +6796,6 @@ final class TelegramIconsTheme {
       locationMapPin: @escaping()->CGImage,
       locationMapLocate: @escaping()->CGImage,
       locationMapLocated: @escaping()->CGImage,
-      chatTabIconSelected: @escaping()->CGImage,
-      chatTabIconSelectedUp: @escaping()->CGImage,
-      chatTabIconSelectedDown: @escaping()->CGImage,
-      chatTabIcon: @escaping()->CGImage,
       passportSettings: @escaping()->CGImage,
       passportInfo: @escaping()->CGImage,
       editMessageMedia: @escaping()->CGImage,
@@ -6846,7 +6927,16 @@ final class TelegramIconsTheme {
       chat_filter_secret_chats: @escaping()->CGImage,
       chat_filter_unmuted: @escaping()->CGImage,
       chat_filter_unread: @escaping()->CGImage,
-      group_invite_via_link: @escaping()->CGImage
+      group_invite_via_link: @escaping()->CGImage,
+      tab_contacts: @escaping()->CGImage,
+      tab_contacts_active: @escaping()->CGImage,
+      tab_calls: @escaping()->CGImage,
+      tab_calls_active: @escaping()->CGImage,
+      tab_chats: @escaping()->CGImage,
+      tab_chats_active: @escaping()->CGImage,
+      tab_chats_active_filters: @escaping()->CGImage,
+      tab_settings: @escaping()->CGImage,
+      tab_settings_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -6865,6 +6955,7 @@ final class TelegramIconsTheme {
       self._errorImage = errorImage
       self._errorImageSelected = errorImageSelected
       self._chatSearch = chatSearch
+      self._chatSearchActive = chatSearchActive
       self._chatCall = chatCall
       self._chatActions = chatActions
       self._chatFailedCall_incoming = chatFailedCall_incoming
@@ -7168,10 +7259,6 @@ final class TelegramIconsTheme {
       self._locationMapPin = locationMapPin
       self._locationMapLocate = locationMapLocate
       self._locationMapLocated = locationMapLocated
-      self._chatTabIconSelected = chatTabIconSelected
-      self._chatTabIconSelectedUp = chatTabIconSelectedUp
-      self._chatTabIconSelectedDown = chatTabIconSelectedDown
-      self._chatTabIcon = chatTabIcon
       self._passportSettings = passportSettings
       self._passportInfo = passportInfo
       self._editMessageMedia = editMessageMedia
@@ -7304,5 +7391,14 @@ final class TelegramIconsTheme {
       self._chat_filter_unmuted = chat_filter_unmuted
       self._chat_filter_unread = chat_filter_unread
       self._group_invite_via_link = group_invite_via_link
+      self._tab_contacts = tab_contacts
+      self._tab_contacts_active = tab_contacts_active
+      self._tab_calls = tab_calls
+      self._tab_calls_active = tab_calls_active
+      self._tab_chats = tab_chats
+      self._tab_chats_active = tab_chats_active
+      self._tab_chats_active_filters = tab_chats_active_filters
+      self._tab_settings = tab_settings
+      self._tab_settings_active = tab_settings_active
   }
 }

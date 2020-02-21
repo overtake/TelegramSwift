@@ -50,7 +50,21 @@ public class TabBarView: View {
     func replaceTab(_ tab: TabItem, at index:Int) {
         self.tabs.remove(at: index)
         self.tabs.insert(tab, at: index)
-        self.redraw()
+        
+        let subview = self.subviews[index].subviews.first?.subviews.first as? ImageView
+        subview?.animates = true
+        subview?.image = self.selectedIndex == index ? tab.selectedImage : tab.image
+        subview?.animates = false
+        (self.subviews[index] as? Control)?.backgroundColor = presentation.colors.background
+        (self.subviews[index].subviews.first as? View)?.backgroundColor = presentation.colors.background
+
+        if let subView = tab.subNode?.view {
+            while self.subviews[index].subviews.count > 1 {
+                self.subviews[index].subviews.last?.removeFromSuperview()
+            }
+            self.subviews[index].addSubview(subView)
+            tab.subNode?.update()
+        }
     }
     
     func insertTab(_ tab: TabItem, at index: Int) {
@@ -108,8 +122,8 @@ public class TabBarView: View {
             let view = Control(frame: NSMakeRect(xOffset, .borderSize, itemWidth, height))
             view.backgroundColor = presentation.colors.background
             let container = View(frame: view.bounds)
-            view.set(handler: { [weak tab] control in
-                tab?.longHoverHandler?(control)
+            view.set(handler: { [weak self] control in
+                self?.tabs[i].longHoverHandler?(control)
             }, for: .RightDown)
             
             view.set(handler: { [weak self] control in

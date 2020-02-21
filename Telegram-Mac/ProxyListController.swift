@@ -120,7 +120,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_add, equatable: InputDataEquatable(addViewType), item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsAddProxy, nameStyle: blueActionButton, type: .none, viewType: addViewType, action: { () in
             arguments.edit(nil)
-        }, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 30, thumbInset: 3), inset:NSEdgeInsets(left: 30, right: 30))
+        }, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 30, thumbInset: -5), inset:NSEdgeInsets(left: 30, right: 30))
     }))
     index += 1
     

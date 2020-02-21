@@ -24,6 +24,12 @@ class ChatNavigateFailed: ImageButton {
         set(image: theme.icons.chat_failed_scroller, for: .Normal)
         set(image: theme.icons.chat_failed_scroller_active, for: .Highlight)
         self.setFrameSize(60,60)
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
