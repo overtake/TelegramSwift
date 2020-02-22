@@ -694,14 +694,15 @@ class ChatListController : PeersListController {
             guard let `self` = self else {
                 return
             }
-//            #if !STABLE && !APP_STORE
+            #if !STABLE && !APP_STORE
+            context.sharedContext.bindings.mainController().isUpChatList = self.genericView.tableView.documentOffset.y <= 0 && self.previousChatList.with { $0?.laterIndex == nil} && self.mode.groupId == .root
+            #endif
 //            if scroll.visibleRows.location == 0 && view.laterIndex != nil {
 //                self.lastScrolledIndex = nil
 //            }
 //            self.account.context.mainViewController.isUpChatList = scroll.visibleRows.location > 0 || view.laterIndex != nil
 //            #else
             //#endif
-            context.sharedContext.bindings.mainController().isUpChatList = self.genericView.tableView.documentOffset.y <= 0 && self.previousChatList.with { $0?.laterIndex == nil} && self.mode.groupId == .root
             self.removeRevealStateIfNeeded(nil)
         }))
         

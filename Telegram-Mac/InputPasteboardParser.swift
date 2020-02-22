@@ -147,7 +147,7 @@ class InputPasteboardParser: NSObject {
             }
             
             
-            if let _ = items[0].types.firstIndex(of: NSPasteboard.PasteboardType(rawValue: "com.apple.traditional-mac-plain-text")) {
+            if let _ = items[0].types.firstIndex(of: NSPasteboard.PasteboardType(rawValue: "com.microsoft.appbundleid")) {
                 return true
             }
             
