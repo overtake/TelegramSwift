@@ -34,7 +34,7 @@ class MMMenu : NSMenu {
         }
         set {
             if newValue == "Telegram" {
-                super.title = "Circles for Telegram"
+                super.title = "Telefrost"
             } else {
                 super.title = newValue
             }

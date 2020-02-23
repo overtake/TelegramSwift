@@ -1,9 +1,9 @@
 final class ApiEnvironment {
     static var apiId:Int32 {
-        return 904055
+        return 1041243
     }
     static var apiHash:String {
-        return "870b467d56944d5347e0f8d4efa93028"
+        return "a22e951ebb6655d6d80ff04ada0306de"
     }
     
     static var bundleId: String {

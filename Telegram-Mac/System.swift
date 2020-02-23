@@ -19,7 +19,7 @@ public let resourcesQueue = Queue(name: "ResourcesQueue")
 public let prepareQueue = Queue(name: "PrepareQueue")
 public let messagesViewQueue = Queue(name: "messagesViewQueue")
 
-public let appName = "Circles for Telegram"
+public let appName = "Telefrost"
 public let kMediaImageExt = "jpg";
 public let kMediaGifExt = "mov";
 public let kMediaVideoExt = "mp4";

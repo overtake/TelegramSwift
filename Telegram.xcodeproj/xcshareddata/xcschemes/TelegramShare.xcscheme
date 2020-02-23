@@ -30,8 +30,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D098C7141D7E175A007784E4"
-               BuildableName = "Circles for Telegram.app"
-               BlueprintName = "Circles for Telegram"
+               BuildableName = "Telefrost.app"
+               BlueprintName = "Telefrost"
                ReferencedContainer = "container:Telegram.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -75,8 +75,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
-            BuildableName = "Circles for Telegram.app"
-            BlueprintName = "Circles for Telegram"
+            BuildableName = "Telefrost.app"
+            BlueprintName = "Telefrost"
             ReferencedContainer = "container:Telegram.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -93,8 +93,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D098C7141D7E175A007784E4"
-            BuildableName = "Circles for Telegram.app"
-            BlueprintName = "Circles for Telegram"
+            BuildableName = "Telefrost.app"
+            BlueprintName = "Telefrost"
             ReferencedContainer = "container:Telegram.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

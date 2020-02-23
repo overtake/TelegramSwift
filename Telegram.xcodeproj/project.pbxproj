@@ -1939,7 +1939,7 @@
 		D07C6D7F2346A42F00468B1A /* monkey_see.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_see.tgs; sourceTree = "<group>"; };
 		D07C6D822347701700468B1A /* WalletProcessTransactionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletProcessTransactionController.swift; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
-		D098C7151D7E175A007784E4 /* Circles for Telegram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Circles for Telegram.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D098C7151D7E175A007784E4 /* Telefrost.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telefrost.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D098C71A1D7E175A007784E4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D098C71F1D7E175A007784E4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -4543,7 +4543,7 @@
 		D098C7161D7E175A007784E4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D098C7151D7E175A007784E4 /* Circles for Telegram.app */,
+				D098C7151D7E175A007784E4 /* Telefrost.app */,
 				C232EA911E1D07E700C4D38C /* TelegramShare.appex */,
 			);
 			name = Products;
@@ -4682,9 +4682,9 @@
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		D098C7141D7E175A007784E4 /* Circles for Telegram */ = {
+		D098C7141D7E175A007784E4 /* Telefrost */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Circles for Telegram" */;
+			buildConfigurationList = D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telefrost" */;
 			buildPhases = (
 				9F193BD82130B968001C0800 /* ShellScript */,
 				D098C7121D7E175A007784E4 /* Frameworks */,
@@ -4701,9 +4701,9 @@
 			dependencies = (
 				A71DC8312386C83E000EEDE2 /* PBXTargetDependency */,
 			);
-			name = "Circles for Telegram";
+			name = Telefrost;
 			productName = "Telegram-Mac";
-			productReference = D098C7151D7E175A007784E4 /* Circles for Telegram.app */;
+			productReference = D098C7151D7E175A007784E4 /* Telefrost.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -4785,7 +4785,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				D098C7141D7E175A007784E4 /* Circles for Telegram */,
+				D098C7141D7E175A007784E4 /* Telefrost */,
 				C232EA901E1D07E700C4D38C /* TelegramShare */,
 			);
 		};
@@ -6670,7 +6670,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = DebugAppStore;
 		};
-		D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Circles for Telegram" */ = {
+		D098C7221D7E175A007784E4 /* Build configuration list for PBXNativeTarget "Telefrost" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D098C7231D7E175A007784E4 /* DebugHockeyapp */,

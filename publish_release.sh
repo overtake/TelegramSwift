@@ -1,7 +1,7 @@
 BUILD_DIR=
 GITHUB_ACCESS_TOKEN=
 BRANCH="circles"
-SCHEME="Circles for Telegram"
+SCHEME="Telefrost"
 USER=
 PASSWORD=
 TEAM="WDEGJM2L33"
@@ -56,8 +56,8 @@ do
   to=$(echo $info | cut -d';' -f2) 
   version=$(echo $info | cut -d';' -f3)
 
-  DELTA_NAME="Circles for Telegram$to-$from.delta"
-  DELTA_NAME_ESCAPED="Circles.for.Telegram$to-$from.delta"
+  DELTA_NAME="Telefrost$to-$from.delta"
+  DELTA_NAME_ESCAPED="Telefrost$to-$from.delta"
 
   xmlstarlet ed -L -u "/rss/channel/item/title[text()=\"$version\"]/../sparkle:deltas/enclosure[@sparkle:deltaFrom=\"$from\"]/@url" -v "https://github.com/Shimbo/TelegramSwift/releases/download/$version/$DELTA_NAME_ESCAPED" updates/appcast.xml
 
