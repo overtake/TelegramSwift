@@ -328,7 +328,7 @@ class MainViewController: TelegramViewController {
     }
     
     private func showCallsTab() {
-        tabController.insert(tab: TabItem(image: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCalls"), selected: false), selectedImage: theme.tabBar.icon(key: 1, image: #imageLiteral(resourceName: "Icon_TabRecentCallsHighlighted"), selected: true), controller: phoneCalls), at: 1)
+        tabController.insert(tab: TabItem(image: theme.icons.tab_calls, selectedImage: theme.icons.tab_calls_active, controller: phoneCalls), at: 1)
     }
     private func hideCallsTab() {
         tabController.remove(at: 1)
