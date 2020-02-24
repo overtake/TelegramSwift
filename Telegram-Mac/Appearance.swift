@@ -864,14 +864,16 @@ private func generateClockMinImage(_ color: NSColor) -> CGImage {
 }
 
 
-private func generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor) -> CGImage {
+private func  generateChatScrolldownImage(backgroundColor: NSColor, borderColor: NSColor, arrowColor: NSColor) -> CGImage {
     return generateImage(CGSize(width: 38.0, height: 38.0), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         context.setFillColor(backgroundColor.cgColor)
         context.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         context.setLineWidth(1.0)
-        context.setStrokeColor(borderColor.withAlphaComponent(0.7).cgColor)
-       // context.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        if borderColor != .clear {
+            context.setStrokeColor(borderColor.withAlphaComponent(0.7).cgColor)
+            context.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        }
         context.setStrokeColor(arrowColor.cgColor)
         context.setLineWidth(1.0)
         
@@ -1675,8 +1677,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatSearchDownDisabled: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.grayIcon, flipVertical:true) },
                                                chatSearchCalendar: { #imageLiteral(resourceName: "Icon_Calendar").precomposed(palette.accentIcon) },
                                                dismissAccessory: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon) },
-                                               chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.grayIcon, arrowColor: palette.grayIcon) },
-                                               chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.accentIcon, arrowColor: palette.accentIcon) },
+                                               chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon) },
+                                               chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon) },
                                                audioPlayerPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.accentIcon) },
                                                audioPlayerPause: { #imageLiteral(resourceName: "Icon_InlinePlayerPause").precomposed(palette.accentIcon) },
                                                audioPlayerNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.accentIcon) },
