@@ -44,11 +44,7 @@ class ChatNavigateScroller: ImageButton {
             }
         }))
         
-        let shadow = NSShadow()
-        shadow.shadowBlurRadius = 5
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
-        shadow.shadowOffset = NSMakeSize(0, 2)
-        self.shadow = shadow
+       updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -57,6 +53,16 @@ class ChatNavigateScroller: ImageButton {
         set(image: theme.icons.chatScrollUp, for: .Normal)
         set(image: theme.icons.chatScrollUpActive, for: .Highlight)
         badge?.fillColor = theme.colors.accent
+        
+        if theme.colors.chatBackground == theme.colors.background && theme.colors.isDark {
+          
+
+        }
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow
     }
     
     override func scrollWheel(with event: NSEvent) {
