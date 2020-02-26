@@ -38,6 +38,8 @@ public class TitleButton: ImageButton {
     private var stateColor:[ControlState:NSColor] = [:]
     private var stateFont:[ControlState:NSFont] = [:]
     
+    public var autoSizeToFit: Bool = true
+    
     public var direction: TitleButtonImageDirection = .left {
         didSet {
             if direction != oldValue {
@@ -53,7 +55,9 @@ public class TitleButton: ImageButton {
     public func set(text:String, for state:ControlState) -> Void {
         stateText[state] = text
         apply(state: self.controlState)
-        _ = sizeToFit(NSZeroSize, self.frame.size, thatFit: _thatFit)
+        if autoSizeToFit {
+            _ = sizeToFit(NSZeroSize, self.frame.size, thatFit: _thatFit)
+        }
 
     }
     
@@ -178,10 +182,10 @@ public class TitleButton: ImageButton {
                 let imageFocus:NSRect = focus(self.imageView.frame.size)
                 switch direction {
                 case .left:
-                    self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
-                    self.text.frame = NSMakeRect(imageView.frame.maxX + 6.0, textFocus.minY, textFocus.width, textFocus.height)
+                    self.imageView.frame = NSMakeRect(round((self.frame.width - textFocus.width - imageFocus.width)/2.0 - 4), imageFocus.minY, imageFocus.width, imageFocus.height)
+                    self.text.frame = NSMakeRect(imageView.frame.maxX + 4, textFocus.minY, textFocus.width, textFocus.height)
                 case .right:
-                    self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 6.0), imageFocus.minY, imageFocus.width, imageFocus.height)
+                    self.imageView.frame = NSMakeRect(round(frame.width - imageFocus.width - 4), imageFocus.minY, imageFocus.width, imageFocus.height)
                     self.text.frame = NSMakeRect(0, textFocus.minY, textFocus.width, textFocus.height)
                 case .top:
                     self.imageView.frame = NSMakeRect(imageFocus.minX, imageFocus.minY - textFocus.height / 2 - 2, imageFocus.width, imageFocus.height)

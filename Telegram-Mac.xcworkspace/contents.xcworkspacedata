@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/GraphCore/GraphCore.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/GraphUI/Graph.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:submodules/TGUIKit/TGUIKit.xcodeproj">
    </FileRef>
    <FileRef

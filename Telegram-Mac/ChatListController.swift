@@ -15,8 +15,8 @@ import SyncCore
 
 
 
-private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Peer, PeerNotificationSettings?, Bool) -> Bool)? {
-    let filterPredicate: ((Peer, PeerNotificationSettings?, Bool) -> Bool)?
+private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ChatListFilterPredicate? {
+    let filterPredicate: ((Peer, PeerNotificationSettings?, Bool) -> Bool)
     
     guard let preset = preset else {
         return nil
@@ -90,10 +90,6 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
             return true
         }
         
-        if includePeers.contains(peer.id) {
-            return true
-        }
-        
         if !preset.includeCategories.contains(.read) {
           
             if !isUnread {
@@ -103,7 +99,7 @@ private func chatListFilterPredicate(for preset: ChatListFilterPreset?) -> ((Pee
         
         return check()
     }
-    return filterPredicate
+    return ChatListFilterPredicate.init(includePeerIds: includePeers, include: filterPredicate)
 }
 
 
@@ -509,6 +505,8 @@ class ChatListController : PeersListController {
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
+                
+                
                 signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), count: count)
                 scroll = st
             case let .Index(index, st):
