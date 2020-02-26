@@ -879,7 +879,9 @@ class InputContextHelper: NSObject {
                             let mediaRows = makeMediaEnties(result.results, isSavedGifs: false, initialSize:NSMakeSize(initialSize.width, 100))
                             
                             for i in 0 ..< mediaRows.count {
-                                entries.append(.contextMediaResult(result, mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
+                                if !mediaRows[i].results.isEmpty {
+                                    entries.append(.contextMediaResult(result, mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
+                                }
                             }
                             
                         }

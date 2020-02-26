@@ -1,0 +1,893 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A7393CFC240685CD00CE44CA /* HorizontalScalesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CC5240685CC00CE44CA /* HorizontalScalesRenderer.swift */; };
+		A7393CFD240685CD00CE44CA /* BarChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CC6240685CC00CE44CA /* BarChartRenderer.swift */; };
+		A7393CFE240685CD00CE44CA /* LinesChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CC7240685CC00CE44CA /* LinesChartRenderer.swift */; };
+		A7393CFF240685CD00CE44CA /* PecentChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CC8240685CC00CE44CA /* PecentChartRenderer.swift */; };
+		A7393D00240685CD00CE44CA /* PerformanceRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CC9240685CC00CE44CA /* PerformanceRenderer.swift */; };
+		A7393D01240685CD00CE44CA /* VerticalLinesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCA240685CC00CE44CA /* VerticalLinesRenderer.swift */; };
+		A7393D02240685CD00CE44CA /* LineBulletsRenerer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCB240685CC00CE44CA /* LineBulletsRenerer.swift */; };
+		A7393D03240685CD00CE44CA /* VerticalScalesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCC240685CC00CE44CA /* VerticalScalesRenderer.swift */; };
+		A7393D04240685CD00CE44CA /* BaseChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCD240685CC00CE44CA /* BaseChartRenderer.swift */; };
+		A7393D05240685CD00CE44CA /* PieChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCE240685CC00CE44CA /* PieChartRenderer.swift */; };
+		A7393D06240685CD00CE44CA /* ChartDetailsRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CCF240685CC00CE44CA /* ChartDetailsRenderer.swift */; };
+		A7393D07240685CD00CE44CA /* PercentPieAnimationRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD0240685CC00CE44CA /* PercentPieAnimationRenderer.swift */; };
+		A7393D08240685CD00CE44CA /* PieChartComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD3240685CC00CE44CA /* PieChartComponentController.swift */; };
+		A7393D09240685CD00CE44CA /* PercentPieChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD4240685CC00CE44CA /* PercentPieChartController.swift */; };
+		A7393D0A240685CD00CE44CA /* PercentChartComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD5240685CC00CE44CA /* PercentChartComponentController.swift */; };
+		A7393D0B240685CD00CE44CA /* BaseChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD6240685CC00CE44CA /* BaseChartController.swift */; };
+		A7393D0C240685CD00CE44CA /* BarsComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD8240685CC00CE44CA /* BarsComponentController.swift */; };
+		A7393D0D240685CD00CE44CA /* StackedBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CD9240685CC00CE44CA /* StackedBarsChartController.swift */; };
+		A7393D0E240685CD00CE44CA /* LinesComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CDA240685CC00CE44CA /* LinesComponentController.swift */; };
+		A7393D0F240685CD00CE44CA /* DailyBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CDB240685CC00CE44CA /* DailyBarsChartController.swift */; };
+		A7393D10240685CD00CE44CA /* GeneralChartComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CDC240685CC00CE44CA /* GeneralChartComponentController.swift */; };
+		A7393D11240685CD00CE44CA /* GeneralLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CDE240685CC00CE44CA /* GeneralLinesChartController.swift */; };
+		A7393D12240685CD00CE44CA /* TwoAxisLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CDF240685CC00CE44CA /* TwoAxisLinesChartController.swift */; };
+		A7393D13240685CD00CE44CA /* BaseLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE0240685CC00CE44CA /* BaseLinesChartController.swift */; };
+		A7393D14240685CD00CE44CA /* ColorMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE2240685CC00CE44CA /* ColorMode.swift */; };
+		A7393D15240685CD00CE44CA /* ChartLineData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE3240685CC00CE44CA /* ChartLineData.swift */; };
+		A7393D16240685CD00CE44CA /* LinesSelectionLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE4240685CC00CE44CA /* LinesSelectionLabel.swift */; };
+		A7393D17240685CD00CE44CA /* LinesChartLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE5240685CC00CE44CA /* LinesChartLabel.swift */; };
+		A7393D18240685CD00CE44CA /* TimeInterval+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE7240685CC00CE44CA /* TimeInterval+Utils.swift */; };
+		A7393D19240685CD00CE44CA /* AnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE8240685CD00CE44CA /* AnimationController.swift */; };
+		A7393D1A240685CD00CE44CA /* TextUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CE9240685CD00CE44CA /* TextUtils.swift */; };
+		A7393D1B240685CD00CE44CA /* UIView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CEA240685CD00CE44CA /* UIView+Extensions.swift */; };
+		A7393D1C240685CD00CE44CA /* UIColor+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CEB240685CD00CE44CA /* UIColor+Utils.swift */; };
+		A7393D1D240685CD00CE44CA /* DisplayLinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CEC240685CD00CE44CA /* DisplayLinkService.swift */; };
+		A7393D1E240685CD00CE44CA /* GlobalHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CED240685CD00CE44CA /* GlobalHelpers.swift */; };
+		A7393D1F240685CD00CE44CA /* TimeZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CEE240685CD00CE44CA /* TimeZone.swift */; };
+		A7393D20240685CD00CE44CA /* ScalesNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CEF240685CD00CE44CA /* ScalesNumberFormatter.swift */; };
+		A7393D21240685CD00CE44CA /* CGPoint+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF0240685CD00CE44CA /* CGPoint+Extensions.swift */; };
+		A7393D22240685CD00CE44CA /* Array+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF1240685CD00CE44CA /* Array+Utils.swift */; };
+		A7393D23240685CD00CE44CA /* UIImage+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF2240685CD00CE44CA /* UIImage+Utils.swift */; };
+		A7393D24240685CD00CE44CA /* ClosedRange+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF3240685CD00CE44CA /* ClosedRange+Utils.swift */; };
+		A7393D25240685CD00CE44CA /* CGFloat.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF4240685CD00CE44CA /* CGFloat.swift */; };
+		A7393D26240685CD00CE44CA /* NumberFormatter+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF5240685CD00CE44CA /* NumberFormatter+Utils.swift */; };
+		A7393D27240685CD00CE44CA /* ChartVisibilityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF7240685CD00CE44CA /* ChartVisibilityItem.swift */; };
+		A7393D28240685CD00CE44CA /* ChartsDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF8240685CD00CE44CA /* ChartsDataManager.swift */; };
+		A7393D29240685CD00CE44CA /* Convert.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CF9240685CD00CE44CA /* Convert.swift */; };
+		A7393D2A240685CD00CE44CA /* ChartsCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CFA240685CD00CE44CA /* ChartsCollection.swift */; };
+		A7393D2B240685CD00CE44CA /* ChartsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393CFB240685CD00CE44CA /* ChartsError.swift */; };
+		A789E0C723E841B600AEB34A /* Graph.h in Headers */ = {isa = PBXBuildFile; fileRef = A789E0C523E841B600AEB34A /* Graph.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A7393CC5240685CC00CE44CA /* HorizontalScalesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalScalesRenderer.swift; sourceTree = "<group>"; };
+		A7393CC6240685CC00CE44CA /* BarChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BarChartRenderer.swift; sourceTree = "<group>"; };
+		A7393CC7240685CC00CE44CA /* LinesChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinesChartRenderer.swift; sourceTree = "<group>"; };
+		A7393CC8240685CC00CE44CA /* PecentChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PecentChartRenderer.swift; sourceTree = "<group>"; };
+		A7393CC9240685CC00CE44CA /* PerformanceRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceRenderer.swift; sourceTree = "<group>"; };
+		A7393CCA240685CC00CE44CA /* VerticalLinesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VerticalLinesRenderer.swift; sourceTree = "<group>"; };
+		A7393CCB240685CC00CE44CA /* LineBulletsRenerer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineBulletsRenerer.swift; sourceTree = "<group>"; };
+		A7393CCC240685CC00CE44CA /* VerticalScalesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VerticalScalesRenderer.swift; sourceTree = "<group>"; };
+		A7393CCD240685CC00CE44CA /* BaseChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseChartRenderer.swift; sourceTree = "<group>"; };
+		A7393CCE240685CC00CE44CA /* PieChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PieChartRenderer.swift; sourceTree = "<group>"; };
+		A7393CCF240685CC00CE44CA /* ChartDetailsRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartDetailsRenderer.swift; sourceTree = "<group>"; };
+		A7393CD0240685CC00CE44CA /* PercentPieAnimationRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PercentPieAnimationRenderer.swift; sourceTree = "<group>"; };
+		A7393CD3240685CC00CE44CA /* PieChartComponentController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PieChartComponentController.swift; sourceTree = "<group>"; };
+		A7393CD4240685CC00CE44CA /* PercentPieChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PercentPieChartController.swift; sourceTree = "<group>"; };
+		A7393CD5240685CC00CE44CA /* PercentChartComponentController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PercentChartComponentController.swift; sourceTree = "<group>"; };
+		A7393CD6240685CC00CE44CA /* BaseChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseChartController.swift; sourceTree = "<group>"; };
+		A7393CD8240685CC00CE44CA /* BarsComponentController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BarsComponentController.swift; sourceTree = "<group>"; };
+		A7393CD9240685CC00CE44CA /* StackedBarsChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StackedBarsChartController.swift; sourceTree = "<group>"; };
+		A7393CDA240685CC00CE44CA /* LinesComponentController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinesComponentController.swift; sourceTree = "<group>"; };
+		A7393CDB240685CC00CE44CA /* DailyBarsChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DailyBarsChartController.swift; sourceTree = "<group>"; };
+		A7393CDC240685CC00CE44CA /* GeneralChartComponentController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralChartComponentController.swift; sourceTree = "<group>"; };
+		A7393CDE240685CC00CE44CA /* GeneralLinesChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralLinesChartController.swift; sourceTree = "<group>"; };
+		A7393CDF240685CC00CE44CA /* TwoAxisLinesChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoAxisLinesChartController.swift; sourceTree = "<group>"; };
+		A7393CE0240685CC00CE44CA /* BaseLinesChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseLinesChartController.swift; sourceTree = "<group>"; };
+		A7393CE2240685CC00CE44CA /* ColorMode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ColorMode.swift; sourceTree = "<group>"; };
+		A7393CE3240685CC00CE44CA /* ChartLineData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartLineData.swift; sourceTree = "<group>"; };
+		A7393CE4240685CC00CE44CA /* LinesSelectionLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinesSelectionLabel.swift; sourceTree = "<group>"; };
+		A7393CE5240685CC00CE44CA /* LinesChartLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinesChartLabel.swift; sourceTree = "<group>"; };
+		A7393CE7240685CC00CE44CA /* TimeInterval+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "TimeInterval+Utils.swift"; sourceTree = "<group>"; };
+		A7393CE8240685CD00CE44CA /* AnimationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnimationController.swift; sourceTree = "<group>"; };
+		A7393CE9240685CD00CE44CA /* TextUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextUtils.swift; sourceTree = "<group>"; };
+		A7393CEA240685CD00CE44CA /* UIView+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+Extensions.swift"; sourceTree = "<group>"; };
+		A7393CEB240685CD00CE44CA /* UIColor+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Utils.swift"; sourceTree = "<group>"; };
+		A7393CEC240685CD00CE44CA /* DisplayLinkService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DisplayLinkService.swift; sourceTree = "<group>"; };
+		A7393CED240685CD00CE44CA /* GlobalHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalHelpers.swift; sourceTree = "<group>"; };
+		A7393CEE240685CD00CE44CA /* TimeZone.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimeZone.swift; sourceTree = "<group>"; };
+		A7393CEF240685CD00CE44CA /* ScalesNumberFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScalesNumberFormatter.swift; sourceTree = "<group>"; };
+		A7393CF0240685CD00CE44CA /* CGPoint+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGPoint+Extensions.swift"; sourceTree = "<group>"; };
+		A7393CF1240685CD00CE44CA /* Array+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Array+Utils.swift"; sourceTree = "<group>"; };
+		A7393CF2240685CD00CE44CA /* UIImage+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIImage+Utils.swift"; sourceTree = "<group>"; };
+		A7393CF3240685CD00CE44CA /* ClosedRange+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ClosedRange+Utils.swift"; sourceTree = "<group>"; };
+		A7393CF4240685CD00CE44CA /* CGFloat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGFloat.swift; sourceTree = "<group>"; };
+		A7393CF5240685CD00CE44CA /* NumberFormatter+Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NumberFormatter+Utils.swift"; sourceTree = "<group>"; };
+		A7393CF7240685CD00CE44CA /* ChartVisibilityItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartVisibilityItem.swift; sourceTree = "<group>"; };
+		A7393CF8240685CD00CE44CA /* ChartsDataManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartsDataManager.swift; sourceTree = "<group>"; };
+		A7393CF9240685CD00CE44CA /* Convert.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convert.swift; sourceTree = "<group>"; };
+		A7393CFA240685CD00CE44CA /* ChartsCollection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartsCollection.swift; sourceTree = "<group>"; };
+		A7393CFB240685CD00CE44CA /* ChartsError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartsError.swift; sourceTree = "<group>"; };
+		A7831B152403BFE30056AEAC /* TGUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TGUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A789E0C223E841B600AEB34A /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A789E0C523E841B600AEB34A /* Graph.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Graph.h; sourceTree = "<group>"; };
+		A789E0C623E841B600AEB34A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A789E0BF23E841B600AEB34A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A7393CC2240685CC00CE44CA /* src */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CC3240685CC00CE44CA /* Charts */,
+				A7393CE1240685CC00CE44CA /* Models */,
+				A7393CE6240685CC00CE44CA /* Helpers */,
+				A7393CF6240685CD00CE44CA /* Charts Reader */,
+			);
+			name = src;
+			path = "../../../submodules/telegram-ios/submodules/GraphCore/src";
+			sourceTree = "<group>";
+		};
+		A7393CC3240685CC00CE44CA /* Charts */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CC4240685CC00CE44CA /* Renderes */,
+				A7393CD1240685CC00CE44CA /* Controllers */,
+			);
+			path = Charts;
+			sourceTree = "<group>";
+		};
+		A7393CC4240685CC00CE44CA /* Renderes */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CC5240685CC00CE44CA /* HorizontalScalesRenderer.swift */,
+				A7393CC6240685CC00CE44CA /* BarChartRenderer.swift */,
+				A7393CC7240685CC00CE44CA /* LinesChartRenderer.swift */,
+				A7393CC8240685CC00CE44CA /* PecentChartRenderer.swift */,
+				A7393CC9240685CC00CE44CA /* PerformanceRenderer.swift */,
+				A7393CCA240685CC00CE44CA /* VerticalLinesRenderer.swift */,
+				A7393CCB240685CC00CE44CA /* LineBulletsRenerer.swift */,
+				A7393CCC240685CC00CE44CA /* VerticalScalesRenderer.swift */,
+				A7393CCD240685CC00CE44CA /* BaseChartRenderer.swift */,
+				A7393CCE240685CC00CE44CA /* PieChartRenderer.swift */,
+				A7393CCF240685CC00CE44CA /* ChartDetailsRenderer.swift */,
+				A7393CD0240685CC00CE44CA /* PercentPieAnimationRenderer.swift */,
+			);
+			path = Renderes;
+			sourceTree = "<group>";
+		};
+		A7393CD1240685CC00CE44CA /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CD2240685CC00CE44CA /* Percent And Pie */,
+				A7393CD6240685CC00CE44CA /* BaseChartController.swift */,
+				A7393CD7240685CC00CE44CA /* Stacked Bars */,
+				A7393CDC240685CC00CE44CA /* GeneralChartComponentController.swift */,
+				A7393CDD240685CC00CE44CA /* Lines */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		A7393CD2240685CC00CE44CA /* Percent And Pie */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CD3240685CC00CE44CA /* PieChartComponentController.swift */,
+				A7393CD4240685CC00CE44CA /* PercentPieChartController.swift */,
+				A7393CD5240685CC00CE44CA /* PercentChartComponentController.swift */,
+			);
+			path = "Percent And Pie";
+			sourceTree = "<group>";
+		};
+		A7393CD7240685CC00CE44CA /* Stacked Bars */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CD8240685CC00CE44CA /* BarsComponentController.swift */,
+				A7393CD9240685CC00CE44CA /* StackedBarsChartController.swift */,
+				A7393CDA240685CC00CE44CA /* LinesComponentController.swift */,
+				A7393CDB240685CC00CE44CA /* DailyBarsChartController.swift */,
+			);
+			path = "Stacked Bars";
+			sourceTree = "<group>";
+		};
+		A7393CDD240685CC00CE44CA /* Lines */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CDE240685CC00CE44CA /* GeneralLinesChartController.swift */,
+				A7393CDF240685CC00CE44CA /* TwoAxisLinesChartController.swift */,
+				A7393CE0240685CC00CE44CA /* BaseLinesChartController.swift */,
+			);
+			path = Lines;
+			sourceTree = "<group>";
+		};
+		A7393CE1240685CC00CE44CA /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CE2240685CC00CE44CA /* ColorMode.swift */,
+				A7393CE3240685CC00CE44CA /* ChartLineData.swift */,
+				A7393CE4240685CC00CE44CA /* LinesSelectionLabel.swift */,
+				A7393CE5240685CC00CE44CA /* LinesChartLabel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A7393CE6240685CC00CE44CA /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CE7240685CC00CE44CA /* TimeInterval+Utils.swift */,
+				A7393CE8240685CD00CE44CA /* AnimationController.swift */,
+				A7393CE9240685CD00CE44CA /* TextUtils.swift */,
+				A7393CEA240685CD00CE44CA /* UIView+Extensions.swift */,
+				A7393CEB240685CD00CE44CA /* UIColor+Utils.swift */,
+				A7393CEC240685CD00CE44CA /* DisplayLinkService.swift */,
+				A7393CED240685CD00CE44CA /* GlobalHelpers.swift */,
+				A7393CEE240685CD00CE44CA /* TimeZone.swift */,
+				A7393CEF240685CD00CE44CA /* ScalesNumberFormatter.swift */,
+				A7393CF0240685CD00CE44CA /* CGPoint+Extensions.swift */,
+				A7393CF1240685CD00CE44CA /* Array+Utils.swift */,
+				A7393CF2240685CD00CE44CA /* UIImage+Utils.swift */,
+				A7393CF3240685CD00CE44CA /* ClosedRange+Utils.swift */,
+				A7393CF4240685CD00CE44CA /* CGFloat.swift */,
+				A7393CF5240685CD00CE44CA /* NumberFormatter+Utils.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		A7393CF6240685CD00CE44CA /* Charts Reader */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CF7240685CD00CE44CA /* ChartVisibilityItem.swift */,
+				A7393CF8240685CD00CE44CA /* ChartsDataManager.swift */,
+				A7393CF9240685CD00CE44CA /* Convert.swift */,
+				A7393CFA240685CD00CE44CA /* ChartsCollection.swift */,
+				A7393CFB240685CD00CE44CA /* ChartsError.swift */,
+			);
+			path = "Charts Reader";
+			sourceTree = "<group>";
+		};
+		A7831B142403BFE30056AEAC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A7831B152403BFE30056AEAC /* TGUIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A789E0B823E841B600AEB34A = {
+			isa = PBXGroup;
+			children = (
+				A789E0C423E841B600AEB34A /* Graph */,
+				A789E0C323E841B600AEB34A /* Products */,
+				A7831B142403BFE30056AEAC /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A789E0C323E841B600AEB34A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A789E0C223E841B600AEB34A /* GraphCore.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A789E0C423E841B600AEB34A /* Graph */ = {
+			isa = PBXGroup;
+			children = (
+				A7393CC2240685CC00CE44CA /* src */,
+				A789E0C523E841B600AEB34A /* Graph.h */,
+				A789E0C623E841B600AEB34A /* Info.plist */,
+			);
+			path = Graph;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		A789E0BD23E841B600AEB34A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A789E0C723E841B600AEB34A /* Graph.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		A789E0C123E841B600AEB34A /* GraphCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A789E0CA23E841B600AEB34A /* Build configuration list for PBXNativeTarget "GraphCore" */;
+			buildPhases = (
+				A789E0BD23E841B600AEB34A /* Headers */,
+				A789E0BE23E841B600AEB34A /* Sources */,
+				A789E0BF23E841B600AEB34A /* Frameworks */,
+				A789E0C023E841B600AEB34A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GraphCore;
+			productName = Graph;
+			productReference = A789E0C223E841B600AEB34A /* GraphCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A789E0B923E841B600AEB34A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1030;
+				ORGANIZATIONNAME = Telegram;
+				TargetAttributes = {
+					A789E0C123E841B600AEB34A = {
+						CreatedOnToolsVersion = 10.3;
+					};
+				};
+			};
+			buildConfigurationList = A789E0BC23E841B600AEB34A /* Build configuration list for PBXProject "GraphCore" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = A789E0B823E841B600AEB34A;
+			productRefGroup = A789E0C323E841B600AEB34A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A789E0C123E841B600AEB34A /* GraphCore */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A789E0C023E841B600AEB34A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A789E0BE23E841B600AEB34A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7393D1F240685CD00CE44CA /* TimeZone.swift in Sources */,
+				A7393D10240685CD00CE44CA /* GeneralChartComponentController.swift in Sources */,
+				A7393D2A240685CD00CE44CA /* ChartsCollection.swift in Sources */,
+				A7393D14240685CD00CE44CA /* ColorMode.swift in Sources */,
+				A7393D23240685CD00CE44CA /* UIImage+Utils.swift in Sources */,
+				A7393D0D240685CD00CE44CA /* StackedBarsChartController.swift in Sources */,
+				A7393D22240685CD00CE44CA /* Array+Utils.swift in Sources */,
+				A7393D21240685CD00CE44CA /* CGPoint+Extensions.swift in Sources */,
+				A7393D0E240685CD00CE44CA /* LinesComponentController.swift in Sources */,
+				A7393D00240685CD00CE44CA /* PerformanceRenderer.swift in Sources */,
+				A7393D24240685CD00CE44CA /* ClosedRange+Utils.swift in Sources */,
+				A7393D2B240685CD00CE44CA /* ChartsError.swift in Sources */,
+				A7393D17240685CD00CE44CA /* LinesChartLabel.swift in Sources */,
+				A7393D29240685CD00CE44CA /* Convert.swift in Sources */,
+				A7393D1C240685CD00CE44CA /* UIColor+Utils.swift in Sources */,
+				A7393D1B240685CD00CE44CA /* UIView+Extensions.swift in Sources */,
+				A7393D27240685CD00CE44CA /* ChartVisibilityItem.swift in Sources */,
+				A7393D16240685CD00CE44CA /* LinesSelectionLabel.swift in Sources */,
+				A7393CFF240685CD00CE44CA /* PecentChartRenderer.swift in Sources */,
+				A7393D15240685CD00CE44CA /* ChartLineData.swift in Sources */,
+				A7393D07240685CD00CE44CA /* PercentPieAnimationRenderer.swift in Sources */,
+				A7393D05240685CD00CE44CA /* PieChartRenderer.swift in Sources */,
+				A7393D12240685CD00CE44CA /* TwoAxisLinesChartController.swift in Sources */,
+				A7393D26240685CD00CE44CA /* NumberFormatter+Utils.swift in Sources */,
+				A7393D01240685CD00CE44CA /* VerticalLinesRenderer.swift in Sources */,
+				A7393D18240685CD00CE44CA /* TimeInterval+Utils.swift in Sources */,
+				A7393D20240685CD00CE44CA /* ScalesNumberFormatter.swift in Sources */,
+				A7393D0B240685CD00CE44CA /* BaseChartController.swift in Sources */,
+				A7393D03240685CD00CE44CA /* VerticalScalesRenderer.swift in Sources */,
+				A7393D0A240685CD00CE44CA /* PercentChartComponentController.swift in Sources */,
+				A7393D11240685CD00CE44CA /* GeneralLinesChartController.swift in Sources */,
+				A7393D13240685CD00CE44CA /* BaseLinesChartController.swift in Sources */,
+				A7393D04240685CD00CE44CA /* BaseChartRenderer.swift in Sources */,
+				A7393D1E240685CD00CE44CA /* GlobalHelpers.swift in Sources */,
+				A7393D08240685CD00CE44CA /* PieChartComponentController.swift in Sources */,
+				A7393D25240685CD00CE44CA /* CGFloat.swift in Sources */,
+				A7393CFC240685CD00CE44CA /* HorizontalScalesRenderer.swift in Sources */,
+				A7393D1D240685CD00CE44CA /* DisplayLinkService.swift in Sources */,
+				A7393D02240685CD00CE44CA /* LineBulletsRenerer.swift in Sources */,
+				A7393CFD240685CD00CE44CA /* BarChartRenderer.swift in Sources */,
+				A7393D19240685CD00CE44CA /* AnimationController.swift in Sources */,
+				A7393D1A240685CD00CE44CA /* TextUtils.swift in Sources */,
+				A7393CFE240685CD00CE44CA /* LinesChartRenderer.swift in Sources */,
+				A7393D28240685CD00CE44CA /* ChartsDataManager.swift in Sources */,
+				A7393D06240685CD00CE44CA /* ChartDetailsRenderer.swift in Sources */,
+				A7393D09240685CD00CE44CA /* PercentPieChartController.swift in Sources */,
+				A7393D0F240685CD00CE44CA /* DailyBarsChartController.swift in Sources */,
+				A7393D0C240685CD00CE44CA /* BarsComponentController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A7393CB92406859300CE44CA /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		A7393CBA2406859300CE44CA /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = Graph/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugHockeyapp;
+		};
+		A7393CBC2406859800CE44CA /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		A7393CBD2406859800CE44CA /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = Graph/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = HockeyappMacAlpha;
+		};
+		A7393CBF240685A600CE44CA /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		A7393CC0240685A600CE44CA /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = Graph/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseAppStore;
+		};
+		A789E0C823E841B600AEB34A /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		A789E0C923E841B600AEB34A /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		A789E0CB23E841B600AEB34A /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = Graph/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugAppStore;
+		};
+		A789E0CC23E841B600AEB34A /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = Graph/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseHockeyapp;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A789E0BC23E841B600AEB34A /* Build configuration list for PBXProject "GraphCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A789E0C823E841B600AEB34A /* DebugAppStore */,
+				A7393CBC2406859800CE44CA /* HockeyappMacAlpha */,
+				A7393CB92406859300CE44CA /* DebugHockeyapp */,
+				A789E0C923E841B600AEB34A /* ReleaseHockeyapp */,
+				A7393CBF240685A600CE44CA /* ReleaseAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+		A789E0CA23E841B600AEB34A /* Build configuration list for PBXNativeTarget "GraphCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A789E0CB23E841B600AEB34A /* DebugAppStore */,
+				A7393CBD2406859800CE44CA /* HockeyappMacAlpha */,
+				A7393CBA2406859300CE44CA /* DebugHockeyapp */,
+				A789E0CC23E841B600AEB34A /* ReleaseHockeyapp */,
+				A7393CC0240685A600CE44CA /* ReleaseAppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A789E0B923E841B600AEB34A /* Project object */;
+}

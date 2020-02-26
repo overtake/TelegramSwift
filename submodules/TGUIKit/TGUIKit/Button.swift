@@ -16,7 +16,7 @@ open class Button: Control {
     
     public var autohighlight:Bool = true
     public var highlightHovered:Bool = false
-    private(set) var _thatFit: Bool = false
+    public var _thatFit: Bool = false
 
     private var stateBackground:[ControlState:NSColor] = [:]
     

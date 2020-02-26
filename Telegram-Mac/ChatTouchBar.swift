@@ -222,7 +222,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
-            if oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult {
+            if oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult || oldValue.selectionState != value.selectionState || oldValue.canInvokeBasicActions != value.canInvokeBasicActions {
                 self.prevIsKeyWindow = textView.window?.isKeyWindow
                 let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
                 self.defaultItemIdentifiers = result.items

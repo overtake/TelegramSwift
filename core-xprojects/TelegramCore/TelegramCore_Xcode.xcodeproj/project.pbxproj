@@ -28,6 +28,7 @@
 		A71DC83F2387CE10000EEDE2 /* AuthTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */; };
 		A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972723A3A8C80091F293 /* InactiveChannels.swift */; };
 		A767DD4723F2FBD000366F76 /* ChatListFiltering.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */; };
+		A7831B202403D16F0056AEAC /* ChannelStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */; };
 		A7D281DE236C25500000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281DD236C25500000A9BF /* SwiftSignalKit.framework */; };
 		A7D281E2236C25710000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E1236C25710000A9BF /* Postbox.framework */; };
 		A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E3236C257C0000A9BF /* TelegramApi.framework */; };
@@ -380,6 +381,7 @@
 		A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthTransfer.swift; sourceTree = "<group>"; };
 		A754972723A3A8C80091F293 /* InactiveChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannels.swift; sourceTree = "<group>"; };
 		A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListFiltering.swift; sourceTree = "<group>"; };
+		A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelStatistics.swift; sourceTree = "<group>"; };
 		A7D281D7236C25370000A9BF /* libphonenumber.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libphonenumber.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D9236C253C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281DB236C25440000A9BF /* MtProtoKitMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1446,6 +1448,7 @@
 		D0DF0C881D819C5F008AEB01 /* Peers */ = {
 			isa = PBXGroup;
 			children = (
+				A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */,
 				A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */,
 				D0C26D6B1FE286C3004ABF18 /* FetchChatList.swift */,
 				D0BC386F1E40853E0044D6FE /* UpdatePeers.swift */,
@@ -1655,6 +1658,7 @@
 				D01C7F051EFC1C49008305F1 /* DeviceContact.swift in Sources */,
 				D050F26A1E4A5B6D00988324 /* ManagedGlobalNotificationSettings.swift in Sources */,
 				D050F26B1E4A5B6D00988324 /* ApplyMaxReadIndexInteractively.swift in Sources */,
+				A7831B202403D16F0056AEAC /* ChannelStatistics.swift in Sources */,
 				D033FEB11E61EB0200644997 /* PeerContactSettings.swift in Sources */,
 				D050F26C1E4A5B6D00988324 /* UpdatePeers.swift in Sources */,
 				D08984F621187ECA00918162 /* NetworkType.swift in Sources */,

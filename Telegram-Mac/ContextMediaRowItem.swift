@@ -238,13 +238,15 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         if let item = item as? ContextMediaRowItem {
             var inset:CGFloat = 0
             var i:Int = 0
-            for size in item.result.sizes {
-                if point.x > inset && point.x < inset + size.width {
-                    item.arguments.sendResult(item.result.results[i], self.subviews[i])
-                    break
+            if !item.result.results.isEmpty {
+                for size in item.result.sizes {
+                    if point.x > inset && point.x < inset + size.width {
+                        item.arguments.sendResult(item.result.results[i], self.subviews[i])
+                        break
+                    }
+                    inset += size.width + dif
+                    i += 1
                 }
-                inset += size.width + dif
-                i += 1
             }
         }
     }

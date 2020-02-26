@@ -295,11 +295,8 @@ class ChannelInfoArguments : PeerInfoArguments {
 
     }
     
-    func stats() {
-//        _ = showModalProgress(signal: getChannelStats(postbox: context.account.postbox, network: context.account.network, peerId) |> deliverOnMainQueue, for: arguments.context.window).start(next: { [weak self] url in
-//            guard let `self` = self, let url = url else {return}
-//            self.pushViewController(ChannelStatisticsController(self.context, self.peerId, statsUrl: url))
-//        })
+    func stats(_ datacenterId: Int32) {
+        self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
     }
     
     func report() -> Void {
@@ -353,7 +350,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
-    case statistics(sectionId: ChannelInfoSection, viewType: GeneralViewType)
+    case statistics(sectionId: ChannelInfoSection, datacenterId: Int32, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
@@ -377,7 +374,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .admins(sectionId, count, _): return .admins(sectionId: sectionId, count: count, viewType: viewType)
         case let .blocked(sectionId, count, _): return .blocked(sectionId: sectionId, count: count, viewType: viewType)
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
-        case let .statistics(sectionId, _): return .statistics(sectionId: sectionId, viewType: viewType)
+        case let .statistics(sectionId, datacenterId, _): return .statistics(sectionId: sectionId, datacenterId: datacenterId, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
@@ -500,8 +497,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .statistics(sectionId, viewType):
-            if case .statistics(sectionId, viewType) = entry {
+        case let .statistics(sectionId, datacenterId, viewType):
+            if case .statistics(sectionId, datacenterId, viewType) = entry {
                 return true
             } else {
                 return false
@@ -587,13 +584,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 5
         case .sharedMedia:
             return 6
-        case .admins:
-            return 7
-        case .members:
-            return 8
-        case .blocked:
-            return 9
         case .statistics:
+            return 7
+        case .admins:
+            return 8
+        case .members:
+            return 9
+        case .blocked:
             return 10
         case .link:
             return 11
@@ -640,7 +637,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .members(sectionId, _, _):
             return sectionId.rawValue
-        case let .statistics(sectionId, _):
+        case let .statistics(sectionId, _, _):
             return sectionId.rawValue
         case let .link(sectionId, _, _):
             return sectionId.rawValue
@@ -687,7 +684,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .members(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .statistics(sectionId, _):
+        case let .statistics(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .link(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -760,8 +757,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
         case let .blocked(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
-        case let .statistics(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStatistics, type: .next, viewType: viewType, action: arguments.stats)
+        case let .statistics(_, datacenterId, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStatistics, type: .next, viewType: viewType, action: {
+                arguments.stats(datacenterId)
+            })
         case let .link(_, addressName: addressName, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
         case let .discussion(_, group, _, viewType):
@@ -920,6 +919,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 var adminsCount:Int32? = nil
                 var blockedCount:Int32? = nil
                 var canViewStats: Bool = false
+                
+                
                 if let cachedData = view.cachedData as? CachedChannelData {
                     membersCount = cachedData.participantsSummary.memberCount
                     adminsCount = cachedData.participantsSummary.adminCount
@@ -928,7 +929,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 }
                 entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
                 entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
-                
+              
                 entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
                 
             }
@@ -940,6 +941,18 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 additionBlock.append(.notifications(sectionId: .addition, settings: view.notificationSettings, viewType: .singleItem))
             }
             additionBlock.append(.sharedMedia(sectionId: .addition, viewType: .singleItem))
+            
+            var datacenterId: Int32 = 0
+            
+            if let cachedData = view.cachedData as? CachedChannelData {
+                datacenterId = cachedData.statsDatacenterId
+            }
+            
+            #if DEBUG
+            if datacenterId > 0 {
+                additionBlock.append(.statistics(sectionId: .addition, datacenterId: datacenterId, viewType: .innerItem))
+            }
+            #endif
             
             applyBlock(additionBlock)
             
