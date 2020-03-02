@@ -60,7 +60,7 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     return entries
 }
 
-func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String) -> Void) -> InputDataModalController {
+func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String?) -> Void) -> InputDataModalController {
     
     
     let initialState = InputURLFormatterState(text: string, url: defaultUrl?.removingPercentEncoding)
@@ -105,11 +105,9 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
                 
             })
             
-            if let url = url {
-                completion(url)
-                close?()
-                return .none
-            }
+            completion(url)
+            close?()
+            return .none
             
             
         }

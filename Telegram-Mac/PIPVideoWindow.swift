@@ -301,8 +301,8 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         _window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             if event.clickCount == 2, let strongSelf = self {
-                let inner = strongSelf.control.view.convert(event.locationInWindow, from: nil)
-                if NSPointInRect(event.locationInWindow, strongSelf.bounds), strongSelf.control.view.hitTest(inner) is MediaPlayerView {
+                let inner = strongSelf.control.view.convert(event.locationInWindow, from: nil)                
+                if NSWindow.windowNumber(at: NSEvent.mouseLocation, belowWindowWithWindowNumber: 0) == strongSelf.windowNumber, strongSelf.control.view.hitTest(inner) is MediaPlayerView {
                     strongSelf.hide()
                 }
             }

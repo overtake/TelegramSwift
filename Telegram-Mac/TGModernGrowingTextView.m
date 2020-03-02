@@ -1480,18 +1480,32 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 -(void)addLink:(NSString *)link {
     if (self.selectedRange.length == 0)
-    return;
-    id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
-    [self addInputTextTag:tag range:self.selectedRange];
-    [self update:YES];
+        return;
+    if (link == nil) {
+        NSMutableAttributedString *copy = [self.attributedString mutableCopy];
+        [copy removeAttribute:TGCustomLinkAttributeName range: self.selectedRange];
+        [self setAttributedString:copy animated:false];
+    } else {
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+        [self addInputTextTag:tag range:self.selectedRange];
+        [self update:YES];
+    }
+   
 }
     
 -(void)addLink:(NSString *)link range: (NSRange)range {
     if (range.length == 0)
-    return;
-    id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
-    [self addInputTextTag:tag range:range];
-    [self update:YES];
+        return;
+    
+    if (link == nil) {
+        NSMutableAttributedString *copy = [self.attributedString mutableCopy];
+        [copy removeAttribute:TGCustomLinkAttributeName range: range];
+        [self setAttributedString:copy animated:false];
+    } else {
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+        [self addInputTextTag:tag range:range];
+        [self update:YES];
+    }
 }
     
     
