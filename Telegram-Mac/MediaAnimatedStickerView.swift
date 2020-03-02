@@ -19,8 +19,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
 
     private let loadResourceDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
-    private let playThrottleDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
+    private let playThrottleDisposable = MetaDisposable()
     private let playerView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 240, 240))
     private let thumbView = TransformImageView()
     private var sticker:LottieAnimation? = nil {
@@ -91,7 +91,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 break
             }
         }
-        
+       
         if previousAccept != accept {
             self.playThrottleDisposable.set(signal.start(next: { [weak self] in
                 guard let `self` = self else {

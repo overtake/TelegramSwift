@@ -82,7 +82,7 @@ class GlobalBadgeNode: Node {
     
     private let getColor: (Bool) -> NSColor
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, preset: ChatListFilterPreset? = nil) {
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
@@ -124,26 +124,26 @@ class GlobalBadgeNode: Node {
         unreadCountItems.append(.total(nil))
         var keys: [PostboxViewKey] = []
         let unreadKey: PostboxViewKey
-        if let current = preset, applyFilter {
-            if !current.additionallyIncludePeers.isEmpty {
-                for peerId in current.additionallyIncludePeers {
+        if let current = filter, applyFilter {
+            if !current.data.includePeers.isEmpty {
+                for peerId in current.data.includePeers {
                     unreadCountItems.append(.peer(peerId))
                 }
             }
             unreadKey = .unreadCounts(items: unreadCountItems)
             keys.append(unreadKey)
-            for peerId in current.additionallyIncludePeers {
+            for peerId in current.data.includePeers {
                 keys.append(.basicPeer(peerId))
                 
             }
-            keys.append(.peerNotificationSettings(peerIds: Set(current.additionallyIncludePeers)))
+            keys.append(.peerNotificationSettings(peerIds: Set(current.data.includePeers)))
         } else {
             unreadKey = .unreadCounts(items: [])
         }
         
         let s:Signal<Result, NoError> = combineLatest(signal, account.postbox.unreadMessageCountsView(items: items), account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: sharedContext.accountManager), peerSignal) |> map { (counts, view, keysView, inAppSettings, peerSettings) in
             
-            if !applyFilter || preset == nil {
+            if !applyFilter || filter == nil {
                 var excludeTotal: Int32 = 0
                 
                 var dockText: String?
@@ -176,7 +176,7 @@ class GlobalBadgeNode: Node {
                     }
                 }
                 return Result(dockText: dockText, total: excludeTotal)
-            } else if let preset = preset, inAppSettings.badgeEnabled {
+            } else if let filter = filter, inAppSettings.badgeEnabled {
                 if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView {
                     var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
                     var totalState: ChatListTotalUnreadState?
@@ -186,7 +186,7 @@ class GlobalBadgeNode: Node {
                             totalState = totalStateValue
                         case let .peer(peerId, state):
                             if let state = state, state.isUnread {
-                                let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(preset.additionallyIncludePeers))] as? PeerNotificationSettingsView
+                                let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(filter.data.includePeers))] as? PeerNotificationSettingsView
                                 if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
                                     let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer)
                                     var peerCount = Int(state.count)
@@ -200,7 +200,7 @@ class GlobalBadgeNode: Node {
                                             removable = true
                                         }
                                     }
-                                    if !preset.includeCategories.contains(.muted), isRemoved {
+                                    if filter.data.excludeMuted, isRemoved {
                                         removable = false
                                     }
                                     if removable, state.isUnread {
@@ -219,23 +219,23 @@ class GlobalBadgeNode: Node {
                     }
                     
                     var tags: [PeerSummaryCounterTags] = []
-                    if preset.includeCategories.contains(.privateChats) {
+                    if filter.data.categories.contains(.privateChats) {
                         tags.append(.privateChat)
                     }
                     
-                    if preset.includeCategories.contains(.publicGroups) {
+                    if filter.data.categories.contains(.publicGroups) {
                         tags.append(.publicGroup)
                     }
-                    if preset.includeCategories.contains(.privateGroups) {
+                    if filter.data.categories.contains(.privateGroups) {
                         tags.append(.privateGroup)
                     }
-                    if preset.includeCategories.contains(.secretChats) {
+                    if filter.data.categories.contains(.secretChats) {
                         tags.append(.secretChat)
                     }
-                    if preset.includeCategories.contains(.bots) {
+                    if filter.data.categories.contains(.bots) {
                         tags.append(.bot)
                     }
-                    if preset.includeCategories.contains(.channels) {
+                    if filter.data.categories.contains(.channels) {
                         tags.append(.channel)
                     }
                     
@@ -260,7 +260,7 @@ class GlobalBadgeNode: Node {
                             }
                         }
                     }
-                    for peerId in preset.additionallyIncludePeers {
+                    for peerId in filter.data.includePeers {
                         if let (tag, peerCount) = peerTagAndCount[peerId] {
                             if !tags.contains(tag) {
                                 count += Int32(peerCount)

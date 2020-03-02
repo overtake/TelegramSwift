@@ -7,179 +7,206 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A790A346236B1822000451B5 /* SAtomic.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADA1B28285400EAF753 /* SAtomic.m */; };
-		A790A347236B1822000451B5 /* SBag.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADC1B28285400EAF753 /* SBag.m */; };
-		A790A348236B1822000451B5 /* SSubscriber.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC91B28285400EAF753 /* SSubscriber.m */; };
-		A790A349236B1822000451B5 /* SDisposableSet.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD01B28285400EAF753 /* SDisposableSet.m */; };
-		A790A34A236B1822000451B5 /* SMetaDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD11B28285400EAF753 /* SMetaDisposable.m */; };
-		A790A34B236B1822000451B5 /* SBlockDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ADE1B28285400EAF753 /* SBlockDisposable.m */; };
-		A790A34C236B1822000451B5 /* SThreadPool.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB21B28285400EAF753 /* SThreadPool.m */; };
-		A790A34D236B1822000451B5 /* SThreadPoolTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */; };
-		A790A34E236B1822000451B5 /* SThreadPoolQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */; };
-		A790A34F236B1822000451B5 /* SQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB31B28285400EAF753 /* SQueue.m */; };
-		A790A350236B1822000451B5 /* STimer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AE61B28285400EAF753 /* STimer.m */; };
-		A790A351236B1822000451B5 /* SSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB81B28285400EAF753 /* SSignal.m */; };
-		A790A352236B1822000451B5 /* SSignal+Single.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD81B28285400EAF753 /* SSignal+Single.m */; };
-		A790A353236B1822000451B5 /* SSignal+Mapping.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD71B28285400EAF753 /* SSignal+Mapping.m */; };
-		A790A354236B1822000451B5 /* SSignal+Combine.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABD1B28285400EAF753 /* SSignal+Combine.m */; };
-		A790A355236B1822000451B5 /* SSignal+Accumulate.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */; };
-		A790A356236B1822000451B5 /* SSignal+SideEffects.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */; };
-		A790A357236B1823000451B5 /* SSignal+Take.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB41B28285400EAF753 /* SSignal+Take.m */; };
-		A790A358236B1823000451B5 /* SSignal+Timing.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB11B28285400EAF753 /* SSignal+Timing.m */; };
-		A790A359236B1823000451B5 /* SSignal+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AB51B28285400EAF753 /* SSignal+Meta.m */; };
-		A790A35A236B1823000451B5 /* SSignal+Pipe.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */; };
-		A790A35B236B1823000451B5 /* SSignal+Catch.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AC21B28285400EAF753 /* SSignal+Catch.m */; };
-		A790A35C236B1823000451B5 /* SSignal+Dispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */; };
-		A790A35D236B1823000451B5 /* SSignal+Multicast.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085AD21B28285400EAF753 /* SSignal+Multicast.m */; };
-		A790A35E236B1823000451B5 /* SMulticastSignalManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */; };
-		A790A35F236B1823000451B5 /* SVariable.m in Sources */ = {isa = PBXBuildFile; fileRef = D09FD73D1BA9BAB900FF0A4F /* SVariable.m */; };
-		A790A360236B1858000451B5 /* SAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD91B28285400EAF753 /* SAtomic.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A361236B1858000451B5 /* SBag.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADB1B28285400EAF753 /* SBag.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A362236B1858000451B5 /* SSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD31B28285400EAF753 /* SSubscriber.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A363236B1858000451B5 /* SDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD41B28285400EAF753 /* SDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A364236B1858000451B5 /* SDisposableSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADF1B28285400EAF753 /* SDisposableSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A365236B1858000451B5 /* SMetaDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE21B28285400EAF753 /* SMetaDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A366236B1858000451B5 /* SBlockDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ADD1B28285400EAF753 /* SBlockDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A367236B1858000451B5 /* SThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACE1B28285400EAF753 /* SThreadPool.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A368236B1858000451B5 /* SThreadPoolTask.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A369236B1858000451B5 /* SThreadPoolQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36A236B1858000451B5 /* SQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC61B28285400EAF753 /* SQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36B236B1858000451B5 /* STimer.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE51B28285400EAF753 /* STimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36C236B1858000451B5 /* SSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD51B28285400EAF753 /* SSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36D236B1858000451B5 /* SSignal+Single.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB71B28285400EAF753 /* SSignal+Single.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36E236B1858000451B5 /* SSignal+Mapping.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AD61B28285400EAF753 /* SSignal+Mapping.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A36F236B1858000451B5 /* SSignal+Combine.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABC1B28285400EAF753 /* SSignal+Combine.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A370236B1858000451B5 /* SSignal+Accumulate.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A371236B1858000451B5 /* SSignal+SideEffects.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A372236B1858000451B5 /* SSignal+Take.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC41B28285400EAF753 /* SSignal+Take.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A373236B1858000451B5 /* SSignal+Timing.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC81B28285400EAF753 /* SSignal+Timing.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A374236B1858000451B5 /* SSignal+Meta.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC71B28285400EAF753 /* SSignal+Meta.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A375236B1858000451B5 /* SSignal+Pipe.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A376236B1858000451B5 /* SSignal+Catch.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AC31B28285400EAF753 /* SSignal+Catch.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A377236B1858000451B5 /* SSignal+Dispatch.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A378236B1858000451B5 /* SSignal+Multicast.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AE41B28285400EAF753 /* SSignal+Multicast.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A379236B1858000451B5 /* SMulticastSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A37A236B1858000451B5 /* SVariable.h in Headers */ = {isa = PBXBuildFile; fileRef = D09FD73C1BA9BAB900FF0A4F /* SVariable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A790A37E236B1CC9000451B5 /* SSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D0085AB91B28285400EAF753 /* SSignalKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0467D1920D7F7BC0055C28F /* Signal_Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */; };
-		D053B4011F16881000E2D58A /* QueueLocalObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */; };
+		A791908B240CFCE4002011CA /* STimer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919055240CFCE1002011CA /* STimer.h */; };
+		A791908C240CFCE4002011CA /* SSignal+Pipe.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919056240CFCE1002011CA /* SSignal+Pipe.h */; };
+		A791908D240CFCE4002011CA /* SDisposableSet.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919057240CFCE1002011CA /* SDisposableSet.h */; };
+		A791908E240CFCE4002011CA /* SSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919058240CFCE1002011CA /* SSignal.h */; };
+		A791908F240CFCE4002011CA /* SSignal+Accumulate.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919059240CFCE1002011CA /* SSignal+Accumulate.h */; };
+		A7919091240CFCE4002011CA /* SThreadPoolQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905B240CFCE1002011CA /* SThreadPoolQueue.h */; };
+		A7919092240CFCE4002011CA /* SSignal+Meta.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905C240CFCE1002011CA /* SSignal+Meta.h */; };
+		A7919093240CFCE4002011CA /* SVariable.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905D240CFCE1002011CA /* SVariable.h */; };
+		A7919095240CFCE4002011CA /* SThreadPoolTask.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905F240CFCE1002011CA /* SThreadPoolTask.h */; };
+		A7919098240CFCE4002011CA /* SSignal+SideEffects.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919062240CFCE1002011CA /* SSignal+SideEffects.h */; };
+		A791909A240CFCE4002011CA /* SSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919064240CFCE2002011CA /* SSignalKit.h */; };
+		A791909D240CFCE4002011CA /* SSignal+Dispatch.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919067240CFCE2002011CA /* SSignal+Dispatch.h */; };
+		A791909E240CFCE4002011CA /* SSignal+Combine.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919068240CFCE2002011CA /* SSignal+Combine.h */; };
+		A79190A4240CFCE4002011CA /* SMetaDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A791906E240CFCE2002011CA /* SMetaDisposable.h */; };
+		A79190A7240CFCE4002011CA /* SBlockDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919071240CFCE2002011CA /* SBlockDisposable.h */; };
+		A79190A8240CFCE4002011CA /* SAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919072240CFCE2002011CA /* SAtomic.h */; };
+		A79190AA240CFCE4002011CA /* SSignal+Multicast.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919074240CFCE2002011CA /* SSignal+Multicast.h */; };
+		A79190AD240CFCE4002011CA /* SSignal+Single.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919077240CFCE2002011CA /* SSignal+Single.h */; };
+		A79190AE240CFCE4002011CA /* SDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919078240CFCE2002011CA /* SDisposable.h */; };
+		A79190AF240CFCE4002011CA /* SSignal+Mapping.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919079240CFCE3002011CA /* SSignal+Mapping.h */; };
+		A79190B0240CFCE4002011CA /* SBag.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907A240CFCE3002011CA /* SBag.h */; };
+		A79190B3240CFCE4002011CA /* SQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907D240CFCE3002011CA /* SQueue.h */; };
+		A79190B4240CFCE4002011CA /* SSignal+Timing.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907E240CFCE3002011CA /* SSignal+Timing.h */; };
+		A79190B6240CFCE4002011CA /* SSignal+Catch.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919080240CFCE3002011CA /* SSignal+Catch.h */; };
+		A79190B7240CFCE4002011CA /* SSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919081240CFCE3002011CA /* SSubscriber.h */; };
+		A79190BA240CFCE4002011CA /* SMulticastSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919084240CFCE3002011CA /* SMulticastSignalManager.h */; };
+		A79190BC240CFCE4002011CA /* SThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919086240CFCE4002011CA /* SThreadPool.h */; };
+		A79190BD240CFCE4002011CA /* SSignal+Take.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919087240CFCE4002011CA /* SSignal+Take.h */; };
+		A79190BF240CFD14002011CA /* Atomic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E18240CF16A002011CA /* Atomic.swift */; };
+		A79190C0240CFD14002011CA /* Bag.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E22240CF16B002011CA /* Bag.swift */; };
+		A79190C1240CFD14002011CA /* Disposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E23240CF16B002011CA /* Disposable.swift */; };
+		A79190C2240CFD14002011CA /* Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E20240CF16A002011CA /* Lock.swift */; };
+		A79190C3240CFD14002011CA /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E2E240CF16B002011CA /* Multicast.swift */; };
+		A79190C4240CFD14002011CA /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1C240CF16A002011CA /* Promise.swift */; };
+		A79190C5240CFD14002011CA /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E2B240CF16B002011CA /* Queue.swift */; };
+		A79190C6240CFD14002011CA /* QueueLocalObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1B240CF16A002011CA /* QueueLocalObject.swift */; };
+		A79190C7240CFD14002011CA /* Signal_Catch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1A240CF16A002011CA /* Signal_Catch.swift */; };
+		A79190C8240CFD14002011CA /* Signal_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E24240CF16B002011CA /* Signal_Combine.swift */; };
+		A79190C9240CFD14002011CA /* Signal_Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E15240CF16A002011CA /* Signal_Dispatch.swift */; };
+		A79190CA240CFD14002011CA /* Signal_Loop.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E17240CF16A002011CA /* Signal_Loop.swift */; };
+		A79190CB240CFD14002011CA /* Signal_Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E16240CF16A002011CA /* Signal_Mapping.swift */; };
+		A79190CC240CFD14002011CA /* Signal_Materialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E2A240CF16B002011CA /* Signal_Materialize.swift */; };
+		A79190CD240CFD14002011CA /* Signal_Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E28240CF16B002011CA /* Signal_Merge.swift */; };
+		A79190CE240CFD14002011CA /* Signal_Meta.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E2D240CF16B002011CA /* Signal_Meta.swift */; };
+		A79190CF240CFD14002011CA /* Signal_Reduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E27240CF16B002011CA /* Signal_Reduce.swift */; };
+		A79190D0240CFD14002011CA /* Signal_SideEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E19240CF16A002011CA /* Signal_SideEffects.swift */; };
+		A79190D1240CFD14002011CA /* Signal_Single.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E2C240CF16B002011CA /* Signal_Single.swift */; };
+		A79190D2240CFD14002011CA /* Signal_Take.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1E240CF16A002011CA /* Signal_Take.swift */; };
+		A79190D3240CFD14002011CA /* Signal_Timing.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E25240CF16B002011CA /* Signal_Timing.swift */; };
+		A79190D4240CFD14002011CA /* Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E26240CF16B002011CA /* Signal.swift */; };
+		A79190D5240CFD14002011CA /* Subscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1D240CF16A002011CA /* Subscriber.swift */; };
+		A79190D6240CFD14002011CA /* ThreadPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E21240CF16B002011CA /* ThreadPool.swift */; };
+		A79190D7240CFD14002011CA /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E29240CF16B002011CA /* Timer.swift */; };
+		A79190D8240CFD14002011CA /* ValuePipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7918E1F240CF16A002011CA /* ValuePipe.swift */; };
+		A79190DA240CFD22002011CA /* SAtomic.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919082240CFCE3002011CA /* SAtomic.m */; };
+		A79190DC240CFD22002011CA /* SBag.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919061240CFCE1002011CA /* SBag.m */; };
+		A79190DE240CFD22002011CA /* SBlockDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919065240CFCE2002011CA /* SBlockDisposable.m */; };
+		A79190E0240CFD22002011CA /* SDisposableSet.h in Sources */ = {isa = PBXBuildFile; fileRef = A7919057240CFCE1002011CA /* SDisposableSet.h */; };
+		A79190E1240CFD22002011CA /* SDisposableSet.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919053240CFCE1002011CA /* SDisposableSet.m */; };
+		A79190E3240CFD22002011CA /* SMetaDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = A791907F240CFCE3002011CA /* SMetaDisposable.m */; };
+		A79190E5240CFD22002011CA /* SMulticastSignalManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919088240CFCE4002011CA /* SMulticastSignalManager.m */; };
+		A79190E7240CFD22002011CA /* SQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919070240CFCE2002011CA /* SQueue.m */; };
+		A79190E9240CFD22002011CA /* SSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = A791906C240CFCE2002011CA /* SSignal.m */; };
+		A79190EB240CFD22002011CA /* SSignal+Accumulate.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919060240CFCE1002011CA /* SSignal+Accumulate.m */; };
+		A79190ED240CFD22002011CA /* SSignal+Catch.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919054240CFCE1002011CA /* SSignal+Catch.m */; };
+		A79190EF240CFD22002011CA /* SSignal+Combine.m in Sources */ = {isa = PBXBuildFile; fileRef = A791906B240CFCE2002011CA /* SSignal+Combine.m */; };
+		A79190F1240CFD22002011CA /* SSignal+Dispatch.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919076240CFCE2002011CA /* SSignal+Dispatch.m */; };
+		A79190F3240CFD22002011CA /* SSignal+Mapping.m in Sources */ = {isa = PBXBuildFile; fileRef = A791907C240CFCE3002011CA /* SSignal+Mapping.m */; };
+		A79190F5240CFD22002011CA /* SSignal+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = A791906F240CFCE2002011CA /* SSignal+Meta.m */; };
+		A79190F7240CFD22002011CA /* SSignal+Multicast.m in Sources */ = {isa = PBXBuildFile; fileRef = A791906A240CFCE2002011CA /* SSignal+Multicast.m */; };
+		A79190F9240CFD22002011CA /* SSignal+Pipe.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919073240CFCE2002011CA /* SSignal+Pipe.m */; };
+		A79190FB240CFD22002011CA /* SSignal+SideEffects.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919069240CFCE2002011CA /* SSignal+SideEffects.m */; };
+		A79190FD240CFD22002011CA /* SSignal+Single.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919066240CFCE2002011CA /* SSignal+Single.m */; };
+		A79190FF240CFD22002011CA /* SSignal+Take.m in Sources */ = {isa = PBXBuildFile; fileRef = A791905E240CFCE1002011CA /* SSignal+Take.m */; };
+		A7919101240CFD22002011CA /* SSignal+Timing.m in Sources */ = {isa = PBXBuildFile; fileRef = A791907B240CFCE3002011CA /* SSignal+Timing.m */; };
+		A7919104240CFD22002011CA /* SSubscriber.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919063240CFCE2002011CA /* SSubscriber.m */; };
+		A7919106240CFD22002011CA /* SThreadPool.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919085240CFCE3002011CA /* SThreadPool.m */; };
+		A7919108240CFD22002011CA /* SThreadPoolQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919083240CFCE3002011CA /* SThreadPoolQueue.m */; };
+		A791910A240CFD22002011CA /* SThreadPoolTask.m in Sources */ = {isa = PBXBuildFile; fileRef = A7919075240CFCE2002011CA /* SThreadPoolTask.m */; };
+		A791910C240CFD22002011CA /* STimer.m in Sources */ = {isa = PBXBuildFile; fileRef = A791906D240CFCE2002011CA /* STimer.m */; };
+		A791910E240CFD22002011CA /* SVariable.m in Sources */ = {isa = PBXBuildFile; fileRef = A791905A240CFCE1002011CA /* SVariable.m */; };
+		A791910F240CFD60002011CA /* SAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919072240CFCE2002011CA /* SAtomic.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919110240CFD60002011CA /* SBag.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907A240CFCE3002011CA /* SBag.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919111240CFD60002011CA /* SBlockDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919071240CFCE2002011CA /* SBlockDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919112240CFD60002011CA /* SDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919078240CFCE2002011CA /* SDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919113240CFD60002011CA /* SDisposableSet.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919057240CFCE1002011CA /* SDisposableSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919114240CFD60002011CA /* SMetaDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A791906E240CFCE2002011CA /* SMetaDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919115240CFD60002011CA /* SMulticastSignalManager.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919084240CFCE3002011CA /* SMulticastSignalManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919116240CFD60002011CA /* SQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907D240CFCE3002011CA /* SQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919117240CFD60002011CA /* SSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919058240CFCE1002011CA /* SSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919118240CFD60002011CA /* SSignal+Accumulate.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919059240CFCE1002011CA /* SSignal+Accumulate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919119240CFD60002011CA /* SSignal+Catch.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919080240CFCE3002011CA /* SSignal+Catch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911A240CFD60002011CA /* SSignal+Combine.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919068240CFCE2002011CA /* SSignal+Combine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911B240CFD60002011CA /* SSignal+Dispatch.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919067240CFCE2002011CA /* SSignal+Dispatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911C240CFD60002011CA /* SSignal+Mapping.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919079240CFCE3002011CA /* SSignal+Mapping.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911D240CFD60002011CA /* SSignal+Meta.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905C240CFCE1002011CA /* SSignal+Meta.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911E240CFD60002011CA /* SSignal+Multicast.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919074240CFCE2002011CA /* SSignal+Multicast.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791911F240CFD60002011CA /* SSignal+Pipe.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919056240CFCE1002011CA /* SSignal+Pipe.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919120240CFD60002011CA /* SSignal+SideEffects.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919062240CFCE1002011CA /* SSignal+SideEffects.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919121240CFD60002011CA /* SSignal+Single.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919077240CFCE2002011CA /* SSignal+Single.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919122240CFD60002011CA /* SSignal+Take.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919087240CFCE4002011CA /* SSignal+Take.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919123240CFD60002011CA /* SSignal+Timing.h in Headers */ = {isa = PBXBuildFile; fileRef = A791907E240CFCE3002011CA /* SSignal+Timing.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919124240CFD60002011CA /* SSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919064240CFCE2002011CA /* SSignalKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919125240CFD60002011CA /* SSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919081240CFCE3002011CA /* SSubscriber.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919126240CFD60002011CA /* SThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919086240CFCE4002011CA /* SThreadPool.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919127240CFD60002011CA /* SThreadPoolQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905B240CFCE1002011CA /* SThreadPoolQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919128240CFD60002011CA /* SThreadPoolTask.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905F240CFCE1002011CA /* SThreadPoolTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7919129240CFD60002011CA /* STimer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919055240CFCE1002011CA /* STimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A791912A240CFD60002011CA /* SVariable.h in Headers */ = {isa = PBXBuildFile; fileRef = A791905D240CFCE1002011CA /* SVariable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0B417F11D7DFA63004562A4 /* SwiftSignalKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D0B417EF1D7DFA63004562A4 /* SwiftSignalKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0B417F61D7DFAAB004562A4 /* Signal_Timing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */; };
-		D0B417F71D7DFAAB004562A4 /* Signal_SideEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */; };
-		D0B417F81D7DFAAB004562A4 /* Signal_Dispatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */; };
-		D0B417F91D7DFAAB004562A4 /* ThreadPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */; };
-		D0B417FA1D7DFAAB004562A4 /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B401B282BEE00EAF753 /* Timer.swift */; };
-		D0B417FB1D7DFAAB004562A4 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B411B282BEE00EAF753 /* Queue.swift */; };
-		D0B417FC1D7DFAAB004562A4 /* ValuePipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B421B282BEE00EAF753 /* ValuePipe.swift */; };
-		D0B417FD1D7DFAAB004562A4 /* Bag.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B431B282BEE00EAF753 /* Bag.swift */; };
-		D0B417FE1D7DFAAB004562A4 /* Signal_Take.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B441B282BEE00EAF753 /* Signal_Take.swift */; };
-		D0B417FF1D7DFAAB004562A4 /* Signal_Catch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B451B282BEE00EAF753 /* Signal_Catch.swift */; };
-		D0B418001D7DFAAB004562A4 /* Signal_Single.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B461B282BEE00EAF753 /* Signal_Single.swift */; };
-		D0B418011D7DFAAB004562A4 /* Signal_Meta.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B471B282BEE00EAF753 /* Signal_Meta.swift */; };
-		D0B418021D7DFAAB004562A4 /* Signal_Combine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B481B282BEE00EAF753 /* Signal_Combine.swift */; };
-		D0B418031D7DFAAB004562A4 /* Signal_Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */; };
-		D0B418041D7DFAAB004562A4 /* Atomic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B491B282BEE00EAF753 /* Atomic.swift */; };
-		D0B418051D7DFAAB004562A4 /* Signal_Reduce.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */; };
-		D0B418061D7DFAAB004562A4 /* Signal_Materialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */; };
-		D0B418071D7DFAAB004562A4 /* Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4B1B282BEE00EAF753 /* Signal.swift */; };
-		D0B418081D7DFAAB004562A4 /* Disposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4C1B282BEE00EAF753 /* Disposable.swift */; };
-		D0B418091D7DFAAB004562A4 /* Signal_Mapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */; };
-		D0B4180A1D7DFAAB004562A4 /* Subscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0085B4E1B282BEE00EAF753 /* Subscriber.swift */; };
-		D0B4180B1D7DFAAB004562A4 /* Promise.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07A5CFC1BBDE6E400451791 /* Promise.swift */; };
-		D0B4180C1D7DFAAB004562A4 /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F09A71C9EF77100BB6F96 /* Multicast.swift */; };
-		D0B4180D1D7DFAAB004562A4 /* Lock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D066BD091C7FE06700D7A576 /* Lock.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A790A321236B17DF000451B5 /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A790A37C236B1C44000451B5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		D0085AB11B28285400EAF753 /* SSignal+Timing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Timing.m"; sourceTree = "<group>"; };
-		D0085AB21B28285400EAF753 /* SThreadPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPool.m; sourceTree = "<group>"; };
-		D0085AB31B28285400EAF753 /* SQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SQueue.m; sourceTree = "<group>"; };
-		D0085AB41B28285400EAF753 /* SSignal+Take.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Take.m"; sourceTree = "<group>"; };
-		D0085AB51B28285400EAF753 /* SSignal+Meta.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Meta.m"; sourceTree = "<group>"; };
-		D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Accumulate.h"; sourceTree = "<group>"; };
-		D0085AB71B28285400EAF753 /* SSignal+Single.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Single.h"; sourceTree = "<group>"; };
-		D0085AB81B28285400EAF753 /* SSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSignal.m; sourceTree = "<group>"; };
-		D0085AB91B28285400EAF753 /* SSignalKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSignalKit.h; sourceTree = "<group>"; };
-		D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMulticastSignalManager.h; sourceTree = "<group>"; };
-		D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMulticastSignalManager.m; sourceTree = "<group>"; };
-		D0085ABC1B28285400EAF753 /* SSignal+Combine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Combine.h"; sourceTree = "<group>"; };
-		D0085ABD1B28285400EAF753 /* SSignal+Combine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Combine.m"; sourceTree = "<group>"; };
-		D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Pipe.h"; sourceTree = "<group>"; };
-		D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Pipe.m"; sourceTree = "<group>"; };
-		D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+SideEffects.h"; sourceTree = "<group>"; };
-		D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+SideEffects.m"; sourceTree = "<group>"; };
-		D0085AC21B28285400EAF753 /* SSignal+Catch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Catch.m"; sourceTree = "<group>"; };
-		D0085AC31B28285400EAF753 /* SSignal+Catch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Catch.h"; sourceTree = "<group>"; };
-		D0085AC41B28285400EAF753 /* SSignal+Take.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Take.h"; sourceTree = "<group>"; };
-		D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Accumulate.m"; sourceTree = "<group>"; };
-		D0085AC61B28285400EAF753 /* SQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SQueue.h; sourceTree = "<group>"; };
-		D0085AC71B28285400EAF753 /* SSignal+Meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Meta.h"; sourceTree = "<group>"; };
-		D0085AC81B28285400EAF753 /* SSignal+Timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Timing.h"; sourceTree = "<group>"; };
-		D0085AC91B28285400EAF753 /* SSubscriber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSubscriber.m; sourceTree = "<group>"; };
-		D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Dispatch.m"; sourceTree = "<group>"; };
-		D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPoolTask.m; sourceTree = "<group>"; };
-		D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SThreadPoolQueue.m; sourceTree = "<group>"; };
-		D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPoolQueue.h; sourceTree = "<group>"; };
-		D0085ACE1B28285400EAF753 /* SThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPool.h; sourceTree = "<group>"; };
-		D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SThreadPoolTask.h; sourceTree = "<group>"; };
-		D0085AD01B28285400EAF753 /* SDisposableSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SDisposableSet.m; sourceTree = "<group>"; };
-		D0085AD11B28285400EAF753 /* SMetaDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SMetaDisposable.m; sourceTree = "<group>"; };
-		D0085AD21B28285400EAF753 /* SSignal+Multicast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Multicast.m"; sourceTree = "<group>"; };
-		D0085AD31B28285400EAF753 /* SSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSubscriber.h; sourceTree = "<group>"; };
-		D0085AD41B28285400EAF753 /* SDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDisposable.h; sourceTree = "<group>"; };
-		D0085AD51B28285400EAF753 /* SSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSignal.h; sourceTree = "<group>"; };
-		D0085AD61B28285400EAF753 /* SSignal+Mapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Mapping.h"; sourceTree = "<group>"; };
-		D0085AD71B28285400EAF753 /* SSignal+Mapping.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Mapping.m"; sourceTree = "<group>"; };
-		D0085AD81B28285400EAF753 /* SSignal+Single.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SSignal+Single.m"; sourceTree = "<group>"; };
-		D0085AD91B28285400EAF753 /* SAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SAtomic.h; sourceTree = "<group>"; };
-		D0085ADA1B28285400EAF753 /* SAtomic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SAtomic.m; sourceTree = "<group>"; };
-		D0085ADB1B28285400EAF753 /* SBag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBag.h; sourceTree = "<group>"; };
-		D0085ADC1B28285400EAF753 /* SBag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBag.m; sourceTree = "<group>"; };
-		D0085ADD1B28285400EAF753 /* SBlockDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBlockDisposable.h; sourceTree = "<group>"; };
-		D0085ADE1B28285400EAF753 /* SBlockDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBlockDisposable.m; sourceTree = "<group>"; };
-		D0085ADF1B28285400EAF753 /* SDisposableSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDisposableSet.h; sourceTree = "<group>"; };
-		D0085AE21B28285400EAF753 /* SMetaDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMetaDisposable.h; sourceTree = "<group>"; };
-		D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Dispatch.h"; sourceTree = "<group>"; };
-		D0085AE41B28285400EAF753 /* SSignal+Multicast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SSignal+Multicast.h"; sourceTree = "<group>"; };
-		D0085AE51B28285400EAF753 /* STimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STimer.h; sourceTree = "<group>"; };
-		D0085AE61B28285400EAF753 /* STimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STimer.m; sourceTree = "<group>"; };
+		A7918E15240CF16A002011CA /* Signal_Dispatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Dispatch.swift; path = Source/Signal_Dispatch.swift; sourceTree = "<group>"; };
+		A7918E16240CF16A002011CA /* Signal_Mapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Mapping.swift; path = Source/Signal_Mapping.swift; sourceTree = "<group>"; };
+		A7918E17240CF16A002011CA /* Signal_Loop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Loop.swift; path = Source/Signal_Loop.swift; sourceTree = "<group>"; };
+		A7918E18240CF16A002011CA /* Atomic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Atomic.swift; path = Source/Atomic.swift; sourceTree = "<group>"; };
+		A7918E19240CF16A002011CA /* Signal_SideEffects.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_SideEffects.swift; path = Source/Signal_SideEffects.swift; sourceTree = "<group>"; };
+		A7918E1A240CF16A002011CA /* Signal_Catch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Catch.swift; path = Source/Signal_Catch.swift; sourceTree = "<group>"; };
+		A7918E1B240CF16A002011CA /* QueueLocalObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = QueueLocalObject.swift; path = Source/QueueLocalObject.swift; sourceTree = "<group>"; };
+		A7918E1C240CF16A002011CA /* Promise.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Promise.swift; path = Source/Promise.swift; sourceTree = "<group>"; };
+		A7918E1D240CF16A002011CA /* Subscriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Subscriber.swift; path = Source/Subscriber.swift; sourceTree = "<group>"; };
+		A7918E1E240CF16A002011CA /* Signal_Take.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Take.swift; path = Source/Signal_Take.swift; sourceTree = "<group>"; };
+		A7918E1F240CF16A002011CA /* ValuePipe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ValuePipe.swift; path = Source/ValuePipe.swift; sourceTree = "<group>"; };
+		A7918E20240CF16A002011CA /* Lock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Lock.swift; path = Source/Lock.swift; sourceTree = "<group>"; };
+		A7918E21240CF16B002011CA /* ThreadPool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ThreadPool.swift; path = Source/ThreadPool.swift; sourceTree = "<group>"; };
+		A7918E22240CF16B002011CA /* Bag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Bag.swift; path = Source/Bag.swift; sourceTree = "<group>"; };
+		A7918E23240CF16B002011CA /* Disposable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Disposable.swift; path = Source/Disposable.swift; sourceTree = "<group>"; };
+		A7918E24240CF16B002011CA /* Signal_Combine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Combine.swift; path = Source/Signal_Combine.swift; sourceTree = "<group>"; };
+		A7918E25240CF16B002011CA /* Signal_Timing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Timing.swift; path = Source/Signal_Timing.swift; sourceTree = "<group>"; };
+		A7918E26240CF16B002011CA /* Signal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal.swift; path = Source/Signal.swift; sourceTree = "<group>"; };
+		A7918E27240CF16B002011CA /* Signal_Reduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Reduce.swift; path = Source/Signal_Reduce.swift; sourceTree = "<group>"; };
+		A7918E28240CF16B002011CA /* Signal_Merge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Merge.swift; path = Source/Signal_Merge.swift; sourceTree = "<group>"; };
+		A7918E29240CF16B002011CA /* Timer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Timer.swift; path = Source/Timer.swift; sourceTree = "<group>"; };
+		A7918E2A240CF16B002011CA /* Signal_Materialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Materialize.swift; path = Source/Signal_Materialize.swift; sourceTree = "<group>"; };
+		A7918E2B240CF16B002011CA /* Queue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Queue.swift; path = Source/Queue.swift; sourceTree = "<group>"; };
+		A7918E2C240CF16B002011CA /* Signal_Single.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Single.swift; path = Source/Signal_Single.swift; sourceTree = "<group>"; };
+		A7918E2D240CF16B002011CA /* Signal_Meta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Meta.swift; path = Source/Signal_Meta.swift; sourceTree = "<group>"; };
+		A7918E2E240CF16B002011CA /* Multicast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Multicast.swift; path = Source/Multicast.swift; sourceTree = "<group>"; };
+		A7919053240CFCE1002011CA /* SDisposableSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SDisposableSet.m; path = Source/SSignalKit/SDisposableSet.m; sourceTree = "<group>"; };
+		A7919054240CFCE1002011CA /* SSignal+Catch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Catch.m"; path = "Source/SSignalKit/SSignal+Catch.m"; sourceTree = "<group>"; };
+		A7919055240CFCE1002011CA /* STimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = STimer.h; path = Source/SSignalKit/STimer.h; sourceTree = "<group>"; };
+		A7919056240CFCE1002011CA /* SSignal+Pipe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Pipe.h"; path = "Source/SSignalKit/SSignal+Pipe.h"; sourceTree = "<group>"; };
+		A7919057240CFCE1002011CA /* SDisposableSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SDisposableSet.h; path = Source/SSignalKit/SDisposableSet.h; sourceTree = "<group>"; };
+		A7919058240CFCE1002011CA /* SSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSignal.h; path = Source/SSignalKit/SSignal.h; sourceTree = "<group>"; };
+		A7919059240CFCE1002011CA /* SSignal+Accumulate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Accumulate.h"; path = "Source/SSignalKit/SSignal+Accumulate.h"; sourceTree = "<group>"; };
+		A791905A240CFCE1002011CA /* SVariable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SVariable.m; path = Source/SSignalKit/SVariable.m; sourceTree = "<group>"; };
+		A791905B240CFCE1002011CA /* SThreadPoolQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SThreadPoolQueue.h; path = Source/SSignalKit/SThreadPoolQueue.h; sourceTree = "<group>"; };
+		A791905C240CFCE1002011CA /* SSignal+Meta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Meta.h"; path = "Source/SSignalKit/SSignal+Meta.h"; sourceTree = "<group>"; };
+		A791905D240CFCE1002011CA /* SVariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SVariable.h; path = Source/SSignalKit/SVariable.h; sourceTree = "<group>"; };
+		A791905E240CFCE1002011CA /* SSignal+Take.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Take.m"; path = "Source/SSignalKit/SSignal+Take.m"; sourceTree = "<group>"; };
+		A791905F240CFCE1002011CA /* SThreadPoolTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SThreadPoolTask.h; path = Source/SSignalKit/SThreadPoolTask.h; sourceTree = "<group>"; };
+		A7919060240CFCE1002011CA /* SSignal+Accumulate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Accumulate.m"; path = "Source/SSignalKit/SSignal+Accumulate.m"; sourceTree = "<group>"; };
+		A7919061240CFCE1002011CA /* SBag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBag.m; path = Source/SSignalKit/SBag.m; sourceTree = "<group>"; };
+		A7919062240CFCE1002011CA /* SSignal+SideEffects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+SideEffects.h"; path = "Source/SSignalKit/SSignal+SideEffects.h"; sourceTree = "<group>"; };
+		A7919063240CFCE2002011CA /* SSubscriber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SSubscriber.m; path = Source/SSignalKit/SSubscriber.m; sourceTree = "<group>"; };
+		A7919064240CFCE2002011CA /* SSignalKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSignalKit.h; path = Source/SSignalKit/SSignalKit.h; sourceTree = "<group>"; };
+		A7919065240CFCE2002011CA /* SBlockDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBlockDisposable.m; path = Source/SSignalKit/SBlockDisposable.m; sourceTree = "<group>"; };
+		A7919066240CFCE2002011CA /* SSignal+Single.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Single.m"; path = "Source/SSignalKit/SSignal+Single.m"; sourceTree = "<group>"; };
+		A7919067240CFCE2002011CA /* SSignal+Dispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Dispatch.h"; path = "Source/SSignalKit/SSignal+Dispatch.h"; sourceTree = "<group>"; };
+		A7919068240CFCE2002011CA /* SSignal+Combine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Combine.h"; path = "Source/SSignalKit/SSignal+Combine.h"; sourceTree = "<group>"; };
+		A7919069240CFCE2002011CA /* SSignal+SideEffects.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+SideEffects.m"; path = "Source/SSignalKit/SSignal+SideEffects.m"; sourceTree = "<group>"; };
+		A791906A240CFCE2002011CA /* SSignal+Multicast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Multicast.m"; path = "Source/SSignalKit/SSignal+Multicast.m"; sourceTree = "<group>"; };
+		A791906B240CFCE2002011CA /* SSignal+Combine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Combine.m"; path = "Source/SSignalKit/SSignal+Combine.m"; sourceTree = "<group>"; };
+		A791906C240CFCE2002011CA /* SSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SSignal.m; path = Source/SSignalKit/SSignal.m; sourceTree = "<group>"; };
+		A791906D240CFCE2002011CA /* STimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = STimer.m; path = Source/SSignalKit/STimer.m; sourceTree = "<group>"; };
+		A791906E240CFCE2002011CA /* SMetaDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SMetaDisposable.h; path = Source/SSignalKit/SMetaDisposable.h; sourceTree = "<group>"; };
+		A791906F240CFCE2002011CA /* SSignal+Meta.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Meta.m"; path = "Source/SSignalKit/SSignal+Meta.m"; sourceTree = "<group>"; };
+		A7919070240CFCE2002011CA /* SQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SQueue.m; path = Source/SSignalKit/SQueue.m; sourceTree = "<group>"; };
+		A7919071240CFCE2002011CA /* SBlockDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SBlockDisposable.h; path = Source/SSignalKit/SBlockDisposable.h; sourceTree = "<group>"; };
+		A7919072240CFCE2002011CA /* SAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SAtomic.h; path = Source/SSignalKit/SAtomic.h; sourceTree = "<group>"; };
+		A7919073240CFCE2002011CA /* SSignal+Pipe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Pipe.m"; path = "Source/SSignalKit/SSignal+Pipe.m"; sourceTree = "<group>"; };
+		A7919074240CFCE2002011CA /* SSignal+Multicast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Multicast.h"; path = "Source/SSignalKit/SSignal+Multicast.h"; sourceTree = "<group>"; };
+		A7919075240CFCE2002011CA /* SThreadPoolTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SThreadPoolTask.m; path = Source/SSignalKit/SThreadPoolTask.m; sourceTree = "<group>"; };
+		A7919076240CFCE2002011CA /* SSignal+Dispatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Dispatch.m"; path = "Source/SSignalKit/SSignal+Dispatch.m"; sourceTree = "<group>"; };
+		A7919077240CFCE2002011CA /* SSignal+Single.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Single.h"; path = "Source/SSignalKit/SSignal+Single.h"; sourceTree = "<group>"; };
+		A7919078240CFCE2002011CA /* SDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SDisposable.h; path = Source/SSignalKit/SDisposable.h; sourceTree = "<group>"; };
+		A7919079240CFCE3002011CA /* SSignal+Mapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Mapping.h"; path = "Source/SSignalKit/SSignal+Mapping.h"; sourceTree = "<group>"; };
+		A791907A240CFCE3002011CA /* SBag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SBag.h; path = Source/SSignalKit/SBag.h; sourceTree = "<group>"; };
+		A791907B240CFCE3002011CA /* SSignal+Timing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Timing.m"; path = "Source/SSignalKit/SSignal+Timing.m"; sourceTree = "<group>"; };
+		A791907C240CFCE3002011CA /* SSignal+Mapping.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "SSignal+Mapping.m"; path = "Source/SSignalKit/SSignal+Mapping.m"; sourceTree = "<group>"; };
+		A791907D240CFCE3002011CA /* SQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SQueue.h; path = Source/SSignalKit/SQueue.h; sourceTree = "<group>"; };
+		A791907E240CFCE3002011CA /* SSignal+Timing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Timing.h"; path = "Source/SSignalKit/SSignal+Timing.h"; sourceTree = "<group>"; };
+		A791907F240CFCE3002011CA /* SMetaDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SMetaDisposable.m; path = Source/SSignalKit/SMetaDisposable.m; sourceTree = "<group>"; };
+		A7919080240CFCE3002011CA /* SSignal+Catch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Catch.h"; path = "Source/SSignalKit/SSignal+Catch.h"; sourceTree = "<group>"; };
+		A7919081240CFCE3002011CA /* SSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SSubscriber.h; path = Source/SSignalKit/SSubscriber.h; sourceTree = "<group>"; };
+		A7919082240CFCE3002011CA /* SAtomic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SAtomic.m; path = Source/SSignalKit/SAtomic.m; sourceTree = "<group>"; };
+		A7919083240CFCE3002011CA /* SThreadPoolQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SThreadPoolQueue.m; path = Source/SSignalKit/SThreadPoolQueue.m; sourceTree = "<group>"; };
+		A7919084240CFCE3002011CA /* SMulticastSignalManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SMulticastSignalManager.h; path = Source/SSignalKit/SMulticastSignalManager.h; sourceTree = "<group>"; };
+		A7919085240CFCE3002011CA /* SThreadPool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SThreadPool.m; path = Source/SSignalKit/SThreadPool.m; sourceTree = "<group>"; };
+		A7919086240CFCE4002011CA /* SThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SThreadPool.h; path = Source/SSignalKit/SThreadPool.h; sourceTree = "<group>"; };
+		A7919087240CFCE4002011CA /* SSignal+Take.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SSignal+Take.h"; path = "Source/SSignalKit/SSignal+Take.h"; sourceTree = "<group>"; };
+		A7919088240CFCE4002011CA /* SMulticastSignalManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SMulticastSignalManager.m; path = Source/SSignalKit/SMulticastSignalManager.m; sourceTree = "<group>"; };
 		D0085B251B282B9800EAF753 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D0085B261B282B9800EAF753 /* SwiftSignalKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
-		D0085B3B1B282BEE00EAF753 /* SwiftSignalKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
-		D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Timing.swift; sourceTree = "<group>"; };
-		D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_SideEffects.swift; sourceTree = "<group>"; };
-		D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Dispatch.swift; sourceTree = "<group>"; };
-		D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ThreadPool.swift; sourceTree = "<group>"; };
-		D0085B401B282BEE00EAF753 /* Timer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
-		D0085B411B282BEE00EAF753 /* Queue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
-		D0085B421B282BEE00EAF753 /* ValuePipe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValuePipe.swift; sourceTree = "<group>"; };
-		D0085B431B282BEE00EAF753 /* Bag.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bag.swift; sourceTree = "<group>"; };
-		D0085B441B282BEE00EAF753 /* Signal_Take.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Take.swift; sourceTree = "<group>"; };
-		D0085B451B282BEE00EAF753 /* Signal_Catch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Catch.swift; sourceTree = "<group>"; };
-		D0085B461B282BEE00EAF753 /* Signal_Single.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Single.swift; sourceTree = "<group>"; };
-		D0085B471B282BEE00EAF753 /* Signal_Meta.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Meta.swift; sourceTree = "<group>"; };
-		D0085B481B282BEE00EAF753 /* Signal_Combine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Combine.swift; sourceTree = "<group>"; };
-		D0085B491B282BEE00EAF753 /* Atomic.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Atomic.swift; sourceTree = "<group>"; };
-		D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Reduce.swift; sourceTree = "<group>"; };
-		D0085B4B1B282BEE00EAF753 /* Signal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal.swift; sourceTree = "<group>"; };
-		D0085B4C1B282BEE00EAF753 /* Disposable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Disposable.swift; sourceTree = "<group>"; };
-		D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Mapping.swift; sourceTree = "<group>"; };
-		D0085B4E1B282BEE00EAF753 /* Subscriber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Subscriber.swift; sourceTree = "<group>"; };
 		D0445DDC1A7C2CA500267924 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signal_Loop.swift; sourceTree = "<group>"; };
-		D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QueueLocalObject.swift; sourceTree = "<group>"; };
-		D05F09A71C9EF77100BB6F96 /* Multicast.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Multicast.swift; sourceTree = "<group>"; };
-		D066BD091C7FE06700D7A576 /* Lock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Lock.swift; sourceTree = "<group>"; };
-		D07A5CFC1BBDE6E400451791 /* Promise.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Promise.swift; sourceTree = "<group>"; };
-		D09FD73C1BA9BAB900FF0A4F /* SVariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SVariable.h; sourceTree = "<group>"; };
-		D09FD73D1BA9BAB900FF0A4F /* SVariable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SVariable.m; sourceTree = "<group>"; };
 		D0B417ED1D7DFA63004562A4 /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0B417EF1D7DFA63004562A4 /* SwiftSignalKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftSignalKit.h; sourceTree = "<group>"; };
 		D0B417F01D7DFA63004562A4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Materialize.swift; sourceTree = "<group>"; };
-		D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Signal_Merge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -208,37 +235,43 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		A7918E14240CF163002011CA /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				A7918E18240CF16A002011CA /* Atomic.swift */,
+				A7918E22240CF16B002011CA /* Bag.swift */,
+				A7918E23240CF16B002011CA /* Disposable.swift */,
+				A7918E20240CF16A002011CA /* Lock.swift */,
+				A7918E2E240CF16B002011CA /* Multicast.swift */,
+				A7918E1C240CF16A002011CA /* Promise.swift */,
+				A7918E2B240CF16B002011CA /* Queue.swift */,
+				A7918E1B240CF16A002011CA /* QueueLocalObject.swift */,
+				A7918E1A240CF16A002011CA /* Signal_Catch.swift */,
+				A7918E24240CF16B002011CA /* Signal_Combine.swift */,
+				A7918E15240CF16A002011CA /* Signal_Dispatch.swift */,
+				A7918E17240CF16A002011CA /* Signal_Loop.swift */,
+				A7918E16240CF16A002011CA /* Signal_Mapping.swift */,
+				A7918E2A240CF16B002011CA /* Signal_Materialize.swift */,
+				A7918E28240CF16B002011CA /* Signal_Merge.swift */,
+				A7918E2D240CF16B002011CA /* Signal_Meta.swift */,
+				A7918E27240CF16B002011CA /* Signal_Reduce.swift */,
+				A7918E19240CF16A002011CA /* Signal_SideEffects.swift */,
+				A7918E2C240CF16B002011CA /* Signal_Single.swift */,
+				A7918E1E240CF16A002011CA /* Signal_Take.swift */,
+				A7918E25240CF16B002011CA /* Signal_Timing.swift */,
+				A7918E26240CF16B002011CA /* Signal.swift */,
+				A7918E1D240CF16A002011CA /* Subscriber.swift */,
+				A7918E21240CF16B002011CA /* ThreadPool.swift */,
+				A7918E29240CF16B002011CA /* Timer.swift */,
+				A7918E1F240CF16A002011CA /* ValuePipe.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
 		D0085B231B282B9800EAF753 /* SwiftSignalKit */ = {
 			isa = PBXGroup;
 			children = (
-				D0085B3B1B282BEE00EAF753 /* SwiftSignalKit.h */,
-				D0085B3C1B282BEE00EAF753 /* Signal_Timing.swift */,
-				D0085B3D1B282BEE00EAF753 /* Signal_SideEffects.swift */,
-				D0085B3E1B282BEE00EAF753 /* Signal_Dispatch.swift */,
-				D0085B3F1B282BEE00EAF753 /* ThreadPool.swift */,
-				D0085B401B282BEE00EAF753 /* Timer.swift */,
-				D0085B411B282BEE00EAF753 /* Queue.swift */,
-				D0085B421B282BEE00EAF753 /* ValuePipe.swift */,
-				D0085B431B282BEE00EAF753 /* Bag.swift */,
-				D0085B441B282BEE00EAF753 /* Signal_Take.swift */,
-				D0085B451B282BEE00EAF753 /* Signal_Catch.swift */,
-				D0085B461B282BEE00EAF753 /* Signal_Single.swift */,
-				D0085B471B282BEE00EAF753 /* Signal_Meta.swift */,
-				D0085B481B282BEE00EAF753 /* Signal_Combine.swift */,
-				D0FC1A391CA3284F0056AE9A /* Signal_Merge.swift */,
-				D0085B491B282BEE00EAF753 /* Atomic.swift */,
-				D0085B4A1B282BEE00EAF753 /* Signal_Reduce.swift */,
-				D0CD17B11CC17C83007C5650 /* Signal_Materialize.swift */,
-				D0085B4B1B282BEE00EAF753 /* Signal.swift */,
-				D0085B4C1B282BEE00EAF753 /* Disposable.swift */,
-				D0085B4D1B282BEE00EAF753 /* Signal_Mapping.swift */,
-				D0467D1720D7F7BC0055C28F /* Signal_Loop.swift */,
-				D0085B4E1B282BEE00EAF753 /* Subscriber.swift */,
-				D07A5CFC1BBDE6E400451791 /* Promise.swift */,
-				D05F09A71C9EF77100BB6F96 /* Multicast.swift */,
-				D066BD091C7FE06700D7A576 /* Lock.swift */,
-				D053B3FF1F16881000E2D58A /* QueueLocalObject.swift */,
-				D0085B261B282B9800EAF753 /* SwiftSignalKit.h */,
+				A7918E14240CF163002011CA /* Sources */,
 				D0085B241B282B9800EAF753 /* Supporting Files */,
 			);
 			name = SwiftSignalKit;
@@ -276,60 +309,60 @@
 		D0445DDA1A7C2CA500267924 /* SSignalKit */ = {
 			isa = PBXGroup;
 			children = (
-				D0085AD91B28285400EAF753 /* SAtomic.h */,
-				D0085ADA1B28285400EAF753 /* SAtomic.m */,
-				D0085ADB1B28285400EAF753 /* SBag.h */,
-				D0085ADC1B28285400EAF753 /* SBag.m */,
-				D0085AD31B28285400EAF753 /* SSubscriber.h */,
-				D0085AC91B28285400EAF753 /* SSubscriber.m */,
-				D0085AD41B28285400EAF753 /* SDisposable.h */,
-				D0085ADF1B28285400EAF753 /* SDisposableSet.h */,
-				D0085AD01B28285400EAF753 /* SDisposableSet.m */,
-				D0085AE21B28285400EAF753 /* SMetaDisposable.h */,
-				D0085AD11B28285400EAF753 /* SMetaDisposable.m */,
-				D0085ADD1B28285400EAF753 /* SBlockDisposable.h */,
-				D0085ADE1B28285400EAF753 /* SBlockDisposable.m */,
-				D0085ACE1B28285400EAF753 /* SThreadPool.h */,
-				D0085AB21B28285400EAF753 /* SThreadPool.m */,
-				D0085ACF1B28285400EAF753 /* SThreadPoolTask.h */,
-				D0085ACB1B28285400EAF753 /* SThreadPoolTask.m */,
-				D0085ACD1B28285400EAF753 /* SThreadPoolQueue.h */,
-				D0085ACC1B28285400EAF753 /* SThreadPoolQueue.m */,
-				D0085AC61B28285400EAF753 /* SQueue.h */,
-				D0085AB31B28285400EAF753 /* SQueue.m */,
-				D0085AE51B28285400EAF753 /* STimer.h */,
-				D0085AE61B28285400EAF753 /* STimer.m */,
-				D0085AD51B28285400EAF753 /* SSignal.h */,
-				D0085AB81B28285400EAF753 /* SSignal.m */,
-				D0085AB71B28285400EAF753 /* SSignal+Single.h */,
-				D0085AD81B28285400EAF753 /* SSignal+Single.m */,
-				D0085AD61B28285400EAF753 /* SSignal+Mapping.h */,
-				D0085AD71B28285400EAF753 /* SSignal+Mapping.m */,
-				D0085ABC1B28285400EAF753 /* SSignal+Combine.h */,
-				D0085ABD1B28285400EAF753 /* SSignal+Combine.m */,
-				D0085AB61B28285400EAF753 /* SSignal+Accumulate.h */,
-				D0085AC51B28285400EAF753 /* SSignal+Accumulate.m */,
-				D0085AC01B28285400EAF753 /* SSignal+SideEffects.h */,
-				D0085AC11B28285400EAF753 /* SSignal+SideEffects.m */,
-				D0085AC41B28285400EAF753 /* SSignal+Take.h */,
-				D0085AB41B28285400EAF753 /* SSignal+Take.m */,
-				D0085AC81B28285400EAF753 /* SSignal+Timing.h */,
-				D0085AB11B28285400EAF753 /* SSignal+Timing.m */,
-				D0085AC71B28285400EAF753 /* SSignal+Meta.h */,
-				D0085AB51B28285400EAF753 /* SSignal+Meta.m */,
-				D0085ABE1B28285400EAF753 /* SSignal+Pipe.h */,
-				D0085ABF1B28285400EAF753 /* SSignal+Pipe.m */,
-				D0085AC31B28285400EAF753 /* SSignal+Catch.h */,
-				D0085AC21B28285400EAF753 /* SSignal+Catch.m */,
-				D0085AE31B28285400EAF753 /* SSignal+Dispatch.h */,
-				D0085ACA1B28285400EAF753 /* SSignal+Dispatch.m */,
-				D0085AE41B28285400EAF753 /* SSignal+Multicast.h */,
-				D0085AD21B28285400EAF753 /* SSignal+Multicast.m */,
-				D0085ABA1B28285400EAF753 /* SMulticastSignalManager.h */,
-				D0085ABB1B28285400EAF753 /* SMulticastSignalManager.m */,
-				D09FD73C1BA9BAB900FF0A4F /* SVariable.h */,
-				D09FD73D1BA9BAB900FF0A4F /* SVariable.m */,
-				D0085AB91B28285400EAF753 /* SSignalKit.h */,
+				A7919072240CFCE2002011CA /* SAtomic.h */,
+				A7919082240CFCE3002011CA /* SAtomic.m */,
+				A791907A240CFCE3002011CA /* SBag.h */,
+				A7919061240CFCE1002011CA /* SBag.m */,
+				A7919071240CFCE2002011CA /* SBlockDisposable.h */,
+				A7919065240CFCE2002011CA /* SBlockDisposable.m */,
+				A7919078240CFCE2002011CA /* SDisposable.h */,
+				A7919057240CFCE1002011CA /* SDisposableSet.h */,
+				A7919053240CFCE1002011CA /* SDisposableSet.m */,
+				A791906E240CFCE2002011CA /* SMetaDisposable.h */,
+				A791907F240CFCE3002011CA /* SMetaDisposable.m */,
+				A7919084240CFCE3002011CA /* SMulticastSignalManager.h */,
+				A7919088240CFCE4002011CA /* SMulticastSignalManager.m */,
+				A791907D240CFCE3002011CA /* SQueue.h */,
+				A7919070240CFCE2002011CA /* SQueue.m */,
+				A7919058240CFCE1002011CA /* SSignal.h */,
+				A791906C240CFCE2002011CA /* SSignal.m */,
+				A7919059240CFCE1002011CA /* SSignal+Accumulate.h */,
+				A7919060240CFCE1002011CA /* SSignal+Accumulate.m */,
+				A7919080240CFCE3002011CA /* SSignal+Catch.h */,
+				A7919054240CFCE1002011CA /* SSignal+Catch.m */,
+				A7919068240CFCE2002011CA /* SSignal+Combine.h */,
+				A791906B240CFCE2002011CA /* SSignal+Combine.m */,
+				A7919067240CFCE2002011CA /* SSignal+Dispatch.h */,
+				A7919076240CFCE2002011CA /* SSignal+Dispatch.m */,
+				A7919079240CFCE3002011CA /* SSignal+Mapping.h */,
+				A791907C240CFCE3002011CA /* SSignal+Mapping.m */,
+				A791905C240CFCE1002011CA /* SSignal+Meta.h */,
+				A791906F240CFCE2002011CA /* SSignal+Meta.m */,
+				A7919074240CFCE2002011CA /* SSignal+Multicast.h */,
+				A791906A240CFCE2002011CA /* SSignal+Multicast.m */,
+				A7919056240CFCE1002011CA /* SSignal+Pipe.h */,
+				A7919073240CFCE2002011CA /* SSignal+Pipe.m */,
+				A7919062240CFCE1002011CA /* SSignal+SideEffects.h */,
+				A7919069240CFCE2002011CA /* SSignal+SideEffects.m */,
+				A7919077240CFCE2002011CA /* SSignal+Single.h */,
+				A7919066240CFCE2002011CA /* SSignal+Single.m */,
+				A7919087240CFCE4002011CA /* SSignal+Take.h */,
+				A791905E240CFCE1002011CA /* SSignal+Take.m */,
+				A791907E240CFCE3002011CA /* SSignal+Timing.h */,
+				A791907B240CFCE3002011CA /* SSignal+Timing.m */,
+				A7919064240CFCE2002011CA /* SSignalKit.h */,
+				A7919081240CFCE3002011CA /* SSubscriber.h */,
+				A7919063240CFCE2002011CA /* SSubscriber.m */,
+				A7919086240CFCE4002011CA /* SThreadPool.h */,
+				A7919085240CFCE3002011CA /* SThreadPool.m */,
+				A791905B240CFCE1002011CA /* SThreadPoolQueue.h */,
+				A7919083240CFCE3002011CA /* SThreadPoolQueue.m */,
+				A791905F240CFCE1002011CA /* SThreadPoolTask.h */,
+				A7919075240CFCE2002011CA /* SThreadPoolTask.m */,
+				A7919055240CFCE1002011CA /* STimer.h */,
+				A791906D240CFCE2002011CA /* STimer.m */,
+				A791905D240CFCE1002011CA /* SVariable.h */,
+				A791905A240CFCE1002011CA /* SVariable.m */,
 				D0445DDB1A7C2CA500267924 /* Supporting Files */,
 			);
 			name = SSignalKit;
@@ -360,34 +393,34 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A790A37E236B1CC9000451B5 /* SSignalKit.h in Headers */,
-				A790A360236B1858000451B5 /* SAtomic.h in Headers */,
-				A790A361236B1858000451B5 /* SBag.h in Headers */,
-				A790A362236B1858000451B5 /* SSubscriber.h in Headers */,
-				A790A363236B1858000451B5 /* SDisposable.h in Headers */,
-				A790A364236B1858000451B5 /* SDisposableSet.h in Headers */,
-				A790A365236B1858000451B5 /* SMetaDisposable.h in Headers */,
-				A790A366236B1858000451B5 /* SBlockDisposable.h in Headers */,
-				A790A367236B1858000451B5 /* SThreadPool.h in Headers */,
-				A790A368236B1858000451B5 /* SThreadPoolTask.h in Headers */,
-				A790A369236B1858000451B5 /* SThreadPoolQueue.h in Headers */,
-				A790A36A236B1858000451B5 /* SQueue.h in Headers */,
-				A790A36B236B1858000451B5 /* STimer.h in Headers */,
-				A790A36C236B1858000451B5 /* SSignal.h in Headers */,
-				A790A36D236B1858000451B5 /* SSignal+Single.h in Headers */,
-				A790A36E236B1858000451B5 /* SSignal+Mapping.h in Headers */,
-				A790A36F236B1858000451B5 /* SSignal+Combine.h in Headers */,
-				A790A370236B1858000451B5 /* SSignal+Accumulate.h in Headers */,
-				A790A371236B1858000451B5 /* SSignal+SideEffects.h in Headers */,
-				A790A372236B1858000451B5 /* SSignal+Take.h in Headers */,
-				A790A373236B1858000451B5 /* SSignal+Timing.h in Headers */,
-				A790A374236B1858000451B5 /* SSignal+Meta.h in Headers */,
-				A790A375236B1858000451B5 /* SSignal+Pipe.h in Headers */,
-				A790A376236B1858000451B5 /* SSignal+Catch.h in Headers */,
-				A790A377236B1858000451B5 /* SSignal+Dispatch.h in Headers */,
-				A790A378236B1858000451B5 /* SSignal+Multicast.h in Headers */,
-				A790A379236B1858000451B5 /* SMulticastSignalManager.h in Headers */,
-				A790A37A236B1858000451B5 /* SVariable.h in Headers */,
+				A791910F240CFD60002011CA /* SAtomic.h in Headers */,
+				A7919110240CFD60002011CA /* SBag.h in Headers */,
+				A7919111240CFD60002011CA /* SBlockDisposable.h in Headers */,
+				A7919112240CFD60002011CA /* SDisposable.h in Headers */,
+				A7919113240CFD60002011CA /* SDisposableSet.h in Headers */,
+				A7919114240CFD60002011CA /* SMetaDisposable.h in Headers */,
+				A7919115240CFD60002011CA /* SMulticastSignalManager.h in Headers */,
+				A7919116240CFD60002011CA /* SQueue.h in Headers */,
+				A7919117240CFD60002011CA /* SSignal.h in Headers */,
+				A7919118240CFD60002011CA /* SSignal+Accumulate.h in Headers */,
+				A7919119240CFD60002011CA /* SSignal+Catch.h in Headers */,
+				A791911A240CFD60002011CA /* SSignal+Combine.h in Headers */,
+				A791911B240CFD60002011CA /* SSignal+Dispatch.h in Headers */,
+				A791911C240CFD60002011CA /* SSignal+Mapping.h in Headers */,
+				A791911D240CFD60002011CA /* SSignal+Meta.h in Headers */,
+				A791911E240CFD60002011CA /* SSignal+Multicast.h in Headers */,
+				A791911F240CFD60002011CA /* SSignal+Pipe.h in Headers */,
+				A7919120240CFD60002011CA /* SSignal+SideEffects.h in Headers */,
+				A7919121240CFD60002011CA /* SSignal+Single.h in Headers */,
+				A7919122240CFD60002011CA /* SSignal+Take.h in Headers */,
+				A7919123240CFD60002011CA /* SSignal+Timing.h in Headers */,
+				A7919124240CFD60002011CA /* SSignalKit.h in Headers */,
+				A7919125240CFD60002011CA /* SSubscriber.h in Headers */,
+				A7919126240CFD60002011CA /* SThreadPool.h in Headers */,
+				A7919127240CFD60002011CA /* SThreadPoolQueue.h in Headers */,
+				A7919128240CFD60002011CA /* SThreadPoolTask.h in Headers */,
+				A7919129240CFD60002011CA /* STimer.h in Headers */,
+				A791912A240CFD60002011CA /* SVariable.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +428,35 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7919093240CFCE4002011CA /* SVariable.h in Headers */,
+				A79190AF240CFCE4002011CA /* SSignal+Mapping.h in Headers */,
+				A79190B6240CFCE4002011CA /* SSignal+Catch.h in Headers */,
+				A79190B4240CFCE4002011CA /* SSignal+Timing.h in Headers */,
+				A79190B7240CFCE4002011CA /* SSubscriber.h in Headers */,
+				A791908B240CFCE4002011CA /* STimer.h in Headers */,
+				A7919098240CFCE4002011CA /* SSignal+SideEffects.h in Headers */,
+				A7919091240CFCE4002011CA /* SThreadPoolQueue.h in Headers */,
+				A7919095240CFCE4002011CA /* SThreadPoolTask.h in Headers */,
+				A79190BA240CFCE4002011CA /* SMulticastSignalManager.h in Headers */,
+				A79190B3240CFCE4002011CA /* SQueue.h in Headers */,
+				A791908C240CFCE4002011CA /* SSignal+Pipe.h in Headers */,
+				A791909E240CFCE4002011CA /* SSignal+Combine.h in Headers */,
+				A791908E240CFCE4002011CA /* SSignal.h in Headers */,
+				A79190B0240CFCE4002011CA /* SBag.h in Headers */,
+				A79190BD240CFCE4002011CA /* SSignal+Take.h in Headers */,
+				A79190AD240CFCE4002011CA /* SSignal+Single.h in Headers */,
 				D0B417F11D7DFA63004562A4 /* SwiftSignalKit.h in Headers */,
+				A79190A8240CFCE4002011CA /* SAtomic.h in Headers */,
+				A79190A4240CFCE4002011CA /* SMetaDisposable.h in Headers */,
+				A791908F240CFCE4002011CA /* SSignal+Accumulate.h in Headers */,
+				A791909D240CFCE4002011CA /* SSignal+Dispatch.h in Headers */,
+				A79190AA240CFCE4002011CA /* SSignal+Multicast.h in Headers */,
+				A79190A7240CFCE4002011CA /* SBlockDisposable.h in Headers */,
+				A79190AE240CFCE4002011CA /* SDisposable.h in Headers */,
+				A79190BC240CFCE4002011CA /* SThreadPool.h in Headers */,
+				A791908D240CFCE4002011CA /* SDisposableSet.h in Headers */,
+				A7919092240CFCE4002011CA /* SSignal+Meta.h in Headers */,
+				A791909A240CFCE4002011CA /* SSignalKit.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -457,6 +518,7 @@
 					};
 					D0B417EC1D7DFA63004562A4 = {
 						CreatedOnToolsVersion = 8.0;
+						LastSwiftMigration = 1030;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -502,32 +564,33 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A790A346236B1822000451B5 /* SAtomic.m in Sources */,
-				A790A347236B1822000451B5 /* SBag.m in Sources */,
-				A790A348236B1822000451B5 /* SSubscriber.m in Sources */,
-				A790A349236B1822000451B5 /* SDisposableSet.m in Sources */,
-				A790A34A236B1822000451B5 /* SMetaDisposable.m in Sources */,
-				A790A34B236B1822000451B5 /* SBlockDisposable.m in Sources */,
-				A790A34C236B1822000451B5 /* SThreadPool.m in Sources */,
-				A790A34D236B1822000451B5 /* SThreadPoolTask.m in Sources */,
-				A790A34E236B1822000451B5 /* SThreadPoolQueue.m in Sources */,
-				A790A34F236B1822000451B5 /* SQueue.m in Sources */,
-				A790A350236B1822000451B5 /* STimer.m in Sources */,
-				A790A351236B1822000451B5 /* SSignal.m in Sources */,
-				A790A352236B1822000451B5 /* SSignal+Single.m in Sources */,
-				A790A353236B1822000451B5 /* SSignal+Mapping.m in Sources */,
-				A790A354236B1822000451B5 /* SSignal+Combine.m in Sources */,
-				A790A355236B1822000451B5 /* SSignal+Accumulate.m in Sources */,
-				A790A356236B1822000451B5 /* SSignal+SideEffects.m in Sources */,
-				A790A357236B1823000451B5 /* SSignal+Take.m in Sources */,
-				A790A358236B1823000451B5 /* SSignal+Timing.m in Sources */,
-				A790A359236B1823000451B5 /* SSignal+Meta.m in Sources */,
-				A790A35A236B1823000451B5 /* SSignal+Pipe.m in Sources */,
-				A790A35B236B1823000451B5 /* SSignal+Catch.m in Sources */,
-				A790A35C236B1823000451B5 /* SSignal+Dispatch.m in Sources */,
-				A790A35D236B1823000451B5 /* SSignal+Multicast.m in Sources */,
-				A790A35E236B1823000451B5 /* SMulticastSignalManager.m in Sources */,
-				A790A35F236B1823000451B5 /* SVariable.m in Sources */,
+				A79190DA240CFD22002011CA /* SAtomic.m in Sources */,
+				A79190DC240CFD22002011CA /* SBag.m in Sources */,
+				A79190DE240CFD22002011CA /* SBlockDisposable.m in Sources */,
+				A79190E0240CFD22002011CA /* SDisposableSet.h in Sources */,
+				A79190E1240CFD22002011CA /* SDisposableSet.m in Sources */,
+				A79190E3240CFD22002011CA /* SMetaDisposable.m in Sources */,
+				A79190E5240CFD22002011CA /* SMulticastSignalManager.m in Sources */,
+				A79190E7240CFD22002011CA /* SQueue.m in Sources */,
+				A79190E9240CFD22002011CA /* SSignal.m in Sources */,
+				A79190EB240CFD22002011CA /* SSignal+Accumulate.m in Sources */,
+				A79190ED240CFD22002011CA /* SSignal+Catch.m in Sources */,
+				A79190EF240CFD22002011CA /* SSignal+Combine.m in Sources */,
+				A79190F1240CFD22002011CA /* SSignal+Dispatch.m in Sources */,
+				A79190F3240CFD22002011CA /* SSignal+Mapping.m in Sources */,
+				A79190F5240CFD22002011CA /* SSignal+Meta.m in Sources */,
+				A79190F7240CFD22002011CA /* SSignal+Multicast.m in Sources */,
+				A79190F9240CFD22002011CA /* SSignal+Pipe.m in Sources */,
+				A79190FB240CFD22002011CA /* SSignal+SideEffects.m in Sources */,
+				A79190FD240CFD22002011CA /* SSignal+Single.m in Sources */,
+				A79190FF240CFD22002011CA /* SSignal+Take.m in Sources */,
+				A7919101240CFD22002011CA /* SSignal+Timing.m in Sources */,
+				A7919104240CFD22002011CA /* SSubscriber.m in Sources */,
+				A7919106240CFD22002011CA /* SThreadPool.m in Sources */,
+				A7919108240CFD22002011CA /* SThreadPoolQueue.m in Sources */,
+				A791910A240CFD22002011CA /* SThreadPoolTask.m in Sources */,
+				A791910C240CFD22002011CA /* STimer.m in Sources */,
+				A791910E240CFD22002011CA /* SVariable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,32 +598,32 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0B417F61D7DFAAB004562A4 /* Signal_Timing.swift in Sources */,
-				D0B417F71D7DFAAB004562A4 /* Signal_SideEffects.swift in Sources */,
-				D0B417F81D7DFAAB004562A4 /* Signal_Dispatch.swift in Sources */,
-				D0B417F91D7DFAAB004562A4 /* ThreadPool.swift in Sources */,
-				D0B417FA1D7DFAAB004562A4 /* Timer.swift in Sources */,
-				D0B417FB1D7DFAAB004562A4 /* Queue.swift in Sources */,
-				D0B417FC1D7DFAAB004562A4 /* ValuePipe.swift in Sources */,
-				D0B417FD1D7DFAAB004562A4 /* Bag.swift in Sources */,
-				D0B417FE1D7DFAAB004562A4 /* Signal_Take.swift in Sources */,
-				D0B417FF1D7DFAAB004562A4 /* Signal_Catch.swift in Sources */,
-				D0B418001D7DFAAB004562A4 /* Signal_Single.swift in Sources */,
-				D0B418011D7DFAAB004562A4 /* Signal_Meta.swift in Sources */,
-				D0B418021D7DFAAB004562A4 /* Signal_Combine.swift in Sources */,
-				D0B418031D7DFAAB004562A4 /* Signal_Merge.swift in Sources */,
-				D0B418041D7DFAAB004562A4 /* Atomic.swift in Sources */,
-				D0B418051D7DFAAB004562A4 /* Signal_Reduce.swift in Sources */,
-				D0B418061D7DFAAB004562A4 /* Signal_Materialize.swift in Sources */,
-				D0B418071D7DFAAB004562A4 /* Signal.swift in Sources */,
-				D0B418081D7DFAAB004562A4 /* Disposable.swift in Sources */,
-				D0467D1920D7F7BC0055C28F /* Signal_Loop.swift in Sources */,
-				D0B418091D7DFAAB004562A4 /* Signal_Mapping.swift in Sources */,
-				D053B4011F16881000E2D58A /* QueueLocalObject.swift in Sources */,
-				D0B4180A1D7DFAAB004562A4 /* Subscriber.swift in Sources */,
-				D0B4180B1D7DFAAB004562A4 /* Promise.swift in Sources */,
-				D0B4180C1D7DFAAB004562A4 /* Multicast.swift in Sources */,
-				D0B4180D1D7DFAAB004562A4 /* Lock.swift in Sources */,
+				A79190BF240CFD14002011CA /* Atomic.swift in Sources */,
+				A79190C0240CFD14002011CA /* Bag.swift in Sources */,
+				A79190C1240CFD14002011CA /* Disposable.swift in Sources */,
+				A79190C2240CFD14002011CA /* Lock.swift in Sources */,
+				A79190C3240CFD14002011CA /* Multicast.swift in Sources */,
+				A79190C4240CFD14002011CA /* Promise.swift in Sources */,
+				A79190C5240CFD14002011CA /* Queue.swift in Sources */,
+				A79190C6240CFD14002011CA /* QueueLocalObject.swift in Sources */,
+				A79190C7240CFD14002011CA /* Signal_Catch.swift in Sources */,
+				A79190C8240CFD14002011CA /* Signal_Combine.swift in Sources */,
+				A79190C9240CFD14002011CA /* Signal_Dispatch.swift in Sources */,
+				A79190CA240CFD14002011CA /* Signal_Loop.swift in Sources */,
+				A79190CB240CFD14002011CA /* Signal_Mapping.swift in Sources */,
+				A79190CC240CFD14002011CA /* Signal_Materialize.swift in Sources */,
+				A79190CD240CFD14002011CA /* Signal_Merge.swift in Sources */,
+				A79190CE240CFD14002011CA /* Signal_Meta.swift in Sources */,
+				A79190CF240CFD14002011CA /* Signal_Reduce.swift in Sources */,
+				A79190D0240CFD14002011CA /* Signal_SideEffects.swift in Sources */,
+				A79190D1240CFD14002011CA /* Signal_Single.swift in Sources */,
+				A79190D2240CFD14002011CA /* Signal_Take.swift in Sources */,
+				A79190D3240CFD14002011CA /* Signal_Timing.swift in Sources */,
+				A79190D4240CFD14002011CA /* Signal.swift in Sources */,
+				A79190D5240CFD14002011CA /* Subscriber.swift in Sources */,
+				A79190D6240CFD14002011CA /* ThreadPool.swift in Sources */,
+				A79190D7240CFD14002011CA /* Timer.swift in Sources */,
+				A79190D8240CFD14002011CA /* ValuePipe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -993,6 +1056,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
@@ -1150,6 +1214,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
@@ -1312,6 +1377,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
@@ -1344,6 +1410,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
@@ -1375,6 +1442,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
@@ -1454,6 +1522,7 @@
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;

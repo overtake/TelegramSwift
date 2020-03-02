@@ -41,7 +41,8 @@
 #import "Svg.h"
 #endif
 
-
+#import "CallBridge.h"
+#import "CalendarUtils.h"
 #import "RingBuffer.h"
 #import "ocr.h"
 #import "TGPassportMRZ.h"
@@ -128,18 +129,6 @@ NSArray<NSString *> * __nonnull currentAppInputSource();
 -(void)detectBoldColorInStringWithFont:(NSFont *__nonnull)font;
 @end
 
-@interface CalendarUtils : NSObject
-
-+ (BOOL) isSameDate:(NSDate*__nonnull)d1 date:(NSDate* __nonnull)d2 checkDay:(BOOL)checkDay;
-+ (NSString*__nonnull) dd:(NSDate*__nonnull)d;
-+ (NSInteger) colForDay:(NSInteger)day;
-+ (NSInteger) lastDayOfTheMonth:(NSDate *__nonnull)date;
-+ (NSDate*__nonnull) toUTC:(NSDate*__nonnull)d;
-+ (NSDate*__nonnull) monthDay:(NSInteger)day date:(NSDate *__nonnull)date;
-+ (NSInteger)weekDay:(NSDate *__nonnull)date;
-+ (NSDate *__nonnull) stepMonth:(NSInteger)dm date:(NSDate *__nonnull)date;
-
-@end
 
 
 
@@ -433,64 +422,6 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 @end
 
 
-
-@interface TGCallConnectionDescription : NSObject
-    
-    @property (nonatomic, readonly) int64_t identifier;
-    @property (nonatomic, strong, readonly) NSString *ipv4;
-    @property (nonatomic, strong, readonly) NSString *ipv6;
-    @property (nonatomic, readonly) int32_t port;
-    @property (nonatomic, strong, readonly) NSData *peerTag;
-    
-- (instancetype)initWithIdentifier:(int64_t)identifier ipv4:(NSString *)ipv4 ipv6:(NSString *)ipv6 port:(int32_t)port peerTag:(NSData *)peerTag;
-    
-@end
-
-
-@interface TGCallConnection : NSObject
-
-@property (nonatomic, strong, readonly) NSData *key;
-@property (nonatomic, strong, readonly) NSData *keyHash;
-@property (nonatomic, strong, readonly) TGCallConnectionDescription *defaultConnection;
-@property (nonatomic, strong, readonly) NSArray<TGCallConnectionDescription *> *alternativeConnections;
-@property (nonatomic, readonly) int32_t maxLayer;
-- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections maxLayer:(int32_t)maxLayer;
-
-@end
-
-@interface AudioDevice : NSObject
-@property(nonatomic, strong, readonly) NSString *_Nullable deviceId;
-@property(nonatomic, strong, readonly) NSString *deviceName;
--(id)initWithDeviceId:(NSString*)deviceId deviceName:(NSString *)deviceName;
-@end
-
-@interface CProxy : NSObject
-@property(nonatomic, strong, readonly) NSString *host;
-@property(nonatomic, assign, readonly) int32_t port;
-@property(nonatomic, strong, readonly) NSString *_Nullable user;
-@property(nonatomic, strong, readonly) NSString *_Nullable pass;
--(id)initWithHost:(NSString*)host port:(int32_t)port user:(NSString *_Nullable )user pass:(NSString * _Nullable)pass;
-@end
-
-@interface CallBridge : NSObject
-
--(id)initWithProxy:(CProxy * _Nullable)proxy;
-
--(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p serializedData:(NSString *)serializedData connection:(TGCallConnection *)connection;
--(void)mute;
--(void)unmute;
--(BOOL)isMuted;
-+(int32_t)voipMaxLayer;
--(NSString *)currentOutputDeviceId;
--(NSString *)currentInputDeviceId;
-+(NSArray<AudioDevice *> *)outputDevices;
-+(NSArray<AudioDevice *> *)inputDevices;
--(void)setCurrentOutputDeviceId:(NSString *)deviceId;
--(void)setCurrentInputDeviceId:(NSString *)deviceId;
--(void)setMutedOtherSounds:(BOOL)mute;
-@property (nonatomic, copy) void (^stateChangeHandler)(int);
-
-@end
 
 @interface TGCurrencyFormatterEntry : NSObject
 

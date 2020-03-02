@@ -202,7 +202,13 @@
 		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
 		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
-		A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
+		A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D342407CAE100CE44CA /* ChatMediaDice.swift */; };
+		A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */; };
+		A7393D392407D0F100CE44CA /* GraphCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; };
+		A7393D3A2407D0F800CE44CA /* GraphCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7393D412407FF0F00CE44CA /* dice_idle.tgs */; };
+		A7393D442408F84300CE44CA /* DiceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D432408F84300CE44CA /* DiceCache.swift */; };
+		A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
@@ -215,12 +221,13 @@
 		A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */; };
 		A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC3223C8988300DD307B /* quiz-correct.mp3 */; };
 		A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */; };
-		A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A7831B182403CB420056AEAC /* Graph.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7831B172403CB420056AEAC /* Graph.framework */; };
 		A7831B1C2403CFDD0056AEAC /* ChannelStatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7831B1B2403CFDD0056AEAC /* ChannelStatsViewController.swift */; };
 		A7831B2A24040B6B0056AEAC /* StatisticRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7831B2924040B6B0056AEAC /* StatisticRowItem.swift */; };
-		A789E08423E05EAE00AEB34A /* ChatListPresetListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */; };
+		A789E08423E05EAE00AEB34A /* ChatListFiltersListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E08323E05EAE00AEB34A /* ChatListFiltersListController.swift */; };
 		A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C1379123DB00D900803ED3 /* ChatListFilterPreferences.swift */; };
+		A7918DB424093505002011CA /* GraphUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7918DB324093505002011CA /* GraphUI.framework */; };
+		A7919135240D0869002011CA /* MurMurHash32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919134240D0869002011CA /* MurMurHash32.framework */; };
+		A7919138240D1077002011CA /* ChatListFilterPredicate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7919137240D1077002011CA /* ChatListFilterPredicate.swift */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7B6DDD623ED8FDF00B8E01C /* think_spectacular.tgs */; };
@@ -244,7 +251,6 @@
 		A7D2820F236C3C3B0000A9BF /* Postbox.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28204236C3C0B0000A9BF /* Postbox.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7D28211236C3D390000A9BF /* SyncCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28210236C3D390000A9BF /* SyncCore.framework */; };
 		A7D28212236C3D3E0000A9BF /* SyncCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7D28210236C3D390000A9BF /* SyncCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		A7D28214236C3DAE0000A9BF /* WalletCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28213236C3DAE0000A9BF /* WalletCore.framework */; };
 		A7D28226236C50EE0000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28204236C3C0B0000A9BF /* Postbox.framework */; };
 		A7D28227236C50F20000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28206236C3C0F0000A9BF /* SwiftSignalKit.framework */; };
 		A7D28228236C50F60000A9BF /* SyncCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D28210236C3D390000A9BF /* SyncCore.framework */; };
@@ -864,7 +870,7 @@
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
-		D0FFC4AC23E184BA0044D305 /* ChatListPresetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */; };
+		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
 
@@ -885,7 +891,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A778DC4323CDBB6600DD307B /* WalletCore.framework in Copy Files */,
+				A7393D3A2407D0F800CE44CA /* GraphCore.framework in Copy Files */,
 				A7D28212236C3D3E0000A9BF /* SyncCore.framework in Copy Files */,
 				A7D2820F236C3C3B0000A9BF /* Postbox.framework in Copy Files */,
 				A7D2820E236C3C330000A9BF /* SwiftSignalKit.framework in Copy Files */,
@@ -1253,6 +1259,12 @@
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SVGKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
+		A7393D342407CAE100CE44CA /* ChatMediaDice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaDice.swift; sourceTree = "<group>"; };
+		A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDiceContentView.swift; sourceTree = "<group>"; };
+		A7393D382407D0F100CE44CA /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7393D412407FF0F00CE44CA /* dice_idle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = dice_idle.tgs; sourceTree = "<group>"; };
+		A7393D432408F84300CE44CA /* DiceCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCache.swift; sourceTree = "<group>"; };
+		A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelOverviewStatsRowItem.swift; sourceTree = "<group>"; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
@@ -1267,7 +1279,10 @@
 		A7831B172403CB420056AEAC /* Graph.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Graph.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7831B1B2403CFDD0056AEAC /* ChannelStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStatsViewController.swift; sourceTree = "<group>"; };
 		A7831B2924040B6B0056AEAC /* StatisticRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticRowItem.swift; sourceTree = "<group>"; };
-		A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListPresetListController.swift; sourceTree = "<group>"; };
+		A789E08323E05EAE00AEB34A /* ChatListFiltersListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFiltersListController.swift; sourceTree = "<group>"; };
+		A7918DB324093505002011CA /* GraphUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GraphUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7919134240D0869002011CA /* MurMurHash32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MurMurHash32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7919137240D1077002011CA /* ChatListFilterPredicate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterPredicate.swift; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
@@ -1983,7 +1998,7 @@
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
-		D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListPresetController.swift; sourceTree = "<group>"; };
+		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
 		D0FFCEBD215A7CB700995AFE /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1992,7 +2007,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A74EB06923758BBC005F55AE /* WalletCore.framework in Frameworks */,
 				A7D2822D236C51F10000A9BF /* OpenSSLEncryption.framework in Frameworks */,
 				A7D28229236C50FC0000A9BF /* TelegramCore.framework in Frameworks */,
 				A7D28228236C50F60000A9BF /* SyncCore.framework in Frameworks */,
@@ -2006,7 +2020,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7831B182403CB420056AEAC /* Graph.framework in Frameworks */,
+				A7919135240D0869002011CA /* MurMurHash32.framework in Frameworks */,
+				A7918DB424093505002011CA /* GraphUI.framework in Frameworks */,
+				A7393D392407D0F100CE44CA /* GraphCore.framework in Frameworks */,
 				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
 				A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */,
 				A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */,
@@ -2015,7 +2031,6 @@
 				A7D28259236C70A50000A9BF /* SSignalKit.framework in Frameworks */,
 				A7D28232236C57DD0000A9BF /* libphonenumber.framework in Frameworks */,
 				A7D2822B236C51A50000A9BF /* OpenSSLEncryption.framework in Frameworks */,
-				A7D28214236C3DAE0000A9BF /* WalletCore.framework in Frameworks */,
 				A7D28211236C3D390000A9BF /* SyncCore.framework in Frameworks */,
 				A7D2820B236C3C1B0000A9BF /* MtProtoKit.framework in Frameworks */,
 				A7D28209236C3C150000A9BF /* TelegramCore.framework in Frameworks */,
@@ -2237,6 +2252,7 @@
 				9FF5A1CA2232A2FF00BC1359 /* UpgradedAccount.swift */,
 				9F1BC1A8223FDE6D00F21815 /* InputSources.swift */,
 				9F0F8E81226DCD1C00A97F6A /* OpmizeDatabaseView.swift */,
+				A7393D432408F84300CE44CA /* DiceCache.swift */,
 			);
 			name = account;
 			sourceTree = "<group>";
@@ -2522,6 +2538,7 @@
 			children = (
 				A7831B1B2403CFDD0056AEAC /* ChannelStatsViewController.swift */,
 				A7831B2924040B6B0056AEAC /* StatisticRowItem.swift */,
+				A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */,
 			);
 			name = stats;
 			sourceTree = "<group>";
@@ -2529,8 +2546,9 @@
 		A789E08223E05E9A00AEB34A /* presets */ = {
 			isa = PBXGroup;
 			children = (
-				A789E08323E05EAE00AEB34A /* ChatListPresetListController.swift */,
-				D0FFC4AB23E184BA0044D305 /* ChatListPresetController.swift */,
+				A789E08323E05EAE00AEB34A /* ChatListFiltersListController.swift */,
+				D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */,
+				A7919137240D1077002011CA /* ChatListFilterPredicate.swift */,
 			);
 			name = presets;
 			sourceTree = "<group>";
@@ -2738,6 +2756,7 @@
 				C224675C1FA884E300F03E27 /* ChatGroupedItem.swift */,
 				9FDD78D021C8F0CC00F1B4EF /* ChatPollItem.swift */,
 				D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */,
+				A7393D342407CAE100CE44CA /* ChatMediaDice.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -3791,6 +3810,7 @@
 				C248BD201E6F09CC004B9106 /* ChatGameContentView.swift */,
 				C21095991E9FE04700E10BDB /* ChatVideoMessageContentView.swift */,
 				D00CE50C2289C9B7008C1B4F /* MediaAnimatedStickerView.swift */,
+				A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */,
 			);
 			name = content;
 			sourceTree = "<group>";
@@ -4511,6 +4531,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A7393D412407FF0F00CE44CA /* dice_idle.tgs */,
 				A7C7215823FD473D00CE3F75 /* success_saved.tgs */,
 				A7B6DDD623ED8FDF00B8E01C /* think_spectacular.tgs */,
 				D07C6D7F2346A42F00468B1A /* monkey_see.tgs */,
@@ -4625,6 +4646,9 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7919134240D0869002011CA /* MurMurHash32.framework */,
+				A7918DB324093505002011CA /* GraphUI.framework */,
+				A7393D382407D0F100CE44CA /* GraphCore.framework */,
 				A7831B172403CB420056AEAC /* Graph.framework */,
 				A7377E5B23B5E99500AD3ADD /* libxml2.tbd */,
 				A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */,
@@ -4855,6 +4879,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
 				9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */,
 				C2057FA51EBBCEA7000423DC /* voip_busy.caf in Resources */,
@@ -5050,6 +5075,7 @@
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
 				9F7B5FCB22003DC70087D020 /* WallpaperColorPicker.swift in Sources */,
 				9FFAE4F7205A8C89000C028E /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */,
+				A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */,
 				D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C2DF47BB1DE79574003AA6C0 /* framing.c in Sources */,
@@ -5149,6 +5175,7 @@
 				D014AA242316CE0700CE5362 /* NewThemeController.swift in Sources */,
 				C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */,
 				9FC8ADA6206925F60094F7B4 /* PassportWindowController.swift in Sources */,
+				A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */,
 				C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */,
 				9F9B5EBB2257408200728CDC /* FFMpegAVCodecContext.m in Sources */,
 				C2DF47DA1DE82653003AA6C0 /* NSObject+TGLock.m in Sources */,
@@ -5224,6 +5251,7 @@
 				C24DABC01E0834B7005EE404 /* XCDYouTubeVideo.m in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C2DE5D321F3CA8370081EC1E /* InstantPageTile.swift in Sources */,
+				A7919138240D1077002011CA /* ChatListFilterPredicate.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */,
@@ -5248,7 +5276,7 @@
 				C25C132D1E8A404F00AE26A1 /* InstalledStickerPacksController.swift in Sources */,
 				9F10CE9A206284F8002DD61A /* InputDataDateRowItem.swift in Sources */,
 				C24DABA41E083185005EE404 /* YTVimeoURLParser.m in Sources */,
-				D0FFC4AC23E184BA0044D305 /* ChatListPresetController.swift in Sources */,
+				D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
 				9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */,
@@ -5372,6 +5400,7 @@
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
 				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
+				A7393D442408F84300CE44CA /* DiceCache.swift in Sources */,
 				D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */,
 				D076F88F2297285F004F895A /* DiscussionSetModalController.swift in Sources */,
 				C2DF47CE1DE79751003AA6C0 /* ATQueue.m in Sources */,
@@ -5406,6 +5435,7 @@
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
 				9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */,
+				A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */,
 				C221ED581EA687B600471C65 /* AutomaticMediaDownloadCategoryPeers.swift in Sources */,
 				9F1BABB021E60DCC0075C03E /* UndoOverlayHeaderView.swift in Sources */,
 				C24BA3BD1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift in Sources */,
@@ -5421,7 +5451,7 @@
 				C2A16E551E117BD000585A85 /* CreateChannelViewController.swift in Sources */,
 				9F7D422C222415C9007B68BB /* SharedAccountContext.swift in Sources */,
 				9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */,
-				A789E08423E05EAE00AEB34A /* ChatListPresetListController.swift in Sources */,
+				A789E08423E05EAE00AEB34A /* ChatListFiltersListController.swift in Sources */,
 				9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				D0C39EC3233A5D9B003CD402 /* WalletTransactionPreviewController.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,

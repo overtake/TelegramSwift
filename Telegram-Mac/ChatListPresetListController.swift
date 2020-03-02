@@ -16,26 +16,22 @@ import TGUIKit
 
 private final class ChatListPresetArguments {
     let context: AccountContext
-    let openPreset:(ChatListFilterPreset)->Void
-    let removePreset: (ChatListFilterPreset)->Void
-    let toggleTabsIsEnabled:(Bool)->Void
-    let toggleTabsBadge: (Bool)->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilterPreset)->Void, removePreset: @escaping(ChatListFilterPreset)->Void, toggleTabsIsEnabled: @escaping(Bool)->Void, toggleTabsBadge: @escaping(Bool)->Void) {
+    let openPreset:(ChatListFilter)->Void
+    let removePreset: (ChatListFilter)->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter)->Void, removePreset: @escaping(ChatListFilter)->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
-        self.toggleTabsIsEnabled = toggleTabsIsEnabled
-        self.toggleTabsBadge = toggleTabsBadge
     }
 }
-private func _id_preset(_ preset: ChatListFilterPreset) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_preset_\(preset.uniqueId)")
+private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_preset_\(filter.id)")
 }
 private let _id_add_new = InputDataIdentifier("_id_add_new")
 private let _id_add_tabs = InputDataIdentifier("_id_add_tabs")
 private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
 
-private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: ChatListPresetArguments) -> [InputDataEntry] {
+private func chatListPresetEntries(state: ChatListFiltersState, arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -44,56 +40,35 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    
-    if !state.presets.isEmpty {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_tabs, data: InputDataGeneralData(name: "Show Tabs", color: theme.colors.text, type: .switchable(state.tabsIsEnabled), viewType: state.tabsIsEnabled ? .firstItem : .singleItem, action: {
-            arguments.toggleTabsIsEnabled(!state.tabsIsEnabled)
-        })))
-        index += 1
 
-        if state.tabsIsEnabled {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_badge_tabs, data: InputDataGeneralData(name: "Unread Badge", color: theme.colors.text, type: .switchable(state.badge), viewType: .lastItem, action: {
-                arguments.toggleTabsBadge(!state.badge)
-            })))
-            index += 1
-        }
-        
-        
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Display filter tabs on main screen for quick switching."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    }
   
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FILTERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    for preset in state.presets {
-        var viewType = bestGeneralViewType(state.presets, for: preset)
-        if state.presets.count == 1 {
+    for filter in state.filters {
+        var viewType = bestGeneralViewType(state.filters, for: filter)
+        if state.filters.count == 1 {
             viewType = .firstItem
-        } else if preset == state.presets.last, state.presets.count < 10 {
+        } else if filter == state.filters.last, state.filters.count < 10 {
             viewType = .innerItem
         }
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(preset), data: .init(name: preset.title, color: theme.colors.text, type: .nextContext(preset.desc), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
-            arguments.openPreset(preset)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, type: .nextContext(filter.desc), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
+            arguments.openPreset(filter)
         }, menuItems: {
             return [ContextMenuItem("Remove", handler: {
-                arguments.removePreset(preset)
+                arguments.removePreset(filter)
             })]
         })))
         index += 1
     }
     
-    if state.presets.count < 10 {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: state.presets.isEmpty ? .singleItem : .lastItem, action: {
-            arguments.openPreset(ChatListFilterPreset.new)
+    if state.filters.count < 10 {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: state.filters.isEmpty ? .singleItem : .lastItem, action: {
+           // arguments.openPreset(ChatListFilter.new)
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add more \(10 - state.presets.count) filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add \(10 - state.filters.count) more filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
     } else {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Drag and drop filter to sort it. Right click to remove."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
@@ -108,21 +83,13 @@ private func chatListPresetEntries(state: ChatListFilterPreferences, arguments: 
     return entries
 }
 
-func ChatListPresetListController(context: AccountContext) -> InputDataController {
+func ChatListFiltersListController(context: AccountContext) -> InputDataController {
     
-    let arguments = ChatListPresetArguments(context: context, openPreset: { preset in
-        context.sharedContext.bindings.rootNavigation().push(ChatListPresetController(context: context, preset: preset))
-    }, removePreset: { preset in
-        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-            $0.withRemovedPreset(preset)
-        }).start()
-    }, toggleTabsIsEnabled: { value in
-        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-            $0.withUpdatedTabEnable(value)
-        }).start()
-    }, toggleTabsBadge: { value in
-        _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-            $0.withUpdatedBadge(value)
+    let arguments = ChatListPresetArguments(context: context, openPreset: { filter in
+        context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+    }, removePreset: { filter in
+        _ = updateChatListFilterSettingsInteractively(postbox: context.account.postbox, {
+            $0.withRemovedFilter(filter)
         }).start()
     })
     
@@ -177,8 +144,8 @@ func ChatListPresetListController(context: AccountContext) -> InputDataControlle
             }, resort: { row in
                 
             }, complete: { from, to in
-                _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-                    $0.withMovePreset(from - range.location, to - range.location)
+                _ = updateChatListFilterSettingsInteractively(postbox: context.account.postbox, {
+                    $0.withMoveFilter(from - range.location, to - range.location)
                 }).start()
             })
         } else {

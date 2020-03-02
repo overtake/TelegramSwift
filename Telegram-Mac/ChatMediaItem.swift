@@ -317,6 +317,9 @@ class ChatMediaItem: ChatRowItem {
         if let media = media as? TelegramMediaFile, media.isAnimatedSticker || media.isStaticSticker {
             canAddCaption = false
         }
+        if media is TelegramMediaDice {
+            canAddCaption = false
+        }
         
         
         self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in

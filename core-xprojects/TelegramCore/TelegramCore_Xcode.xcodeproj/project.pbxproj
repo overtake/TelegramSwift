@@ -29,17 +29,15 @@
 		A754972823A3A8C80091F293 /* InactiveChannels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972723A3A8C80091F293 /* InactiveChannels.swift */; };
 		A767DD4723F2FBD000366F76 /* ChatListFiltering.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */; };
 		A7831B202403D16F0056AEAC /* ChannelStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */; };
+		A7919034240CF9C7002011CA /* Reachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919033240CF9C7002011CA /* Reachability.framework */; };
+		A7919036240CF9CC002011CA /* CryptoUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919035240CF9CC002011CA /* CryptoUtils.framework */; };
+		A7919038240CF9D1002011CA /* NetworkLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919037240CF9D1002011CA /* NetworkLogging.framework */; };
+		A7919136240D08A6002011CA /* TogglePeerChatPinned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BC387A1E40D2880044D6FE /* TogglePeerChatPinned.swift */; };
 		A7D281DE236C25500000A9BF /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281DD236C25500000A9BF /* SwiftSignalKit.framework */; };
 		A7D281E2236C25710000A9BF /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E1236C25710000A9BF /* Postbox.framework */; };
 		A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E3236C257C0000A9BF /* TelegramApi.framework */; };
 		A7D281EA236C27030000A9BF /* MtProtoKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281E9236C27030000A9BF /* MtProtoKit.framework */; };
 		A7D281EC236C2FAD0000A9BF /* SyncCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D281EB236C2FAD0000A9BF /* SyncCore.framework */; };
-		A7D281F0236C32900000A9BF /* NetworkLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = A7D281EE236C32900000A9BF /* NetworkLogging.m */; };
-		A7D281F1236C32900000A9BF /* NetworkLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D281EF236C32900000A9BF /* NetworkLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7D281F4236C32A00000A9BF /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D281F2236C32A00000A9BF /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7D281F5236C32A00000A9BF /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = A7D281F3236C32A00000A9BF /* Reachability.m */; };
-		A7D281F8236C32AA0000A9BF /* Crypto.m in Sources */ = {isa = PBXBuildFile; fileRef = A7D281F6236C32AA0000A9BF /* Crypto.m */; };
-		A7D281F9236C32AA0000A9BF /* Crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D281F7236C32AA0000A9BF /* Crypto.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7D281FB236C34670000A9BF /* SynchronizeInstalledStickerPacksOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D281FA236C34660000A9BF /* SynchronizeInstalledStickerPacksOperation.swift */; };
 		A7D281FD236C35E30000A9BF /* TelegramMediaWebFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D281FC236C35E30000A9BF /* TelegramMediaWebFile.swift */; };
 		A7F2833D239E4EE300742C20 /* ContentSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2833C239E4EE300742C20 /* ContentSettings.swift */; };
@@ -271,7 +269,6 @@
 		D0B8444B1DAB91FD005F29E1 /* ManagedSynchronizePeerReadStates.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AB0B991D666520002C78E7 /* ManagedSynchronizePeerReadStates.swift */; };
 		D0B8444C1DAB91FD005F29E1 /* UpdateCachedPeerData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B843861DA6F705005F29E1 /* UpdateCachedPeerData.swift */; };
 		D0B85AC61F6B2B9400B8B5CE /* RecentlyUsedHashtags.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B85AC41F6B2B9400B8B5CE /* RecentlyUsedHashtags.swift */; };
-		D0BC387C1E40D2880044D6FE /* TogglePeerChatPinned.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BC387A1E40D2880044D6FE /* TogglePeerChatPinned.swift */; };
 		D0BE303B20619EE800FBE6D8 /* SecureIdForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE303920619EE800FBE6D8 /* SecureIdForm.swift */; };
 		D0BE303E2061A29100FBE6D8 /* RequestSecureIdForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE303C2061A29100FBE6D8 /* RequestSecureIdForm.swift */; };
 		D0BE304C20627D9800FBE6D8 /* AccessSecureId.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE304A20627D9800FBE6D8 /* AccessSecureId.swift */; };
@@ -382,6 +379,9 @@
 		A754972723A3A8C80091F293 /* InactiveChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannels.swift; sourceTree = "<group>"; };
 		A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListFiltering.swift; sourceTree = "<group>"; };
 		A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelStatistics.swift; sourceTree = "<group>"; };
+		A7919033240CF9C7002011CA /* Reachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Reachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7919035240CF9CC002011CA /* CryptoUtils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CryptoUtils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7919037240CF9D1002011CA /* NetworkLogging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NetworkLogging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D7236C25370000A9BF /* libphonenumber.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libphonenumber.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281D9236C253C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281DB236C25440000A9BF /* MtProtoKitMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKitMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -793,6 +793,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7919038240CF9D1002011CA /* NetworkLogging.framework in Frameworks */,
+				A7919036240CF9CC002011CA /* CryptoUtils.framework in Frameworks */,
+				A7919034240CF9C7002011CA /* Reachability.framework in Frameworks */,
 				A7D281EC236C2FAD0000A9BF /* SyncCore.framework in Frameworks */,
 				A7D281EA236C27030000A9BF /* MtProtoKit.framework in Frameworks */,
 				A7D281E4236C257C0000A9BF /* TelegramApi.framework in Frameworks */,
@@ -1246,6 +1249,9 @@
 		D06706631D512ADA00DED3E3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7919037240CF9D1002011CA /* NetworkLogging.framework */,
+				A7919035240CF9CC002011CA /* CryptoUtils.framework */,
+				A7919033240CF9C7002011CA /* Reachability.framework */,
 				A7D281EB236C2FAD0000A9BF /* SyncCore.framework */,
 				A7D281E9236C27030000A9BF /* MtProtoKit.framework */,
 				A7D281E3236C257C0000A9BF /* TelegramApi.framework */,
@@ -1539,9 +1545,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7D281F9236C32AA0000A9BF /* Crypto.h in Headers */,
-				A7D281F1236C32900000A9BF /* NetworkLogging.h in Headers */,
-				A7D281F4236C32A00000A9BF /* Reachability.h in Headers */,
 				D0B4186B1D7E03D5004562A4 /* TelegramCore.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1616,6 +1619,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7919136240D08A6002011CA /* TogglePeerChatPinned.swift in Sources */,
 				D03413F3231325B300B555F3 /* Themes.swift in Sources */,
 				D03413F1231323CE00B555F3 /* Theme.swift in Sources */,
 				D021E7E92306EC03002F8BD1 /* ScheduledMessages.swift in Sources */,
@@ -1669,7 +1673,6 @@
 				D050F26E1E4A5B6D00988324 /* RemovePeerChat.swift in Sources */,
 				D0613FD81E606B3B00202CDB /* ConvertGroupToSupergroup.swift in Sources */,
 				D0DB7F041F43030C00591D48 /* InstallInteractiveReadMessagesAction.swift in Sources */,
-				A7D281F0236C32900000A9BF /* NetworkLogging.m in Sources */,
 				D01D6BFA1E42A718006151C6 /* SearchStickers.swift in Sources */,
 				D0D748031E7AE98B00F4B1F6 /* StickerPackInteractiveOperations.swift in Sources */,
 				D0B167241F9F972E00976B40 /* LoggingSettings.swift in Sources */,
@@ -1771,7 +1774,6 @@
 				D0B418961D7E0580004562A4 /* TelegramMediaFile.swift in Sources */,
 				D08CAA881ED81DD40000FDA8 /* LocalizationInfo.swift in Sources */,
 				D099D74A1EEF418D00A3128C /* HistoryViewStateValidation.swift in Sources */,
-				A7D281F8236C32AA0000A9BF /* Crypto.m in Sources */,
 				D0AF32231FAC95C20097362B /* StandaloneUploadedMedia.swift in Sources */,
 				A767DD4723F2FBD000366F76 /* ChatListFiltering.swift in Sources */,
 				D04554A721B43440007A6DD9 /* CancelAccountReset.swift in Sources */,
@@ -1838,8 +1840,6 @@
 				D00C7CCD1E3620C30080C3D5 /* CachedChannelParticipants.swift in Sources */,
 				D0A472B71F4CBE8B00E0EEDA /* LoadedPeer.swift in Sources */,
 				D03C536E1DAD5CA9004C17B3 /* PhoneNumber.swift in Sources */,
-				A7D281F5236C32A00000A9BF /* Reachability.m in Sources */,
-				D0BC387C1E40D2880044D6FE /* TogglePeerChatPinned.swift in Sources */,
 				D0528E6B1E65DD2100E2FEF5 /* WebpagePreview.swift in Sources */,
 				D0E8B8B42044706300605593 /* ForwardGame.swift in Sources */,
 				D0B844111DAB91CD005F29E1 /* Regex.swift in Sources */,

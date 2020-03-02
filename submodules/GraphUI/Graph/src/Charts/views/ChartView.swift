@@ -67,7 +67,11 @@ class ChartView: Control {
         
         let fractionPoint = CGPoint(x: (point.x - chartFrame.origin.x) / chartFrame.width,
                                     y: (point.y - chartFrame.origin.y) / chartFrame.height)
-        userDidSelectCoordinateClosure?(fractionPoint)
+        
+        if NSPointInRect(point, frame) {
+            userDidSelectCoordinateClosure?(fractionPoint)
+        }
+        
     }
     
     override func mouseDragged(with event: NSEvent) {
@@ -76,7 +80,11 @@ class ChartView: Control {
         
         let fractionPoint = CGPoint(x: (point.x - chartFrame.origin.x) / chartFrame.width,
                                     y: (point.y - chartFrame.origin.y) / chartFrame.height)
-        userDidSelectCoordinateClosure?(fractionPoint)
+                
+        if NSPointInRect(point, frame) {
+            userDidSelectCoordinateClosure?(fractionPoint)
+        }
+    
     }
     
     override func mouseUp(with event: NSEvent) {

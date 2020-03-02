@@ -20,14 +20,12 @@ private final class DeveloperArguments {
     let toggleLogs:(Bool)->Void
     let navigateToLogs:()->Void
     let addAccount:()->Void
-    let toggleFilters:(Bool)->Void
-    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleFilters:@escaping(Bool)->Void) {
+    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void) {
         self.importColors = importColors
         self.exportColors = exportColors
         self.toggleLogs = toggleLogs
         self.navigateToLogs = navigateToLogs
         self.addAccount = addAccount
-        self.toggleFilters = toggleFilters
     }
 }
 
@@ -132,7 +130,6 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             })
         case let .enableFilters(_, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Enable Filters", type: .switchable(enabled), action: {
-                arguments.toggleFilters(!enabled)
             })
         case let .toggleLogs(_, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Enable Logs", type: .switchable(enabled), action: {
@@ -145,7 +142,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     
 }
 
-private func developerEntries(_ chatListPreferences: ChatListFilterPreferences) -> [DeveloperEntry] {
+private func developerEntries() -> [DeveloperEntry] {
     var entries:[DeveloperEntry] = []
     
     var sectionId:Int32 = 1
@@ -164,9 +161,6 @@ private func developerEntries(_ chatListPreferences: ChatListFilterPreferences) 
     
     entries.append(.section(sectionId))
     sectionId += 1
-    
-    entries.append(.enableFilters(sectionId: sectionId, enabled: chatListPreferences.isEnabled))
-
     
     
     entries.append(.section(sectionId))
@@ -228,19 +222,13 @@ class DeveloperViewController: TableViewController {
         }, addAccount: {
             let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
-        }, toggleFilters: { enabled in
-            _ = updateChatListFilterPreferencesInteractively(postbox: context.account.postbox, {
-                $0.withUpdatedEnabled(enabled)
-            }).start()
         })
         
         let signal = combineLatest(queue: prepareQueue, context.account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.chatListSettings]), appearanceSignal)
         
         genericView.merge(with: signal |> map { preferences, appearance in
             
-            let chatListFilters = preferences.values[ApplicationSpecificPreferencesKeys.chatListSettings] as? ChatListFilterPreferences ?? ChatListFilterPreferences.defaultSettings
-            
-            let entries = developerEntries(chatListFilters).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = developerEntries().map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> deliverOnMainQueue)
         

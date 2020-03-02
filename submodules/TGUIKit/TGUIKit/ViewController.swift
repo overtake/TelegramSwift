@@ -315,6 +315,10 @@ open class ViewController : NSObject {
         return false
     }
     
+    open var isAutoclosePopover: Bool {
+        return true
+    }
+    
     open func executeReturn() -> Void {
         self.navigationController?.back()
     }

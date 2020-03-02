@@ -10,10 +10,10 @@
 		A701F902236B2EF8002ABF81 /* sqlcipher.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F900236B2EF8002ABF81 /* sqlcipher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A701F911236B2F01002ABF81 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = A701F909236B2F01002ABF81 /* sqlite3.c */; };
 		A701F912236B2F01002ABF81 /* SQLite-Bridging.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F90A236B2F01002ABF81 /* SQLite-Bridging.h */; };
-		A701F914236B2F01002ABF81 /* sqlcipher_config.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F90C236B2F01002ABF81 /* sqlcipher_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A701F916236B2F01002ABF81 /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F90E236B2F01002ABF81 /* sqlite3ext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A701F918236B2F01002ABF81 /* fts3_tokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F910236B2F01002ABF81 /* fts3_tokenizer.h */; };
-		A701F920236B2FF3002ABF81 /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F90D236B2F01002ABF81 /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7918DBA240CEDE5002011CA /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB7240CEDE5002011CA /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7918DBB240CEDE5002011CA /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB8240CEDE5002011CA /* sqlite3ext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7918DBC240CEDE5002011CA /* sqlcipher_config.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB9240CEDE5002011CA /* sqlcipher_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +29,9 @@
 		A701F90F236B2F01002ABF81 /* SQLite-Bridging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SQLite-Bridging.m"; sourceTree = "<group>"; };
 		A701F910236B2F01002ABF81 /* fts3_tokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fts3_tokenizer.h; sourceTree = "<group>"; };
 		A701F922236B3172002ABF81 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		A7918DB7240CEDE5002011CA /* sqlite3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sqlite3.h; path = "../../submodules/telegram-ios/submodules/sqlcipher/PublicHeaders/sqlcipher/sqlite3.h"; sourceTree = "<group>"; };
+		A7918DB8240CEDE5002011CA /* sqlite3ext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sqlite3ext.h; path = "../../submodules/telegram-ios/submodules/sqlcipher/PublicHeaders/sqlcipher/sqlite3ext.h"; sourceTree = "<group>"; };
+		A7918DB9240CEDE5002011CA /* sqlcipher_config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sqlcipher_config.h; path = "../../submodules/telegram-ios/submodules/sqlcipher/PublicHeaders/sqlcipher/sqlcipher_config.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +48,9 @@
 		A701F8F3236B2EF8002ABF81 = {
 			isa = PBXGroup;
 			children = (
+				A7918DB9240CEDE5002011CA /* sqlcipher_config.h */,
+				A7918DB7240CEDE5002011CA /* sqlite3.h */,
+				A7918DB8240CEDE5002011CA /* sqlite3ext.h */,
 				A701F908236B2F01002ABF81 /* Sources */,
 				A701F8FF236B2EF8002ABF81 /* sqlcipher */,
 				A701F8FE236B2EF8002ABF81 /* Products */,
@@ -100,9 +106,9 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A701F914236B2F01002ABF81 /* sqlcipher_config.h in Headers */,
-				A701F916236B2F01002ABF81 /* sqlite3ext.h in Headers */,
-				A701F920236B2FF3002ABF81 /* sqlite3.h in Headers */,
+				A7918DBA240CEDE5002011CA /* sqlite3.h in Headers */,
+				A7918DBB240CEDE5002011CA /* sqlite3ext.h in Headers */,
+				A7918DBC240CEDE5002011CA /* sqlcipher_config.h in Headers */,
 				A701F918236B2F01002ABF81 /* fts3_tokenizer.h in Headers */,
 				A701F912236B2F01002ABF81 /* SQLite-Bridging.h in Headers */,
 				A701F902236B2EF8002ABF81 /* sqlcipher.h in Headers */,

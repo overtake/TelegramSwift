@@ -140,7 +140,7 @@ open class Popover: NSObject {
             self.readyDisposable.set(signal.start(next: { [weak self, weak controller, weak parentView] ready in
                 if let parentView = parentView {
                     for subview in parentView.subviews {
-                        if let view = subview  as? PopoverBackground, view.popover?.isShown == true {
+                        if let view = subview  as? PopoverBackground, view.popover?.isShown == true, view.popover?.controller?.isAutoclosePopover == true {
                             view.popover?.hide(false)
                         }
                     }

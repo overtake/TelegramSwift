@@ -14,6 +14,9 @@ import SwiftSignalKit
 import AVFoundation
 import QuickLook
 
+let diceSymbol: String = "🎲"
+
+
 class MediaSenderContainer : Equatable {
     let path:String
     let caption:String
@@ -169,6 +172,11 @@ class Sender: NSObject {
         }
         
         
+        var mediaReference: AnyMediaReference? = nil
+        if input.inputText == diceSymbol {
+            mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(value: nil))
+        }
+        
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length
@@ -184,7 +192,7 @@ class Sender: NSObject {
             if FastSettings.isChannelMessagesMuted(peerId) || silent {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil)
+            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil)
         }
         
         return enqueueMessages(context: context, peerId: peerId, messages: mapped) |> mapToSignal { value in

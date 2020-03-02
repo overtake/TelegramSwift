@@ -42,6 +42,25 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         entries.append(.loading)
     } else if let stats = state.stats  {
         
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("OVERVIEW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        var overviewItems:[ChannelOverviewItem] = []
+        
+        overviewItems.append(ChannelOverviewItem(title: "Followers", value: stats.followers.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: "Enabled Notifications", value: stats.enabledNotifications.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: "Views Per Post", value: stats.viewsPerPost.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: "Shares Per Post", value: stats.sharesPerPost.attributedString))
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
+            return ChannelOverviewStatsRowItem.init(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
+        }))
+        index += 1
+        
+        
         struct Graph {
             let graph: ChannelStatsGraph
             let title: String
@@ -88,7 +107,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             index += 1
             
             switch graph.graph {
-            case let .Loaded(string):
+            case let .Loaded(_, string):                
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
                         return StatisticRowItem(initialSize, stableId: stableId, collection: collection, viewType: .singleItem, type: graph.type)

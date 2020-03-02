@@ -95,4 +95,14 @@
     return [cal dateFromComponents:components];
 }
 
++ (NSDate *) year:(NSInteger)dm date:(NSDate *)date {
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    unsigned unitFlags = NSCalendarUnitDay| NSCalendarUnitYear | NSCalendarUnitMonth;
+    NSDateComponents *components = [cal components:unitFlags fromDate:date];
+    components.day = 1;
+    components.year = dm;
+    components.month = components.month;
+    return [cal dateFromComponents:components];
+}
+
 @end

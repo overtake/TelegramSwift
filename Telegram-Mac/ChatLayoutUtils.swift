@@ -90,6 +90,8 @@ class ChatLayoutUtils: NSObject {
             if let file = media.file {
                 return contentSize(for: file, with: width)
             }
+        } else if media is TelegramMediaDice {
+            size = NSMakeSize(128, 128)
         }
         
         return size
@@ -119,6 +121,8 @@ class ChatLayoutUtils: NSObject {
             }
         } else if media is TelegramMediaMap {
             return ChatMapContentView.self
+        } else if media is TelegramMediaDice {
+            return ChatDiceContentView.self
         } else if let media = media as? TelegramMediaGame {
             if let file = media.file {
                 return contentNode(for: file)
