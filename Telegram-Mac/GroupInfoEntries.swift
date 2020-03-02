@@ -1501,6 +1501,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         if let presence = participant.presence, peerPresences[participant.peer.id] == nil {
                             peerPresences[participant.peer.id] = presence
                         }
+                        if participant.peer.id == arguments.context.account.peerId {
+                            peerPresences[participant.peer.id] = TelegramUserPresence(status: .present(until: Int32.max), lastActivity: Int32.max)
+                        }
                         if peers[participant.peer.id] == nil {
                             peers[participant.peer.id] = participant.peer
                         }

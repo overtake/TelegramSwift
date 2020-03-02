@@ -124,7 +124,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
-    
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
         return _ready.get() |> filter { $0 } |> take (1)
@@ -531,9 +530,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 }
             })
         }
-        
-        
-        
+            
        // _ready.set(.single(true))
     }
     

@@ -320,6 +320,9 @@ class ChatRowItem: TableRowItem {
                     return isBubbled
                 }
             }
+            if media is TelegramMediaDice {
+                return isBubbled
+            }
             if let media = media as? TelegramMediaMap {
                 if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                     var time:TimeInterval = Date().timeIntervalSince1970
@@ -721,6 +724,9 @@ class ChatRowItem: TableRowItem {
                     return false //!message.text.isEmpty || (message.replyAttribute != nil && !file.isInstantVideo) || (message.forwardInfo != nil && !file.isInstantVideo)
                 }
             }
+            if media is TelegramMediaDice {
+                return false
+            }
             
             for attr in message.attributes {
                 if let _ = attr as? InlineBotMessageAttribute {
@@ -862,6 +868,9 @@ class ChatRowItem: TableRowItem {
                         return renderType == .bubble
                     }
                     
+                }
+                if media is TelegramMediaDice {
+                    return renderType == .bubble
                 }
                 if let media = media as? TelegramMediaMap {
                     if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
@@ -1330,6 +1339,8 @@ class ChatRowItem: TableRowItem {
                     return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media.first is TelegramMediaUnsupported {
                     return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
+                } else if message.media.first is TelegramMediaDice {
+                    return ChatMediaDice(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 }
                 
                 return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)

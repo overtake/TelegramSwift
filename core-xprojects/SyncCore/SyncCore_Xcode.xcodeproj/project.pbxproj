@@ -151,6 +151,7 @@
 		A701F8E2236B2A12002ABF81 /* SynchronizeInstalledStickerPacksOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A701F855236B2A11002ABF81 /* SynchronizeInstalledStickerPacksOperations.swift */; };
 		A701F8EC236B2E30002ABF81 /* Postbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F8EB236B2E30002ABF81 /* Postbox.framework */; };
 		A701F92A236C1AF7002ABF81 /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F929236C1AF7002ABF81 /* SwiftSignalKit.framework */; };
+		A7393D2D2407A14800CE44CA /* TelegramMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */; };
 		A754972623A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */; };
 		A7D28201236C379D0000A9BF /* PixelDimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28200236C379D0000A9BF /* PixelDimensions.swift */; };
 /* End PBXBuildFile section */
@@ -304,6 +305,7 @@
 		A701F8E6236B2A78002ABF81 /* PostboxMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = PostboxMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A701F8EB236B2E30002ABF81 /* Postbox.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Postbox.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A701F929236C1AF7002ABF81 /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramMediaDice.swift; sourceTree = "<group>"; };
 		A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedMediaStickersMessageAttribute.swift; sourceTree = "<group>"; };
 		A7D28200236C379D0000A9BF /* PixelDimensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelDimensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -351,6 +353,7 @@
 		A701F7C8236B2A11002ABF81 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */,
 				A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */,
 				A701F7C9236B2A11002ABF81 /* TelegramGroup.swift */,
 				A701F7CA236B2A11002ABF81 /* OutgoingContentInfoMessageAttribute.swift */,
@@ -708,6 +711,7 @@
 				A701F870236B2A11002ABF81 /* Localization.swift in Sources */,
 				A701F873236B2A11002ABF81 /* ImportableDeviceContactData.swift in Sources */,
 				A701F871236B2A11002ABF81 /* CachedThemesConfiguration.swift in Sources */,
+				A7393D2D2407A14800CE44CA /* TelegramMediaDice.swift in Sources */,
 				A701F892236B2A11002ABF81 /* TelegramMediaImage.swift in Sources */,
 				A701F8CD236B2A12002ABF81 /* CloudChatRemoveMessagesOperation.swift in Sources */,
 				A701F8D2236B2A12002ABF81 /* CachedStickerPack.swift in Sources */,

@@ -2,6 +2,21 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/Reachability/Reachability.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/NetworkLogging/NetworkLogging.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/CryptoUtils/CryptoUtils.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/StringTransliteration/StringTransliteration.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/MurMurHash32/MurMurHash32.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/GraphCore/GraphCore.xcodeproj">
    </FileRef>
    <FileRef

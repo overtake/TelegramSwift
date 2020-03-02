@@ -111,6 +111,8 @@
 		A789E0C223E841B600AEB34A /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A789E0C523E841B600AEB34A /* Graph.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Graph.h; sourceTree = "<group>"; };
 		A789E0C623E841B600AEB34A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7918D5224093467002011CA /* q.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = q.h; sourceTree = "<group>"; };
+		A7918D5324093467002011CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +266,7 @@
 			isa = PBXGroup;
 			children = (
 				A789E0C423E841B600AEB34A /* Graph */,
+				A7918D5124093467002011CA /* q */,
 				A789E0C323E841B600AEB34A /* Products */,
 				A7831B142403BFE30056AEAC /* Frameworks */,
 			);
@@ -285,6 +288,15 @@
 				A789E0C623E841B600AEB34A /* Info.plist */,
 			);
 			path = Graph;
+			sourceTree = "<group>";
+		};
+		A7918D5124093467002011CA /* q */ = {
+			isa = PBXGroup;
+			children = (
+				A7918D5224093467002011CA /* q.h */,
+				A7918D5324093467002011CA /* Info.plist */,
+			);
+			path = q;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -325,6 +337,7 @@
 		A789E0B923E841B600AEB34A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				DefaultBuildSystemTypeForWorkspace = Latest;
 				LastUpgradeCheck = 1030;
 				ORGANIZATIONNAME = Telegram;
 				TargetAttributes = {
@@ -501,7 +514,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -592,7 +605,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -676,7 +689,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -809,7 +822,7 @@
 		A789E0CB23E841B600AEB34A /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -824,7 +837,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -851,7 +864,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACH_O_TYPE = staticlib;
+				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

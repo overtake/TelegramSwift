@@ -289,9 +289,6 @@ class MainViewController: TelegramViewController {
             return Signal<Bool, NoError>.single(arc4random() % 2 == 5)
         } |> delay(10 * 10, queue: .mainQueue()) |> restart)
         |> filter { $0 }
-        |> mapToSignal { _ in
-            return chatListFilterPreferences(postbox: context.account.postbox) |> take(1) |> map { $0.needShowTooltip && $0.isEnabled }
-        } |> filter { $0 }
         |> deliverOnMainQueue
         
         tooltipDisposable.set(s.start(next: { [weak self] show in

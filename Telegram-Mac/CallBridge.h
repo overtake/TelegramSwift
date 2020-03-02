@@ -27,6 +27,8 @@
 @interface CallBridge : NSObject
 -(void)startTransmissionIfNeeded:(bool)outgoing allowP2p:(bool)allowP2p serializedData:(NSString *)serializedData connection:(TGCallConnection *)connection;
 
+-(id)initWithProxy:(CProxy *)proxy;
+
 -(void)mute;
 -(void)unmute;
 -(BOOL)isMuted;
@@ -41,6 +43,7 @@
 @property (nonatomic, copy) void (^stateChangeHandler)(int);
 
 +(int32_t)voipMaxLayer;
++(NSString *)voipVersion;
 
 +(NSArray<AudioDevice *> *)outputDevices;
 +(NSArray<AudioDevice *> *)inputDevices;

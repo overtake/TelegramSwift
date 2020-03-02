@@ -12,7 +12,7 @@ import TelegramCore
 import SyncCore
 import Postbox
 import TGUIKit
-
+import MurMurHash32
 
 public struct TinyThumbnailData: Equatable {
     let tablesDataHash: Int32

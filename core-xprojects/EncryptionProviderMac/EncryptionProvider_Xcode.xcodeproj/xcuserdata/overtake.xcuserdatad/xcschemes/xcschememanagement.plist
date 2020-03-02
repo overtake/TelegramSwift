@@ -7,7 +7,7 @@
 		<key>EncryptionProvider.xcscheme</key>
 		<dict>
 			<key>isShown</key>
-			<false/>
+			<true/>
 			<key>orderHint</key>
 			<integer>25</integer>
 		</dict>

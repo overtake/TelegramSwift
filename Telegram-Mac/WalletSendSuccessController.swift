@@ -1,13 +1,13 @@
+////
+////  WalletSendSuccessController.swift
+////  Telegram
+////
+////  Created by Mikhail Filimonov on 25/09/2019.
+////  Copyright © 2019 Telegram. All rights reserved.
+////
 //
-//  WalletSendSuccessController.swift
-//  Telegram
+//import Cocoa
 //
-//  Created by Mikhail Filimonov on 25/09/2019.
-//  Copyright © 2019 Telegram. All rights reserved.
+//func WalletSendSuccessController() {
 //
-
-import Cocoa
-
-func WalletSendSuccessController() {
-
-}
+//}

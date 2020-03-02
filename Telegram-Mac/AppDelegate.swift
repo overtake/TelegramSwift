@@ -9,7 +9,7 @@ import Quartz
 import MtProtoKit
 import CoreServices
 import LocalAuthentication
-import WalletCore
+//import WalletCore
 import OpenSSLEncryption
 import CoreSpotlight
 #if !APP_STORE
@@ -17,6 +17,13 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
+#if !SHARE
+extension Account {
+    var diceCache: DiceCache? {
+        return (NSApp.delegate as? AppDelegate)?.contextValue?.context.diceCache
+    }
+}
+#endif
 
 
 private final class SharedApplicationContext {
@@ -63,7 +70,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
 
     
-    private var contextValue: AuthorizedApplicationContext?
+    fileprivate var contextValue: AuthorizedApplicationContext?
     private let context = Promise<AuthorizedApplicationContext?>()
     
     private var authContextValue: UnauthorizedApplicationContext?
@@ -377,7 +384,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
             })
             
-            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: CallBridge.voipMaxLayer(), appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: CallBridge.voipMaxLayer(), voipVersions: [CallBridge.voipVersion()], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             
@@ -439,31 +446,31 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             })
             
             
-            let tonKeychain: TonKeychain
-            
-            tonKeychain = TonKeychain(encryptionPublicKey: {
-                return Signal { subscriber in
-                    return EmptyDisposable
-                }
-            }, encrypt: { data in
-                return Signal { subscriber in
-                    if #available(OSX 10.12, *) {
-                        if let context = self.contextValue?.context, let publicKey = TKPublicKey.get(for: context.account) {
-                            if let result = publicKey.encrypt(data: data) {
-                                subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
-                                subscriber.putCompletion()
-                                return EmptyDisposable
-                            }
-                        }
-                    }
-                    subscriber.putError(.generic)
-                    return EmptyDisposable
-                }
-            }, decrypt: { encryptedData in
-                return Signal { subscriber in
-                    return EmptyDisposable
-                }
-            })
+//            let tonKeychain: TonKeychain
+//            
+//            tonKeychain = TonKeychain(encryptionPublicKey: {
+//                return Signal { subscriber in
+//                    return EmptyDisposable
+//                }
+//            }, encrypt: { data in
+//                return Signal { subscriber in
+//                    if #available(OSX 10.12, *) {
+//                        if let context = self.contextValue?.context, let publicKey = TKPublicKey.get(for: context.account) {
+//                            if let result = publicKey.encrypt(data: data) {
+//                                subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
+//                                subscriber.putCompletion()
+//                                return EmptyDisposable
+//                            }
+//                        }
+//                    }
+//                    subscriber.putError(.generic)
+//                    return EmptyDisposable
+//                }
+//            }, decrypt: { encryptedData in
+//                return Signal { subscriber in
+//                    return EmptyDisposable
+//                }
+//            })
 
 
             
@@ -493,9 +500,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         }.start()
                                     semaphore.wait()
                                 }
-                                let tonContext = StoredTonContext(basePath: account.basePath, postbox: account.postbox, network: account.network, keychain: tonKeychain)
+                              //  let tonContext = StoredTonContext(basePath: account.basePath, postbox: account.postbox, network: account.network, keychain: tonKeychain)
 
-                                let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, tonContext: tonContext, account: account)
+                                let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
                                 return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings)
                                 
                             } else {

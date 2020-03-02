@@ -83,6 +83,10 @@ class CalendarController: GenericViewController<CalendarControllerView> {
             if let strongSelf = self {
                 strongSelf.navigation.push(strongSelf.stepMonth(date: CalendarUtils.stepMonth(1, date: date)), style: .push)
             }
+        }, changeYear: { [weak self] year, date in
+            if let strongSelf = self {
+                strongSelf.navigation.push(strongSelf.stepMonth(date: CalendarUtils.year(Int(year), date: date)), style: .push)
+            }
         })
         
         self.navigation = CalendarNavigation(stepMonth(date: current), window)
@@ -92,6 +96,10 @@ class CalendarController: GenericViewController<CalendarControllerView> {
     
     func stepMonth(date:Date) -> CalendarMonthController {
         return CalendarMonthController(date, onlyFuture: self.onlyFuture, selectDayAnyway: CalendarUtils.isSameDate(current, date: date, checkDay: false), interactions: interactions)
+    }
+    
+    override var isAutoclosePopover: Bool {
+        return false
     }
 }
 

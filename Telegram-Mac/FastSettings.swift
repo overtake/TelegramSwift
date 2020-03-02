@@ -361,6 +361,13 @@ class FastSettings {
         })
     }
     
+    static func diceHasAlreadyPlayed(_ messageId: MessageId) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+    }
+    static func markDiceAsPlayed(_ messageId: MessageId) {
+        UserDefaults.standard.set(true, forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+        UserDefaults.standard.synchronize()
+    }
     /*
  
      +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
@@ -544,28 +551,6 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
                        return path.downloadedPath
                     }
                 }
-                
-                var adopted = adopted
-                var i:Int = 1
-                let deletedPathExt = adopted.nsstring.deletingPathExtension
-                while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                    let ext = adopted.nsstring.pathExtension
-                    adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                    i += 1
-                }
-                
-                try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-                
-                let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-                
-                let fs = fileSize(boxPath)
-                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-                
-                
-                
-                _ = updateDownloadedFilePaths(postbox, {
-                    $0.withAddedPath(path)
-                }).start()
                 
                 return adopted
             }

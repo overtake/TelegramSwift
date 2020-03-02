@@ -40,6 +40,14 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         }
     } else if let representation = representation as? CachedScaledVideoFirstFrameRepresentation {
         return fetchCachedScaledVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
+    } else if let representation = representation as? CachedDiceRepresentation {
+        if let diceCache = account.diceCache {
+            return diceCache.diceData(representation.value, synchronous: false) |> mapToSignal { data in
+                return fetchCachedDiceRepresentation(account: account, data: data.0, representation: representation)
+            }
+        } else {
+            return .complete()
+        }
     } else if let representation = representation as? CachedBlurredWallpaperRepresentation {
         return account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
             |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
@@ -624,3 +632,42 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
 }
 
 
+private func fetchCachedDiceRepresentation(account: Account, data: Data, representation: CachedDiceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return Signal { subscriber in
+        
+        var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
+        if dataValue == nil {
+            dataValue = data
+        }
+        if let json = String(data: dataValue, encoding: .utf8) {
+            let rlottie = RLottieBridge(json: json, key: representation.value)
+            
+            let unmanaged = rlottie?.renderFrame(180, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+            let colorImage = unmanaged?.takeRetainedValue()
+            
+            let path = NSTemporaryDirectory() + "\(arc4random64())"
+            let url = URL(fileURLWithPath: path)
+            
+            let colorData = NSMutableData()
+            if let colorImage = colorImage, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                let colorQuality: Float
+                colorQuality = 0.4
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+                if CGImageDestinationFinalize(colorDestination)  {
+                    try? colorData.write(to: url, options: .atomic)
+                    subscriber.putNext(.temporaryPath(path))
+                    subscriber.putCompletion()
+                }
+            } else {
+                subscriber.putCompletion()
+            }
+        }
+        
+        return ActionDisposable {
+            
+        }
+    }
+}

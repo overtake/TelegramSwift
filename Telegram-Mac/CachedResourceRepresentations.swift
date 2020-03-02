@@ -177,6 +177,29 @@ final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceReprese
 }
 
 
+final class CachedDiceRepresentation: CachedMediaResourceRepresentation {
+    let keepDuration: CachedMediaRepresentationKeepDuration = .general
+    
+    let value: String
+    let size: NSSize
+    var uniqueId: String {
+        return value
+    }
+    
+    init(value: String, size: NSSize) {
+        self.value = value
+        self.size = size
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let to = to as? CachedDiceRepresentation {
+            return self.value == to.value && self.size == to.size
+        } else {
+            return false
+        }
+    }
+}
+
 
 
 public enum EmojiFitzModifier: Int32, Equatable {

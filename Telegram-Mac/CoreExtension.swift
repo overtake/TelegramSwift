@@ -308,6 +308,8 @@ extension Media {
             return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) || file.isAnimatedSticker
         } else if let map = self as? TelegramMediaMap {
             return map.venue == nil
+        } else if self is TelegramMediaDice {
+            return true
         }
         return false
     }

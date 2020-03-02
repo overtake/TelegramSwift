@@ -15,6 +15,8 @@
 		A7377E1923ACAE3A00AD3ADD /* FailedMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */; };
 		A754972423A3A5540091F293 /* MessageHistoryFailedTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */; };
 		A767DD4323F2F75800366F76 /* HistoryTagInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4223F2F75800366F76 /* HistoryTagInfoView.swift */; };
+		A7918DDF240CEFFA002011CA /* MurMurHash32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7918DDE240CEFFA002011CA /* MurMurHash32.framework */; };
+		A7918E69240CF2A3002011CA /* StringTransliteration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7918E68240CF2A3002011CA /* StringTransliteration.framework */; };
 		C20EB2A31F7179DC00DD3A57 /* PeerNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AE3EBB1F68261B0069BC90 /* PeerNotificationSettingsView.swift */; };
 		C25B56FE1F431C3300581D02 /* MessageHistoryTagsSummaryTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D070479F1F3CE16500F6A8D4 /* MessageHistoryTagsSummaryTable.swift */; };
 		C2A315BC1E2E730400D89000 /* PeerOperationLogTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AD23261E194D1C00A7089A /* PeerOperationLogTable.swift */; };
@@ -124,8 +126,6 @@
 		D0B418581D7DFE29004562A4 /* SeedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D044CA291C617D39002160FF /* SeedConfiguration.swift */; };
 		D0B418591D7DFE29004562A4 /* PostboxTransaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D510F31D63BA8400A97B8A /* PostboxTransaction.swift */; };
 		D0B4185A1D7DFE29004562A4 /* ViewTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1DE141C5E1C6900C7826E /* ViewTracker.swift */; };
-		D0B4185B1D7DFE2C004562A4 /* MurMurHash32.h in Headers */ = {isa = PBXBuildFile; fileRef = D044E1611B2AD667001EE087 /* MurMurHash32.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0B4185C1D7DFE2F004562A4 /* MurMurHash32.m in Sources */ = {isa = PBXBuildFile; fileRef = D044E1621B2AD677001EE087 /* MurMurHash32.m */; };
 		D0B844031DAB91A7005F29E1 /* PeerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DF0C8E1D81A350008AEB01 /* PeerView.swift */; };
 		D0B844051DAB91B5005F29E1 /* MediaBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = D055BD321B7D3D2D00F06C0A /* MediaBox.swift */; };
 		D0B844061DAB91B5005F29E1 /* MediaResourceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F09A51C9E9F9300BB6F96 /* MediaResourceStatus.swift */; };
@@ -211,6 +211,8 @@
 		A7377E1823ACAE3A00AD3ADD /* FailedMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FailedMessagesView.swift; sourceTree = "<group>"; };
 		A754972323A3A5540091F293 /* MessageHistoryFailedTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryFailedTable.swift; sourceTree = "<group>"; };
 		A767DD4223F2F75800366F76 /* HistoryTagInfoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HistoryTagInfoView.swift; sourceTree = "<group>"; };
+		A7918DDE240CEFFA002011CA /* MurMurHash32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MurMurHash32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7918E68240CF2A3002011CA /* StringTransliteration.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = StringTransliteration.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D000CAD922006C6C0011B15D /* SharedAccountMediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedAccountMediaManager.swift; sourceTree = "<group>"; };
 		D001388520BD942B007C9721 /* PostboxUpgrade_16to17.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_16to17.swift; sourceTree = "<group>"; };
 		D003E4E51B38DBDB00C22CBC /* MessageHistoryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryView.swift; sourceTree = "<group>"; };
@@ -414,6 +416,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7918E69240CF2A3002011CA /* StringTransliteration.framework in Frameworks */,
+				A7918DDF240CEFFA002011CA /* MurMurHash32.framework in Frameworks */,
 				A701F935236C1DC4002ABF81 /* Crc32.framework in Frameworks */,
 				A701F92C236C1B66002ABF81 /* SwiftSignalKit.framework in Frameworks */,
 				A701F925236B3350002ABF81 /* sqlcipher.framework in Frameworks */,
@@ -475,6 +479,8 @@
 		D0B4185F1D7DFE95004562A4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A7918E68240CF2A3002011CA /* StringTransliteration.framework */,
+				A7918DDE240CEFFA002011CA /* MurMurHash32.framework */,
 				A701F934236C1DC4002ABF81 /* Crc32.framework */,
 				A701F92D236C1D02002ABF81 /* crc32.framework */,
 				A701F92B236C1B66002ABF81 /* SwiftSignalKit.framework */,
@@ -772,7 +778,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0B4185B1D7DFE2C004562A4 /* MurMurHash32.h in Headers */,
 				D0B418171D7DFAF3004562A4 /* Postbox.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -973,7 +978,6 @@
 				D0F7B1DE1E045C6A007EB8A5 /* PeerChatTopIndexableMessageIds.swift in Sources */,
 				D0B4184A1D7DFE20004562A4 /* UnsentMessageHistoryView.swift in Sources */,
 				D0B418231D7DFE0C004562A4 /* SimpleDictionary.swift in Sources */,
-				D0B4185C1D7DFE2F004562A4 /* MurMurHash32.m in Sources */,
 				D0F7B1E01E045C6A007EB8A5 /* ItemCacheTable.swift in Sources */,
 				D07047A91F3DA8D700F6A8D4 /* PendingMessageActionsMetadataTable.swift in Sources */,
 				D0DA1D301F70419D0034E892 /* PendingPeerNotificationSettingsView.swift in Sources */,
@@ -1111,7 +1115,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",
@@ -1193,7 +1196,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",
@@ -1282,7 +1284,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",
@@ -1373,7 +1374,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",
@@ -1456,7 +1456,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",
@@ -1495,7 +1494,6 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MODULEMAP_PRIVATE_FILE = "$(SRCROOT)/../../submodules/telegram-ios/submodules/Postbox/Sources/module.private.modulemap";
 				OTHER_CFLAGS = (
 					"-DSQLITE_HAS_CODEC=1",
 					"-DSQLCIPHER_CRYPTO_CC=1",

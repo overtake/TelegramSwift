@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A790A2C1236AFB7D000451B5 /* EncryptionProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = A72D452A236AF6770052FA81 /* EncryptionProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A790A30C236B072F000451B5 /* EncryptionProviderHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = A790A2A0236AFA72000451B5 /* EncryptionProviderHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A7918DB6240CED79002011CA /* EncryptionProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB5240CED78002011CA /* EncryptionProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -17,6 +17,7 @@
 		A790A29E236AFA72000451B5 /* EncryptionProvider.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EncryptionProvider.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A790A2A0236AFA72000451B5 /* EncryptionProviderHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EncryptionProviderHeader.h; sourceTree = "<group>"; };
 		A790A2A1236AFA72000451B5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A7918DB5240CED78002011CA /* EncryptionProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = EncryptionProvider.h; path = "../../submodules/telegram-ios/submodules/EncryptionProvider/PublicHeaders/EncryptionProvider/EncryptionProvider.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,6 +34,7 @@
 		A72D451E236AF6770052FA81 = {
 			isa = PBXGroup;
 			children = (
+				A7918DB5240CED78002011CA /* EncryptionProvider.h */,
 				A72D4529236AF6770052FA81 /* Sources */,
 				A790A29F236AFA72000451B5 /* EncryptionProvider */,
 				A72D4528236AF6770052FA81 /* Products */,
@@ -81,7 +83,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A790A2C1236AFB7D000451B5 /* EncryptionProvider.h in Headers */,
+				A7918DB6240CED79002011CA /* EncryptionProvider.h in Headers */,
 				A790A30C236B072F000451B5 /* EncryptionProviderHeader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

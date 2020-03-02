@@ -310,6 +310,10 @@ private final class PlayerRenderer {
     func playSoundEffect() {
         self.soundEffect?.markAsPlayable()
     }
+    private var getCurrentFrame:()->Int32? = { return nil }
+    var currentFrame: Int32? {
+        return self.getCurrentFrame()
+    }
     
     private func play(_ player: RLottieBridge) {
         
@@ -328,12 +332,32 @@ private final class PlayerRenderer {
         }
         
         let maxFrames:Int32 = 180
+        var currentFrame: Int32 = 0
+        var startFrame: Int32 = min(min(player.startFrame(), maxFrames), min(player.endFrame(), maxFrames))
+        var endFrame: Int32 = min(player.endFrame(), maxFrames)
+        switch self.animation.playPolicy {
+        case let .loopAt(firstStart, range):
+            startFrame = range.lowerBound
+            endFrame = range.upperBound
+            if let firstStart = firstStart {
+                currentFrame = firstStart
+            }
+        case let .toEnd(from):
+            startFrame = from
+            currentFrame = from
+        default:
+            break
+        }
         
-        let initialState = RendererState(cancelled: false, animation: self.animation, layer: player, fileSupplyment: fileSupplyment, frames: [], cachedFrames: [:], currentFrame: 0, startFrame: min(min(player.startFrame(), maxFrames), min(player.endFrame(), maxFrames)), endFrame: min(player.endFrame(), maxFrames), fps: max(min(player.fps(), 60), 30))
+        let initialState = RendererState(cancelled: false, animation: self.animation, layer: player, fileSupplyment: fileSupplyment, frames: [], cachedFrames: [:], currentFrame: currentFrame, startFrame: startFrame, endFrame: endFrame, fps: max(min(player.fps(), 60), 30))
         
         let stateValue:RenderAtomic<RendererState?> = RenderAtomic(value: initialState)
         let updateState:(_ f:(RendererState?)->RendererState?)->Void = { f in
             _ = stateValue.modify(f)
+        }
+        
+        self.getCurrentFrame = {
+            return stateValue.with { $0?.currentFrame }
         }
         
         var framesTask: ThreadPoolTask? = nil
@@ -397,25 +421,34 @@ private final class PlayerRenderer {
                         }
                         
                         switch renderer.animation.playPolicy {
-                        case .loop:
+                        case .loop, .loopAt:
                             break
                         case .once:
                             if current.frame + 1 == currentState(stateValue)?.endFrame {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
+                                let onFinish = renderer.animation.onFinish ?? {}
+                                DispatchQueue.main.async(execute: onFinish)
+                                updateState(.stoped)
                             }
-                        case .onceEnd:
+                        case .onceEnd, .toEnd:
                             if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
+                                let onFinish = renderer.animation.onFinish ?? {}
+                                DispatchQueue.main.async(execute: onFinish)
+                                updateState(.stoped)
                             }
                         case let .framesCount(limit):
                             if limit <= playedCount {
                                 renderer.finished = true
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
+                                let onFinish = renderer.animation.onFinish ?? {}
+                                DispatchQueue.main.async(execute: onFinish)
+                                updateState(.stoped)
                             }
                         }
                         
@@ -448,7 +481,7 @@ private final class PlayerRenderer {
                     if currentFrame % Int32(round(Float(state.fps) / Float(fps))) != 0 {
                         currentFrame += 1
                     }
-                    if currentFrame >= state.startFrame + state.endFrame - 1 {
+                    if currentFrame >= state.endFrame - 1 {
                         currentFrame = state.startFrame - 1
                     }
                     if let frame = frame {
@@ -517,6 +550,13 @@ private final class PlayerContext {
             renderer.playSoundEffect()
         }
     }
+    var currentFrame:Int32? {
+        var currentFrame:Int32? = nil
+        self.rendererRef.syncWith { renderer in
+            currentFrame = renderer.currentFrame
+        }
+        return currentFrame
+    }
 }
 
 
@@ -558,8 +598,10 @@ enum LottieAnimationKey : Equatable {
 
 enum LottiePlayPolicy : Equatable {
     case loop
+    case loopAt(firstStart:Int32?, range: ClosedRange<Int32>)
     case once
     case onceEnd
+    case toEnd(from: Int32)
     case framesCount(Int32)
 }
 
@@ -590,6 +632,9 @@ final class LottieAnimation : Equatable {
     let colors:[LottieColor]
     
     let postbox: Postbox?
+    
+    var onFinish:(()->Void)?
+
     
     init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
         self.compressed = compressed
@@ -914,6 +959,14 @@ class LottiePlayerView : NSView {
             context.playAgain()
         } else {
             context?.playSoundEffect()
+        }
+    }
+    
+    var currentFrame: Int32? {
+        if let context = self.context {
+            return context.currentFrame
+        } else {
+            return nil
         }
     }
     

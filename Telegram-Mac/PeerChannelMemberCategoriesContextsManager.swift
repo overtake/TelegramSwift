@@ -246,12 +246,17 @@ final class PeerChannelMemberCategoriesContextsManager {
                             if let presences = (view.views[key] as? PeerPresencesView)?.presences {
                                 for (_, presence) in presences {
                                     if let presence = presence as? TelegramUserPresence {
-                                        let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: network.globalTime > 0 ? network.globalTime - Date().timeIntervalSince1970 : 0, relativeTo: Int32(timestamp))
-                                        switch relativeStatus {
-                                        case .online:
-                                            count += 1
+                                        let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: network.globalTime > 0 ? network.globalTime - timestamp : 0, relativeTo: Int32(timestamp))
+                                        sw: switch relativeStatus {
+                                        case let .online(at: until):
+                                            if until > Int32(timestamp) {
+                                                count += 1
+                                            } else {
+                                                var bp:Int = 0
+                                                bp += 1
+                                            }
                                         default:
-                                            break
+                                            break sw
                                         }
                                     }
                                 }

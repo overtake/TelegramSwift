@@ -231,6 +231,12 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     override func mouseDown(with event: NSEvent) {
+        
+        if event.modifierFlags.contains(.control) {
+            super.mouseDown(with: event)
+            return
+        }
+        
         if userInteractionEnabled {
             inDragging = false
             dragpath = nil
@@ -322,6 +328,12 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     override func mouseUp(with event: NSEvent) {
+        if event.modifierFlags.contains(.control) {
+            super.mouseUp(with: event)
+            return
+        }
+        
+        
         if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 {
             executeInteraction(false)
         } else {

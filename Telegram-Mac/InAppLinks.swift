@@ -14,7 +14,7 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 import MtProtoKit
-import WalletCore
+//import WalletCore
 
 private let inapp:String = "chat://"
 private let tgme:String = "tg://"
@@ -522,38 +522,38 @@ func execute(inapp:inAppLink) {
         })
     case let .tonTransfer(_, context, data: data):
         if #available(OSX 10.12, *) {
-            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
-                if  let config = configuration.config, let blockchainName = configuration.blockchainName {
-                    let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
-                    if hasKeys {
-                        let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
-                        _ = signal.start(next: { wallets in
-                            if !wallets.isEmpty {
-                                let amount = data.amount ?? 0
-                                let formattedAmount: String
-                                if amount > 0 {
-                                    formattedAmount = formatBalanceText(amount)
-                                } else {
-                                    formattedAmount = ""
-                                }
-                                let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
-                                showModal(with: controller, for: context.window)
-                            } else {
-                                confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
-                                    switch result {
-                                    case .basic:
-                                        context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
-                                    default:
-                                        break
-                                    }
-                                })
-                            }
-                        })
-                    } else {
-                       context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable))
-                    }
-                }
-            })
+//            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
+//                if  let config = configuration.config, let blockchainName = configuration.blockchainName {
+//                    let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
+//                    if hasKeys {
+//                        let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
+//                        _ = signal.start(next: { wallets in
+//                            if !wallets.isEmpty {
+//                                let amount = data.amount ?? 0
+//                                let formattedAmount: String
+//                                if amount > 0 {
+//                                    formattedAmount = formatBalanceText(amount)
+//                                } else {
+//                                    formattedAmount = ""
+//                                }
+//                                let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
+//                                showModal(with: controller, for: context.window)
+//                            } else {
+//                                confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
+//                                    switch result {
+//                                    case .basic:
+//                                        context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
+//                                    default:
+//                                        break
+//                                    }
+//                                })
+//                            }
+//                        })
+//                    } else {
+//                       context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable))
+//                    }
+//                }
+//            })
         }
     case .instantView:
         break
@@ -1144,24 +1144,24 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         }
        
     } else if url.hasPrefix(ton_scheme), let context = context {
-        let action = url.substring(from: ton_scheme.length)
-        if action.hasPrefix("transfer/") {
-            let vars = urlVars(with: url as String)
-            let preAddressLength = ton_scheme.length + "transfer/".length + walletAddressLength
-            let address = urlString.prefix(preAddressLength)
-            if address.length == preAddressLength {
-                let address = String(address.suffix(walletAddressLength))
-                var amount: Int64? = nil
-                var comment: String? = nil
-                if let varAmount = vars["amount"], !varAmount.isEmpty, let intAmount = Int64(varAmount) {
-                    amount = intAmount
-                }
-                if let varComment = vars["text"], !varComment.isEmpty  {
-                    comment = escape(with: varComment, addPercent: false)
-                }
-                return .tonTransfer(link: urlString, context: context, data: ParsedWalletUrl(address: address, amount: amount, comment: comment))
-            }
-        }
+//        let action = url.substring(from: ton_scheme.length)
+//        if action.hasPrefix("transfer/") {
+//            let vars = urlVars(with: url as String)
+//            let preAddressLength = ton_scheme.length + "transfer/".length + walletAddressLength
+//            let address = urlString.prefix(preAddressLength)
+//            if address.length == preAddressLength {
+//                let address = String(address.suffix(walletAddressLength))
+//                var amount: Int64? = nil
+//                var comment: String? = nil
+//                if let varAmount = vars["amount"], !varAmount.isEmpty, let intAmount = Int64(varAmount) {
+//                    amount = intAmount
+//                }
+//                if let varComment = vars["text"], !varComment.isEmpty  {
+//                    comment = escape(with: varComment, addPercent: false)
+//                }
+//                return .tonTransfer(link: urlString, context: context, data: ParsedWalletUrl(address: address, amount: amount, comment: comment))
+//            }
+//        }
         return .nothing
     }
     
@@ -1233,31 +1233,31 @@ public struct ParsedWalletUrl {
     public let comment: String?
 }
 
-
-public func parseWalletUrl(_ url: URL) -> ParsedWalletUrl? {
-    guard url.scheme == "ton" && url.host == "transfer" else {
-        return nil
-    }
-    var address: String?
-    let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-    if isValidAddress(path) {
-        address = path
-    }
-    var amount: Int64?
-    var comment: String?
-    if let query = url.query, let components = URLComponents(string: "/?" + query), let queryItems = components.queryItems {
-        for queryItem in queryItems {
-            if let value = queryItem.value {
-                if queryItem.name == "amount", !value.isEmpty, let amountValue = Int64(value) {
-                    amount = amountValue
-                } else if queryItem.name == "text", !value.isEmpty {
-                    comment = value
-                }
-            }
-        }
-    }
-    return address.flatMap { ParsedWalletUrl(address: $0, amount: amount, comment: comment) }
-}
+//
+//public func parseWalletUrl(_ url: URL) -> ParsedWalletUrl? {
+//    guard url.scheme == "ton" && url.host == "transfer" else {
+//        return nil
+//    }
+//    var address: String?
+//    let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+//    if isValidAddress(path) {
+//        address = path
+//    }
+//    var amount: Int64?
+//    var comment: String?
+//    if let query = url.query, let components = URLComponents(string: "/?" + query), let queryItems = components.queryItems {
+//        for queryItem in queryItems {
+//            if let value = queryItem.value {
+//                if queryItem.name == "amount", !value.isEmpty, let amountValue = Int64(value) {
+//                    amount = amountValue
+//                } else if queryItem.name == "text", !value.isEmpty {
+//                    comment = value
+//                }
+//            }
+//        }
+//    }
+//    return address.flatMap { ParsedWalletUrl(address: $0, amount: amount, comment: comment) }
+//}
 
 
 

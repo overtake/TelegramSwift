@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import Graph
+import GraphUI
 import GraphCore
 
 enum ChartItemType {
@@ -79,7 +79,7 @@ class StatisticRowView: TableRowView {
         chartView.layout()
     }
     
-    
+    private var first: Bool = true
 
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -93,6 +93,11 @@ class StatisticRowView: TableRowView {
         chartView.setup(controller: item.controller, title: "Test")
 
         chartView.apply(colorMode: theme.colors.isDark ? .night : .day, animated: false)
+        
+        if first {
+            chartView.layer?.animateAlpha(from: 0, to: 1, duration: 0.25)
+        }
+        first = false
     }
     
     required init?(coder: NSCoder) {

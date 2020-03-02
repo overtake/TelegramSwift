@@ -1657,14 +1657,7 @@ func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], NoE
 
 func randomInt32() -> Int32 {
     let uRandom = arc4random()
-    let value: Int32
-    let dif = Int(uRandom) - Int(INT32_MAX)
-    if dif > 0 {
-        value = Int32(dif)
-    } else {
-        value = Int32(uRandom)
-    }
-    return value
+    return Int32(bitPattern: uRandom)
 }
 
 

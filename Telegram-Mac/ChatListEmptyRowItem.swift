@@ -10,6 +10,8 @@ import TGUIKit
 import Cocoa
 import SwiftSignalKit
 import Postbox
+import TelegramCore
+import SyncCore
 
 class ChatListEmptyRowItem: TableRowItem {
     private let _stableId: AnyHashable
@@ -18,9 +20,9 @@ class ChatListEmptyRowItem: TableRowItem {
         return _stableId
     }
     let context: AccountContext
-    let filter: ChatListFilterPreset?
+    let filter: ChatListFilter?
     let openFilterSettings: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilterPreset?, context: AccountContext, openFilterSettings: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext, openFilterSettings: @escaping()->Void) {
         self.context = context
         self.filter = filter
         self._stableId = stableId

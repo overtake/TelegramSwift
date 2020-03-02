@@ -14,14 +14,14 @@ import SwiftSignalKit
 import SyncCore
 
 class ChatListRevealItem: TableStickItem {
-    fileprivate let action:((ChatListFilterPreset?)->Void)?
+    fileprivate let action:((ChatListFilter?)->Void)?
     fileprivate let context: AccountContext?
-    fileprivate let tabs: [ChatListFilterPreset]
-    fileprivate let selected: ChatListFilterPreset?
+    fileprivate let tabs: [ChatListFilter]
+    fileprivate let selected: ChatListFilter?
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: [Int32: Int32]
-    fileprivate let _menuItems: ((ChatListFilterPreset?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilterPreset], selected: ChatListFilterPreset?, counters: [Int32 : Int32], action: ((ChatListFilterPreset?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilterPreset?)->[ContextMenuItem])? = nil) {
+    fileprivate let _menuItems: ((ChatListFilter?)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter?, counters: [Int32 : Int32], action: ((ChatListFilter?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter?)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -43,7 +43,7 @@ class ChatListRevealItem: TableStickItem {
         super.init(initialSize)
     }
     
-    func menuItems(for item: ChatListFilterPreset?) -> [ContextMenuItem] {
+    func menuItems(for item: ChatListFilter?) -> [ContextMenuItem] {
         return self._menuItems?(item) ?? []
     }
     
@@ -144,8 +144,8 @@ final class ChatListRevealView : TableStickView {
             return
         }
         
-        let generateIcon:(ChatListFilterPreset?)->CGImage? = { tab in
-            let unreadCount:Int32? = item.counters[tab != nil ? tab!.uniqueId : -1]
+        let generateIcon:(ChatListFilter?)->CGImage? = { tab in
+            let unreadCount:Int32? = item.counters[tab != nil ? tab!.id : -1]
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount > 0, context.sharedContext.layout != .minimisize {
                 let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
@@ -191,11 +191,11 @@ final class ChatListRevealView : TableStickView {
         var items:[ScrollableSegmentItem] = [.init(title: context.sharedContext.layout == .minimisize ? L10n.chatListFilterAllChatsShort : L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(item.counters[-1] ?? 0))]
         index += 1
         for tab in item.tabs {
-            let unreadCount = item.counters[tab.uniqueId]
+            let unreadCount = item.counters[tab.id]
             let icon: CGImage? = generateIcon(tab)
-            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title
+            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title ?? ""
            
-            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.uniqueId, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount ?? 0)))
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount ?? 0)))
             index += 1
         }
 //        if let _ = item.openSettings {
