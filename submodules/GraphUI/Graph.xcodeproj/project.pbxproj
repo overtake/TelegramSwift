@@ -18,6 +18,7 @@
 		A7918DB0240934F4002011CA /* UIImageView+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E6F623E8427000AEB34A /* UIImageView+Utils.swift */; };
 		A7918DB1240934F4002011CA /* UIImage+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E6FC23E8427000AEB34A /* UIImage+Utils.swift */; };
 		A7918DB2240934F4002011CA /* UILabel+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A789E6FF23E8427000AEB34A /* UILabel+Utils.swift */; };
+		A791913C240D3822002011CA /* GraphCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7393CB72406765300CE44CA /* GraphCore.framework */; };
 		D008C5A624093BDA003617EA /* TGUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7831B152403BFE30056AEAC /* TGUIKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -46,6 +47,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A791913C240D3822002011CA /* GraphCore.framework in Frameworks */,
 				D008C5A624093BDA003617EA /* TGUIKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

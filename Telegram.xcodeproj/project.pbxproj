@@ -205,7 +205,6 @@
 		A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D342407CAE100CE44CA /* ChatMediaDice.swift */; };
 		A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */; };
 		A7393D392407D0F100CE44CA /* GraphCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; };
-		A7393D3A2407D0F800CE44CA /* GraphCore.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7393D412407FF0F00CE44CA /* dice_idle.tgs */; };
 		A7393D442408F84300CE44CA /* DiceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D432408F84300CE44CA /* DiceCache.swift */; };
 		A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */; };
@@ -891,7 +890,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A7393D3A2407D0F800CE44CA /* GraphCore.framework in Copy Files */,
 				A7D28212236C3D3E0000A9BF /* SyncCore.framework in Copy Files */,
 				A7D2820F236C3C3B0000A9BF /* Postbox.framework in Copy Files */,
 				A7D2820E236C3C330000A9BF /* SwiftSignalKit.framework in Copy Files */,
