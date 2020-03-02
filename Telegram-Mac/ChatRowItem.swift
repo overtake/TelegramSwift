@@ -1219,7 +1219,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     let formatterEdited = DateFormatter()
-                    formatterEdited.dateStyle = .short
+                    formatterEdited.dateStyle = .medium
                     formatterEdited.timeStyle = .medium
                     formatterEdited.timeZone = NSTimeZone.local
                     fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"

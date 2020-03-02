@@ -21,8 +21,8 @@ class ChatListEmptyRowItem: TableRowItem {
     }
     let context: AccountContext
     let filter: ChatListFilter?
-    let openFilterSettings: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext, openFilterSettings: @escaping()->Void) {
+    let openFilterSettings: (ChatListFilter?)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext, openFilterSettings: @escaping(ChatListFilter?)->Void) {
         self.context = context
         self.filter = filter
         self._stableId = stableId
@@ -111,7 +111,7 @@ private class ChatListEmptyRowView : TableRowView {
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { [weak item] contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak item] value in
                 if value == "filter" {
-                    item?.openFilterSettings()
+                    item?.openFilterSettings(item?.filter)
                 }
                
             }))

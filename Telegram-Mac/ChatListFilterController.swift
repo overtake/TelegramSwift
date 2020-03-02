@@ -117,17 +117,17 @@ private func chatListFilterEntries(state: ChatListFiltersListState, peers: [Peer
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FILTER NAME"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.filter.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Filter Name", filter: { $0 }, limit: 20))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.filter.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.chatListFilterNamePlaceholder, filter: { $0 }, limit: 20))
     index += 1
    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INCLUDE CHAT TYPES"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterCategoriesHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_private_chats, data: .init(name: L10n.chatListFilterPrivateChats, color: theme.colors.text, type: .selectable(state.filter.data.categories.contains(.privateChats)), viewType: .firstItem, enabled: true, action: {
@@ -159,12 +159,12 @@ private func chatListFilterEntries(state: ChatListFiltersListState, peers: [Peer
     sectionId += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_muted, data: .init(name: "Exclude Muted", color: theme.colors.text, type: .switchable(state.filter.data.excludeMuted), viewType: .firstItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_muted, data: .init(name: L10n.chatListFilterExcludeMuted, color: theme.colors.text, type: .switchable(state.filter.data.excludeMuted), viewType: .firstItem, enabled: true, action: {
         arguments.toggleExcludeMuted(!state.filter.data.excludeMuted)
     })))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_read, data: .init(name: "Exclude Read", color: theme.colors.text, type: .switchable(state.filter.data.excludeRead), viewType: .lastItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_exclude_read, data: .init(name: L10n.chatListFilterExcludeRead, color: theme.colors.text, type: .switchable(state.filter.data.excludeRead), viewType: .lastItem, enabled: true, action: {
         arguments.toggleExcludeRead(!state.filter.data.excludeRead)
     })))
     index += 1
@@ -175,12 +175,12 @@ private func chatListFilterEntries(state: ChatListFiltersListState, peers: [Peer
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ALWAYS INCLUDE"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterAlwaysIncludeHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_exception, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Add Chats", nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
+        return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.chatListFilterAlwaysIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addPeer, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
     }))
     index += 1
     
@@ -203,7 +203,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, peers: [Peer
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                 arguments.openInfo(peer.id)
             }, contextMenuItems: {
-                return [ContextMenuItem.init("Remove", handler: {
+                return [ContextMenuItem.init(L10n.chatListFilterAlwaysIncludeRemovePeer, handler: {
                     arguments.removePeer(peer.id)
                 })]
             })
@@ -212,7 +212,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, peers: [Peer
     }
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("These chats will be always included to the chat list."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterAlwaysIncludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))

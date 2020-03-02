@@ -116,8 +116,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
--(void)addLink:(NSString *_Nonnull)link;
--(void)addLink:(NSString *_Nonnull)link range: (NSRange)range;
+-(void)addLink:(NSString *_Nullable)link;
+-(void)addLink:(NSString *_Nullable)link range: (NSRange)range;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 - (void)addSimpleItem:(SimpleUndoItem *)item;

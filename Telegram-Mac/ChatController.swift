@@ -3497,13 +3497,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let back = BarView(70, controller: self) //MajorBackNavigationBar(self, account: account, excludePeerId: peerId)
         
         let editButton = ImageButton()
-        editButton.disableActions()
+       // editButton.disableActions()
         back.addSubview(editButton)
         
         self.editButton = editButton
 //        
         let doneButton = TitleButton()
-        doneButton.disableActions()
+      //  doneButton.disableActions()
         doneButton.set(font: .medium(.text), for: .Normal)
         doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
         

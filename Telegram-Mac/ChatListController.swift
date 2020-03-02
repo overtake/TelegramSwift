@@ -139,7 +139,7 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilter?)->Void, openFilterSettings: @escaping()->Void, tabsMenuItems: @escaping(ChatListFilter?)->[ContextMenuItem]) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, context: AccountContext, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: PeerGroupId, setupFilter: @escaping(ChatListFilter?)->Void, openFilterSettings: @escaping(ChatListFilter?)->Void, tabsMenuItems: @escaping(ChatListFilter?)->[ContextMenuItem]) -> Signal<TableUpdateTransition, NoError> {
     
     return Signal { subscriber in
         
@@ -163,7 +163,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
             case let .reveal(tabs, selected, counters):
-                return ChatListRevealItem(initialSize, context: context, tabs: tabs, selected: selected, counters: counters, action: setupFilter, openSettings: openFilterSettings, menuItems: tabsMenuItems)
+                return ChatListRevealItem(initialSize, context: context, tabs: tabs, selected: selected, counters: counters, action: setupFilter, openSettings: {
+                    openFilterSettings(nil)
+                }, menuItems: tabsMenuItems)
             case let .empty(filter):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context, openFilterSettings: openFilterSettings)
             }
@@ -437,8 +439,12 @@ class ChatListController : PeersListController {
             }
             self?.scrollup()
         }
-        let openFilterSettings:()->Void = {
-            context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+        let openFilterSettings:(ChatListFilter?)->Void = { filter in
+            if let filter = filter {
+                context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+            } else {
+                context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+            }
         }
         
         
@@ -563,11 +569,14 @@ class ChatListController : PeersListController {
                         })), for: context.window)
                     }))
                     items.append(.init(L10n.chatListFilterDelete, handler: {
-                        _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-                            var state = state
-                            state.withRemovedFilter(filter)
-                            return state
-                        }), replaceRemoteChatListFilters(account: context.account)).start()
+                        confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
+                            _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
+                                var state = state
+                                state.withRemovedFilter(filter)
+                                return state
+                            }), replaceRemoteChatListFilters(account: context.account)).start()
+                        })
+                        
                     }))
                 } else {
                     items.append(.init(L10n.chatListFilterEditFilters, handler: {

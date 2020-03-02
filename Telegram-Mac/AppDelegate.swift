@@ -955,20 +955,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         if let context = self.contextValue?.context {
             let navigation = context.sharedContext.bindings.rootNavigation()
-            
-            if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
-                let alert: NSAlert = NSAlert()
-                alert.addButton(withTitle: L10n.walletTerminateAppOK)
-                alert.addButton(withTitle: L10n.walletTerminateAppCancel)
-                alert.messageText = L10n.walletTerminateAppTitle
-                alert.informativeText = L10n.walletTerminateAppText
-                alert.alertStyle = .warning
-                if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
-                    return .terminateNow
-                } else {
-                    return .terminateLater
-                }
-            }
         }
         
         return .terminateNow
