@@ -17,84 +17,84 @@ import SyncCore
 func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredicate? {
     let filterPredicate: ((Peer, PeerNotificationSettings?, Bool) -> Bool)
     
-    guard let filter = filter else {
+    guard let filter = filter?.data else {
         return nil
     }
-    filterPredicate = { peer, notificationSettings, isUnread in
-        
-        let check:()->Bool = {
-            if filter.data.excludeMuted {
-                if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
-                    if case let .muted(until) = notificationSettings.muteState {
-                        return until < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-                    }
-                } else {
-                    return false
-                }
-            }
-            
-            
-            if !filter.data.categories.contains(.privateChats) {
-                if let user = peer as? TelegramUser {
-                    if user.botInfo == nil {
-                        return false
-                    }
-                } else if let _ = peer as? TelegramSecretChat {
-                    return false
-                }
-            }
-            
-            if !filter.data.categories.contains(.secretChats) {
-                if let _ = peer as? TelegramSecretChat {
-                    return false
-                }
-            }
-            
-            if !filter.data.categories.contains(.bots) {
-                if let user = peer as? TelegramUser {
-                    if user.botInfo != nil {
-                        return false
-                    }
-                }
-            }
-            if !filter.data.categories.contains(.privateGroups) {
-                if let _ = peer as? TelegramGroup {
-                    return false
-                } else if let channel = peer as? TelegramChannel {
-                    if case .group = channel.info {
-                        if channel.username == nil {
-                            return false
-                        }
-                    }
-                }
-            }
-            if !filter.data.categories.contains(.publicGroups) {
-                if let channel = peer as? TelegramChannel {
-                    if case .group = channel.info {
-                        if channel.username != nil {
-                            return false
-                        }
-                    }
-                }
-            }
-            
-            if !filter.data.categories.contains(.channels) {
-                if let channel = peer as? TelegramChannel {
-                    if case .broadcast = channel.info {
-                        return false
-                    }
-                }
-            }
-            return true
-        }
-        
-        if filter.data.excludeRead {
+    let includePeers = Set(filter.includePeers)
+    let excludePeers = Set(filter.excludePeers)
+    return ChatListFilterPredicate(includePeerIds: includePeers, excludePeerIds: excludePeers, include: { peer, notificationSettings, isUnread, isContact, isArchived in
+        if filter.excludeRead {
             if !isUnread {
                 return false
             }
         }
-        
-        return check()
-    }
-    return ChatListFilterPredicate(includePeerIds: Set(filter.data.includePeers), include: filterPredicate)
+        if filter.excludeMuted {
+            if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
+                if case .muted = notificationSettings.muteState {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+        if filter.excludeArchived {
+            if isArchived {
+                return false
+            }
+        }
+        if !filter.categories.contains(.contacts) && isContact {
+            if let user = peer as? TelegramUser {
+                if user.botInfo == nil {
+                    return false
+                }
+            } else if let _ = peer as? TelegramSecretChat {
+                return false
+            }
+        }
+        if !filter.categories.contains(.nonContacts) && !isContact {
+            if let user = peer as? TelegramUser {
+                if user.botInfo == nil {
+                    return false
+                }
+            } else if let _ = peer as? TelegramSecretChat {
+                return false
+            }
+        }
+        if !filter.categories.contains(.bots) {
+            if let user = peer as? TelegramUser {
+                if user.botInfo != nil {
+                    return false
+                }
+            }
+        }
+        if !filter.categories.contains(.smallGroups) {
+            if let _ = peer as? TelegramGroup {
+                return false
+            } else if let channel = peer as? TelegramChannel {
+                if case .group = channel.info {
+                    if channel.username == nil {
+                        return false
+                    }
+                }
+            }
+        }
+        if !filter.categories.contains(.largeGroups) {
+            if let channel = peer as? TelegramChannel {
+                if case .group = channel.info {
+                    if channel.username != nil {
+                        return false
+                    }
+                }
+            }
+        }
+        if !filter.categories.contains(.channels) {
+            if let channel = peer as? TelegramChannel {
+                if case .broadcast = channel.info {
+                    return false
+                }
+            }
+        }
+        return true
+    })
+
 }

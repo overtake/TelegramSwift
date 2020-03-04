@@ -29,6 +29,7 @@ enum LocalAnimatedSticker {
     case think_spectacular
     case success_saved
     case dice_idle
+    case folder
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -66,6 +67,8 @@ enum LocalAnimatedSticker {
             resource = LocalBundleResource(name: "success_saved", ext: "tgs")
         case .dice_idle:
             resource = LocalBundleResource(name: "dice_idle", ext: "tgs")
+        case .folder:
+            resource = LocalBundleResource(name: "folder", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -108,6 +111,8 @@ enum LocalAnimatedSticker {
         case .success_saved:
             playPolicy = .once
         case .dice_idle:
+            playPolicy = .once
+        case .folder:
             playPolicy = .once
         }
         return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, media: self.file)

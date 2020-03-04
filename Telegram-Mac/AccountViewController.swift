@@ -133,6 +133,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case passport(index: Int, peer: Peer)
     case wallet(index: Int)
     case update(index: Int, state: Any)
+    case filters(index: Int)
     case readArticles(index: Int)
     case about(index: Int)
     case faq(index: Int)
@@ -161,22 +162,24 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(7)
         case .stickers:
             return .index(8)
-        case .update:
+        case .filters:
             return .index(9)
-        case .appearance:
+        case .update:
             return .index(10)
-        case .passport:
+        case .appearance:
             return .index(11)
-        case .wallet:
+        case .passport:
             return .index(12)
-        case .readArticles:
+        case .wallet:
             return .index(13)
-        case .about:
+        case .readArticles:
             return .index(14)
-        case .faq:
+        case .about:
             return .index(15)
-        case .ask:
+        case .faq:
             return .index(16)
+        case .ask:
+            return .index(17)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -209,6 +212,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .about(index):
             return index
         case let .passport(index, _):
+            return index
+        case let .filters(index):
             return index
         case let .wallet(index):
             return index
@@ -332,6 +337,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }
         case let .ask(lhsIndex):
             if case let .ask(rhsIndex) = rhs {
+                return lhsIndex == rhsIndex
+            } else {
+                return false
+            }
+        case let .filters(lhsIndex):
+            if case let .filters(rhsIndex) = rhs {
                 return lhsIndex == rhsIndex
             } else {
                 return false
@@ -491,6 +502,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 })
                 
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+        case .filters:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFilters, icon: theme.icons.settingsFilters, activeIcon: theme.icons.settingsFiltersActive, type: .next, action: {
+                arguments.presentController(ChatListFiltersListController(context: arguments.context), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .update(_, let state):
             
             var text: String = ""
@@ -523,7 +538,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -578,6 +593,11 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
     index += 1
     entries.append(.stickers(index: index))
     index += 1
+    
+    if hasFilters {
+        entries.append(.filters(index: index))
+        index += 1
+    }
     
     if let state = appUpdateState {
         entries.append(.update(index: index, state: state))
@@ -742,7 +762,8 @@ class LayoutAccountController : TableViewController {
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
     fileprivate let hasWallet: Promise<Bool> = Promise(false)
-    
+    fileprivate let hasFilters: Promise<Bool> = Promise(false)
+
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -756,7 +777,7 @@ class LayoutAccountController : TableViewController {
         
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
             return context.account.network.connectionStatus |> map {(settings, $0)}
-            }, passportPromise.get()))
+        }, passportPromise.get()))
         
         
         syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
@@ -771,8 +792,12 @@ class LayoutAccountController : TableViewController {
                 return false
             }
         })
-
-
+        
+        self.hasFilters.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
+        |> map { view -> Bool in
+            let configuration = ChatListFilteringConfiguration(appConfiguration: view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue)
+            return configuration.isEnabled
+        })
         
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
@@ -812,8 +837,8 @@ class LayoutAccountController : TableViewController {
         #endif
         
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get(), hasFilters.get()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet, hasFilters -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet, hasFilters: hasFilters).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -865,10 +890,14 @@ class LayoutAccountController : TableViewController {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "app_update":
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                        _ = genericView.select(item: item)
+                    }
+                case controller.identifier == "filters":
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
                         _ = genericView.select(item: item)
                     }
@@ -877,7 +906,7 @@ class LayoutAccountController : TableViewController {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "wallet-info" || controller.identifier == "wallet-create" || controller.identifier == "wallet-splash":

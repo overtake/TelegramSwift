@@ -590,13 +590,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     func show(_ controller:ViewController,_ style:ViewControllerStyle) -> Void {
         lock = true
-        let previous:ViewController = self.controller;
-        self.controller = controller
-        controller.navigationController = self
+      
 
         guard let window = self.window else {return}
         
-        
+        let previous:ViewController = self.controller;
+        controller.navigationController = self
         
         if(previous === controller && stackCount > 1) {
             previous.viewWillDisappear(false)
@@ -729,6 +728,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 addShadowView(.left, updateOrigin: shadowView.superview == nil)
             }
         case .none:
+            
+            
             previous.viewWillDisappear(false);
             previous.view.removeFromSuperview()
             containerView.addSubview(controller.view)
@@ -752,8 +753,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
             
+            self.controller = controller
+            
             return // without animations
         }
+        
+        self.controller = controller
         
         let prevBackgroundView = containerView.copy() as! NSView
         let nextBackgroundView = containerView.copy() as! NSView

@@ -258,15 +258,39 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     
 }
 
+final class ShareAdditionItem {
+    let peer: Peer
+    let status: String?
+    init(peer: Peer, status: String?) {
+        self.peer = peer
+        self.status = status
+    }
+}
+
+final class ShareAdditionItems {
+    let items: [ShareAdditionItem]
+    let topSeparator: String
+    let bottomSeparator: String
+    init(items: [ShareAdditionItem], topSeparator: String, bottomSeparator: String) {
+        self.items = items
+        self.topSeparator = topSeparator
+        self.bottomSeparator = bottomSeparator
+    }
+}
+
 
 class ShareObject {
+    
+    let additionTopItems:ShareAdditionItems?
+    
     let context: AccountContext
     let emptyPerformOnClose: Bool
     let excludePeerIds: Set<PeerId>
-    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = []) {
+    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil) {
         self.context = context
         self.emptyPerformOnClose = emptyPerformOnClose
         self.excludePeerIds = excludePeerIds
+        self.additionTopItems = additionTopItems
     }
     
     var multipleSelection: Bool {
@@ -611,7 +635,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
-            let color = presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+            let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
             return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: peer.id == account.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? (multipleSelection ? nil : L10n.forwardToSavedMessages) : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
                selectInteraction.action(peer.id)
             })
@@ -653,7 +677,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             let removed = oldValue.selected.subtracting(value.selected)
 
             for item in added {
-                let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser)
+                let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? L10n.peerDeletedUser
                 genericView.tokenizedView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
             }
             
@@ -973,7 +997,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var peerIds:[PeerId] = []
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _):
+                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
                                 peerIds.append(renderedPeer.peerId)
                             default:
                                 break
@@ -999,13 +1023,35 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         var contains:[PeerId:PeerId] = [:]
                         
+                        var offset: Int32 = Int32.max
                         
-                        entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, true))
+                        if let additionTopItems = share.additionTopItems {
+                            var index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
+                            entries.append(.separator(additionTopItems.topSeparator, index))
+                            offset -= 1
+                            
+                            
+                            for item in additionTopItems.items {
+                                index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
+                                let theme = PeerStatusStringTheme()
+                                
+                                let status = NSAttributedString.initialize(string: item.status, color: theme.statusColor, font: theme.statusFont)
+                                let title = NSAttributedString.initialize(string: item.peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
+                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), true))
+                                offset -= 1
+                            }
+                            
+                            index = ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset))
+                            entries.append(.separator(additionTopItems.bottomSeparator, index))
+                            offset -= 1
+                        }
+                        
+                        entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, true))
                         contains[value.3.id] = value.3.id
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
                                 if let main = renderedPeer.peer {
                                     if contains[main.id] == nil {
                                         if share.possibilityPerformTo(main) {

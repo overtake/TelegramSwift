@@ -185,6 +185,11 @@ class ShortPeerRowItem: GeneralRowItem {
         if isLookSavedMessage && account.peerId == peer.id {
             photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 15, photoSize.height - 15)), cornerRadius: nil)) |> map {($0, false)}
         }
+        
+        if let emptyAvatar = peer.emptyAvatar {
+            self.photo = generateEmptyPhoto(photoSize, type: emptyAvatar) |> map {($0, false)}
+        }
+        
         let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? L10n.peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
         
         if let titleAddition = titleAddition {

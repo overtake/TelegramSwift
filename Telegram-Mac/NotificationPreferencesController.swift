@@ -171,8 +171,8 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.publicGroup)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-        arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains(.publicGroup))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains([.largeGroup, .smallGroup])), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+        arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains([.largeGroup, .smallGroup]))
     })))
     index += 1
     
@@ -244,9 +244,9 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
             if enable {
-                tags.insert(.publicGroup)
+                tags.insert([.largeGroup, .smallGroup])
             } else {
-                tags.remove(.publicGroup)
+                tags.remove([.largeGroup, .smallGroup])
             }
             return value.withUpdatedTotalUnreadCountIncludeTags(tags)
         }).start()

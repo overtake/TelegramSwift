@@ -73,6 +73,8 @@ internal final class L10n {
   internal static var accountSettingsDeleteAccount: String  { return L10n.tr("Localizable", "AccountSettings.DeleteAccount") }
   /// Telegram FAQ
   internal static var accountSettingsFAQ: String  { return L10n.tr("Localizable", "AccountSettings.FAQ") }
+  /// Filters
+  internal static var accountSettingsFilters: String  { return L10n.tr("Localizable", "AccountSettings.Filters") }
   /// General
   internal static var accountSettingsGeneral: String  { return L10n.tr("Localizable", "AccountSettings.General") }
   /// Language
@@ -1891,10 +1893,14 @@ internal final class L10n {
   internal static var chatListUnsupportedMessage: String  { return L10n.tr("Localizable", "ChatList.UnsupportedMessage") }
   /// You
   internal static var chatListYou: String  { return L10n.tr("Localizable", "ChatList.You") }
+  /// CHATS
+  internal static var chatListAddBottomSeparator: String  { return L10n.tr("Localizable", "ChatList.Add.BottomSeparator") }
   /// Select chats...
   internal static var chatListAddPlaceholder: String  { return L10n.tr("Localizable", "ChatList.Add.Placeholder") }
   /// Add
   internal static var chatListAddSave: String  { return L10n.tr("Localizable", "ChatList.Add.Save") }
+  /// CHAT TYPES
+  internal static var chatListAddTopSeparator: String  { return L10n.tr("Localizable", "ChatList.Add.TopSeparator") }
   /// Chats
   internal static var chatListArchiveBack: String  { return L10n.tr("Localizable", "ChatList.Archive.Back") }
   /// Call
@@ -1935,12 +1941,16 @@ internal final class L10n {
   internal static var chatListFilterAllChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AllChats") }
   /// All
   internal static var chatListFilterAllChatsShort: String  { return L10n.tr("Localizable", "ChatList.Filter.AllChatsShort") }
+  /// Archive
+  internal static var chatListFilterArchive: String  { return L10n.tr("Localizable", "ChatList.Filter.Archive") }
   /// Chats
   internal static var chatListFilterBack: String  { return L10n.tr("Localizable", "ChatList.Filter.Back") }
   /// Bots
   internal static var chatListFilterBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Bots") }
   /// Channels
   internal static var chatListFilterChannels: String  { return L10n.tr("Localizable", "ChatList.Filter.Channels") }
+  /// Contacts
+  internal static var chatListFilterContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.Contacts") }
   /// Delete
   internal static var chatListFilterDelete: String  { return L10n.tr("Localizable", "ChatList.Filter.Delete") }
   /// Edit
@@ -1953,30 +1963,26 @@ internal final class L10n {
   internal static var chatListFilterExcludeMuted: String  { return L10n.tr("Localizable", "ChatList.Filter.ExcludeMuted") }
   /// Exclude Read
   internal static var chatListFilterExcludeRead: String  { return L10n.tr("Localizable", "ChatList.Filter.ExcludeRead") }
-  /// Private Chats
-  internal static var chatListFilterPrivateChats: String  { return L10n.tr("Localizable", "ChatList.Filter.PrivateChats") }
-  /// Private Groups
-  internal static var chatListFilterPrivateGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.PrivateGroups") }
-  /// Public Groups
-  internal static var chatListFilterPublicGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.PublicGroups") }
+  /// Groups
+  internal static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
+  /// Create filters for different groups of chats and quickly switch between them.
+  internal static var chatListFilterHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Header") }
+  /// Muted
+  internal static var chatListFilterMutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.MutedChats") }
+  /// Non-Contacts
+  internal static var chatListFilterNonContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.NonContacts") }
+  /// Read
+  internal static var chatListFilterReadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.ReadChats") }
   /// Secret Chats
   internal static var chatListFilterSecretChat: String  { return L10n.tr("Localizable", "ChatList.Filter.SecretChat") }
   /// Edit Filters
   internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
+  /// Small Groups
+  internal static var chatListFilterSmallGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.SmallGroups") }
+  /// Filter
+  internal static var chatListFilterTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.Title") }
   /// You can organize your chats by right click.
   internal static var chatListFilterTooltip: String  { return L10n.tr("Localizable", "ChatList.Filter.Tooltip") }
-  /// Unmuted
-  internal static var chatListFilterUnmutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmutedChats") }
-  /// Unread
-  internal static var chatListFilterUnreadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.UnreadChats") }
-  /// Add Chat
-  internal static var chatListFilterAlwaysIncludeAddChat: String  { return L10n.tr("Localizable", "ChatList.Filter.AlwaysInclude.AddChat") }
-  /// These chats will be always included to the chat list
-  internal static var chatListFilterAlwaysIncludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.AlwaysInclude.Desc") }
-  /// ALWAYS INCLUDE
-  internal static var chatListFilterAlwaysIncludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.AlwaysInclude.Header") }
-  /// Remove
-  internal static var chatListFilterAlwaysIncludeRemovePeer: String  { return L10n.tr("Localizable", "ChatList.Filter.AlwaysInclude.RemovePeer") }
   /// INCLUDE CHAT TYPES
   internal static var chatListFilterCategoriesHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Categories.Header") }
   /// Delete Filter
@@ -1985,38 +1991,40 @@ internal final class L10n {
   internal static var chatListFilterConfirmRemoveOK: String  { return L10n.tr("Localizable", "ChatList.Filter.Confirm.Remove.OK") }
   /// Are you sure you want to delete filter?
   internal static var chatListFilterConfirmRemoveText: String  { return L10n.tr("Localizable", "ChatList.Filter.Confirm.Remove.Text") }
-  /// All Bots
-  internal static var chatListFilterDescBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Bots") }
-  /// All Channels
-  internal static var chatListFilterDescChannels: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Channels") }
-  /// Customized
-  internal static var chatListFilterDescCustomized: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Customized") }
-  /// All Groups
-  internal static var chatListFilterDescGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Groups") }
-  /// All Private Chats
-  internal static var chatListFilterDescPrivateChats: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.PrivateChats") }
-  /// All Private Groups
-  internal static var chatListFilterDescPrivateGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.PrivateGroups") }
-  /// All Public Groups
-  internal static var chatListFilterDescPublicGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.PublicGroups") }
-  /// All Secret Chats
-  internal static var chatListFilterDescSecretChats: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.SecretChats") }
-  /// All Unmuted
-  internal static var chatListFilterDescUnmuted: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Unmuted") }
-  /// All Unread
-  internal static var chatListFilterDescUnread: String  { return L10n.tr("Localizable", "ChatList.Filter.Desc.Unread") }
-  /// Create New Filter
+  /// Add Chats
+  internal static var chatListFilterExcludeAddChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.AddChat") }
+  /// Choose chats and types of chats that will never appear in this filter
+  internal static var chatListFilterExcludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Desc") }
+  /// EXCLUDED CHATS
+  internal static var chatListFilterExcludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Header") }
+  /// Remove
+  internal static var chatListFilterExcludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.RemoveChat") }
+  /// Add Chats
+  internal static var chatListFilterIncludeAddChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.AddChat") }
+  /// Choose chats and types of chats that will appear in this filter
+  internal static var chatListFilterIncludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Desc") }
+  /// INCLUDED CHATS
+  internal static var chatListFilterIncludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Header") }
+  /// Remove
+  internal static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }
+  /// Add a Custom Filter
   internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
+  /// Drag and drop filter to sort it. Right click to remove
+  internal static var chatListFilterListDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Desc") }
+  /// FILTERS
+  internal static var chatListFilterListHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Header") }
+  /// Remove
+  internal static var chatListFilterListRemove: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Remove") }
   /// Filters
   internal static var chatListFilterListTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Title") }
   /// FILTER NAME
   internal static var chatListFilterNameHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Name.Header") }
   /// Filter Name
   internal static var chatListFilterNamePlaceholder: String  { return L10n.tr("Localizable", "ChatList.Filter.Name.Placeholder") }
-  /// New Filter
-  internal static var chatListFilterPresetNewName: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.NewName") }
-  /// Filter
-  internal static var chatListFilterPresetTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.Preset.Title") }
+  /// Add
+  internal static var chatListFilterRecommendedAdd: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Add") }
+  /// RECOMMENDED
+  internal static var chatListFilterRecommendedHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Header") }
   /// For 1 Day
   internal static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour

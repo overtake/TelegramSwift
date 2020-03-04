@@ -25,11 +25,16 @@ private final class ChatListPresetArguments {
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_preset_\(filter.id)")
+    return InputDataIdentifier("_id_filter_\(filter.id)")
+}
+private func _id_recommended(_ filter: ChatListFilter) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_recommended\(filter.id)")
 }
 private let _id_add_new = InputDataIdentifier("_id_add_new")
 private let _id_add_tabs = InputDataIdentifier("_id_add_tabs")
 private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
+
+private let _id_header = InputDataIdentifier("_id_header")
 
 private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
@@ -40,9 +45,20 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], a
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
+        
+        let attributedString = NSMutableAttributedString()
+        
+        _ = attributedString.append(string: L10n.chatListFilterHeader, color: theme.colors.listGrayText, font: .normal(.text))
+        
+        return ChatListFiltersHeaderItem(initialSize, context: arguments.context, stableId: stableId, text: attributedString)
+    }))
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
   
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FILTERS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterListHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
     for (filter, count) in filtersWithCounts {
@@ -58,7 +74,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], a
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
             arguments.openPreset(filter)
         }, menuItems: {
-            return [ContextMenuItem("Remove", handler: {
+            return [ContextMenuItem(L10n.chatListFilterListRemove, handler: {
                 arguments.removePreset(filter)
             })]
         })))
@@ -70,18 +86,39 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], a
             arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }))
         })))
         index += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can add \(10 - filtersWithCounts.count) more filters. Drag and drop filter to sort it."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
-    } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Drag and drop filter to sort it. Right click to remove."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-        index += 1
     }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterListDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    index += 1
     
+   
+    
+    
+//
+//    if true {
+//        entries.append(.sectionId(sectionId, type: .normal))
+//        sectionId += 1
+//
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterRecommendedHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+//        index += 1
+//
+//        var recommended:[ChatListFilter] = [ChatListFilter.new(excludeIds: [1]), ChatListFilter.new(excludeIds: [0])]
+//
+//        recommended[0].title = "Unread"
+//        recommended[1].title = "Personal"
+//        for filter in recommended {
+//            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recommended(filter), equatable: nil, item: { initialSize, stableId in
+//                return ChatListFilterRecommendedItem(initialSize, stableId: stableId, filter: filter, description: "All unread chats", viewType: bestGeneralViewType(recommended, for: filter), add: {
+//
+//                })
+//            }))
+//            index += 1
+//        }
+//
+//
+//    }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    
     
     return entries
 }
@@ -138,7 +175,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     }
     
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false, identifier: "filters")
     
     controller._abolishWhenNavigationSame = true
     

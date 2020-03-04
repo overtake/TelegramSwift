@@ -508,6 +508,11 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
     init(closedButtonKeyboardMessageId: MessageId?, processedSetupReplyMessageId: MessageId?) {
         self.closedButtonKeyboardMessageId = closedButtonKeyboardMessageId
         self.processedSetupReplyMessageId = processedSetupReplyMessageId
+        
+        if processedSetupReplyMessageId?.id == 349 {
+            var bp:Int = 0
+            bp += 1
+        }
     }
     
     init(decoder: PostboxDecoder) {
@@ -519,6 +524,11 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
         
         if let processedMessageIdPeerId = (decoder.decodeOptionalInt64ForKey("pb.p") as Int64?), let processedMessageIdNamespace = (decoder.decodeOptionalInt32ForKey("pb.n") as Int32?), let processedMessageIdId = (decoder.decodeOptionalInt32ForKey("pb.i") as Int32?) {
             self.processedSetupReplyMessageId = MessageId(peerId: PeerId(processedMessageIdPeerId), namespace: processedMessageIdNamespace, id: processedMessageIdId)
+            
+            if processedMessageIdId == 349 {
+                var bp:Int = 0
+                bp += 1
+            }
         } else {
             self.processedSetupReplyMessageId = nil
         }
@@ -546,9 +556,6 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
         }
     }
     
-    static func ==(lhs: ChatInterfaceMessageActionsState, rhs: ChatInterfaceMessageActionsState) -> Bool {
-        return lhs.closedButtonKeyboardMessageId == rhs.closedButtonKeyboardMessageId && lhs.processedSetupReplyMessageId == rhs.processedSetupReplyMessageId
-    }
     
     func withUpdatedClosedButtonKeyboardMessageId(_ closedButtonKeyboardMessageId: MessageId?) -> ChatInterfaceMessageActionsState {
         return ChatInterfaceMessageActionsState(closedButtonKeyboardMessageId: closedButtonKeyboardMessageId, processedSetupReplyMessageId: self.processedSetupReplyMessageId)
