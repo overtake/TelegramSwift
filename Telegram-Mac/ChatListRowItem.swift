@@ -174,6 +174,8 @@ class ChatListRowItem: TableRowItem {
         return _animateArchive.swap(false)
     }
     
+    let filter: ChatListFilter?
+    
     var isCollapsed: Bool {
         if let archiveStatus = archiveStatus {
             switch archiveStatus {
@@ -306,7 +308,7 @@ class ChatListRowItem: TableRowItem {
     
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
-    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false) {
+    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
         self.groupId = groupId
         self.peer = nil
         self.message = message
@@ -322,6 +324,7 @@ class ChatListRowItem: TableRowItem {
         self.groupLatestPeers = peers
         self.isVerified = false
         self.isScam = false
+        self.filter = filter
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
@@ -396,7 +399,7 @@ class ChatListRowItem: TableRowItem {
     private let highlightText: String?
     private let embeddedState:PeerChatListEmbeddedInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true) {
+    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -439,6 +442,7 @@ class ChatListRowItem: TableRowItem {
         self.peer = renderedPeer.chatMainPeer
         self.groupId = .root
         self.hasFailed = hasFailed
+        self.filter = filter
         self.associatedGroupId = associatedGroupId
         self.highlightText = highlightText
         if let peer = peer {

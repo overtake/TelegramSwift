@@ -528,7 +528,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                         if peer.canSendMessage {

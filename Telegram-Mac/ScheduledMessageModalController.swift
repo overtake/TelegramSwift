@@ -7,8 +7,10 @@
 //
 
 import TGUIKit
-
+import TelegramCore
+import SwiftSignalKit
 import SyncCore
+import Postbox
 
 private var timeIntervals:[TimeInterval?]  {
     var intervals:[TimeInterval?] = []
@@ -148,12 +150,14 @@ class ScheduledMessageModalController: ModalViewController {
     private let context: AccountContext
     private let scheduleAt: (Date)->Void
     private let defaultDate: Date?
-    private let sendWhenOnline: Bool
-    init(context: AccountContext, defaultDate: Date? = nil, sendWhenOnline: Bool = true, scheduleAt:@escaping(Date)->Void) {
+    private let peerId: PeerId
+    private var sendWhenOnline: Bool = false
+    private let disposable = MetaDisposable()
+    init(context: AccountContext, defaultDate: Date? = nil, peerId: PeerId, scheduleAt:@escaping(Date)->Void) {
         self.context = context
         self.defaultDate = defaultDate
         self.scheduleAt = scheduleAt
-        self.sendWhenOnline = sendWhenOnline
+        self.peerId = peerId
         super.init(frame: NSMakeRect(0, 0, 350, 200))
         self.bar = .init(height: 0)
     }
@@ -279,8 +283,30 @@ class ScheduledMessageModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let peerId = self.peerId
+        let context = self.context
+        let presence = context.account.postbox.transaction {
+            $0.getPeerPresence(peerId: peerId) as? TelegramUserPresence
+        } |> deliverOnMainQueue
         
+        disposable.set(presence.start(next: { [weak self] presence in
+            
+            var sendWhenOnline: Bool = false
+            if let presence = presence {
+                switch presence.status {
+                case .present:
+                    sendWhenOnline = peerId != context.peerId
+                default:
+                    break
+                }
+            }
+            self?.sendWhenOnline = sendWhenOnline
+            self?.initialize()
+        }))
         
+    }
+    
+    private func initialize() {
         let date = self.defaultDate ?? Date()
         
         var t: time_t = time_t(date.timeIntervalSince1970)
@@ -302,19 +328,19 @@ class ScheduledMessageModalController: ModalViewController {
             let day = self.genericView.dayPicker.selected.value
             
             let date = day.startOfDay.addingTimeInterval(updated.interval)
-
+            
             self.applyTime(date)
             return true
         }
         
         self.genericView.sendOn.set(handler: { [weak self] _ in
             self?.schedule()
-        }, for: .Click)
+            }, for: .Click)
         
         self.genericView.sendWhenOnline.set(handler: { [weak self] _ in
             self?.scheduleAt(Date(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp)))
             self?.close()
-        }, for: .Click)
+            }, for: .Click)
         
         self.readyOnce()
         
@@ -326,7 +352,7 @@ class ScheduledMessageModalController: ModalViewController {
                 showPopover(for: control, with: calendar, edge: .maxY, inset: NSMakePoint(-8, -50))
             }
             
-        }, for: .Down)
+            }, for: .Down)
         
         self.genericView.timePicker.set(handler: { [weak self] control in
             if let control = control as? DatePicker<Date>, let `self` = self, let window = self.window, !hasPopover(window) {
@@ -344,7 +370,7 @@ class ScheduledMessageModalController: ModalViewController {
                         }
                         items.append(SPopoverItem(formatTime(date), { [weak self] in
                             self?.applyTime(date)
-                        }, height: 30))
+                            }, height: 30))
                     } else if !items.isEmpty {
                         items.append(SPopoverItem())
                     }
@@ -352,7 +378,10 @@ class ScheduledMessageModalController: ModalViewController {
                 showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), edge: .maxY, inset: NSMakePoint(0, -50))
             }
             
-        }, for: .Down)
-        
+            }, for: .Down)
+    }
+    
+    deinit {
+        disposable.dispose()
     }
 }

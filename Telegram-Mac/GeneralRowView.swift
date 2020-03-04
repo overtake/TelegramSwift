@@ -10,6 +10,63 @@ import Cocoa
 import TGUIKit
 
 
+class GeneralContainableRowView : TableRowView {
+    let containerView = GeneralRowContainerView(frame: NSZeroRect)
+    private let borderView: View = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        super.addSubview(self.containerView)
+        containerView.addSubview(borderView)
+    }
+    
+    deinit {
+        self.containerView.removeAllSubviews()
+    }
+    
+    override func addSubview(_ view: NSView) {
+        self.containerView.addSubview(view)
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
+    override func updateColors() {
+        guard let item = item as? GeneralRowItem else {
+            return
+        }
+        self.backgroundColor = item.viewType.rowBackground
+        self.containerView.backgroundColor = backdorColor
+        self.borderView.backgroundColor = theme.colors.border
+    }
+    
+    override func layout() {
+        super.layout()
+        guard let item = item as? GeneralRowItem else {
+            return
+        }
+        let blockWidth = min(600, frame.width - item.inset.left - item.inset.right)
+        
+        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), item.inset.top, blockWidth, frame.height - item.inset.bottom - item.inset.top)
+        self.containerView.setCorners(item.viewType.corners)
+        
+        borderView.frame = NSMakeRect(item.viewType.innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, .borderSize)
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? GeneralRowItem else {
+            return
+        }
+        
+        borderView.isHidden = !item.viewType.hasBorder
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 final class GeneralRowContainerView : Control {
     private let maskLayer = CAShapeLayer()

@@ -1,20 +1,20 @@
 //
-//  DiscussionHeaderItem.swift
+//  ChatListFiltersHeaderItem.swift
 //  Telegram
 //
-//  Created by Mikhail Filimonov on 23/05/2019.
-//  Copyright © 2019 Telegram. All rights reserved.
+//  Created by Mikhail Filimonov on 03.03.2020.
+//  Copyright © 2020 Telegram. All rights reserved.
 //
 
+import Cocoa
 import TGUIKit
 
-
-class DiscussionHeaderItem: GeneralRowItem {
-    fileprivate let icon: CGImage
+class ChatListFiltersHeaderItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, icon: CGImage, text: NSAttributedString) {
-        self.icon = icon
+    fileprivate let context: AccountContext
+    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, text: NSAttributedString) {
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
+        self.context = context
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
     }
     
@@ -24,21 +24,21 @@ class DiscussionHeaderItem: GeneralRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        return DiscussionHeaderView.self
+        return ChatListFiltersHeaderView.self
     }
     
     override var height: CGFloat {
-        return inset.top + inset.bottom + icon.backingSize.height + inset.top + textLayout.layoutSize.height
+        return inset.bottom + 112 + textLayout.layoutSize.height
     }
 }
 
 
-private final class DiscussionHeaderView : TableRowView {
-    private let imageView: ImageView = ImageView()
-    private let textView: TextView = TextView()
+private final class ChatListFiltersHeaderView : TableRowView {
+    private let stickerView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
+    private let textView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView)
+        addSubview(stickerView)
         addSubview(textView)
     }
     
@@ -54,10 +54,9 @@ private final class DiscussionHeaderView : TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         
-        guard let item = item as? DiscussionHeaderItem else { return }
+        guard let item = item as? ChatListFiltersHeaderItem else { return }
         
-        self.imageView.image = item.icon
-        self.imageView.sizeToFit()
+        self.stickerView.update(with: LocalAnimatedSticker.folder.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: LocalAnimatedSticker.folder.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
         self.textView.update(item.textLayout)
         
@@ -66,10 +65,10 @@ private final class DiscussionHeaderView : TableRowView {
     
     override func layout() {
         super.layout()
-        guard let item = item as? DiscussionHeaderItem else { return }
-
-        self.imageView.centerX(y: item.inset.top)
-        self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)
+        guard let item = item as? ChatListFiltersHeaderItem else { return }
+        
+        self.stickerView.centerX(y: 0)
+        self.textView.centerX(y: self.stickerView.frame.maxY + item.inset.bottom)
     }
     
     required init?(coder: NSCoder) {

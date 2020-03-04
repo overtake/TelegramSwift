@@ -175,6 +175,7 @@ class Sender: NSObject {
         var mediaReference: AnyMediaReference? = nil
         if input.inputText == diceSymbol {
             mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(value: nil))
+            input = ChatTextInputState(inputText: "")
         }
         
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in

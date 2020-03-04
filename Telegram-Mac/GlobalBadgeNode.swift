@@ -155,7 +155,7 @@ class GlobalBadgeNode: Node {
                 excludeTotal = totalValue
                 
                 if items.count == 1, let peerSettings = peerSettings {
-                    if let count = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), count > 0 {
+                    if let count = view.count(for: items[0]), count > 0 {
                         var removable = false
                         switch inAppSettings.totalUnreadCountDisplayStyle {
                         case .raw:
@@ -188,7 +188,7 @@ class GlobalBadgeNode: Node {
                             if let state = state, state.isUnread {
                                 let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(filter.data.includePeers))] as? PeerNotificationSettingsView
                                 if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
-                                    let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer)
+                                    let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
                                     var peerCount = Int(state.count)
                                     let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
                                     var removable = false
@@ -219,18 +219,17 @@ class GlobalBadgeNode: Node {
                     }
                     
                     var tags: [PeerSummaryCounterTags] = []
-                    if filter.data.categories.contains(.privateChats) {
-                        tags.append(.privateChat)
+                    if filter.data.categories.contains(.contacts) {
+                        tags.append(.contact)
                     }
-                    
-                    if filter.data.categories.contains(.publicGroups) {
-                        tags.append(.publicGroup)
+                    if filter.data.categories.contains(.nonContacts) {
+                        tags.append(.nonContact)
                     }
-                    if filter.data.categories.contains(.privateGroups) {
-                        tags.append(.privateGroup)
+                    if filter.data.categories.contains(.smallGroups) {
+                        tags.append(.smallGroup)
                     }
-                    if filter.data.categories.contains(.secretChats) {
-                        tags.append(.secretChat)
+                    if filter.data.categories.contains(.largeGroups) {
+                        tags.append(.largeGroup)
                     }
                     if filter.data.categories.contains(.bots) {
                         tags.append(.bot)
@@ -269,7 +268,7 @@ class GlobalBadgeNode: Node {
                     }
                     
                     if items.count == 1, let peerSettings = peerSettings {
-                        if let current = view.count(for: items[0]), inAppSettings.totalUnreadCountIncludeTags.contains(peerSettings.0.peerSummaryTags), current > 0 {
+                        if let current = view.count(for: items[0]), current > 0 {
                             var removable = false
                             switch inAppSettings.totalUnreadCountDisplayStyle {
                             case .raw:

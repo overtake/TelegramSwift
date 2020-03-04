@@ -3137,6 +3137,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var settingsFilters: CGImage {
+      if let image = cached.with({ $0["settingsFilters"] }) {
+          return image
+      } else {
+          let image = _settingsFilters()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsFilters"] = image
+              return current
+          }
+          return image
+      }
+  }
   var settingsAskQuestionActive: CGImage {
       if let image = cached.with({ $0["settingsAskQuestionActive"] }) {
           return image
@@ -3301,6 +3314,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsUpdateActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var settingsFiltersActive: CGImage {
+      if let image = cached.with({ $0["settingsFiltersActive"] }) {
+          return image
+      } else {
+          let image = _settingsFiltersActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsFiltersActive"] = image
               return current
           }
           return image
@@ -5880,6 +5906,214 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_filter_large_groups: CGImage {
+      if let image = cached.with({ $0["chat_filter_large_groups"] }) {
+          return image
+      } else {
+          let image = _chat_filter_large_groups()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_large_groups"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_non_contacts: CGImage {
+      if let image = cached.with({ $0["chat_filter_non_contacts"] }) {
+          return image
+      } else {
+          let image = _chat_filter_non_contacts()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_non_contacts"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_archive: CGImage {
+      if let image = cached.with({ $0["chat_filter_archive"] }) {
+          return image
+      } else {
+          let image = _chat_filter_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_bots_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_bots_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_bots_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_bots_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_channels_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_channels_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_channels_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_channels_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_custom_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_custom_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_custom_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_custom_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_groups_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_groups_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_groups_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_groups_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_muted_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_muted_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_muted_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_muted_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_private_chats_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_private_chats_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_private_chats_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_private_chats_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_read_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_read_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_read_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_read_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_secret_chats_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_secret_chats_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_secret_chats_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_secret_chats_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_unmuted_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_unmuted_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_unmuted_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_unmuted_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_unread_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_unread_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_unread_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_unread_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_large_groups_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_large_groups_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_large_groups_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_large_groups_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_non_contacts_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_non_contacts_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_non_contacts_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_non_contacts_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_filter_archive_avatar: CGImage {
+      if let image = cached.with({ $0["chat_filter_archive_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_filter_archive_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_archive_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
   var group_invite_via_link: CGImage {
       if let image = cached.with({ $0["group_invite_via_link"] }) {
           return image
@@ -6252,6 +6486,7 @@ final class TelegramIconsTheme {
   private let _settingsPassport: ()->CGImage
   private let _settingsWallet: ()->CGImage
   private let _settingsUpdate: ()->CGImage
+  private let _settingsFilters: ()->CGImage
   private let _settingsAskQuestionActive: ()->CGImage
   private let _settingsFaqActive: ()->CGImage
   private let _settingsGeneralActive: ()->CGImage
@@ -6265,6 +6500,7 @@ final class TelegramIconsTheme {
   private let _settingsPassportActive: ()->CGImage
   private let _settingsWalletActive: ()->CGImage
   private let _settingsUpdateActive: ()->CGImage
+  private let _settingsFiltersActive: ()->CGImage
   private let _settingsProfile: ()->CGImage
   private let _generalCheck: ()->CGImage
   private let _settingsAbout: ()->CGImage
@@ -6463,6 +6699,22 @@ final class TelegramIconsTheme {
   private let _chat_filter_secret_chats: ()->CGImage
   private let _chat_filter_unmuted: ()->CGImage
   private let _chat_filter_unread: ()->CGImage
+  private let _chat_filter_large_groups: ()->CGImage
+  private let _chat_filter_non_contacts: ()->CGImage
+  private let _chat_filter_archive: ()->CGImage
+  private let _chat_filter_bots_avatar: ()->CGImage
+  private let _chat_filter_channels_avatar: ()->CGImage
+  private let _chat_filter_custom_avatar: ()->CGImage
+  private let _chat_filter_groups_avatar: ()->CGImage
+  private let _chat_filter_muted_avatar: ()->CGImage
+  private let _chat_filter_private_chats_avatar: ()->CGImage
+  private let _chat_filter_read_avatar: ()->CGImage
+  private let _chat_filter_secret_chats_avatar: ()->CGImage
+  private let _chat_filter_unmuted_avatar: ()->CGImage
+  private let _chat_filter_unread_avatar: ()->CGImage
+  private let _chat_filter_large_groups_avatar: ()->CGImage
+  private let _chat_filter_non_contacts_avatar: ()->CGImage
+  private let _chat_filter_archive_avatar: ()->CGImage
   private let _group_invite_via_link: ()->CGImage
   private let _tab_contacts: ()->CGImage
   private let _tab_contacts_active: ()->CGImage
@@ -6716,6 +6968,7 @@ final class TelegramIconsTheme {
       settingsPassport: @escaping()->CGImage,
       settingsWallet: @escaping()->CGImage,
       settingsUpdate: @escaping()->CGImage,
+      settingsFilters: @escaping()->CGImage,
       settingsAskQuestionActive: @escaping()->CGImage,
       settingsFaqActive: @escaping()->CGImage,
       settingsGeneralActive: @escaping()->CGImage,
@@ -6729,6 +6982,7 @@ final class TelegramIconsTheme {
       settingsPassportActive: @escaping()->CGImage,
       settingsWalletActive: @escaping()->CGImage,
       settingsUpdateActive: @escaping()->CGImage,
+      settingsFiltersActive: @escaping()->CGImage,
       settingsProfile: @escaping()->CGImage,
       generalCheck: @escaping()->CGImage,
       settingsAbout: @escaping()->CGImage,
@@ -6927,6 +7181,22 @@ final class TelegramIconsTheme {
       chat_filter_secret_chats: @escaping()->CGImage,
       chat_filter_unmuted: @escaping()->CGImage,
       chat_filter_unread: @escaping()->CGImage,
+      chat_filter_large_groups: @escaping()->CGImage,
+      chat_filter_non_contacts: @escaping()->CGImage,
+      chat_filter_archive: @escaping()->CGImage,
+      chat_filter_bots_avatar: @escaping()->CGImage,
+      chat_filter_channels_avatar: @escaping()->CGImage,
+      chat_filter_custom_avatar: @escaping()->CGImage,
+      chat_filter_groups_avatar: @escaping()->CGImage,
+      chat_filter_muted_avatar: @escaping()->CGImage,
+      chat_filter_private_chats_avatar: @escaping()->CGImage,
+      chat_filter_read_avatar: @escaping()->CGImage,
+      chat_filter_secret_chats_avatar: @escaping()->CGImage,
+      chat_filter_unmuted_avatar: @escaping()->CGImage,
+      chat_filter_unread_avatar: @escaping()->CGImage,
+      chat_filter_large_groups_avatar: @escaping()->CGImage,
+      chat_filter_non_contacts_avatar: @escaping()->CGImage,
+      chat_filter_archive_avatar: @escaping()->CGImage,
       group_invite_via_link: @escaping()->CGImage,
       tab_contacts: @escaping()->CGImage,
       tab_contacts_active: @escaping()->CGImage,
@@ -7179,6 +7449,7 @@ final class TelegramIconsTheme {
       self._settingsPassport = settingsPassport
       self._settingsWallet = settingsWallet
       self._settingsUpdate = settingsUpdate
+      self._settingsFilters = settingsFilters
       self._settingsAskQuestionActive = settingsAskQuestionActive
       self._settingsFaqActive = settingsFaqActive
       self._settingsGeneralActive = settingsGeneralActive
@@ -7192,6 +7463,7 @@ final class TelegramIconsTheme {
       self._settingsPassportActive = settingsPassportActive
       self._settingsWalletActive = settingsWalletActive
       self._settingsUpdateActive = settingsUpdateActive
+      self._settingsFiltersActive = settingsFiltersActive
       self._settingsProfile = settingsProfile
       self._generalCheck = generalCheck
       self._settingsAbout = settingsAbout
@@ -7390,6 +7662,22 @@ final class TelegramIconsTheme {
       self._chat_filter_secret_chats = chat_filter_secret_chats
       self._chat_filter_unmuted = chat_filter_unmuted
       self._chat_filter_unread = chat_filter_unread
+      self._chat_filter_large_groups = chat_filter_large_groups
+      self._chat_filter_non_contacts = chat_filter_non_contacts
+      self._chat_filter_archive = chat_filter_archive
+      self._chat_filter_bots_avatar = chat_filter_bots_avatar
+      self._chat_filter_channels_avatar = chat_filter_channels_avatar
+      self._chat_filter_custom_avatar = chat_filter_custom_avatar
+      self._chat_filter_groups_avatar = chat_filter_groups_avatar
+      self._chat_filter_muted_avatar = chat_filter_muted_avatar
+      self._chat_filter_private_chats_avatar = chat_filter_private_chats_avatar
+      self._chat_filter_read_avatar = chat_filter_read_avatar
+      self._chat_filter_secret_chats_avatar = chat_filter_secret_chats_avatar
+      self._chat_filter_unmuted_avatar = chat_filter_unmuted_avatar
+      self._chat_filter_unread_avatar = chat_filter_unread_avatar
+      self._chat_filter_large_groups_avatar = chat_filter_large_groups_avatar
+      self._chat_filter_non_contacts_avatar = chat_filter_non_contacts_avatar
+      self._chat_filter_archive_avatar = chat_filter_archive_avatar
       self._group_invite_via_link = group_invite_via_link
       self._tab_contacts = tab_contacts
       self._tab_contacts_active = tab_contacts_active

@@ -1426,6 +1426,70 @@ class TelegramPresentationTheme : PresentationTheme {
     let wallpaper: ThemeWallpaper
     
     
+    
+    private var _chatReadMarkServiceOverlayBubble1: CGImage?
+    private var _chatReadMarkServiceOverlayBubble2: CGImage?
+    var chatReadMarkServiceOverlayBubble1: CGImage {
+        if let icon = _chatReadMarkServiceOverlayBubble1 {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_MessageCheckMark1")!.precomposed(self.chatServiceItemTextColor)
+            _chatReadMarkServiceOverlayBubble1 = new
+            return new
+        }
+    }
+    var chatReadMarkServiceOverlayBubble2: CGImage {
+        if let icon = _chatReadMarkServiceOverlayBubble2 {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_MessageCheckmark2")!.precomposed(self.chatServiceItemTextColor)
+            _chatReadMarkServiceOverlayBubble2 = new
+            return new
+        }
+    }
+    
+    private var _chatSendingOverlayServiceFrame: CGImage?
+    private var _chatSendingOverlayServiceHour: CGImage?
+    private var _chatSendingOverlayServiceMin: CGImage?
+    var chatSendingOverlayServiceFrame: CGImage {
+        if let icon = _chatSendingOverlayServiceFrame {
+            return icon
+        } else {
+            let new = generateSendingFrame(self.chatServiceItemTextColor)
+            _chatSendingOverlayServiceFrame = new
+            return new
+        }
+    }
+    var chatSendingOverlayServiceHour: CGImage {
+        if let icon = _chatSendingOverlayServiceHour {
+            return icon
+        } else {
+            let new = generateClockMinImage(self.chatServiceItemTextColor)
+            _chatSendingOverlayServiceHour = new
+            return new
+        }
+    }
+    var chatSendingOverlayServiceMin: CGImage {
+        if let icon = _chatSendingOverlayServiceMin {
+            return icon
+        } else {
+            let new = generateClockMinImage(self.chatServiceItemTextColor)
+            _chatSendingOverlayServiceMin = new
+            return new
+        }
+    }
+    
+    private var _chatChannelViewsOverlayServiceBubble: CGImage?
+    var chatChannelViewsOverlayServiceBubble: CGImage {
+        if let icon = _chatChannelViewsOverlayServiceBubble {
+            return icon
+        } else {
+            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor)
+            _chatChannelViewsOverlayServiceBubble = new
+            return new
+        }
+    }
+    
     private var _chatServiceItemColor: NSColor?
     var chatServiceItemColor: NSColor {
         if let value = _chatServiceItemColor {
@@ -1841,6 +1905,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
                                                settingsWallet: { generateSettingsIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(NSColor(0x59a7d8), flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
+                                               settingsFilters: { generateSettingsIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
@@ -1854,6 +1919,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsWalletActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsUpdateActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsFiltersActive: { generateSettingsActiveIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsProfile: { generateSettingsIcon(NSImage(named: "Icon_SettingsProfile")!.precomposed(flipVertical: true)) },
                                                generalCheck: { #imageLiteral(resourceName: "Icon_Check").precomposed(palette.accentIcon) },
                                                settingsAbout: { #imageLiteral(resourceName: "Icon_SettingsAbout").precomposed(palette.accentIcon) },
@@ -2052,6 +2118,22 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_filter_secret_chats: { NSImage(named: "Icon_FilterSecretChats")!.precomposed(palette.accentIcon) },
                                                chat_filter_unmuted: { NSImage(named: "Icon_FilterUnmuted")!.precomposed(palette.accentIcon) },
                                                chat_filter_unread: { NSImage(named: "Icon_FilterUnread")!.precomposed(palette.accentIcon) },
+                                               chat_filter_large_groups: { NSImage(named: "Icon_FilterLargeGroups")!.precomposed(palette.accentIcon) },
+                                               chat_filter_non_contacts: { NSImage(named: "Icon_FilterNonContacts")!.precomposed(palette.accentIcon) },
+                                               chat_filter_archive: { NSImage(named: "Icon_FilterArchive")!.precomposed(palette.accentIcon) },
+                                               chat_filter_bots_avatar:  { NSImage(named: "Icon_FilterBots")!.precomposed(.white) },
+                                               chat_filter_channels_avatar:  { NSImage(named: "Icon_FilterChannels")!.precomposed(.white) },
+                                               chat_filter_custom_avatar:  { NSImage(named: "Icon_FilterCustom")!.precomposed(.white) },
+                                               chat_filter_groups_avatar:  { NSImage(named: "Icon_FilterGroups")!.precomposed(.white) },
+                                               chat_filter_muted_avatar: { NSImage(named: "Icon_FilterMuted")!.precomposed(.white) },
+                                               chat_filter_private_chats_avatar: { NSImage(named: "Icon_FilterPrivateChats")!.precomposed(.white) },
+                                               chat_filter_read_avatar: { NSImage(named: "Icon_FilterRead")!.precomposed(.white) },
+                                               chat_filter_secret_chats_avatar: { NSImage(named: "Icon_FilterSecretChats")!.precomposed(.white) },
+                                               chat_filter_unmuted_avatar: { NSImage(named: "Icon_FilterUnmuted")!.precomposed(.white) },
+                                               chat_filter_unread_avatar: { NSImage(named: "Icon_FilterUnread")!.precomposed(.white) },
+                                               chat_filter_large_groups_avatar: { NSImage(named: "Icon_FilterLargeGroups")!.precomposed(.white) },
+                                               chat_filter_non_contacts_avatar: { NSImage(named: "Icon_FilterNonContacts")!.precomposed(.white) },
+                                               chat_filter_archive_avatar: { NSImage(named: "Icon_FilterArchive")!.precomposed(.white) },
                                                group_invite_via_link: { NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.accentIcon) },
                                                tab_contacts: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.grayIcon) },
                                                tab_contacts_active: { NSImage(named: "Icon_TabContacts")!.precomposed(palette.accentIcon) },

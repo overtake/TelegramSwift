@@ -305,11 +305,11 @@ extension Media {
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
-            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) || file.isAnimatedSticker
+            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif"))
         } else if let map = self as? TelegramMediaMap {
             return map.venue == nil
         } else if self is TelegramMediaDice {
-            return true
+            return false
         }
         return false
     }

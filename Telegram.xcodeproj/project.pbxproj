@@ -194,6 +194,8 @@
 		9FFAE50D205AA1FB000C028E /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F8FDF3A205A7AE7001A7A77 /* libswresample.a */; };
 		9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE50E205AB4A3000C028E /* libiconv.tbd */; };
 		9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FFAE513205AB50C000C028E /* libz.tbd */; };
+		A7029EF8240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7029EF7240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift */; };
+		A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7029EF9240E3CCF00A89ABD /* folder.tgs */; };
 		A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		A71DC82D23858356000EEDE2 /* Spotlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82C23858356000EEDE2 /* Spotlight.swift */; };
 		A71DC82F2386AADF000EEDE2 /* Signature.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DC82E2386AADF000EEDE2 /* Signature.swift */; };
@@ -208,6 +210,7 @@
 		A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7393D412407FF0F00CE44CA /* dice_idle.tgs */; };
 		A7393D442408F84300CE44CA /* DiceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D432408F84300CE44CA /* DiceCache.swift */; };
 		A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */; };
+		A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
@@ -1250,6 +1253,8 @@
 		9FFAE50E205AB4A3000C028E /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		9FFAE510205AB4AB000C028E /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		9FFAE513205AB50C000C028E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		A7029EF7240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFiltersHeaderItem.swift; sourceTree = "<group>"; };
+		A7029EF9240E3CCF00A89ABD /* folder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder.tgs; sourceTree = "<group>"; };
 		A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreSpotlight.framework; path = System/Library/Frameworks/CoreSpotlight.framework; sourceTree = SDKROOT; };
 		A71DC82C23858356000EEDE2 /* Spotlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spotlight.swift; sourceTree = "<group>"; };
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
@@ -1263,6 +1268,7 @@
 		A7393D412407FF0F00CE44CA /* dice_idle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = dice_idle.tgs; sourceTree = "<group>"; };
 		A7393D432408F84300CE44CA /* DiceCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCache.swift; sourceTree = "<group>"; };
 		A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelOverviewStatsRowItem.swift; sourceTree = "<group>"; };
+		A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterRecommendedItem.swift; sourceTree = "<group>"; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
@@ -2541,14 +2547,16 @@
 			name = stats;
 			sourceTree = "<group>";
 		};
-		A789E08223E05E9A00AEB34A /* presets */ = {
+		A789E08223E05E9A00AEB34A /* filters */ = {
 			isa = PBXGroup;
 			children = (
 				A789E08323E05EAE00AEB34A /* ChatListFiltersListController.swift */,
 				D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */,
 				A7919137240D1077002011CA /* ChatListFilterPredicate.swift */,
+				A7029EF7240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift */,
+				A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */,
 			);
-			name = presets;
+			name = filters;
 			sourceTree = "<group>";
 		};
 		A7B5030D23B62DF200C9838E /* svg */ = {
@@ -3032,7 +3040,7 @@
 		C22E06301D8043A000A11C88 /* chatlist */ = {
 			isa = PBXGroup;
 			children = (
-				A789E08223E05E9A00AEB34A /* presets */,
+				A789E08223E05E9A00AEB34A /* filters */,
 				C22E06311D8044CC00A11C88 /* ChatListController.swift */,
 				C22E063C1D80929400A11C88 /* ChatListRowItem.swift */,
 				C2CBCAC41D81649E00142EC0 /* ChatListRowView.swift */,
@@ -4529,6 +4537,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A7029EF9240E3CCF00A89ABD /* folder.tgs */,
 				A7393D412407FF0F00CE44CA /* dice_idle.tgs */,
 				A7C7215823FD473D00CE3F75 /* success_saved.tgs */,
 				A7B6DDD623ED8FDF00B8E01C /* think_spectacular.tgs */,
@@ -4877,6 +4886,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
 				9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */,
@@ -5266,6 +5276,7 @@
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
 				C27A6F711ECF604A00C65577 /* TGCurrencyFormatter.m in Sources */,
+				A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				9FA0E53B2052EDFF001E5649 /* HackUtils.m in Sources */,
@@ -5497,6 +5508,7 @@
 				D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
+				A7029EF8240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,
 				C2C9B9371E8016D400380D79 /* SPMediaKeyTap.m in Sources */,
 				C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */,

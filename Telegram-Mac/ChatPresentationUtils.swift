@@ -120,6 +120,7 @@ private func generatePercentageImage(color: NSColor, value: Int, font: NSFont) -
 
 final class TelegramChatColors {
     
+
     
     private var _generatedPercentageAnimationImages:[CGImage]?
     private var _generatedPercentageAnimationImagesIncomingBubbled:[CGImage]?
@@ -200,6 +201,7 @@ final class TelegramChatColors {
             return images
         }
     }
+    
     
     private let palette: ColorPalette
     init(_ palette: ColorPalette, _ bubbled: Bool) {
@@ -303,13 +305,13 @@ final class TelegramChatColors {
     }
     
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isStateOverlayLayout ? item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
     func stateStateIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isFailed ? item.presentation.icons.sentFailed : (item.isStateOverlayLayout ? theme.icons.chatReadMarkOverlayBubble1 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble1_incoming : item.presentation.icons.chatReadMarkInBubble1_outgoing : item.presentation.icons.chatReadMarkOutBubble1)
+        return item.isFailed ? item.presentation.icons.sentFailed : (item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatReadMarkServiceOverlayBubble1 :  theme.icons.chatReadMarkOverlayBubble1 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble1_incoming : item.presentation.icons.chatReadMarkInBubble1_outgoing : item.presentation.icons.chatReadMarkOutBubble1)
     }
     func readStateIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isStateOverlayLayout ? item.presentation.icons.chatReadMarkOverlayBubble2 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble2_incoming : item.presentation.icons.chatReadMarkInBubble2_outgoing : item.presentation.icons.chatReadMarkOutBubble2
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatReadMarkServiceOverlayBubble2 : item.presentation.icons.chatReadMarkOverlayBubble2 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble2_incoming : item.presentation.icons.chatReadMarkInBubble2_outgoing : item.presentation.icons.chatReadMarkOutBubble2
     }
     
     func instantPageIcon(_ incoming: Bool, _ bubbled: Bool, presentation: TelegramPresentationTheme) -> CGImage {
@@ -317,13 +319,13 @@ final class TelegramChatColors {
     }
     
     func sendingFrameIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isStateOverlayLayout ? item.presentation.icons.chatSendingOverlayFrame : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInFrame_incoming : item.presentation.icons.chatSendingInFrame_outgoing : item.presentation.icons.chatSendingOutFrame
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatSendingOverlayServiceFrame : item.presentation.icons.chatSendingOverlayFrame : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInFrame_incoming : item.presentation.icons.chatSendingInFrame_outgoing : item.presentation.icons.chatSendingOutFrame
     }
     func sendingHourIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isStateOverlayLayout ? item.presentation.icons.chatSendingOverlayHour : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInHour_incoming : item.presentation.icons.chatSendingInHour_outgoing : item.presentation.icons.chatSendingOutHour
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatSendingOverlayServiceHour : item.presentation.icons.chatSendingOverlayHour : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInHour_incoming : item.presentation.icons.chatSendingInHour_outgoing : item.presentation.icons.chatSendingOutHour
     }
     func sendingMinIcon(_ item: ChatRowItem) -> CGImage {
-        return item.isStateOverlayLayout ? item.presentation.icons.chatSendingOverlayMin : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInMin_incoming : item.presentation.icons.chatSendingInMin_outgoing : item.presentation.icons.chatSendingOutMin
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatSendingOverlayServiceMin : item.presentation.icons.chatSendingOverlayMin : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatSendingInMin_incoming : item.presentation.icons.chatSendingInMin_outgoing : item.presentation.icons.chatSendingOutMin
     }
     
     func chatCallIcon(_ item: ChatCallRowItem) -> CGImage {

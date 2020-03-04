@@ -35,6 +35,7 @@ private extension Int32 {
         case 6:
             return diceSide6
         default:
+            
             preconditionFailure()
         }
     }
@@ -53,11 +54,13 @@ private struct DiceState : Equatable {
     
     init(message: Message) {
         self.messageId = message.id
-        if message.forwardInfo != nil {
+        if let dice = message.media.first as? TelegramMediaDice, dice.value == 0 {
+            play = .idle
+        } else if message.forwardInfo != nil {
             play = .end(animated: false)
         } else {
             if message.flags.contains(.Failed) {
-                play = .failed
+                self.play = .failed
             } else if message.flags.isSending {
                 play = .idle
             } else {
@@ -178,7 +181,7 @@ class ChatDiceContentView: ChatMediaContentView {
             
                 
             let data: Signal<(Data, TelegramMediaFile), NoError>
-            if let currentValue = currentValue {
+            if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
                 data = context.diceCache.diceData(currentValue.diceSide, synchronous: approximateSynchronousValue)
             } else {
                 data = Signal { subscriber in
@@ -219,7 +222,7 @@ class ChatDiceContentView: ChatMediaContentView {
                     }
                 }
                 self.playerView.set(animation)
-                if let currentValue = currentValue {
+                if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
                     self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)

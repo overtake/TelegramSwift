@@ -1085,7 +1085,7 @@ class ChatRowItem: TableRowItem {
                     }
 
                     
-                    forwardNameLayout = TextViewLayout(attr, maximumNumberOfLines: renderType == .bubble ? 2 : 1, truncationType: .end)
+                    forwardNameLayout = TextViewLayout(attr, maximumNumberOfLines: renderType == .bubble ? 2 : 1, truncationType: .end, alwaysStaticItems: true)
                     forwardNameLayout?.interactions = globalLinkExecutor
                 }
             }
@@ -1701,15 +1701,21 @@ class ChatRowItem: TableRowItem {
     }
     
     var stateOverlayTextColor: NSColor {
-           guard let media = self.message?.media.first else {
-               return self.presentation.chatServiceItemTextColor
-           }
-           if media.isInteractiveMedia {
-                return NSColor(0xffffff)
-           } else {
-               return self.presentation.chatServiceItemTextColor
-           }
+       guard let media = self.message?.media.first else {
+           return self.presentation.chatServiceItemTextColor
        }
+       if media.isInteractiveMedia {
+            return NSColor(0xffffff)
+       } else {
+           return self.presentation.chatServiceItemTextColor
+       }
+    }
+    var isInteractiveMedia: Bool {
+        guard let media = self.message?.media.first else {
+            return false
+        }
+        return media.isInteractiveMedia
+    }
 }
 
 func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
@@ -1732,7 +1738,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             _ = sendScheduledMessageNowInteractively(postbox: account.postbox, messageId: message.id).start()
         }))
         items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), sendWhenOnline: peer.isUser && peer.id != context.peerId, scheduleAt: { date in
+            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), peerId: peer.id, scheduleAt: { date in
                 _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start(next: { result in
                     
                 }, error: { error in

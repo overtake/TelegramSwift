@@ -54,7 +54,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let showNotificationsOutOfFocus: Bool
     let badgeEnabled: Bool
     static var defaultSettings: InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: [.privateChat, .secretChat, .bot, .privateGroup, .channel, .publicGroup], notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true)
+        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: .all, notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true)
     }
     
     init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags, notifyAllAccounts: Bool, showNotificationsOutOfFocus: Bool, badgeEnabled: Bool) {
@@ -86,21 +86,20 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
             var resultTags: PeerSummaryCounterTags = []
             for legacyTag in LegacyPeerSummaryCounterTags(rawValue: value) {
                 if legacyTag == .regularChatsAndPrivateGroups {
-                    resultTags.insert(.privateChat)
-                    resultTags.insert(.secretChat)
+                    resultTags.insert(.contact)
+                    resultTags.insert(.nonContact)
                     resultTags.insert(.bot)
-                    resultTags.insert(.privateGroup)
-                    resultTags.insert(.channel)
-                    resultTags.insert(.publicGroup)
+                    resultTags.insert(.smallGroup)
+                    resultTags.insert(.largeGroup)
                 } else if legacyTag == .publicGroups {
-                    resultTags.insert(.publicGroup)
+                    resultTags.insert(.smallGroup)
                 } else if legacyTag == .channels {
                     resultTags.insert(.channel)
                 }
             }
             self.totalUnreadCountIncludeTags = resultTags
         } else {
-            self.totalUnreadCountIncludeTags = [.privateChat, .secretChat, .bot, .privateGroup, .channel, .publicGroup]
+            self.totalUnreadCountIncludeTags = .all
         }
 
         self.showNotificationsOutOfFocus = decoder.decodeInt32ForKey("snoof", orElse: 1) != 0
