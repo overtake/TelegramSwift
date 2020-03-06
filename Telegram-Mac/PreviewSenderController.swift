@@ -810,6 +810,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func send(_ silent: Bool, atDate: Date? = nil) {
+        
+        let text = self.genericView.textView.string().trimmed
+        if text.length > ChatPresentationInterfaceState.maxShortInput {
+            alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLong)
+            return
+        }
+        
         switch chatInteraction.mode {
         case .scheduled:
             if let peer = chatInteraction.peer {
@@ -1554,7 +1561,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 1024
+        return ChatPresentationInterfaceState.maxInput
     }
     
     override func viewClass() -> AnyClass {

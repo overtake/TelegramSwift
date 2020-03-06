@@ -40,6 +40,8 @@ private final class ChatListFiltersHeaderView : TableRowView {
         super.init(frame: frameRect)
         addSubview(stickerView)
         addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
     }
     
     override var backdorColor: NSColor {

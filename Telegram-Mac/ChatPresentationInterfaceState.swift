@@ -648,26 +648,26 @@ struct ChatPresentationInterfaceState: Equatable {
         return false
     }
     
-    let maxInput:Int32 = 50000
-    let maxShortInput:Int32 = 1024
-    let textLimit: Int32 = 4096
+    static let maxInput:Int32 = 50000
+    static let maxShortInput:Int32 = 1024
+    static let textLimit: Int32 = 4096
     var maxInputCharacters:Int32 {
         if state == .normal {
-            return maxInput
+            return ChatPresentationInterfaceState.maxInput
         } else if let editState = interfaceState.editState {
             if editState.message.media.count == 0 {
-                return textLimit
+                return ChatPresentationInterfaceState.textLimit
             } else {
                 for media in editState.message.media {
                     if !(media is TelegramMediaWebpage) {
-                        return maxShortInput
+                        return ChatPresentationInterfaceState.maxShortInput
                     }
                 }
-                return textLimit
+                return ChatPresentationInterfaceState.textLimit
             }
         }
         
-        return maxInput
+        return ChatPresentationInterfaceState.maxInput
     }
     
     var effectiveInput:ChatTextInputState {

@@ -506,7 +506,13 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                     chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
                 }
             }
-            if !textView.string().trimmed.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
+            
+            let text = textView.string().trimmed
+            if text.length > chatInteraction.presentation.maxInputCharacters {
+                alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLong)
+                return false
+            }
+            if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
                 chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
@@ -633,7 +639,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return chatInteraction.presentation.maxInputCharacters
+        return ChatPresentationInterfaceState.maxInput
     }
     
     @available(OSX 10.12.2, *)

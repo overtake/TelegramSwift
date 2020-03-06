@@ -9,8 +9,6 @@ import Cocoa
 import SwiftSignalKit
 
 class PopoverBackground: Control {
-    fileprivate weak var popover:Popover?
-    
 
 }
 
@@ -121,6 +119,8 @@ open class Popover: NSObject {
     
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, contentRect:NSRect = NSMakeRect(7, 7, 0, 0), delayBeforeShown: Double = 0.2) -> Void {
+        
+        control.popover = self
         
         if let controller = controller, let parentView = control.window?.contentView {
             

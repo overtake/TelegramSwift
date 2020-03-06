@@ -17,9 +17,11 @@ extension ChatListFilter {
    
 
     var isFullfilled: Bool {
-        return self.data.categories == .all && !data.excludeMuted && !data.excludeRead
+        return self.data.categories == .all && data.includePeers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead && data.excludeArchived
     }
-
+    var isEmpty: Bool {
+        return self.data.categories.isEmpty && data.includePeers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead
+    }
     var icon: CGImage {
 
         if data.categories == .all && data.excludeMuted && !data.excludeRead {
