@@ -285,17 +285,17 @@ class MainViewController: TelegramViewController {
         
         tabController.updateLocalizationAndTheme(theme: theme)
 
-        let s:Signal<Bool, NoError> = Signal<Bool, NoError>.single(arc4random() % 2 == 5) |> then(deferred {
-            return Signal<Bool, NoError>.single(arc4random() % 2 == 5)
-        } |> delay(10 * 10, queue: .mainQueue()) |> restart)
-        |> filter { $0 }
-        |> deliverOnMainQueue
-        
-        tooltipDisposable.set(s.start(next: { [weak self] show in
-            
-            self?.showFilterTooltip()
-            
-        }))
+//        let s:Signal<Bool, NoError> = Signal<Bool, NoError>.single(arc4random() % 2 == 5) |> then(deferred {
+//            return Signal<Bool, NoError>.single(arc4random() % 2 == 5)
+//        } |> delay(10 * 10, queue: .mainQueue()) |> restart)
+//        |> filter { $0 }
+//        |> deliverOnMainQueue
+//
+//        tooltipDisposable.set(s.start(next: { [weak self] show in
+//
+//            self?.showFilterTooltip()
+//
+//        }))
         
 //        account.postbox.transaction ({ transaction -> Void in
 //          
@@ -361,8 +361,12 @@ class MainViewController: TelegramViewController {
         switch self.chatList.mode {
         case .plain, .filter:
             if self.tabController.current == chatListNavigation, !items.isEmpty {
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxX, inset: NSMakePoint(control.frame.width + 40, 0))
-            }            
+                if let popover = control.popover {
+                    popover.hide()
+                } else {
+                    showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxX, inset: NSMakePoint(control.frame.width + 40, 0))
+                }
+            }
         default:
             break
         }
@@ -399,6 +403,12 @@ class MainViewController: TelegramViewController {
     }
     
     private func _showFast( control: Control, accounts: [AccountWithInfo], passcodeData: PostboxAccessChallengeData, notifications: InAppNotificationSettings) {
+        
+        if let popover = control.popover {
+            popover.hide()
+            return
+        }
+        
         var items:[SPopoverItem] = []
         let context = self.context
         var headerItems: [TableRowItem] = []

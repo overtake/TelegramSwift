@@ -34,6 +34,8 @@ private let longOverHandleDisposable = MetaDisposable()
 
 open class Control: View {
     
+    public internal(set) weak var popover: Popover?
+    
     open var isEnabled:Bool = true {
         didSet {
             if isEnabled != oldValue {

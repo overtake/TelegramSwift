@@ -389,6 +389,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter) -
                         if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeRead {
                             filter.data.excludeRead = true
                         }
+                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeArchived {
+                            filter.data.excludeArchived = true
+                        }
                     }
                     
                     return filter
@@ -425,6 +428,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter) -
                     if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeRead {
                         filter.data.excludeRead = false
                     }
+                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeArchived {
+                        filter.data.excludeArchived = false
+                    }
                 }
                 return filter
             }
@@ -458,14 +464,14 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter) -
     })
     
     
-    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, statePromise.get()) |> mapToSignal { _, state -> Signal<(ChatListFiltersListState, [Peer]), NoError> in
-        return context.account.postbox.transaction { transaction -> [Peer] in
-            return state.filter.data.includePeers.compactMap { transaction.getPeer($0) }
+    let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, statePromise.get()) |> mapToSignal { _, state -> Signal<(ChatListFiltersListState, ([Peer], [Peer])), NoError> in
+        return context.account.postbox.transaction { transaction -> ([Peer], [Peer]) in
+            return (state.filter.data.includePeers.compactMap { transaction.getPeer($0) }, state.filter.data.excludePeers.compactMap { transaction.getPeer($0) })
         } |> map {
             (state, $0)
         }
     } |> map {
-        return chatListFilterEntries(state: $0, includePeers: $1, excludePeers: $1, arguments: arguments)
+        return chatListFilterEntries(state: $0, includePeers: $1.0, excludePeers: $1.1, arguments: arguments)
     } |> map {
           return InputDataSignalValue(entries: $0)
     }
@@ -526,7 +532,12 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter) -
             
             let filter = stateValue.with { $0.filter }
             
-            if !filter.isFullfilled {
+            if filter.isFullfilled {
+                alert(for: context.window, info: L10n.chatListFilterErrorLikeChats)
+            } else if filter.isEmpty {
+                alert(for: context.window, info: L10n.chatListFilterErrorEmpty)
+                f(.fail(.fields([_id_add_include : .shake])))
+            } else {
                 _ = showModalProgress(signal: requestUpdateChatListFilter(account: context.account, id: filter.id, filter: filter), for: context.window).start(error: { error in
                     switch error {
                     case .generic:
@@ -536,8 +547,6 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter) -
                     save(false)
                     f(.success(.navigationBack))
                 })
-            } else {
-                alert(for: context.window, info: "You can't add filter which concur to all chats. Please try again.")
             }
             
             

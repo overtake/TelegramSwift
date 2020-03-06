@@ -177,7 +177,6 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false, identifier: "filters")
     
-    controller._abolishWhenNavigationSame = true
     
     controller.updateDatas = { data in
         return .none
