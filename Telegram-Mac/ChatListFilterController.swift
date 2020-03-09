@@ -72,9 +72,11 @@ extension ChatListFiltersState {
 
 class SelectCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
-    init(_ context: AccountContext, excludePeerIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+    private let limitReachedText: String
+    init(_ context: AccountContext, excludePeerIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>) {
         self.callback = callback
-        super.init(context, excludePeerIds: excludePeerIds, additionTopItems: additionTopItems)
+        self.limitReachedText = limitReachedText
+        super.init(context, excludePeerIds: excludePeerIds, additionTopItems: additionTopItems, limit: limit)
     }
     
     override var interactionOk: String {
@@ -88,11 +90,14 @@ class SelectCallbackObject : ShareObject {
     override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         return callback(peerIds) |> mapError { _ in return String() }
     }
+    override func limitReached() {
+        alert(for: context.window, info: limitReachedText)
+    }
     override var searchPlaceholderKey: String {
         return "ChatList.Add.Placeholder"
     }
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
-        return !self.excludePeerIds.contains(peer.id)
+        return true
     }
     
 }
@@ -266,7 +271,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             index += 1
             break
         } else {
-            let viewType = bestGeneralViewType(fake, for: i + 1)
+            let viewType = bestGeneralViewType(fake, for: state.filter.data.includePeers.count < maximumPeers ? i + 1 : i)
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
@@ -323,7 +328,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             index += 1
             break
         } else {
-            let viewType = bestGeneralViewType(fake, for: i + 1)
+            let viewType = bestGeneralViewType(fake, for: state.filter.data.excludePeers.count < maximumPeers ? i + 1 : i)
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
@@ -393,7 +398,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.includePeers.count }, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
             updateState { state in
                 var state = state
                 
@@ -404,7 +409,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 
                 state.withUpdatedFilter { filter in
                     var filter = filter
-                    filter.data.includePeers = Array((filter.data.includePeers + peerIds).uniqueElements.prefix(maximumPeers))
+                    
+                    let updated:[PeerId] = Array((filter.data.includePeers + peerIds).uniqueElements)
+                    filter.data.includePeers = Array(updated.prefix(maximumPeers))
                     filter.data.excludePeers.removeAll(where: { peerIds.contains($0) })
                     var updatedCats = filter.data.categories
                     let cats = categories.map { ChatListFilterPeerCategories(rawValue: $0.id) }
@@ -424,7 +431,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         let items = stateValue.with { $0.filter.additionExcludeItems }
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.excludePeers.count }, limitReachedText: L10n.chatListFilterExcludeLimitReached, callback: { peerIds in
             updateState { state in
                 var state = state
                 state.withUpdatedFilter { filter in

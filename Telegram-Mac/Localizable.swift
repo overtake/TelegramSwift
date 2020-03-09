@@ -2061,6 +2061,8 @@ internal final class L10n {
   internal static var chatListFilterExcludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Desc") }
   /// EXCLUDED CHATS
   internal static var chatListFilterExcludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Header") }
+  /// Sorry, you can only exclude up to 100 chats.
+  internal static var chatListFilterExcludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.LimitReached") }
   /// Remove
   internal static var chatListFilterExcludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.RemoveChat") }
   /// Add Chats
@@ -2069,6 +2071,8 @@ internal final class L10n {
   internal static var chatListFilterIncludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Desc") }
   /// INCLUDED CHATS
   internal static var chatListFilterIncludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Header") }
+  /// Sorry, you can only include up to 100 chats.
+  internal static var chatListFilterIncludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.LimitReached") }
   /// Remove
   internal static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }
   /// Add a Custom Folder

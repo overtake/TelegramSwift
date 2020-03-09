@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0445DD71A7C2CA500267924"
+               BlueprintIdentifier = "A790A320236B17DF000451B5"
                BuildableName = "SSignalKit.framework"
                BlueprintName = "SSignalKit"
                ReferencedContainer = "container:SSignalKit_Xcode.xcodeproj">
@@ -42,7 +42,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0445DD71A7C2CA500267924"
+            BlueprintIdentifier = "A790A320236B17DF000451B5"
             BuildableName = "SSignalKit.framework"
             BlueprintName = "SSignalKit"
             ReferencedContainer = "container:SSignalKit_Xcode.xcodeproj">
@@ -64,7 +64,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0445DD71A7C2CA500267924"
+            BlueprintIdentifier = "A790A320236B17DF000451B5"
             BuildableName = "SSignalKit.framework"
             BlueprintName = "SSignalKit"
             ReferencedContainer = "container:SSignalKit_Xcode.xcodeproj">
@@ -82,7 +82,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0445DD71A7C2CA500267924"
+            BlueprintIdentifier = "A790A320236B17DF000451B5"
             BuildableName = "SSignalKit.framework"
             BlueprintName = "SSignalKit"
             ReferencedContainer = "container:SSignalKit_Xcode.xcodeproj">

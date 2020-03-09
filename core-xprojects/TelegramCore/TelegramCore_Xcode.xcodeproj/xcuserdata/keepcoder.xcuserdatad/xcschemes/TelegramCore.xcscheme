@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D09D8C001D4FAB1D0081DBEC"
+               BlueprintIdentifier = "D0B418661D7E03D5004562A4"
                BuildableName = "TelegramCore.framework"
                BlueprintName = "TelegramCore"
                ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
@@ -42,7 +42,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D09D8C001D4FAB1D0081DBEC"
+            BlueprintIdentifier = "D0B418661D7E03D5004562A4"
             BuildableName = "TelegramCore.framework"
             BlueprintName = "TelegramCore"
             ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
@@ -64,7 +64,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D09D8C001D4FAB1D0081DBEC"
+            BlueprintIdentifier = "D0B418661D7E03D5004562A4"
             BuildableName = "TelegramCore.framework"
             BlueprintName = "TelegramCore"
             ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">
@@ -82,7 +82,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D09D8C001D4FAB1D0081DBEC"
+            BlueprintIdentifier = "D0B418661D7E03D5004562A4"
             BuildableName = "TelegramCore.framework"
             BlueprintName = "TelegramCore"
             ReferencedContainer = "container:TelegramCore_Xcode.xcodeproj">

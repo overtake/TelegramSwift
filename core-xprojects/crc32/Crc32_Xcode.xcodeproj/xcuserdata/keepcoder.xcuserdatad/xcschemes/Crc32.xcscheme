@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D03E45632305CC310049C28B"
+               BlueprintIdentifier = "D03E46312306E0BB0049C28B"
                BuildableName = "Crc32.framework"
                BlueprintName = "Crc32"
                ReferencedContainer = "container:Crc32_Xcode.xcodeproj">
@@ -45,7 +45,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D03E45632305CC310049C28B"
+            BlueprintIdentifier = "D03E46312306E0BB0049C28B"
             BuildableName = "Crc32.framework"
             BlueprintName = "Crc32"
             ReferencedContainer = "container:Crc32_Xcode.xcodeproj">
@@ -63,7 +63,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D03E45632305CC310049C28B"
+            BlueprintIdentifier = "D03E46312306E0BB0049C28B"
             BuildableName = "Crc32.framework"
             BlueprintName = "Crc32"
             ReferencedContainer = "container:Crc32_Xcode.xcodeproj">

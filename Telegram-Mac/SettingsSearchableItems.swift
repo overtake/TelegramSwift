@@ -370,7 +370,7 @@ private func notificationSearchableItems(context: AccountContext, settings: Glob
         SettingsSearchableItem(id: .notifications(2), title: L10n.notificationSettingsMessagesPreview, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsMessageNotificationsPreview), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsToggleNotificationsHeader], present: { context, _, present in
             presentNotificationSettings(context, present, .messagePreviews)
         }),
-        SettingsSearchableItem(id: .notifications(18), title: L10n.notificationSettingsIncludePublicGroups, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(18), title: L10n.notificationSettingsIncludeGroups, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in
             presentNotificationSettings(context, present, .includePublicGroups)
         }),
         SettingsSearchableItem(id: .notifications(19), title: L10n.notificationSettingsIncludeChannels, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeIncludeMutedChannels), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in

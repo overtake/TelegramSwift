@@ -96,6 +96,8 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
                         switch entry {
                         case let .total(_, totalStateValue):
                             totalState = totalStateValue
+                        case .totalInGroup:
+                            break
                         case let .peer(peerId, state):
                             if let state = state, state.isUnread {
                                 let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(current.data.includePeers))] as? PeerNotificationSettingsView
