@@ -141,6 +141,7 @@ final class ChatInteraction : InterfaceObserver  {
     var addContact:()->Void = {}
     var blockContact: ()->Void = {}
     var openScheduledMessages: ()->Void = {}
+    var openBank: (String)->Void = { _ in }
     
     var getGradientOffsetRect:()->NSRect = {  return .zero }
 

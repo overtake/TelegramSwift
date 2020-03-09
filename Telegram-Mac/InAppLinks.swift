@@ -235,7 +235,7 @@ func execute(inapp:inAppLink) {
             }
         }
         let escaped = escape(with:url)
-        if let url = URL(string: escaped) {
+        if let urlQueryAllowed = escaped.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed), let url = URL(string: urlQueryAllowed) {
             let success:()->Void = {
                 
                 var path = url.absoluteString

@@ -605,8 +605,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     guard let strongSelf = strongSelf else {return}
                     strongSelf.context.composeCreateChannel()
                 }, theme.icons.composeNewChannel)];
-                
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
+                if let popover = control.popover {
+                    popover.hide()
+                } else {
+                    showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
+                }
             }
         }, for: .Click)
         

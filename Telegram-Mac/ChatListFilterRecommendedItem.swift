@@ -14,11 +14,11 @@ import SwiftSignalKit
 
 class ChatListFilterRecommendedItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter, description: String, viewType: GeneralViewType, add: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, title: String, description: String, viewType: GeneralViewType, add: @escaping()->Void) {
         
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: filter.title, color: theme.colors.text, font: .normal(.title))
+        _ = attr.append(string: title, color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: "\n", color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: description, color: theme.colors.grayText, font: .normal(.text))
         self.textLayout = TextViewLayout(attr)
@@ -54,7 +54,7 @@ private final class ChatListFilterRecommendedView : GeneralContainableRowView {
         super.init(frame: frameRect)
         addSubview(textView)
         addSubview(button)
-        
+        button.autohighlight = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
     }
@@ -73,6 +73,7 @@ private final class ChatListFilterRecommendedView : GeneralContainableRowView {
         
         textView.backgroundColor = backdorColor
         button.set(background: theme.colors.accent, for: .Normal)
+        button.set(background: theme.colors.accent.withAlphaComponent(0.85), for: .Highlight)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

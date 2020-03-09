@@ -2579,6 +2579,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.openScheduledChat()
         }
         
+        chatInteraction.openBank = { card in
+            
+            _ = showModalProgress(signal: getBankCardInfo(account: context.account, cardNumber: card), for: context.window).start(next: { info in
+                if let info = info {
+                    
+                    let values: [ValuesSelectorValue<String>] = info.urls.map {
+                        return ValuesSelectorValue(localized: $0.title, value: $0.url)
+                    }
+                    
+                    showModal(with: ValuesSelectorModalController(values: values, selected: nil, title: info.title, onComplete: { selected in
+                        execute(inapp: .external(link: selected.value, false))
+                    }), for: context.window)
+                 
+                }
+            })
+        }
+        
         chatInteraction.shareContact = { [weak self] peer in
             if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage {
                 _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, contact: peer).start()
@@ -3521,7 +3538,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         editButton.userInteractionEnabled = false
         
         back.set(handler: { [weak self] _ in
-            if let window = self?.window, !hasPopover(window) {
+            if let window = self?.window {
                 self?.showRightControls()
             }
         }, for: .Click)
@@ -3659,7 +3676,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     if !items.isEmpty {
-                        showPopover(for: button, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -65))
+                        if let popover = button.popover {
+                            popover.hide()
+                        } else {
+                            showPopover(for: button, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -65))
+                        }
                     }
                 }))
             }

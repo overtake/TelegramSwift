@@ -939,7 +939,7 @@ class ChatListController : PeersListController {
             |> map { [weak self] settings, isEnabled -> [SPopoverItem] in
                 var items:[SPopoverItem] = []
                 if isEnabled {
-                    items.append(SPopoverItem(L10n.chatListFilterSetup, {
+                    items.append(SPopoverItem(settings.filters.isEmpty ? L10n.chatListFilterSetupEmpty : L10n.chatListFilterSetup, {
                         context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
                     }, theme.icons.chat_filter_add))
                     

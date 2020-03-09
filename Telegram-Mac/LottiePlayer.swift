@@ -319,7 +319,7 @@ private final class PlayerRenderer {
         
         self.finished = false
         
-        let fps: Int = max(min(Int(player.fps()), self.animation.maximumFps), 30)
+        let fps: Int = max(min(Int(player.fps()), self.animation.maximumFps), 24)
         
         let bufferSize = Int(self.animation.size.width) * animation.backingScale * Int(self.animation.size.height) * animation.backingScale * 4
         

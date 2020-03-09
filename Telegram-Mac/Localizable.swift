@@ -1289,8 +1289,34 @@ internal final class L10n {
   internal static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   internal static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
-  /// Your message is too long.
-  internal static var chatInputErrorMessageTooLong: String  { return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong") }
+  /// %d
+  internal static func chatInputErrorMessageTooLongCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_countable", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d characters.
+  internal static func chatInputErrorMessageTooLongFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_few", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d characters.
+  internal static func chatInputErrorMessageTooLongMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_many", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d character.
+  internal static func chatInputErrorMessageTooLongOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_one", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d characters.
+  internal static func chatInputErrorMessageTooLongOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_other", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d characters.
+  internal static func chatInputErrorMessageTooLongTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_two", p1)
+  }
+  /// Your message is too long to be saved. Please remove %d characters.
+  internal static func chatInputErrorMessageTooLongZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_zero", p1)
+  }
   /// Waiting for the %@ to get online...
   internal static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
@@ -1939,7 +1965,7 @@ internal final class L10n {
   internal static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }
   /// All
   internal static var chatListFilterAll: String  { return L10n.tr("Localizable", "ChatList.Filter.All") }
-  /// All
+  /// All Chats
   internal static var chatListFilterAllChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AllChats") }
   /// Archive
   internal static var chatListFilterArchive: String  { return L10n.tr("Localizable", "ChatList.Filter.Archive") }
@@ -1953,6 +1979,8 @@ internal final class L10n {
   internal static var chatListFilterContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.Contacts") }
   /// Delete
   internal static var chatListFilterDelete: String  { return L10n.tr("Localizable", "ChatList.Filter.Delete") }
+  /// Create
+  internal static var chatListFilterDone: String  { return L10n.tr("Localizable", "ChatList.Filter.Done") }
   /// Edit
   internal static var chatListFilterEdit: String  { return L10n.tr("Localizable", "ChatList.Filter.Edit") }
   /// Edit Folders
@@ -1969,6 +1997,8 @@ internal final class L10n {
   internal static var chatListFilterHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Header") }
   /// Muted
   internal static var chatListFilterMutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.MutedChats") }
+  /// Create Folder
+  internal static var chatListFilterNewTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.NewTitle") }
   /// Non-Contacts
   internal static var chatListFilterNonContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.NonContacts") }
   /// Read
@@ -1977,6 +2007,36 @@ internal final class L10n {
   internal static var chatListFilterSecretChat: String  { return L10n.tr("Localizable", "ChatList.Filter.SecretChat") }
   /// Edit Folders
   internal static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
+  /// Add Folder
+  internal static var chatListFilterSetupEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.SetupEmpty") }
+  /// %d
+  internal static func chatListFilterShowMoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_countable", p1)
+  }
+  /// Show %d More Chats
+  internal static func chatListFilterShowMoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_few", p1)
+  }
+  /// Show %d More Chats
+  internal static func chatListFilterShowMoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_many", p1)
+  }
+  /// Show %d More Chat
+  internal static func chatListFilterShowMoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_one", p1)
+  }
+  /// Show %d More Chats
+  internal static func chatListFilterShowMoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_other", p1)
+  }
+  /// Show %d More Chats
+  internal static func chatListFilterShowMoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_two", p1)
+  }
+  /// Show %d More Chats
+  internal static func chatListFilterShowMoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.ShowMore_zero", p1)
+  }
   /// Small Groups
   internal static var chatListFilterSmallGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.SmallGroups") }
   /// Folder
@@ -2013,7 +2073,7 @@ internal final class L10n {
   internal static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }
   /// Add a Custom Folder
   internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
-  /// Drag and drop folder to sort it. Right click to remove
+  /// Drag and drop folder to sort it. Right click to remove.
   internal static var chatListFilterListDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Desc") }
   /// FOLDERS
   internal static var chatListFilterListHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Header") }
@@ -3675,10 +3735,10 @@ internal final class L10n {
   internal static var notificationSettingsCountUnreadMessages: String  { return L10n.tr("Localizable", "NotificationSettings.CountUnreadMessages") }
   /// Include Channels
   internal static var notificationSettingsIncludeChannels: String  { return L10n.tr("Localizable", "NotificationSettings.IncludeChannels") }
+  /// Include Groups
+  internal static var notificationSettingsIncludeGroups: String  { return L10n.tr("Localizable", "NotificationSettings.IncludeGroups") }
   /// Include Muted Chats
   internal static var notificationSettingsIncludeMutedChats: String  { return L10n.tr("Localizable", "NotificationSettings.IncludeMutedChats") }
-  /// Include Public Groups
-  internal static var notificationSettingsIncludePublicGroups: String  { return L10n.tr("Localizable", "NotificationSettings.IncludePublicGroups") }
   /// Message Preview
   internal static var notificationSettingsMessagesPreview: String  { return L10n.tr("Localizable", "NotificationSettings.MessagesPreview") }
   /// Notification Tone

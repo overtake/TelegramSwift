@@ -12,9 +12,11 @@ import TGUIKit
 class ChatListFiltersHeaderItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, text: NSAttributedString) {
+    fileprivate let sticker: LocalAnimatedSticker
+    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, sticker: LocalAnimatedSticker, text: NSAttributedString) {
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         self.context = context
+        self.sticker = sticker
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
     }
     
@@ -28,7 +30,7 @@ class ChatListFiltersHeaderItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return inset.bottom + 112 + textLayout.layoutSize.height
+        return 112 + textLayout.layoutSize.height + (textLayout.layoutSize.height > 0 ? inset.bottom : 0)
     }
 }
 
@@ -58,7 +60,7 @@ private final class ChatListFiltersHeaderView : TableRowView {
         
         guard let item = item as? ChatListFiltersHeaderItem else { return }
         
-        self.stickerView.update(with: LocalAnimatedSticker.folder.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: LocalAnimatedSticker.folder.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        self.stickerView.update(with: item.sticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: item.sticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
         self.textView.update(item.textLayout)
         

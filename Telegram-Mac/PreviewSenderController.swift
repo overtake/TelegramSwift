@@ -813,7 +813,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let text = self.genericView.textView.string().trimmed
         if text.length > ChatPresentationInterfaceState.maxShortInput {
-            alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLong)
+            alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
             return
         }
         

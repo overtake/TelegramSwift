@@ -41,9 +41,9 @@ class TouchBarStickerItemView: NSScrubberItemView {
     }
     
     
-    func update(context: AccountContext, file: TelegramMediaFile) {
+    func update(context: AccountContext, file: TelegramMediaFile, animated: Bool) {
         self.file = file
-        if file.isAnimatedSticker {
+        if file.isAnimatedSticker, animated {
             self.imageView?.removeFromSuperview()
             self.imageView = nil
 

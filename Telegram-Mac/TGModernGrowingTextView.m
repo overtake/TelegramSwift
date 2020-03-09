@@ -627,8 +627,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [super setString:string];
 }
     
-    
-    @end
+@end
 
 
 

@@ -748,8 +748,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }, for: .Click)
             
             
-            
-            revealRightView.addSubview(pin)
+            if item.filter == nil {
+                revealRightView.addSubview(pin)
+            }
             revealRightView.addSubview(delete)
             
             if item.filter == nil {

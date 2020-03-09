@@ -215,6 +215,7 @@
 		D076F88A2296D8F6004F895A /* ManageChannelDiscussionGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F8882296D8E9004F895A /* ManageChannelDiscussionGroup.swift */; };
 		D07E4140208A769D00FCA8F0 /* ProxyServersStatuses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07E413E208A769D00FCA8F0 /* ProxyServersStatuses.swift */; };
 		D081E10B217F5ADE003CD921 /* LocalizationPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D081E109217F5ADE003CD921 /* LocalizationPreview.swift */; };
+		D0830FC2241254FD006198E7 /* BankCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0830FC1241254FD006198E7 /* BankCards.swift */; };
 		D0879BC922F85A3E00C4D6B3 /* ImageRepresentationWithReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0879BC722F85A3E00C4D6B3 /* ImageRepresentationWithReference.swift */; };
 		D08984F32114B97400918162 /* ClearCloudDrafts.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08984F12114B97400918162 /* ClearCloudDrafts.swift */; };
 		D08984F621187ECA00918162 /* NetworkType.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08984F421187ECA00918162 /* NetworkType.swift */; };
@@ -627,6 +628,7 @@
 		D07827CA1E02F5B200071108 /* RichText.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		D07E413E208A769D00FCA8F0 /* ProxyServersStatuses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyServersStatuses.swift; sourceTree = "<group>"; };
 		D081E109217F5ADE003CD921 /* LocalizationPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationPreview.swift; sourceTree = "<group>"; };
+		D0830FC1241254FD006198E7 /* BankCards.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BankCards.swift; sourceTree = "<group>"; };
 		D08774FB1E3E39F600A97350 /* ManagedGlobalNotificationSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedGlobalNotificationSettings.swift; sourceTree = "<group>"; };
 		D08774FD1E3E3A3500A97350 /* GlobalNotificationSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalNotificationSettings.swift; sourceTree = "<group>"; };
 		D0879BC722F85A3E00C4D6B3 /* ImageRepresentationWithReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageRepresentationWithReference.swift; sourceTree = "<group>"; };
@@ -1454,6 +1456,7 @@
 		D0DF0C881D819C5F008AEB01 /* Peers */ = {
 			isa = PBXGroup;
 			children = (
+				D0830FC1241254FD006198E7 /* BankCards.swift */,
 				A7831B1F2403D16F0056AEAC /* ChannelStatistics.swift */,
 				A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */,
 				D0C26D6B1FE286C3004ABF18 /* FetchChatList.swift */,
@@ -1650,6 +1653,7 @@
 				C29340F41F5081280074991E /* UpdateGroupSpecificStickerset.swift in Sources */,
 				C25638021E79E7FC00311607 /* TwoStepVerification.swift in Sources */,
 				D00DBBD81E64E41100DB5485 /* CreateSecretChat.swift in Sources */,
+				D0830FC2241254FD006198E7 /* BankCards.swift in Sources */,
 				C2FD33EC1E696C79008D13D4 /* GroupsInCommon.swift in Sources */,
 				C239BE9D1E630CB300C2C453 /* UpdatePinnedMessage.swift in Sources */,
 				C239BE981E62F0D200C2C453 /* LoadMessagesIfNecessary.swift in Sources */,
