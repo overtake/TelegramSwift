@@ -39,10 +39,12 @@ class StickersScrubberBarItem: NSCustomTouchBarItem, NSScrubberDelegate, NSScrub
     private let entries: [TouchBarStickerEntry]
     private let context: AccountContext
     private let sendSticker: (TelegramMediaFile)->Void
-    init(identifier: NSTouchBarItem.Identifier, context: AccountContext, sendSticker:@escaping(TelegramMediaFile)->Void, entries: [TouchBarStickerEntry]) {
+    private let animated: Bool
+    init(identifier: NSTouchBarItem.Identifier, context: AccountContext, animated: Bool, sendSticker:@escaping(TelegramMediaFile)->Void, entries: [TouchBarStickerEntry]) {
         self.entries = entries
         self.context = context
         self.sendSticker = sendSticker
+        self.animated = animated
         super.init(identifier: identifier)
         
         let scrubber = TGScrubber()
@@ -101,6 +103,8 @@ class StickersScrubberBarItem: NSCustomTouchBarItem, NSScrubberDelegate, NSScrub
            runSelector()
         case .possible:
             break
+        @unknown default:
+            break
         }
     }
     
@@ -133,7 +137,7 @@ class StickersScrubberBarItem: NSCustomTouchBarItem, NSScrubberDelegate, NSScrub
             itemView = view
         case let .sticker(file):
             let view = scrubber.makeItem(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: StickersScrubberBarItem.stickerItemViewIdentifier), owner: nil) as! TouchBarStickerItemView
-            view.update(context: context, file: file)
+            view.update(context: context, file: file, animated: self.animated)
             itemView = view
         }
         
@@ -181,7 +185,7 @@ final class ChatStickersTouchBarPopover : NSTouchBar, NSTouchBarDelegate {
     func touchBar(_ touchBar: NSTouchBar, makeItemForIdentifier identifier: NSTouchBarItem.Identifier) -> NSTouchBarItem? {
         switch identifier {
         case .sticker:
-            let scrubberItem: NSCustomTouchBarItem = StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, sendSticker: { [weak self] file in
+            let scrubberItem: NSCustomTouchBarItem = StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, animated: true, sendSticker: { [weak self] file in
                 self?.dismiss(file)
             }, entries: self.entries)
             return scrubberItem

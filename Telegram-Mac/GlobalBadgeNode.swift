@@ -225,11 +225,8 @@ class GlobalBadgeNode: Node {
                     if filter.data.categories.contains(.nonContacts) {
                         tags.append(.nonContact)
                     }
-                    if filter.data.categories.contains(.smallGroups) {
-                        tags.append(.smallGroup)
-                    }
-                    if filter.data.categories.contains(.largeGroups) {
-                        tags.append(.largeGroup)
+                    if filter.data.categories.contains(.groups) {
+                        tags.append(.group)
                     }
                     if filter.data.categories.contains(.bots) {
                         tags.append(.bot)

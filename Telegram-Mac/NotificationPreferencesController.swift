@@ -57,20 +57,20 @@ private final class NotificationArguments {
     let notificationTone:(String) -> Void
     let toggleIncludeUnreadChats:(Bool) -> Void
     let toggleCountUnreadMessages:(Bool) -> Void
-    let toggleIncludePublicGroups:(Bool) -> Void
+    let toggleIncludeGroups:(Bool) -> Void
     let toggleIncludeChannels:(Bool) -> Void
     let allAcounts: ()-> Void
     let snoof: ()-> Void
     let updateJoinedNotifications: (Bool) -> Void
     let toggleBadge: (Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludePublicGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
         self.notificationTone = notificationTone
         self.toggleIncludeUnreadChats = toggleIncludeUnreadChats
         self.toggleCountUnreadMessages = toggleCountUnreadMessages
-        self.toggleIncludePublicGroups = toggleIncludePublicGroups
+        self.toggleIncludeGroups = toggleIncludeGroups
         self.toggleIncludeChannels = toggleIncludeChannels
         self.allAcounts = allAcounts
         self.snoof = snoof
@@ -171,8 +171,8 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludePublicGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains([.largeGroup, .smallGroup])), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-        arguments.toggleIncludePublicGroups(!settings.totalUnreadCountIncludeTags.contains([.largeGroup, .smallGroup]))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.group)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+        arguments.toggleIncludeGroups(!settings.totalUnreadCountIncludeTags.contains(.group))
     })))
     index += 1
     
@@ -240,13 +240,13 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
     }, toggleCountUnreadMessages: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayCategory(enable ? .messages : .chats)}).start()
-    }, toggleIncludePublicGroups: { enable in
+    }, toggleIncludeGroups: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             var tags: PeerSummaryCounterTags = value.totalUnreadCountIncludeTags
             if enable {
-                tags.insert([.largeGroup, .smallGroup])
+                tags.insert(.group)
             } else {
-                tags.remove([.largeGroup, .smallGroup])
+                tags.remove(.group)
             }
             return value.withUpdatedTotalUnreadCountIncludeTags(tags)
         }).start()

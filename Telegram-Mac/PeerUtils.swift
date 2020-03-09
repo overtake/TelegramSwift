@@ -58,10 +58,7 @@ final class TelegramFilterCategory : Peer {
         if category == .nonContacts {
             return L10n.chatListFilterNonContacts
         }
-        if category == .smallGroups {
-            return L10n.chatListFilterSmallGroups
-        }
-        if category == .largeGroups {
+        if category == .groups {
             return L10n.chatListFilterGroups
         }
         if category == .channels {
@@ -89,10 +86,7 @@ final class TelegramFilterCategory : Peer {
         if category == .nonContacts {
             return .icon(colors: theme.colors.peerColors(1), icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
         }
-        if category == .smallGroups {
-            return .icon(colors: theme.colors.peerColors(3), icon: theme.icons.chat_filter_groups_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
-        }
-        if category == .largeGroups {
+        if category == .groups {
             return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_large_groups_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
         }
         if category == .channels {

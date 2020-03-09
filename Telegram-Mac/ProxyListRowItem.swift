@@ -190,8 +190,8 @@ private final class ProxyListRowView : TableRowView, ViewDisplayDelegate {
             statusView.setFrameOrigin(innerInsets.left + item.inset.left, self.containerView.frame.height - statusView.frame.height - 7)
             delete.centerY(x: self.containerView.frame.width - delete.frame.width - innerInsets.right)
             info.centerY(x: self.containerView.frame.width - delete.frame.width - innerInsets.right - 10 - info.frame.width)
-            connected.centerY(x: innerInsets.left + 2)
-            connectingView.centerY(x: innerInsets.left + 2)
+            connected.centerY(x: innerInsets.left - 4)
+            connectingView.centerY(x: innerInsets.left - 1)
         }
         
     }

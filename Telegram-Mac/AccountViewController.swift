@@ -876,7 +876,7 @@ class LayoutAccountController : TableViewController {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = genericView.item(stableId: AccountInfoEntryId.index(Int(11))) {
+                if let item = genericView.item(stableId: AccountInfoEntryId.index(Int(12))) {
                     _ = genericView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
@@ -909,10 +909,10 @@ class LayoutAccountController : TableViewController {
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                         _ = genericView.select(item: item)
                     }
-                case controller.identifier == "wallet-info" || controller.identifier == "wallet-create" || controller.identifier == "wallet-splash":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
-                        _ = genericView.select(item: item)
-                    }
+//                case controller.identifier == "wallet-info" || controller.identifier == "wallet-create" || controller.identifier == "wallet-splash":
+//                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+//                        _ = genericView.select(item: item)
+//                    }
                 default:
                     genericView.cancelSelection()
                 }

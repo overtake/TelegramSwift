@@ -88,6 +88,7 @@ private final class ValuesSelectorModalView : View {
     
     func hasSearch(_ hasSearch: Bool) {
         searchView.isHidden = !hasSearch
+        separator.isHidden = !hasSearch
     }
     
     required init?(coder: NSCoder) {
@@ -96,7 +97,10 @@ private final class ValuesSelectorModalView : View {
     
     override func layout() {
         super.layout()
-        tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
+        
+        let offset: CGFloat = searchView.isHidden ? 0 : 50
+        
+        tableView.frame = NSMakeRect(0, offset, frame.width, frame.height - offset)
         searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
         searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - searchView.frame.height) / 2))
         separator.frame = NSMakeRect(0, 49, frame.width, .borderSize)
@@ -179,7 +183,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.hasSearch(self.stateValue.modify({$0}).values.count > 10)
+        genericView.hasSearch(self.stateValue.with { $0.values.count > 10 })
         
         let search:ValuePromise<SearchState> = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
 
@@ -260,7 +264,7 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 150, genericView.tableView.listHeight + 50)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 150, genericView.tableView.listHeight + self.stateValue.with { $0.values.count > 10 ? 50 : 0 })), animated: false)
     }
     
     override func returnKeyAction() -> KeyHandlerResult {

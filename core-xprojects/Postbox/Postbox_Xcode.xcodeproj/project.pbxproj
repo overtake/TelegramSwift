@@ -87,6 +87,7 @@
 		D079FCE71F06A31C0038FADE /* NoticeTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D079FCE51F06A3170038FADE /* NoticeTable.swift */; };
 		D07E7B46224E227100BB053B /* PostboxUpgrade_20to21.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07E7B44224E227100BB053B /* PostboxUpgrade_20to21.swift */; };
 		D07E7B49224E562C00BB053B /* PostboxUpgrade_21to22.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07E7B47224E562C00BB053B /* PostboxUpgrade_21to22.swift */; };
+		D0830FC62416397A006198E7 /* ChatListViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0830FC52416397A006198E7 /* ChatListViewState.swift */; };
 		D08775011E3E3D9F00A97350 /* PreferencesTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08774FF1E3E3D9F00A97350 /* PreferencesTable.swift */; };
 		D08775041E3E3E7400A97350 /* PreferencesEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08775021E3E3E7400A97350 /* PreferencesEntry.swift */; };
 		D08775071E3E3F2100A97350 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08775051E3E3F2100A97350 /* PreferencesView.swift */; };
@@ -300,6 +301,7 @@
 		D07CFF841DCA99C400761F81 /* InitialMessageHistoryData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InitialMessageHistoryData.swift; sourceTree = "<group>"; };
 		D07E7B44224E227100BB053B /* PostboxUpgrade_20to21.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_20to21.swift; sourceTree = "<group>"; };
 		D07E7B47224E562C00BB053B /* PostboxUpgrade_21to22.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_21to22.swift; sourceTree = "<group>"; };
+		D0830FC52416397A006198E7 /* ChatListViewState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListViewState.swift; sourceTree = "<group>"; };
 		D08774FF1E3E3D9F00A97350 /* PreferencesTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesTable.swift; sourceTree = "<group>"; };
 		D08775021E3E3E7400A97350 /* PreferencesEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesEntry.swift; sourceTree = "<group>"; };
 		D08775051E3E3F2100A97350 /* PreferencesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
@@ -677,6 +679,7 @@
 				D0AB0B8F1D65D4AB002C78E7 /* UnsentMessageIndicesView.swift */,
 				D0DF0C8E1D81A350008AEB01 /* PeerView.swift */,
 				D021E0DB1DB5237C00C6B04F /* ItemCollectionsView.swift */,
+				D0830FC52416397A006198E7 /* ChatListViewState.swift */,
 				D0FA0AC61E77F0A2005BB9B7 /* ItemCollectionInfosView.swift */,
 				D0E23DE11E808A9400B9B6D2 /* ItemCollectionIdsView.swift */,
 				D0BE38381E7C1FD4000079AF /* ItemCollectionInfoView.swift */,
@@ -919,6 +922,7 @@
 				D0B4184D1D7DFE20004562A4 /* ContactPeersView.swift in Sources */,
 				D00C7CE41E37861C0080C3D5 /* MessageView.swift in Sources */,
 				D08775011E3E3D9F00A97350 /* PreferencesTable.swift in Sources */,
+				D0830FC62416397A006198E7 /* ChatListViewState.swift in Sources */,
 				D0F7B1CC1E045C6A007EB8A5 /* ChatListIndexTable.swift in Sources */,
 				D07047A61F3CF63800F6A8D4 /* MessageHistoryTagSummaryView.swift in Sources */,
 				D0F7B1D31E045C6A007EB8A5 /* CachedPeerDataTable.swift in Sources */,

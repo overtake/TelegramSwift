@@ -756,11 +756,11 @@ class ChatListRowItem: TableRowItem {
                 _ = returnGroup(account: context.account, peerId: peerId).start()
             }
             
-            if pinnedType != .ad && groupId == .root {
+            if pinnedType != .ad && groupId == .root, filter == nil {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
-            if groupId == .root, (canArchive || associatedGroupId != .root) {
+            if groupId == .root, (canArchive || associatedGroupId != .root), filter == nil {
                 items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
             }
             

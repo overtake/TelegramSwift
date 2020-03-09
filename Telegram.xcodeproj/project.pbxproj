@@ -849,6 +849,7 @@
 		D07C6D802346A43000468B1A /* monkey_unsee.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07C6D7E2346A42E00468B1A /* monkey_unsee.tgs */; };
 		D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07C6D7F2346A42F00468B1A /* monkey_see.tgs */; };
 		D07C6D832347701700468B1A /* WalletProcessTransactionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07C6D822347701700468B1A /* WalletProcessTransactionController.swift */; };
+		D0830FC424127473006198E7 /* folder_new.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* folder_new.tgs */; };
 		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
@@ -1975,6 +1976,7 @@
 		D07C6D7E2346A42E00468B1A /* monkey_unsee.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_unsee.tgs; sourceTree = "<group>"; };
 		D07C6D7F2346A42F00468B1A /* monkey_see.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_see.tgs; sourceTree = "<group>"; };
 		D07C6D822347701700468B1A /* WalletProcessTransactionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletProcessTransactionController.swift; sourceTree = "<group>"; };
+		D0830FC324127468006198E7 /* folder_new.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_new.tgs; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
 		D098C7151D7E175A007784E4 /* Telegram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telegram.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -4537,6 +4539,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				D0830FC324127468006198E7 /* folder_new.tgs */,
 				A7029EF9240E3CCF00A89ABD /* folder.tgs */,
 				A7393D412407FF0F00CE44CA /* dice_idle.tgs */,
 				A7C7215823FD473D00CE3F75 /* success_saved.tgs */,
@@ -4886,6 +4889,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0830FC424127473006198E7 /* folder_new.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,

@@ -610,7 +610,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             if let result = self.chatInteraction?.presentation.inputQueryResult, let chatInteraction = self.chatInteraction {
                 switch result {
                 case let .stickers(stickers):
-                    return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, sendSticker: { [weak self] file in
+                    return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, animated: false, sendSticker: { [weak self] file in
                         self?.chatInteraction?.sendAppFile(file, false)
                         self?.chatInteraction?.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))

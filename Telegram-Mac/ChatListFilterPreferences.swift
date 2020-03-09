@@ -28,10 +28,8 @@ extension ChatListFilter {
             return theme.icons.chat_filter_unmuted
         } else if data.categories == .all && !data.excludeMuted && data.excludeRead {
             return theme.icons.chat_filter_unread
-        } else if data.categories == .smallGroups {
+        } else if data.categories == .groups {
             return theme.icons.chat_filter_groups
-        } else if data.categories == .largeGroups {
-            return theme.icons.chat_filter_large_groups
         } else if data.categories == .channels {
             return theme.icons.chat_filter_channels
         } else if data.categories == .contacts {
@@ -139,11 +137,8 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
                     if current.data.categories.contains(.nonContacts) {
                         tags.append(.nonContact)
                     }
-                    if current.data.categories.contains(.smallGroups) {
-                        tags.append(.smallGroup)
-                    }
-                    if current.data.categories.contains(.largeGroups) {
-                        tags.append(.largeGroup)
+                    if current.data.categories.contains(.groups) {
+                        tags.append(.group)
                     }
                     if current.data.categories.contains(.bots) {
                         tags.append(.bot)
@@ -186,12 +181,6 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
             }
             signals.append(s)
         }
-        return combineLatest(signals) |> mapToSignal { values in
-            return renderedTotalUnreadCount(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox) |> map { total in
-                var values = values
-                values.append((id: -1, count: total.0))
-                return values
-            }
-        }
+        return combineLatest(signals) 
     }
 }

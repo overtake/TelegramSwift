@@ -499,8 +499,8 @@ public class Modal: NSObject {
         }, for: .Down)
         
         background.set(handler: { [weak self] control in
-            guard let controller = self?.controller else { return }
-            if controller.closable, !controller.view._mouseInside() {
+            guard let controller = self?.controller, let `self` = self else { return }
+            if controller.closable, !controller.view._mouseInside() && !self.container.mouseInside() {
                 controller.close()
             }
             if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
