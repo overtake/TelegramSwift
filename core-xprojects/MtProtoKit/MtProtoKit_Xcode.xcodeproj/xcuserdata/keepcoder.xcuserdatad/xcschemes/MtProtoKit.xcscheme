@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0CB05F61ADC4483005E298F"
+               BlueprintIdentifier = "D079AB961AF39B8000076F59"
                BuildableName = "MtProtoKit.framework"
                BlueprintName = "MtProtoKit"
                ReferencedContainer = "container:MtProtoKit_Xcode.xcodeproj">
@@ -42,7 +42,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0CB05F61ADC4483005E298F"
+            BlueprintIdentifier = "D079AB961AF39B8000076F59"
             BuildableName = "MtProtoKit.framework"
             BlueprintName = "MtProtoKit"
             ReferencedContainer = "container:MtProtoKit_Xcode.xcodeproj">
@@ -64,7 +64,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0CB05F61ADC4483005E298F"
+            BlueprintIdentifier = "D079AB961AF39B8000076F59"
             BuildableName = "MtProtoKit.framework"
             BlueprintName = "MtProtoKit"
             ReferencedContainer = "container:MtProtoKit_Xcode.xcodeproj">
@@ -82,7 +82,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0CB05F61ADC4483005E298F"
+            BlueprintIdentifier = "D079AB961AF39B8000076F59"
             BuildableName = "MtProtoKit.framework"
             BlueprintName = "MtProtoKit"
             ReferencedContainer = "container:MtProtoKit_Xcode.xcodeproj">

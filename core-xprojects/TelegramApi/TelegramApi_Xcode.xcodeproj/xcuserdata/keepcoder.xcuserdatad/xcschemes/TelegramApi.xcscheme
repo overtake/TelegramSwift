@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D035731E22B5C1FC00F0920D"
+               BlueprintIdentifier = "D0CC4AC222BA46F30088F36D"
                BuildableName = "TelegramApi.framework"
                BlueprintName = "TelegramApi"
                ReferencedContainer = "container:TelegramApi_Xcode.xcodeproj">
@@ -45,7 +45,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D035731E22B5C1FC00F0920D"
+            BlueprintIdentifier = "D0CC4AC222BA46F30088F36D"
             BuildableName = "TelegramApi.framework"
             BlueprintName = "TelegramApi"
             ReferencedContainer = "container:TelegramApi_Xcode.xcodeproj">
@@ -63,7 +63,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D035731E22B5C1FC00F0920D"
+            BlueprintIdentifier = "D0CC4AC222BA46F30088F36D"
             BuildableName = "TelegramApi.framework"
             BlueprintName = "TelegramApi"
             ReferencedContainer = "container:TelegramApi_Xcode.xcodeproj">

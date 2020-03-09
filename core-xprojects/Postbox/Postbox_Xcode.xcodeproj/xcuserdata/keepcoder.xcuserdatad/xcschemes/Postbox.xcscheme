@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D0E3A7491B28A7E300A402D9"
+               BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
                BuildableName = "Postbox.framework"
                BlueprintName = "Postbox"
                ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
@@ -42,7 +42,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0E3A7491B28A7E300A402D9"
+            BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
             BuildableName = "Postbox.framework"
             BlueprintName = "Postbox"
             ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
@@ -64,7 +64,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0E3A7491B28A7E300A402D9"
+            BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
             BuildableName = "Postbox.framework"
             BlueprintName = "Postbox"
             ReferencedContainer = "container:Postbox_Xcode.xcodeproj">
@@ -82,7 +82,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D0E3A7491B28A7E300A402D9"
+            BlueprintIdentifier = "D0B418121D7DFAF2004562A4"
             BuildableName = "Postbox.framework"
             BlueprintName = "Postbox"
             ReferencedContainer = "container:Postbox_Xcode.xcodeproj">

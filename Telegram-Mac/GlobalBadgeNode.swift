@@ -184,6 +184,8 @@ class GlobalBadgeNode: Node {
                         switch entry {
                         case let .total(_, totalStateValue):
                             totalState = totalStateValue
+                        case .totalInGroup:
+                            break
                         case let .peer(peerId, state):
                             if let state = state, state.isUnread {
                                 let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(filter.data.includePeers))] as? PeerNotificationSettingsView

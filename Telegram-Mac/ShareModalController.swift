@@ -286,7 +286,9 @@ class ShareObject {
     let context: AccountContext
     let emptyPerformOnClose: Bool
     let excludePeerIds: Set<PeerId>
-    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil) {
+    let limit: Int?
+    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
+        self.limit = limit
         self.context = context
         self.emptyPerformOnClose = emptyPerformOnClose
         self.excludePeerIds = excludePeerIds
@@ -310,6 +312,9 @@ class ShareObject {
     
     func perform(to entries:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         return .complete()
+    }
+    func limitReached() {
+        
     }
     
     var hasLink: Bool {
@@ -686,6 +691,21 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             }
             self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
 
+            if let limit = self.share.limit, value.selected.count > limit {
+                DispatchQueue.main.async { [unowned self] in
+                    self.selectInteractions.update(animated: true, { current in
+                        var current = current
+                        for peerId in added {
+                            if let peer = current.peers[peerId] {
+                                current = current.withToggledSelected(peerId, peer: peer)
+                            }
+                        }
+                        return current
+                    })
+                    self.share.limitReached()
+                }
+            }
+            
         }
     }
     
@@ -988,9 +1008,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     
                     switch(location) {
                     case let .Initial(count, _):
-                        signal = context.account.viewTracker.tailChatListView(groupId: .root, count: count)
+                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true }), count: count)
                     case let .Index(index, _):
-                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, index: index, count: 30)
+                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true }), index: index, count: 30)
                     }
                     
                     return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult], Peer), NoError> in
@@ -1046,8 +1066,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             offset -= 1
                         }
                         
-                        entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, true))
-                        contains[value.3.id] = value.3.id
+                        if !share.excludePeerIds.contains(value.3.id) {
+                            entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, true))
+                            contains[value.3.id] = value.3.id
+                        }
                         
                         for entry in value.0.entries {
                             switch entry {
@@ -1113,7 +1135,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var entries:[SelectablePeersEntry] = []
                         var contains:[PeerId:PeerId] = [:]
                         var i:Int32 = Int32.max
-                        if L10n.peerSavedMessages.lowercased().hasPrefix(query.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.request.lowercased()) || values.0.contains(where: {$0.peerId == context.peerId}) {
+                        if L10n.peerSavedMessages.lowercased().hasPrefix(query.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.request.lowercased()) || values.0.contains(where: {$0.peerId == context.peerId}), !share.excludePeerIds.contains(values.2.id) {
                             let index = MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: i), timestamp: i)
                             entries.append(.plain(values.2, ChatListIndex(pinningIndex: 0, messageIndex: index), nil, true))
                             i -= 1
