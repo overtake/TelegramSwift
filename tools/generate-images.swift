@@ -458,6 +458,7 @@ func initialize() -> [String] {
     array.append("poll_selected_correct_outgoing")
     array.append("poll_selected_incorrect_outgoing")
     
+    array.append("chat_filter_edit")
     array.append("chat_filter_add")
     array.append("chat_filter_bots")
     array.append("chat_filter_channels")
@@ -487,6 +488,7 @@ func initialize() -> [String] {
     array.append("chat_filter_non_contacts_avatar")
     array.append("chat_filter_archive_avatar")
     
+
     array.append("group_invite_via_link")
     
 

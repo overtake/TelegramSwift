@@ -5763,6 +5763,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_filter_edit: CGImage {
+      if let image = cached.with({ $0["chat_filter_edit"] }) {
+          return image
+      } else {
+          let image = _chat_filter_edit()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_filter_edit"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chat_filter_add: CGImage {
       if let image = cached.with({ $0["chat_filter_add"] }) {
           return image
@@ -6688,6 +6701,7 @@ final class TelegramIconsTheme {
   private let _poll_selected_outgoing: ()->CGImage
   private let _poll_selected_correct_outgoing: ()->CGImage
   private let _poll_selected_incorrect_outgoing: ()->CGImage
+  private let _chat_filter_edit: ()->CGImage
   private let _chat_filter_add: ()->CGImage
   private let _chat_filter_bots: ()->CGImage
   private let _chat_filter_channels: ()->CGImage
@@ -7170,6 +7184,7 @@ final class TelegramIconsTheme {
       poll_selected_outgoing: @escaping()->CGImage,
       poll_selected_correct_outgoing: @escaping()->CGImage,
       poll_selected_incorrect_outgoing: @escaping()->CGImage,
+      chat_filter_edit: @escaping()->CGImage,
       chat_filter_add: @escaping()->CGImage,
       chat_filter_bots: @escaping()->CGImage,
       chat_filter_channels: @escaping()->CGImage,
@@ -7651,6 +7666,7 @@ final class TelegramIconsTheme {
       self._poll_selected_outgoing = poll_selected_outgoing
       self._poll_selected_correct_outgoing = poll_selected_correct_outgoing
       self._poll_selected_incorrect_outgoing = poll_selected_incorrect_outgoing
+      self._chat_filter_edit = chat_filter_edit
       self._chat_filter_add = chat_filter_add
       self._chat_filter_bots = chat_filter_bots
       self._chat_filter_channels = chat_filter_channels

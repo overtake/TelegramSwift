@@ -559,22 +559,24 @@ class ChatListController : PeersListController {
                     }))
                     items.append(.init(L10n.chatListFilterAddChats, handler: {
                         showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(filter.data.includePeers), additionTopItems: nil, limit: 100 - filter.data.includePeers.count, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
-                            return combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-                                var state = state
+                            return updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                                var filters = filters
                                 filter.data.includePeers = filter.data.includePeers + peerIds
-                                state.withAddedFilter(filter, onlyReplace: true)
-                                return state
-                            }), replaceRemoteChatListFilters(account: context.account)) |> ignoreValues
+                                if let index = filters.firstIndex(where: {$0.id == filter.id }) {
+                                    filters[index] = filter
+                                }
+                                return filters
+                            }) |> ignoreValues
                             
                         })), for: context.window)
                     }))
                     items.append(.init(L10n.chatListFilterDelete, handler: {
                         confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
-                            _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-                                var state = state
-                                state.withRemovedFilter(filter)
-                                return state
-                            }), replaceRemoteChatListFilters(account: context.account)).start()
+                            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                                var filters = filters
+                                filters.removeAll(where: { $0.id == filter.id })
+                                return filters
+                            }).start()
                         })
                         
                     }))
@@ -670,11 +672,11 @@ class ChatListController : PeersListController {
                 $0.withUpdatedTabs([]).withUpdatedFilter(nil)
             } )
         case let .filter(filterId):
-            filterDisposable.set(filterView.start(next: { [weak self] settings in
+            filterDisposable.set(filterView.start(next: { [weak self] filters in
                 var shouldBack: Bool = false
                 self?.updateFilter { current in
                     var current = current
-                    if let updated = settings.filters.first(where: { $0.id == filterId }) {
+                    if let updated = filters.first(where: { $0.id == filterId }) {
                         current = current.withUpdatedFilter(updated)
                     } else {
                         shouldBack = true
@@ -688,18 +690,18 @@ class ChatListController : PeersListController {
                 }
             }))
         default:
-            filterDisposable.set(filterView.start(next: { [weak self] settings in
+            filterDisposable.set(filterView.start(next: { [weak self] filters in
                 self?.updateFilter( { current in
                     var current = current
                     if let filter = current.filter {
-                        if let updated = settings.filters.first(where: { $0.id == filter.id }) {
+                        if let updated = filters.first(where: { $0.id == filter.id }) {
                             current = current.withUpdatedFilter(updated)
                         } else {
                             current = current.withUpdatedFilter(nil)
                         }
                     }
                     
-                    current = current.withUpdatedTabs(settings.filters)
+                    current = current.withUpdatedTabs(filters)
                     return current
                 } )
             }))
@@ -936,12 +938,12 @@ class ChatListController : PeersListController {
         return combineLatest(chatListFilterPreferences(postbox: context.account.postbox), isEnabled)
             |> take(1)
             |> deliverOnMainQueue
-            |> map { [weak self] settings, isEnabled -> [SPopoverItem] in
+            |> map { [weak self] filters, isEnabled -> [SPopoverItem] in
                 var items:[SPopoverItem] = []
                 if isEnabled {
-                    items.append(SPopoverItem(settings.filters.isEmpty ? L10n.chatListFilterSetupEmpty : L10n.chatListFilterSetup, {
+                    items.append(SPopoverItem(filters.isEmpty ? L10n.chatListFilterSetupEmpty : L10n.chatListFilterSetup, {
                         context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-                    }, theme.icons.chat_filter_add))
+                    }, filters.isEmpty ? theme.icons.chat_filter_add : theme.icons.chat_filter_edit))
                     
                     if self?.filterValue?.filter != nil {
                         items.append(SPopoverItem(L10n.chatListFilterAll, {
@@ -951,10 +953,10 @@ class ChatListController : PeersListController {
                         }))
                     }
                     
-                    if !settings.filters.isEmpty {
+                    if !filters.isEmpty {
                         items.append(SPopoverItem(false))
                     }
-                    for filter in settings.filters {
+                    for filter in filters {
                         let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
                             
                         }, getColor: { isSelected in
@@ -1220,15 +1222,15 @@ class ChatListController : PeersListController {
         } else {
             let prefs = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1)
             
-            _ = prefs.start(next: { [weak self] settings in
+            _ = prefs.start(next: { [weak self] filters in
                 if index == 0 {
                     self?.updateFilter {
                         $0.withUpdatedFilter(nil)
                     }
                     self?.scrollup()
-                } else if settings.filters.count >= index {
+                } else if filters.count >= index {
                     self?.updateFilter {
-                        $0.withUpdatedFilter(settings.filters[index - 1])
+                        $0.withUpdatedFilter(filters[index - 1])
                     }
                     self?.scrollup()
                 } else {

@@ -651,24 +651,45 @@ public final class TextViewLayout : Equatable {
         calculateLayout(isBigEmoji: isBigEmoji)
 
         strokeRects.removeAll()
+        
         attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
             if let value = value {
-                for line in lines {
-                    let lineRange = NSIntersectionRange(range, line.range)
-                    if lineRange.length != 0 {
-                        var leftOffset: CGFloat = 0.0
-                        if lineRange.location != line.range.location {
-                            leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
-                        }
-                        let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
-                        
-                        
-                        let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
-                        if interactions.isDomainLink(value) && strokeLinks {
+                if interactions.isDomainLink(value) && strokeLinks {
+                    for line in lines {
+                        let lineRange = NSIntersectionRange(range, line.range)
+                        if lineRange.length != 0 {
+                            var leftOffset: CGFloat = 0.0
+                            if lineRange.location != line.range.location {
+                                leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                            }
+                            let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                            
+                            let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             strokeRects.append((rect, color))
+                            
+                            if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
+                                var leftOffset: CGFloat = 0.0
+                                if lineRange.location != line.range.location {
+                                    leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                                }
+                                let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                                
+                                toolTipRects.append(NSMakeRect(line.frame.minX + leftOffset, line.frame.minY - line.frame.height, rightOffset - leftOffset, line.frame.height))
+                            }
                         }
-                        if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
+                    }
+                }
+                if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
+                    for line in lines {
+                        let lineRange = NSIntersectionRange(range, line.range)
+                        if lineRange.length != 0 {
+                            var leftOffset: CGFloat = 0.0
+                            if lineRange.location != line.range.location {
+                                leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
+                            }
+                            let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
+                            
                             toolTipRects.append(NSMakeRect(line.frame.minX + leftOffset, line.frame.minY - line.frame.height, rightOffset - leftOffset, line.frame.height))
                         }
                     }
@@ -686,8 +707,6 @@ public final class TextViewLayout : Equatable {
                         if lineRange.location != line.range.location {
                             leftOffset += floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
                         }
-                        
-                        
                         let rect = NSMakeRect(line.frame.minX + leftOffset + 10, line.frame.minY - (size.height - 7) + 2, size.width - 8, size.height - 8)
                         hexColorsRect.append((rect, color, attributedString.attributedSubstring(from: range).string))
                     }

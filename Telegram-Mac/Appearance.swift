@@ -2107,6 +2107,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                poll_selected_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.webPreviewActivityBubble_outgoing) },
                                                poll_selected_correct_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelected")!, backgound: palette.greenBubble_outgoing) },
                                                poll_selected_incorrect_outgoing: { generatePollIcon(NSImage(named: "Icon_PollSelectedIncorrect")!, backgound: palette.redBubble_outgoing) },
+                                               chat_filter_edit: { NSImage(named: "Icon_FilterEdit")!.precomposed(palette.accentIcon) },
                                                chat_filter_add: { NSImage(named: "Icon_FilterAdd")!.precomposed(palette.accentIcon) },
                                                chat_filter_bots:  { NSImage(named: "Icon_FilterBots")!.precomposed(palette.accentIcon) },
                                                chat_filter_channels:  { NSImage(named: "Icon_FilterChannels")!.precomposed(palette.accentIcon) },

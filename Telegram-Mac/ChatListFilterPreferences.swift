@@ -55,17 +55,13 @@ extension ChatListFilter {
 }
 
 
-func chatListFilterPreferences(postbox: Postbox) -> Signal<ChatListFiltersState, NoError> {
-    return postbox.preferencesView(keys: [PreferencesKeys.chatListFilters]) |> map { view in
-        return view.values[PreferencesKeys.chatListFilters] as? ChatListFiltersState ?? ChatListFiltersState.default
-    }
+func chatListFilterPreferences(postbox: Postbox) -> Signal<[ChatListFilter], NoError> {
+    return updatedChatListFilters(postbox: postbox)
 }
 
 func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count: Int32)], NoError>  {
-    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0 } |> mapToSignal { settings -> Signal<[(id: Int32, count: Int32)], NoError> in
-        
-        let filters = settings.filters
-        
+    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0 } |> mapToSignal { filters -> Signal<[(id: Int32, count: Int32)], NoError> in
+                
         var signals:[Signal<(id: Int32, count: Int32), NoError>] = []
         for current in filters {
             

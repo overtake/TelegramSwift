@@ -681,17 +681,12 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             let added = value.selected.subtracting(oldValue.selected)
             let removed = oldValue.selected.subtracting(value.selected)
 
-            for item in added {
-                let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? L10n.peerDeletedUser
-                genericView.tokenizedView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
+            
+            let selected = value.selected.filter {
+                $0.namespace != ChatListFilterPeerCategories.Namespace
             }
             
-            for item in removed {
-                genericView.tokenizedView.removeToken(uniqueId: item.toInt64(), animated: animated)
-            }
-            self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
-
-            if let limit = self.share.limit, value.selected.count > limit {
+            if let limit = self.share.limit, selected.count > limit {
                 DispatchQueue.main.async { [unowned self] in
                     self.selectInteractions.update(animated: true, { current in
                         var current = current
@@ -704,7 +699,20 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     })
                     self.share.limitReached()
                 }
+                return
             }
+            
+            for item in added {
+                let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? L10n.peerDeletedUser
+                genericView.tokenizedView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
+            }
+            
+            for item in removed {
+                genericView.tokenizedView.removeToken(uniqueId: item.toInt64(), animated: animated)
+            }
+            self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
+
+            
             
         }
     }
@@ -1006,11 +1014,18 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 } else {
                     var signal:Signal<(ChatListView,ViewUpdateType), NoError>
                     
+                    let predicate: ChatListFilterPredicate?
+                    if !share.excludePeerIds.isEmpty {
+                        predicate = ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true })
+                    } else {
+                        predicate = nil
+                    }
+                    
                     switch(location) {
                     case let .Initial(count, _):
-                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true }), count: count)
+                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: predicate, count: count)
                     case let .Index(index, _):
-                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true }), index: index, count: 30)
+                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: predicate, index: index, count: 30)
                     }
                     
                     return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult], Peer), NoError> in

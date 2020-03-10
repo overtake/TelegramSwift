@@ -855,6 +855,9 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
         if media is TelegramMediaPoll {
             return false
         }
+        if media is TelegramMediaDice {
+            return false
+        }
     }
     
     for attr in message.attributes {

@@ -42,6 +42,7 @@ class ChatListRevealItem: TableStickItem {
         self.counters = [:]
         super.init(initialSize)
     }
+
     
     func menuItems(for item: ChatListFilter?) -> [ContextMenuItem] {
         return self._menuItems?(item) ?? []
