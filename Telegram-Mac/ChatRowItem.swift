@@ -1355,7 +1355,6 @@ class ChatRowItem: TableRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
                 
         let result = super.makeSize(width, oldWidth: oldWidth)
-        
         isForceRightLine = false
         
         if let channelViewsAttributed = channelViewsAttributed {
@@ -1371,8 +1370,8 @@ class ChatRowItem: TableRowItem {
 
         func layout() -> Bool {
             if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
-                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent, replyMarkupModel == nil {
-                    widthForContent = _contentSize.width - 5
+                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
+                   // widthForContent = _contentSize.width - 5
                     self.isForceRightLine = true
                     //_contentSize = self.makeContentSize(widthForContent)
                     return true
@@ -1576,7 +1575,7 @@ class ChatRowItem: TableRowItem {
         //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
         
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
-        let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
+        let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
         

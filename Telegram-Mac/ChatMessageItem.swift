@@ -548,13 +548,15 @@ class ChatMessageItem: ChatRowItem {
             return super.isFixedRightPosition
         }
         
-        if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+        if textLayout.lines.count > 1, let line = textLayout.lines.last, max(realContentSize.width, maxTitleWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
+       
         return super.isForceRightLine
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+
         if containsBigEmoji {
             return rightSize.height + 3
         }

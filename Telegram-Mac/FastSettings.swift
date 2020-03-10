@@ -141,8 +141,8 @@ class FastSettings {
     private static let kArchiveAutohidden = "kArchiveAutohidden"
     private static let kAutohideArchiveFeature = "kAutohideArchiveFeature"
 
+    private static let kLeftColumnWidth = "kLeftColumnWidth"
 
-    
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -368,6 +368,15 @@ class FastSettings {
         UserDefaults.standard.set(true, forKey: "dice_\(messageId.id)_\(messageId.namespace)")
         UserDefaults.standard.synchronize()
     }
+    
+    static func updateLeftColumnWidth(_ width: CGFloat) {
+        UserDefaults.standard.set(width, forKey: kLeftColumnWidth)
+        UserDefaults.standard.synchronize()
+    }
+    static var leftColumnWidth: CGFloat {
+        return UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300
+    }
+    
     /*
  
      +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {

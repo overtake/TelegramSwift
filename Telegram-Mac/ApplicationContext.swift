@@ -558,16 +558,33 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         leftController.openChat(index, force: force)
     }
     
-  
+    func splitResizeCursor(at point: NSPoint) -> NSCursor? {
+        if FastSettings.isMinimisize {
+            return NSCursor.resizeRight
+        } else {
+            if window.frame.width - point.x <= 380 {
+                return NSCursor.resizeLeft
+            }
+            return NSCursor.resizeLeftRight
+        }
+    }
 
-
+    func splitViewShouldResize(at point: NSPoint) {
+        if !FastSettings.isMinimisize {
+            let max_w = window.frame.width - 380
+            let result = min(max(point.x, 300), max_w)
+            FastSettings.updateLeftColumnWidth(result)
+            splitView.updateStartSize(size: NSMakeSize(result, result), controller: leftController)
+        }
+        
+    }
     
 
     
     func splitViewDidNeedSwapToLayout(state: SplitViewState) {
         let previousState = splitView.state
         splitView.removeAllControllers();
-        let w:CGFloat = 300;
+        let w:CGFloat = FastSettings.leftColumnWidth;
         FastSettings.isMinimisize = false
         splitView.mustMinimisize = false
         switch state {
