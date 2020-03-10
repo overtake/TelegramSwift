@@ -30,15 +30,21 @@ fileprivate class SplitMinimisizeView : Control {
         checkCursor()
     }
     
+    
     func checkCursor() {
         if let splitView = splitView {
             if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
-                if mouseInside() {
-                    if splitView.state == .minimisize {
-                        NSCursor.resizeRight.set()
+                if mouseInside() || (NSEvent.pressedMouseButtons & (1 << 0)) != 0  {
+                    if let cursor = splitView.delegate?.splitResizeCursor(at: self.frame.origin.offsetBy(dx: 5, dy: 0)) {
+                        cursor.set()
                     } else {
-                        NSCursor.resizeLeft.set()
+                        if splitView.state == .minimisize {
+                            NSCursor.resizeRight.set()
+                        } else {
+                            NSCursor.resizeLeft.set()
+                        }
                     }
+                  
                 } else {
                     NSCursor.arrow.set()
                 }
@@ -67,19 +73,17 @@ fileprivate class SplitMinimisizeView : Control {
         
         if let splitView = splitView {
             if let minimisize = splitView.delegate?.splitViewIsCanMinimisize(), minimisize {
-                if splitView.state == .minimisize {
-                    NSCursor.resizeRight.set()
-                } else {
-                    NSCursor.resizeLeft.set()
-                }
+                checkCursor()
                 
                 let current = splitView.convert(event.locationInWindow, from: nil)
                 
                 
-                if startPoint.x - current.x >= 100, splitView.state != .minimisize {
+                splitView.delegate?.splitViewShouldResize(at: current)
+                
+                if current.x <= 100, splitView.state != .minimisize {
                     splitView.needMinimisize()
                     startPoint = current
-                } else if current.x - startPoint.x >= 100, splitView.state == .minimisize {
+                } else if current.x >= 100, splitView.state == .minimisize {
                     splitView.needFullsize()
                     startPoint = current
                 } else {
@@ -90,13 +94,36 @@ fileprivate class SplitMinimisizeView : Control {
         }
     }
     
+    private func notifyTableEndResize(in view: NSView) {
+        for view in view.subviews {
+            if let view = view as? TGFlipableTableView {
+                view.viewDidEndLiveResize()
+            } else {
+                notifyTableEndResize(in: view)
+            }
+        }
+    }
+    private func notifyTableStartResize(in view: NSView) {
+        for view in view.subviews {
+            if let view = view as? TGFlipableTableView {
+                view.viewWillStartLiveResize()
+            } else {
+                notifyTableStartResize(in: view)
+            }
+        }
+    }
+    
     fileprivate override func mouseUp(with event: NSEvent) {
         startPoint = NSZeroPoint
+        if let splitView = splitView {
+            notifyTableEndResize(in: splitView)
+        }
     }
     
     fileprivate override func mouseDown(with event: NSEvent) {
         if let splitView = splitView {
             startPoint = splitView.convert(event.locationInWindow, from: nil)
+            notifyTableStartResize(in: splitView)
         }
     }
     
@@ -137,6 +164,19 @@ public protocol SplitViewDelegate : class {
     func splitViewDidNeedFullsize(controller:ViewController) -> Void
     func splitViewIsCanMinimisize() -> Bool
     func splitViewDrawBorder() -> Bool
+    
+    func splitViewShouldResize(at point: NSPoint) -> Void
+    
+    func splitResizeCursor(at point: NSPoint) -> NSCursor?
+}
+
+public extension SplitViewDelegate {
+    func splitViewShouldResize(at point: NSPoint) -> Void {
+        
+    }
+    func splitResizeCursor(at point: NSPoint) -> NSCursor? {
+        return nil
+    }
 }
 
 
@@ -176,7 +216,7 @@ public class SplitView : View {
     
     private var _proportions:[Int:SplitProportion] = [Int:SplitProportion]()
     private var _startSize:[Int:NSSize] = [Int:NSSize]()
-    private var _controllers:[ViewController] = [ViewController]()
+    fileprivate var _controllers:[ViewController] = [ViewController]()
     private var _issingle:Bool?
     private var _layoutProportions:[SplitViewState:SplitProportion] = [SplitViewState:SplitProportion]()
     
@@ -270,11 +310,8 @@ public class SplitView : View {
     
     public func updateStartSize(size:NSSize, controller:ViewController) -> Void {
         _startSize[controller.internalId] = size;
-        
         _proportions[controller.internalId] = SplitProportion(min:size.width, max:size.height);
-        
-       update();
-
+        needsLayout = true
     }
     
     public func update(_ forceNotice:Bool = false) -> Void {
@@ -381,7 +418,6 @@ public class SplitView : View {
             }
             
             size = NSMakeSize(x + min > frame.width ? (frame.width - x) : min, frame.height);
-            
             let rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
             
             if(!NSEqualRects(rect, obj.view.frame)) {
