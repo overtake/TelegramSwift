@@ -1233,4 +1233,5 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
     }
     
+    
 }

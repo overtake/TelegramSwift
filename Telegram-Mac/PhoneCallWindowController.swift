@@ -55,7 +55,6 @@ private class PhoneCallWindowView : View {
         
         controls.material = .dark
         controls.blendingMode = .behindWindow
-        
         secureContainerView.wantsLayer = true
         secureContainerView.background = NSColor(0x000000, 0.75)
         secureTextView.backgroundColor = .clear

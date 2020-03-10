@@ -36,7 +36,9 @@ public class TabBarView: View {
         super.draw(layer, in: ctx)
         
         ctx.setFillColor(presentation.colors.border.cgColor)
-        ctx.fill(self.bounds)
+        ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
+        ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
+
     }
     
     func control(for index: Int) -> Control {

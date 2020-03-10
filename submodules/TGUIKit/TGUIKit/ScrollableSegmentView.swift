@@ -463,13 +463,20 @@ public class ScrollableSegmentView: View {
         super.layout()
         scrollView.frame = bounds
         borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-        selectorView.frame = selectorFrame
         for item in self.items {
             if let view = item.view {
                 view.setFrameSize(NSMakeSize(view.size.width, frame.height))
             }
         }
-        layoutItems(animated: false)
+        var x: CGFloat = 0
+        for item in self.items {
+            if let view = item.view {
+                view.setFrameOrigin(NSMakePoint(x, 0))
+                x += view.size.width
+            }
+        }
+        documentView.frame = CGRect(origin: .zero, size: NSMakeSize(x, frame.height))
+        selectorView.frame = selectorFrame
     }
     
     public func updateItems(_ items:[ScrollableSegmentItem], animated: Bool, autoscroll: Bool = true) -> Void {

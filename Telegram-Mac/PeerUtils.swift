@@ -81,28 +81,28 @@ final class TelegramFilterCategory : Peer {
     
     var icon: EmptyAvatartType? {
         if category == .contacts {
-            return .icon(colors: theme.colors.peerColors(5), icon: theme.icons.chat_filter_private_chats_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(5), icon: theme.icons.chat_filter_private_chats_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .nonContacts {
-            return .icon(colors: theme.colors.peerColors(1), icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(1), icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .groups {
-            return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_large_groups_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(2), icon: theme.icons.chat_filter_large_groups_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .channels {
-            return .icon(colors: theme.colors.peerColors(0), icon: theme.icons.chat_filter_channels_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(0), icon: theme.icons.chat_filter_channels_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .bots {
-            return .icon(colors: theme.colors.peerColors(6), icon: theme.icons.chat_filter_bots_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(6), icon: theme.icons.chat_filter_bots_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .excludeMuted {
-            return .icon(colors: theme.colors.peerColors(0), icon: theme.icons.chat_filter_muted_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(0), icon: theme.icons.chat_filter_muted_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .excludeRead {
-            return .icon(colors: theme.colors.peerColors(3), icon: theme.icons.chat_filter_read_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(3), icon: theme.icons.chat_filter_read_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         if category == .excludeArchived {
-            return .icon(colors: theme.colors.peerColors(5), icon: theme.icons.chat_filter_archive_avatar, iconSize: NSMakeSize(20, 20), cornerRadius: nil)
+            return .icon(colors: theme.colors.peerColors(5), icon: theme.icons.chat_filter_archive_avatar, iconSize: NSMakeSize(24, 24), cornerRadius: nil)
         }
         return nil
     }

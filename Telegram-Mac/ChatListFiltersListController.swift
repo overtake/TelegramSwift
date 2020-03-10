@@ -135,30 +135,29 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     let arguments = ChatListPresetArguments(context: context, openPreset: { filter, isNew in
         context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
     }, removePreset: { filter in
-        _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-            var state = state
-            state.withRemovedFilter(filter)
-            return state
-        }), replaceRemoteChatListFilters(account: context.account)).start()
+        confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
+            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                var filters = filters
+                filters.removeAll(where: { $0.id == filter.id })
+                return filters
+            }).start()
+        })
+        
     }, addFeatured: { featured in
-        _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-            var state = state
-            var new = ChatListFilter.new(excludeIds: state.filters.map { $0.id })
+        _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+            var filters = filters
+            var new = ChatListFilter.new(excludeIds: filters.map { $0.id })
             new.data = featured.data
             new.title = featured.title
-            state.withAddedFilter(new)
-            return state
-        }), replaceRemoteChatListFilters(account: context.account)).start()
+            filters.append(new)
+            return filters
+        }).start()
     })
     
     
     let chatCountCache = Atomic<[ChatListFilterData: Int]>(value: [:])
     
-    let filtersWithCounts = context.account.postbox.preferencesView(keys: [PreferencesKeys.chatListFilters])
-        |> map { preferences -> [ChatListFilter] in
-            let filtersState = preferences.values[PreferencesKeys.chatListFilters] as? ChatListFiltersState ?? ChatListFiltersState.default
-            return filtersState.filters
-        }
+    let filtersWithCounts = chatListFilterPreferences(postbox: context.account.postbox)
         |> distinctUntilChanged
         |> mapToSignal { filters -> Signal<[(ChatListFilter, Int)], NoError> in
             return context.account.postbox.transaction { transaction -> [(ChatListFilter, Int)] in
@@ -238,11 +237,11 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
             }, resort: { row in
                 
             }, complete: { from, to in
-                _ = combineLatest(updateChatListFilterSettingsInteractively(postbox: context.account.postbox, { state in
-                    var state = state
-                    state.withMoveFilter(from - range.location, to - range.location)
-                    return state
-                }), replaceRemoteChatListFilters(account: context.account)).start()
+                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                    var filters = filters
+                    filters.move(at: from - range.location, to: to - range.location)
+                    return filters
+                }).start()
                 
             })
         } else {
