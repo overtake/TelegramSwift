@@ -89,7 +89,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     
     
     required init(frame frameRect: NSRect, shareObject: ShareObject) {
-        tokenizedView = TokenizedView(frame: NSMakeRect(0, 0, 260, 30), localizationFunc: { key in
+        tokenizedView = TokenizedView(frame: NSMakeRect(0, 0, 300, 30), localizationFunc: { key in
             return translate(key: key, [])
         }, placeholderKey: shareObject.searchPlaceholderKey)
         super.init(frame: frameRect)
@@ -286,13 +286,15 @@ class ShareObject {
     let context: AccountContext
     let emptyPerformOnClose: Bool
     let excludePeerIds: Set<PeerId>
+    let defaultSelectedIds:Set<PeerId>
     let limit: Int?
-    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
+    init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], defaultSelectedIds: Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
         self.limit = limit
         self.context = context
         self.emptyPerformOnClose = emptyPerformOnClose
         self.excludePeerIds = excludePeerIds
         self.additionTopItems = additionTopItems
+        self.defaultSelectedIds = defaultSelectedIds
     }
     
     var multipleSelection: Bool {
@@ -702,17 +704,17 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 return
             }
             
-            for item in added {
+            let tokens:[SearchToken] = added.map { item in
                 let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? L10n.peerDeletedUser
-                genericView.tokenizedView.addToken(token: SearchToken(name: title, uniqueId: item.toInt64()), animated: animated)
+                return SearchToken(name: title, uniqueId: item.toInt64())
             }
+            genericView.tokenizedView.addTokens(tokens: tokens, animated: animated)
             
-            for item in removed {
-                genericView.tokenizedView.removeToken(uniqueId: item.toInt64(), animated: animated)
+            let idsToRemove:[Int64] = removed.map {
+                $0.toInt64()
             }
+            genericView.tokenizedView.removeTokens(uniqueIds: idsToRemove, animated: animated)
             self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
-
-            
             
         }
     }
@@ -894,6 +896,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         let request = Promise<ChatListIndexRequest>()
         let context = self.share.context
         let selectInteraction = self.selectInteractions
+        
+     
+        
         let share = self.share
         selectInteraction.add(observer: self)
         let previous:Atomic<[SelectablePeersEntry]?> = Atomic(value: nil)
@@ -940,7 +945,24 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         let multipleSelection = self.share.multipleSelection
         
         
-        
+        let defaultItems = context.account.postbox.transaction { transaction -> [Peer] in
+            var peers:[Peer] = []
+            
+            if let addition = share.additionTopItems {
+                for item in addition.items {
+                    if share.defaultSelectedIds.contains(item.peer.id) {
+                        peers.append(item.peer)
+                    }
+                }
+            }
+           
+            for peerId in share.defaultSelectedIds  {
+                if let peer = transaction.getPeer(peerId) {
+                    peers.append(peer)
+                }
+            }
+            return peers
+        }
         
         let list:Signal<TableUpdateTransition, NoError> = combineLatest(request.get() |> distinctUntilChanged |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue) |> mapToSignal { location, query -> Signal<TableUpdateTransition, NoError> in
             
@@ -1188,14 +1210,25 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             }
         } |> deliverOnMainQueue
         
-        disposable.set(list.start(next: { [weak self] transition in
+        let signal:Signal<TableUpdateTransition, NoError> = defaultItems |> deliverOnMainQueue |> mapToSignal { [weak self] defaultSelected in
+            
+            self?.selectInteractions.update(animated: false, { value in
+                var value = value
+                for peer in defaultSelected {
+                    value = value.withToggledSelected(peer.id, peer: peer)
+                }
+                return value
+            })
+            
+            return list
+        } |> deliverOnMainQueue
+        
+        disposable.set(signal.start(next: { [weak self] transition in
             self?.genericView.tableView.resetScrollNotifies()
             self?.genericView.tableView.scroll(to: .up(false))
-            self?.genericView.tableView.merge(with:transition)
-            
-            
+            self?.genericView.tableView.merge(with: transition)
             self?.genericView.tableView.cancelHighlight()
-            
+        
             self?.readyOnce()
             
         }))

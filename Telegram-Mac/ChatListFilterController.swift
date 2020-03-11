@@ -19,33 +19,50 @@ private extension ChatListFilter {
     var additionIncludeItems: [ShareAdditionItem] {
         var items:[ShareAdditionItem] = []
         
-        if !self.data.categories.contains(.contacts) {
+        items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .groups), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .channels), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .bots), status: ""))
+        return items
+    }
+    var selectedIncludeItems: [ShareAdditionItem] {
+        var items:[ShareAdditionItem] = []
+        
+        if self.data.categories.contains(.contacts) {
             items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
         }
-        if !self.data.categories.contains(.nonContacts) {
+        if self.data.categories.contains(.nonContacts) {
             items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
         }
-        if !self.data.categories.contains(.groups) {
+        if self.data.categories.contains(.groups) {
             items.append(.init(peer: TelegramFilterCategory(category: .groups), status: ""))
         }
-        if !self.data.categories.contains(.channels) {
+        if self.data.categories.contains(.channels) {
             items.append(.init(peer: TelegramFilterCategory(category: .channels), status: ""))
         }
-        if !self.data.categories.contains(.bots) {
+        if self.data.categories.contains(.bots) {
             items.append(.init(peer: TelegramFilterCategory(category: .bots), status: ""))
         }
         return items
     }
     var additionExcludeItems: [ShareAdditionItem] {
         var items:[ShareAdditionItem] = []
+        items.append(.init(peer: TelegramFilterCategory(category: .excludeMuted), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .excludeRead), status: ""))
+        items.append(.init(peer: TelegramFilterCategory(category: .excludeArchived), status: ""))
+        return items
+    }
+    var selectedExcludeItems: [ShareAdditionItem] {
+        var items:[ShareAdditionItem] = []
         
-        if !self.data.excludeMuted {
+        if self.data.excludeMuted {
             items.append(.init(peer: TelegramFilterCategory(category: .excludeMuted), status: ""))
         }
-        if !self.data.excludeRead {
+        if self.data.excludeRead {
             items.append(.init(peer: TelegramFilterCategory(category: .excludeRead), status: ""))
         }
-        if !self.data.excludeArchived {
+        if self.data.excludeArchived {
             items.append(.init(peer: TelegramFilterCategory(category: .excludeArchived), status: ""))
         }
         return items
@@ -73,10 +90,10 @@ private extension ChatListFilter {
 class SelectCallbackObject : ShareObject {
     private let callback:([PeerId])->Signal<Never, NoError>
     private let limitReachedText: String
-    init(_ context: AccountContext, excludePeerIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+    init(_ context: AccountContext, defaultSelectedIds: Set<PeerId>, additionTopItems: ShareAdditionItems?, limit: Int?, limitReachedText: String, callback:@escaping([PeerId])->Signal<Never, NoError>) {
         self.callback = callback
         self.limitReachedText = limitReachedText
-        super.init(context, excludePeerIds: excludePeerIds, additionTopItems: additionTopItems, limit: limit)
+        super.init(context, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
     }
     
     override var interactionOk: String {
@@ -406,7 +423,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.includePeers.count }, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.includePeers + $0.filter.selectedIncludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.includePeers.count }, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
             updateState { state in
                 var state = state
                 
@@ -418,10 +435,8 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 state.withUpdatedFilter { filter in
                     var filter = filter
                     
-                    let updated:[PeerId] = Array((filter.data.includePeers + peerIds).uniqueElements)
-                    filter.data.includePeers = Array(updated.prefix(maximumPeers))
-                    filter.data.excludePeers.removeAll(where: { peerIds.contains($0) })
-                    var updatedCats = filter.data.categories
+                    filter.data.includePeers = Array(peerIds.uniqueElements.prefix(maximumPeers))
+                    var updatedCats: ChatListFilterPeerCategories = []
                     let cats = categories.map { ChatListFilterPeerCategories(rawValue: $0.id) }
                     for cat in cats {
                         updatedCats.insert(cat)
@@ -439,7 +454,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         let items = stateValue.with { $0.filter.additionExcludeItems }
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(stateValue.with { $0.filter.data.includePeers }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.excludePeers.count }, limitReachedText: L10n.chatListFilterExcludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.excludePeers + $0.filter.selectedExcludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: stateValue.with { maximumPeers - $0.filter.data.excludePeers.count }, limitReachedText: L10n.chatListFilterExcludeLimitReached, callback: { peerIds in
             updateState { state in
                 var state = state
                 state.withUpdatedFilter { filter in
@@ -449,8 +464,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                         $0.namespace == ChatListFilterPeerCategories.Namespace
                     }
                     let peerIds = Set(peerIds).subtracting(categories)
-                    filter.data.excludePeers = Array((filter.data.excludePeers + peerIds).uniqueElements.prefix(100))
-                    filter.data.includePeers.removeAll(where: { peerIds.contains($0) })
+                    filter.data.excludePeers = Array(peerIds.uniqueElements.prefix(maximumPeers))
                     for cat in categories {
                         if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeMuted {
                             filter.data.excludeMuted = true

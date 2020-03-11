@@ -558,7 +558,7 @@ class ChatListController : PeersListController {
                         context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
                     }))
                     items.append(.init(L10n.chatListFilterAddChats, handler: {
-                        showModal(with: ShareModalController(SelectCallbackObject(context, excludePeerIds: Set(filter.data.includePeers), additionTopItems: nil, limit: 100 - filter.data.includePeers.count, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
+                        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers), additionTopItems: nil, limit: 100 - filter.data.includePeers.count, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
                             return updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
                                 var filters = filters
                                 filter.data.includePeers = filter.data.includePeers + peerIds

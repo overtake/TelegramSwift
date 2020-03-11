@@ -200,6 +200,7 @@ private final class RendererState  {
                 data = UnsafeRawPointer(frameData)
             }
             
+            
             if let data = data {
                 return RenderedFrame(key: animation.key, frame: frame, size: animation.size, data: data, backingScale: self.animation.backingScale)
             }
@@ -982,7 +983,6 @@ class LottiePlayerView : NSView {
                     let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)
                     let layer = Unmanaged.passRetained(metal)
-                    
                     self.context = PlayerContext(animation, displayFrame: { frame in
                         layer.takeUnretainedValue().render(bytes: frame.data, size: frame.size, backingScale: frame.backingScale)
                     }, release: {
