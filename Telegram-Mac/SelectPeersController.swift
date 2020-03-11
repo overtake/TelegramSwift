@@ -1110,13 +1110,15 @@ class SelectPeersController: ComposeViewController<[PeerId], Void, SelectPeersCo
                 alert(for: mainWindow, info: L10n.composeCreateGroupLimitError)
             }
             
-            for item in added {
-                genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+            let tokens = added.map {
+                return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? L10n.peerDeletedUser, uniqueId: $0.toInt64())
             }
+            genericView.tokenView.addTokens(tokens: tokens, animated: animated)
             
-            for item in removed {
-                genericView.tokenView.removeToken(uniqueId: item.toInt64(), animated: animated)
+            let idsToRemove:[Int64] = removed.map {
+                $0.toInt64()
             }
+            genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)
             
             self.nextEnabled(!value.selected.isEmpty)
             
@@ -1291,14 +1293,15 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 let added = value.selected.subtracting(oldValue.selected)
                 let removed = oldValue.selected.subtracting(value.selected)
                 
-                for item in added {
-                    genericView.tokenView.addToken(token: SearchToken(name: value.peers[item]?.compactDisplayTitle ?? tr(L10n.peerDeletedUser), uniqueId: item.toInt64()), animated: animated)
+                let tokens = added.map {
+                    return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? L10n.peerDeletedUser, uniqueId: $0.toInt64())
                 }
+                genericView.tokenView.addTokens(tokens: tokens, animated: animated)
                 
-                for item in removed {
-                    genericView.tokenView.removeToken(uniqueId: item.toInt64(), animated: animated)
+                let idsToRemove:[Int64] = removed.map {
+                    $0.toInt64()
                 }
-                
+                genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)                
                 
                 modal?.interactions?.updateEnables(!value.selected.isEmpty)
             }

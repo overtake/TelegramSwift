@@ -250,6 +250,11 @@ private final class PopularPeersRowView : TableRowView {
         addSubview(separator)
     }
     
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+        separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
+    }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -269,9 +274,7 @@ private final class PopularPeersRowView : TableRowView {
         }
         
         tableView.endTableUpdates()
-        
         separator.backgroundColor = theme.colors.border
-        separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
     }
     
     required init?(coder: NSCoder) {

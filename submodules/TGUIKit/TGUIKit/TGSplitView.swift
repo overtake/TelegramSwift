@@ -11,6 +11,8 @@ import SwiftSignalKit
 fileprivate class SplitMinimisizeView : Control {
     
     private var startPoint:NSPoint = NSZeroPoint
+    private var startDragging: NSPoint = .zero
+    private var acceptAllDrags: Bool = false
     weak var splitView:SplitView?
     override init() {
         super.init()
@@ -77,17 +79,24 @@ fileprivate class SplitMinimisizeView : Control {
                 
                 let current = splitView.convert(event.locationInWindow, from: nil)
                 
+                if startDragging == .zero {
+                    startDragging = current
+                    acceptAllDrags = false
+                }
                 
-                splitView.delegate?.splitViewShouldResize(at: current)
-                
-                if current.x <= 100, splitView.state != .minimisize {
-                    splitView.needMinimisize()
-                    startPoint = current
-                } else if current.x >= 100, splitView.state == .minimisize {
-                    splitView.needFullsize()
-                    startPoint = current
-                } else {
-                    splitView.resize(to: current)
+                if abs(startDragging.x - current.x) > frame.width / 2 || abs(startDragging.y - current.y) > frame.width / 2 || acceptAllDrags {
+                    acceptAllDrags = true
+                    splitView.delegate?.splitViewShouldResize(at: current)
+                    
+                    if current.x <= 100, splitView.state != .minimisize {
+                        splitView.needMinimisize()
+                        startPoint = current
+                    } else if current.x >= 100, splitView.state == .minimisize {
+                        splitView.needFullsize()
+                        startPoint = current
+                    } else {
+                        splitView.resize(to: current)
+                    }
                 }
             }
             
@@ -96,25 +105,25 @@ fileprivate class SplitMinimisizeView : Control {
     
     private func notifyTableEndResize(in view: NSView) {
         for view in view.subviews {
-            if let view = view as? TGFlipableTableView {
-                view.viewDidEndLiveResize()
+            if let view = view as? TableView {
+                view.layoutItems()
             } else {
                 notifyTableEndResize(in: view)
             }
         }
     }
-    private func notifyTableStartResize(in view: NSView) {
-        for view in view.subviews {
-            if let view = view as? TGFlipableTableView {
-                view.viewWillStartLiveResize()
-            } else {
-                notifyTableStartResize(in: view)
-            }
-        }
+
+    override func rightMouseUp(with event: NSEvent) {
+        super.rightMouseUp(with: event)
+        startPoint = .zero
+        startDragging = .zero
+        acceptAllDrags = false
     }
     
     fileprivate override func mouseUp(with event: NSEvent) {
-        startPoint = NSZeroPoint
+        startPoint = .zero
+        startDragging = .zero
+        acceptAllDrags = false
         if let splitView = splitView {
             notifyTableEndResize(in: splitView)
         }
@@ -123,13 +132,11 @@ fileprivate class SplitMinimisizeView : Control {
     fileprivate override func mouseDown(with event: NSEvent) {
         if let splitView = splitView {
             startPoint = splitView.convert(event.locationInWindow, from: nil)
-            notifyTableStartResize(in: splitView)
         }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
         if let splitView = splitView {
             if let drawBorder = splitView.delegate?.splitViewDrawBorder(), drawBorder {
                 ctx.setFillColor(presentation.colors.border.cgColor)
