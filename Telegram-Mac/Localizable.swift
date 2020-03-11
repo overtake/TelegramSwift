@@ -2051,6 +2051,14 @@ internal final class L10n {
   internal static var chatListFilterConfirmRemoveOK: String  { return L10n.tr("Localizable", "ChatList.Filter.Confirm.Remove.OK") }
   /// Are you sure you want to delete folder?
   internal static var chatListFilterConfirmRemoveText: String  { return L10n.tr("Localizable", "ChatList.Filter.Confirm.Remove.Text") }
+  /// Cancel
+  internal static var chatListFilterDiscardCancel: String  { return L10n.tr("Localizable", "ChatList.Filter.Discard.Cancel") }
+  /// Discard Changes
+  internal static var chatListFilterDiscardHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Discard.Header") }
+  /// Discard
+  internal static var chatListFilterDiscardOK: String  { return L10n.tr("Localizable", "ChatList.Filter.Discard.OK") }
+  /// Are you sure you want to discard all changes?
+  internal static var chatListFilterDiscardText: String  { return L10n.tr("Localizable", "ChatList.Filter.Discard.Text") }
   /// Please add some chats or chat types to the folder.
   internal static var chatListFilterErrorEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.Error.Empty") }
   /// Can’t create a folder that includes all your chats.
@@ -2061,7 +2069,7 @@ internal final class L10n {
   internal static var chatListFilterExcludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Desc") }
   /// EXCLUDED CHATS
   internal static var chatListFilterExcludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.Header") }
-  /// Sorry, you can only exclude up to 100 chats.
+  /// Sorry, you can only add up to 100 chats.
   internal static var chatListFilterExcludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.LimitReached") }
   /// Remove
   internal static var chatListFilterExcludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.RemoveChat") }
@@ -2071,7 +2079,7 @@ internal final class L10n {
   internal static var chatListFilterIncludeDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Desc") }
   /// INCLUDED CHATS
   internal static var chatListFilterIncludeHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.Header") }
-  /// Sorry, you can only include up to 100 chats.
+  /// Sorry, you can only add up to 100 chats.
   internal static var chatListFilterIncludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.LimitReached") }
   /// Remove
   internal static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }

@@ -592,7 +592,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     controller.backInvocation = { data, f in
         if stateValue.with({ $0.filter != filter }) {
-            confirm(for: context.window, header: "Discard Changes", information: "Are you sure you want to discard all changes?", okTitle: "Yes", cancelTitle: "Cancel", successHandler: { _ in
+            confirm(for: context.window, header: L10n.chatListFilterDiscardHeader, information: L10n.chatListFilterDiscardText, okTitle: L10n.chatListFilterDiscardOK, cancelTitle: L10n.chatListFilterDiscardCancel, successHandler: { _ in
                 f(true)
             })
         } else {
