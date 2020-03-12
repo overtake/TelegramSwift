@@ -395,7 +395,7 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
 
             switch callSettings {
             case .everybody:
-                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .textTopItem))
+                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .singleItem))
             case .contacts:
                 entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .firstItem))
                 entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor), .lastItem))

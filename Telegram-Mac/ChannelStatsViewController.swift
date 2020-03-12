@@ -42,6 +42,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         entries.append(.loading)
     } else if let stats = state.stats  {
         
+       // stats.messageInteractions.append(ChannelStatsMessageInteractions)
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -78,10 +79,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             context.loadFollowersGraph()
             updateIsLoading(identifier, true)
         }))
-//        graphs.append(Graph(graph: stats.interactionsGraph, title: "INTERACTIONS", identifier: InputDataIdentifier("interactionsGraph"), type: .general, load: { identifier in
-//            context.loadInteractionsGraph()
-//            updateIsLoading(identifier, true)
-//        }))
+
         graphs.append(Graph(graph: stats.viewsBySourceGraph, title: "VIEWS BY SOURCE", identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
             context.loadViewsBySourceGraph()
             updateIsLoading(identifier, true)
@@ -98,8 +96,11 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             context.loadMuteGraph()
             updateIsLoading(identifier, true)
         }))
+        graphs.append(Graph(graph: stats.interactionsGraph, title: "INTERACTIONS", identifier: InputDataIdentifier("interactionsGraph"), type: .general, load: { identifier in
+            context.loadInteractionsGraph()
+            updateIsLoading(identifier, true)
+        }))
 
-       
         for graph in graphs {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
@@ -135,6 +136,8 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
                 }))
                 index += 1
                 updateIsLoading(graph.identifier, false)
+            case .Empty:
+                break
             }
         }
         

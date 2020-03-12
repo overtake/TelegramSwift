@@ -370,11 +370,11 @@ class FastSettings {
     }
     
     static func updateLeftColumnWidth(_ width: CGFloat) {
-        UserDefaults.standard.set(width, forKey: kLeftColumnWidth)
+        UserDefaults.standard.set(round(width), forKey: kLeftColumnWidth)
         UserDefaults.standard.synchronize()
     }
     static var leftColumnWidth: CGFloat {
-        return UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300
+        return round(UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300)
     }
     
     /*

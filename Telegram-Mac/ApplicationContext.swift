@@ -572,7 +572,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     func splitViewShouldResize(at point: NSPoint) {
         if !FastSettings.isMinimisize {
             let max_w = window.frame.width - 380
-            let result = min(max(point.x, 300), max_w)
+            let result = round(min(max(point.x, 300), max_w))
             FastSettings.updateLeftColumnWidth(result)
             splitView.updateStartSize(size: NSMakeSize(result, result), controller: leftController)
         }

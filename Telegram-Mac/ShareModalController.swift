@@ -311,6 +311,9 @@ class ShareObject {
         return "ShareModal.Search.Placeholder"
     }
 
+    var alwaysEnableDone: Bool {
+        return false
+    }
     
     func perform(to entries:[PeerId], comment: String? = nil) -> Signal<Never, String> {
         return .complete()
@@ -714,7 +717,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 $0.toInt64()
             }
             genericView.tokenizedView.removeTokens(uniqueIds: idsToRemove, animated: animated)
-            self.modal?.interactions?.updateEnables(!value.selected.isEmpty)
+            self.modal?.interactions?.updateEnables(!value.selected.isEmpty || share.alwaysEnableDone)
             
         }
     }
@@ -1292,7 +1295,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             }
             return .invoked
         }
-        if !selectInteractions.presentation.peers.isEmpty {
+        if !selectInteractions.presentation.peers.isEmpty || share.alwaysEnableDone {
             
             let ids = selectInteractions.presentation.selected
 
