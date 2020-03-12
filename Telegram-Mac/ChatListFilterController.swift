@@ -96,10 +96,6 @@ class SelectCallbackObject : ShareObject {
         super.init(context, defaultSelectedIds: defaultSelectedIds, additionTopItems: additionTopItems, limit: limit)
     }
     
-    override var interactionOk: String {
-        return L10n.chatListAddSave
-    }
-    
     override var hasCaptionView: Bool {
         return false
     }
@@ -112,6 +108,12 @@ class SelectCallbackObject : ShareObject {
     }
     override var searchPlaceholderKey: String {
         return "ChatList.Add.Placeholder"
+    }
+    override var interactionOk: String {
+        return L10n.chatListFilterAddDone
+    }
+    override var alwaysEnableDone: Bool {
+        return true
     }
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
         return true

@@ -211,6 +211,7 @@
 		A7393D442408F84300CE44CA /* DiceCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D432408F84300CE44CA /* DiceCache.swift */; };
 		A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */; };
 		A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */; };
+		A742CE45241A517800C6B69B /* ChannelRecentPostRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */; };
 		A74EB072237961A1005F55AE /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB070237961A1005F55AE /* AppCenterCrashes.framework */; };
 		A74EB073237961BF005F55AE /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A74EB06F237961A1005F55AE /* AppCenter.framework */; };
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
@@ -1270,6 +1271,7 @@
 		A7393D432408F84300CE44CA /* DiceCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCache.swift; sourceTree = "<group>"; };
 		A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelOverviewStatsRowItem.swift; sourceTree = "<group>"; };
 		A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterRecommendedItem.swift; sourceTree = "<group>"; };
+		A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelRecentPostRowItem.swift; sourceTree = "<group>"; };
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
@@ -2545,6 +2547,7 @@
 				A7831B1B2403CFDD0056AEAC /* ChannelStatsViewController.swift */,
 				A7831B2924040B6B0056AEAC /* StatisticRowItem.swift */,
 				A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */,
+				A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */,
 			);
 			name = stats;
 			sourceTree = "<group>";
@@ -5496,6 +5499,7 @@
 				9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */,
 				C2DF47EE1DE9A1F3003AA6C0 /* LoginViewController.swift in Sources */,
 				C2DE5D301F3CA7C00081EC1E /* InstantPageLinkSelectionView.swift in Sources */,
+				A742CE45241A517800C6B69B /* ChannelRecentPostRowItem.swift in Sources */,
 				D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */,
 				D017A3F12338DE1E0086174B /* WalletTestWordsItem.swift in Sources */,
 				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
