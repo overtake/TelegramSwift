@@ -212,18 +212,7 @@ class ChatListRowItem: TableRowItem {
     
     let associatedGroupId: PeerGroupId
     
-    var isMuted:Bool {
-        if pinnedType == .ad {
-            return false
-        }
-        if let peerNotificationSettings = peerNotificationSettings as? TelegramPeerNotificationSettings {
-            if case .muted(_) = peerNotificationSettings.muteState {
-                return true
-            }
-        }
-
-        return false
-    }
+    let isMuted:Bool 
     
     let isVerified: Bool
     let isScam: Bool
@@ -319,6 +308,7 @@ class ChatListRowItem: TableRowItem {
         self.pinnedType = pinnedType
         self.renderedPeer = nil
         self.associatedGroupId = .root
+        self.isMuted = false
         self.isOnline = nil
         self.archiveStatus = archiveStatus
         self.groupLatestPeers = peers
@@ -399,7 +389,7 @@ class ChatListRowItem: TableRowItem {
     private let highlightText: String?
     private let embeddedState:PeerChatListEmbeddedInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  notificationSettings:PeerNotificationSettings? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -454,7 +444,7 @@ class ChatListRowItem: TableRowItem {
         }
         
        
-        self.peerNotificationSettings = notificationSettings
+        self.isMuted = isMuted
         self.readState = readState
         
         

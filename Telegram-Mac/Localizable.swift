@@ -1063,6 +1063,86 @@ internal final class L10n {
   internal static var channelMembersMembersListDesc: String  { return L10n.tr("Localizable", "ChannelMembers.MembersListDesc") }
   /// Add Members
   internal static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
+  /// OVERVIEW
+  internal static var channelStatsOverview: String  { return L10n.tr("Localizable", "ChannelStats.Overview") }
+  /// %d
+  internal static func channelStatsSharesCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_countable", p1)
+  }
+  /// %d shares
+  internal static func channelStatsSharesCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_few", p1)
+  }
+  /// %d shares
+  internal static func channelStatsSharesCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_many", p1)
+  }
+  /// %d shares
+  internal static func channelStatsSharesCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_one", p1)
+  }
+  /// %d shares
+  internal static func channelStatsSharesCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_other", p1)
+  }
+  /// %d shares
+  internal static func channelStatsSharesCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.SharesCount_two", p1)
+  }
+  /// No shares
+  internal static var channelStatsSharesCountZero: String  { return L10n.tr("Localizable", "ChannelStats.SharesCount_zero") }
+  /// Channel Statistics
+  internal static var channelStatsTitle: String  { return L10n.tr("Localizable", "ChannelStats.Title") }
+  /// %d
+  internal static func channelStatsViewsCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_countable", p1)
+  }
+  /// %d views
+  internal static func channelStatsViewsCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_few", p1)
+  }
+  /// %d views
+  internal static func channelStatsViewsCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_many", p1)
+  }
+  /// %d views
+  internal static func channelStatsViewsCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_one", p1)
+  }
+  /// %d views
+  internal static func channelStatsViewsCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_other", p1)
+  }
+  /// %d views
+  internal static func channelStatsViewsCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_two", p1)
+  }
+  /// No views
+  internal static var channelStatsViewsCountZero: String  { return L10n.tr("Localizable", "ChannelStats.ViewsCount_zero") }
+  /// FOLLOWERS
+  internal static var channelStatsGraphFollowers: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Followers") }
+  /// GROWTH
+  internal static var channelStatsGraphGrowth: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Growth") }
+  /// INTERACTIONS
+  internal static var channelStatsGraphInteractions: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Interactions") }
+  /// LANGUAGE
+  internal static var channelStatsGraphLanguage: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Language") }
+  /// NEW FOLLOWERS BY SOURCE
+  internal static var channelStatsGraphNewFollowersBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.NewFollowersBySource") }
+  /// NOTIFICATIONS
+  internal static var channelStatsGraphNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Notifications") }
+  /// VIEWS BY SOURCE
+  internal static var channelStatsGraphViewsBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsBySource") }
+  /// Enabled Notifications
+  internal static var channelStatsOverviewEnabledNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Overview.EnabledNotifications") }
+  /// Followers
+  internal static var channelStatsOverviewFollowers: String  { return L10n.tr("Localizable", "ChannelStats.Overview.Followers") }
+  /// Shares Per Post
+  internal static var channelStatsOverviewSharesPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.SharesPerPost") }
+  /// Views Per Post
+  internal static var channelStatsOverviewViewsPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ViewsPerPost") }
+  /// TOP RECENT POSTS
+  internal static var channelStatsRecentHeader: String  { return L10n.tr("Localizable", "ChannelStats.Recent.Header") }
   /// Checking...
   internal static var channelVisibilityChecking: String  { return L10n.tr("Localizable", "ChannelVisibility.Checking") }
   /// Loading...
@@ -1249,6 +1329,8 @@ internal final class L10n {
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// Scheduled until online
   internal static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
+  /// The result of this throw was randomly generated by Telegram.
+  internal static var chatDiceResult: String  { return L10n.tr("Localizable", "Chat.Dice.Result") }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send

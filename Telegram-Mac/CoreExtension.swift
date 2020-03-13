@@ -481,6 +481,15 @@ public extension Message {
         return isCrosspostFromChannel
     }
     
+    var channelViewsCount: Int32? {
+        for attribute in self.attributes {
+            if let attribute = attribute as? ViewCountMessageAttribute {
+                return Int32(attribute.count)
+            }
+        }
+        return nil
+    }
+    
     var isScheduledMessage: Bool {
         return self.id.namespace == Namespaces.Message.ScheduledCloud || self.id.namespace == Namespaces.Message.ScheduledLocal
     }

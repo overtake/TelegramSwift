@@ -8,7 +8,7 @@ enum RenderedTotalUnreadCountType {
 }
 
 func renderedTotalUnreadCount(transaction: Transaction) -> (Int32, RenderedTotalUnreadCountType) {
-    let totalUnreadState = transaction.getTotalUnreadState()
+    let totalUnreadState = transaction.getTotalUnreadState(groupId: .root)
     let inAppSettings: InAppNotificationSettings = (transaction.getPreferencesEntry(key: ApplicationSharedPreferencesKeys.inAppNotificationSettings) as? InAppNotificationSettings) ?? .defaultSettings
     let type: RenderedTotalUnreadCountType
     switch inAppSettings.totalUnreadCountDisplayStyle {

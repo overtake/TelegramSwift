@@ -100,7 +100,7 @@ func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count:
                                 if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
                                     let tag = context.account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
                                     var peerCount = Int(state.count)
-                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
+                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount(default: false) ?? false
                                     var removable = false
                                     switch inAppSettings.totalUnreadCountDisplayStyle {
                                     case .raw:

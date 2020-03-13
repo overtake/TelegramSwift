@@ -26,18 +26,23 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
     if !filter.excludeArchived {
         includeAdditionalPeerGroupIds.append(Namespaces.PeerGroup.archive)
     }
-    return ChatListFilterPredicate(includePeerIds: includePeers, excludePeerIds: excludePeers, includeAdditionalPeerGroupIds: includeAdditionalPeerGroupIds, include: { peer, notificationSettings, isUnread, isContact in
+    var messageTagSummary: ChatListMessageTagSummaryResultCalculation?
+    if filter.excludeRead {
+        messageTagSummary = ChatListMessageTagSummaryResultCalculation(addCount: ChatListMessageTagSummaryResultComponent(tag: .unseenPersonalMessage, namespace: Namespaces.Message.Cloud), subtractCount: ChatListMessageTagActionsSummaryResultComponent(type: PendingMessageActionType.consumeUnseenPersonalMessage, namespace: Namespaces.Message.Cloud))
+    }
+
+    return ChatListFilterPredicate(includePeerIds: includePeers, excludePeerIds: excludePeers, messageTagSummary: messageTagSummary, includeAdditionalPeerGroupIds: includeAdditionalPeerGroupIds, include: { peer, isMuted, isUnread, isContact, messageTagSummaryResult in
         if filter.excludeRead {
-            if !isUnread {
+            var effectiveUnread = isUnread
+            if let messageTagSummaryResult = messageTagSummaryResult, messageTagSummaryResult {
+                effectiveUnread = true
+            }
+            if !effectiveUnread {
                 return false
             }
         }
         if filter.excludeMuted {
-            if let notificationSettings = notificationSettings as? TelegramPeerNotificationSettings {
-                if case .muted = notificationSettings.muteState {
-                    return false
-                }
-            } else {
+            if isMuted {
                 return false
             }
         }
@@ -84,5 +89,6 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
         }
         return true
     })
+
 
 }

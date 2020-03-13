@@ -529,7 +529,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = DebugHockeyapp;
 		};
@@ -620,7 +620,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = HockeyappMacAlpha;
 		};
@@ -704,7 +704,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = ReleaseAppStore;
 		};
@@ -852,7 +852,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = DebugAppStore;
 		};
@@ -879,7 +879,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = ReleaseHockeyapp;
 		};

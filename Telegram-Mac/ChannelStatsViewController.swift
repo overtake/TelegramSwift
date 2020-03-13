@@ -31,7 +31,11 @@ private struct UIStatsState : Equatable {
     }
 }
 
-private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, context: ChannelStatsContext) -> [InputDataEntry] {
+private func _id_message(_ messageId: MessageId) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_message_\(messageId)")
+}
+
+private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, messages: [Message]?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openMessage: @escaping(MessageId)->Void, context: ChannelStatsContext, accountContext: AccountContext) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -46,15 +50,15 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("OVERVIEW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
         
-        overviewItems.append(ChannelOverviewItem(title: "Followers", value: stats.followers.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: "Enabled Notifications", value: stats.enabledNotifications.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: "Views Per Post", value: stats.viewsPerPost.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: "Shares Per Post", value: stats.sharesPerPost.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewFollowers, value: stats.followers.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewEnabledNotifications, value: stats.enabledNotifications.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewViewsPerPost, value: stats.viewsPerPost.attributedString))
+        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewSharesPerPost, value: stats.sharesPerPost.attributedString))
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem.init(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
@@ -71,32 +75,32 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
         
         var graphs: [Graph] = []
-        graphs.append(Graph(graph: stats.growthGraph, title: "GROWTH", identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
             context.loadGrowthGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.followersGraph, title: "FOLLOWERS", identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
             context.loadFollowersGraph()
             updateIsLoading(identifier, true)
         }))
 
-        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: "VIEWS BY SOURCE", identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
+        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
             context.loadViewsBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: "NEW FOLLOWERS BY SOURCE", identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .daily, load: { identifier in
+        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .daily, load: { identifier in
             context.loadNewFollowersBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.languagesGraph, title: "LANGUAGE", identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
+        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
             context.loadLanguagesGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.muteGraph, title: "NOTIFICATIONS", identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
             context.loadMuteGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.interactionsGraph, title: "INTERACTIONS", identifier: InputDataIdentifier("interactionsGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
             context.loadInteractionsGraph()
             updateIsLoading(identifier, true)
         }))
@@ -144,6 +148,22 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
+        if let messages = messages, let interactions = interactions, !messages.isEmpty {
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.channelStatsRecentHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            for (i, message) in messages.enumerated() {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), item: { initialSize, stableId in
+                    return ChannelRecentPostRowItem(initialSize, stableId: stableId, context: accountContext, message: message, interactions: interactions[message.id], viewType: bestGeneralViewType(messages, for: i), action: {
+                        openMessage(message.id)
+                    })
+                }))
+                index += 1
+            }
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
     }
     
    
@@ -164,9 +184,38 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     let statsContext = ChannelStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peerId)
 
     
+    let messagesPromise = Promise<MessageHistoryView?>(nil)
+
     
-    let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state) |> map { uiState, state in
-        return statsEntries(state, uiState: uiState, updateIsLoading: { identifier, isLoading in
+    let messageView = context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: .upperBound, anchorIndex: .upperBound, count: 100, fixedCombinedReadStates: nil)
+        |> map { messageHistoryView, _, _ -> MessageHistoryView? in
+            return messageHistoryView
+    }
+    messagesPromise.set(.single(nil) |> then(messageView))
+
+    let openMessage: (MessageId)->Void = { messageId in
+        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId))
+    }
+    
+    let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state, messagesPromise.get()) |> map { uiState, state, messageView in
+        
+        
+        let interactions = state.stats?.messageInteractions.reduce([MessageId : ChannelStatsMessageInteractions]()) { (map, interactions) -> [MessageId : ChannelStatsMessageInteractions] in
+            var map = map
+            map[interactions.messageId] = interactions
+            return map
+        }
+        
+        let messages = messageView?.entries.map { $0.message }.filter { interactions?[$0.id] != nil }.sorted(by: { (lhsMessage, rhsMessage) -> Bool in
+            let lhsViews = max(lhsMessage.channelViewsCount ?? 0, interactions?[lhsMessage.id]?.views ?? 0)
+            let rhsViews = max(rhsMessage.channelViewsCount ?? 0, interactions?[rhsMessage.id]?.views ?? 0)
+            return lhsViews > rhsViews
+                //return lhsMessage.timestamp > rhsMessage.timestamp
+        })
+        
+
+        
+        return statsEntries(state, uiState: uiState, messages: messages, interactions: interactions, updateIsLoading: { identifier, isLoading in
             updateState { state in
                 if isLoading {
                     return state.withAddedLoading(identifier)
@@ -174,16 +223,15 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
                     return state.withRemovedLoading(identifier)
                 }
             }
-        }, context: statsContext)
+        }, openMessage: openMessage, context: statsContext, accountContext: context)
     } |> map {
         return InputDataSignalValue(entries: $0)
     }
     
     
-    let controller = InputDataController(dataSignal: signal, title: "Channels Stats", hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: L10n.channelStatsTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextOject = statsContext
-    
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
     }

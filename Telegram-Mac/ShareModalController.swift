@@ -1039,18 +1039,12 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 } else {
                     var signal:Signal<(ChatListView,ViewUpdateType), NoError>
                     
-                    let predicate: ChatListFilterPredicate?
-                    if !share.excludePeerIds.isEmpty {
-                        predicate = ChatListFilterPredicate(includePeerIds: Set(), excludePeerIds: share.excludePeerIds, includeAdditionalPeerGroupIds: [], include: { _, _, _, _ in return true })
-                    } else {
-                        predicate = nil
-                    }
                     
                     switch(location) {
                     case let .Initial(count, _):
-                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: predicate, count: count)
+                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: nil, count: count)
                     case let .Index(index, _):
-                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: predicate, index: index, count: 30)
+                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: nil, index: index, count: 30)
                     }
                     
                     return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult], Peer), NoError> in

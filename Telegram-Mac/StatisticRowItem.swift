@@ -15,6 +15,7 @@ enum ChartItemType {
     case general
     case daily
     case percent
+    case step
 }
 
 class StatisticRowItem: GeneralRowItem {
@@ -29,6 +30,8 @@ class StatisticRowItem: GeneralRowItem {
             self.controller = DailyBarsChartController(chartsCollection: collection)
         case .percent:
             self.controller = PercentPieChartController(chartsCollection: collection)
+        case .step:
+            self.controller = GeneralLinesChartController(chartsCollection: collection)
         }
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
