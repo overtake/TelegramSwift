@@ -35,7 +35,6 @@ private extension Int32 {
         case 6:
             return diceSide6
         default:
-            
             preconditionFailure()
         }
     }
@@ -119,7 +118,10 @@ class ChatDiceContentView: ChatMediaContentView {
     
     
     override func executeInteraction(_ isControl: Bool) {
-        
+        guard let window = self.kitWindow else {
+            return
+        }
+        alert(for: window, info: L10n.chatDiceResult)
     }
     
     var chatLoopAnimated: Bool {

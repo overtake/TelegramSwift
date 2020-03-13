@@ -151,14 +151,15 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 switch inner {
                 case let .HoleEntry(hole):
                     return ChatListHoleRowItem(initialSize, context, hole)
-                case let .MessageEntry(index, message, readState, notifySettings,embeddedState, renderedPeer, peerPresence, summaryInfo, hasFailed, isContact):
+                case let .MessageEntry(index, message, readState, isMuted, embeddedState, renderedPeer, peerPresence, summaryInfo, hasFailed, isContact):
                     var pinnedType: ChatListPinnedType = .some
                     if isSponsored {
                         pinnedType = .ad
                     } else if index.pinningIndex == nil {
                         pinnedType = .none
                     }
-                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState:readState, notificationSettings: notifySettings, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId, hasFailed: hasFailed, filter: filter)
+                    
+                    return ChatListRowItem(initialSize, context: context, message: message, index: inner.index, readState: readState, isMuted: isMuted, embeddedState: embeddedState, pinnedType: pinnedType, renderedPeer: renderedPeer, peerPresence: peerPresence, summaryInfo: summaryInfo, activities: activities, associatedGroupId: groupId, hasFailed: hasFailed, filter: filter)
                 }
             case let .group(_, groupId, peers, message, unreadState, unreadCountDisplayCategory, animated, archiveStatus):
                 return ChatListRowItem(initialSize, context: context, pinnedType: .none, groupId: groupId, peers: peers, message: message, unreadState: unreadState, unreadCountDisplayCategory: unreadCountDisplayCategory, animateGroup: animated, archiveStatus: archiveStatus)
@@ -523,7 +524,7 @@ class ChatListController : PeersListController {
                         if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
                             return nil
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
-                            let entry: ChatListEntry = ChatListEntry.MessageEntry(values.0, nil, values.2, values.3, values.4, values.5, values.6, values.7, values.8, values.9)
+                            let entry: ChatListEntry = ChatListEntry.MessageEntry(index: values.0, message: nil, readState: values.2, isRemovedFromTotalUnreadCount: values.3, embeddedInterfaceState: values.4, renderedPeer: values.5, presence: values.6, summaryInfo: values.7, hasFailed: values.8, isContact: values.9)
                             return AppearanceWrapperEntry(entry: .chat(entry, activities, isSponsored: isSponsored, filter: filter), appearance: appearance)
                         } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.archiveChat]) {
                             if groupId == .root {
@@ -561,7 +562,7 @@ class ChatListController : PeersListController {
                         showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers), additionTopItems: nil, limit: 100 - filter.data.includePeers.count, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
                             return updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
                                 var filters = filters
-                                filter.data.includePeers = filter.data.includePeers + peerIds
+                                filter.data.includePeers = peerIds
                                 if let index = filters.firstIndex(where: {$0.id == filter.id }) {
                                     filters[index] = filter
                                 }

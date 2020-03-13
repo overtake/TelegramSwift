@@ -105,7 +105,7 @@ class GlobalBadgeNode: Node {
             items.append(.peer(peerId))
             let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
             peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
-                return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount ?? false
+                return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount(default: false) ?? false
                 }) |> map {Optional($0)}
         } else {
             peerSignal = .single(nil)
@@ -192,7 +192,7 @@ class GlobalBadgeNode: Node {
                                 if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
                                     let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
                                     var peerCount = Int(state.count)
-                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount ?? false
+                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount(default: false) ?? false
                                     var removable = false
                                     switch inAppSettings.totalUnreadCountDisplayStyle {
                                     case .raw:

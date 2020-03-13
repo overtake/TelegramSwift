@@ -27,6 +27,9 @@ enum PluralizationForm {
 }
 
 func presentationStringsPluralizationForm(_ lc: UInt32, _ value: Int32) -> PluralizationForm {
+    if value == 0 {
+        return .zero
+    }
     switch numberPluralizationForm(lc, value) {
         case .zero:
             return .zero

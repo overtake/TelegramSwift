@@ -36,6 +36,8 @@ class ChartVisibilityView: View {
                 selectionViews.append(view)
             }
             
+            assert(selectionViews.count == items.count)
+            
             for (index, item) in items.enumerated() {
                 let view = selectionViews[index]
                 view.item = item
