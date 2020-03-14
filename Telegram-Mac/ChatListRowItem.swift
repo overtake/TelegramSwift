@@ -212,7 +212,11 @@ class ChatListRowItem: TableRowItem {
     
     let associatedGroupId: PeerGroupId
     
-    let isMuted:Bool 
+    let isMuted:Bool
+    
+    var hasUnread: Bool {
+        return ctxBadgeNode != nil
+    }
     
     let isVerified: Bool
     let isScam: Bool

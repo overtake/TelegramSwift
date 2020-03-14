@@ -156,8 +156,8 @@ class ChartView: Control {
 }
 
 
-extension ChartView: GColorModeContainer {
-    func apply(colorMode: GColorMode, animated: Bool) {
-        detailsView?.apply(colorMode: colorMode, animated: animated && (detailsView?.isVisibleInWindow ?? false))
+extension ChartView: ChartThemeContainer {
+    func apply(theme: ChartTheme, animated: Bool) {
+        detailsView?.apply(theme: theme, animated: animated && (detailsView?.isVisibleInWindow ?? false))
     }
 }

@@ -143,11 +143,11 @@ class ChartVisibilityView: View {
     
 }
 
-extension ChartVisibilityView: GColorModeContainer {
-    func apply(colorMode: GColorMode, animated: Bool) {
+extension ChartVisibilityView: ChartThemeContainer {
+    func apply(theme: ChartTheme, animated: Bool) {
         View.perform(animated: animated) {
-            self.backgroundColor = colorMode.chartBackgroundColor
-          //  self.tintColor = colorMode.descriptionActionColor
+            self.backgroundColor = theme.chartBackgroundColor
+          //  self.tintColor = theme.descriptionActionColor
         }
     }
 }

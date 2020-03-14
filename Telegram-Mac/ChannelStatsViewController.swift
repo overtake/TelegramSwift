@@ -266,7 +266,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
  // controller = GeneralLinesChartController(chartsCollection: collection)
  //  }
  self?.genericView.chartView.setup(controller: controller, title: "Mute graph")
- self?.genericView.chartView.apply(colorMode: .day, animated: false)
+ self?.genericView.chartView.apply(theme: .day, animated: false)
  
  
  }, failure: { error in

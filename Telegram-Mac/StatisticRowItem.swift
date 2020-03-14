@@ -59,7 +59,7 @@ class StatisticRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return (theme.colors.isDark ? GColorMode.night : GColorMode.day).chartBackgroundColor
+        return (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
     }
     
     override func updateColors() {
@@ -95,7 +95,7 @@ class StatisticRowView: TableRowView {
         
         chartView.setup(controller: item.controller, title: "Test")
 
-        chartView.apply(colorMode: theme.colors.isDark ? .night : .day, animated: false)
+        chartView.apply(theme: theme.colors.isDark ? .defaultNightTheme : .defaultDayTheme, animated: false)
         
         if first {
             chartView.layer?.animateAlpha(from: 0, to: 1, duration: 0.25)

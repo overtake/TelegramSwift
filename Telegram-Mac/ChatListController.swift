@@ -251,6 +251,7 @@ class ChatListController : PeersListController {
         return _filterValue.with { $0 }
     }
     private func updateFilter(_ f:(FilterData)->FilterData) {
+        self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
         filter.set(_filterValue.modify(f))
         _  = first.swap(true)
         setCenterTitle(self.defaultBarTitle)
@@ -622,15 +623,6 @@ class ChatListController : PeersListController {
             guard let `self` = self else {
                 return
             }
-//            #if !STABLE && !APP_STORE
-//            context.sharedContext.bindings.mainController().isUpChatList = self.genericView.tableView.documentOffset.y <= 0 && self.previousChatList.with { $0?.laterIndex == nil} && self.mode.groupId == .root
-//            #endif
-//            if scroll.visibleRows.location == 0 && view.laterIndex != nil {
-//                self.lastScrolledIndex = nil
-//            }
-//            self.account.context.mainViewController.isUpChatList = scroll.visibleRows.location > 0 || view.laterIndex != nil
-//            #else
-            //#endif
             self.removeRevealStateIfNeeded(nil)
         }))
         
@@ -789,8 +781,24 @@ class ChatListController : PeersListController {
             }
             return item.pinnedType != .none || item.groupId != .root
         }
+        
         self.searchController?.pinnedItems = self.collectPinnedItems
         self.genericView.tableView.resortController?.resortRange = pinnedRange
+        
+        
+        let needPreload = previousChatList.with  { $0?.laterIndex == nil }
+        if needPreload {
+            context.account.viewTracker.chatListPreloadItems.set(.single([]))
+            var preloadItems:[ChatHistoryPreloadItem] = []
+            self.genericView.tableView.enumerateItems(with: { item -> Bool in
+                guard let item = item as? ChatListRowItem, let index = item.chatListIndex else {return true}
+                preloadItems.append(.init(index: index, isMuted: item.isMuted, hasUnread: item.hasUnread))
+                return preloadItems.count < 30
+            })
+            context.account.viewTracker.chatListPreloadItems.set(.single(preloadItems) |> delay(0.2, queue: prepareQueue))
+        } else {
+            context.account.viewTracker.chatListPreloadItems.set(.single([]))
+        }
     }
     
     private func resortPinned(_ from: Int, _ to: Int) {

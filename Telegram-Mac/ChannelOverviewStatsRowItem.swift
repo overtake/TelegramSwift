@@ -146,7 +146,7 @@ private final class ChannelOverviewLayoutView : View {
     
     func updateColors() {
         
-        let backgroundColor = (theme.colors.isDark ? GColorMode.night : GColorMode.day).chartBackgroundColor
+        let backgroundColor = (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
         
         self.backgroundColor = backgroundColor
         self.titleView.backgroundColor = backgroundColor
@@ -154,7 +154,7 @@ private final class ChannelOverviewLayoutView : View {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        fatalError("init(coder :) has not been implemented")
     }
 }
 
@@ -203,7 +203,7 @@ private final class ChannelOverviewStatsRowView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return (theme.colors.isDark ? GColorMode.night : GColorMode.day).chartBackgroundColor
+        return (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
     }
     
     override func updateColors() {

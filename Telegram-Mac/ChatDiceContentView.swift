@@ -121,7 +121,8 @@ class ChatDiceContentView: ChatMediaContentView {
         guard let window = self.kitWindow else {
             return
         }
-        alert(for: window, info: L10n.chatDiceResult)
+        tooltip(for: self.playerView, text: L10n.chatDiceResult, offset: NSMakePoint(0, -50))
+       // alert(for: window, info: L10n.chatDiceResult)
     }
     
     var chatLoopAnimated: Bool {
