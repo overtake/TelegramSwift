@@ -935,6 +935,9 @@ class LottiePlayerView : NSView {
         
     }
     
+    override var isFlipped: Bool {
+        return true
+    }
     
     override func layout() {
         super.layout()

@@ -14,7 +14,7 @@ private enum Constants {
     static let chartViewHeightFraction: CGFloat = 0.55
 }
 
-public class ChartStackSection: View, GColorModeContainer {
+public class ChartStackSection: View, ChartThemeContainer {
     var chartView: ChartView
     var rangeView: RangeChartView
     var visibilityView: ChartVisibilityView
@@ -78,41 +78,41 @@ public class ChartStackSection: View, GColorModeContainer {
         fatalError("init(frame:) has not been implemented")
     }
     
-    public func apply(colorMode: GColorMode, animated: Bool) {
+    public func apply(theme: ChartTheme, animated: Bool) {
         View.perform(animated: animated && self.isVisibleInWindow) {
-            self.backgroundColor = colorMode.tableBackgroundColor
+            self.backgroundColor = theme.tableBackgroundColor
             
-            self.sectionContainerView.backgroundColor = colorMode.chartBackgroundColor
-            self.rangeView.backgroundColor = colorMode.chartBackgroundColor
-            self.visibilityView.backgroundColor = colorMode.chartBackgroundColor
-         //  self.backButton.tintColor = colorMode.actionButtonColor
-            self.backButton.set(color: colorMode.actionButtonColor, for: .Normal)
+            self.sectionContainerView.backgroundColor = theme.chartBackgroundColor
+            self.rangeView.backgroundColor = theme.chartBackgroundColor
+            self.visibilityView.backgroundColor = theme.chartBackgroundColor
+         //  self.backButton.tintColor = theme.actionButtonColor
+            self.backButton.set(color: theme.actionButtonColor, for: .Normal)
             
             self.backButton.set(text: "Zoom Out", for: .Normal)
             _ = self.backButton.sizeToFit()
             
             for separator in self.separators {
-                separator.backgroundColor = colorMode.tableSeparatorColor
+                separator.backgroundColor = theme.tableSeparatorColor
             }
         }
         
         if rangeView.isVisibleInWindow || chartView.isVisibleInWindow {
             chartView.loadDetailsViewIfNeeded()
-            chartView.apply(colorMode: colorMode, animated: animated && chartView.isVisibleInWindow)
-            controller.apply(colorMode: colorMode, animated: animated)
-            rangeView.apply(colorMode: colorMode, animated: animated && rangeView.isVisibleInWindow)
+            chartView.apply(theme: theme, animated: animated && chartView.isVisibleInWindow)
+            controller.apply(theme: theme, animated: animated)
+            rangeView.apply(theme: theme, animated: animated && rangeView.isVisibleInWindow)
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval.random(in: 0...0.1)) {
                 self.chartView.loadDetailsViewIfNeeded()
-                self.controller.apply(colorMode: colorMode, animated: false)
-                self.chartView.apply(colorMode: colorMode, animated: false)
-                self.rangeView.apply(colorMode: colorMode, animated: false)
+                self.controller.apply(theme: theme, animated: false)
+                self.chartView.apply(theme: theme, animated: false)
+                self.rangeView.apply(theme: theme, animated: false)
             }
           
         }
         
-        self.titleLabel.setTextColor(colorMode.chartTitleColor, animated: animated && titleLabel.isVisibleInWindow)
-        self.headerLabel.setTextColor(colorMode.sectionTitleColor, animated: animated && headerLabel.isVisibleInWindow)
+        self.titleLabel.setTextColor(theme.chartTitleColor, animated: animated && titleLabel.isVisibleInWindow)
+        self.headerLabel.setTextColor(theme.chartTitleColor, animated: animated && headerLabel.isVisibleInWindow)
         
         needsLayout = true
     }

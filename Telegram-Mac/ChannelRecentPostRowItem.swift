@@ -191,21 +191,19 @@ private final class ChannelRecentPostRowView : GeneralContainableRowView {
         if let media = item.contentImageMedia {
             if imageView == nil {
                 self.imageView = TransformImageView(frame: NSMakeRect(0, 0, 34, 34))
+                imageView?.set(arguments: TransformImageArguments(corners: .init(radius: 4), imageSize: NSMakeSize(34, 34), boundingSize: NSMakeSize(34, 34), intrinsicInsets: NSEdgeInsets()))
                 addSubview(self.imageView!)
             }
             let updateIconImageSignal = chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: media), scale: backingScaleFactor, small:true)
             imageView?.setSignal(updateIconImageSignal)
             
-            imageView?.set(arguments: TransformImageArguments(corners: .init(radius: 4), imageSize: NSMakeSize(34, 34), boundingSize: NSMakeSize(34, 34), intrinsicInsets: NSEdgeInsets()))
             fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: media)).start())
             
         } else {
             imageView?.removeFromSuperview()
             imageView = nil
             fetchDisposable.set(nil)
-            fetchDisposable.set(nil)
         }
-        needsLayout = true
     }
 
     deinit {

@@ -274,16 +274,16 @@ private extension RangeChartView {
     }
 }
 
-extension RangeChartView: GColorModeContainer {
-    func apply(colorMode: GColorMode, animated: Bool) {
+extension RangeChartView: ChartThemeContainer {
+    func apply(theme: ChartTheme, animated: Bool) {
         let closure = {
-            self.lowerBoundTintView.backgroundColor = colorMode.rangeViewTintColor
-            self.upperBoundTintView.backgroundColor = colorMode.rangeViewTintColor
+            self.lowerBoundTintView.backgroundColor = theme.rangeViewTintColor
+            self.upperBoundTintView.backgroundColor = theme.rangeViewTintColor
         }
         
-        self.cropFrameView.setImage(colorMode.rangeCropImage, animated: animated)
+        self.cropFrameView.setImage(theme.rangeCropImage, animated: animated)
         
-        //        self.chartView.apply(colorMode: colorMode, animated: animated)
+        //        self.chartView.apply(theme: theme, animated: animated)
         
         if animated {
             View.perform(animated: true, animations: closure)

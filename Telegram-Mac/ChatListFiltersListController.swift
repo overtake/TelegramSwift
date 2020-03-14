@@ -97,7 +97,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     
 
     
-    if let suggested = suggested {
+    if let suggested = suggested, filtersWithCounts.count < 10 {
         
         let filtered = suggested.filters.filter { value -> Bool in
             return filtersWithCounts.first(where: { $0.0.data == value.data }) == nil

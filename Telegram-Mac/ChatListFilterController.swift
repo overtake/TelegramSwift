@@ -13,6 +13,53 @@ import TelegramCore
 import SyncCore
 import TGUIKit
 
+
+
+enum ChatListFilterType {
+    case generic
+    case unmuted
+    case unread
+    case channels
+    case groups
+    case bots
+    case contacts
+    case nonContacts
+}
+
+func chatListFilterType(_ filter: ChatListFilter) -> ChatListFilterType {
+    let filterType: ChatListFilterType
+    if filter.data.includePeers.isEmpty {
+        if filter.data.categories == .all {
+            if filter.data.excludeRead {
+                filterType = .unread
+            } else if filter.data.excludeMuted {
+                filterType = .unmuted
+            } else {
+                filterType = .generic
+            }
+        } else {
+            if filter.data.categories == .channels {
+                filterType = .channels
+            } else if filter.data.categories == .groups {
+                filterType = .groups
+            } else if filter.data.categories == .bots {
+                filterType = .bots
+            } else if filter.data.categories == .contacts {
+                filterType = .contacts
+            } else if filter.data.categories == .nonContacts {
+                filterType = .nonContacts
+            } else {
+                filterType = .generic
+            }
+        }
+    } else {
+        filterType = .generic
+    }
+    return filterType
+}
+
+
+
 private let maximumPeers: Int = 100
 
 private extension ChatListFilter {
@@ -126,11 +173,13 @@ private struct ChatListFiltersListState: Equatable {
     var showAllInclude: Bool
     var showAllExclude: Bool
     let isNew: Bool
-    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool) {
+    var changedName: Bool
+    init(filter: ChatListFilter, isNew: Bool, showAllInclude: Bool, showAllExclude: Bool, changedName: Bool) {
         self.filter = filter
         self.isNew = isNew
         self.showAllInclude = showAllInclude
         self.showAllExclude = showAllExclude
+        self.changedName = changedName
     }
     
     
@@ -379,7 +428,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
 func ChatListFilterController(context: AccountContext, filter: ChatListFilter, isNew: Bool = false) -> InputDataController {
     
     
-    let initialState = ChatListFiltersListState(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false)
+    let initialState = ChatListFiltersListState(filter: filter, isNew: isNew, showAllInclude: false, showAllExclude: false, changedName: !isNew)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -580,6 +629,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         if let name = data[_id_name_input]?.stringValue {
             updateState { state in
                 var state = state
+                if state.filter.title != name {
+                    state.changedName = true
+                }
                 state.withUpdatedFilter { filter in
                     var filter = filter
                     filter.title = name
@@ -617,6 +669,61 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         updateDisposable.dispose()
     }
     
+    
+    controller.afterTransaction = { controller in
+        let type = stateValue.with { chatListFilterType($0.filter) }
+        let nameIsUpdated = stateValue.with { $0.changedName }
+        if !nameIsUpdated {
+            switch type {
+            case .generic:
+                break
+            case .unmuted:
+                //state.name = presentationData.strings.ChatListFolder_NameNonMuted
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultUnmuted
+                    return state
+                }
+            case .unread:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultUnread
+                    return state
+                }
+            case .channels:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultChannels
+                    return state
+                }
+            case .groups:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultGroups
+                    return state
+                }
+            case .bots:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultBots
+                    return state
+                }
+            case .contacts:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultContacts
+                    return state
+                }
+            case .nonContacts:
+                updateState { state in
+                    var state = state
+                    state.filter.title = L10n.chatListFilterTilteDefaultNonContacts
+                    return state
+                }
+            }
+
+        }
+    }
     
     controller.validateData = { data in
         
