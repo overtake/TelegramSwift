@@ -268,7 +268,7 @@ class ContactsController: PeersListController {
         
     }
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
         genericView.tableView.scroll(to: .up(true))
     }
     

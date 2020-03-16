@@ -226,7 +226,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 return updated
             })
         } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
-            return toggleItemPinned(postbox: arguments.context.account.postbox, groupId: .root, itemId: .peer(peer.id))
+            return toggleItemPinned(postbox: arguments.context.account.postbox, location: .group(.root), itemId: .peer(peer.id))
         } |> deliverOnMainQueue
         
         _ = updatePeer.start(next: { result in
@@ -994,7 +994,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }
     }
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
         genericView.clipView.scroll(to: NSMakePoint(0, 50), animated: false)
     }
     

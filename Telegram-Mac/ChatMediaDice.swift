@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCore
 import SyncCore
 import Postbox
+import SwiftSignalKit
 
 class ChatMediaDice: ChatMediaItem {
     override var additionalLineForDateInBubbleState: CGFloat? {
@@ -21,5 +22,15 @@ class ChatMediaDice: ChatMediaItem {
     }
     override var isBubbleFullFilled: Bool {
         return true
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        return super.menuItems(in: location) |> map { items in
+            var items = items
+            items.insert(ContextMenuItem(L10n.textCopyText, handler: {
+                copyToClipboard(diceSymbol)
+            }), at: 0)
+            return items
+        }
     }
 }

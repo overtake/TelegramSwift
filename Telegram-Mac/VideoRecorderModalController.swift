@@ -31,7 +31,7 @@ class VideoRecorderModalController: ModalViewController {
     init(chatInteraction: ChatInteraction, pipeline: VideoRecorderPipeline) {
         self.chatInteraction = chatInteraction
         self.pipeline = pipeline
-        super.init(frame: NSMakeRect(0, 0, 220, 220))
+        super.init(frame: NSMakeRect(0, 0, 240, 240))
         bar = .init(height: 0)
     }
     

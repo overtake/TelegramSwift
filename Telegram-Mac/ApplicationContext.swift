@@ -411,7 +411,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            alert(for: window, info: "test")
+            showModal(with: GlobalSearchModalController(context: context), for: window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif

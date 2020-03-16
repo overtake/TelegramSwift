@@ -50,7 +50,7 @@ extension ChatListFilter {
                 id = tempId
             }
         }
-        return ChatListFilter(id: id, title: "", data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: [], excludePeers: []))
+        return ChatListFilter(id: id, title: "", data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: [], excludePeers: [], pinnedPeers: []))
     }
 }
 

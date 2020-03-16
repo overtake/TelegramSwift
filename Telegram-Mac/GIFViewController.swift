@@ -319,7 +319,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
         self.genericView.tableView?.scroll(to: .up(true))
     }
     

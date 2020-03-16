@@ -656,7 +656,7 @@ open class ViewController : NSObject {
         
     }
     
-    open func scrollup() {
+    open func scrollup(force: Bool = false) {
         
     }
     

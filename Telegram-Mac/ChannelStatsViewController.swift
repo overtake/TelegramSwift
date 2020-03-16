@@ -55,10 +55,18 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         
         var overviewItems:[ChannelOverviewItem] = []
         
-        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewFollowers, value: stats.followers.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewEnabledNotifications, value: stats.enabledNotifications.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewViewsPerPost, value: stats.viewsPerPost.attributedString))
-        overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewSharesPerPost, value: stats.sharesPerPost.attributedString))
+        if stats.followers.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewFollowers, value: stats.followers.attributedString))
+        }
+        if stats.enabledNotifications.total != 0 {
+            overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewEnabledNotifications, value: stats.enabledNotifications.attributedString))
+        }
+        if stats.viewsPerPost.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewViewsPerPost, value: stats.viewsPerPost.attributedString))
+        }
+        if stats.sharesPerPost.current > 0 {
+            overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewSharesPerPost, value: stats.sharesPerPost.attributedString))
+        }
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem.init(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
@@ -75,35 +83,35 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
         
         var graphs: [Graph] = []
-        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
-            context.loadGrowthGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
-            context.loadFollowersGraph()
-            updateIsLoading(identifier, true)
-        }))
-
-        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
-            context.loadViewsBySourceGraph()
-            updateIsLoading(identifier, true)
-        }))
+//        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
+//            context.loadGrowthGraph()
+//            updateIsLoading(identifier, true)
+//        }))
+//        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
+//            context.loadFollowersGraph()
+//            updateIsLoading(identifier, true)
+//        }))
+//
+//        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
+//            context.loadViewsBySourceGraph()
+//            updateIsLoading(identifier, true)
+//        }))
         graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .daily, load: { identifier in
             context.loadNewFollowersBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
-            context.loadLanguagesGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
-            context.loadMuteGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
-            context.loadInteractionsGraph()
-            updateIsLoading(identifier, true)
-        }))
+//        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
+//            context.loadLanguagesGraph()
+//            updateIsLoading(identifier, true)
+//        }))
+//        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
+//            context.loadMuteGraph()
+//            updateIsLoading(identifier, true)
+//        }))
+//        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
+//            context.loadInteractionsGraph()
+//            updateIsLoading(identifier, true)
+//        }))
 
         for graph in graphs {
             entries.append(.sectionId(sectionId, type: .normal))
