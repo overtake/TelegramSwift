@@ -34,10 +34,19 @@ class StatisticRowItem: GeneralRowItem {
             self.controller = GeneralLinesChartController(chartsCollection: collection)
         }
         super.init(initialSize, stableId: stableId, viewType: viewType)
+        _ = makeSize(initialSize.width, oldWidth: 0)
+    }
+    
+    private var graphHeight: CGFloat = 0
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        graphHeight = self.controller.height(for: blockWidth - (viewType.innerInset.left + viewType.innerInset.right)) + viewType.innerInset.bottom + viewType.innerInset.top
+        return true
     }
     
     override var height: CGFloat {
-        return self.controller.height(for: blockWidth) + viewType.innerInset.bottom + viewType.innerInset.top
+        return graphHeight
     }
     
     override func viewClass() -> AnyClass {

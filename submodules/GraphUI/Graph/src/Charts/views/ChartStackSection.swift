@@ -152,7 +152,7 @@ public class ChartStackSection: View, ChartThemeContainer {
         self.sectionContainerView.frame = CGRect(origin: CGPoint(), size: CGSize(width: bounds.width, height: frame.height))
         self.chartView.frame = CGRect(origin: CGPoint(), size: CGSize(width: bounds.width, height: 250.0))
         self.rangeView.frame = CGRect(origin: CGPoint(x: 0.0, y: 250.0), size: CGSize(width: bounds.width, height: 48.0))
-        let visibilityHeight = ChartVisibilityView.generateItemsFrames(for: bounds.width, items: self.visibilityView.items).last?.maxY ?? 0
+        let visibilityHeight = ChartVisibilityItem.generateItemsFrames(for: bounds.width, items: self.visibilityView.items).last?.maxY ?? 0
         self.visibilityView.frame = CGRect(origin: CGPoint(x: 0.0, y: 308.0), size: CGSize(width: bounds.width, height: visibilityHeight))
     }
     

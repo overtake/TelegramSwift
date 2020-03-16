@@ -102,7 +102,7 @@ public class TabBarController: ViewController, TabViewDelegate {
         }
     }
     
-    public override func scrollup() {
+    public func scrollup() {
         current?.scrollup()
     }
     

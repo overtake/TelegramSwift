@@ -1058,7 +1058,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
 
-    override func scrollup() -> Void {
+    override func scrollup(force: Bool = false) -> Void {
         if let reply = historyState.reply() {
             chatInteraction.focusMessageId(nil, reply, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
             historyState = historyState.withRemovingReplies(max: reply)

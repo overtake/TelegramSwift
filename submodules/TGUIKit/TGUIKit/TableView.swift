@@ -166,10 +166,10 @@ public class UpdateTransition<T> {
     }
 }
 public struct TableSearchVisibleData {
-    let cancelImage: CGImage
+    let cancelImage: CGImage?
     let cancel:()->Void
     let updateState: (SearchState)->Void
-    public init(cancelImage: CGImage, cancel: @escaping()->Void, updateState: @escaping(SearchState)->Void) {
+    public init(cancelImage: CGImage? = nil, cancel: @escaping()->Void, updateState: @escaping(SearchState)->Void) {
         self.cancelImage = cancelImage
         self.cancel = cancel
         self.updateState = updateState
@@ -338,14 +338,13 @@ protocol SelectDelegate : class {
 
 private final class TableSearchView : View {
     let searchView = SearchView(frame: NSZeroRect)
-    private let cancelButton = ImageButton()
+    private var cancelButton:ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(searchView)
         background = presentation.colors.background
         border = [.Bottom]
         searchView.frame = NSMakeRect(10, 10, frame.width - 20, frame.height - 20)
-        addSubview(cancelButton)
     }
     
     func applySearchResponder() {
@@ -356,12 +355,22 @@ private final class TableSearchView : View {
     }
     
     func updateDatas(_ datas: TableSearchVisibleData) {
-        cancelButton.removeAllHandlers()
-        cancelButton.set(image: datas.cancelImage, for: .Normal)
-        cancelButton.set(handler: { _ in
-            datas.cancel()
-        }, for: .Click)
-        _ = cancelButton.sizeToFit()
+        if let cancelImage = datas.cancelImage {
+            if self.cancelButton == nil {
+                self.cancelButton = ImageButton()
+                self.addSubview(cancelButton!)
+            }
+            cancelButton!.removeAllHandlers()
+            cancelButton!.set(image: cancelImage, for: .Normal)
+            cancelButton!.set(handler: { _ in
+                datas.cancel()
+            }, for: .Click)
+            _ = cancelButton!.sizeToFit()
+        } else {
+            cancelButton?.removeFromSuperview()
+            cancelButton = nil
+        }
+       
         
         searchView.searchInteractions = SearchInteractions({ state, _ in
             datas.updateState(state)
@@ -374,8 +383,12 @@ private final class TableSearchView : View {
     
     override func layout() {
         super.layout()
-        cancelButton.centerY(x: frame.width - 10 - cancelButton.frame.width)
-        searchView.frame = NSMakeRect(10, 10, frame.width - cancelButton.frame.width - 30, frame.height - 20)
+        if let cancelButton = self.cancelButton {
+            cancelButton.centerY(x: frame.width - 10 - cancelButton.frame.width)
+            searchView.frame = NSMakeRect(10, 10, frame.width - cancelButton.frame.width - 30, frame.height - 20)
+        } else {
+            searchView.frame = NSMakeRect(10, 10, frame.width - 20, frame.height - 20)
+        }
     }
     
     
@@ -857,6 +870,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         if let rightBorder = rightBorder {
             rightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
+        }
+        
+        if let stickView = stickView {
+            stickView.frame = NSMakeRect(stickView.frame.minX, stickView.frame.minY, frame.width, stickView.frame.height)
         }
     }
     

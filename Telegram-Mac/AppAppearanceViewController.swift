@@ -468,7 +468,8 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                 showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
             }
         }, for: .Click)
-        view.set(image: theme.icons.chatActions, highlightImage: nil)
+        view.button.set(image: theme.icons.chatActions, for: .Normal)
+        view.button.set(image: theme.icons.chatActionsActive, for: .Highlight)
         return view
         
     })

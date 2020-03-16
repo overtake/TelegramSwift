@@ -1160,7 +1160,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
-    open override func scrollup() {
+    open override func scrollup(force: Bool = false) {
         super.scrollup()
         if controller.redirectUserInterfaceCalls {
             controller.scrollup()

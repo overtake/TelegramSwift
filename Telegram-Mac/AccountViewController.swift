@@ -91,7 +91,7 @@ class AccountViewController: NavigationViewController {
         layoutController.viewWillAppear(animated)
     }
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
         layoutController.scrollup()
     }
     
@@ -982,7 +982,7 @@ class LayoutAccountController : TableViewController {
     }
 
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
         
         if searchController != nil {
             let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView

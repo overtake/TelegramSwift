@@ -403,6 +403,9 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
+        if chatInteraction.isGlobalSearchMessage {
+            return true
+        }
         return false
     }
     
@@ -1627,7 +1630,13 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.chatLocation {
         case .peer:
             if let peer = peer {
-                chatInteraction.openInfo(peer.id, !(peer is TelegramUser), nil, nil)
+                let messageId: MessageId?
+                if chatInteraction.isGlobalSearchMessage {
+                    messageId = self.message?.id
+                } else {
+                    messageId = nil
+                }
+                chatInteraction.openInfo(peer.id, !(peer is TelegramUser), messageId, nil)
             }
         }
         

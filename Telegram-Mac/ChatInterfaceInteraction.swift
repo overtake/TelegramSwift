@@ -43,6 +43,7 @@ final class ChatInteraction : InterfaceObserver  {
     let context: AccountContext
     let isLogInteraction:Bool
     let disableSelectAbility: Bool
+    let isGlobalSearchMessage: Bool
     private let modifyDisposable:MetaDisposable = MetaDisposable()
     private let mediaDisposable:MetaDisposable = MetaDisposable()
     private let startBotDisposable:MetaDisposable = MetaDisposable()
@@ -51,11 +52,12 @@ final class ChatInteraction : InterfaceObserver  {
     let editDisposable = MetaDisposable()
     private let disableProxyDisposable = MetaDisposable()
     private let enableProxyDisposable = MetaDisposable()
-    init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false) {
+    init(chatLocation: ChatLocation, context: AccountContext, mode: ChatMode = .history, isLogInteraction: Bool = false, disableSelectAbility: Bool = false, isGlobalSearchMessage: Bool = false) {
         self.chatLocation = chatLocation
         self.context = context
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
+        self.isGlobalSearchMessage = isGlobalSearchMessage
         self.presentation = ChatPresentationInterfaceState(chatLocation)
         self.mode = mode
         super.init()

@@ -17,10 +17,6 @@ private enum Constants {
     static let insets = NSEdgeInsets(top: 0, left: 16, bottom: 16, right: 16)
 }
 
-struct ChartVisibilityItem {
-    var title: String
-    var color: NSColor
-}
 
 class ChartVisibilityView: View {
     var items: [ChartVisibilityItem] = [] {
@@ -75,28 +71,6 @@ class ChartVisibilityView: View {
     
     private var selectionViews: [ChartVisibilityItemView] = []
     
-    static func generateItemsFrames(for chartWidth: CGFloat, items: [ChartVisibilityItem]) -> [CGRect] {
-        var previousPoint = CGPoint(x: Constants.insets.left, y: Constants.insets.top)
-        var frames: [CGRect] = []
-        
-        for item in items {
-            let labelSize = TitleButton.size(with: item.title, font: ChartVisibilityItemView.textFont)
-            let width = (labelSize.width + Constants.labelTextApproxInsets).rounded(.up)
-            if previousPoint.x + width < (chartWidth - Constants.insets.left - Constants.insets.right) {
-                frames.append(CGRect(origin: previousPoint, size: CGSize(width: width, height: Constants.itemHeight)))
-            } else if previousPoint.x <= Constants.insets.left {
-                frames.append(CGRect(origin: previousPoint, size: CGSize(width: width, height: Constants.itemHeight)))
-            } else {
-                previousPoint.y += Constants.itemHeight + Constants.itemSpacing
-                previousPoint.x = Constants.insets.left
-                frames.append(CGRect(origin: previousPoint, size: CGSize(width: width, height: Constants.itemHeight)))
-            }
-            previousPoint.x += width + Constants.itemSpacing
-        }
-        
-        return frames
-    }
-    
     var selectionCallbackClosure: (([Bool]) -> Void)?
     
     func setItemSelected(_ selected: Bool, at index: Int, animated: Bool) {
@@ -136,7 +110,8 @@ class ChartVisibilityView: View {
     }
     
     private func updateFrames() {
-        for (index, frame) in ChartVisibilityView.generateItemsFrames(for: bounds.width, items: self.items).enumerated() {
+        let frames = ChartVisibilityItem.generateItemsFrames(for: frame.width, items: self.items)
+        for (index, frame) in frames.enumerated() {
             selectionViews[index].frame = frame
         }
     }

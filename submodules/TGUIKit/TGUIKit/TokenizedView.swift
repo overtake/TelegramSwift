@@ -235,13 +235,17 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
                    //     token.change(size: NSMakeSize(frame.width - startPointX - between.x, token.frame.height), animated: animated)
                    // }
                     point.x = between.x
-                    point.y += token.frame.height + between.y
+                    if i != count - 1 {
+                        point.y += token.frame.height + between.y
+                    }
                 }
                 
             }
             if subview == container.subviews.last {
                 if mainw - point.x > mainw/3 {
-                    extraLine = true
+                    if point.x != between.x {
+                        extraLine = true
+                    }
                 }
             }
         }

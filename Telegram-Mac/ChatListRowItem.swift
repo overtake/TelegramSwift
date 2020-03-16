@@ -630,7 +630,14 @@ class ChatListRowItem: TableRowItem {
     
     func togglePinned() {
         if let chatLocation = chatLocation {
-            _ = (toggleItemPinned(postbox: context.account.postbox, groupId: self.associatedGroupId, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+            let location: TogglePeerChatPinnedLocation
+            
+            if let filter = self.filter {
+                location = .filter(filter.id)
+            } else {
+                location = .group(self.associatedGroupId)
+            }
+            _ = (toggleItemPinned(postbox: context.account.postbox, location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
                     alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
@@ -750,7 +757,7 @@ class ChatListRowItem: TableRowItem {
                 _ = returnGroup(account: context.account, peerId: peerId).start()
             }
             
-            if pinnedType != .ad && groupId == .root, filter == nil {
+            if pinnedType != .ad && groupId == .root {
                 items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
@@ -812,20 +819,10 @@ class ChatListRowItem: TableRowItem {
             }
             
         } else {
-            let togglePin = {[weak self] in
-                if let chatLocation = self?.chatLocation, let associatedGroupId = self?.associatedGroupId {
-                    _ = (toggleItemPinned(postbox: context.account.postbox, groupId: associatedGroupId, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
-                        switch result {
-                        case .limitExceeded:
-                            alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
-                        default:
-                            break
-                        }
-                    })
-                }
-            }
             if pinnedType != .ad, groupId == .root {
-                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: { [weak self] in
+                    self?.togglePinned()
+                }))
             }
         }
         

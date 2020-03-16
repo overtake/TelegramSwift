@@ -218,6 +218,7 @@
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
+		A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */; };
 		A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2923C75F1100DD307B /* Confetti.swift */; };
 		A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC2D23C77AD800DD307B /* confetti.mp3 */; };
 		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
@@ -1277,6 +1278,7 @@
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
+		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
 		A778DC2923C75F1100DD307B /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		A778DC2D23C77AD800DD307B /* confetti.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = confetti.mp3; sourceTree = "<group>"; };
 		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
@@ -4478,6 +4480,7 @@
 			children = (
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 				A7F28336239A808500742C20 /* AudioAnimatedSticker.swift */,
+				A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -5067,6 +5070,7 @@
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C24FD4101F20FBFB00A97196 /* RecentUsedEmoji.swift in Sources */,
+				A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				D07C6D832347701700468B1A /* WalletProcessTransactionController.swift in Sources */,
 				C253A95F1D9165CD00CDC850 /* webp.m in Sources */,

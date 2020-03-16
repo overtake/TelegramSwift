@@ -439,7 +439,7 @@ class ChatListController : PeersListController {
             self?.updateFilter {
                 $0.withUpdatedFilter(filter)
             }
-            self?.scrollup()
+            self?.scrollup(force: true)
         }
         let openFilterSettings:(ChatListFilter?)->Void = { filter in
             if let filter = filter {
@@ -788,7 +788,6 @@ class ChatListController : PeersListController {
         
         let needPreload = previousChatList.with  { $0?.laterIndex == nil }
         if needPreload {
-            context.account.viewTracker.chatListPreloadItems.set(.single([]))
             var preloadItems:[ChatHistoryPreloadItem] = []
             self.genericView.tableView.enumerateItems(with: { item -> Bool in
                 guard let item = item as? ChatListRowItem, let index = item.chatListIndex else {return true}
@@ -809,6 +808,13 @@ class ChatListController : PeersListController {
         
         let groupId: PeerGroupId = self.mode.groupId
 
+        let location: TogglePeerChatPinnedLocation
+        
+        if let filter = self.filterValue?.filter {
+            location = .filter(filter.id)
+        } else {
+            location = .group(groupId)
+        }
         
         self.genericView.tableView.enumerateItems { item -> Bool in
             guard let item = item as? ChatListRowItem else {
@@ -835,7 +841,7 @@ class ChatListController : PeersListController {
          items.move(at: from - offset, to: to - offset)
         
         reorderDisposable.set(context.account.postbox.transaction { transaction -> Void in
-            _ = reorderPinnedItemIds(transaction: transaction, groupId: groupId, itemIds: items)
+            _ = reorderPinnedItemIds(transaction: transaction, location: location, itemIds: items)
         }.start())
     }
     
@@ -861,7 +867,12 @@ class ChatListController : PeersListController {
     private var lastScrolledIndex: ChatListIndex? = nil
     
     
-    override func scrollup() {
+    override func scrollup(force: Bool = false) {
+        
+        if force {
+            self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
+            return
+        }
         
         if searchController != nil {
             self.genericView.searchView.change(state: .None, true)
@@ -894,7 +905,13 @@ class ChatListController : PeersListController {
                 self.request.set(.single(.Initial(50, .up(true))))
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
-                    self.context.sharedContext.bindings.mainController().showFastChatSettings()
+                    if self.filterValue?.filter != nil {
+                        self.updateFilter {
+                            $0.withUpdatedFilter(nil)
+                        }
+                    } else {
+                        self.context.sharedContext.bindings.mainController().showFastChatSettings()
+                    }
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
                 }
@@ -982,7 +999,7 @@ class ChatListController : PeersListController {
                             self.updateFilter {
                                 $0.withUpdatedFilter(filter)
                             }
-                            self.scrollup()
+                            self.scrollup(force: true)
                         }, filter.icon, additionView: additionView))
                     }
                 }
