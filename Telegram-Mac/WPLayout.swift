@@ -240,7 +240,7 @@ class WPLayout: Equatable {
     func measure(width: CGFloat)  {
         if oldWidth != width {
             self.oldWidth = width
-            siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width, 20), nil, false, .left)
+            siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width - 50, 20), nil, false, .left)
         }
         
         if let siteName = siteName {

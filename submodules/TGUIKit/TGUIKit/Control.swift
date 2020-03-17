@@ -296,6 +296,10 @@ open class Control: View {
             if isEnabled && layer!.opacity > 0 {
                 send(event: .Up)
                 
+                if longInvoked {
+                    send(event: .LongMouseUp)
+                }
+                
                 if mouseInside() && !longInvoked {
                     if event.clickCount == 1  {
                         send(event: .SingleClick)

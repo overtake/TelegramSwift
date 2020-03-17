@@ -76,7 +76,7 @@ private class ChatListEmptyRowView : TableRowView {
         let animatedSticker: LocalAnimatedSticker
         
         if let _ = item.filter {
-            animatedSticker = .think_spectacular
+            animatedSticker = .folder_empty
         } else {
             animatedSticker = .chiken_born
         }

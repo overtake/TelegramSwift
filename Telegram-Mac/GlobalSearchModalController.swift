@@ -154,7 +154,7 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
                     state.query = searchState.request
                     return state
                 }
-                let signal = searchMessages(account: context.account, location: .general, query: "#g \(searchState.request)", state: stateValue.with { $0.searchState }, limit: 100) |> deliverOnMainQueue
+                let signal = searchMessages(account: context.account, location: .general, query: "#g c:ru minviews:100 \(searchState.request)", state: stateValue.with { $0.searchState }, limit: 100) |> deliverOnMainQueue
                 
                 searchDisposable.set(signal.start(next: { searchResult, searchState in
                     updateState { state in
@@ -205,7 +205,7 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
         return .none
     }
     
-    let modalController = InputDataModalController(controller, closeHandler: { f in f() }, size: NSMakeSize(300, 300))
+    let modalController = InputDataModalController(controller, closeHandler: { f in f() }, size: NSMakeSize(400, 300))
     
     close = { [weak modalController] in
         modalController?.close()

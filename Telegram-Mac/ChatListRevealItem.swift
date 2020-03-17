@@ -19,9 +19,9 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let tabs: [ChatListFilter]
     fileprivate let selected: ChatListFilter?
     fileprivate let openSettings: (()->Void)?
-    fileprivate let counters: [Int32: Int32]
+    fileprivate let counters: ChatListFilterBadges
     fileprivate let _menuItems: ((ChatListFilter?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter?, counters: [Int32 : Int32], action: ((ChatListFilter?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter?)->[ContextMenuItem])? = nil) {
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter?, counters: ChatListFilterBadges, action: ((ChatListFilter?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter?)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -39,7 +39,7 @@ class ChatListRevealItem: TableStickItem {
         self.selected = nil
         self.openSettings = nil
         self._menuItems = nil
-        self.counters = [:]
+        self.counters = ChatListFilterBadges(total: 0, filters: [])
         super.init(initialSize)
     }
 
@@ -146,10 +146,10 @@ final class ChatListRevealView : TableStickView {
         }
         
         let generateIcon:(ChatListFilter?)->CGImage? = { tab in
-            let unreadCount:Int32? = item.counters[tab != nil ? tab!.id : -1]
+            let unreadCount:ChatListFilterBadge? = item.counters.count(for: tab)
             let icon: CGImage?
-            if let unreadCount = unreadCount, unreadCount > 0, context.sharedContext.layout != .minimisize {
-                let attributedString = NSAttributedString.initialize(string: "\(Int(unreadCount).prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
+            if let unreadCount = unreadCount, unreadCount.count > 0, context.sharedContext.layout != .minimisize {
+                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
                 size = NSMakeSize(max(size.height,size.width), size.height)
@@ -157,7 +157,7 @@ final class ChatListRevealView : TableStickView {
                 icon = generateImage(size, rotatedContext: { size, ctx in
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
-                    if item.selected == tab {
+                    if item.selected == tab || unreadCount.hasUnmutedUnread {
                         ctx.setFillColor(theme.colors.accent.cgColor)
                     } else {
                         ctx.setFillColor(theme.colors.grayText.cgColor)
@@ -189,14 +189,14 @@ final class ChatListRevealView : TableStickView {
         let segmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
-        var items:[ScrollableSegmentItem] = [.init(title: L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(item.counters[-1] ?? 0))]
+        var items:[ScrollableSegmentItem] = [.init(title: L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(L10n.chatListFilterAllChats))]
         index += 1
         for tab in item.tabs {
-            let unreadCount = item.counters[tab.id]
+            let unreadCount = item.counters.count(for: tab)
             let icon: CGImage? = generateIcon(tab)
-            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title ?? ""
+            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title
            
-            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount ?? 0)))
+            items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount)))
             index += 1
         }
 //        if let _ = item.openSettings {
@@ -208,6 +208,14 @@ final class ChatListRevealView : TableStickView {
         
         segmentView.updateItems(items, animated: animated)
         
+        segmentView.resortRange = NSMakeRange(1, items.count - 1)
+        segmentView.resortHandler = { from, to in
+            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { state in
+                var state = state
+                state.move(at: from - 1, to: to - 1)
+                return state
+            }).start()
+        }
         segmentView.didChangeSelectedItem = { [weak item] selected in
             if let item = item {
                 if selected.uniqueId == -1 {

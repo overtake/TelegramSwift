@@ -172,7 +172,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     private let loadStickersDisposable = MetaDisposable()
     private let loadRecentEmojiDisposable = MetaDisposable()
 
-    private weak var chatInteraction: ChatInteraction?
+    private var chatInteraction: ChatInteraction?
     private var textView: NSTextView
     private let candidateListItem = NSCandidateListTouchBarItem<AnyObject>(identifier: .candidateList)
     private let layoutStateDisposable = MetaDisposable()
@@ -200,6 +200,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.chatInteraction = chatInteraction
         textView.updateTouchBarItemIdentifiers()
         self.textView = textView
+       // self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
     }
     
     func updateByKeyWindow() {
@@ -222,7 +223,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
-            if oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult || oldValue.selectionState != value.selectionState || oldValue.canInvokeBasicActions != value.canInvokeBasicActions {
+            if !animated  || oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult || oldValue.selectionState != value.selectionState || oldValue.canInvokeBasicActions != value.canInvokeBasicActions {
                 self.prevIsKeyWindow = textView.window?.isKeyWindow
                 let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
                 self.defaultItemIdentifiers = result.items
