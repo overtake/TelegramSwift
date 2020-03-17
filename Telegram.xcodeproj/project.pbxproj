@@ -219,6 +219,7 @@
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
 		A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */; };
+		A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */; };
 		A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2923C75F1100DD307B /* Confetti.swift */; };
 		A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC2D23C77AD800DD307B /* confetti.mp3 */; };
 		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
@@ -1279,6 +1280,7 @@
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
 		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
+		A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_empty.tgs; sourceTree = "<group>"; };
 		A778DC2923C75F1100DD307B /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		A778DC2D23C77AD800DD307B /* confetti.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = confetti.mp3; sourceTree = "<group>"; };
 		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
@@ -4545,6 +4547,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */,
 				D0830FC324127468006198E7 /* folder_new.tgs */,
 				A7029EF9240E3CCF00A89ABD /* folder.tgs */,
 				A7393D412407FF0F00CE44CA /* dice_idle.tgs */,
@@ -4895,6 +4898,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
 				D0830FC424127473006198E7 /* folder_new.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,

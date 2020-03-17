@@ -20,7 +20,7 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
     guard let filter = filter?.data else {
         return nil
     }
-    let includePeers = Set(filter.includePeers)
+    let includePeers = Set(filter.includePeers.peers)
     let excludePeers = Set(filter.excludePeers)
     var includeAdditionalPeerGroupIds: [PeerGroupId] = []
     if !filter.excludeArchived {
@@ -31,7 +31,7 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
         messageTagSummary = ChatListMessageTagSummaryResultCalculation(addCount: ChatListMessageTagSummaryResultComponent(tag: .unseenPersonalMessage, namespace: Namespaces.Message.Cloud), subtractCount: ChatListMessageTagActionsSummaryResultComponent(type: PendingMessageActionType.consumeUnseenPersonalMessage, namespace: Namespaces.Message.Cloud))
     }
 
-    return ChatListFilterPredicate(includePeerIds: includePeers, excludePeerIds: excludePeers, pinnedPeerIds: filter.pinnedPeers, messageTagSummary: messageTagSummary, includeAdditionalPeerGroupIds: includeAdditionalPeerGroupIds, include: { peer, isMuted, isUnread, isContact, messageTagSummaryResult in
+    return ChatListFilterPredicate(includePeerIds: includePeers, excludePeerIds: excludePeers, pinnedPeerIds: filter.includePeers.pinnedPeers, messageTagSummary: messageTagSummary, includeAdditionalPeerGroupIds: includeAdditionalPeerGroupIds, include: { peer, isMuted, isUnread, isContact, messageTagSummaryResult in
         if filter.excludeRead {
             var effectiveUnread = isUnread
             if let messageTagSummaryResult = messageTagSummaryResult, messageTagSummaryResult {
