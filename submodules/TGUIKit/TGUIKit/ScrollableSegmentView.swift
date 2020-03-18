@@ -519,7 +519,9 @@ public class ScrollableSegmentView: View {
         for (idx, item, _) in updateIndices {
             self.updateItem(item, theme: self.theme, at: idx, animated: animated)
         }
-        layoutItems(animated: animated)
+        if !deleteIndices.isEmpty || !indicesAndItems.isEmpty || !updateIndices.isEmpty {
+            layoutItems(animated: animated)
+        }
        
         
         if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view {

@@ -32,6 +32,7 @@ enum LocalAnimatedSticker {
     case folder
     case new_folder
     case folder_empty
+    case graph_loading
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -75,6 +76,8 @@ enum LocalAnimatedSticker {
             resource = LocalBundleResource(name: "folder_new", ext: "tgs")
         case .folder_empty:
             resource = LocalBundleResource(name: "folder_empty", ext: "tgs")
+        case .graph_loading:
+            resource = LocalBundleResource(name: "graph_loading", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -121,9 +124,11 @@ enum LocalAnimatedSticker {
         case .folder:
             playPolicy = .once
         case .new_folder:
-            playPolicy = .once
+            playPolicy = .loop
         case .folder_empty:
             playPolicy = .once
+        case .graph_loading:
+            playPolicy = .loop
         }
         return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, media: self.file)
     }
