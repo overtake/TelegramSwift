@@ -43,7 +43,9 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
     
     
     if state.stats == nil {
-        entries.append(.loading)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext)
+        }))
     } else if let stats = state.stats  {
         
        // stats.messageInteractions.append(ChannelStatsMessageInteractions)

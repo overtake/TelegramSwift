@@ -130,6 +130,8 @@ final class ChatListRevealView : TableStickView {
     
     private var splitViewState: SplitViewState?
     
+    private var removeAnimationForNextTransition: Bool = false
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
@@ -137,7 +139,7 @@ final class ChatListRevealView : TableStickView {
             return
         }
         
-        var animated = self.animated || animated
+        var animated = (self.animated || animated)
         self.animated = true
         
         
@@ -209,7 +211,7 @@ final class ChatListRevealView : TableStickView {
         segmentView.updateItems(items, animated: animated)
         
         segmentView.resortRange = NSMakeRange(1, items.count - 1)
-        segmentView.resortHandler = { from, to in
+        segmentView.resortHandler = { [weak self] from, to in
             _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { state in
                 var state = state
                 state.move(at: from - 1, to: to - 1)

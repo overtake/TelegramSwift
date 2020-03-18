@@ -22,6 +22,7 @@ enum UIChatListEntryId : Hashable {
     case groupId(PeerGroupId)
     case reveal
     case empty
+    case loading
 }
 
 struct ChatListInputActivity : Equatable {
@@ -59,6 +60,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
     case reveal([ChatListFilter], ChatListFilter?, ChatListFilterBadges)
     case empty(ChatListFilter?)
+    case loading(ChatListFilter?)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
         case let .chat(entry, activity, isSponsored, filter):
@@ -91,6 +93,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case let .loading(filter):
+            if case .loading(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -117,6 +125,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: index)
         case .empty:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
+        case .loading:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
         }
     }
     
@@ -134,6 +144,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .reveal
         case .empty:
             return .empty
+        case .loading:
+            return .loading
         }
     }
     
@@ -171,6 +183,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }, menuItems: tabsMenuItems)
             case let .empty(filter):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context, openFilterSettings: openFilterSettings)
+            case let .loading(filter):
+                return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context)
             }
         }
         
@@ -253,8 +267,12 @@ class ChatListController : PeersListController {
         return _filterValue.with { $0 }
     }
     private func updateFilter(_ f:(FilterData)->FilterData) {
-        self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
-        filter.set(_filterValue.modify(f))
+        let previous = filterValue
+        let current = _filterValue.modify(f)
+        filter.set(current)
+        if previous?.filter?.id != current.filter?.id {
+            self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
+        }
         _  = first.swap(true)
         setCenterTitle(self.defaultBarTitle)
     }
@@ -425,8 +443,6 @@ class ChatListController : PeersListController {
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
-                
-                
                 signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), count: count)
                 scroll = st
             case let .Index(index, st):
@@ -506,7 +522,25 @@ class ChatListController : PeersListController {
                 if !hasHole {
                     mapped.append(.empty(value.3.filter))
                 }
+            } else {
+                let isLoading = mapped.filter { value in
+                    switch value {
+                    case let .chat(entry, _, _, _):
+                        if case .HoleEntry = entry {
+                           return false
+                        } else {
+                            return true
+                        }
+                    default:
+                        return true
+                    }
+                }.isEmpty
+                if isLoading {
+                    mapped.append(.loading(value.3.filter))
+                    
+                }
             }
+            
             
             if !value.3.tabs.isEmpty {
                 mapped.append(.reveal(value.3.tabs, value.3.filter, filtersCounter))
@@ -539,6 +573,8 @@ class ChatListController : PeersListController {
                 case .reveal:
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 case .empty:
+                    return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                case .loading:
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 }
             }
