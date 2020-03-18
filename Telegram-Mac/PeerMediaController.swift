@@ -283,6 +283,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let loadFwdMessagesDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable = MetaDisposable()
     private let searchValueDisposable = MetaDisposable()
+    private let loadListsDisposable = MetaDisposable()
     private let currentModeValue:ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
     private var searchController: PeerMediaListController?
     
@@ -566,7 +567,21 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         }
         
         self.ready.set(combined |> deliverOnMainQueue)
+        
+        let ready = self.ready.get() |> filter { $0 } |> take(1) |> deliverOnMainQueue
+        
+        loadListsDisposable.set(ready.start(next: { [weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            for i in 0 ..< self.listControllers.count {
+                self.listControllers[i].loadViewIfNeeded(self.bounds)
+                self.listControllers[i].load(with: self.tagsList[i].tagsValue)
+            }
+        }))
+        
     }
+    
     
     private var currentTable: TableView? {
         if self.mode == .photoOrVideo {
@@ -578,10 +593,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     override func loadView() {
         super.loadView()
  
-        for i in 0 ..< listControllers.count {
-            listControllers[i].loadViewIfNeeded(bounds)
-            listControllers[i].load(with: tagsList[i].tagsValue)
-        }
+
         mediaGrid.loadViewIfNeeded(bounds)
         
         mediaGrid.viewWillAppear(false)
@@ -669,6 +681,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         messagesActionDisposable.dispose()
         loadFwdMessagesDisposable.dispose()
         loadSelectionMessagesDisposable.dispose()
+        loadListsDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

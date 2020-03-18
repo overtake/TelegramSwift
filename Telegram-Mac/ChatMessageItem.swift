@@ -933,10 +933,9 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
+                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { bankCard in
-                    
                     openBank(bankCard)
-                    
                 }), range: range)
             case let .Custom(type):
                 if type == ApplicationSpecificEntityType.Timecode {

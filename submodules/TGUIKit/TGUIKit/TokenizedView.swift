@@ -243,9 +243,9 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
             }
             if subview == container.subviews.last {
                 if mainw - point.x > mainw/3 {
-                    if point.x != between.x {
+                   // if point.x != between.x {
                         extraLine = true
-                    }
+                  //  }
                 }
             }
         }

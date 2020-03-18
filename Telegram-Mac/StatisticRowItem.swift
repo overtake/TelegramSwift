@@ -121,7 +121,7 @@ class StatisticRowView: TableRowView {
 class StatisticLoadingRowItem: GeneralRowItem {
     fileprivate let errorTextLayout: TextViewLayout?
     init(_ initialSize: NSSize, stableId: AnyHashable, error: String?) {
-        let height: CGFloat = 350 + GeneralViewType.singleItem.innerInset.bottom +  GeneralViewType.singleItem.innerInset.top
+        let height: CGFloat = 308 + GeneralViewType.singleItem.innerInset.bottom + GeneralViewType.singleItem.innerInset.top + 30
         if let error = error {
             self.errorTextLayout = TextViewLayout.init(.initialize(string: error, color: theme.colors.grayText, font: .normal(.text)))
         } else {
