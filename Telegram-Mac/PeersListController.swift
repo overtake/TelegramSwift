@@ -788,6 +788,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             break
         case .empty:
             break
+        case .loading:
+            break
         }
         if close {
             self.genericView.searchView.cancel(true)

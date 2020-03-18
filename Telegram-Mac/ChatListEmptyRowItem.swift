@@ -76,7 +76,7 @@ private class ChatListEmptyRowView : TableRowView {
         let animatedSticker: LocalAnimatedSticker
         
         if let _ = item.filter {
-            animatedSticker = .think_spectacular
+            animatedSticker = .folder_empty
         } else {
             animatedSticker = .chiken_born
         }
@@ -133,6 +133,138 @@ private class ChatListEmptyRowView : TableRowView {
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         
         sticker.centerX(y: textView.frame.minY - sticker.frame.height - 20)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
+
+
+
+
+
+
+
+
+
+class ChatListLoadingRowItem: TableRowItem {
+    private let _stableId: AnyHashable
+    
+    override var stableId: AnyHashable {
+        return _stableId
+    }
+    let context: AccountContext
+    let filter: ChatListFilter?
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext) {
+        self.context = context
+        self.filter = filter
+        self._stableId = stableId
+        super.init(initialSize)
+    }
+    
+    override var height: CGFloat {
+        if let table = table {
+            var tableHeight: CGFloat = 0
+            table.enumerateItems { item -> Bool in
+                if item.index < self.index {
+                    tableHeight += item.height
+                }
+                return true
+            }
+            let height = table.frame.height == 0 ? initialSize.height : table.frame.height
+            return height - tableHeight
+        }
+        return initialSize.height
+    }
+    
+    override func viewClass() -> AnyClass {
+        return ChatListLoadingRowView.self
+    }
+}
+
+
+private class ChatListLoadingRowView : TableRowView {
+    private let disposable = MetaDisposable()
+    private let textView = TextView()
+    private let separator = View()
+    private let sticker: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
+    private let indicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        textView.isSelectable = false
+        
+        addSubview(separator)
+        addSubview(sticker)
+        addSubview(indicator)
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        
+        guard let item = item as? ChatListLoadingRowItem else {
+            return
+        }
+        
+        
+        if let _ = item.filter {
+            let animatedSticker: LocalAnimatedSticker = LocalAnimatedSticker.new_folder
+            sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+            sticker.isHidden = false
+            indicator.isHidden = true
+        } else {
+            sticker.isHidden = true
+            indicator.isHidden = false
+        }
+        
+        needsLayout = true
+    }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        
+        separator.background = theme.colors.border
+        
+        guard let item = item as? ChatListLoadingRowItem else {
+            return
+        }
+        
+        let text: String
+        if let _ = item.filter {
+            text = L10n.chatListFilterLoading
+        } else {
+            text = L10n.chatListLoading
+        }
+        
+        let attr = NSAttributedString.initialize(string: text, color: theme.colors.text, font: .normal(.text)).mutableCopy() as! NSMutableAttributedString
+        
+        attr.detectBoldColorInString(with: .medium(.text))
+        
+        let layout = TextViewLayout(attr, alignment: .center)
+        
+        layout.measure(width: frame.width - 40)
+        layout.interactions = globalLinkExecutor
+        textView.update(layout)
+        textView.center()
+        
+        textView.isHidden = frame.width <= 70 || item.filter == nil
+        sticker.isHidden = frame.width <= 70 || item.filter == nil
+        
+        indicator.isHidden = item.filter != nil
+        
+        separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
+        
+        sticker.centerX(y: textView.frame.minY - sticker.frame.height - 20)
+        indicator.center()
     }
     
     required init?(coder: NSCoder) {

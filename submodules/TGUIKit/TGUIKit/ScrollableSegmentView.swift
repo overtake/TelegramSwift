@@ -172,16 +172,19 @@ private final class SegmentItemView : Control {
     private let textView = TextView()
     private let callback: (ScrollableSegmentItem)->Void
     private let menuItems:(ScrollableSegmentItem)->[ContextMenuItem]
-    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, callback: @escaping(ScrollableSegmentItem)->Void, menuItems:@escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
+    private let startDraggingIfNeeded: (ScrollableSegmentItem, Control)->Void
+    init(item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, callback: @escaping(ScrollableSegmentItem)->Void, startDraggingIfNeeded: @escaping(ScrollableSegmentItem, Control)->Void, menuItems:@escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
         self.item = item
         self.callback = callback
         self.menuItems = menuItems
         self.textLayout = buildText(for: item)
+        self.startDraggingIfNeeded = startDraggingIfNeeded
         super.init(frame: NSZeroRect)
-        self.handleLongEvent = false
+        self.handleLongEvent = true
         addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        textView.disableBackgroundDrawing = true
         textView.isEventLess = true
         self.updateItem(item, theme: theme, animated: false)
         
@@ -194,7 +197,7 @@ private final class SegmentItemView : Control {
                 self?.textView.change(opacity: 0.8, animated: true)
                 self?.imageView?.change(opacity: 0.8, animated: true)
             }
-            }, for: .Highlight)
+        }, for: .Highlight)
         
         set(handler: { [weak self] _ in
             self?.textView.change(opacity: 1.0, animated: true)
@@ -214,6 +217,13 @@ private final class SegmentItemView : Control {
             self.callback(self.item)
         }, for: .Click)
         
+        
+        set(handler: { [weak self] control in
+            guard let `self` = self else {
+                return
+            }
+            self.startDraggingIfNeeded(self.item, control)
+        }, for: .LongMouseDown)
         
         set(handler: { [weak self] control in
             guard let `self` = self else {
@@ -245,7 +255,6 @@ private final class SegmentItemView : Control {
         self.item = item
         self.textLayout = buildText(for: item)
         textView.update(self.textLayout)
-        
         if let image = item.icon {
             if imageView == nil {
                 imageView = ImageView()
@@ -272,8 +281,8 @@ private final class SegmentItemView : Control {
         }
         
         change(size: size, animated: animated, duration: duration)
-        self.backgroundColor = presentation.colors.background
-        textView.backgroundColor = presentation.colors.background
+        self.backgroundColor = .clear
+        textView.backgroundColor = .clear
         needsLayout = true
     }
     
@@ -375,6 +384,12 @@ private class Scroll : ScrollView {
     }
 }
 
+private struct ResortData {
+    let point: NSPoint
+    let item: ScrollableSegmentItem
+    let view: Control
+    let viewPoint: NSPoint
+}
 
 public class ScrollableSegmentView: View {
     public let scrollView:ScrollView = Scroll()
@@ -400,6 +415,8 @@ public class ScrollableSegmentView: View {
         }
     }
     
+    public var resortRange: NSRange? = nil
+    public var resortHandler: ((Int, Int)->Void)?
     public override func scrollWheel(with event: NSEvent) {
         scrollView.scrollWheel(with: event)
     }
@@ -411,6 +428,8 @@ public class ScrollableSegmentView: View {
         addSubview(selectorView)
         scrollView.documentView = documentView
         
+        
+        
 //        scrollView.backgroundColor = .clear
 //        scrollView.background = .clear
 //
@@ -421,6 +440,7 @@ public class ScrollableSegmentView: View {
         })
         layout()
         redraw()
+        
     }
     
     deinit {
@@ -475,7 +495,7 @@ public class ScrollableSegmentView: View {
                 x += view.size.width
             }
         }
-        documentView.frame = CGRect(origin: .zero, size: NSMakeSize(x, frame.height))
+        documentView.frame = CGRect(origin: .zero, size: NSMakeSize(max(x, frame.width), frame.height))
         selectorView.frame = selectorFrame
     }
     
@@ -499,7 +519,9 @@ public class ScrollableSegmentView: View {
         for (idx, item, _) in updateIndices {
             self.updateItem(item, theme: self.theme, at: idx, animated: animated)
         }
-        layoutItems(animated: animated)
+        if !deleteIndices.isEmpty || !indicesAndItems.isEmpty || !updateIndices.isEmpty {
+            layoutItems(animated: animated)
+        }
        
         
         if let selectedItem = items.first(where: { $0.selected }), let selectedView = selectedItem.view {
@@ -540,7 +562,9 @@ public class ScrollableSegmentView: View {
         self.items[index] = item
     }
     private func insertItem(_ item: ScrollableSegmentItem, theme: ScrollableSegmentTheme, at index: Int, animated: Bool, callback: @escaping(ScrollableSegmentItem)->Void, menuItems: @escaping(ScrollableSegmentItem)->[ContextMenuItem]) {
-        let view = SegmentItemView(item: item, theme: theme, callback: callback, menuItems: menuItems)
+        let view = SegmentItemView(item: item, theme: theme, callback: callback, startDraggingIfNeeded: { [weak self] item, view in
+            self?.startDraggingIfNeeded(item, view)
+        }, menuItems: menuItems)
         view.setFrameSize(NSMakeSize(view.frame.width, frame.height))
         item.view = view
         
@@ -557,17 +581,105 @@ public class ScrollableSegmentView: View {
         }
     }
     
+    private var initialResortData: ResortData?
+    
+    private func startDraggingIfNeeded(_ item: ScrollableSegmentItem, _ view: Control) {
+        if let range = self.resortRange, let window = self.window {
+            if range.indexIn(item.index) {
+                initialResortData = ResortData(point: self.convert(window.mouseLocationOutsideOfEventStream, from: nil), item: item, view: view, viewPoint: view.frame.origin)
+                
+                view.set(handler: { [weak self] _ in
+                    self?.applyLiveResort()
+                }, for: .MouseDragging)
+                
+                view.set(handler: { [weak self] _ in
+                    self?.applyResort()
+                }, for: .LongMouseUp)
+            }
+        }
+    }
+    
+    private func applyResort() {
+        if let data = initialResortData {
+            _ = data.view.removeLastHandler()
+            _ = data.view.removeLastHandler()
+            layoutItems(animated: true, completion: { [weak self] in
+                if let bestIndex = self?.bestIndex {
+                    self?.resortHandler?(data.item.index, bestIndex)
+                }
+                self?.bestIndex = nil
+                self?.initialResortData = nil
+            })
+        }
+    }
+    private var bestIndex: Int? = nil
+    private func applyLiveResort() {
+        if let data = initialResortData, let resortRange = resortRange, let window = self.window {
+            let currentPoint = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            let updatePoint = currentPoint.offsetBy(dx: -data.point.x, dy: -data.point.y)
+            data.view.setFrameOrigin(data.viewPoint.offsetBy(dx: updatePoint.x.rounded(), dy: 0))
+            selectorView.frame = selectorFrame
+            
+            var bestIndex: Int = items.count - 1
+            
+            var x: CGFloat = 0
+            for (i, item) in self.items.enumerated() {
+                if let view = item.view {
+                    x += view.frame.width
+                }
+                if x > currentPoint.x {
+                    bestIndex = i
+                    break
+                }
+            }
+            
+            bestIndex = max(resortRange.location, bestIndex)
+            if bestIndex != self.bestIndex {
+                self.bestIndex = bestIndex
+                x = 0
+                for (i, item) in self.items.enumerated() {
+                    if let view = item.view {
+                        if i == bestIndex, bestIndex <= data.item.index {
+                            x += data.view.frame.width
+                        }
+                        if item != data.item {
+                            view.change(pos: NSMakePoint(x, view.frame.minY), animated: true)
+                            x += view.frame.width
+                        }
+                        if i == bestIndex, bestIndex > data.item.index {
+                            x += data.view.frame.width
+                        }
+                    }
+                }
+                selectorView.change(pos: selectorFrame.origin, animated: true)
+            }
+            if let event = NSApp.currentEvent {
+                scrollView.contentView.autoscroll(with: event)
+            }
+        }
+    }
 
     
-    private func layoutItems(animated: Bool) {
+    private func layoutItems(animated: Bool, completion: (()->Void)? = nil) {
         var x: CGFloat = 0
-        for item in self.items {
+        var items = self.items
+        if let data = initialResortData, let bestIndex = self.bestIndex, bestIndex != data.item.index {
+            items.insert(items.remove(at: data.item.index), at: bestIndex)
+        }
+        
+        for (i, item) in items.enumerated() {
             if let view = item.view {
-                view._change(pos: NSMakePoint(x, 0), animated: animated)
+                view._change(pos: NSMakePoint(x, 0), animated: animated, completion: { [weak self] completed in
+                    if i == self?.bestIndex {
+                        completion?()
+                    }
+                })
                 x += view.size.width
             }
         }
-        documentView.change(size: NSMakeSize(x, frame.height), animated: animated)
+        
+        documentView.change(size: NSMakeSize(max(x, frame.width), frame.height), animated: animated)
+        selectorView.change(pos: selectorFrame.origin, animated: animated)
     }
     
     private func redraw() {

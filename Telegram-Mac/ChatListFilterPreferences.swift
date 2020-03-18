@@ -17,10 +17,10 @@ extension ChatListFilter {
    
 
     var isFullfilled: Bool {
-        return self.data.categories == .all && data.includePeers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead && data.excludeArchived
+        return self.data.categories == .all && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead && data.excludeArchived
     }
     var isEmpty: Bool {
-        return self.data.categories.isEmpty && data.includePeers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead
+        return self.data.categories.isEmpty && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead
     }
     var icon: CGImage {
 
@@ -50,7 +50,7 @@ extension ChatListFilter {
                 id = tempId
             }
         }
-        return ChatListFilter(id: id, title: "", data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: [], excludePeers: [], pinnedPeers: []))
+        return ChatListFilter(id: id, title: "", emoticon: nil, data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
     }
 }
 
@@ -59,126 +59,192 @@ func chatListFilterPreferences(postbox: Postbox) -> Signal<[ChatListFilter], NoE
     return updatedChatListFilters(postbox: postbox)
 }
 
-func filtersBadgeCounters(context: AccountContext) -> Signal<[(id: Int32, count: Int32)], NoError>  {
-    return chatListFilterPreferences(postbox: context.account.postbox) |> map { $0 } |> mapToSignal { filters -> Signal<[(id: Int32, count: Int32)], NoError> in
-                
-        var signals:[Signal<(id: Int32, count: Int32), NoError>] = []
-        for current in filters {
+struct ChatListFilterBadge : Equatable {
+    let filter: ChatListFilter
+    let count: Int
+    let hasUnmutedUnread: Bool
+}
+struct ChatListFilterBadges : Equatable {
+    let total:Int
+    let filters:[ChatListFilterBadge]
+    
+    func count(for filter: ChatListFilter?) -> ChatListFilterBadge? {
+        return filters.first(where: { $0.filter.id == filter?.id })
+    }
+}
+
+func chatListFilterItems(account: Account, accountManager: AccountManager) -> Signal<ChatListFilterBadges, NoError> {
+    
+    let settings = appNotificationSettings(accountManager: accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
+        return lhs.badgeEnabled == rhs.badgeEnabled
+    })
+    
+    return combineLatest(updatedChatListFilters(postbox: account.postbox), settings)
+        |> mapToSignal { filters, inAppSettings -> Signal<(Int, [(ChatListFilter, Int, Bool)]), NoError> in
+            
+            if !inAppSettings.badgeEnabled {
+                return .single((0, []))
+            }
             
             var unreadCountItems: [UnreadMessageCountsItem] = []
-            unreadCountItems.append(.total(nil))
-            var keys: [PostboxViewKey] = []
-            let unreadKey: PostboxViewKey
-            
-            if !current.data.includePeers.isEmpty {
-                for peerId in current.data.includePeers {
+            unreadCountItems.append(.totalInGroup(.root))
+            var additionalPeerIds = Set<PeerId>()
+            var additionalGroupIds = Set<PeerGroupId>()
+            for filter in filters {
+                additionalPeerIds.formUnion(filter.data.includePeers.peers)
+                additionalPeerIds.formUnion(filter.data.excludePeers)
+                if !filter.data.excludeArchived {
+                    additionalGroupIds.insert(Namespaces.PeerGroup.archive)
+                }
+            }
+            if !additionalPeerIds.isEmpty {
+                for peerId in additionalPeerIds {
                     unreadCountItems.append(.peer(peerId))
                 }
             }
-            unreadKey = .unreadCounts(items: unreadCountItems)
-            keys.append(unreadKey)
-            for peerId in current.data.includePeers {
-                keys.append(.basicPeer(peerId))
-                
+            for groupId in additionalGroupIds {
+                unreadCountItems.append(.totalInGroup(groupId))
             }
-            keys.append(.peerNotificationSettings(peerIds: Set(current.data.includePeers)))
+            let unreadKey: PostboxViewKey = .unreadCounts(items: unreadCountItems)
+            var keys: [PostboxViewKey] = []
+            keys.append(unreadKey)
+            for peerId in additionalPeerIds {
+                keys.append(.basicPeer(peerId))
+            }
             
-            let s:Signal<(id: Int32, count: Int32), NoError> = combineLatest(context.account.postbox.combinedView(keys: keys), appNotificationSettings(accountManager: context.sharedContext.accountManager)) |> map { keysView, inAppSettings -> (id: Int32, count: Int32) in
-                
-                if let unreadCounts = keysView.views[unreadKey] as? UnreadMessageCountsView, inAppSettings.badgeEnabled {
-                    var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int)] = [:]
-                    var totalState: ChatListTotalUnreadState?
+            return combineLatest(queue: account.postbox.queue,
+                                 account.postbox.combinedView(keys: keys),
+                                 Signal<Bool, NoError>.single(true)
+                )
+                |> map { view, _ -> (Int, [(ChatListFilter, Int, Bool)]) in
+                    guard let unreadCounts = view.views[unreadKey] as? UnreadMessageCountsView else {
+                        return (0, [])
+                    }
+                    
+                    var result: [(ChatListFilter, Int, Bool)] = []
+                    
+                    var peerTagAndCount: [PeerId: (PeerSummaryCounterTags, Int, Bool)] = [:]
+                    
+                    var totalStates: [PeerGroupId: ChatListTotalUnreadState] = [:]
                     for entry in unreadCounts.entries {
                         switch entry {
-                        case let .total(_, totalStateValue):
-                            totalState = totalStateValue
-                        case .totalInGroup:
-                            break
+                        case let .total(_, state):
+                            totalStates[.root] = state
+                        case let .totalInGroup(groupId, state):
+                            totalStates[groupId] = state
                         case let .peer(peerId, state):
                             if let state = state, state.isUnread {
-                                let notificationSettings = keysView.views[.peerNotificationSettings(peerIds: Set(current.data.includePeers))] as? PeerNotificationSettingsView
-                                if let peerView = keysView.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
-                                    let tag = context.account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
+                                if let peerView = view.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
+                                    let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
+                                    
                                     var peerCount = Int(state.count)
-                                    let isRemoved = notificationSettings?.notificationSettings[peerId]?.isRemovedFromTotalUnreadCount(default: false) ?? false
-                                    var removable = false
-                                    switch inAppSettings.totalUnreadCountDisplayStyle {
-                                    case .raw:
-                                        removable = true
-                                    case .filtered:
-                                        if !isRemoved {
-                                            removable = true
-                                        }
-                                    }
-                                    if current.data.excludeMuted, isRemoved {
-                                        removable = false
-                                    }
-                                    if removable, state.isUnread {
-                                        switch inAppSettings.totalUnreadCountDisplayCategory {
-                                        case .chats:
-                                            peerCount = 1
-                                        case .messages:
-                                            peerCount = max(1, peerCount)
-                                        }
-                                        peerTagAndCount[peerId] = (tag, peerCount)
+                                    if state.isUnread {
+                                        peerCount = max(1, peerCount)
                                     }
                                     
+                                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, case .muted = notificationSettings.muteState {
+                                        peerTagAndCount[peerId] = (tag, peerCount, false)
+                                    } else {
+                                        peerTagAndCount[peerId] = (tag, peerCount, true)
+                                    }
                                 }
                             }
                         }
                     }
                     
-                    var tags: [PeerSummaryCounterTags] = []
-                    if current.data.categories.contains(.contacts) {
-                        tags.append(.contact)
-                    }
-                    if current.data.categories.contains(.nonContacts) {
-                        tags.append(.nonContact)
-                    }
-                    if current.data.categories.contains(.groups) {
-                        tags.append(.group)
-                    }
-                    if current.data.categories.contains(.bots) {
-                        tags.append(.bot)
-                    }
-                    if current.data.categories.contains(.channels) {
-                        tags.append(.channel)
-                    }
+                    let totalBadge = 0
                     
-                    var count:Int32 = 0
-                    if let totalState = totalState {
-                        for tag in tags {
-                            let state:[PeerSummaryCounterTags: ChatListTotalUnreadCounters]
-                            switch inAppSettings.totalUnreadCountDisplayStyle {
-                            case .raw:
-                                state = totalState.absoluteCounters
-                            case .filtered:
-                                state = totalState.filteredCounters
-                            }
-                            if let value = state[tag] {
-                                switch inAppSettings.totalUnreadCountDisplayCategory {
-                                case .chats:
-                                    count += value.chatCount
-                                case .messages:
-                                    count += value.messageCount
+                    for filter in filters {
+                        var tags: [PeerSummaryCounterTags] = []
+                        if filter.data.categories.contains(.contacts) {
+                            tags.append(.contact)
+                        }
+                        if filter.data.categories.contains(.nonContacts) {
+                            tags.append(.nonContact)
+                        }
+                        if filter.data.categories.contains(.groups) {
+                            tags.append(.group)
+                        }
+                        if filter.data.categories.contains(.bots) {
+                            tags.append(.bot)
+                        }
+                        if filter.data.categories.contains(.channels) {
+                            tags.append(.channel)
+                        }
+                        
+                        var count = 0
+                        var hasUnmutedUnread = false
+                        if let totalState = totalStates[.root] {
+                            for tag in tags {
+                                if filter.data.excludeMuted {
+                                    if let value = totalState.filteredCounters[tag] {
+                                        if value.chatCount != 0 {
+                                            count += Int(value.chatCount)
+                                            hasUnmutedUnread = true
+                                        }
+                                    }
+                                } else {
+                                    if let value = totalState.absoluteCounters[tag] {
+                                        count += Int(value.chatCount)
+                                    }
+                                    if let value = totalState.filteredCounters[tag] {
+                                        if value.chatCount != 0 {
+                                            hasUnmutedUnread = true
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    for peerId in current.data.includePeers {
-                        if let (tag, peerCount) = peerTagAndCount[peerId] {
-                            if !tags.contains(tag) {
-                                count += Int32(peerCount)
+                        if !filter.data.excludeArchived {
+                            if let totalState = totalStates[Namespaces.PeerGroup.archive] {
+                                for tag in tags {
+                                    if filter.data.excludeMuted {
+                                        if let value = totalState.filteredCounters[tag] {
+                                            if value.chatCount != 0 {
+                                                count += Int(value.chatCount)
+                                                hasUnmutedUnread = true
+                                            }
+                                        }
+                                    } else {
+                                        if let value = totalState.absoluteCounters[tag] {
+                                            count += Int(value.chatCount)
+                                        }
+                                        if let value = totalState.filteredCounters[tag] {
+                                            if value.chatCount != 0 {
+                                                hasUnmutedUnread = true
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
+                        for peerId in filter.data.includePeers.peers {
+                            if let (tag, peerCount, hasUnmuted) = peerTagAndCount[peerId] {
+                                if !tags.contains(tag) {
+                                    if peerCount != 0 {
+                                        count += 1
+                                        if hasUnmuted {
+                                            hasUnmutedUnread = true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        for peerId in filter.data.excludePeers {
+                            if let (tag, peerCount, _) = peerTagAndCount[peerId] {
+                                if tags.contains(tag) {
+                                    if peerCount != 0 {
+                                        count -= 1
+                                    }
+                                }
+                            }
+                        }
+                        result.append((filter, count, hasUnmutedUnread))
                     }
-                    return (id: current.id, count: count)
-                } else {
-                    return (id: current.id, count: 0)
-                }
+                    
+                    return (totalBadge, result)
             }
-            signals.append(s)
+        } |> map { value -> ChatListFilterBadges in
+            return ChatListFilterBadges(total: value.0, filters: value.1.map { ChatListFilterBadge(filter: $0.0, count: $0.1, hasUnmutedUnread: $0.2) })
         }
-        return combineLatest(signals) 
-    }
 }
