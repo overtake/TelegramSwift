@@ -948,11 +948,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
                 datacenterId = cachedData.statsDatacenterId
             }
             
-            #if DEBUG
             if datacenterId > 0 {
                 additionBlock.append(.statistics(sectionId: .addition, datacenterId: datacenterId, viewType: .innerItem))
             }
-            #endif
             
             applyBlock(additionBlock)
             

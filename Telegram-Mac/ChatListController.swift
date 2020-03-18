@@ -269,10 +269,10 @@ class ChatListController : PeersListController {
     private func updateFilter(_ f:(FilterData)->FilterData) {
         let previous = filterValue
         let current = _filterValue.modify(f)
-        filter.set(current)
         if previous?.filter?.id != current.filter?.id {
             self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
         }
+        filter.set(current)
         _  = first.swap(true)
         setCenterTitle(self.defaultBarTitle)
     }
@@ -1275,23 +1275,26 @@ class ChatListController : PeersListController {
     }
     
     func openChat(_ index: Int, force: Bool = false) {
-        
-        if force {
+        if case .folder = self.mode {
+            _openChat(index)
+        } else if force  {
             _openChat(index)
         } else {
             let prefs = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1)
             
             _ = prefs.start(next: { [weak self] filters in
-                if index == 0 {
+                if filters.isEmpty {
+                    self?._openChat(index)
+                } else if index == 0 {
                     self?.updateFilter {
                         $0.withUpdatedFilter(nil)
                     }
-                    self?.scrollup()
+                    self?.scrollup(force: true)
                 } else if filters.count >= index {
                     self?.updateFilter {
                         $0.withUpdatedFilter(filters[index - 1])
                     }
-                    self?.scrollup()
+                    self?.scrollup(force: true)
                 } else {
                     self?._openChat(index)
                 }
@@ -1426,7 +1429,7 @@ class ChatListController : PeersListController {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }
                     controller.clearReplyStack()
-                    controller.scrollup()
+                    controller.scrollup(force: true)
                 case .scheduled:
                     navigation.back()
                 }

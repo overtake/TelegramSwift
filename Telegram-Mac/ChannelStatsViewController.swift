@@ -71,7 +71,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
-            return ChannelOverviewStatsRowItem.init(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
+            return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
         index += 1
         

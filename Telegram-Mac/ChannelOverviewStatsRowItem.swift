@@ -190,7 +190,7 @@ private final class ChannelOverviewStatsRowView : TableRowView {
                     if i > 1 {
                         width = max(width, self.containerView.subviews[i - 1].frame.width)
                     }
-                    if i + 2 < self.containerView.subviews.count {
+                    if i + 3 < self.containerView.subviews.count {
                         width = max(width, self.containerView.subviews[i + 3].frame.width)
                     }
                     

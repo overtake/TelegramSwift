@@ -315,7 +315,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.openChat(2)
             return .invoked
-            }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
+        }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.openChat(3)

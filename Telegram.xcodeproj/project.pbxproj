@@ -359,9 +359,6 @@
 		C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226742E1DBE2CB3000BA9ED /* PanelUtils.swift */; };
 		C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674301DBE9B50000BA9ED /* FetchCachedRepresentations.swift */; };
 		C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674371DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift */; };
-		C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */; };
-		C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C226743E1DC12E4E000BA9ED /* GridMessageItem.swift */; };
-		C22674411DC13165000BA9ED /* GridHoleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674401DC13165000BA9ED /* GridHoleItem.swift */; };
 		C22674451DC20664000BA9ED /* PeerMediaListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22674441DC20664000BA9ED /* PeerMediaListController.swift */; };
 		C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271D9B1DACC027001792B6 /* SearchController.swift */; };
 		C2271D9E1DACC796001792B6 /* ChatListMessageRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271D9D1DACC796001792B6 /* ChatListMessageRowItem.swift */; };
@@ -581,7 +578,6 @@
 		C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */; };
 		C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */; };
 		C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C27BAC7920CFCE68007A7508 /* PassportSettingsHeaderItem.swift */; };
-		C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */; };
 		C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */; };
 		C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */; };
 		C2844AE01DA90C8A009308DC /* emoji.txt in Resources */ = {isa = PBXBuildFile; fileRef = C2844ADF1DA90C8A009308DC /* emoji.txt */; };
@@ -1431,9 +1427,6 @@
 		C226742E1DBE2CB3000BA9ED /* PanelUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PanelUtils.swift; sourceTree = "<group>"; };
 		C22674301DBE9B50000BA9ED /* FetchCachedRepresentations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FetchCachedRepresentations.swift; sourceTree = "<group>"; };
 		C22674371DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaCollectionInterfaceState.swift; sourceTree = "<group>"; };
-		C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaGridController.swift; sourceTree = "<group>"; };
-		C226743E1DC12E4E000BA9ED /* GridMessageItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridMessageItem.swift; sourceTree = "<group>"; };
-		C22674401DC13165000BA9ED /* GridHoleItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridHoleItem.swift; sourceTree = "<group>"; };
 		C22674441DC20664000BA9ED /* PeerMediaListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaListController.swift; sourceTree = "<group>"; };
 		C2271D9B1DACC027001792B6 /* SearchController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchController.swift; sourceTree = "<group>"; };
 		C2271D9D1DACC796001792B6 /* ChatListMessageRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListMessageRowItem.swift; sourceTree = "<group>"; };
@@ -1691,7 +1684,6 @@
 		C27AAFEC1DEB1D72009B9629 /* SignalUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalUtils.swift; sourceTree = "<group>"; };
 		C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyComposeController.swift; sourceTree = "<group>"; };
 		C27BAC7920CFCE68007A7508 /* PassportSettingsHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassportSettingsHeaderItem.swift; sourceTree = "<group>"; };
-		C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreparedChatHistoryViewTransition.swift; sourceTree = "<group>"; };
 		C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListViewIntermediateState.swift; sourceTree = "<group>"; };
 		C2844AD61DA907E8009308DC /* EntertainmentViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EntertainmentViewController.swift; sourceTree = "<group>"; };
 		C2844ADF1DA90C8A009308DC /* emoji.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji.txt; sourceTree = "<group>"; };
@@ -2724,15 +2716,6 @@
 			name = content;
 			sourceTree = "<group>";
 		};
-		C2167E551DC2210600F98E03 /* content */ = {
-			isa = PBXGroup;
-			children = (
-				C226743E1DC12E4E000BA9ED /* GridMessageItem.swift */,
-				C22674401DC13165000BA9ED /* GridHoleItem.swift */,
-			);
-			name = content;
-			sourceTree = "<group>";
-		};
 		C219E1E51D8AC83A0042F0C8 /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -2846,8 +2829,6 @@
 			isa = PBXGroup;
 			children = (
 				A7C41DAF2358622F00CF9402 /* modern */,
-				C2167E551DC2210600F98E03 /* content */,
-				C22674391DC1273E000BA9ED /* PeerMediaGridController.swift */,
 			);
 			name = grid;
 			sourceTree = "<group>";
@@ -3494,7 +3475,6 @@
 				C2203EA11DDE2AB8001E6AB6 /* ChatSelectText.swift */,
 				C29C3E721E4397F300193A7E /* StickerPreviewHandler.swift */,
 				C250BA8E1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift */,
-				C28149871EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift */,
 				C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */,
 				C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */,
 				C251FB4B1FEDCC750035E5D7 /* ChatPresentationUtils.swift */,
@@ -5274,7 +5254,6 @@
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */,
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
-				C28149881EA7F22200BB933E /* PreparedChatHistoryViewTransition.swift in Sources */,
 				D071E8AA214BC589001B6024 /* TouchBarStickerItemView.swift in Sources */,
 				9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
@@ -5296,7 +5275,6 @@
 				C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */,
 				D07450F12340DC8200769D7F /* WalletConfiguration.swift in Sources */,
 				C2B6488C1EB2533800BA574B /* TGGifConverter.m in Sources */,
-				C22674411DC13165000BA9ED /* GridHoleItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
@@ -5401,7 +5379,6 @@
 				C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */,
 				D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */,
 				9F7B5FCD220099220087D020 /* WallpaperPatternPreview.swift in Sources */,
-				C226743F1DC12E4E000BA9ED /* GridMessageItem.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
@@ -5561,7 +5538,6 @@
 				9F7B741122296FD7006610E4 /* SharedNotificationManager.swift in Sources */,
 				C25F714A1E4110C50046AF4E /* ApplicationSpecificPreferencesKeys.swift in Sources */,
 				9F7B740F2229618E006610E4 /* SharedWakeupManager.swift in Sources */,
-				C226743A1DC1273E000BA9ED /* PeerMediaGridController.swift in Sources */,
 				C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */,
 				9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */,
 				D071E8AC214BE6E7001B6024 /* TouchBarScrubberHeaderItemView.swift in Sources */,

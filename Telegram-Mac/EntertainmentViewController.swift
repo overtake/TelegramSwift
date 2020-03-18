@@ -654,6 +654,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         }
         interactions.sendEmoji = { [weak self] emoji in
             _ = self?.chatInteraction?.appendText(emoji)
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.searchView != nil {
+                self.genericView.toggleSearch(self.searchState)
+            }
         }
         
         self.interactions = interactions
