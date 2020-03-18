@@ -734,6 +734,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             previous.view.removeFromSuperview()
             containerView.addSubview(controller.view)
 
+            self.controller = controller
+            
             controller.viewWillAppear(false);
             previous.viewDidDisappear(false);
             controller.viewDidAppear(false);
@@ -753,7 +755,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
             
-            self.controller = controller
             
             return // without animations
         }

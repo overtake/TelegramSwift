@@ -22,6 +22,7 @@ enum UIChatListEntryId : Hashable {
     case groupId(PeerGroupId)
     case reveal
     case empty
+    case loading
 }
 
 struct ChatListInputActivity : Equatable {
@@ -52,11 +53,14 @@ struct ChatListState: Equatable {
     }
 }
 
+
+
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(ChatListEntry, [ChatListInputActivity], isSponsored: Bool, filter: ChatListFilter?)
     case group(Int, PeerGroupId, [ChatListGroupReferencePeer], Message?, PeerGroupUnreadCountersCombinedSummary, TotalUnreadCountDisplayCategory, Bool, HiddenArchiveStatus)
-    case reveal([ChatListFilter], ChatListFilter?, [Int32: Int32])
+    case reveal([ChatListFilter], ChatListFilter?, ChatListFilterBadges)
     case empty(ChatListFilter?)
+    case loading(ChatListFilter?)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
         case let .chat(entry, activity, isSponsored, filter):
@@ -89,6 +93,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case let .loading(filter):
+            if case .loading(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -115,6 +125,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: index)
         case .empty:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
+        case .loading:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
         }
     }
     
@@ -132,6 +144,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .reveal
         case .empty:
             return .empty
+        case .loading:
+            return .loading
         }
     }
     
@@ -169,6 +183,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }, menuItems: tabsMenuItems)
             case let .empty(filter):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context, openFilterSettings: openFilterSettings)
+            case let .loading(filter):
+                return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: context)
             }
         }
         
@@ -251,8 +267,12 @@ class ChatListController : PeersListController {
         return _filterValue.with { $0 }
     }
     private func updateFilter(_ f:(FilterData)->FilterData) {
-        self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
-        filter.set(_filterValue.modify(f))
+        let previous = filterValue
+        let current = _filterValue.modify(f)
+        filter.set(current)
+        if previous?.filter?.id != current.filter?.id {
+            self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
+        }
         _  = first.swap(true)
         setCenterTitle(self.defaultBarTitle)
     }
@@ -423,8 +443,6 @@ class ChatListController : PeersListController {
             var removeNextAnimation: Bool = false
             switch location {
             case let .Initial(count, st):
-                
-                
                 signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), count: count)
                 scroll = st
             case let .Index(index, st):
@@ -451,7 +469,7 @@ class ChatListController : PeersListController {
         
         
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), filtersBadgeCounters(context: context)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenArchiveState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, archiveIsHidden, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
             var removeNextAnimation = value.2
             
@@ -504,15 +522,28 @@ class ChatListController : PeersListController {
                 if !hasHole {
                     mapped.append(.empty(value.3.filter))
                 }
+            } else {
+                let isLoading = mapped.filter { value in
+                    switch value {
+                    case let .chat(entry, _, _, _):
+                        if case .HoleEntry = entry {
+                           return false
+                        } else {
+                            return true
+                        }
+                    default:
+                        return true
+                    }
+                }.isEmpty
+                if isLoading {
+                    mapped.append(.loading(value.3.filter))
+                    
+                }
             }
             
+            
             if !value.3.tabs.isEmpty {
-                let dict:[Int32: Int32] = filtersCounter.reduce([:], { current, value in
-                    var current = current
-                    current[value.id] = value.count
-                    return current
-                })
-                mapped.append(.reveal(value.3.tabs, value.3.filter, dict))
+                mapped.append(.reveal(value.3.tabs, value.3.filter, filtersCounter))
             }
             
             let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
@@ -543,6 +574,8 @@ class ChatListController : PeersListController {
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 case .empty:
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+                case .loading:
+                    return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                 }
             }
             
@@ -560,10 +593,10 @@ class ChatListController : PeersListController {
                         context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
                     }))
                     items.append(.init(L10n.chatListFilterAddChats, handler: {
-                        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers), additionTopItems: nil, limit: 100 - filter.data.includePeers.count, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
+                        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
                             return updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
                                 var filters = filters
-                                filter.data.includePeers = peerIds
+                                filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(100)))
                                 if let index = filters.firstIndex(where: {$0.id == filter.id }) {
                                     filters[index] = filter
                                 }

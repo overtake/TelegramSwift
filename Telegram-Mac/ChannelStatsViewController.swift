@@ -43,7 +43,9 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
     
     
     if state.stats == nil {
-        entries.append(.loading)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext)
+        }))
     } else if let stats = state.stats  {
         
        // stats.messageInteractions.append(ChannelStatsMessageInteractions)
@@ -83,35 +85,35 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
         
         var graphs: [Graph] = []
-//        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
-//            context.loadGrowthGraph()
-//            updateIsLoading(identifier, true)
-//        }))
-//        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
-//            context.loadFollowersGraph()
-//            updateIsLoading(identifier, true)
-//        }))
-//
-//        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
-//            context.loadViewsBySourceGraph()
-//            updateIsLoading(identifier, true)
-//        }))
+        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
+            context.loadGrowthGraph()
+            updateIsLoading(identifier, true)
+        }))
+        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
+            context.loadFollowersGraph()
+            updateIsLoading(identifier, true)
+        }))
+
+        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
+            context.loadViewsBySourceGraph()
+            updateIsLoading(identifier, true)
+        }))
         graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .daily, load: { identifier in
             context.loadNewFollowersBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-//        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
-//            context.loadLanguagesGraph()
-//            updateIsLoading(identifier, true)
-//        }))
-//        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
-//            context.loadMuteGraph()
-//            updateIsLoading(identifier, true)
-//        }))
-//        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
-//            context.loadInteractionsGraph()
-//            updateIsLoading(identifier, true)
-//        }))
+        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
+            context.loadLanguagesGraph()
+            updateIsLoading(identifier, true)
+        }))
+        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
+            context.loadMuteGraph()
+            updateIsLoading(identifier, true)
+        }))
+        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
+            context.loadInteractionsGraph()
+            updateIsLoading(identifier, true)
+        }))
 
         for graph in graphs {
             entries.append(.sectionId(sectionId, type: .normal))

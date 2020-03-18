@@ -139,7 +139,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
             let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
-            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), file: media, context: context, table: nil, ignoreWindowKey: true, iconSignal: .complete())
+            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(200, 200), viewSize: NSMakeSize(200, 200), file: media, context: context, table: nil, ignoreWindowKey: true, iconSignal: .complete())
         }
 
         if let contentView = window?.contentView, genericView.superview == nil {

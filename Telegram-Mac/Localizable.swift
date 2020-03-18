@@ -1993,6 +1993,8 @@ internal final class L10n {
   internal static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   internal static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
+  /// Loading...
+  internal static var chatListLoading: String  { return L10n.tr("Localizable", "ChatList.Loading") }
   /// Proxy Sponsor
   internal static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Feed
@@ -2077,6 +2079,8 @@ internal final class L10n {
   internal static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
   /// Create folders for different groups of chats and quickly switch between them.
   internal static var chatListFilterHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Header") }
+  /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
+  internal static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
   /// Muted
   internal static var chatListFilterMutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.MutedChats") }
   /// Create Folder
@@ -2169,7 +2173,7 @@ internal final class L10n {
   internal static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }
   /// Add a Custom Folder
   internal static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
-  /// Drag and drop folder to sort it. Right click to remove.
+  /// Drag and drop folders to change order. Right click to remove.
   internal static var chatListFilterListDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Desc") }
   /// FOLDERS
   internal static var chatListFilterListHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.List.Header") }

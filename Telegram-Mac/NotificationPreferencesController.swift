@@ -16,7 +16,6 @@ import SyncCore
 enum NotificationsAndSoundsEntryTag: ItemListItemTag {
     case allAccounts
     case messagePreviews
-    case includePublicGroups
     case includeChannels
     case unreadCountCategory
     case joinedNotifications
@@ -28,8 +27,6 @@ enum NotificationsAndSoundsEntryTag: ItemListItemTag {
             return .general(_id_all_accounts)
         case .messagePreviews:
             return .general(_id_message_preview)
-        case .includePublicGroups:
-            return .general(_id_include_public_group)
         case .includeChannels:
             return .general(_id_include_channels)
         case .unreadCountCategory:
@@ -164,12 +161,12 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_muted_chats, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeMutedChats, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayStyle == .raw), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-        arguments.toggleIncludeUnreadChats(settings.totalUnreadCountDisplayStyle != .raw)
-    })))
-    index += 1
+//
+//
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_muted_chats, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeMutedChats, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayStyle == .raw), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+//        arguments.toggleIncludeUnreadChats(settings.totalUnreadCountDisplayStyle != .raw)
+//    })))
+//    index += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.group)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
         arguments.toggleIncludeGroups(!settings.totalUnreadCountIncludeTags.contains(.group))
