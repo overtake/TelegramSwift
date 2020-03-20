@@ -564,9 +564,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         }
         let visibleRect = NSMakeRect(0, self.visibleRect.minY - item.itemSize.height, self.visibleRect.width, self.visibleRect.height + item.itemSize.height * 2)
         let size = item.itemSize
-        
-        
-        
+                
         if self.visibleRect != NSZeroRect && superview != nil && window != nil {
             let visibleRange = (Int(ceil(visibleRect.minY / (size.height))), Int(ceil(visibleRect.height / (size.height))))
             if visibleRange != self.previousRange {

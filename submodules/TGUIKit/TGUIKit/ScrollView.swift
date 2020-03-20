@@ -35,6 +35,7 @@ open class ScrollView: NSScrollView{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
     
+    public var applyExternalScroll:((NSEvent)->Bool)? = nil
   
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
@@ -132,6 +133,11 @@ open class ScrollView: NSScrollView{
             super.scrollWheel(with: event)
             return
         }
+        
+        if let applyExternalScroll = self.applyExternalScroll, applyExternalScroll(event) {
+            return
+        }
+        
         if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))) {
             super.scrollWheel(with: event)
         }

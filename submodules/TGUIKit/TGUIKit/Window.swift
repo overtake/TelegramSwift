@@ -629,6 +629,12 @@ open class Window: NSWindow {
         //        let testEvent = NSEvent.EventType.init(rawValue: 36)!
         //
         
+//        if event.type.rawValue == 29 {
+//            NSLog("\(event.modifierFlags.rawValue)")
+//            var bp:Int = 0
+//            bp += 1
+//        }
+        
         let eventType = event.type
         if sheets.isEmpty {
             if eventType == .keyDown {

@@ -561,9 +561,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func canTransformInputText() -> Bool {
-        if let editState = chatInteraction.presentation.interfaceState.editState {
-            return editState.message.media.isEmpty
-        }
         return true
     }
     

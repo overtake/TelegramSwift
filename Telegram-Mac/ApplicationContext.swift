@@ -410,8 +410,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
-            showModal(with: GlobalSearchModalController(context: context), for: window)
+        window.set(handler: { () -> KeyHandlerResult in
+            context.sharedContext.bindings.rootNavigation().push(GlobalSearchModalController(context: context))
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif

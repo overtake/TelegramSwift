@@ -223,6 +223,7 @@
 		A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */; };
 		A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8AA124221D2800FDB071 /* graph_loading.tgs */; };
 		A76C8AA424221F5400FDB071 /* StatisticsLoadingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8AA324221F5400FDB071 /* StatisticsLoadingRowItem.swift */; };
+		A76C8AB3242366EC00FDB071 /* PeerMediaBlockRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8AB2242366EC00FDB071 /* PeerMediaBlockRowItem.swift */; };
 		A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2923C75F1100DD307B /* Confetti.swift */; };
 		A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A778DC2D23C77AD800DD307B /* confetti.mp3 */; };
 		A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = A778DC2F23C8985300DD307B /* SoundEffects.swift */; };
@@ -1283,6 +1284,7 @@
 		A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalTabsView.swift; sourceTree = "<group>"; };
 		A76C8AA124221D2800FDB071 /* graph_loading.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = graph_loading.tgs; sourceTree = "<group>"; };
 		A76C8AA324221F5400FDB071 /* StatisticsLoadingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsLoadingRowItem.swift; sourceTree = "<group>"; };
+		A76C8AB2242366EC00FDB071 /* PeerMediaBlockRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaBlockRowItem.swift; sourceTree = "<group>"; };
 		A778DC2923C75F1100DD307B /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		A778DC2D23C77AD800DD307B /* confetti.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = confetti.mp3; sourceTree = "<group>"; };
 		A778DC2F23C8985300DD307B /* SoundEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffects.swift; sourceTree = "<group>"; };
@@ -2533,6 +2535,14 @@
 			name = polls;
 			sourceTree = "<group>";
 		};
+		A76C8AB124235F8900FDB071 /* modern */ = {
+			isa = PBXGroup;
+			children = (
+				A76C8AB2242366EC00FDB071 /* PeerMediaBlockRowItem.swift */,
+			);
+			name = modern;
+			sourceTree = "<group>";
+		};
 		A778DC2C23C77ACB00DD307B /* sounds */ = {
 			isa = PBXGroup;
 			children = (
@@ -2856,6 +2866,7 @@
 		C2271DA81DAD867E001792B6 /* PeerInfo */ = {
 			isa = PBXGroup;
 			children = (
+				A76C8AB124235F8900FDB071 /* modern */,
 				C2AF3B801E5CD77800DFDD81 /* controllers */,
 				C2271DC21DAE5E32001792B6 /* table */,
 				C2271DA91DAD8716001792B6 /* PeerInfoController.swift */,
@@ -5130,6 +5141,7 @@
 				C2E0646B1ECF137300387BB8 /* ChatInvoiceItem.swift in Sources */,
 				C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */,
 				9FA0E52A20519E33001E5649 /* MP4Atom.m in Sources */,
+				A76C8AB3242366EC00FDB071 /* PeerMediaBlockRowItem.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
