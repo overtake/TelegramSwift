@@ -519,7 +519,7 @@
 			};
 			name = HockeyappMacAlpha;
 		};
-		A7918FF5240CF6A7002011CA /* ReleaseHockeypp */ = {
+		A7918FF5240CF6A7002011CA /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -572,9 +572,9 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = ReleaseHockeypp;
+			name = ReleaseHockeyapp;
 		};
-		A7918FF6240CF6A7002011CA /* ReleaseHockeypp */ = {
+		A7918FF6240CF6A7002011CA /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
@@ -599,7 +599,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 			};
-			name = ReleaseHockeypp;
+			name = ReleaseHockeyapp;
 		};
 /* End XCBuildConfiguration section */
 
@@ -611,7 +611,7 @@
 				A7918FF3240CF69A002011CA /* HockeyappMacAlpha */,
 				A7918FF1240CF691002011CA /* DebugHockeyapp */,
 				A7918FED240CF659002011CA /* ReleaseAppStore */,
-				A7918FF5240CF6A7002011CA /* ReleaseHockeypp */,
+				A7918FF5240CF6A7002011CA /* ReleaseHockeyapp */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ReleaseAppStore;
@@ -623,7 +623,7 @@
 				A7918FF4240CF69A002011CA /* HockeyappMacAlpha */,
 				A7918FF2240CF691002011CA /* DebugHockeyapp */,
 				A7918FF0240CF659002011CA /* ReleaseAppStore */,
-				A7918FF6240CF6A7002011CA /* ReleaseHockeypp */,
+				A7918FF6240CF6A7002011CA /* ReleaseHockeyapp */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ReleaseAppStore;
