@@ -312,7 +312,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
-        
         if (self.shouldAnimateOriginChange) {
             self.shouldAnimateOriginChange = false;
             self.destinationOrigin = newOrigin;
@@ -331,7 +330,11 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     public override var bounds: NSRect {
-        didSet {
+        set {
+            super.bounds = newValue
+        }
+        get {
+            return super.bounds
         }
     }
     

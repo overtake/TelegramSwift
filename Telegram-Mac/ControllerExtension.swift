@@ -177,10 +177,16 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
         }, for:.Click)
     }
     
-    override init(_ context:AccountContext) {
-        super.init(context)
+    override func loadView() {
         editBar = TextButtonBarView(controller: self, text: "", style: navigationButtonStyle, alignment:.Right)
         addHandler()
+        rightBarView = editBar
+        updateEditStateTitles()
+        super.loadView()
+    }
+    
+    override init(_ context:AccountContext) {
+        super.init(context)
     }
 
     func update(with state:ViewControllerState) -> Void {
@@ -198,8 +204,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     override func updateNavigation(_ navigation: NavigationViewController?) {
         super.updateNavigation(navigation)
         if navigation != nil {
-            rightBarView = editBar
-            updateEditStateTitles()
+            
         }
     }
     

@@ -74,7 +74,7 @@ private func globalSearchEntries(state: GlobalSearchState, arguments: GlobalSear
                 let randomId = arc4random()
                 return MessageHistoryEntry(message: message.withUpdatedStableId(randomId), isRead: result.readStates[message.id.peerId]?.isOutgoingMessageIndexRead(MessageIndex(message)) ?? false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
             }
-            let _messageEntries = messageEntries(mapped, dayGrouping: true, renderType: theme.bubbled ? .bubble : .list, searchState: SearchMessagesResultState(state.query, result.messages)).reversed()
+            let _messageEntries = messageEntries(mapped, dayGrouping: true, renderType: theme.bubbled ? .bubble : .list, searchState: SearchMessagesResultState(state.query, result.messages))
             
             let interactions = ChatInteraction(chatLocation: .peer(PeerId(0)), context: arguments.context, mode: .history, isLogInteraction: true, disableSelectAbility: true, isGlobalSearchMessage: true)
             
@@ -110,7 +110,7 @@ private func globalSearchEntries(state: GlobalSearchState, arguments: GlobalSear
     return entries
 }
 
-func GlobalSearchModalController(context: AccountContext) -> InputDataModalController {
+func GlobalSearchModalController(context: AccountContext) -> ViewController {
     
     var close: (()->Void)? = nil
 
@@ -152,6 +152,7 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
                     var state = state
                     state.isLoading = true
                     state.query = searchState.request
+                    state.searchState = nil
                     return state
                 }
                 let signal = searchMessages(account: context.account, location: .general, query: "#g c:ru minviews:100 \(searchState.request)", state: stateValue.with { $0.searchState }, limit: 100) |> deliverOnMainQueue
@@ -178,17 +179,12 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
         })))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Global Search")
+    let controller = InputDataController(dataSignal: signal, title: "Global Search", hasDone: false)
     
     controller.onDeinit = {
         searchDisposable.dispose()
     }
     
-    
-    
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
-        close?()
-    })
     
     controller.getBackgroundColor = {
         return .clear
@@ -196,6 +192,7 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
     
     controller.didLoaded = { controller, _ in
         controller.genericView.backgroundMode = theme.backgroundMode
+        controller.genericView.tableView.setIsFlipped(true)
     }
     
     controller.updateDatas = { data in
@@ -205,11 +202,5 @@ func GlobalSearchModalController(context: AccountContext) -> InputDataModalContr
         return .none
     }
     
-    let modalController = InputDataModalController(controller, closeHandler: { f in f() }, size: NSMakeSize(400, 300))
-    
-    close = { [weak modalController] in
-        modalController?.close()
-    }
-    
-    return modalController
+    return controller
 }

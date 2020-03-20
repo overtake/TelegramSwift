@@ -131,7 +131,10 @@ class PeerMediaControllerView : View {
     fileprivate let segmentPanelView: SegmentContainerView = SegmentContainerView(frame: NSZeroRect)
     fileprivate var searchPanelView: SearchContainerView?
 
-    private weak var mainView:NSView?
+    private(set) weak var mainView:NSView?
+    
+
+    
     private let separator:View = View()
     private var isSelectionState:Bool = false
     private var chatInteraction:ChatInteraction?
@@ -287,7 +290,13 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     private let currentModeValue:ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
     private var searchController: PeerMediaListController?
     
-    
+    var currentMainView:((NSView?, Bool, Bool)->Void)? = nil {
+        didSet {
+            if isLoaded() {
+                currentMainView?(genericView.mainView, false, false)
+            }
+        }
+    }
     
     init(context: AccountContext, peerId:PeerId, tagMask:MessageTags) {
         self.peerId = peerId
@@ -607,7 +616,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
     
     private func toggle(with mode:PeerMediaCollectionMode, animated:Bool = false) {
         currentModeValue.set(mode)
-        if self.mode != mode {
+        let isUpdated = self.mode != mode
+        if isUpdated {
             let oldMode = self.mode
             self.mode = mode
             if mode == .photoOrVideo {
@@ -672,9 +682,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                     })
                 }))
             }
-            
         }
-        
+        self.currentMainView?(genericView.mainView, animated, isUpdated)
     }
     
     deinit {

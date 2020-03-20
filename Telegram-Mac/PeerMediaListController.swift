@@ -443,26 +443,26 @@ class PeerMediaListController: TableViewController {
         historyPromise.set(historyViewUpdate)
 
         
-        location.set(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.upperBound, scrollPosition: .none(nil), count: 140, animated: false))
+        let perPageCount:()->Int = { [weak self] in
+            guard let `self` = self else {
+                return 0
+            }
+            return Int(self.frame.height / 50)
+        }
+        
+        var requestCount: Int = perPageCount() + 5
+        
+        
+        location.set(.Initial(count: requestCount))
      
         genericView.setScrollHandler { [weak self] scroll in
-            
-            let view = self?.updateView.modify({$0})
-            if let view = view, view.updateType == .history {
-                var messageIndex:MessageIndex?
-                switch scroll.direction {
-                case .bottom:
-                    messageIndex = view.earlierId
-                case .top:
-                    messageIndex = view.laterId
-                case .none:
-                    break
-                }
-                
-                if let messageIndex = messageIndex {
-                    let _ = animated.swap(false)
-                    location.set(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 140, side: scroll.direction == .bottom ? .lower : .upper))
-                }
+            switch scroll.direction {
+            case .bottom:
+                animated.swap(false)
+                requestCount += perPageCount() * 3
+                location.set(.Initial(count: requestCount))
+            default:
+                break
             }
         }
         

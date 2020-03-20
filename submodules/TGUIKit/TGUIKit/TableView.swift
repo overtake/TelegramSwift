@@ -579,7 +579,7 @@ public protocol InteractionContentViewProtocol : class {
 
 public class TableScrollListener : NSObject {
     fileprivate let uniqueId:UInt32 = arc4random()
-    fileprivate let handler:(ScrollPosition)->Void
+    public var handler:(ScrollPosition)->Void
     fileprivate let dispatchWhenVisibleRangeUpdated: Bool
     fileprivate var first: Bool = true
     public init(dispatchWhenVisibleRangeUpdated: Bool = true, _ handler:@escaping(ScrollPosition)->Void) {
@@ -893,8 +893,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var liveScrollStartPosition: NSPoint?
     
+    public var _scrollWillStartLiveScrolling:(()->Void)?
+    public var _scrollDidLiveScrolling:(()->Void)?
+    public var _scrollDidEndLiveScrolling:(()->Void)?
+
     open func scrollWillStartLiveScrolling() {
         liveScrollStartPosition = documentOffset
+        _scrollWillStartLiveScrolling?()
     }
     private var liveScrollStack:[CGFloat] = []
     open func scrollDidLiveScrolling() {
@@ -910,10 +915,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
+        _scrollDidLiveScrolling?()
     }
     
     
+    public var updateScrollPoint:((NSPoint)->NSPoint)? = nil
+    
     open override func scroll(_ clipView: NSClipView, to point: NSPoint) {
+        var point = point
+        if let updateScrollPoint = updateScrollPoint {
+            point = updateScrollPoint(point)
+        }
         clipView.scroll(to: point)
     }
     
@@ -955,6 +967,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             liveScrollStartPosition = nil
         }
         liveScrollStack.removeAll()
+        _scrollDidEndLiveScrolling?()
     }
     
     open override func viewDidMoveToSuperview() {
@@ -3002,7 +3015,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func performScrollEvent(_ animated: Bool = false) -> Void {
         self.nextScrollEventIsAnimated = animated
         self.updateScroll(visibleRows())
-        NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: self.contentView)
+        //NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: self.contentView)
     }
     
     deinit {

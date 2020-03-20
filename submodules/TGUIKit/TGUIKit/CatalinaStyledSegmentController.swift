@@ -107,7 +107,7 @@ private final class CatalinaSegmentItemView : Control {
 //        activeTextView.backgroundColor = !selected ? theme.backgroundColor : theme.foregroundColor
 //        inactiveTextView.backgroundColor = !selected ? theme.backgroundColor : theme.foregroundColor
 
-        userInteractionEnabled = !selected
+      //  userInteractionEnabled = !selected
         isSelected = selected
     }
     

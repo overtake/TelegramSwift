@@ -178,6 +178,7 @@ class Sender: NSObject {
             input = ChatTextInputState(inputText: "")
         }
         
+        
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length

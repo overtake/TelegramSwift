@@ -330,12 +330,27 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
         }
     }
+    private var _mediaController: PeerMediaController? = nil
+    var mediaController: PeerMediaController {
+        if _mediaController == nil {
+            _mediaController = PeerMediaController(context: context, peerId: peerId, tagMask: [])
+        }
+        return _mediaController!
+    }
     
     deinit {
         reportPeerDisposable.dispose()
         updatePeerNameDisposable.dispose()
         toggleSignaturesDisposable.dispose()
         updatePhotoDisposable.dispose()
+        
+        var mediaController = _mediaController
+        _mediaController = nil
+        if mediaController != nil {
+            Queue.mainQueue().async {
+                mediaController = nil
+            }
+        }
     }
 }
 
@@ -360,6 +375,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case signDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case report(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case leave(sectionId: ChannelInfoSection, isCreator: Bool, viewType: GeneralViewType)
+    
+    case media(sectionId: ChannelInfoSection, controller: PeerMediaController, viewType: GeneralViewType)
     case section(Int)
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> ChannelInfoEntry {
@@ -384,6 +401,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .signDesc(sectionId, _): return .signDesc(sectionId: sectionId, viewType: viewType)
         case let .report(sectionId, _): return .report(sectionId: sectionId, viewType: viewType)
         case let .leave(sectionId, isCreator, _): return .leave(sectionId: sectionId, isCreator: isCreator, viewType: viewType)
+        case let .media(sectionId, controller, _): return .media(sectionId: sectionId, controller: controller, viewType: viewType)
         case .section: return self
         }
     }
@@ -565,6 +583,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .media(sectionId, _, viewType):
+            switch entry {
+            case .media(sectionId, _, viewType):
+                return true
+            default:
+                return false
+            }
         }
     }
     
@@ -610,6 +635,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 18
         case .leave:
             return 19
+        case .media:
+            return 20
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -657,6 +684,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .leave(sectionId, _, _):
             return sectionId.rawValue
+        case let .media(sectionId, _, _):
+            return sectionId.rawValue
         case let .section(sectionId):
             return sectionId
         }
@@ -703,6 +732,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .report(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .leave(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .media(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -807,6 +838,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSignMessagesDesc, viewType: viewType)
         case let .leave(_, isCreator, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? L10n.peerInfoDeleteChannel : L10n.peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
+        case let .media(_, controller, viewType):
+            return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, viewType: viewType)
         case .section(_):
             return GeneralRowItem(initialSize, height:30, stableId: stableId.hashValue, viewType: .separator)
         }
@@ -822,6 +855,7 @@ enum ChannelInfoSection : Int {
     case manage = 6
     case addition = 7
     case destruct = 8
+    case media = 9
 }
 
 func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInfoEntry] {
@@ -965,6 +999,10 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
         }
     }
     
+    #if DEBUG
+    entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
+    #endif
+    
     var items:[ChannelInfoEntry] = []
     var sectionId:Int = 0
     for entry in entries {
@@ -976,6 +1014,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
     }
     sectionId += 1
     items.append(.section(sectionId))
+    
+    
+   
     
     entries = items
     

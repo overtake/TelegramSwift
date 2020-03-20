@@ -1330,3 +1330,12 @@ NSArray<NSString *> * __nonnull currentAppInputSource()
     return inputs;
 }
 
+NSEvent * __nullable createScrollWheelEvent() {
+    CGEventRef upEvent = CGEventCreateScrollWheelEvent(
+                                                       NULL,
+                                                       kCGScrollEventUnitPixel,
+                                                       1, 0, 0 );
+    NSEvent *event = [NSEvent eventWithCGEvent:upEvent];
+    CFRelease(upEvent);
+    return event;
+}
