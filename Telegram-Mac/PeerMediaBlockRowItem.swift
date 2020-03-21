@@ -64,7 +64,7 @@ private final class PeerMediaBlockRowView : TableRowView {
             return
         }
         
-        item.controller.view.frame = NSMakeRect(0, 0, frame.width, table.frame.height)
+        item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)
     }
     
     override func scrollWheel(with event: NSEvent) {
@@ -98,21 +98,16 @@ private final class PeerMediaBlockRowView : TableRowView {
             if let mediaTable = mediaTable {
                 
                 let offset = table.documentOffset.y - self.frame.minY
-                let maximum = mediaTable.documentSize.height - mediaTable.frame.height
+                //let maximum = mediaTable.documentSize.height - mediaTable.frame.height
                 let updated = max(0, offset)//min(max(0, offset), maximum)
                 if !scrollingInMediaTable, updated != mediaTable.documentOffset.y {
                     mediaTable.clipView.scroll(to: NSMakePoint(0, updated))
                 }
                 if scrollInner {
-                    if item.controller.view.superview != table {
-                        table.addSubview(item.controller.view)
-                    }
+                    
                 } else {
                     if mediaTable.documentOffset.y > 0 {
                         scrollInner = true
-                    }
-                    if item.controller.view.superview == table {
-                        self.addSubview(item.controller.view)
                     }
                 }
                 NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: mediaTable.clipView)
@@ -121,6 +116,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                     item.temporaryHeight = mediaTable.documentSize.height
                     table.noteHeightOfRow(item.index, false)
                 }
+                item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)
             }
         }
 
@@ -132,7 +128,7 @@ private final class PeerMediaBlockRowView : TableRowView {
             scrollingInMediaTable = false
         }
         
-        self.addSubview(item.controller.view)
+        item.table?.addSubview(item.controller.view)
         
         item.controller.currentMainView = { [weak item, weak self] mainView, animated, updated in
             if let item = item, animated {
