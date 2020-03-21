@@ -110,6 +110,12 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             context.loadMuteGraph()
             updateIsLoading(identifier, true)
         }))
+        
+        graphs.append(Graph(graph: stats.topHoursGraph, title: "VIEWS BY HOURS", identifier: InputDataIdentifier("topHoursGraph"), type: .step, load: { identifier in
+            context.loadTopHoursGraph()
+            updateIsLoading(identifier, true)
+        }))
+        
         graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
             context.loadInteractionsGraph()
             updateIsLoading(identifier, true)

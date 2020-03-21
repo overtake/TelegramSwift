@@ -28,7 +28,6 @@
 		D0A9B745241CEFAC007DF938 /* LinesComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B70E241CEFAC007DF938 /* LinesComponentController.swift */; };
 		D0A9B746241CEFAC007DF938 /* DailyBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B70F241CEFAC007DF938 /* DailyBarsChartController.swift */; };
 		D0A9B747241CEFAC007DF938 /* StepBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B710241CEFAC007DF938 /* StepBarsChartController.swift */; };
-		D0A9B748241CEFAC007DF938 /* StepBarsChartController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B711241CEFAC007DF938 /* StepBarsChartController2.swift */; };
 		D0A9B749241CEFAC007DF938 /* GeneralChartComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B712241CEFAC007DF938 /* GeneralChartComponentController.swift */; };
 		D0A9B74A241CEFAC007DF938 /* GeneralLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B714241CEFAC007DF938 /* GeneralLinesChartController.swift */; };
 		D0A9B74B241CEFAC007DF938 /* TwoAxisLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B715241CEFAC007DF938 /* TwoAxisLinesChartController.swift */; };
@@ -377,7 +376,6 @@
 				D0A9B744241CEFAC007DF938 /* StackedBarsChartController.swift in Sources */,
 				D0A9B745241CEFAC007DF938 /* LinesComponentController.swift in Sources */,
 				D0A9B737241CEFAC007DF938 /* PerformanceRenderer.swift in Sources */,
-				D0A9B748241CEFAC007DF938 /* StepBarsChartController2.swift in Sources */,
 				D0A9B75D241CEFAC007DF938 /* ClosedRange+Utils.swift in Sources */,
 				D0A9B736241CEFAC007DF938 /* PecentChartRenderer.swift in Sources */,
 				D0A9B73E241CEFAC007DF938 /* PercentPieAnimationRenderer.swift in Sources */,
