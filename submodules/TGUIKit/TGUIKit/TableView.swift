@@ -694,6 +694,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if super.layer?.backgroundColor != .clear {
             super.layer?.backgroundColor = self.getBackgroundColor().cgColor
         }
+        stickView?.updateColors()
         rightBorder?.backgroundColor = theme.colors.border
         //tableView.background = .clear
       //  super.layer?.backgroundColor = .clear
