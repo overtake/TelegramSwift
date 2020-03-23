@@ -47,7 +47,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.defaultItemIdentifiers = peerMediaTouchBarItems(presentation: chatInteraction.presentation)
         modeDisposable.set(currentMode.start(next: { [weak self] mode in
             let view = ((self?.item(forIdentifier: .segmentMedias) as? NSCustomTouchBarItem)?.view as? NSSegmentedControl)
-            view?.setSelected(true, forSegment: mode.rawValue)
+            view?.setSelected(true, forSegment: Int(mode.rawValue))
             self?.currentMode = mode
         }))
     }
@@ -66,7 +66,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 button?.isEnabled = chatInteraction.presentation.canInvokeBasicActions.delete
             case .segmentMedias:
                 let view = ((item(forIdentifier: identifier) as? NSCustomTouchBarItem)?.view as? NSSegmentedControl)
-                view?.setSelected(true, forSegment: self.currentMode.rawValue)
+                view?.setSelected(true, forSegment: Int(self.currentMode.rawValue))
             default:
                 break
             }

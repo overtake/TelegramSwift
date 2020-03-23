@@ -380,6 +380,8 @@ private class Scroll : ScrollView {
         if documentView!.frame.width > frame.width {
             scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
             clipView.scroll(to: scrollPoint)
+        } else {
+            superview?.scrollWheel(with: event)
         }
     }
 }
@@ -404,6 +406,8 @@ public class ScrollableSegmentView: View {
     public var menuItems:((ScrollableSegmentItem)->[ContextMenuItem])?
 
     
+    public var fitToWidth: Bool = false
+    
     public var didChangeSelectedItem:((ScrollableSegmentItem)->Void)?
     
     public var theme: ScrollableSegmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .medium(.title))
@@ -418,7 +422,7 @@ public class ScrollableSegmentView: View {
     public var resortRange: NSRange? = nil
     public var resortHandler: ((Int, Int)->Void)?
     public override func scrollWheel(with event: NSEvent) {
-        scrollView.scrollWheel(with: event)
+        super.scrollWheel(with: event)
     }
     
     public required init(frame frameRect: NSRect) {
@@ -489,10 +493,23 @@ public class ScrollableSegmentView: View {
             }
         }
         var x: CGFloat = 0
+        
+        var insetBetween: CGFloat = 0
+        
+        if fitToWidth {
+            let itemsWidth = items.reduce(CGFloat(0), { current, value in
+                return current + (value.view?.size.width ?? 0)
+            })
+            if itemsWidth < frame.width {
+                insetBetween = floor((frame.width - itemsWidth) / CGFloat(items.count + 1))
+            }
+        }
+        x += insetBetween
+        
         for item in self.items {
             if let view = item.view {
                 view.setFrameOrigin(NSMakePoint(x, 0))
-                x += view.size.width
+                x += view.size.width + insetBetween
             }
         }
         documentView.frame = CGRect(origin: .zero, size: NSMakeSize(max(x, frame.width), frame.height))
@@ -667,6 +684,17 @@ public class ScrollableSegmentView: View {
             items.insert(items.remove(at: data.item.index), at: bestIndex)
         }
         
+        var insetBetween: CGFloat = 0
+        
+        if fitToWidth {
+            let itemsWidth = items.reduce(CGFloat(0), { current, value in
+                return current + (value.view?.size.width ?? 0)
+            })
+            if itemsWidth < frame.width {
+                insetBetween = floor((frame.width - itemsWidth) / CGFloat(items.count + 1))
+            }
+        }
+        x += insetBetween
         for (i, item) in items.enumerated() {
             if let view = item.view {
                 view._change(pos: NSMakePoint(x, 0), animated: animated, completion: { [weak self] completed in
@@ -674,7 +702,7 @@ public class ScrollableSegmentView: View {
                         completion?()
                     }
                 })
-                x += view.size.width
+                x += view.size.width + insetBetween
             }
         }
         

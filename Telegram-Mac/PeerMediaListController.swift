@@ -147,14 +147,27 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
     
     
     
-    for group in groupItems.reversed() {
-        converted.append(group.section)
-        converted.append(group.date)
+    for (i, group) in groupItems.reversed().enumerated() {
+        if i != 0 {
+            converted.append(group.section)
+            converted.append(group.date)
+        }
+      
         
         for item in group.items {
             switch item {
             case let .messageEntry(message, settings, _):
-                converted.append(.messageEntry(message, settings, bestGeneralViewType(group.items, for: item)))
+                var viewType = bestGeneralViewType(group.items, for: item)
+                
+                if i == 0, item == group.items.first {
+                    if group.items.count > 1 {
+                        viewType =  .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+                    } else {
+                        viewType =  .modern(position: .last, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+                    }
+                }
+                
+                converted.append(.messageEntry(message, settings, viewType))
             default:
                 fatalError()
             }
@@ -408,6 +421,8 @@ class PeerMediaListController: TableViewController {
         let context = self.context
         let chatInteraction = self.chatInteraction
         let initialSize = self.atomicSize
+        
+        
         let _updateView = self.updateView
         let _entries = self.entires
         

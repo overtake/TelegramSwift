@@ -48,7 +48,6 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }))
     } else if let stats = state.stats  {
         
-       // stats.messageInteractions.append(ChannelStatsMessageInteractions)
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
