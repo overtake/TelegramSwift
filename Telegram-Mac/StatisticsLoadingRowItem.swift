@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import SwiftSignalKit
 
 class StatisticsLoadingRowItem: GeneralRowItem {
     
@@ -17,7 +18,10 @@ class StatisticsLoadingRowItem: GeneralRowItem {
     init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, text:String? = nil, viewType: GeneralViewType = .legacy) {
         self.context = context
         if let text = text {
-            self.text = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
+            let attr = NSMutableAttributedString()
+            _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.title))
+            attr.detectBoldColorInString(with: .medium(.title))
+            self.text = TextViewLayout(attr, alignment: .center)
             self.text?.measure(width: initialSize.width - 60)
         } else {
             self.text = nil
@@ -29,6 +33,10 @@ class StatisticsLoadingRowItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         text?.measure(width: width - 60)
         return success
+    }
+    
+    override var instantlyResize: Bool {
+        return false
     }
     
     override var height: CGFloat {
@@ -57,12 +65,28 @@ class StatisticsLoadingRowItem: GeneralRowItem {
 class StatisticsLoadingRowView : TableRowView {
     private let imageView:MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
     private let textView:TextView = TextView()
+    private let disposable = MetaDisposable()
+    private let progressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 30, 30))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(progressIndicator)
         addSubview(imageView)
         addSubview(textView)
         textView.isSelectable = false
         
+        
+        
+        self.imageView.change(opacity: 0, animated: false)
+        self.textView.change(opacity: 0, animated: false)
+        self.progressIndicator.change(opacity: 1, animated: false)
+        
+        let signal = Signal<NoValue, NoError>.complete() |> delay(1.5, queue: .mainQueue())
+        
+        disposable.set(signal.start(completed: { [weak self] in
+            self?.imageView.change(opacity: 1, animated: true)
+            self?.textView.change(opacity: 1, animated: true)
+            self?.progressIndicator.change(opacity: 0, animated: true)
+        }))
     }
     
     
@@ -74,17 +98,32 @@ class StatisticsLoadingRowView : TableRowView {
         }
     }
     
+    override func updateColors() {
+        super.updateColors()
+        textView.backgroundColor = backdorColor
+        progressIndicator.progressColor = theme.colors.text
+    }
+    
     override func layout() {
         super.layout()
-        imageView.center()
+        
+        progressIndicator.center()
+        
         if let item = item as? StatisticsLoadingRowItem {
             textView.update(item.text)
-            textView.centerX(y: imageView.frame.maxY + 10)
+            textView.centerX(y: frame.midY + 5)
+            imageView.centerX(y: frame.midY - imageView.frame.height - 5)
+        } else {
+            imageView.center()
         }
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -94,8 +133,9 @@ class StatisticsLoadingRowView : TableRowView {
             
             imageView.update(with: LocalAnimatedSticker.graph_loading.file, size: NSMakeSize(80, 80), context: item.context, parent: nil, table: item.table, parameters: LocalAnimatedSticker.graph_loading.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
             
-            textView.backgroundColor = backdorColor
             self.needsLayout = true
+            
+            
         }
     }
 }
