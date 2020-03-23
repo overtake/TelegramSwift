@@ -1013,6 +1013,8 @@ internal final class L10n {
   internal static func channelSlowModeToolTip(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.SlowMode.ToolTip", p1, p2)
   }
+  /// **Preparing stats**\nPlease wait a few moments while we generate your stats
+  internal static var channelStatsLoading: String  { return L10n.tr("Localizable", "Channel.Stats.Loading") }
   /// Sorry, this channel has too many admins and the new owner can't be added. Please remove one of the existing admins first.
   internal static var channelTransferOwnerErrorAdminsTooMuch: String  { return L10n.tr("Localizable", "Channel.TransferOwner.ErrorAdminsTooMuch") }
   /// Sorry, this user is not a member of this channel and their privacy settings prevent you from adding them manually.
@@ -1131,6 +1133,8 @@ internal final class L10n {
   internal static var channelStatsGraphNewFollowersBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.NewFollowersBySource") }
   /// NOTIFICATIONS
   internal static var channelStatsGraphNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Notifications") }
+  /// VIEWS BY HOURS
+  internal static var channelStatsGraphViewsByHours: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsByHours") }
   /// VIEWS BY SOURCE
   internal static var channelStatsGraphViewsBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsBySource") }
   /// Enabled Notifications
@@ -1993,8 +1997,6 @@ internal final class L10n {
   internal static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
   internal static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
-  /// Loading...
-  internal static var chatListLoading: String  { return L10n.tr("Localizable", "ChatList.Loading") }
   /// Proxy Sponsor
   internal static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Feed
@@ -2079,6 +2081,34 @@ internal final class L10n {
   internal static var chatListFilterGroups: String  { return L10n.tr("Localizable", "ChatList.Filter.Groups") }
   /// Create folders for different groups of chats and quickly switch between them.
   internal static var chatListFilterHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Header") }
+  /// %d
+  internal static func chatListFilterHideCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_countable", p1)
+  }
+  /// Hide %d Chats
+  internal static func chatListFilterHideFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_few", p1)
+  }
+  /// Hide %d Chats
+  internal static func chatListFilterHideMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_many", p1)
+  }
+  /// Hide %d Chat
+  internal static func chatListFilterHideOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_one", p1)
+  }
+  /// Hide %d Chats
+  internal static func chatListFilterHideOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_other", p1)
+  }
+  /// Hide %d Chats
+  internal static func chatListFilterHideTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_two", p1)
+  }
+  /// Hide %d Chats
+  internal static func chatListFilterHideZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Hide_zero", p1)
+  }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   internal static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
   /// Muted

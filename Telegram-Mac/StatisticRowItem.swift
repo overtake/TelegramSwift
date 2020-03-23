@@ -10,30 +10,63 @@ import Cocoa
 import TGUIKit
 import GraphUI
 import GraphCore
-
-enum ChartItemType {
-    case general
-    case daily
-    case percent
+import SwiftSignalKit
+public enum ChartItemType {
+    case lines
+    case twoAxis
+    case pie
+    case bars
     case step
+    case twoAxisStep
+    case hourlyStep
 }
+
+
 
 class StatisticRowItem: GeneralRowItem {
     let collection: ChartsCollection
     let controller: BaseChartController
-    init(_ initialSize: NSSize, stableId: AnyHashable, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType, getDetailsData: @escaping (Date, @escaping (String?) -> Void) -> Void) {
         self.collection = collection
+        
+        let controller: BaseChartController
         switch type {
-        case .general:
-            self.controller = GeneralLinesChartController(chartsCollection: collection)
-        case .daily:
-            self.controller = DailyBarsChartController(chartsCollection: collection)
-        case .percent:
-            self.controller = PercentPieChartController(chartsCollection: collection)
+        case .lines:
+            controller = GeneralLinesChartController(chartsCollection: collection)
+            controller.isZoomable = false
+        case .twoAxis:
+            controller = TwoAxisLinesChartController(chartsCollection: collection)
+            controller.isZoomable = false
+        case .pie:
+            controller = PercentPieChartController(chartsCollection: collection)
+        case .bars:
+            controller = StackedBarsChartController(chartsCollection: collection)
+            controller.isZoomable = false
         case .step:
-            self.controller = StepBarsChartController(chartsCollection: collection)
+            controller = StepBarsChartController(chartsCollection: collection)
+        case .twoAxisStep:
+            controller = TwoAxisStepBarsChartController(chartsCollection: collection)
+        case .hourlyStep:
+            controller = StepBarsChartController(chartsCollection: collection, hourly: true)
+            controller.isZoomable = false
         }
         
+        controller.getDetailsData = { date, completion in
+            getDetailsData(date, { detailsData in
+                if let detailsData = detailsData, let data = detailsData.data(using: .utf8) {
+                    ChartsDataManager.readChart(data: data, extraCopiesCount: 0, sync: true, success: { collection in
+                        Queue.mainQueue().async {
+                            completion(collection)
+                        }
+                    }) { error in
+                        completion(nil)
+                    }
+                } else {
+                    completion(nil)
+                }
+            })
+        }
+        self.controller = controller
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         _ = makeSize(initialSize.width, oldWidth: 0)
