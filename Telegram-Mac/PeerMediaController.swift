@@ -89,28 +89,28 @@ private final class SearchContainerView : View {
     }
 }
  
-private final class SegmentContainerView : View {
-    fileprivate let segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 200, 30))
+private final class SegmentContainerView : GeneralRowContainerView {
+    fileprivate let segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, 200, 50))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         border = [.Bottom]
-        addSubview(segmentControl.view)
+        addSubview(segmentControl)
         updateLocalizationAndTheme(theme: theme)
+        segmentControl.fitToWidth = true
+       
     }
     
     override func layout() {
         super.layout()
         
-        let maxWidth: CGFloat = 600
-        let blockWidth = min(maxWidth, frame.width - 60)
-        
-        segmentControl.view.setFrameSize(NSMakeSize(blockWidth, 30))
-        segmentControl.view.center()
+        segmentControl.frame = bounds
+        segmentControl.center()
+        setCorners([.topLeft, .topRight])
     }
      
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        segmentControl.theme = CatalinaSegmentTheme(backgroundColor: theme.colors.listBackground, foregroundColor: theme.colors.background, activeTextColor: theme.colors.text, inactiveTextColor: theme.colors.listGrayText)
+        segmentControl.theme = ScrollableSegmentTheme(border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
         borderColor = theme.colors.border
         backgroundColor = theme.colors.background
     }
@@ -132,8 +132,12 @@ class PeerMediaControllerView : View {
     fileprivate var searchPanelView: SearchContainerView?
 
     private(set) weak var mainView:NSView?
+    private let mainContainer: View = View()
     
-
+    override func scrollWheel(with event: NSEvent) {
+        mainView?.scrollWheel(with: event)
+    }
+    
     
     private let separator:View = View()
     private var isSelectionState:Bool = false
@@ -141,6 +145,7 @@ class PeerMediaControllerView : View {
     private var searchState: SearchState?
     required init(frame frameRect:NSRect) {
         super.init(frame: frameRect)
+        addSubview(mainContainer)
         addSubview(actionsPanelView)
         addSubview(separator)
         addSubview(segmentPanelView)
@@ -162,7 +167,7 @@ class PeerMediaControllerView : View {
     
     
     fileprivate func updateMainView(with view:NSView, animated:PeerMediaAnimationDirection?) {
-        self.addSubview(view, positioned: .below, relativeTo: actionsPanelView)
+        mainContainer.addSubview(view)
         if let animated = animated {
             if let mainView = mainView {
                 switch animated {
@@ -256,10 +261,11 @@ class PeerMediaControllerView : View {
             searchPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
             segmentPanelView.frame = NSMakeRect(0, -50, frame.width, 50)
         } else {
-            segmentPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
+            let maxWidth = min(frame.width - 60, 600)
+            segmentPanelView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - maxWidth) / 2), 0, maxWidth, 50)
         }
-        
-        mainView?.frame = NSMakeRect(0, 50, frame.width, frame.height - inset - 50)
+        mainContainer.frame = NSMakeRect(30, 50, frame.width - 60, frame.height - inset - 50)
+        mainView?.frame = mainContainer.bounds
         actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
         separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
     }
@@ -269,17 +275,48 @@ class PeerMediaControllerView : View {
     }
 }
 
+ private extension PeerMediaCollectionMode {
+    var title: String {
+        if self.tagsValue == .photoOrVideo {
+            return L10n.peerMediaMedia
+        }
+        if self.tagsValue == .file {
+            return L10n.peerMediaFiles
+        }
+        if self.tagsValue == .webPage {
+            return L10n.peerMediaLinks
+        }
+        if self.tagsValue == .music {
+            return L10n.peerMediaAudio
+        }
+        if self.tagsValue == .voiceOrInstantVideo {
+            return L10n.peerMediaVoice
+        }
+        return ""
+    }
+ }
+ 
 class PeerMediaController: EditableViewController<PeerMediaControllerView>, Notifable {
 
     private let peerId:PeerId
     private var peer:Peer?
     
     private var tagMask:MessageTags
-    private var mode:PeerMediaCollectionMode = .photoOrVideo
+    
+    private let modeValue: ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
+    private let tabsSignal:Promise<(tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode)> = Promise()
+    private let tabsDisposable = MetaDisposable()
+    private var mode:PeerMediaCollectionMode = .photoOrVideo {
+        didSet {
+            modeValue.set(mode)
+        }
+    }
     
     private let mediaGrid:PeerMediaPhotosController
     private let listControllers:[PeerMediaListController]
-    private let tagsList:[PeerMediaCollectionMode] = [.file, .webpage, .music, .voice]
+    private let tagsList:[PeerMediaCollectionMode] = [.photoOrVideo, .file, .webpage, .music, .voice]
+    
+    
     private var currentTagListIndex: Int = -1
     private var interactions:ChatInteraction
     private let messagesActionDisposable:MetaDisposable = MetaDisposable()
@@ -321,7 +358,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         if temporaryTouchBar == nil {
             temporaryTouchBar = PeerMediaTouchBar(chatInteraction: interactions, currentMode: currentModeValue.get(), toggleMode: { [weak self] value in
                 self?.toggle(with: value, animated: false)
-                self?.genericView.segmentPanelView.segmentControl.set(selected: value.rawValue)
+               // self?.genericView.segmentPanelView.segmentControl.set(selected: value.rawValue)
             })
         }
         return temporaryTouchBar as? NSTouchBar
@@ -351,7 +388,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
             if self.genericView.searchPanelView != nil {
                 return .rejected
             }
-            self.genericView.segmentPanelView.segmentControl.selectNext(animated: true)
+          //  self.genericView.segmentPanelView.segmentControl.selectNext(animated: true)
             return .invoked
         }, with: self, for: .Tab)
     }
@@ -430,9 +467,34 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         super.viewDidLoad()
         genericView.updateInteraction(interactions)
         
-        
         let context = self.context
         
+        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool), NoError> in
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 6, tagMask: tags.tagsValue)
+            |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool) in
+                let exists = view.entries.first(where: { entry -> Bool in
+                    return entry.message.media.first != nil
+                }) != nil
+                return (tag: tags, exists: exists)
+            }
+        }
+        
+        let tabSignal = combineLatest(queue: .mainQueue(), combineLatest(tabItems) |> map {
+            return $0.filter { $0.exists }
+        }, modeValue.get())
+        |> map {
+            (tabs: $0.0.map { $0.tag }, selected: $0.1)
+        }
+        
+        tabsSignal.set(tabSignal)
+        
+
+        
+        genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
+            self?.toggle(with: PeerMediaCollectionMode(rawValue: item.uniqueId)!, animated: true)
+        }
+        
+
         interactions.forwardMessages = { messageIds in
             showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: mainWindow)
         }
@@ -571,8 +633,8 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
             return true
         }
         
-        let combined = combineLatest( [peerSignal |> take(1), mediaGrid.ready.get()] ) |> map { result -> Bool in
-            return result[0] && result[1]
+        let combined = combineLatest( [peerSignal |> take(1), mediaGrid.ready.get(), self.tabsSignal.get() |> map { _ in return true }] ) |> map { result -> Bool in
+            return result[0] && result[1] && result[2]
         }
         
         self.ready.set(combined |> deliverOnMainQueue)
@@ -584,9 +646,22 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 return
             }
             for i in 0 ..< self.listControllers.count {
-                self.listControllers[i].loadViewIfNeeded(self.bounds)
+                self.listControllers[i].loadViewIfNeeded(NSMakeRect(0, 0, self.bounds.width - 60, self.bounds.height))
                 self.listControllers[i].load(with: self.tagsList[i].tagsValue)
             }
+        }))
+        
+        var firstTabAppear = true
+        tabsDisposable.set((self.tabsSignal.get() |> deliverOnMainQueue).start(next: { [weak self] tabs, selected in
+            var items:[ScrollableSegmentItem] = []
+            let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
+            let segmentTheme = ScrollableSegmentTheme(border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
+            for (i, tab)  in tabs.enumerated() {
+                items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+            }
+            self?.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
+            
+            firstTabAppear = false
         }))
         
     }
@@ -603,7 +678,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         super.loadView()
  
 
-        mediaGrid.loadViewIfNeeded(bounds)
+        mediaGrid.loadViewIfNeeded(NSMakeRect(0, 0, self.bounds.width - 60, self.bounds.height))
         
         mediaGrid.viewWillAppear(false)
         genericView.updateMainView(with: mediaGrid.view, animated: nil)
@@ -623,7 +698,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
             if mode == .photoOrVideo {
                 mediaGrid.viewWillAppear(animated)
                 self.listControllers[currentTagListIndex].viewWillDisappear(animated)
-                mediaGrid.view.frame = bounds
+                mediaGrid.view.frame = NSMakeRect(0, 0, self.bounds.width - 60, self.bounds.height)
                 let animation: PeerMediaAnimationDirection?
                 if animated {
                     if tagsList.contains(oldMode) {
@@ -651,7 +726,7 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
                 self.currentTagListIndex = tagsList.firstIndex(of: mode)!
                 self.listControllers[currentTagListIndex].viewWillAppear(animated)
                 previous.viewWillDisappear(animated)
-                self.listControllers[currentTagListIndex].view.frame = bounds
+                self.listControllers[currentTagListIndex].view.frame = NSMakeRect(0, 0, self.bounds.width - 60, self.bounds.height)
                 
                 let animation: PeerMediaAnimationDirection?
                 if animated {
@@ -691,31 +766,13 @@ class PeerMediaController: EditableViewController<PeerMediaControllerView>, Noti
         loadFwdMessagesDisposable.dispose()
         loadSelectionMessagesDisposable.dispose()
         loadListsDisposable.dispose()
+        tabsDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        genericView.segmentPanelView.segmentControl.removeAll()
-        
-        genericView.segmentPanelView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.peerMediaMedia, handler: { [weak self] in
-            self?.toggle(with: .photoOrVideo, animated:true)
-        }))
-        
-        genericView.segmentPanelView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.peerMediaFiles, handler: { [weak self] in
-            self?.toggle(with: .file, animated:true)
-        }))
-        
-        genericView.segmentPanelView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.peerMediaLinks, handler: { [weak self] in
-            self?.toggle(with: .webpage, animated:true)
-        }))
-        
-        genericView.segmentPanelView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.peerMediaAudio, handler: { [weak self] in
-            self?.toggle(with: .music, animated:true)
-        }))
-        
-        genericView.segmentPanelView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.peerMediaVoice, handler: { [weak self] in
-            self?.toggle(with: .voice, animated:true)
-        }))
+     //   genericView.segmentPanelView.segmentControl.removeAll()
+   
         for controller in self.listControllers {
             if controller.isLoaded() {
                 controller.updateLocalizationAndTheme(theme: theme)

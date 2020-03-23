@@ -31,7 +31,7 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
     }
 }
 
-enum PeerMediaCollectionMode : Int {
+enum PeerMediaCollectionMode : Int32 {
     case photoOrVideo = 0
     case file = 1
     case webpage = 2
