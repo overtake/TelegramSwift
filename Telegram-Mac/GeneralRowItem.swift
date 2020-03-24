@@ -307,9 +307,6 @@ class GeneralRowItem: TableRowItem {
         return false
     }
     
-    override var isUniqueView: Bool {
-        return true
-    }
     
     var blockWidth: CGFloat {
         switch self.viewType {
