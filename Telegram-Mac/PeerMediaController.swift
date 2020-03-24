@@ -61,7 +61,6 @@ private final class SearchContainerView : View {
         super.init(frame: frameRect)
         addSubview(searchView)
         addSubview(close)
-        border = [.Bottom]
         updateLocalizationAndTheme(theme: theme)
     }
     
@@ -90,7 +89,6 @@ private final class SegmentContainerView : View {
     fileprivate let segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, 200, 50))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        border = [.Bottom]
         addSubview(segmentControl)
         updateLocalizationAndTheme(theme: theme)
         segmentControl.fitToWidth = true
@@ -106,7 +104,7 @@ private final class SegmentContainerView : View {
      
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        segmentControl.theme = ScrollableSegmentTheme(border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
+        segmentControl.theme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
         borderColor = theme.colors.border
         backgroundColor = .clear
     }
@@ -149,7 +147,7 @@ private final class SegmentContainerView : View {
         let blockWidth = min(600, frame.width - sectionOffset * 2)
 
         
-        view.frame = NSMakeRect(sectionOffset, sectionOffset, blockWidth, frame.height - sectionOffset)
+        view.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), sectionOffset, blockWidth, frame.height - sectionOffset)
     }
     
     var mainView:NSView? {
@@ -238,6 +236,7 @@ class PeerMediaControllerView : View {
     func updateCorners(_ corners: GeneralViewItemCorners, animated: Bool) {
         self.corners = corners
         self.topPanelView.setCorners(corners, animated: animated)
+        topPanelSeparatorView.isHidden = corners == .all
     }
     
     fileprivate func updateMainView(with view:NSView, animated:PeerMediaAnimationDirection?) {
@@ -490,7 +489,7 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         guard let controllerBarView = self.controllerBarView else {
             return
         }
-        navigationController.swapNavigationBar(controllerBarView, animation: animated ? .crossfade : .none)
+        navigationController.swapNavigationBar(controllerBarView, animation: .none)
        
     }
     
@@ -511,7 +510,7 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
             return
         }
         if let navigationController = navigationController {
-            navigationController.swapNavigationBar(navigationBarView, animation: animated ? .crossfade : .none)
+            navigationController.swapNavigationBar(navigationBarView, animation: .none)
         }
     }
     
@@ -767,7 +766,7 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         tabsDisposable.set((self.tabsSignal.get() |> deliverOnMainQueue).start(next: { [weak self] tabs, selected in
             var items:[ScrollableSegmentItem] = []
             let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
-            let segmentTheme = ScrollableSegmentTheme(border: theme.colors.border, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
+            let segmentTheme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
             for (i, tab)  in tabs.enumerated() {
                 items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
             }
