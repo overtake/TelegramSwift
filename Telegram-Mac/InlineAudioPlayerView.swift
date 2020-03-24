@@ -99,13 +99,13 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         var paused: Bool = false
         
         progressView.startScrobbling = { [weak self]  in
-            self?.controller?.pause()
+            _ = self?.controller?.pause()
             paused = true
         }
         
         progressView.endScrobbling = { [weak self]  in
             if paused {
-                self?.controller?.play()
+                _ = self?.controller?.play()
             }
         }
         
@@ -359,7 +359,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20 + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 40)))
+        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 40 + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 40)))
         textView.update(textView.layout)
         
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)
@@ -367,9 +367,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         
-        //textView.centerY(x: next.frame.maxX + floorToScreenPixels(backingScaleFactor, (w - textView.frame.width)/2), addition: -2)
+        textView.centerY(x: next.frame.maxX + floorToScreenPixels(backingScaleFactor, (w - textView.frame.width)/2))
         
-        textView.center()
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }

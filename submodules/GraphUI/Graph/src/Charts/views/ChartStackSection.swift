@@ -80,7 +80,7 @@ public class ChartStackSection: View, ChartThemeContainer {
     
     public func apply(theme: ChartTheme, animated: Bool) {
         View.perform(animated: animated && self.isVisibleInWindow) {
-            self.backgroundColor = theme.tableBackgroundColor
+            self.backgroundColor = theme.chartBackgroundColor
             
             self.sectionContainerView.backgroundColor = theme.chartBackgroundColor
             self.rangeView.backgroundColor = theme.chartBackgroundColor
@@ -92,7 +92,7 @@ public class ChartStackSection: View, ChartThemeContainer {
             _ = self.backButton.sizeToFit()
             
             for separator in self.separators {
-                separator.backgroundColor = theme.tableSeparatorColor
+                separator.backgroundColor = theme.barChartStrongLinesColor
             }
         }
         

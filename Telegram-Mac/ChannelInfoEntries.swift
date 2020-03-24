@@ -334,6 +334,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     var mediaController: PeerMediaController {
         if _mediaController == nil {
             _mediaController = PeerMediaController(context: context, peerId: peerId, tagMask: [])
+            _mediaController?.navigationController = context.sharedContext.bindings.rootNavigation()
         }
         return _mediaController!
     }
@@ -1007,8 +1008,12 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
     var sectionId:Int = 0
     for entry in entries {
         if entry.sectionId != sectionId {
-            items.append(.section(sectionId))
-            sectionId = entry.sectionId
+            if entry.sectionId == ChannelInfoSection.media.rawValue {
+                
+            } else {
+                items.append(.section(sectionId))
+                sectionId = entry.sectionId
+            }
         }
         items.append(entry)
     }

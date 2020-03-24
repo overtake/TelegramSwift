@@ -495,6 +495,35 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
     }
     
+    fileprivate var barInset: CGFloat {
+        var barInset:CGFloat = 0
+        if let header = callHeader, header.needShown {
+            barInset += header.height
+        } else if let header = undoHeader, header.needShown {
+            barInset += header.height
+        }
+        return barInset
+    }
+    
+    public func swapNavigationBar(_ navigationBar: NavigationBarView, animation: NavigationBarSwapAnimation) {
+        switch animation {
+        case .none:
+            navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+            self.navigationBar.removeFromSuperview()
+            self.navigationBar = navigationBar
+            self.containerView.addSubview(navigationBar)
+        case .crossfade:
+            navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+            let previousNavigationBar = self.navigationBar
+            self.navigationBar.change(opacity: 0, animated: true, completion: { [weak previousNavigationBar] _ in
+                previousNavigationBar?.removeFromSuperview()
+            })
+            self.navigationBar = navigationBar
+            containerView.addSubview(navigationBar)
+            navigationBar.change(opacity: 1, animated: true)
+        }
+    }
+    
     open override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
         containerView.frame = bounds
