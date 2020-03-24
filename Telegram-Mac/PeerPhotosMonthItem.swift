@@ -39,11 +39,27 @@ class PeerPhotosMonthItem: GeneralRowItem {
         self.context = context
         self.gallerySupplyment = gallerySupplyment
         self.chatInteraction = chatInteraction
+        
+       
+        
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        
+        if !items.isEmpty {
+            var t: time_t = time_t(TimeInterval(items[0].timestamp))
+            var timeinfo: tm = tm()
+            localtime_r(&t, &timeinfo)
+            
+            if timeinfo.tm_mon == 2 {
+                var bp:Int = 0
+                bp += 1
+            }
+            
+        }
         
         var rowCount:Int = 4
         var perWidth: CGFloat = 0

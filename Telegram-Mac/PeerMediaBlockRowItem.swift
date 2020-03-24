@@ -98,8 +98,10 @@ private final class PeerMediaBlockRowView : TableRowView {
             if let mediaTable = mediaTable {
                 
                 let offset = table.documentOffset.y - self.frame.minY
-                //let maximum = mediaTable.documentSize.height - mediaTable.frame.height
-                let updated = max(0, offset)//min(max(0, offset), maximum)
+                var updated = max(0, offset)
+                if mediaTable.documentSize.height <= table.frame.height, updated > 0 {
+                    updated = max(updated - 30, 0)
+                }
                 if !scrollingInMediaTable, updated != mediaTable.documentOffset.y {
                     mediaTable.clipView.scroll(to: NSMakePoint(0, updated))
                 }
@@ -113,10 +115,24 @@ private final class PeerMediaBlockRowView : TableRowView {
                 NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: mediaTable.clipView)
                 
                 if item.temporaryHeight != mediaTable.documentSize.height {
-                    item.temporaryHeight = mediaTable.documentSize.height
+                    item.temporaryHeight = max(mediaTable.documentSize.height, table.frame.height)
                     table.noteHeightOfRow(item.index, false)
                 }
+                
+                let previousY = item.controller.view.frame.minY
+                
                 item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)
+             
+                let currentY = item.controller.view.frame.minY
+                if previousY != currentY {
+                    if currentY == 0, previousY != 0 {
+                        item.controller.viewWillAppear(true)
+                        item.controller.viewDidAppear(true)
+                    } else if previousY == 0 {
+                        item.controller.viewWillDisappear(true)
+                        item.controller.viewDidDisappear(true)
+                    }
+                }
             }
         }
 
@@ -140,9 +156,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                     item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                 }
             }
-            
-         //   (mainView as? TableView)?.hasVerticalScroller = false
-            
+                        
             (mainView as? TableView)?.applyExternalScroll = { [weak self, weak item] event in
                 guard let `self` = self, let item = item else {
                     return false
@@ -150,11 +164,14 @@ private final class PeerMediaBlockRowView : TableRowView {
                 if scrollInner {
                     if event.scrollingDeltaY > 0 {
                         if let tableView = item.controller.genericView.mainView as? TableView, tableView.documentOffset.y <= 0 {
-                            scrollInner = false
-                            item.table?.clipView.scroll(to: NSMakePoint(0, self.frame.minY))
-                            item.table?.scrollWheel(with: event)
-                            scrollingInMediaTable = false
-                            return true
+                            if !item.controller.isInSearch {
+                                scrollInner = false
+                                item.table?.clipView.scroll(to: NSMakePoint(0, self.frame.minY))
+                                item.table?.scrollWheel(with: event)
+                                scrollingInMediaTable = false
+                                return true
+                            }
+                           
                         }
                     }
                     scrollingInMediaTable = true

@@ -8,6 +8,11 @@
 
 import Cocoa
 
+public enum NavigationBarSwapAnimation {
+    case none
+    case crossfade
+}
+
 public struct NavigationBarStyle {
     public let height:CGFloat
     public let enableBorder:Bool

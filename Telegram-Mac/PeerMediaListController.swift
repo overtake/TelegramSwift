@@ -430,11 +430,17 @@ class PeerMediaListController: TableViewController {
         
         let historyViewTransition = combineLatest(queue: prepareQueue,historyPromise.get(), appearanceSignal) |> map { update, appearance -> (transition: TableUpdateTransition, previousUpdate: PeerMediaUpdate?, currentUpdate: PeerMediaUpdate) in
             let animated = animated.swap(true)
-            let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            var scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            
+            
             
             let entries = convertEntries(from: update, tags: tagMask, timeDifference: context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = _entries.swap(entries)
             let previousUpdate = _updateView.swap(update)
+            
+            if previousUpdate?.searchState != update.searchState {
+                scroll = .up(animated)
+            }
             
             let transition = preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: previousUpdate?.searchState.state != update.searchState.state, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
             

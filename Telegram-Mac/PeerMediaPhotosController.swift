@@ -140,7 +140,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                     if prevDateId != dateId {
                         entries.append(.section(index: index.successor()))
                         entries.append(.date(index: index))
-                        entries.append(.month(index: index.predecessor(), items: temp, viewType: viewType))
+                        entries.append(.month(index: index.predecessor(), items: temp, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                     } else {
                         entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, viewType: viewType)
                     }

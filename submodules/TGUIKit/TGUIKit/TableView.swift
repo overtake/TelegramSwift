@@ -652,6 +652,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
     
+    public var updatedItems:(([TableRowItem])->Void)? {
+        didSet {
+            updatedItems?(self.list)
+        }
+    }
     
     public var beforeSetupItem:((TableRowView, TableRowItem)->Void)?
     public var afterSetupItem:((TableRowView, TableRowItem)->Void)?
@@ -2293,22 +2298,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        
         if isSetTransitionToQueue() || (!self.queuedTransitions.isEmpty && !forceApply) {
             self.queuedTransitions.append(transition)
             return
         }
         
         let oldEmpty = self.isEmpty
-        
-//        for subview in tableView.subviews.reversed() {
-//            if let subview = subview as? NSTableRowView {
-//                if tableView.row(for: subview) == -1 {
-//                    subview.removeFromSuperview()
-//                }
-//            }
-//        }
 
-        
         self.beginUpdates()
         
         let documentOffset = self.documentOffset
@@ -2498,6 +2495,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
      //   self.tableView.endUpdates()
         self.endUpdates()
         
+        
+       self.updatedItems?(self.list)
         
 //        for subview in self.tableView.subviews.reversed() {
 //            if self.tableView.row(for: subview) == -1 {
