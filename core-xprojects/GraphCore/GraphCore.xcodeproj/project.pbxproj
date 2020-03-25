@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A79A559D2428D1D500EEFA4F /* TwoAxisStepBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79A559C2428D1D500EEFA4F /* TwoAxisStepBarsChartController.swift */; };
 		D0A9B733241CEFAC007DF938 /* HorizontalScalesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B6F9241CEFAC007DF938 /* HorizontalScalesRenderer.swift */; };
 		D0A9B734241CEFAC007DF938 /* BarChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B6FA241CEFAC007DF938 /* BarChartRenderer.swift */; };
 		D0A9B735241CEFAC007DF938 /* LinesChartRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B6FB241CEFAC007DF938 /* LinesChartRenderer.swift */; };
@@ -28,7 +29,6 @@
 		D0A9B745241CEFAC007DF938 /* LinesComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B70E241CEFAC007DF938 /* LinesComponentController.swift */; };
 		D0A9B746241CEFAC007DF938 /* DailyBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B70F241CEFAC007DF938 /* DailyBarsChartController.swift */; };
 		D0A9B747241CEFAC007DF938 /* StepBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B710241CEFAC007DF938 /* StepBarsChartController.swift */; };
-		D0A9B748241CEFAC007DF938 /* StepBarsChartController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B711241CEFAC007DF938 /* StepBarsChartController2.swift */; };
 		D0A9B749241CEFAC007DF938 /* GeneralChartComponentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B712241CEFAC007DF938 /* GeneralChartComponentController.swift */; };
 		D0A9B74A241CEFAC007DF938 /* GeneralLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B714241CEFAC007DF938 /* GeneralLinesChartController.swift */; };
 		D0A9B74B241CEFAC007DF938 /* TwoAxisLinesChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B715241CEFAC007DF938 /* TwoAxisLinesChartController.swift */; };
@@ -64,6 +64,7 @@
 		A7831B152403BFE30056AEAC /* TGUIKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TGUIKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A789E0C223E841B600AEB34A /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A789E0C623E841B600AEB34A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A79A559C2428D1D500EEFA4F /* TwoAxisStepBarsChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TwoAxisStepBarsChartController.swift; path = "../../../../../../../../../../../builds/jAXw2Tf8/0/overtake/telegrammacos/submodules/telegram-ios/submodules/GraphCore/Sources/Charts/Controllers/Stacked Bars/TwoAxisStepBarsChartController.swift"; sourceTree = "<group>"; };
 		D0A9B6F9241CEFAC007DF938 /* HorizontalScalesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HorizontalScalesRenderer.swift; sourceTree = "<group>"; };
 		D0A9B6FA241CEFAC007DF938 /* BarChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BarChartRenderer.swift; sourceTree = "<group>"; };
 		D0A9B6FB241CEFAC007DF938 /* LinesChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinesChartRenderer.swift; sourceTree = "<group>"; };
@@ -228,6 +229,7 @@
 		D0A9B70B241CEFAC007DF938 /* Stacked Bars */ = {
 			isa = PBXGroup;
 			children = (
+				A79A559C2428D1D500EEFA4F /* TwoAxisStepBarsChartController.swift */,
 				D0A9B70C241CEFAC007DF938 /* BarsComponentController.swift */,
 				D0A9B70D241CEFAC007DF938 /* StackedBarsChartController.swift */,
 				D0A9B70E241CEFAC007DF938 /* LinesComponentController.swift */,
@@ -377,7 +379,6 @@
 				D0A9B744241CEFAC007DF938 /* StackedBarsChartController.swift in Sources */,
 				D0A9B745241CEFAC007DF938 /* LinesComponentController.swift in Sources */,
 				D0A9B737241CEFAC007DF938 /* PerformanceRenderer.swift in Sources */,
-				D0A9B748241CEFAC007DF938 /* StepBarsChartController2.swift in Sources */,
 				D0A9B75D241CEFAC007DF938 /* ClosedRange+Utils.swift in Sources */,
 				D0A9B736241CEFAC007DF938 /* PecentChartRenderer.swift in Sources */,
 				D0A9B73E241CEFAC007DF938 /* PercentPieAnimationRenderer.swift in Sources */,
@@ -421,6 +422,7 @@
 				D0A9B746241CEFAC007DF938 /* DailyBarsChartController.swift in Sources */,
 				D0A9B747241CEFAC007DF938 /* StepBarsChartController.swift in Sources */,
 				D0A9B743241CEFAC007DF938 /* BarsComponentController.swift in Sources */,
+				A79A559D2428D1D500EEFA4F /* TwoAxisStepBarsChartController.swift in Sources */,
 				D0A9B74C241CEFAC007DF938 /* BaseLinesChartController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
