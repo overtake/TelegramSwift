@@ -35,7 +35,7 @@ private func _id_message(_ messageId: MessageId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_message_\(messageId)")
 }
 
-private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, messages: [Message]?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openMessage: @escaping(MessageId)->Void, context: ChannelStatsContext, accountContext: AccountContext) -> [InputDataEntry] {
+private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsState, messages: [Message]?, interactions: [MessageId : ChannelStatsMessageInteractions]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, openMessage: @escaping(MessageId)->Void, context: ChannelStatsContext, accountContext: AccountContext, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -44,11 +44,10 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
     
     if state.stats == nil {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
-            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext)
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
         }))
     } else if let stats = state.stats  {
         
-       // stats.messageInteractions.append(ChannelStatsMessageInteractions)
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -85,38 +84,38 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         }
         
         var graphs: [Graph] = []
-        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.growthGraph, title: L10n.channelStatsGraphGrowth, identifier: InputDataIdentifier("growthGraph"), type: .lines, load: { identifier in
             context.loadGrowthGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.followersGraph, title: L10n.channelStatsGraphFollowers, identifier: InputDataIdentifier("followersGraph"), type: .lines, load: { identifier in
             context.loadFollowersGraph()
             updateIsLoading(identifier, true)
         }))
 
-        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .daily, load: { identifier in
+        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .bars, load: { identifier in
             context.loadViewsBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .daily, load: { identifier in
+        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .bars, load: { identifier in
             context.loadNewFollowersBySourceGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .percent, load: { identifier in
+        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
             context.loadLanguagesGraph()
             updateIsLoading(identifier, true)
         }))
-        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .general, load: { identifier in
+        graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .lines, load: { identifier in
             context.loadMuteGraph()
             updateIsLoading(identifier, true)
         }))
         
-        graphs.append(Graph(graph: stats.topHoursGraph, title: "VIEWS BY HOURS", identifier: InputDataIdentifier("topHoursGraph"), type: .step, load: { identifier in
+        graphs.append(Graph(graph: stats.topHoursGraph, title: L10n.channelStatsGraphViewsByHours, identifier: InputDataIdentifier("topHoursGraph"), type: .hourlyStep, load: { identifier in
             context.loadTopHoursGraph()
             updateIsLoading(identifier, true)
         }))
         
-        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .step, load: { identifier in
+        graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .twoAxisStep, load: { identifier in
             context.loadInteractionsGraph()
             updateIsLoading(identifier, true)
         }))
@@ -131,7 +130,13 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             case let .Loaded(_, string):                
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
-                        return StatisticRowItem(initialSize, stableId: stableId, collection: collection, viewType: .singleItem, type: graph.type)
+                        return StatisticRowItem(initialSize, stableId: stableId, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
+                            detailedDisposable.set(context.loadDetailedGraph(graph.graph, x: Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
+                                if let graph = graph, case let .Loaded(_, data) = graph {
+                                    completion(data)
+                                }
+                            }), forKey: graph.identifier)
+                        })
                     }))
                 }, failure: { error in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
@@ -213,6 +218,8 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
         context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId))
     }
     
+    let detailedDisposable = DisposableDict<InputDataIdentifier>()
+    
     let signal = combineLatest(queue: prepareQueue, statePromise.get(), statsContext.state, messagesPromise.get()) |> map { uiState, state, messageView in
         
         
@@ -239,7 +246,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
                     return state.withRemovedLoading(identifier)
                 }
             }
-        }, openMessage: openMessage, context: statsContext, accountContext: context)
+        }, openMessage: openMessage, context: statsContext, accountContext: context, detailedDisposable: detailedDisposable)
     } |> map {
         return InputDataSignalValue(entries: $0)
     }
@@ -250,6 +257,10 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     controller.contextOject = statsContext
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
+    }
+    
+    controller.onDeinit = {
+        detailedDisposable.dispose()
     }
     
     return controller

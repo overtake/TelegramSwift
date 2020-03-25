@@ -340,7 +340,12 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             index += 1
             break
         } else {
-            let viewType = bestGeneralViewType(fake, for: hasAddInclude ? i + 1 : i)
+            var viewType = bestGeneralViewType(fake, for: hasAddInclude ? i + 1 : i)
+            
+            if excludePeers.count > 10, i == includePeers.count - 1, state.showAllInclude {
+                viewType = .innerItem
+            }
+            
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
@@ -352,9 +357,20 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             }))
             index += 1
         }
-        
-        
     }
+    
+    if includePeers.count > 10, state.showAllInclude {
+        struct T: Equatable {
+            let a: Bool
+            let b: Int
+        }
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_include, equatable: InputDataEquatable(T(a: state.showAllInclude, b: includePeers.count)), item: { initialSize, stableId in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterHideCountable(includePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
+        }))
+        index += 1
+    }
+    
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterIncludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
@@ -393,14 +409,19 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             let viewType: GeneralViewType
             let peer: PeerEquatable
         }
-        if i > 10, !state.showAllInclude {
+        if i > 10, !state.showAllExclude {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(excludePeers.count), item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterShowMoreCountable(includePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterShowMoreCountable(excludePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
             }))
             index += 1
             break
         } else {
-            let viewType = bestGeneralViewType(fake, for: hasAddExclude ? i + 1 : i)
+            var viewType = bestGeneralViewType(fake, for: hasAddExclude ? i + 1 : i)
+            
+            if excludePeers.count > 10, i == excludePeers.count - 1, state.showAllExclude {
+                viewType = .innerItem
+            }
+            
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
@@ -413,6 +434,19 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
             index += 1
         }
         
+    }
+    
+    if excludePeers.count > 10, state.showAllExclude {
+        
+        struct T: Equatable {
+            let a: Bool
+            let b: Int
+        }
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(T(a: state.showAllExclude, b: excludePeers.count)), item: { initialSize, stableId in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterHideCountable(excludePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
+        }))
+        index += 1
     }
     
     
@@ -555,6 +589,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
+                var peers = filter.data.excludePeers
+                peers.removeAll(where: { $0 == peerId })
+                filter.data.excludePeers = peers
                 if peerId.namespace == ChatListFilterPeerCategories.Namespace  {
                     if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeMuted {
                         filter.data.excludeMuted = false
@@ -598,13 +635,13 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     }, showAllInclude: {
         updateState { state in
             var state = state
-            state.showAllInclude = true
+            state.showAllInclude = !state.showAllInclude
             return state
         }
     }, showAllExclude: {
         updateState { state in
             var state = state
-            state.showAllExclude = true
+            state.showAllExclude = !state.showAllExclude
             return state
         }
     })

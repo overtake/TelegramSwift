@@ -68,7 +68,7 @@ class GeneralContainableRowView : TableRowView {
     }
 }
 
-final class GeneralRowContainerView : Control {
+class GeneralRowContainerView : Control {
     private let maskLayer = CAShapeLayer()
     private var newPath: CGPath?
     required init(frame frameRect: NSRect) {
