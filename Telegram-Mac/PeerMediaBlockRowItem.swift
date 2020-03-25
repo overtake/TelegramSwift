@@ -26,8 +26,6 @@ class PeerMediaBlockRowItem: GeneralRowItem {
     
     deinit {
         if self.controller.isLoaded() {
-            self.controller.viewWillDisappear(false)
-            self.controller.viewDidDisappear(false)
             self.controller.view.removeFromSuperview()
         }
     }
