@@ -24,6 +24,14 @@ class PeerMediaBlockRowItem: GeneralRowItem {
         super.init(initialSize, height: initialSize.height, stableId: stableId, viewType: viewType)
     }
     
+    deinit {
+        if self.controller.isLoaded() {
+            self.controller.viewWillDisappear(false)
+            self.controller.viewDidDisappear(false)
+            self.controller.view.removeFromSuperview()
+        }
+    }
+    
     override var instantlyResize: Bool {
         return false
     }
@@ -57,6 +65,10 @@ private final class PeerMediaBlockRowView : TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
     override func layout() {
         super.layout()
         
@@ -73,6 +85,10 @@ private final class PeerMediaBlockRowView : TableRowView {
             return
         }
         item.controller.view.enclosingScrollView?.scrollWheel(with: event)
+    }
+    
+    deinit {
+        
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

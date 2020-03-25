@@ -142,6 +142,11 @@ private struct PeerInfoSortableEntry: Identifiable, Comparable {
     }
 }
 
+struct PeerMediaTabsData : Equatable {
+    let collections:[PeerMediaCollectionMode]
+    let loaded: Bool
+}
+
 
 fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEntry>]?, to:[AppearanceWrapperEntry<PeerInfoSortableEntry>], account:Account, initialSize:NSSize, peerId:PeerId, arguments: PeerInfoArguments, animated:Bool) -> Signal<TableUpdateTransition, NoError> {
     
@@ -373,13 +378,43 @@ class PeerInfoController: EditableViewController<TableView> {
             channelMembersPromise.set(.single([]))
         }
         
+//        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
+//            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
+//                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+//                    let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
+//                    return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
+//            }
+//        }
+//
+//        let tabSignal = combineLatest(queue: .mainQueue(), combineLatest(tabItems) |> map {
+//            return $0
+//            }, modeValue.get())
+//            |> map {
+//                (tabs: $0.0.filter { $0.exists }.map { $0.tag }, hasLoaded: $0.0.reduce(true, { $0 && $1.hasLoaded }))
+//        }
+        
+        
+        let tags: [PeerMediaCollectionMode] = [.photoOrVideo, .file, .webpage, .music, .voice]
+        
+        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = tags.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
+                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                    let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
+                    return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
+            }
+        }
+        
+        let mediaTabsData: Signal<PeerMediaTabsData, NoError> = combineLatest(tabItems) |> map { data in
+            return PeerMediaTabsData(collections: data.filter { $0.exists }.map { $0.tag }, loaded: data.reduce(true, { $0 && $1.hasLoaded}))
+        }
+
         
         
         let transition = arguments.get() |> mapToSignal { arguments in
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get())
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers -> Signal<(PeerView, TableUpdateTransition), NoError> in
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData -> Signal<(PeerView, TableUpdateTransition), NoError> in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0) }
                     
