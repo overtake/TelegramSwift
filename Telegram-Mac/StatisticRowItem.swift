@@ -31,8 +31,10 @@ class StatisticRowItem: GeneralRowItem {
         case .percent:
             self.controller = PercentPieChartController(chartsCollection: collection)
         case .step:
-            self.controller = GeneralLinesChartController(chartsCollection: collection)
+            self.controller = StepBarsChartController(chartsCollection: collection)
         }
+        
+        
         super.init(initialSize, stableId: stableId, viewType: viewType)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
