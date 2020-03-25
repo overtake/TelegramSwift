@@ -121,16 +121,23 @@ private final class SegmentContainerView : View {
  private let sectionOffset: CGFloat = 30
  
  final class PeerMediaContainerView : View {
+    
+    private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
+    private let separator:View = View()
+
     fileprivate let view: PeerMediaControllerView
     required init(frame frameRect: NSRect) {
         view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, frameRect.width, frameRect.height - sectionOffset))
         super.init(frame: frameRect)
         addSubview(view)
+        addSubview(actionsPanelView)
+        addSubview(separator)
         backgroundColor = theme.colors.listBackground
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.listBackground
+        separator.backgroundColor = theme.colors.border
     }
     
     override func scrollWheel(with event: NSEvent) {
@@ -148,6 +155,11 @@ private final class SegmentContainerView : View {
 
         
         view.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), sectionOffset, blockWidth, frame.height - sectionOffset)
+        
+        let inset:CGFloat = view.isSelectionState ? 50 : 0
+        actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
+        separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
+
     }
     
     var mainView:NSView? {
@@ -156,6 +168,7 @@ private final class SegmentContainerView : View {
     
     func updateInteraction(_ chatInteraction:ChatInteraction) {
         self.view.updateInteraction(chatInteraction)
+        actionsPanelView.prepare(with: chatInteraction)
     }
     
     
@@ -169,6 +182,9 @@ private final class SegmentContainerView : View {
     
     func changeState(selectState:Bool, animated:Bool) {
         self.view.changeState(selectState: selectState, animated: animated)
+        let inset:CGFloat = selectState ? 50 : 0
+        actionsPanelView.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
+        separator.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
     }
     
     var activePanel: View {
@@ -190,7 +206,6 @@ private final class SegmentContainerView : View {
 
 class PeerMediaControllerView : View {
     
-    private let actionsPanelView:MessageActionsPanelView = MessageActionsPanelView(frame: NSMakeRect(0,0,0, 50))
     private let topPanelView = GeneralRowContainerView(frame: .zero)
     fileprivate let segmentPanelView: SegmentContainerView = SegmentContainerView(frame: NSZeroRect)
     fileprivate var searchPanelView: SearchContainerView?
@@ -205,16 +220,13 @@ class PeerMediaControllerView : View {
     
     fileprivate var corners:GeneralViewItemCorners = [.topLeft, .topRight]
     
-    private let separator:View = View()
-    private var isSelectionState:Bool = false
+    fileprivate var isSelectionState:Bool = false
     private var chatInteraction:ChatInteraction?
     private var searchState: SearchState?
     required init(frame frameRect:NSRect) {
         super.init(frame: frameRect)
-        addSubview(actionsPanelView)
         
         addSubview(topPanelView)
-        addSubview(separator)
         topPanelView.addSubview(segmentPanelView)
         topPanelView.addSubview(topPanelSeparatorView)
         updateLocalizationAndTheme(theme: theme)
@@ -223,14 +235,12 @@ class PeerMediaControllerView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.listBackground
-        separator.backgroundColor = theme.colors.border
         topPanelView.backgroundColor = theme.colors.background
         topPanelSeparatorView.backgroundColor = theme.colors.border
     }
     
     func updateInteraction(_ chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
-        actionsPanelView.prepare(with: chatInteraction)
     }
     
     func updateCorners(_ corners: GeneralViewItemCorners, animated: Bool) {
@@ -240,7 +250,7 @@ class PeerMediaControllerView : View {
     }
     
     fileprivate func updateMainView(with view:NSView, animated:PeerMediaAnimationDirection?) {
-        addSubview(view, positioned: .below, relativeTo: actionsPanelView)
+        addSubview(view, positioned: .below, relativeTo: topPanelView)
         if let animated = animated {
             if let mainView = mainView {
                 switch animated {
@@ -311,10 +321,6 @@ class PeerMediaControllerView : View {
         assert(mainView != nil)
         
         self.isSelectionState = selectState
-        let inset:CGFloat = selectState ? 50 : 0
-
-        actionsPanelView.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
-        separator.change(pos: NSMakePoint(0, frame.height - inset), animated: animated)
         
     }
     
@@ -341,8 +347,6 @@ class PeerMediaControllerView : View {
             segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
         }
         mainView?.frame = NSMakeRect(0, 50, frame.width, frame.height - inset - 50)
-        actionsPanelView.frame = NSMakeRect(0, frame.height - inset, frame.width, 50)
-        separator.frame = NSMakeRect(0, frame.height - inset, frame.width, .borderSize)
     }
     
     required init?(coder: NSCoder) {
@@ -376,10 +380,15 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
     private let peerId:PeerId
     private var peer:Peer?
     
-    private var tagMask:MessageTags
-    
     private let modeValue: ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
     private let tabsSignal:Promise<(tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode, hasLoaded: Bool)> = Promise()
+    
+    var tabsValue: Signal<PeerMediaTabsData, NoError> {
+        return tabsSignal.get() |> map {
+            PeerMediaTabsData(collections: $0.tabs, loaded: $0.hasLoaded)
+        } |> distinctUntilChanged
+    }
+    
     private let tabsDisposable = MetaDisposable()
     private var mode:PeerMediaCollectionMode = .photoOrVideo {
         didSet {
@@ -410,9 +419,11 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, tagMask:MessageTags) {
+    private let mediaTabsData:PeerMediaTabsData?
+    
+    init(context: AccountContext, peerId:PeerId, mediaTabsData:PeerMediaTabsData? = nil) {
         self.peerId = peerId
-        self.tagMask = tagMask
+        self.mediaTabsData = mediaTabsData
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId)//PeerMediaGridController(context: context, chatLocation: .peer(peerId), messageId: nil, tagMask: tagMask, chatInteraction: interactions)
         
@@ -789,9 +800,10 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         super.loadView()
  
 
-        mediaGrid.loadViewIfNeeded(NSMakeRect(0, 0, self.bounds.width - 60, self.bounds.height))
+        mediaGrid.loadViewIfNeeded(NSMakeRect(0, 0, self.bounds.width, self.bounds.height))
         
         mediaGrid.viewWillAppear(false)
+        
         genericView.updateMainView(with: mediaGrid.view, animated: nil)
         centerBar.updateSearchVisibility(false)
         mediaGrid.viewDidAppear(false)

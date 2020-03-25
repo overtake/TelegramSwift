@@ -83,14 +83,14 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         dismiss()
     }
     @objc private func sharedMediaAction() {
-        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         dismiss()
     }
     @objc private func peerInfoActions(_ sender: Any?) {
         guard let segment = sender as? NSSegmentedControl else {return}
         switch segment.selectedSegment {
         case 0:
-            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         case 1:
             chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         default:

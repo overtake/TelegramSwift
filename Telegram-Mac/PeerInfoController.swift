@@ -22,6 +22,8 @@ class PeerInfoArguments {
     let pushViewController:(ViewController) -> Void
     
     let pullNavigation:()->NavigationViewController?
+    let mediaController: ()->PeerMediaController?
+    
     
     private let toggleNotificationsDisposable = MetaDisposable()
     private let deleteDisposable = MetaDisposable()
@@ -75,10 +77,10 @@ class PeerInfoArguments {
     }
     
     func sharedMedia() {
-        pushViewController(PeerMediaController(context: context, peerId: peerId, tagMask: .photoOrVideo))
+        pushViewController(PeerMediaController(context: context, peerId: peerId))
     }
     
-    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?) {
+    init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?) {
         self.value = Atomic(value: state)
         _statePromise.set(.single(state))
         self.context = context
@@ -86,7 +88,9 @@ class PeerInfoArguments {
         self.isAd = isAd
         self.pushViewController = pushViewController
         self.pullNavigation = pullNavigation
+        self.mediaController = mediaController
     }
+
     
     deinit {
         toggleNotificationsDisposable.dispose()
@@ -222,8 +226,12 @@ class PeerInfoController: EditableViewController<TableView> {
     
     private var argumentsAction: DisposableSet = DisposableSet()
     var disposable:MetaDisposable = MetaDisposable()
+    
+    private let mediaController: PeerMediaController
+    
     init(context: AccountContext, peerId:PeerId, isAd: Bool = false) {
         self.peerId = peerId
+        self.mediaController = PeerMediaController(context: context, peerId: peerId)
         super.init(context)
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
@@ -232,15 +240,21 @@ class PeerInfoController: EditableViewController<TableView> {
         
         _groupArguments = GroupInfoArguments(context: context, peerId: peerId, state: GroupInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
+        }, mediaController: { [weak self] in
+            return self?.mediaController
         })
         
         _userArguments = UserInfoArguments(context: context, peerId: peerId, state: UserInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
-            return self?.navigationController
+             return self?.navigationController
+        }, mediaController: { [weak self] in
+             return self?.mediaController
         })
         
         
         _channelArguments = ChannelInfoArguments(context: context, peerId: peerId, state: ChannelInfoState(), isAd: isAd, pushViewController: pushViewController, pullNavigation:{ [weak self] () -> NavigationViewController? in
             return self?.navigationController
+        }, mediaController: { [weak self] in
+              return self?.mediaController
         })
         
     }
@@ -335,6 +349,11 @@ class PeerInfoController: EditableViewController<TableView> {
         let initialSize = atomicSize
         let onMainQueue: Atomic<Bool> = Atomic(value: true)
         
+        mediaController._frameRect = bounds
+        mediaController.bar = .init(height: 0)
+        
+        mediaController.loadViewIfNeeded()
+        
         let inputActivity = context.account.peerInputActivities(peerId: peerId)
             |> map { activities -> [PeerId : PeerInputActivity] in
                 return activities.reduce([:], { (current, activity) -> [PeerId : PeerInputActivity] in
@@ -378,41 +397,14 @@ class PeerInfoController: EditableViewController<TableView> {
             channelMembersPromise.set(.single([]))
         }
         
-//        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-//            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
-//                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-//                    let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
-//                    return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
-//            }
-//        }
-//
-//        let tabSignal = combineLatest(queue: .mainQueue(), combineLatest(tabItems) |> map {
-//            return $0
-//            }, modeValue.get())
-//            |> map {
-//                (tabs: $0.0.filter { $0.exists }.map { $0.tag }, hasLoaded: $0.0.reduce(true, { $0 && $1.hasLoaded }))
-//        }
         
-        
-        let tags: [PeerMediaCollectionMode] = [.photoOrVideo, .file, .webpage, .music, .voice]
-        
-        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = tags.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
-                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-                    let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
-                    return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
-            }
-        }
-        
-        let mediaTabsData: Signal<PeerMediaTabsData, NoError> = combineLatest(tabItems) |> map { data in
-            return PeerMediaTabsData(collections: data.filter { $0.exists }.map { $0.tag }, loaded: data.reduce(true, { $0 && $1.hasLoaded}))
-        }
-
+        let mediaTabsData: Signal<PeerMediaTabsData, NoError> = mediaController.tabsValue
+        let mediaReady = mediaController.ready.get() |> take(1)
         
         
         let transition = arguments.get() |> mapToSignal { arguments in
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData -> Signal<(PeerView, TableUpdateTransition), NoError> in
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _ -> Signal<(PeerView, TableUpdateTransition), NoError> in
                     
                     let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
@@ -494,10 +486,6 @@ class PeerInfoController: EditableViewController<TableView> {
                 arguments.updateEditable(state == .Edit, peerView: peerView)
             })
         }
-    }
-    
-    override var rightSwipeController: ViewController? {
-        return PeerMediaController(context: context, peerId: peerId, tagMask: .photoOrVideo)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

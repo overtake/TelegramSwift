@@ -454,17 +454,15 @@ public class ScrollableSegmentView: View {
     public override func mouseUp(with event: NSEvent) {
         if fitToWidth, documentView.frame.width <= frame.width, mouseInside() {
             let insetBetween: CGFloat = self.insetBetween
-            var x: CGFloat = insetBetween
             let point = documentView.convert(event.locationInWindow, from: nil)
             
             for item in self.items {
                 if let view = item.view {
                     
-                    if point.x >= x && point.x <= view.size.width + insetBetween {
+                    if point.x >= view.frame.minX - (item == self.items.first ? insetBetween : insetBetween / 2) && point.x <= view.frame.maxX + (item == self.items.last ? insetBetween : insetBetween / 2) {
                         self.didChangeSelectedItem?(item)
                         return
                     }
-                    x += view.size.width + insetBetween
                     
                 }
             }

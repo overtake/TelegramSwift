@@ -330,28 +330,13 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
         }
     }
-    private var _mediaController: PeerMediaController? = nil
-    var mediaController: PeerMediaController {
-        if _mediaController == nil {
-            _mediaController = PeerMediaController(context: context, peerId: peerId, tagMask: [])
-            _mediaController?.navigationController = context.sharedContext.bindings.rootNavigation()
-        }
-        return _mediaController!
-    }
+
     
     deinit {
         reportPeerDisposable.dispose()
         updatePeerNameDisposable.dispose()
         toggleSignaturesDisposable.dispose()
         updatePhotoDisposable.dispose()
-        
-        var mediaController = _mediaController
-        _mediaController = nil
-        if mediaController != nil {
-            Queue.mainQueue().async {
-                mediaController = nil
-            }
-        }
     }
 }
 
@@ -1000,8 +985,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
         }
     }
     
-    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty {
-        entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
+    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
+        entries.append(.media(sectionId: ChannelInfoSection.media, controller: controller, viewType: .singleItem))
     }
     
     var items:[ChannelInfoEntry] = []
