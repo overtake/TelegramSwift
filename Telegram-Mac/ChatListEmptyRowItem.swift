@@ -242,7 +242,7 @@ private class ChatListLoadingRowView : TableRowView {
         if let _ = item.filter {
             text = L10n.chatListFilterLoading
         } else {
-            text = L10n.chatListLoading
+            text = "Loading"
         }
         
         let attr = NSAttributedString.initialize(string: text, color: theme.colors.text, font: .normal(.text)).mutableCopy() as! NSMutableAttributedString
