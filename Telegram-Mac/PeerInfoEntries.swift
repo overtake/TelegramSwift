@@ -76,18 +76,18 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant]) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
     if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments)
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:
-            return channelInfoEntries(view: view, arguments: arguments)
+            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData)
     }
     return []
 }

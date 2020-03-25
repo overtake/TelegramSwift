@@ -983,6 +983,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let forwardMessagesDisposable = MetaDisposable()
     private let shiftSelectedDisposable = MetaDisposable()
     private let updateUrlDisposable = MetaDisposable()
+    private let loadSharedMediaDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -3398,6 +3399,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
     
+    private var firstLoad: Bool = true
 
     func applyTransition(_ transition:TableUpdateTransition, view: MessageHistoryView?, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
         
@@ -3487,7 +3489,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         })
         
+        
+        if firstLoad {
+            firstLoad = false
+            
+            let peerId = self.chatLocation.peerId
+            
+            let tags: [MessageTags] = [.photoOrVideo, .file, .webPage, .music, .voiceOrInstantVideo]
+            
+            let tabItems: [Signal<Never, NoError>] = tags.map { tags -> Signal<Never, NoError> in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 20, tagMask: tags)
+                    |> ignoreValues
+            }
+//
+            loadSharedMediaDisposable.set(combineLatest(tabItems).start())
+        }
     }
+    
     
     override func getCenterBarViewOnce() -> TitledBarView {
         return ChatTitleBarView(controller: self, chatInteraction)
@@ -3844,6 +3862,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         failedMessageIdsDisposable.dispose()
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
+        loadSharedMediaDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

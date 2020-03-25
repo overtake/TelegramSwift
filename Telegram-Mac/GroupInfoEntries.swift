@@ -1251,7 +1251,7 @@ enum GroupInfoSection : Int {
 }
 
 
-func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = []) -> [PeerInfoEntry] {
+func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
     var entries: [GroupInfoEntry] = []
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         

@@ -859,7 +859,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     let state = arguments.state as! ChannelInfoState
@@ -1000,9 +1000,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
         }
     }
     
-    #if DEBUG
-    entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
-    #endif
+    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty {
+        entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
+    }
     
     var items:[ChannelInfoEntry] = []
     var sectionId:Int = 0

@@ -451,6 +451,27 @@ public class ScrollableSegmentView: View {
         NotificationCenter.default.removeObserver(self)
     }
     
+    public override func mouseUp(with event: NSEvent) {
+        if fitToWidth, documentView.frame.width <= frame.width, mouseInside() {
+            let insetBetween: CGFloat = self.insetBetween
+            var x: CGFloat = insetBetween
+            let point = documentView.convert(event.locationInWindow, from: nil)
+            
+            for item in self.items {
+                if let view = item.view {
+                    
+                    if point.x >= x && point.x <= view.size.width + insetBetween {
+                        self.didChangeSelectedItem?(item)
+                        return
+                    }
+                    x += view.size.width + insetBetween
+                    
+                }
+            }
+        }
+        super.mouseUp(with: event)
+    }
+    
     public override func updateLocalizationAndTheme(theme presentation: PresentationTheme) {
         self.theme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
     }
@@ -483,17 +504,7 @@ public class ScrollableSegmentView: View {
         self.selectorView.change(size: selectorFrame.size, animated: animated)
     }
     
-    public override func layout() {
-        super.layout()
-        scrollView.frame = bounds
-        borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-        for item in self.items {
-            if let view = item.view {
-                view.setFrameSize(NSMakeSize(view.size.width, frame.height))
-            }
-        }
-        var x: CGFloat = 0
-        
+    private var insetBetween: CGFloat {
         var insetBetween: CGFloat = 0
         
         if fitToWidth {
@@ -504,7 +515,23 @@ public class ScrollableSegmentView: View {
                 insetBetween = floor((frame.width - itemsWidth) / CGFloat(items.count + 1))
             }
         }
-        x += insetBetween
+        return insetBetween
+    }
+    
+    public override func layout() {
+        super.layout()
+        scrollView.frame = bounds
+        borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
+        for item in self.items {
+            if let view = item.view {
+                view.setFrameSize(NSMakeSize(view.size.width, frame.height))
+            }
+        }
+        
+        let insetBetween: CGFloat = self.insetBetween
+
+        
+        var x: CGFloat = insetBetween
         
         for item in self.items {
             if let view = item.view {
@@ -684,16 +711,9 @@ public class ScrollableSegmentView: View {
             items.insert(items.remove(at: data.item.index), at: bestIndex)
         }
         
-        var insetBetween: CGFloat = 0
+        let insetBetween: CGFloat = self.insetBetween
         
-        if fitToWidth {
-            let itemsWidth = items.reduce(CGFloat(0), { current, value in
-                return current + (value.view?.size.width ?? 0)
-            })
-            if itemsWidth < frame.width {
-                insetBetween = floor((frame.width - itemsWidth) / CGFloat(items.count + 1))
-            }
-        }
+       
         x += insetBetween
         for (i, item) in items.enumerated() {
             if let view = item.view {

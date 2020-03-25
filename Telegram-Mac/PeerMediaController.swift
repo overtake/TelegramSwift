@@ -379,7 +379,7 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
     private var tagMask:MessageTags
     
     private let modeValue: ValuePromise<PeerMediaCollectionMode> = ValuePromise(.photoOrVideo, ignoreRepeated: true)
-    private let tabsSignal:Promise<(tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode)> = Promise()
+    private let tabsSignal:Promise<(tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode, hasLoaded: Bool)> = Promise()
     private let tabsDisposable = MetaDisposable()
     private var mode:PeerMediaCollectionMode = .photoOrVideo {
         didSet {
@@ -580,21 +580,19 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         
         let context = self.context
         
-        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool), NoError> in
+        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
             return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
-            |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool) in
-                let exists = view.entries.first(where: { entry -> Bool in
-                    return entry.message.media.first != nil
-                }) != nil
-                return (tag: tags, exists: exists)
+                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
+                return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
             }
         }
         
         let tabSignal = combineLatest(queue: .mainQueue(), combineLatest(tabItems) |> map {
-            return $0.filter { $0.exists }
+            return $0
         }, modeValue.get())
         |> map {
-            (tabs: $0.0.map { $0.tag }, selected: $0.1)
+            (tabs: $0.0.filter { $0.exists }.map { $0.tag }, selected: $0.1, hasLoaded: $0.0.reduce(true, { $0 && $1.hasLoaded }))
         }
         
         tabsSignal.set(tabSignal)
@@ -744,7 +742,7 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
             return true
         }
         
-        let combined = combineLatest( [peerSignal |> take(1), mediaGrid.ready.get(), self.tabsSignal.get() |> map { _ in return true }] ) |> map { result -> Bool in
+        let combined = combineLatest( [peerSignal |> take(1), mediaGrid.ready.get(), self.tabsSignal.get() |> map { $0.hasLoaded }] ) |> map { result -> Bool in
             return result[0] && result[1] && result[2]
         }
         
@@ -763,14 +761,16 @@ class PeerMediaController: EditableViewController<PeerMediaContainerView>, Notif
         }))
         
         var firstTabAppear = true
-        tabsDisposable.set((self.tabsSignal.get() |> deliverOnMainQueue).start(next: { [weak self] tabs, selected in
+        tabsDisposable.set((self.tabsSignal.get() |> deliverOnMainQueue).start(next: { [weak self] tabs, selected, hasLoaded in
             var items:[ScrollableSegmentItem] = []
-            let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
-            let segmentTheme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
-            for (i, tab)  in tabs.enumerated() {
-                items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+            if hasLoaded {
+                let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
+                let segmentTheme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
+                for (i, tab)  in tabs.enumerated() {
+                    items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                }
+                self?.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
             }
-            self?.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
             
             firstTabAppear = false
         }))
