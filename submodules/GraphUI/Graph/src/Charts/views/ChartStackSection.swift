@@ -174,7 +174,7 @@ public class ChartStackSection: View, ChartThemeContainer {
         controller.chartFrame = { [unowned self] in
             return self.chartView.chartFrame
         }
-        controller.setDetailsViewModel = { [unowned self] viewModel, animated in
+        controller.setDetailsViewModel = { [unowned self] viewModel, animated, _ in
             self.chartView.setDetailsViewModel(viewModel: viewModel, animated: animated)
         }
         controller.setDetailsChartVisibleClosure = { [unowned self] visible, animated in
