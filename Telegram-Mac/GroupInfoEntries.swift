@@ -670,6 +670,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, enabled:Bool, viewType: GeneralViewType)
     case showMore(section:Int, index: Int, viewType: GeneralViewType)
     case leave(section:Int, text: String, viewType: GeneralViewType)
+    case media(section:Int, controller: PeerMediaController, viewType: GeneralViewType)
     case section(Int)
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> GroupInfoEntry {
@@ -695,6 +696,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .member(section, index, peerId, peer, presence, activity, memberStatus, editing, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, memberStatus: memberStatus, editing: editing, enabled: enabled, viewType: viewType)
         case let .showMore(section, index, _): return .showMore(section: section, index: index, viewType: viewType)
         case let .leave(section, text, _): return  .leave(section: section, text: text, viewType: viewType)
+        case let .media(section, controller, _): return  .media(section: section, controller: controller, viewType: viewType)
         case .section: return self
         }
     }
@@ -913,6 +915,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .media(sectionId, _, viewType):
+            if case .media(sectionId, _, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .section(lhsId):
             switch entry {
             case let .section(rhsId):
@@ -976,6 +984,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 19
         case .leave:
             return 20
+        case .media:
+            return 21
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1025,6 +1035,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .leave(sectionId, _, _):
             return sectionId
+        case let .media(sectionId, _, _):
+            return sectionId
         case let .section(sectionId):
             return sectionId
         }
@@ -1073,6 +1085,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .showMore(sectionId, index, _):
             return (sectionId * 100000) + index + 200
         case let .leave(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .media(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .section(sectionId):
             return (sectionId + 1) * 100000 - sectionId

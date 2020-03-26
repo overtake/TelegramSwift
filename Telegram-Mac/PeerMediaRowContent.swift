@@ -41,7 +41,7 @@ class PeerMediaRowItem: GeneralRowItem {
             fatalError("entry haven't message")
         }
         
-        super.init(initialSize, stableId: object.stableId, viewType: viewType, inset: NSEdgeInsets(left: 0, right: 0))
+        super.init(initialSize, stableId: object.stableId, viewType: viewType, inset: NSEdgeInsetsZero)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -125,10 +125,8 @@ class PeerMediaRowView : TableRowView,ViewDisplayDelegate,Notifable {
         
         let contentX = item.interface.presentation.state == .selecting ? item.viewType.innerInset.left + 22 + item.viewType.innerInset.left : item.viewType.innerInset.left
         
-        
         self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
-        
         
         self.contentView.setFrameSize(NSMakeSize(self.containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, self.containerView.frame.height - item.viewType.innerInset.bottom - item.viewType.innerInset.top))
         self.contentView.centerY(x: contentX)

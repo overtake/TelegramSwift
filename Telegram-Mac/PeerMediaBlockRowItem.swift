@@ -27,7 +27,12 @@ class PeerMediaBlockRowItem: GeneralRowItem {
     deinit {
         if self.controller.isLoaded() {
             self.controller.view.removeFromSuperview()
+            
+            if controller.frame.minY == 0 {
+                table?.scroll(to: .up(true))
+            }
         }
+        
     }
     
     override var instantlyResize: Bool {
@@ -83,10 +88,6 @@ private final class PeerMediaBlockRowView : TableRowView {
             return
         }
         item.controller.view.enclosingScrollView?.scrollWheel(with: event)
-    }
-    
-    deinit {
-        
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

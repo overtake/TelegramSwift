@@ -56,8 +56,8 @@
 		D0A9B763241CEFAC007DF938 /* Convert.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B730241CEFAC007DF938 /* Convert.swift */; };
 		D0A9B764241CEFAC007DF938 /* ChartsCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B731241CEFAC007DF938 /* ChartsCollection.swift */; };
 		D0A9B765241CEFAC007DF938 /* ChartsError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A9B732241CEFAC007DF938 /* ChartsError.swift */; };
-		D0DEF73B242A405000A34A30 /* TwoAxisStepBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DEF73A242A405000A34A30 /* TwoAxisStepBarsChartController.swift */; };
-		D0DEF741242B4DDA00A34A30 /* LineBulletsRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DEF740242B4DDA00A34A30 /* LineBulletsRenderer.swift */; };
+		D0DEF74B242BBCE200A34A30 /* LineBulletsRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DEF74A242BBCE200A34A30 /* LineBulletsRenderer.swift */; };
+		D0DEF74C242BBDBE00A34A30 /* TwoAxisStepBarsChartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DEF746242BB79900A34A30 /* TwoAxisStepBarsChartController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +70,7 @@
 		D0A9B6FC241CEFAC007DF938 /* PecentChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PecentChartRenderer.swift; sourceTree = "<group>"; };
 		D0A9B6FD241CEFAC007DF938 /* PerformanceRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PerformanceRenderer.swift; sourceTree = "<group>"; };
 		D0A9B6FE241CEFAC007DF938 /* VerticalLinesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VerticalLinesRenderer.swift; sourceTree = "<group>"; };
+		D0A9B6FF241CEFAC007DF938 /* LineBulletsRenerer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineBulletsRenerer.swift; sourceTree = "<group>"; };
 		D0A9B700241CEFAC007DF938 /* VerticalScalesRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VerticalScalesRenderer.swift; sourceTree = "<group>"; };
 		D0A9B701241CEFAC007DF938 /* BaseChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BaseChartRenderer.swift; sourceTree = "<group>"; };
 		D0A9B702241CEFAC007DF938 /* PieChartRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PieChartRenderer.swift; sourceTree = "<group>"; };
@@ -113,8 +114,8 @@
 		D0A9B730241CEFAC007DF938 /* Convert.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convert.swift; sourceTree = "<group>"; };
 		D0A9B731241CEFAC007DF938 /* ChartsCollection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartsCollection.swift; sourceTree = "<group>"; };
 		D0A9B732241CEFAC007DF938 /* ChartsError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChartsError.swift; sourceTree = "<group>"; };
-		D0DEF73A242A405000A34A30 /* TwoAxisStepBarsChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoAxisStepBarsChartController.swift; sourceTree = "<group>"; };
-		D0DEF740242B4DDA00A34A30 /* LineBulletsRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = LineBulletsRenderer.swift; path = ../Charts/Renderes/LineBulletsRenderer.swift; sourceTree = "<group>"; };
+		D0DEF746242BB79900A34A30 /* TwoAxisStepBarsChartController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TwoAxisStepBarsChartController.swift; sourceTree = "<group>"; };
+		D0DEF74A242BBCE200A34A30 /* LineBulletsRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineBulletsRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -187,12 +188,14 @@
 		D0A9B6F8241CEFAC007DF938 /* Renderes */ = {
 			isa = PBXGroup;
 			children = (
+				D0DEF74A242BBCE200A34A30 /* LineBulletsRenderer.swift */,
 				D0A9B6F9241CEFAC007DF938 /* HorizontalScalesRenderer.swift */,
 				D0A9B6FA241CEFAC007DF938 /* BarChartRenderer.swift */,
 				D0A9B6FB241CEFAC007DF938 /* LinesChartRenderer.swift */,
 				D0A9B6FC241CEFAC007DF938 /* PecentChartRenderer.swift */,
 				D0A9B6FD241CEFAC007DF938 /* PerformanceRenderer.swift */,
 				D0A9B6FE241CEFAC007DF938 /* VerticalLinesRenderer.swift */,
+				D0A9B6FF241CEFAC007DF938 /* LineBulletsRenerer.swift */,
 				D0A9B700241CEFAC007DF938 /* VerticalScalesRenderer.swift */,
 				D0A9B701241CEFAC007DF938 /* BaseChartRenderer.swift */,
 				D0A9B702241CEFAC007DF938 /* PieChartRenderer.swift */,
@@ -227,7 +230,7 @@
 		D0A9B70B241CEFAC007DF938 /* Stacked Bars */ = {
 			isa = PBXGroup;
 			children = (
-				D0DEF73A242A405000A34A30 /* TwoAxisStepBarsChartController.swift */,
+				D0DEF746242BB79900A34A30 /* TwoAxisStepBarsChartController.swift */,
 				D0A9B70C241CEFAC007DF938 /* BarsComponentController.swift */,
 				D0A9B70D241CEFAC007DF938 /* StackedBarsChartController.swift */,
 				D0A9B70E241CEFAC007DF938 /* LinesComponentController.swift */,
@@ -261,7 +264,6 @@
 		D0A9B71C241CEFAC007DF938 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
-				D0DEF740242B4DDA00A34A30 /* LineBulletsRenderer.swift */,
 				D0A9B71D241CEFAC007DF938 /* TimeInterval+Utils.swift */,
 				D0A9B71E241CEFAC007DF938 /* AnimationController.swift */,
 				D0A9B71F241CEFAC007DF938 /* TextUtils.swift */,
@@ -397,6 +399,7 @@
 				D0A9B741241CEFAC007DF938 /* PercentChartComponentController.swift in Sources */,
 				D0A9B751241CEFAC007DF938 /* TimeInterval+Utils.swift in Sources */,
 				D0A9B763241CEFAC007DF938 /* Convert.swift in Sources */,
+				D0DEF74B242BBCE200A34A30 /* LineBulletsRenderer.swift in Sources */,
 				D0A9B75E241CEFAC007DF938 /* CGFloat.swift in Sources */,
 				D0A9B74E241CEFAC007DF938 /* ChartLineData.swift in Sources */,
 				D0A9B753241CEFAC007DF938 /* TextUtils.swift in Sources */,
@@ -410,7 +413,6 @@
 				D0A9B74F241CEFAC007DF938 /* LinesSelectionLabel.swift in Sources */,
 				D0A9B734241CEFAC007DF938 /* BarChartRenderer.swift in Sources */,
 				D0A9B752241CEFAC007DF938 /* AnimationController.swift in Sources */,
-				D0DEF741242B4DDA00A34A30 /* LineBulletsRenderer.swift in Sources */,
 				D0A9B735241CEFAC007DF938 /* LinesChartRenderer.swift in Sources */,
 				D0A9B764241CEFAC007DF938 /* ChartsCollection.swift in Sources */,
 				D0A9B761241CEFAC007DF938 /* ChartVisibilityItem.swift in Sources */,
@@ -420,8 +422,8 @@
 				D0A9B746241CEFAC007DF938 /* DailyBarsChartController.swift in Sources */,
 				D0A9B747241CEFAC007DF938 /* StepBarsChartController.swift in Sources */,
 				D0A9B743241CEFAC007DF938 /* BarsComponentController.swift in Sources */,
-				D0DEF73B242A405000A34A30 /* TwoAxisStepBarsChartController.swift in Sources */,
 				D0A9B74C241CEFAC007DF938 /* BaseLinesChartController.swift in Sources */,
+				D0DEF74C242BBDBE00A34A30 /* TwoAxisStepBarsChartController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

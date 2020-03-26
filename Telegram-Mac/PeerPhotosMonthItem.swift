@@ -40,8 +40,6 @@ class PeerPhotosMonthItem: GeneralRowItem {
         self.gallerySupplyment = gallerySupplyment
         self.chatInteraction = chatInteraction
         
-       
-        
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
