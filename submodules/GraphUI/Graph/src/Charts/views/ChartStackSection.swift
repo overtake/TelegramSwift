@@ -166,7 +166,7 @@ public class ChartStackSection: View, ChartThemeContainer {
             self.controller.chartInteractionDidBegin(point: point)
         }
         chartView.userDidDeselectCoordinateClosure = { [unowned self] in
-            self.controller.chartInteractionDidEnd()
+            self.controller.cancelChartInteraction()
         }
         controller.cartViewBounds = { [unowned self] in
             return self.chartView.bounds
@@ -216,5 +216,9 @@ public class ChartStackSection: View, ChartThemeContainer {
         controller.initializeChart()
         updateToolViews(animated: false)
         
+    }
+    
+    public func updateMouse() {
+        self.chartView.updateMouse()
     }
 }

@@ -102,6 +102,11 @@ class StatisticRowView: TableRowView {
         
     }
     
+    override func updateMouse() {
+        super.updateMouse()
+        chartView.updateMouse()
+    }
+    
     override var backdorColor: NSColor {
         return (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
     }
