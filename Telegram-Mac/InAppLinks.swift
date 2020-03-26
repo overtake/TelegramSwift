@@ -929,7 +929,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
                         if name.hasPrefix("iv?") {
                             return .external(link: url as String, false)
-                        } else if name.hasPrefix("share?") {
+                        } else if name.hasPrefix("share?") || name == "share" {
                             let params = urlVars(with: url as String)
                             if let url = params["url"], let context = context {
                                 return .shareUrl(link: urlString, context, url)

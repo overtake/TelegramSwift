@@ -455,7 +455,7 @@ class PeerMediaListController: TableViewController {
             let state = MediaSearchState(state: values.currentUpdate.searchState, animated: values.currentUpdate.searchState != values.previousUpdate?.searchState, isLoading: values.currentUpdate.updateType == .loading)
             self.genericView.merge(with: values.transition)
             self.mediaSearchState.set(state)
-            
+            self.readyOnce()
             if let controller = globalAudio {
                 (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
             }

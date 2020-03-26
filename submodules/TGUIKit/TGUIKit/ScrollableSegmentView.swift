@@ -479,7 +479,7 @@ public class ScrollableSegmentView: View {
         let selectedItem = self.items.first(where: { $0.selected })
         
         var x: CGFloat = 0
-        var width: CGFloat = 20
+        var width: CGFloat = frame.width
         if let selectedItem = selectedItem, let view = selectedItem.view {
             let point: NSPoint
             if scrollView.clipView.isAnimateScrolling {

@@ -173,7 +173,7 @@ class Sender: NSObject {
         
         
         var mediaReference: AnyMediaReference? = nil
-        if input.inputText == diceSymbol {
+        if input.inputText == diceSymbol, peerId.namespace != Namespaces.Peer.SecretChat {
             mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(value: nil))
             input = ChatTextInputState(inputText: "")
         }

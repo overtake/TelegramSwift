@@ -38,7 +38,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     private let chatInteraction: ChatInteraction
     private let toggleMode: (PeerMediaCollectionMode) -> Void
     private var currentMode: PeerMediaCollectionMode = .photoOrVideo
-    init(chatInteraction: ChatInteraction, currentMode: Signal<PeerMediaCollectionMode, NoError>, toggleMode: @escaping(PeerMediaCollectionMode) -> Void) {
+    init(chatInteraction: ChatInteraction, currentMode: Signal<PeerMediaCollectionMode?, NoError>, toggleMode: @escaping(PeerMediaCollectionMode) -> Void) {
         self.chatInteraction = chatInteraction
         self.toggleMode = toggleMode
         super.init()
@@ -46,9 +46,11 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         chatInteraction.add(observer: self)
         self.defaultItemIdentifiers = peerMediaTouchBarItems(presentation: chatInteraction.presentation)
         modeDisposable.set(currentMode.start(next: { [weak self] mode in
-            let view = ((self?.item(forIdentifier: .segmentMedias) as? NSCustomTouchBarItem)?.view as? NSSegmentedControl)
-            view?.setSelected(true, forSegment: Int(mode.rawValue))
-            self?.currentMode = mode
+            if let mode = mode {
+                let view = ((self?.item(forIdentifier: .segmentMedias) as? NSCustomTouchBarItem)?.view as? NSSegmentedControl)
+                view?.setSelected(true, forSegment: Int(mode.rawValue))
+                self?.currentMode = mode
+            }
         }))
     }
     

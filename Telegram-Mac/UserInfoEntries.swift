@@ -377,6 +377,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case deleteChat(sectionId: Int, viewType: GeneralViewType)
     case deleteContact(sectionId: Int, viewType: GeneralViewType)
     case encryptionKey(sectionId: Int, viewType: GeneralViewType)
+    case media(sectionId: Int, controller: PeerMediaController, viewType: GeneralViewType)
     case section(sectionId:Int)
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> UserInfoEntry {
@@ -404,6 +405,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .deleteChat(sectionId, _): return .deleteChat(sectionId: sectionId, viewType: viewType)
         case let .deleteContact(sectionId, _): return .deleteContact(sectionId: sectionId, viewType: viewType)
         case let .encryptionKey(sectionId, _): return .encryptionKey(sectionId: sectionId, viewType: viewType)
+        case let .media(sectionId, controller, _): return .media(sectionId: sectionId, controller: controller, viewType: viewType)
         case .section: return self
         }
     }
@@ -619,6 +621,13 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
+        case let .media(sectionId, controller, viewType):
+            switch entry {
+            case .media(sectionId, _, viewType):
+                return true
+            default:
+                return false
+            }
         case let .section(lhsId):
             switch entry {
             case let .section(rhsId):
@@ -677,6 +686,8 @@ enum UserInfoEntry: PeerInfoEntry {
             return 21
         case .deleteContact:
             return 22
+        case .media:
+            return 23
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -729,6 +740,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .deleteChat(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .deleteContact(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .media(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .section(id):
             return (id + 1) * 1000 - id
@@ -844,6 +857,8 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteContact, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.deleteContact()
             })
+        case let .media(_, controller, viewType):
+            return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, viewType: viewType)
         case .section(_):
             return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
         }
@@ -992,8 +1007,16 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             }
             applyBlock(additionBlock)
             
-            entries.append(UserInfoEntry.section(sectionId: sectionId))
-            sectionId += 1
+           
+            if state.editingState == nil, mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
+                entries.append(UserInfoEntry.media(sectionId: sectionId, controller: controller, viewType: .singleItem))
+                
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
+            } else {
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
+            }
             
             if let cachedData = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
                 if state.editingState == nil {
@@ -1015,6 +1038,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             }
         }
     }
+    
     
     return entries.sorted(by: { (p1, p2) -> Bool in
         return p1.isOrderedBefore(p2)

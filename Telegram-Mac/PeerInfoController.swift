@@ -77,7 +77,9 @@ class PeerInfoArguments {
     }
     
     func sharedMedia() {
-        pushViewController(PeerMediaController(context: context, peerId: peerId))
+        if let controller = self.mediaController() {
+            pushViewController(controller)
+        }
     }
     
     init(context: AccountContext, peerId:PeerId, state:PeerInfoState, isAd: Bool, pushViewController:@escaping(ViewController)->Void, pullNavigation:@escaping()->NavigationViewController?, mediaController: @escaping()->PeerMediaController?) {
@@ -349,6 +351,8 @@ class PeerInfoController: EditableViewController<TableView> {
         let initialSize = atomicSize
         let onMainQueue: Atomic<Bool> = Atomic(value: true)
         
+        
+        mediaController.navigationController = self.navigationController
         mediaController._frameRect = bounds
         mediaController.bar = .init(height: 0)
         
