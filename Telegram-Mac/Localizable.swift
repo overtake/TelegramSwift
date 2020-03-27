@@ -2039,14 +2039,16 @@ internal final class L10n {
   internal static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
   /// Sorry, you can pin no more than 5 chats to the top.
   internal static var chatListContextPinError: String  { return L10n.tr("Localizable", "ChatList.Context.PinError") }
-  /// Sorry, you can only pin 5 chats to the top.
-  internal static var chatListContextPinErrorNew: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew") }
+  /// Sorry, you can only pin 5 chats to the top in the main list. More chats can be pinned in Chat Folders and your Archive.
+  internal static var chatListContextPinErrorNew2: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew2") }
   /// Return to Group
   internal static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
   /// Unmute
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   internal static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
+  /// Set Up Folders
+  internal static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
   /// Add Chats
   internal static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }
   /// All
