@@ -386,7 +386,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
     }
     
     controller.getBackgroundColor = {
-        theme.colors.background
+        theme.colors.listBackground
     }
     
     controller.didLoaded = { controller, _ in
