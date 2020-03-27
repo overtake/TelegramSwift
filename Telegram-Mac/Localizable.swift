@@ -4559,6 +4559,8 @@ internal final class L10n {
   internal static var peerMediaLinks: String  { return L10n.tr("Localizable", "PeerMedia.Links") }
   /// Media
   internal static var peerMediaMedia: String  { return L10n.tr("Localizable", "PeerMedia.Media") }
+  /// Members
+  internal static var peerMediaMembers: String  { return L10n.tr("Localizable", "PeerMedia.Members") }
   /// Shared Media
   internal static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
   /// Voice

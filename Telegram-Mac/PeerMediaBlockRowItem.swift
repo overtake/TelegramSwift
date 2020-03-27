@@ -109,7 +109,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                 return
             }
             scrollInner = table.documentOffset.y >= self.frame.minY
-            let mediaTable = (item.controller.genericView.mainView as? TableView)
+            let mediaTable = item.controller.genericView.mainTable
             if let mediaTable = mediaTable {
                 
                 let offset = table.documentOffset.y - self.frame.minY
@@ -161,24 +161,24 @@ private final class PeerMediaBlockRowView : TableRowView {
         
         item.table?.addSubview(item.controller.view)
         
-        item.controller.currentMainView = { [weak item, weak self] mainView, animated, updated in
+        item.controller.currentMainTableView = { [weak item, weak self] mainTable, animated, updated in
             if let item = item, animated {
                 if item.table?.documentOffset.y == self?.frame.minY {
                     if !updated {
-                        (mainView as? TableView)?.scroll(to: .up(true))
+                        mainTable?.scroll(to: .up(true))
                     }
                 } else {
                     item.table?.scroll(to: .top(id: item.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
                 }
             }
                         
-            (mainView as? TableView)?.applyExternalScroll = { [weak self, weak item] event in
+            mainTable?.applyExternalScroll = { [weak self, weak item] event in
                 guard let `self` = self, let item = item else {
                     return false
                 }
                 if scrollInner {
                     if event.scrollingDeltaY > 0 {
-                        if let tableView = item.controller.genericView.mainView as? TableView, tableView.documentOffset.y <= 0 {
+                        if let tableView = item.controller.genericView.mainTable, tableView.documentOffset.y <= 0 {
                             if !item.controller.isInSearch {
                                 scrollInner = false
                                 item.table?.clipView.scroll(to: NSMakePoint(0, self.frame.minY))
