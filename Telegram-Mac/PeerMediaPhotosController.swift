@@ -243,6 +243,11 @@ class PeerMediaPhotosController: TableViewController {
         let context = self.context
         let peerId = self.peerId
         let initialSize = self.atomicSize
+        
+        self.genericView.getBackgroundColor = {
+            theme.colors.background
+        }
+        
 
         self.genericView.set(stickClass: PeerMediaDateItem.self, handler: { item in
             
