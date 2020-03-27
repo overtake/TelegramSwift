@@ -2927,6 +2927,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     focus.action?(view.interactableView)
                 }
             }
+            completion(true)
         }
 
     }

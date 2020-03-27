@@ -450,7 +450,11 @@
     private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     override var state:ViewControllerState {
         didSet {
-            self.editing.set(state == .Edit)
+            let newValue = state
+            
+            genericView.mainTable?.scroll(to: .up(true), completion: { [weak self] _ in
+                self?.editing.set(newValue == .Edit)
+            })
         }
     }
     
@@ -605,7 +609,6 @@
                 self.state = value.state == .selecting ? .Edit : .Normal
                 
                 genericView.changeState(selectState: value.state == .selecting && self.mode != .members, animated: animated)
-                genericView.mainTable?.scroll(to: .up(animated))
             }
             
         }
