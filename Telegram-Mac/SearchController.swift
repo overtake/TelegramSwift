@@ -232,7 +232,15 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
         _ = updatePeer.start(next: { result in
             switch result {
             case .limitExceeded:
-                alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
+                confirm(for: arguments.context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        arguments.context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
+                    default:
+                        break
+                    }
+                })
+            //alert(for: mainWindow, info: L10n.chatListContextPinErrorNew2)
             default:
                 break
             }

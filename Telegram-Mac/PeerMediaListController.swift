@@ -342,7 +342,7 @@ class PeerMediaListController: TableViewController {
         super.viewDidLoad()
         
         genericView.getBackgroundColor = {
-            theme.colors.background
+            theme.colors.listBackground
         }
     }
     
