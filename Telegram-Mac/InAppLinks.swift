@@ -63,6 +63,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
 enum InAppSettingsSection : String {
     case themes
     case devices
+    case folders
 }
 
 enum ChatInitialActionBehavior : Equatable {
@@ -564,6 +565,8 @@ func execute(inapp:inAppLink) {
             controller = AppAppearanceViewController(context: context)
         case .devices:
             controller = RecentSessionsController(context)
+        case .folders:
+            controller = ChatListFiltersListController(context: context)
         }
         context.sharedContext.bindings.rootNavigation().push(controller)
     }

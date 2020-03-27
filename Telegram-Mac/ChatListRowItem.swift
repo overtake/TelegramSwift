@@ -629,6 +629,10 @@ class ChatListRowItem: TableRowItem {
     }
     
     func togglePinned() {
+        
+        
+
+        
         if let chatLocation = chatLocation {
             let location: TogglePeerChatPinnedLocation
             
@@ -637,10 +641,22 @@ class ChatListRowItem: TableRowItem {
             } else {
                 location = .group(self.associatedGroupId)
             }
+            
+            let context = self.context
+            
             _ = (toggleItemPinned(postbox: context.account.postbox, location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    alert(for: mainWindow, info: L10n.chatListContextPinErrorNew)
+                    confirm(for: context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                        
+                        switch result {
+                        case .thrid:
+                            context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                        default:
+                            break
+                        }
+                        
+                    })
                 default:
                     break
                 }
