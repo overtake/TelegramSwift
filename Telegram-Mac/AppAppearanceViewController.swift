@@ -458,9 +458,16 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                 if theme.cloudTheme != nil || theme.colors.accent != theme.colors.basicAccent {
                     items.append(SPopoverItem(L10n.appearanceReset, {
                          _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                            return settings.withUpdatedToDefault(dark: settings.defaultIsDark, onlyLocal: true).updateWallpaper({ _ -> ThemeWallpaper in
+                            var settings = settings
+                            if settings.defaultIsDark {
+                                settings = settings.withUpdatedDefaultDark(DefaultTheme(local: TelegramBuiltinTheme.nightAccent, cloud: nil)).saveDefaultAccent(color: PaletteAccentColor(nightAccentPalette.accent))
+                            } else {
+                                settings = settings.withUpdatedDefaultDay(DefaultTheme(local: TelegramBuiltinTheme.dayClassic, cloud: nil)).saveDefaultAccent(color: PaletteAccentColor(dayClassicPalette.accent))
+                            }
+                            
+                            return settings.installDefaultAccent().withUpdatedCloudTheme(nil).updateWallpaper({ _ -> ThemeWallpaper in
                                 return ThemeWallpaper(wallpaper: settings.palette.wallpaper.wallpaper, associated: nil)
-                            })
+                            }).installDefaultWallpaper()
                          }).start()
                     }))
                 }
