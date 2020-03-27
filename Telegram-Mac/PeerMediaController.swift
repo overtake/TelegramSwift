@@ -487,8 +487,8 @@
         return temporaryTouchBar as? NSTouchBar
     }
     
-    var isInSearch: Bool {
-        return self.genericView.activePanel is SearchContainerView
+    var unableToHide: Bool {
+        return self.genericView.activePanel is SearchContainerView || self.state != .Normal
     }
     
     private var navigationBarView: NavigationBarView?
@@ -740,7 +740,12 @@
         let ready = data |> map { _ in return true }
         
         genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
-            self?.modeValue.set(PeerMediaCollectionMode(rawValue: item.uniqueId)!)
+            let newMode = PeerMediaCollectionMode(rawValue: item.uniqueId)!
+            
+            if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
+                self?.currentMainTableView?(mainTable, true, false)
+            }
+            self?.modeValue.set(newMode)
         }
         
         

@@ -179,7 +179,7 @@ private final class PeerMediaBlockRowView : TableRowView {
                 if scrollInner {
                     if event.scrollingDeltaY > 0 {
                         if let tableView = item.controller.genericView.mainTable, tableView.documentOffset.y <= 0 {
-                            if !item.controller.isInSearch {
+                            if !item.controller.unableToHide {
                                 scrollInner = false
                                 item.table?.clipView.scroll(to: NSMakePoint(0, self.frame.minY))
                                 item.table?.scrollWheel(with: event)

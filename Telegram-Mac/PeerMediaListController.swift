@@ -328,9 +328,7 @@ class PeerMediaListController: TableViewController {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        genericView.getBackgroundColor = {
-            theme.colors.listBackground
-        }
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -340,11 +338,17 @@ class PeerMediaListController: TableViewController {
     
     private var isFirst: Bool = true
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        genericView.getBackgroundColor = {
+            theme.colors.background
+        }
+    }
+    
     public func load(with tagMask:MessageTags) -> Void {
      
-        genericView.getBackgroundColor = {
-            theme.colors.listBackground
-        }
+        
         
         genericView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
 

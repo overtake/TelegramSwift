@@ -385,6 +385,10 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         actionsDisposable.dispose()
     }
     
+    controller.getBackgroundColor = {
+        theme.colors.background
+    }
+    
     controller.didLoaded = { controller, _ in
         controller.tableView.setScrollHandler { position in
             if let loadMoreControl = loadMoreControl {
