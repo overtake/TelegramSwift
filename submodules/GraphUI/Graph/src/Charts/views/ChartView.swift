@@ -62,34 +62,45 @@ class ChartView: Control {
     
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
-        
-        let point = convert(event.locationInWindow, from: nil)
-        
-        let fractionPoint = CGPoint(x: (point.x - chartFrame.origin.x) / chartFrame.width,
-                                    y: (point.y - chartFrame.origin.y) / chartFrame.height)
-        
-        if NSPointInRect(point, frame) {
-            userDidSelectCoordinateClosure?(fractionPoint)
+        updateMouse()
+    }
+    
+    func updateMouse() {
+        if let event = window?.currentEvent {
+            let point = convert(event.locationInWindow, from: nil)
+            
+            let fractionPoint = CGPoint(x: (point.x - chartFrame.origin.x) / chartFrame.width,
+                                        y: (point.y - chartFrame.origin.y) / chartFrame.height)
+            
+            if NSPointInRect(point, frame) {
+                userDidSelectCoordinateClosure?(fractionPoint)
+            } else {
+                userDidDeselectCoordinateClosure?()
+            }
         }
-        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        updateMouse()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        updateMouse()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        updateMouse()
     }
     
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
-        let point = convert(event.locationInWindow, from: nil)
-        
-        let fractionPoint = CGPoint(x: (point.x - chartFrame.origin.x) / chartFrame.width,
-                                    y: (point.y - chartFrame.origin.y) / chartFrame.height)
-                
-        if NSPointInRect(point, frame) {
-            userDidSelectCoordinateClosure?(fractionPoint)
-        }
-    
+        updateMouse()
     }
     
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
-        userDidDeselectCoordinateClosure?()
+        updateMouse()
     }
     
     // MARK: Details View
