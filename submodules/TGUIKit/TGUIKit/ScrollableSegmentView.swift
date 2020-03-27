@@ -341,17 +341,19 @@ private final class SelectorView : View {
 }
 
 public struct ScrollableSegmentTheme : Equatable {
+    let background: NSColor
     let border: NSColor
     let selector: NSColor
     let inactiveText: NSColor
     let activeText: NSColor
     let textFont: NSFont
-    public init(border: NSColor, selector: NSColor, inactiveText: NSColor, activeText: NSColor, textFont: NSFont) {
+    public init(background: NSColor, border: NSColor, selector: NSColor, inactiveText: NSColor, activeText: NSColor, textFont: NSFont) {
         self.border = border
         self.selector = selector
         self.inactiveText = inactiveText
         self.activeText = activeText
         self.textFont = textFont
+        self.background = background
     }
 }
 
@@ -410,7 +412,7 @@ public class ScrollableSegmentView: View {
     
     public var didChangeSelectedItem:((ScrollableSegmentItem)->Void)?
     
-    public var theme: ScrollableSegmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .medium(.title))
+    public var theme: ScrollableSegmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .medium(.title))
     {
         didSet {
             if theme != oldValue {
@@ -471,7 +473,7 @@ public class ScrollableSegmentView: View {
     }
     
     public override func updateLocalizationAndTheme(theme presentation: PresentationTheme) {
-        self.theme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        self.theme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
     }
     
     private var selectorFrame: CGRect {
@@ -731,8 +733,8 @@ public class ScrollableSegmentView: View {
     private func redraw() {
         selectorView.theme = self.theme
         borderView.backgroundColor = self.theme.border
-        backgroundColor = presentation.colors.background
-        scrollView.background = presentation.colors.background
+        backgroundColor = self.theme.background
+        scrollView.background = self.theme.background
         for item in self.items {
             item.view?.updateItem(item, theme: self.theme, animated: false)
         }

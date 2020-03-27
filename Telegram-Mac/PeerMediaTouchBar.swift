@@ -48,7 +48,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         modeDisposable.set(currentMode.start(next: { [weak self] mode in
             if let mode = mode {
                 let view = ((self?.item(forIdentifier: .segmentMedias) as? NSCustomTouchBarItem)?.view as? NSSegmentedControl)
-                view?.setSelected(true, forSegment: Int(mode.rawValue))
+                view?.setSelected(true, forSegment: Int(mode.rawValue + 1))
                 self?.currentMode = mode
             }
         }))
