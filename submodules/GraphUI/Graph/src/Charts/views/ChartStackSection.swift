@@ -168,6 +168,7 @@ public class ChartStackSection: View, ChartThemeContainer {
         chartView.userDidDeselectCoordinateClosure = { [unowned self] in
             self.controller.cancelChartInteraction()
         }
+        
         controller.cartViewBounds = { [unowned self] in
             return self.chartView.bounds
         }
@@ -176,6 +177,10 @@ public class ChartStackSection: View, ChartThemeContainer {
         }
         controller.setDetailsViewModel = { [unowned self] viewModel, animated, _ in
             self.chartView.setDetailsViewModel(viewModel: viewModel, animated: animated)
+            
+            self.chartView.userWantZoomIfPossible = {
+                viewModel.tapAction?()
+            }
         }
         controller.setDetailsChartVisibleClosure = { [unowned self] visible, animated in
             self.chartView.setDetailsChartVisible(visible, animated: animated)

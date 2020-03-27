@@ -15,6 +15,10 @@ class ChartView: Control {
         super.init(frame: frame)
         
         setupView()
+        
+        set(handler: { [weak self] _ in
+            self?.userWantZoomIfPossible?()
+        }, for: .Click)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -60,6 +64,8 @@ class ChartView: Control {
     var userDidSelectCoordinateClosure: ((CGPoint) -> Void)?
     var userDidDeselectCoordinateClosure: (() -> Void)?
     
+    var userWantZoomIfPossible: (() -> Void)?
+    
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
         updateMouse()
@@ -100,7 +106,7 @@ class ChartView: Control {
     
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
-        updateMouse()
+        //updateMouse()
     }
     
     // MARK: Details View
