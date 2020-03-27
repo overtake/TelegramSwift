@@ -1616,7 +1616,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         applyBlock(destructBlock)
         
-        if let controller = arguments.mediaController() {
+        if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, state.editingState == nil, let controller = arguments.mediaController() {
             entries.append(.media(section: GroupInfoSection.media.rawValue, controller: controller, viewType: .singleItem))
         }
         

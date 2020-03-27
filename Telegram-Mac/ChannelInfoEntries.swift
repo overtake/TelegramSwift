@@ -985,7 +985,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
         }
     }
     
-    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
+    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, state.editingState == nil, let controller = arguments.mediaController() {
         entries.append(.media(sectionId: ChannelInfoSection.media, controller: controller, viewType: .singleItem))
     }
     

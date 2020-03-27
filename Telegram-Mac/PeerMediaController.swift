@@ -449,6 +449,12 @@
     private let mediaTabsData:PeerMediaTabsData?
     
     private let members: InputDataController
+    private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    override var state:ViewControllerState {
+        didSet {
+            self.editing.set(state == .Edit)
+        }
+    }
     
     init(context: AccountContext, peerId:PeerId, mediaTabsData:PeerMediaTabsData? = nil) {
         self.peerId = peerId
@@ -462,7 +468,7 @@
         }
         self.listControllers = listControllers
         
-        self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: .single(false))
+        self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         
         super.init(context)
     }
@@ -599,7 +605,9 @@
             
             if (value.state == .selecting) != (oldValue.state == .selecting) {
                 self.state = value.state == .selecting ? .Edit : .Normal
-                genericView.changeState(selectState: value.state == .selecting, animated: animated)
+                
+                genericView.changeState(selectState: value.state == .selecting && self.mode != .members, animated: animated)
+                genericView.mainTable?.scroll(to: .up(animated))
             }
             
         }
