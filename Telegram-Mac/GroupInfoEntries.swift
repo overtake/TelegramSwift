@@ -1244,6 +1244,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.delete()
             })
+        case let .media(_, controller, viewType):
+            return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, viewType: viewType)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
         default:
@@ -1262,6 +1264,7 @@ enum GroupInfoSection : Int {
     case admin = 7
     case members = 8
     case destruct = 9
+    case media = 10
 }
 
 
@@ -1590,10 +1593,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 usersBlock.append(GroupInfoEntry.member(section: GroupInfoSection.members.rawValue, index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
-            
-            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
-                usersBlock.append(.showMore(section: GroupInfoSection.members.rawValue, index: sortedParticipants.count + 1, viewType: .singleItem))
-            }
+
             applyBlock(usersBlock)
         }
         
@@ -1616,10 +1616,16 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         applyBlock(destructBlock)
         
+        if let controller = arguments.mediaController() {
+            entries.append(.media(section: GroupInfoSection.media.rawValue, controller: controller, viewType: .singleItem))
+        }
+        
         var items:[GroupInfoEntry] = []
         var sectionId:Int = 0
         for entry in entries {
-            if entry.sectionId != sectionId {
+            if entry.sectionId == GroupInfoSection.media.rawValue {
+                sectionId = entry.sectionId
+            } else if entry.sectionId != sectionId {
                 items.append(.section(sectionId))
                 sectionId = entry.sectionId
             }

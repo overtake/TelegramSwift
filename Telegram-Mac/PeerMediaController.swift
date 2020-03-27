@@ -167,6 +167,15 @@
         return self.view.mainView
     }
     
+    var mainTable: TableView? {
+        if let tableView = self.view.mainView as? TableView {
+            return tableView
+        } else if let view = self.view.mainView as? InputDataView {
+            return view.tableView
+        }
+        return nil
+    }
+    
     func updateInteraction(_ chatInteraction:ChatInteraction) {
         self.view.updateInteraction(chatInteraction)
         actionsPanelView.prepare(with: chatInteraction)
@@ -216,7 +225,16 @@
     private let topPanelSeparatorView = View()
     
     override func scrollWheel(with event: NSEvent) {
-        mainView?.scrollWheel(with: event)
+        mainTable?.scrollWheel(with: event)
+    }
+    
+    var mainTable: TableView? {
+        if let tableView = self.mainView as? TableView {
+            return tableView
+        } else if let view = self.mainView as? InputDataView {
+            return view.tableView
+        }
+        return nil
     }
     
     fileprivate var corners:GeneralViewItemCorners = [.topLeft, .topRight]
@@ -358,19 +376,22 @@
  
  private extension PeerMediaCollectionMode {
     var title: String {
-        if self.tagsValue == .photoOrVideo {
+        if self == .members {
+            return L10n.peerMediaMembers
+        }
+        if self == .photoOrVideo {
             return L10n.peerMediaMedia
         }
-        if self.tagsValue == .file {
+        if self == .file {
             return L10n.peerMediaFiles
         }
-        if self.tagsValue == .webPage {
+        if self == .webpage {
             return L10n.peerMediaLinks
         }
         if self.tagsValue == .music {
             return L10n.peerMediaAudio
         }
-        if self.tagsValue == .voiceOrInstantVideo {
+        if self == .voice {
             return L10n.peerMediaVoice
         }
         return ""
@@ -417,15 +438,17 @@
     
     private var currentController: ViewController?
     
-    var currentMainView:((NSView?, Bool, Bool)->Void)? = nil {
+    var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
             if isLoaded() {
-                currentMainView?(genericView.mainView, false, false)
+                currentMainTableView?(genericView.mainTable, false, false)
             }
         }
     }
     
     private let mediaTabsData:PeerMediaTabsData?
+    
+    private let members: InputDataController
     
     init(context: AccountContext, peerId:PeerId, mediaTabsData:PeerMediaTabsData? = nil) {
         self.peerId = peerId
@@ -439,6 +462,7 @@
         }
         self.listControllers = listControllers
         
+        self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: .single(false))
         
         super.init(context)
     }
@@ -465,14 +489,14 @@
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         interactions.add(observer: self)
-        if self.mode == .photoOrVideo {
-            self.mediaGrid.viewDidAppear(animated)
-        } else {
-            self.listControllers[currentTagListIndex].viewDidAppear(animated)
+        
+        if let mode = self.mode {
+            self.controller(for: mode).viewDidAppear(animated)
         }
         
+        
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .photoOrVideo else {
+            guard let `self` = self, self.mode != .photoOrVideo, self.mode != .members else {
                 return .rejected
             }
             self.listControllers[self.currentTagListIndex].toggleSearch()
@@ -512,14 +536,13 @@
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         interactions.remove(observer: self)
-        if self.mode == .photoOrVideo {
-            self.mediaGrid.viewDidDisappear(animated)
-        } else {
-            self.listControllers[currentTagListIndex].viewDidDisappear(animated)
-            
-            let controller = self.listControllers[currentTagListIndex]
-            controller.searchState.set(.init(state: .None, request: nil))
-            
+        
+        if let mode = mode {
+            let controller = self.controller(for: mode)
+            controller.viewDidDisappear(animated)
+            if let controller = controller as? PeerMediaListController {
+                controller.searchState.set(.init(state: .None, request: nil))
+            }
         }
         
         guard let navigationBarView = self.navigationBarView else {
@@ -532,20 +555,20 @@
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if self.mode == .photoOrVideo {
-            self.mediaGrid.viewWillAppear(animated)
-        } else {
-            self.listControllers[currentTagListIndex].viewWillAppear(animated)
+        
+        if let mode = mode {
+            let controller = self.controller(for: mode)
+            controller.viewWillAppear(animated)
         }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
-        if self.mode == .photoOrVideo {
-            self.mediaGrid.viewWillDisappear(animated)
-        } else {
-            self.listControllers[currentTagListIndex].viewWillDisappear(animated)
+        
+        if let mode = mode {
+            let controller = self.controller(for: mode)
+            controller.viewWillDisappear(animated)
         }
     }
     
@@ -601,17 +624,41 @@
         
         
         
-        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
-                |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-                    let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
-                    return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
+        
+        let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+            if let cachedData = view.cachedData as? CachedGroupData {
+                return (exist: Int(cachedData.participants?.participants.count ?? 0 ) > 3, loaded: true)
+            } else if let cachedData = view.cachedData as? CachedChannelData {
+                if let peer = peerViewMainPeer(view), peer.isSupergroup {
+                    return (exist: Int32(cachedData.participantsSummary.memberCount ?? 0) > 3, loaded: true)
+                } else {
+                    return (exist: false, loaded: true)
+                }
+            } else {
+                return (exist: false, loaded: true)
             }
+        } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+            return (tag: .members, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        let tabSignal = combineLatest(queue: .mainQueue(), combineLatest(tabItems) |> map {
-            return $0
-        }, modeValue.get())
+        
+        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
+            
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
+            |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
+                return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
+            }
+            
+        }
+        
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems)) |> map { members, general -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+            var general = general
+            general.insert(members, at: 0)
+            return general
+        }
+        
+        let tabSignal = combineLatest(queue: .mainQueue(), mergedTabs, modeValue.get())
         |> map { tabs, selected -> (tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode?, hasLoaded: Bool) in
             var selectedValue = selected
             if selected == nil || !tabs.contains(where: { $0.exists && $0.tag == selected }) {
@@ -641,6 +688,13 @@
             }
             if let selected = data.selected {
                 switch selected {
+                case .members:
+                    if !self.members.isLoaded() {
+                        self.members.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.members.ready.get() |> map { _ in
+                        return data
+                    }
                 case .photoOrVideo:
                     if !self.mediaGrid.isLoaded() {
                         self.mediaGrid.loadViewIfNeeded(self.genericView.view.bounds)
@@ -850,7 +904,7 @@
     
     
     private var currentTable: TableView? {
-        if self.mode == .photoOrVideo {
+        if self.mode == .photoOrVideo || self.mode == .members {
             return nil
         } else {
             return self.listControllers[currentTagListIndex].genericView
@@ -858,95 +912,78 @@
     }
     
     private func applyReadyController(mode:PeerMediaCollectionMode, animated:Bool) {
-        (genericView.mainView as? TableView)?.updatedItems = nil
+        genericView.mainTable?.updatedItems = nil
         let oldMode = self.mode
         self.mode = mode
         let previous = self.currentController
-        if mode == .photoOrVideo {
-            self.currentController = mediaGrid
-            mediaGrid.viewWillAppear(animated)
-            previous?.viewWillDisappear(animated)
-            mediaGrid.view.frame = self.genericView.view.bounds
-            let animation: PeerMediaAnimationDirection?
-            if animated, let oldMode = oldMode {
-                if tagsList.contains(oldMode) {
-                    animation = .rightToLeft
-                } else {
-                    animation = .leftToRight
-                }
+        
+        let controller = self.controller(for: mode)
+        
+        self.currentController = controller
+        controller.viewWillAppear(animated)
+        previous?.viewWillDisappear(animated)
+        controller.view.frame = self.genericView.view.bounds
+        let animation: PeerMediaAnimationDirection?
+        
+        if animated, let oldMode = oldMode {
+            if oldMode.rawValue > mode.rawValue {
+                animation = .rightToLeft
             } else {
-                animation = nil
+                animation = .leftToRight
             }
-            
-            genericView.updateMainView(with: mediaGrid.view, animated: animation)
-            mediaGrid.viewDidAppear(animated)
-            previous?.viewDidDisappear(animated)
-            searchValueDisposable.set(nil)
-            centerBar.updateSearchVisibility(false)
         } else {
-            self.currentController = self.listControllers[currentTagListIndex]
-            
-            self.listControllers[currentTagListIndex].viewWillAppear(animated)
-            previous?.viewWillDisappear(animated)
-            self.listControllers[currentTagListIndex].view.frame = self.genericView.view.bounds
-            
-            let animation: PeerMediaAnimationDirection?
-            if animated, let oldMode = oldMode {
-                if oldMode == .photoOrVideo {
-                    animation = .leftToRight
-                } else {
-                    let prevIndex = Int(oldMode.rawValue)
-                    if prevIndex < self.currentTagListIndex {
-                        animation = .leftToRight
-                    } else {
-                        animation = .rightToLeft
-                    }
-                }
-            } else {
-                animation = nil
-            }
-            
-            genericView.updateMainView(with: self.listControllers[currentTagListIndex].view, animated: animation)
-            self.listControllers[currentTagListIndex].viewDidAppear(animated)
-            previous?.viewDidDisappear(animated)
-            centerBar.updateSearchVisibility(true)
-            
-            let controller = self.listControllers[currentTagListIndex]
-            
+            animation = nil
+        }
+        
+        genericView.updateMainView(with: controller.view, animated: animation)
+        controller.viewDidAppear(animated)
+        previous?.viewDidDisappear(animated)
+        searchValueDisposable.set(nil)
+        centerBar.updateSearchVisibility(false)
+        
+        
+        if let controller = controller as? PeerMediaListController {
             searchValueDisposable.set(self.listControllers[currentTagListIndex].mediaSearchValue.start(next: { [weak self, weak controller] state in
                 self?.genericView.updateSearchState(state, updateSearchState: { searchState in
                     controller?.searchState.set(searchState)
                 })
             }))
         }
+        
         var firstUpdate: Bool = true
-        (genericView.mainView as? TableView)?.updatedItems = { [weak self] items in
+        genericView.mainTable?.updatedItems = { [weak self] items in
             let filter = items.filter {
                 !($0 is PeerMediaEmptyRowItem) && !($0.className != "Telegram.GeneralRowItem")
             }
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false
         }
-        self.currentMainView?(genericView.mainView, animated, true)
+        self.currentMainTableView?(genericView.mainTable, animated, true)
+    }
+    
+    func controller(for mode: PeerMediaCollectionMode) -> ViewController {
+        switch mode {
+        case .photoOrVideo:
+            return self.mediaGrid
+        case .members:
+            return self.members
+        default:
+            return self.listControllers[Int(mode.rawValue)]
+        }
     }
     
     private func toggle(with mode:PeerMediaCollectionMode, animated:Bool = false) {
         let isUpdated = self.mode != mode
         if isUpdated {
-            let controller: ViewController
-            switch mode {
-            case .photoOrVideo:
-                controller = self.mediaGrid
-            default:
-                controller = self.listControllers[Int(mode.rawValue)]
-            }
+            let controller: ViewController = self.controller(for: mode)
+
             let ready = controller.ready.get() |> take(1)
             
             toggleDisposable.set(ready.start(next: { [weak self] _ in
                 self?.applyReadyController(mode: mode, animated: animated)
             }))
         } else {
-            self.currentMainView?(genericView.mainView, animated, false)
+            self.currentMainTableView?(genericView.mainTable, animated, false)
         }
         self.modeValue.set(mode)
     }
