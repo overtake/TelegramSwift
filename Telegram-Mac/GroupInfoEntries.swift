@@ -1411,13 +1411,13 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
         
         if let cachedGroupData = view.cachedData as? CachedGroupData, let participants = cachedGroupData.participants {
             
-            entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: participants.participants.count, viewType: .textTopItem))
+           // entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: participants.participants.count, viewType: .textTopItem))
             
             var usersBlock:[GroupInfoEntry] = []
             
-            if access.canAddMembers {
-                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
-            }
+//            if access.canAddMembers {
+//                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
+//            }
             
             
             var updatedParticipants = participants.participants
@@ -1497,7 +1497,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
            
-            applyBlock(usersBlock)
+            //applyBlock(usersBlock)
         }
         
         if let cachedGroupData = view.cachedData as? CachedChannelData {
@@ -1529,17 +1529,17 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
             }
             
-            if let membersCount = cachedGroupData.participantsSummary.memberCount {
-                entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: Int(membersCount), viewType: .textTopItem))
-            }
-            
+//            if let membersCount = cachedGroupData.participantsSummary.memberCount {
+//                entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: Int(membersCount), viewType: .textTopItem))
+//            }
+//
             var usersBlock:[GroupInfoEntry] = []
             
-            if access.canAddMembers  {
-                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
-            }
-            
-            
+//            if access.canAddMembers  {
+//                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
+//            }
+//
+//
             
             var sortedParticipants = participants.filter({!$0.peer.rawDisplayTitle.isEmpty}).sorted(by: { lhs, rhs in
                 let lhsPresence = lhs.presences[lhs.peer.id] as? TelegramUserPresence
@@ -1564,10 +1564,6 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 return lhs < rhs
             })
-            
-            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
-                sortedParticipants = Array(sortedParticipants.prefix(min(50, sortedParticipants.count)))
-            }
             
             for i in 0 ..< sortedParticipants.count {
                 let memberStatus: GroupInfoMemberStatus
@@ -1594,7 +1590,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 usersBlock.append(GroupInfoEntry.member(section: GroupInfoSection.members.rawValue, index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
 
-            applyBlock(usersBlock)
+           //applyBlock(usersBlock)
         }
         
         

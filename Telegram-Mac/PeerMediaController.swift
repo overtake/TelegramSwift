@@ -103,9 +103,8 @@
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        segmentControl.theme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
-        borderColor = theme.colors.border
+      //  super.updateLocalizationAndTheme(theme: theme)
+        segmentControl.theme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.text, textFont: .normal(.text))
         backgroundColor = .clear
     }
     
@@ -244,16 +243,15 @@
     private var searchState: SearchState?
     required init(frame frameRect:NSRect) {
         super.init(frame: frameRect)
-        
         addSubview(topPanelView)
-        topPanelView.addSubview(segmentPanelView)
         topPanelView.addSubview(topPanelSeparatorView)
+        topPanelView.addSubview(segmentPanelView)
         updateLocalizationAndTheme(theme: theme)
         layout()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
+       // super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.listBackground
         topPanelView.backgroundColor = theme.colors.background
         topPanelSeparatorView.backgroundColor = theme.colors.border
@@ -304,7 +302,7 @@
                 guard let searchPanelView = self.searchPanelView else {
                     fatalError()
                 }
-                topPanelView.addSubview(searchPanelView, positioned: .below, relativeTo: topPanelSeparatorView)
+                topPanelView.addSubview(searchPanelView, positioned: .above, relativeTo: topPanelSeparatorView)
                 searchPanelView.searchView.change(state: .Focus, false)
                 searchPanelView.searchView.searchInteractions = SearchInteractions({ _, _ in
                     
@@ -325,7 +323,7 @@
         case .None:
             CATransaction.begin()
             segmentPanelView.removeFromSuperview()
-            topPanelView.addSubview(segmentPanelView, positioned: .below, relativeTo: topPanelSeparatorView)
+            topPanelView.addSubview(segmentPanelView, positioned: .above, relativeTo: topPanelSeparatorView)
             segmentPanelView._change(pos: NSZeroPoint, animated: state.animated)
             if let searchPanelView = self.searchPanelView {
                 self.searchPanelView = nil
@@ -894,7 +892,7 @@
             var items:[ScrollableSegmentItem] = []
             if hasLoaded {
                 let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
-                let segmentTheme = ScrollableSegmentTheme(border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
+                let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
                     items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
