@@ -257,6 +257,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     controller.contextOject = statsContext
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
+        controller.tableView.needUpdateVisibleAfterScroll = true
     }
     
     controller.onDeinit = {
