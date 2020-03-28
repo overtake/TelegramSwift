@@ -43,6 +43,9 @@ class ChatListRevealItem: TableStickItem {
         super.init(initialSize)
     }
 
+    override var singletonItem: Bool {
+        return true
+    }
     
     func menuItems(for item: ChatListFilter?) -> [ContextMenuItem] {
         return self._menuItems?(item) ?? []

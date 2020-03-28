@@ -72,6 +72,10 @@ open class ScrollView: NSScrollView{
         return NSMakePoint(NSMinX(self.contentView.bounds), NSMinY(self.contentView.bounds))
     }
     
+    open override func knowsPageRange(_ range: NSRangePointer) -> Bool {
+        return super.knowsPageRange(range)
+    }
+    
     public var documentSize:NSSize {
         return self.contentView.documentRect.size;
     }
