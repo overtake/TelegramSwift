@@ -1239,10 +1239,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickItem = currentStick ?? someItem
                     
                     if let stickView = stickView {
-                        if subviews.last != stickView {
-                            stickView.removeFromSuperview()
-                            let scroller = subviews.first(where: { $0 is NSScroller })
-                            addSubview(stickView, positioned: .below, relativeTo: scroller)
+                        let scrollerIndex = subviews.firstIndex(where: { $0 is NSScroller })
+                        let stickViewIndex = subviews.firstIndex(where: { $0 is TableStickView })
+                        if let scrollerIndex = scrollerIndex, stickViewIndex == nil || stickViewIndex! > scrollerIndex {
+                            addSubview(stickView, positioned: .below, relativeTo: subviews[scrollerIndex])
                         }
                     }
                     
