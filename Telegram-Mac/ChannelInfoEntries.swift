@@ -999,9 +999,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments) -> [PeerInf
         }
     }
     
-    #if DEBUG
-    entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
-    #endif
+//    #if DEBUG
+//    entries.append(.media(sectionId: ChannelInfoSection.media, controller: arguments.mediaController, viewType: .singleItem))
+//    #endif
     
     var items:[ChannelInfoEntry] = []
     var sectionId:Int = 0

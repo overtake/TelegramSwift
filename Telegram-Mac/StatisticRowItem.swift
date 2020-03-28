@@ -26,7 +26,7 @@ public enum ChartItemType {
 class StatisticRowItem: GeneralRowItem {
     let collection: ChartsCollection
     let controller: BaseChartController
-    init(_ initialSize: NSSize, stableId: AnyHashable, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType, getDetailsData: @escaping (Date, @escaping (String?) -> Void) -> Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, collection: ChartsCollection, viewType: GeneralViewType, type: ChartItemType, getDetailsData: @escaping (Date, @escaping (String?) -> Void) -> Void) {
         self.collection = collection
         
         let controller: BaseChartController
@@ -51,19 +51,40 @@ class StatisticRowItem: GeneralRowItem {
             controller.isZoomable = false
         }
         
+        
+        
         controller.getDetailsData = { date, completion in
-            getDetailsData(date, { detailsData in
-                if let detailsData = detailsData, let data = detailsData.data(using: .utf8) {
-                    ChartsDataManager.readChart(data: data, extraCopiesCount: 0, sync: true, success: { collection in
-                        Queue.mainQueue().async {
-                            completion(collection)
+            let signal:Signal<ChartsCollection?, NoError> = Signal { subscriber -> Disposable in
+                var cancelled: Bool = false
+                getDetailsData(date, { detailsData in
+                    if let detailsData = detailsData, let data = detailsData.data(using: .utf8), !cancelled {
+                        ChartsDataManager.readChart(data: data, extraCopiesCount: 0, sync: true, success: { collection in
+                            if !cancelled {
+                                subscriber.putNext(collection)
+                                subscriber.putCompletion()
+                            }
+                           
+                        }) { error in
+                            if !cancelled {
+                                subscriber.putNext(nil)
+                                subscriber.putCompletion()
+                            }
                         }
-                    }) { error in
-                        completion(nil)
+                    } else {
+                        if !cancelled {
+                            subscriber.putNext(nil)
+                            subscriber.putCompletion()
+                        }
                     }
-                } else {
-                    completion(nil)
+                })
+                
+                return ActionDisposable {
+                    cancelled = true
                 }
+            }
+            
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { collection in
+                completion(collection)
             })
         }
         self.controller = controller
