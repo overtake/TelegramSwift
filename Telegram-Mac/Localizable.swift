@@ -1125,6 +1125,8 @@ internal final class L10n {
   internal static var channelStatsGraphFollowers: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Followers") }
   /// GROWTH
   internal static var channelStatsGraphGrowth: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Growth") }
+  /// INSTANT VIEW
+  internal static var channelStatsGraphInstantView: String  { return L10n.tr("Localizable", "ChannelStats.Graph.InstantView") }
   /// INTERACTIONS
   internal static var channelStatsGraphInteractions: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Interactions") }
   /// LANGUAGE
@@ -1133,7 +1135,7 @@ internal final class L10n {
   internal static var channelStatsGraphNewFollowersBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.NewFollowersBySource") }
   /// NOTIFICATIONS
   internal static var channelStatsGraphNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Notifications") }
-  /// VIEWS BY HOURS
+  /// VIEWS BY HOURS (UTC)
   internal static var channelStatsGraphViewsByHours: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsByHours") }
   /// VIEWS BY SOURCE
   internal static var channelStatsGraphViewsBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsBySource") }
