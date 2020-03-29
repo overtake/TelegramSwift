@@ -1284,7 +1284,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     private func invoke() -> KeyHandlerResult {
         if !genericView.tokenizedView.query.isEmpty {
-            if genericView.tableView.count == 1, let item = genericView.tableView.item(at: 0) as? ShortPeerRowItem {
+            if !genericView.tableView.isEmpty, let item = genericView.tableView.item(at: 0) as? ShortPeerRowItem {
                 selectInteractions.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
             }
             return .invoked
