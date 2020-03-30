@@ -14,45 +14,49 @@
  import Postbox
  
  
- 
- private class PeerMediaTitleBarView : TitledBarView {
-    private var search:ImageButton = ImageButton()
-    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
-        super.init(controller: controller, title)
-        search.set(handler: { _ in
-            handler()
-        }, for: .Click)
-        addSubview(search)
-        updateLocalizationAndTheme(theme: theme)
-    }
-    
-    func updateSearchVisibility(_ visible: Bool) {
-        search.isHidden = !visible
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
-        search.set(image: theme.icons.chatSearch, for: .Normal)
-        _ = search.sizeToFit()
-        backgroundColor = theme.colors.background
-        needsLayout = true
-    }
-    
-    override func layout() {
-        super.layout()
-        search.centerY(x: frame.width - search.frame.width)
-    }
-    
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
- }
+//
+// private class PeerMediaTitleBarView : TitledBarView {
+//    private var search:ImageButton = ImageButton()
+//    fileprivate let context: AccountContext
+//    fileprivate let peerId: PeerId
+//    init(controller: ViewController, context: AccountContext, peerId: PeerId, title:NSAttributedString, handler:@escaping() ->Void) {
+//        super.init(controller: controller, title)
+//        search.set(handler: { _ in
+//            handler()
+//        }, for: .Click)
+//        addSubview(search)
+//        self.context = context
+//        self.peerId = peerId
+//        updateLocalizationAndTheme(theme: theme)
+//    }
+//
+//    func updateSearchVisibility(_ visible: Bool) {
+//        search.isHidden = !visible
+//    }
+//
+//    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+//        super.updateLocalizationAndTheme(theme: theme)
+//        let theme = (theme as! TelegramPresentationTheme)
+//        search.set(image: theme.icons.chatSearch, for: .Normal)
+//        _ = search.sizeToFit()
+//        backgroundColor = theme.colors.background
+//        needsLayout = true
+//    }
+//
+//    override func layout() {
+//        super.layout()
+//        search.centerY(x: frame.width - search.frame.width)
+//    }
+//
+//
+//    required init(frame frameRect: NSRect) {
+//        fatalError("init(frame:) has not been implemented")
+//    }
+//
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+// }
  
  private final class SearchContainerView : View {
     fileprivate let searchView: SearchView = SearchView(frame: NSMakeRect(0, 0, 200, 30))
@@ -400,6 +404,35 @@
     
     private let peerId:PeerId
     private var peer:Peer?
+    private var peerView: PeerView? {
+        didSet {
+            if isLoaded(), let peerView = peerView {
+                let context = self.context
+                
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    let onlineMemberCount:Signal<Int32?, NoError>
+                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    } else {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    }
+                    
+                    self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
+                        guard let `self` = self else {
+                            return
+                        }
+                        let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: count)
+                        self.centerBar.status = result.status
+                        self.centerBar.text = result.title
+                    }))
+                } else {
+                    let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: 0)
+                    self.centerBar.status = result.status
+                    self.centerBar.text = result.title
+                }
+            }
+        }
+    }
     
     private let modeValue: ValuePromise<PeerMediaCollectionMode?> = ValuePromise(nil, ignoreRepeated: true)
     private let tabsSignal:Promise<(tabs: [PeerMediaCollectionMode], selected: PeerMediaCollectionMode?, hasLoaded: Bool)> = Promise()
@@ -430,11 +463,14 @@
     private let loadFwdMessagesDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable = MetaDisposable()
     private let searchValueDisposable = MetaDisposable()
+    private let onlineMemberCountDisposable = MetaDisposable()
     private var searchController: PeerMediaListController?
     
     private let toggleDisposable = MetaDisposable()
     
     private var currentController: ViewController?
+    
+    
     
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
@@ -491,9 +527,6 @@
         return self.genericView.activePanel is SearchContainerView || self.state != .Normal
     }
     
-    private var navigationBarView: NavigationBarView?
-    private var controllerBarView: NavigationBarView?
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         interactions.add(observer: self)
@@ -526,19 +559,9 @@
             return
         }
         
-        if controllerBarView == nil {
-            let barView = NavigationBarView(frame: .zero)
-            barView.frame = navigationController.navigationBar.frame
-            barView.switchViews(left: self.leftBarView, center: self.centerBar, right: self.rightBarView, controller: self, style: .none, animationStyle: .init(duration: 0.2, function: .spring), liveSwiping: false)
-            controllerBarView = barView
-            navigationBarView = navigationController.navigationBar
-        }
-        
-        guard let controllerBarView = self.controllerBarView else {
-            return
-        }
-        navigationController.swapNavigationBar(controllerBarView, animation: .none)
-        
+        navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
+        navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -553,11 +576,9 @@
             }
         }
         
-        guard let navigationBarView = self.navigationBarView else {
-            return
-        }
         if let navigationController = navigationController {
-            navigationController.swapNavigationBar(navigationBarView, animation: .none)
+            navigationController.swapNavigationBar(leftView: nil, centerView: navigationController.controller.centerBarView, rightView: nil, animation: .crossfade)
+            navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: navigationController.controller.rightBarView, animation: .none)
         }
     }
     
@@ -701,7 +722,7 @@
                     if !self.members.isLoaded() {
                         self.members.loadViewIfNeeded(self.genericView.view.bounds)
                     }
-                    return self.members.ready.get() |> map { _ in
+                    return self.members.ready.get() |> map { ready in
                         return data
                     }
                 case .photoOrVideo:
@@ -883,6 +904,7 @@
         
         let peerSignal = context.account.viewTracker.peerView(peerId) |> deliverOnMainQueue |> beforeNext({ [weak self] peerView in
             self?.peer = peerView.peers[peerView.peerId]
+            self?.peerView = peerView
         }) |> map { view -> Bool in
             return true
         }
@@ -911,9 +933,7 @@
                 
                 firstTabAppear = false
             }
-            
         }))
-        
     }
     
     
@@ -953,7 +973,9 @@
         controller.viewDidAppear(animated)
         previous?.viewDidDisappear(animated)
         searchValueDisposable.set(nil)
-        centerBar.updateSearchVisibility(false)
+        
+        
+        centerBar.updateSearchVisibility(mode != .photoOrVideo)
         
         
         if let controller = controller as? PeerMediaListController {
@@ -1008,6 +1030,7 @@
         loadSelectionMessagesDisposable.dispose()
         tabsDisposable.dispose()
         toggleDisposable.dispose()
+        onlineMemberCountDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1038,19 +1061,56 @@
         }
     }
     
-    private var centerBar: PeerMediaTitleBarView {
-        return centerBarView as! PeerMediaTitleBarView
+    private var centerBar: SearchTitleBarView {
+        return centerBarView as! SearchTitleBarView
     }
     
-    override func getCenterBarViewOnce() -> TitledBarView {
-        return PeerMediaTitleBarView(controller: self, title: .initialize(string: self.defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
-            guard let `self` = self else {
-                return
+    private func searchGroupUsers() {
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+            if let peerId = peerId, let context = self?.context {
+                context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }
-            self.listControllers[self.currentTagListIndex].toggleSearch()
         })
     }
     
+    override func getCenterBarViewOnce() -> TitledBarView {
+        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            if let mode = self.mode {
+                switch mode {
+                case .members:
+                    self.searchGroupUsers()
+                case .photoOrVideo:
+                    break
+                default:
+                    (self.controller(for: mode) as? PeerMediaListController)?.toggleSearch()
+                }
+            }
+        })
+    }
+    
+//    override func getCenterBarViewOnce() -> TitledBarView {
+//
+//
+//
+//
+//        return PeerMediaTitleBarView(controller: self, context: context, peerId: self.peerId, title: .initialize(string: self.defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
+//            guard let `self` = self else {
+//                return
+//            }
+//            if let mode = self.mode {
+//                let controller = self.controller(for: mode)
+//                if let controller = controller as? PeerMediaListController {
+//                    controller.toggleSearch()
+//                } else if controller is PeerMediaGroupPeersController {
+//
+//                }
+//            }
+//        })
+//    }
+//
     override func becomeFirstResponder() -> Bool? {
         return true
     }

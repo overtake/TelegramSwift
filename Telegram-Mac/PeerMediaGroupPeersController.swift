@@ -16,9 +16,11 @@ import TGUIKit
 private final class GroupPeersArguments {
     let context: AccountContext
     let removePeer: (PeerId)->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void) {
+    let showMore:()->Void
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void) {
         self.context = context
         self.removePeer = removePeer
+        self.showMore = showMore
     }
     
     func peerInfo(_ peerId:PeerId) {
@@ -30,6 +32,7 @@ private struct GroupPeersState : Equatable {
     var temporaryParticipants: [TemporaryParticipant]
     var successfullyAddedParticipantIds: Set<PeerId>
     var removingParticipantIds: Set<PeerId>
+    var hasShowMoreButton: Bool?
 }
 
 private func _id_peer_id(_ id: PeerId) -> InputDataIdentifier {
@@ -101,6 +104,13 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:0,right:0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                         arguments.peerInfo(peer!.id)
                     }, inputActivity: inputActivity)
+                }))
+                index += 1
+            case let .showMore(_, _, viewType):
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_show_more"), equatable: nil, item: { initialSize, stableId in
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+                        arguments.showMore()
+                    }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4), inset: NSEdgeInsetsZero)
                 }))
                 index += 1
             default:
@@ -245,6 +255,9 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 return lhs < rhs
             })
             
+            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
+                sortedParticipants = Array(sortedParticipants.prefix(min(50, sortedParticipants.count)))
+            }
             
             for i in 0 ..< sortedParticipants.count {
                 let memberStatus: GroupInfoMemberStatus
@@ -270,9 +283,14 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 
                 usersBlock.append(GroupInfoEntry.member(section: Int(sectionId), index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
+            
+            if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
+                usersBlock.append(.showMore(section: GroupInfoSection.members.rawValue, index: sortedParticipants.count + 1, viewType: .singleItem))
+            }
         }
         
     }
+    
     
     applyBlock(usersBlock)
     
@@ -285,7 +303,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
 func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, editing: Signal<Bool, NoError>) -> InputDataController {
     
     
-    let initialState = GroupPeersState(temporaryParticipants: [], successfullyAddedParticipantIds: Set(), removingParticipantIds: Set())
+    let initialState = GroupPeersState(temporaryParticipants: [], successfullyAddedParticipantIds: Set(), removingParticipantIds: Set(), hasShowMoreButton: true)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -372,6 +390,12 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         }
         actionsDisposable.add(signal.start())
         
+    }, showMore: {
+        updateState { state in
+            var state = state
+            state.hasShowMoreButton = nil
+            return state
+        }
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), context.account.postbox.peerView(id: peerId), channelMembersPromise.get(), inputActivity, editing) |> map {

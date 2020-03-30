@@ -15,6 +15,9 @@ open class TableStickItem: TableRowItem {
         return _stableId
     }
     
+    open var singletonItem: Bool {
+        return false
+    }
     
     open var headerHeight: CGFloat {
         return height

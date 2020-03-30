@@ -621,7 +621,7 @@ class ChatRowItem: TableRowItem {
     }
     
     let isScam: Bool
-    let isForwardScam: Bool
+    private(set) var isForwardScam: Bool
 
     var isFailed: Bool {
         if let message = message {
@@ -1098,6 +1098,9 @@ class ChatRowItem: TableRowItem {
                 
                 let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
 
+                if isForwardScam || canFillAuthorName {
+                    self.isForwardScam = false
+                }
                 
                 var titlePeer:Peer? = self.peer
                 

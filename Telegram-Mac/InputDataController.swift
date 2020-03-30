@@ -187,11 +187,92 @@ final class InputDataArguments {
     }
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments) -> TableUpdateTransition {
-    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
-        return entry.entry.item(arguments: arguments, initialSize: initialSize)
-    }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, searchState: searchState)
+private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
+
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool) -> Signal<TableUpdateTransition, NoError> {
+    
+    return Signal { subscriber in
+        
+        func makeItem(_ entry: InputDataEntry) -> TableRowItem {
+            return entry.item(arguments: arguments, initialSize: initialSize)
+        }
+        
+        let applyQueue = onMainQueue ? .mainQueue() : prepareQueue
+        
+        let cancelled: Atomic<Bool> = Atomic(value: false)
+        
+        if Thread.isMainThread {
+            var initialIndex:Int = 0
+            var height:CGFloat = 0
+            var firstInsertion:[(Int, TableRowItem)] = []
+            let entries = Array(right)
+            
+            let index:Int = 0
+            
+            for i in index ..< entries.count {
+                let item = makeItem(entries[i].entry)
+                height += item.height
+                firstInsertion.append((i, item))
+                if initialSize.height < height {
+                    break
+                }
+            }
+            initialIndex = firstInsertion.count
+            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
+            
+            queue.async {
+                if !cancelled.with({ $0 }) {
+                    
+                    var insertions:[(Int, TableRowItem)] = []
+                    let updates:[(Int, TableRowItem)] = []
+                    
+                    for i in initialIndex ..< entries.count {
+                        let item:TableRowItem
+                        item = makeItem(entries[i].entry)
+                        insertions.append((i, item))
+                        if cancelled.with({ $0 }) {
+                            break
+                        }
+                    }
+                    if !cancelled.with({ $0 }) {
+                        applyQueue.async {
+                            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
+                            subscriber.putCompletion()
+                        }
+                    }
+                }
+            }
+        } else {
+            queue.async {
+                let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
+                    if !cancelled.with({ $0 }) {
+                        return makeItem(entry.entry)
+                    } else {
+                        return TableRowItem(.zero)
+                    }
+                })
+                if !cancelled.with({ $0 }) {
+                    applyQueue.async {
+                        subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                        subscriber.putCompletion()
+                    }
+                }
+            }
+            
+        }
+        
+        return ActionDisposable {
+            _ = cancelled.swap(true)
+        }
+    } |> runOn(onMainQueue ? .mainQueue() : prepareQueue)
+    
+    
+    
+//
+//    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
+//        return entry.entry.item(arguments: arguments, initialSize: initialSize)
+//    }
+//    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, searchState: searchState)
 }
 
 
@@ -456,9 +537,11 @@ class InputDataController: GenericViewController<InputDataView> {
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(appearanceSignal |> deliverOnPrepareQueue, values.get() |> deliverOnPrepareQueue) |> map { appearance, state in
+        let onMainQueue: Atomic<Bool> = Atomic(value: true)
+        
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, values.get()) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return prepareTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments)
+            return prepareTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false))
         } |> deliverOnMainQueue
         
         disposable.set(signal.start(next: { [weak self] transition in

@@ -1129,11 +1129,11 @@ internal final class L10n {
   internal static var channelStatsGraphInteractions: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Interactions") }
   /// LANGUAGE
   internal static var channelStatsGraphLanguage: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Language") }
-  /// NEW FOLLOWERS BY SOURCE
+  /// FOLLOWERS BY SOURCE
   internal static var channelStatsGraphNewFollowersBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.NewFollowersBySource") }
   /// NOTIFICATIONS
   internal static var channelStatsGraphNotifications: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Notifications") }
-  /// VIEWS BY HOURS
+  /// VIEWS BY HOURS (UTC)
   internal static var channelStatsGraphViewsByHours: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsByHours") }
   /// VIEWS BY SOURCE
   internal static var channelStatsGraphViewsBySource: String  { return L10n.tr("Localizable", "ChannelStats.Graph.ViewsBySource") }
@@ -2039,7 +2039,7 @@ internal final class L10n {
   internal static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
   /// Sorry, you can pin no more than 5 chats to the top.
   internal static var chatListContextPinError: String  { return L10n.tr("Localizable", "ChatList.Context.PinError") }
-  /// Sorry, you can only pin 5 chats to the top. If you're looking for more organization, try setting up Chat Folders
+  /// Sorry, you can only pin 5 chats to the top in the main list. More chats can be pinned in Chat Folders and your Archive.
   internal static var chatListContextPinErrorNew2: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew2") }
   /// Return to Group
   internal static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
@@ -2047,7 +2047,7 @@ internal final class L10n {
   internal static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   internal static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
-  /// Setup Folders
+  /// Set Up Folders
   internal static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
   /// Add Chats
   internal static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }

@@ -509,18 +509,22 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 }
             }))
         
-        genericView.tableView.setScrollHandler { [weak self] scroll in
-            if let strongSelf = self {
-                switch scroll.direction {
-                case .bottom:
-                    strongSelf.history.set(strongSelf.history.get() |> take(1) |> map { (_, state) in
-                        return (currentMaxId.modify({$0}), state)
-                        })
-                default:
-                    break
-                }
-            }
-        }
+//        genericView.tableView.setScrollHandler { [weak self] scroll in
+//            if let strongSelf = self {
+//                switch scroll.direction {
+//                case .bottom:
+//                    let signal = strongSelf.history.get() |> take(1) |> map { (_, state) in
+//                        (currentMaxId.with { $0 }, state)
+//                    }
+//                    _ = signal.start(next: { [weak strongSelf] data in
+//                        strongSelf?.history.set(.sing)
+//                    })
+//
+//                default:
+//                    break
+//                }
+//            }
+//        }
         
         readyOnce()
         history.set(.single((0, ChannelEventFilterState())))
