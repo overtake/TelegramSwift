@@ -363,7 +363,7 @@ class PeerMediaListController: TableViewController {
             
         })
         
-        let historyPromise: Promise<PeerMediaUpdate> = Promise(PeerMediaUpdate())
+        let historyPromise: Promise<PeerMediaUpdate> = Promise()
         
         
         let historyViewUpdate = combineLatest(location.get(), searchState.get()) |> deliverOnMainQueue

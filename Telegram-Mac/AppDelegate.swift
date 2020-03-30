@@ -626,7 +626,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 applicationUpdateUrlPrefix = nil
                             }
                             setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
+                            #if STABLE
+                            updater_resetWithUpdaterSource(.internal(context: context.context))
+                            #else
                             updater_resetWithUpdaterSource(.external(context: context.context))
+                            #endif
                             
                         }))
                         #endif
@@ -688,7 +692,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         applicationUpdateUrlPrefix = nil
                                     }
                                     setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
+                                    #if STABLE
+                                    updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+                                    #else
                                     updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+                                    #endif
 
                                 }))
                                 #endif
@@ -782,8 +790,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     @IBAction func checkForUpdates(_ sender: Any) {
         #if !APP_STORE
-        showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
-        updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+            showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
+            #if STABLE
+                updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+            #else
+                updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+            #endif
         #endif
     }
     

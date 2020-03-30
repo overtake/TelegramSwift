@@ -141,8 +141,6 @@ public class InputDataModalController : ModalViewController {
     }
     
     public override func loadView() {
-        controller.loadView()
-    
         viewDidLoad()
     }
     
@@ -155,8 +153,8 @@ public class InputDataModalController : ModalViewController {
     
     
     public override func viewDidLoad() {
+        controller.loadView()
         super.viewDidLoad()
-        controller.viewDidLoad()
         ready.set(controller.ready.get())
         
         themeDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
@@ -190,7 +188,6 @@ final class InputDataArguments {
 private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
 
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool) -> Signal<TableUpdateTransition, NoError> {
-    
     return Signal { subscriber in
         
         func makeItem(_ entry: InputDataEntry) -> TableRowItem {
