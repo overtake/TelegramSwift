@@ -1175,7 +1175,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
                 
                 var index:Int = flipped ? range.location : range.location + range.length - 1
-                
+            
+            
                 
                 let scrollInset = self.documentOffset.y + (flipped ? 0 : frame.height)
                 var item:TableRowItem? = optionalItem(at: index)
@@ -1225,6 +1226,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                     }
                     
+                    if someItem.singletonItem {
+                        currentStick = someItem
+                    }
                     
                     if stickView?.item != item {
                         stickView?.set(item: someItem, animated: animated)
@@ -1240,9 +1244,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickItem = currentStick ?? someItem
                     
                     if let stickView = stickView {
-                        if subviews.last != stickView {
-                            stickView.removeFromSuperview()
-                            addSubview(stickView)
+                        let scrollerIndex = subviews.firstIndex(where: { $0 is NSScroller })
+                        let stickViewIndex = subviews.firstIndex(where: { $0 is TableStickView })
+                        if let scrollerIndex = scrollerIndex, stickViewIndex == nil || stickViewIndex! > scrollerIndex {
+                            addSubview(stickView, positioned: .below, relativeTo: subviews[scrollerIndex])
                         }
                     }
                     
@@ -1266,7 +1271,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         if yTopOffset <= -rect.height {
                             yTopOffset = 0
                         }
-                        
+                        if scrollInset <= 0, item.singletonItem {
+                            yTopOffset = abs(scrollInset)
+                        }
                         stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
                         stickView.header = abs(dif) <= item.heightValue
 
@@ -1307,7 +1314,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                         if tableView.isFlipped {
                             
-                            stickView.isHidden = documentOffset.y <= 0// && !stickView.isAlwaysUp
+                            stickView.isHidden = documentOffset.y <= 0 && !item.singletonItem// && !stickView.isAlwaysUp
                         }
 
                         stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
@@ -2144,7 +2151,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var view: NSView? = item.isUniqueView ? nil : self.tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: identifier), owner: self.tableView)
 
         if(view == nil) {
-            view = makeView(at: item.index)
+            if let item = item as? TableStickItem, item.singletonItem {
+                view = TableRowView(frame: NSMakeRect(0, 0, frame.width, item.heightValue))
+            } else {
+                view = makeView(at: item.index)
+            }
             view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
         }
         if view!.frame.height != item.heightValue {
@@ -2532,6 +2543,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         first = false
         performScrollEvent(transition.animated)
+        updateStickAfterScroll(transition.animated)
     }
     
     public func updateEmpties(animated: Bool = false) {

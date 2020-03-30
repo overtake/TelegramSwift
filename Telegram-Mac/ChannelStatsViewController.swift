@@ -93,18 +93,6 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             updateIsLoading(identifier, true)
         }))
 
-        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .bars, load: { identifier in
-            context.loadViewsBySourceGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .bars, load: { identifier in
-            context.loadNewFollowersBySourceGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
-            context.loadLanguagesGraph()
-            updateIsLoading(identifier, true)
-        }))
         graphs.append(Graph(graph: stats.muteGraph, title: L10n.channelStatsGraphNotifications, identifier: InputDataIdentifier("muteGraph"), type: .lines, load: { identifier in
             context.loadMuteGraph()
             updateIsLoading(identifier, true)
@@ -114,6 +102,23 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             context.loadTopHoursGraph()
             updateIsLoading(identifier, true)
         }))
+        
+        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: L10n.channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .bars, load: { identifier in
+            context.loadViewsBySourceGraph()
+            updateIsLoading(identifier, true)
+        }))
+        
+        
+        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: L10n.channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .bars, load: { identifier in
+            context.loadNewFollowersBySourceGraph()
+            updateIsLoading(identifier, true)
+        }))
+        graphs.append(Graph(graph: stats.languagesGraph, title: L10n.channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
+            context.loadLanguagesGraph()
+            updateIsLoading(identifier, true)
+        }))
+
+    
         
         graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .twoAxisStep, load: { identifier in
             context.loadInteractionsGraph()
@@ -130,7 +135,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             case let .Loaded(_, string):                
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
-                        return StatisticRowItem(initialSize, stableId: stableId, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
+                        return StatisticRowItem(initialSize, stableId: stableId, context: accountContext, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
                             detailedDisposable.set(context.loadDetailedGraph(graph.graph, x: Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
                                 if let graph = graph, case let .Loaded(_, data) = graph {
                                     completion(data)

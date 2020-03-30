@@ -505,22 +505,18 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         return barInset
     }
     
-    public func swapNavigationBar(_ navigationBar: NavigationBarView, animation: NavigationBarSwapAnimation) {
-        switch animation {
-        case .none:
-            navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
-            self.navigationBar.removeFromSuperview()
-            self.navigationBar = navigationBar
-            self.containerView.addSubview(navigationBar)
-        case .crossfade:
-            navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
-            let previousNavigationBar = self.navigationBar
-            self.navigationBar.change(opacity: 0, animated: true, completion: { [weak previousNavigationBar] _ in
-                previousNavigationBar?.removeFromSuperview()
-            })
-            self.navigationBar = navigationBar
-            containerView.addSubview(navigationBar)
-            navigationBar.change(opacity: 1, animated: true)
+    public func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        
+        navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+        
+        if let leftView = leftView {
+            navigationBar.switchLeftView(leftView, animation: animation)
+        }
+        if let centerView = centerView {
+            navigationBar.switchCenterView(centerView, animation: animation)
+        }
+        if let rightView = rightView {
+            navigationBar.switchRightView(rightView, animation: animation)
         }
     }
     
