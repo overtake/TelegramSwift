@@ -406,7 +406,7 @@
     private var peer:Peer?
     private var peerView: PeerView? {
         didSet {
-            if isLoaded(), let peerView = peerView {
+            if isLoaded(), let peerView = peerView, isProfileIntended {
                 let context = self.context
                 
                 if let cachedData = peerView.cachedData as? CachedChannelData {
@@ -480,7 +480,7 @@
         }
     }
     
-    private let mediaTabsData:PeerMediaTabsData?
+    private let isProfileIntended: Bool
     
     private let members: InputDataController
     private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
@@ -494,9 +494,9 @@
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, mediaTabsData:PeerMediaTabsData? = nil) {
+    init(context: AccountContext, peerId:PeerId, isProfileIntended:Bool = false) {
         self.peerId = peerId
-        self.mediaTabsData = mediaTabsData
+        self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId)
         
@@ -555,7 +555,7 @@
             return .invoked
         }, with: self, for: .Tab)
         
-        guard let navigationController = self.navigationController else {
+        guard let navigationController = self.navigationController, isProfileIntended else {
             return
         }
         
@@ -576,7 +576,7 @@
             }
         }
         
-        if let navigationController = navigationController {
+        if let navigationController = navigationController, isProfileIntended {
             navigationController.swapNavigationBar(leftView: nil, centerView: navigationController.controller.centerBarView, rightView: nil, animation: .crossfade)
             navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: navigationController.controller.rightBarView, animation: .none)
         }

@@ -233,7 +233,7 @@ class PeerInfoController: EditableViewController<TableView> {
     
     init(context: AccountContext, peerId:PeerId, isAd: Bool = false) {
         self.peerId = peerId
-        self.mediaController = PeerMediaController(context: context, peerId: peerId)
+        self.mediaController = PeerMediaController(context: context, peerId: peerId, isProfileIntended: true)
         super.init(context)
         
         let pushViewController:(ViewController) -> Void = { [weak self] controller in
