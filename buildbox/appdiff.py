@@ -8,14 +8,14 @@ import subprocess
 
 
 def get_file_list(dir):
-    result_files = []
-    result_dirs = []
+    result_files = set()
+    result_dirs = set()
     for root, dirs, files in os.walk(dir, topdown=False):
         for name in files:
-            result_files.append(os.path.relpath(os.path.join(root, name), dir))
+            result_files.app(os.path.relpath(os.path.join(root, name), dir))
         for name in dirs:
-            result_dirs.append(os.path.relpath(os.path.join(root, name), dir))
-    return set(result_dirs), set(result_files)
+            result_dirs.app(os.path.relpath(os.path.join(root, name), dir))
+    return (result_dirs, result_files)
 
 
 def remove_codesign_dirs(dirs):
@@ -50,12 +50,12 @@ def remove_codesign_files(files):
     return result
 
 
-
 def remove_plugin_files(files):
     result = set()
     excluded = set()
     for f in files:
-        if False and re.match('PlugIns/.*', f):
+        # if re.match('PlugIns/.*', f):
+        if False:
             excluded.add(f)
         else:
             result.add(f)
@@ -101,16 +101,11 @@ def diff_dirs(app1, dir1, app2, dir2):
 
 def is_binary(file):
     out = os.popen('file "' + file + '"').read()
-    if out.find('Mach-O') == -1:
-        return False
-    return True
+    return out.find('Mach-O') != -1
 
 
 def is_xcconfig(file):
-    if re.match('.*\\.xcconfig', file):
-        return True
-    else:
-        return False
+    return bool(re.match('.*\\.xcconfig', file))
 
 
 def diff_binaries(tempdir, self_base_path, file1, file2):
@@ -119,7 +114,9 @@ def diff_binaries(tempdir, self_base_path, file1, file2):
         if not os.path.isfile(self_base_path + '/main.cpp'):
             print('Could not find ' + self_base_path + '/main.cpp')
             sys.exit(1)
-        subprocess.call(['clang', self_base_path + '/main.cpp', '-lc++', '-o', diff_app])
+        subprocess.call(
+            ['clang', self_base_path + '/main.cpp', '-lc++', '-o', diff_app]
+        )
         if not os.path.isfile(diff_app):
             print('Could not compile ' + self_base_path + '/main.cpp')
             sys.exit(1)
@@ -137,26 +134,41 @@ def diff_binaries(tempdir, self_base_path, file1, file2):
 
 
 def is_plist(file1):
-    if file1.find('.plist') == -1:
-        return False
-    return True
+    return file1.find('.plist') != -1
 
 
 def diff_plists(file1, file2):
-    remove_properties = ['UISupportedDevices', 'DTAppStoreToolsBuild', 'MinimumOSVersion', 'BuildMachineOSBuild']
+    remove_properties = [
+        'UISupportedDevices',
+        'DTAppStoreToolsBuild',
+        'MinimumOSVersion',
+        'BuildMachineOSBuild',
+    ]
 
     clean1_properties = ''
     clean2_properties = ''
 
     with open(os.devnull, 'w') as devnull:
         for property in remove_properties:
-            if not subprocess.call(['plutil', '-extract', property, 'xml1', '-o', '-', file1], stderr=devnull, stdout=devnull):
+            if not subprocess.call(
+                ['plutil', '-extract', property, 'xml1', '-o', '-', file1],
+                stderr=devnull,
+                stdout=devnull,
+            ):
                 clean1_properties += ' | plutil -remove ' + property + '  -r -o - -- -'
-            if not subprocess.call(['plutil', '-extract', property, 'xml1', '-o', '-', file2], stderr=devnull, stdout=devnull):
+            if not subprocess.call(
+                ['plutil', '-extract', property, 'xml1', '-o', '-', file2],
+                stderr=devnull,
+                stdout=devnull,
+            ):
                 clean2_properties += ' | plutil -remove ' + property + '  -r -o - -- -'
 
-    data1 = os.popen('plutil -convert xml1 "' + file1 + '" -o -' + clean1_properties).read()
-    data2 = os.popen('plutil -convert xml1 "' + file2 + '" -o -' + clean2_properties).read()
+    data1 = os.popen(
+        'plutil -convert xml1 "' + file1 + '" -o -' + clean1_properties
+    ).read()
+    data2 = os.popen(
+        'plutil -convert xml1 "' + file2 + '" -o -' + clean2_properties
+    ).read()
 
     if data1 == data2:
         return 'equal'
@@ -219,8 +231,8 @@ def appdiff(self_base_path, app1, app2):
     app1_dir = app1
     app2_dir = app2
 
-    (app1_dirs, app1_files) = get_file_list(base_app_dir(app1_dir))
-    (app2_dirs, app2_files) = get_file_list(base_app_dir(app2_dir))
+    app1_dirs, app1_files = get_file_list(base_app_dir(app1_dir))
+    app2_dirs, app2_files = get_file_list(base_app_dir(app2_dir))
 
     clean_app1_dirs = remove_codesign_dirs(app1_dirs)
     clean_app2_dirs = remove_codesign_dirs(app2_dirs)
@@ -243,7 +255,12 @@ def appdiff(self_base_path, app1, app2):
     different_files = []
     encrypted_files = []
     for relative_file_path in clean_app1_files:
-        file_result = diff_file(tempdir, self_base_path, base_app_dir(app1_dir) + '/' + relative_file_path, base_app_dir(app2_dir) + '/' + relative_file_path)
+        file_result = diff_file(
+            tempdir,
+            self_base_path,
+            base_app_dir(app1_dir) + '/' + relative_file_path,
+            base_app_dir(app2_dir) + '/' + relative_file_path,
+        )
         if file_result == 'equal':
             pass
         elif file_result == 'binary_encrypted':
@@ -257,13 +274,19 @@ def appdiff(self_base_path, app1, app2):
             print('    ' + relative_file_path)
     else:
         if len(encrypted_files) != 0:
-            print('    Excluded files that couldn\'t be checked due to being encrypted:')
+            print(
+                '    Excluded files that couldn\'t be checked due to being encrypted:'
+            )
             for relative_file_path in encrypted_files:
                 print('        ' + relative_file_path)
         if len(plugin_app1_files) != 0:
-            print('    APPs contain PlugIns directory with app extensions. Extensions can\'t currently be checked.')
+            print(
+                '    APPs contain PlugIns directory with app extensions. Extensions can\'t currently be checked.'
+            )
         if len(nib_app1_files) != 0:
-            print('    APPs contain .nib (compiled Interface Builder) files that are compiled by the App Store and can\'t currently be checked:')
+            print(
+                '    APPs contain .nib (compiled Interface Builder) files that are compiled by the App Store and can\'t currently be checked:'
+            )
             for relative_file_path in nib_app1_files:
                 print('        ' + relative_file_path)
 
