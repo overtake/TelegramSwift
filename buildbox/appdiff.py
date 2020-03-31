@@ -12,9 +12,9 @@ def get_file_list(dir):
     result_dirs = set()
     for root, dirs, files in os.walk(dir, topdown=False):
         for name in files:
-            result_files.app(os.path.relpath(os.path.join(root, name), dir))
+            result_files.add(os.path.relpath(os.path.join(root, name), dir))
         for name in dirs:
-            result_dirs.app(os.path.relpath(os.path.join(root, name), dir))
+            result_dirs.add(os.path.relpath(os.path.join(root, name), dir))
     return (result_dirs, result_files)
 
 
