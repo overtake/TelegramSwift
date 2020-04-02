@@ -239,19 +239,19 @@ public final class TextViewLine {
 public enum TextViewCutoutPosition {
     case TopLeft
     case TopRight
+    case BottomRight
 }
 
 public struct TextViewCutout: Equatable {
-    public let position: TextViewCutoutPosition
-    public let size: NSSize
-    public init(position:TextViewCutoutPosition, size:NSSize) {
-        self.position = position
-        self.size = size
+    public var topLeft: CGSize?
+    public var topRight: CGSize?
+    public var bottomRight: CGSize?
+    
+    public init(topLeft: CGSize? = nil, topRight: CGSize? = nil, bottomRight: CGSize? = nil) {
+        self.topLeft = topLeft
+        self.topRight = topRight
+        self.bottomRight = bottomRight
     }
-}
-
-public func ==(lhs: TextViewCutout, rhs: TextViewCutout) -> Bool {
-    return lhs.position == rhs.position && lhs.size == rhs.size
 }
 
 private let defaultFont:NSFont = .normal(.text)
@@ -268,7 +268,7 @@ public final class TextViewLayout : Equatable {
     public var insets:NSSize = NSZeroSize
     public fileprivate(set) var lines:[TextViewLine] = []
     public fileprivate(set) var isPerfectSized:Bool = true
-    public let maximumNumberOfLines:Int32
+    public var maximumNumberOfLines:Int32
     public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
     public var mayBlocked: Bool = true
@@ -348,15 +348,31 @@ public final class TextViewLayout : Equatable {
         var cutoutMaxY: CGFloat = 0.0
         var cutoutWidth: CGFloat = 0.0
         var cutoutOffset: CGFloat = 0.0
-        if let cutout = cutout {
+        
+        
+        var bottomCutoutEnabled = false
+        var bottomCutoutSize = CGSize()
+        
+
+        
+        
+        if let topLeft = cutout?.topLeft {
             cutoutMinY = -fontLineSpacing
-            cutoutMaxY = cutout.size.height + fontLineSpacing
-            cutoutWidth = cutout.size.width
-            if case .TopLeft = cutout.position {
-                cutoutOffset = cutoutWidth
-            }
+            cutoutMaxY = topLeft.height + fontLineSpacing
+            cutoutWidth = topLeft.width
+            cutoutOffset = cutoutWidth
+            cutoutEnabled = true
+        } else if let topRight = cutout?.topRight {
+            cutoutMinY = -fontLineSpacing
+            cutoutMaxY = topRight.height + fontLineSpacing
+            cutoutWidth = topRight.width
             cutoutEnabled = true
         }
+        if let bottomRight = cutout?.bottomRight {
+            bottomCutoutSize = bottomRight
+            bottomCutoutEnabled = true
+        }
+
         
         var first = true
         var breakInset: CGFloat = 0
@@ -448,6 +464,8 @@ public final class TextViewLayout : Equatable {
                 
                 let originalLine = CTTypesetterCreateLineWithOffset(typesetter, CFRange(location: lastLineCharacterIndex, length: attributedString.length - lastLineCharacterIndex), 0.0)
                 
+               
+                
                 if CTLineGetTypographicBounds(originalLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(originalLine) < Double(constrainedWidth) {
                     coreTextLine = originalLine
                 } else {
@@ -458,7 +476,14 @@ public final class TextViewLayout : Equatable {
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
                     
-                    coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(constrainedWidth), truncationType, truncationToken) ?? truncationToken
+                    
+                    var lineConstrainedWidth = constrainedWidth
+                    if bottomCutoutEnabled {
+                        lineConstrainedWidth -= bottomCutoutSize.width
+                    }
+
+                    
+                    coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(lineConstrainedWidth), truncationType, truncationToken) ?? truncationToken
                     isPerfectSized = false
                 }
                 

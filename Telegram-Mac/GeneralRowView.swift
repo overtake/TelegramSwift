@@ -12,7 +12,7 @@ import TGUIKit
 
 class GeneralContainableRowView : TableRowView {
     let containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private let borderView: View = View()
+    let borderView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(self.containerView)

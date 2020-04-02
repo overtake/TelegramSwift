@@ -145,6 +145,14 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
         }
     }
     
+    if !current.isEmpty {
+        if !groupItems.isEmpty {
+            let item = groupItems.last!
+            groupItems[groupItems.count - 1] = Item(item.date, item.section, item.items + current)
+        } else {
+            groupItems.append(.init(current.first!, .sectionId(current.first!.index.successor()), current))
+        }
+    }
     
     
     for (i, group) in groupItems.reversed().enumerated() {

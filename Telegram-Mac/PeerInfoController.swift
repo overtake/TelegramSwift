@@ -43,8 +43,8 @@ class PeerInfoArguments {
         _statePromise.set(.single(value.modify(f)))
     }
     
-    func updateEditable(_ editable:Bool, peerView:PeerView) {
-        
+    func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
+        return true
     }
     
     func dismissEdition() {
@@ -261,20 +261,6 @@ class PeerInfoController: EditableViewController<TableView> {
         
     }
     
-    override func getCenterBarViewOnce() -> TitledBarView {
-        return SearchTitleBarView(controller: self, title:.initialize(string: defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
-            self?.searchSupergroupUsers()
-        })
-    }
-    
-    func searchSupergroupUsers() {
-        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
-            if let peerId = peerId {
-                self?._channelArguments.peerInfo(peerId)
-            }
-        })
-    }
-    
     deinit {
         disposable.dispose()
         updatedChannelParticipants.dispose()
@@ -300,19 +286,6 @@ class PeerInfoController: EditableViewController<TableView> {
             return .rejected
         }, with: self, for: .Return, priority: .high, modifierFlags: [.command])
         
-        
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self else {return .rejected}
-            if let peerView = self.peerView.modify ({$0}) {
-                if let peer = peerViewMainPeer(peerView) {
-                    if peer.isSupergroup {
-                        self.searchSupergroupUsers()
-                        return .invoked
-                    }
-                }
-            }
-            return .rejected
-        }, with: self, for: .F, priority: .low, modifierFlags: [.command])
     }
     
     
@@ -442,7 +415,7 @@ class PeerInfoController: EditableViewController<TableView> {
                 } else {
                     editable = false
                 }
-                (self?.centerBarView as? SearchTitleBarView)?.updateSearchVisibility(peer.isSupergroup)
+               // (self?.centerBarView as? SearchTitleBarView)?.updateSearchVisibility(peer.isSupergroup)
             } else {
                 editable = false
             }
@@ -483,12 +456,24 @@ class PeerInfoController: EditableViewController<TableView> {
     }
     
     override func update(with state: ViewControllerState) {
-        super.update(with: state)
-        if let peerView = peerView.modify({$0}) {
-            updateArguments({ arguments in
-                arguments.updateEditable(state == .Edit, peerView: peerView)
+        
+        if let peerView = peerView.with ({$0}) {
+            updateArguments({ [weak self] arguments in
+                guard let `self` = self else {
+                    return
+                }
+                let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
+                self.genericView.scroll(to: .up(true))
+                
+                if updateState {
+                    self.applyState(state)
+                }
             })
         }
+    }
+    
+    private func applyState(_ state: ViewControllerState) {
+        super.update(with: state)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

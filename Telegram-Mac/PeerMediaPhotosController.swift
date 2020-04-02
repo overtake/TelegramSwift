@@ -267,7 +267,7 @@ class PeerMediaPhotosController: TableViewController {
             return Int((initialSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount))
         }
 
-        var requestCount = perPageCount()
+        var requestCount = perPageCount() + 20
         
         let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
         

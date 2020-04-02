@@ -214,7 +214,7 @@ final class ChatListRevealView : TableStickView {
         segmentView.updateItems(items, animated: animated)
         
         segmentView.resortRange = NSMakeRange(1, items.count - 1)
-        segmentView.resortHandler = { [weak self] from, to in
+        segmentView.resortHandler = { from, to in
             _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { state in
                 var state = state
                 state.move(at: from - 1, to: to - 1)

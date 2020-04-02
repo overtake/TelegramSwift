@@ -78,6 +78,19 @@ private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImag
     })!
 }
 
+private func generateProfileIcon(_ image: CGImage, backgroundColor: NSColor) -> CGImage {
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, rect.width - 4, rect.height - 4))
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        
+    })!
+}
+
 private func generateChatTabFiltersIcon(_ image: CGImage) -> CGImage {
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
@@ -1484,7 +1497,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if let icon = _chatChannelViewsOverlayServiceBubble {
             return icon
         } else {
-            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor)
+            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor, flipVertical: true)
             _chatChannelViewsOverlayServiceBubble = new
             return new
         }
@@ -2144,7 +2157,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                tab_chats_active: { NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon) },
                                                tab_chats_active_filters: { generateChatTabFiltersIcon(NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon)) },
                                                tab_settings: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.grayIcon) },
-                                               tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) }
+                                               tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) },
+                                               profile_add_member: { generateProfileIcon(NSImage(named: "Icon_Profile_AddMember")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_call: { generateProfileIcon(NSImage(named: "Icon_Profile_Call")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_leave: { generateProfileIcon(NSImage(named: "Icon_Profile_Leave")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_message: { generateProfileIcon(NSImage(named: "Icon_Profile_Message")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_more: { generateProfileIcon(NSImage(named: "Icon_Profile_More")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_mute: { generateProfileIcon(NSImage(named: "Icon_Profile_Mute")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_unmute: { generateProfileIcon(NSImage(named: "Icon_Profile_Unmute")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_search: { generateProfileIcon(NSImage(named: "Icon_Profile_Search")!.precomposed(palette.accentIcon), backgroundColor: .white) },
+                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: .white) }, profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(.white)}
     )
 
 }
