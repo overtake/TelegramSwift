@@ -4433,6 +4433,8 @@ internal final class L10n {
   internal static var peerInfoShareMyInfo: String  { return L10n.tr("Localizable", "PeerInfo.ShareMyInfo") }
   /// Show More
   internal static var peerInfoShowMore: String  { return L10n.tr("Localizable", "PeerInfo.ShowMore") }
+  /// [more]()
+  internal static var peerInfoShowMoreText: String  { return L10n.tr("Localizable", "PeerInfo.ShowMoreText") }
   /// Sign Messages
   internal static var peerInfoSignMessages: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages") }
   /// Start Secret Chat
@@ -4465,6 +4467,8 @@ internal final class L10n {
   internal static var peerInfoBotStatusHasNoAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasNoAccess") }
   /// Channel Name
   internal static var peerInfoChannelNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.ChannelName.Placeholder") }
+  /// Channel Name
+  internal static var peerInfoChannelTitlePleceholder: String  { return L10n.tr("Localizable", "PeerInfo.ChannelTitle.Pleceholder") }
   /// Add
   internal static var peerInfoConfirmAdd: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.Add") }
   /// Add "%@" to the group?
@@ -4539,6 +4543,8 @@ internal final class L10n {
   internal static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
   /// Group Name
   internal static var peerInfoGroupNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.GroupName.Placeholder") }
+  /// Group Name
+  internal static var peerInfoGroupTitlePleceholder: String  { return L10n.tr("Localizable", "PeerInfo.GroupTitle.Pleceholder") }
   /// Private
   internal static var peerInfoGroupTypePrivate: String  { return L10n.tr("Localizable", "PeerInfo.GroupType.Private") }
   /// Public
@@ -4555,6 +4561,8 @@ internal final class L10n {
   internal static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
   /// Audio
   internal static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
+  /// Groups
+  internal static var peerMediaCommonGroups: String  { return L10n.tr("Localizable", "PeerMedia.CommonGroups") }
   /// Docs
   internal static var peerMediaFiles: String  { return L10n.tr("Localizable", "PeerMedia.Files") }
   /// Links
@@ -4565,7 +4573,7 @@ internal final class L10n {
   internal static var peerMediaMembers: String  { return L10n.tr("Localizable", "PeerMedia.Members") }
   /// Shared Media
   internal static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
-  /// Voice
+  /// Voicemessages
   internal static var peerMediaVoice: String  { return L10n.tr("Localizable", "PeerMedia.Voice") }
   /// Shared Audio
   internal static var peerMediaPopoverSharedAudio: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedAudio") }

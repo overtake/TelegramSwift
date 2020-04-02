@@ -52,18 +52,22 @@ struct IntPeerInfoEntryStableId: PeerInfoEntryStableId {
 final class PeerInfoUpdatingPhotoState : Equatable {
     let progress:Float
     let cancel:()->Void
-    
-    init(progress: Float, cancel: @escaping()->Void) {
+    let image: CGImage?
+    init(progress: Float, image: CGImage? = nil, cancel: @escaping()->Void) {
         self.progress = progress
         self.cancel = cancel
+        self.image = image
+    }
+    func withUpdatedImage(_ image: CGImage) -> PeerInfoUpdatingPhotoState {
+        return PeerInfoUpdatingPhotoState(progress: progress, image: image, cancel: self.cancel)
     }
     
     func withUpdatedProgress(_ progress: Float) -> PeerInfoUpdatingPhotoState {
-        return PeerInfoUpdatingPhotoState(progress: progress, cancel: self.cancel)
+        return PeerInfoUpdatingPhotoState(progress: progress, image: self.image, cancel: self.cancel)
     }
     
     static func ==(lhs:PeerInfoUpdatingPhotoState, rhs: PeerInfoUpdatingPhotoState) -> Bool {
-        return lhs.progress == rhs.progress
+        return lhs.progress == rhs.progress && lhs.image == rhs.image
     }
 }
 

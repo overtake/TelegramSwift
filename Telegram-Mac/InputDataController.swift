@@ -22,6 +22,7 @@ public class InputDataModalController : ModalViewController {
         self.controller = controller
         self._modalInteractions = modalInteractions
         self.controller._frameRect = NSMakeRect(0, 0, size.width, size.height)
+        self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
     }
@@ -320,6 +321,7 @@ final class InputDataView : BackgroundView, AppearanceViewProtocol {
 class InputDataController: GenericViewController<InputDataView> {
 
     fileprivate var modalTransitionHandler:((Bool)->Void)? = nil
+    fileprivate var prepareAllItems: Bool = false
     
     private let values: Promise<InputDataSignalValue> = Promise()
     private let disposable = MetaDisposable()
@@ -534,7 +536,7 @@ class InputDataController: GenericViewController<InputDataView> {
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let onMainQueue: Atomic<Bool> = Atomic(value: true)
+        let onMainQueue: Atomic<Bool> = Atomic(value: !prepareAllItems)
         
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, values.get()) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})

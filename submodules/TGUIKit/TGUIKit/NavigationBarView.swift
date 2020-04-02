@@ -436,15 +436,21 @@ public class NavigationBarView: View {
     }
     
     public func switchLeftView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
-        applyAnimation(animation, from: self.leftView, to: barView)
-        self.leftView = barView
+        if self.leftView != barView {
+            applyAnimation(animation, from: self.leftView, to: barView)
+            self.leftView = barView
+        }
     }
     public func switchCenterView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
-        applyAnimation(animation, from: self.centerView, to: barView)
-        self.centerView = barView
+        if self.centerView != barView {
+            applyAnimation(animation, from: self.centerView, to: barView)
+            self.centerView = barView
+        }
     }
     public func switchRightView(_ barView: BarView, animation: NavigationBarSwapAnimation) {
-        applyAnimation(animation, from: self.rightView, to: barView)
-        self.rightView = barView
+        if self.rightView != barView {
+            applyAnimation(animation, from: self.rightView, to: barView)
+            self.rightView = barView
+        }
     }
 }

@@ -90,8 +90,9 @@
  }
  
  private final class SegmentContainerView : View {
-    fileprivate let segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, 200, 50))
+    fileprivate let segmentControl: ScrollableSegmentView
     required init(frame frameRect: NSRect) {
+        self.segmentControl = ScrollableSegmentView(frame: NSMakeRect(0, 0, frameRect.width, 50))
         super.init(frame: frameRect)
         addSubview(segmentControl)
         updateLocalizationAndTheme(theme: theme)
@@ -130,7 +131,7 @@
     
     fileprivate let view: PeerMediaControllerView
     required init(frame frameRect: NSRect) {
-        view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, frameRect.width, frameRect.height - sectionOffset))
+        view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, min(600, frameRect.width - sectionOffset * 2), frameRect.height - sectionOffset))
         super.init(frame: frameRect)
         addSubview(view)
         addSubview(actionsPanelView)
@@ -220,7 +221,7 @@
  class PeerMediaControllerView : View {
     
     private let topPanelView = GeneralRowContainerView(frame: .zero)
-    fileprivate let segmentPanelView: SegmentContainerView = SegmentContainerView(frame: NSZeroRect)
+    fileprivate let segmentPanelView: SegmentContainerView
     fileprivate var searchPanelView: SearchContainerView?
     
     private(set) weak var mainView:NSView?
@@ -246,6 +247,7 @@
     private var chatInteraction:ChatInteraction?
     private var searchState: SearchState?
     required init(frame frameRect:NSRect) {
+        segmentPanelView = SegmentContainerView(frame: NSMakeRect(0, 0, frameRect.width, 50))
         super.init(frame: frameRect)
         addSubview(topPanelView)
         topPanelView.addSubview(topPanelSeparatorView)
@@ -396,6 +398,9 @@
         if self == .voice {
             return L10n.peerMediaVoice
         }
+        if self == .commonGroups {
+            return L10n.peerMediaCommonGroups
+        }
         return ""
     }
  }
@@ -448,7 +453,11 @@
     
     private let mediaGrid:PeerMediaPhotosController
     private let listControllers:[PeerMediaListController]
-    private let tagsList:[PeerMediaCollectionMode] = [.photoOrVideo, .file, .webpage, .music, .voice]
+    private let members: ViewController
+    private let commonGroups: ViewController
+    
+    
+    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice]
     
     
     private var currentTagListIndex: Int {
@@ -482,7 +491,6 @@
     
     private let isProfileIntended: Bool
     
-    private let members: InputDataController
     private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     override var state:ViewControllerState {
         didSet {
@@ -501,13 +509,13 @@
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId)
         
         var listControllers: [PeerMediaListController] = []
-        for _ in tagsList {
+        for _ in tagsList.filter ({ !$0.tagsValue.isEmpty }) {
             listControllers.append(PeerMediaListController(context: context, chatLocation: .peer(peerId), chatInteraction: interactions))
         }
         self.listControllers = listControllers
         
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
-        
+        self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
         super.init(context)
     }
     
@@ -537,8 +545,12 @@
         
         
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .photoOrVideo, self.mode != .members else {
+            guard let `self` = self, self.mode != .photoOrVideo, self.mode != .commonGroups else {
                 return .rejected
+            }
+            if self.mode == .members {
+                self.searchGroupUsers()
+                return .invoked
             }
             self.listControllers[self.currentTagListIndex].toggleSearch()
             return .invoked
@@ -652,15 +664,15 @@
         let context = self.context
         
         
+        let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         
-        
-        
-        let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+        membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
             if let cachedData = view.cachedData as? CachedGroupData {
-                return (exist: Int(cachedData.participants?.participants.count ?? 0 ) > 3, loaded: true)
+                return (exist: Int(cachedData.participants?.participants.count ?? 0 ) > minumimUsersBlock, loaded: true)
             } else if let cachedData = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup {
-                    return (exist: Int32(cachedData.participantsSummary.memberCount ?? 0) > 3, loaded: true)
+                    return (exist: Int32(cachedData.participantsSummary.memberCount ?? 0) > minumimUsersBlock, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }
@@ -671,8 +683,18 @@
             return (tag: .members, exists: data.exist, hasLoaded: data.loaded)
         }
         
+        commonGroupsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+            if let cachedData = view.cachedData as? CachedUserData {
+                return (exist: cachedData.commonGroupCount > 0, loaded: true)
+            } else {
+                return (exist: false, loaded: true)
+            }
+        } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+            return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
+        }
         
-        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
+        
+        let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
             
             return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -682,9 +704,10 @@
             
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems)) |> map { members, general -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab) |> map { members, general, commonGroups -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
             general.insert(members, at: 0)
+            general.append(commonGroups)
             return general
         }
         
@@ -723,6 +746,13 @@
                         self.members.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.members.ready.get() |> map { ready in
+                        return data
+                    }
+                case .commonGroups:
+                    if !self.commonGroups.isLoaded() {
+                        self.commonGroups.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.commonGroups.ready.get() |> map { ready in
                         return data
                     }
                 case .photoOrVideo:
@@ -920,18 +950,26 @@
         var firstTabAppear = true
         tabsDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] tabs, selected, hasLoaded in
             var items:[ScrollableSegmentItem] = []
-            if hasLoaded {
+            if hasLoaded, let `self` = self {
                 let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
                     items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
-                self?.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
+                self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 if let selected = selected {
-                    self?.toggle(with: selected, animated: !firstTabAppear)
+                    self.toggle(with: selected, animated: !firstTabAppear)
                 }
                 
                 firstTabAppear = false
+                
+                if tabs.isEmpty, self.isProfileIntended {
+                    if self.genericView.superview != nil {
+                        self.viewWillDisappear(true)
+                        self.genericView.removeFromSuperview()
+                        self.viewDidDisappear(true)
+                    }
+                }
             }
         }))
     }
@@ -975,7 +1013,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .photoOrVideo)
+        centerBar.updateSearchVisibility(mode != .photoOrVideo && mode != .commonGroups)
         
         
         if let controller = controller as? PeerMediaListController {
@@ -994,7 +1032,7 @@
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false
         }
-        self.currentMainTableView?(genericView.mainTable, animated, true)
+        self.currentMainTableView?(genericView.mainTable, animated, previous != controller && genericView.segmentPanelView.segmentControl.contains(oldMode?.rawValue ?? -3))
     }
     
     func controller(for mode: PeerMediaCollectionMode) -> ViewController {
@@ -1003,6 +1041,8 @@
             return self.mediaGrid
         case .members:
             return self.members
+        case .commonGroups:
+            return self.commonGroups
         default:
             return self.listControllers[Int(mode.rawValue)]
         }
@@ -1082,7 +1122,7 @@
                 switch mode {
                 case .members:
                     self.searchGroupUsers()
-                case .photoOrVideo:
+                case .photoOrVideo, .commonGroups:
                     break
                 default:
                     (self.controller(for: mode) as? PeerMediaListController)?.toggleSearch()

@@ -502,6 +502,19 @@ func initialize() -> [String] {
     array.append("tab_settings")
     array.append("tab_settings_active")
     
+    
+    array.append("profile_add_member")
+    array.append("profile_call")
+    array.append("profile_leave")
+    array.append("profile_message")
+    array.append("profile_more")
+    array.append("profile_mute")
+    array.append("profile_unmute")
+    array.append("profile_search")
+    array.append("profile_secret_chat")
+    
+    array.append("profile_edit_photo")
+    
     return array
 }
 

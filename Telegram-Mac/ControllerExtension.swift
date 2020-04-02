@@ -122,13 +122,14 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     
     func changeState() ->Void {
         
+        let new: ViewControllerState
         if case .Normal = state {
-            self.state = .Edit
+            new = .Edit
         } else {
-            self.state = .Normal
+            new = .Normal
         }
         
-        update(with:state)
+        update(with: new)
     }
     
     var doneString:String {
@@ -190,6 +191,7 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
 
     func update(with state:ViewControllerState) -> Void {
+        self.state = state
         updateEditStateTitles()
     }
     

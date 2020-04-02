@@ -507,7 +507,7 @@ public class ScrollableSegmentView: View {
     private var insetBetween: CGFloat {
         var insetBetween: CGFloat = 0
         
-        if fitToWidth {
+        if fitToWidth, items.count > 1 {
             let itemsWidth = items.reduce(CGFloat(0), { current, value in
                 return current + (value.view?.size.width ?? 0)
             })
@@ -641,6 +641,10 @@ public class ScrollableSegmentView: View {
                 }, for: .LongMouseUp)
             }
         }
+    }
+    
+    public func contains(_ id: Int32) -> Bool {
+        return self.items.first(where: { $0.uniqueId == id }) != nil
     }
     
     private func applyResort() {

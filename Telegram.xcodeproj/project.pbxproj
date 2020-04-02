@@ -375,7 +375,6 @@
 		C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */; };
 		C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */; };
 		C2271DC11DAE583E001792B6 /* TextAndLabelItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */; };
-		C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */; };
 		C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC91DAED681001792B6 /* PresenceStrings.swift */; };
 		C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */; };
 		C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */; };
@@ -877,6 +876,7 @@
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
+		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
@@ -1445,7 +1445,6 @@
 		C2271DBA1DAE213D001792B6 /* ChannelInfoEntries.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelInfoEntries.swift; sourceTree = "<group>"; };
 		C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderItem.swift; sourceTree = "<group>"; };
 		C2271DC01DAE583E001792B6 /* TextAndLabelItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TextAndLabelItem.swift; sourceTree = "<group>"; };
-		C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoHeaderView.swift; sourceTree = "<group>"; };
 		C2271DC91DAED681001792B6 /* PresenceStrings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PresenceStrings.swift; sourceTree = "<group>"; };
 		C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyChatViewController.swift; sourceTree = "<group>"; };
 		C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaController.swift; sourceTree = "<group>"; };
@@ -2012,6 +2011,7 @@
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
+		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
 		D0FFCEBD215A7CB700995AFE /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2908,7 +2908,7 @@
 			isa = PBXGroup;
 			children = (
 				C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */,
-				C2271DC31DAE5E46001792B6 /* PeerInfoHeaderView.swift */,
+				D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */,
 			);
 			name = table;
 			sourceTree = "<group>";
@@ -5396,6 +5396,7 @@
 				D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */,
 				9F7B5FCD220099220087D020 /* WallpaperPatternPreview.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
+				D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
@@ -5745,7 +5746,6 @@
 				C26505951E0301B4001954DC /* MGalleryItem.swift in Sources */,
 				C2777B641DCFB559008B69DD /* ChatServiceRowView.swift in Sources */,
 				C2303E8A1D9A76D800098E12 /* MainViewController.swift in Sources */,
-				C2271DC41DAE5E46001792B6 /* PeerInfoHeaderView.swift in Sources */,
 				9F1BC1A9223FDE6D00F21815 /* InputSources.swift in Sources */,
 				C2E8694D1F43500D00BDD0A2 /* ChatNavigationMention.swift in Sources */,
 				9F63152621D236CB009FD379 /* ForgotPasswordController.swift in Sources */,

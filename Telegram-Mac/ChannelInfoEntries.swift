@@ -136,7 +136,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         }
     }
     
-    override func updateEditable(_ editable: Bool, peerView: PeerView) {
+    override func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         
         let context = self.context
         let peerId = self.peerId
@@ -154,15 +154,21 @@ class ChannelInfoArguments : PeerInfoArguments {
             var updateValues: (title: String?, description: String?) = (nil, nil)
             updateState { state in
                 updateValues = valuesRequiringUpdate(state: state, view: peerView)
+                return state
+            }
+            
+            if let titleValue = updateValues.title, titleValue.isEmpty {
+                controller.genericView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                return false
+            }
+            
+            updateState { state in
                 if updateValues.0 != nil || updateValues.1 != nil {
                     return state.withUpdatedSavingData(true)
                 } else {
                     return state.withUpdatedEditingState(nil)
                 }
             }
-            
-            
-            
             let updateTitle: Signal<Void, NoError>
             if let titleValue = updateValues.title {
                 updateTitle = updatePeerTitle(account: context.account, peerId: peerId, title: titleValue)
@@ -191,8 +197,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 }
             }))
         }
-
-        
+        return true
     }
     
     func visibilitySetup() {
@@ -227,6 +232,24 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(ChannelBlacklistViewController(context, peerId: peerId))
     }
     
+    func updateChannelPhoto() {
+        filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+            if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                    let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                    showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                    _ = controller.result.start(next: { [weak self] url, _ in
+                        self?.updatePhoto(url.path)
+                    })
+                    
+                    controller.onClose = {
+                        removeFile(at: path)
+                    }
+                })
+            }
+        })
+    }
+    
     func updatePhoto(_ path:String) -> Void {
         
         let updateState:((ChannelInfoState)->ChannelInfoState)->Void = { [weak self] f in
@@ -242,25 +265,14 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         let context = self.context
         let peerId = self.peerId
-        /*
-         filethumb(with: URL(fileURLWithPath: path), account: account, scale: System.backingScale) |> mapToSignal { res -> Signal<String, NoError> in
-         guard let image = NSImage(contentsOf: URL(fileURLWithPath: path)) else {
-         return .complete()
-         }
-         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: image.size, boundingSize: NSMakeSize(640, 640), intrinsicInsets: NSEdgeInsets())
-         if let image = res(arguments)?.generateImage() {
-         return putToTemp(image: NSImage(cgImage: image, size: image.backingSize))
-         }
-         return .complete()
-         }
- */
+
         let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
         } |> beforeNext { resource in
             
             updateState { (state) -> ChannelInfoState in
                 return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
-                    return PeerInfoUpdatingPhotoState(progress: 0, cancel: cancel)
+                    return PeerInfoUpdatingPhotoState(progress: 0, image: NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil), cancel: cancel)
                 }
             }
             
@@ -297,6 +309,19 @@ class ChannelInfoArguments : PeerInfoArguments {
     
     func stats(_ datacenterId: Int32) {
         self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+    }
+    func share() {
+        let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+        let context = self.context
+        
+        _ = peer.start(next: { peer in
+            var link: String = "https://t.me/\(peer.id.id)"
+            if let address = peer.addressName, !address.isEmpty {
+                link = "https://t.me/\(address)"
+            }
+            showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
+        })
+        
     }
     
     func report() -> Void {
@@ -345,7 +370,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case scam(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
-    case setPhoto(sectionId: ChannelInfoSection, viewType: GeneralViewType)
+    case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case sharedMedia(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case notifications(sectionId: ChannelInfoSection, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
@@ -362,7 +387,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case report(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case leave(sectionId: ChannelInfoSection, isCreator: Bool, viewType: GeneralViewType)
     
-    case media(sectionId: ChannelInfoSection, controller: PeerMediaController, viewType: GeneralViewType)
+    case media(sectionId: ChannelInfoSection, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
     case section(Int)
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> ChannelInfoEntry {
@@ -371,7 +396,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .scam(sectionId, text, _): return .scam(sectionId: sectionId, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
-        case let .setPhoto(sectionId, _): return .setPhoto(sectionId: sectionId, viewType: viewType)
+        case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
         case let .sharedMedia(sectionId, _): return .sharedMedia(sectionId: sectionId, viewType: viewType)
         case let .notifications(sectionId, settings, _): return .notifications(sectionId: sectionId, settings: settings, viewType: viewType)
         case let .admins(sectionId, count, _): return .admins(sectionId: sectionId, count: count, viewType: viewType)
@@ -387,7 +412,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .signDesc(sectionId, _): return .signDesc(sectionId: sectionId, viewType: viewType)
         case let .report(sectionId, _): return .report(sectionId: sectionId, viewType: viewType)
         case let .leave(sectionId, isCreator, _): return .leave(sectionId: sectionId, isCreator: isCreator, viewType: viewType)
-        case let .media(sectionId, controller, _): return .media(sectionId: sectionId, controller: controller, viewType: viewType)
+        case let .media(sectionId, controller, isVisible, _): return .media(sectionId: sectionId, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section: return self
         }
     }
@@ -450,9 +475,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .setPhoto(sectionId, viewType):
+        case let .setTitle(sectionId, text, viewType):
             switch entry {
-            case .setPhoto(sectionId, viewType):
+            case .setTitle(sectionId, text, viewType):
                 return true
             default:
                 return false
@@ -569,9 +594,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .media(sectionId, _, viewType):
+        case let .media(sectionId, _, isVisible, viewType):
             switch entry {
-            case .media(sectionId, _, viewType):
+            case .media(sectionId, _, isVisible, viewType):
                 return true
             default:
                 return false
@@ -583,7 +608,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         switch self {
         case .info:
             return 0
-        case .setPhoto:
+        case .setTitle:
             return 1
         case .scam:
             return 2
@@ -632,7 +657,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(sectionId, _, _, _, _):
             return sectionId.rawValue
-        case let .setPhoto(sectionId, _):
+        case let .setTitle(sectionId, _, _):
             return sectionId.rawValue
         case let .scam(sectionId, _, _):
             return sectionId.rawValue
@@ -670,7 +695,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .leave(sectionId, _, _):
             return sectionId.rawValue
-        case let .media(sectionId, _, _):
+        case let .media(sectionId, _, _, _):
             return sectionId.rawValue
         case let .section(sectionId):
             return sectionId
@@ -681,7 +706,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .setPhoto(sectionId, _):
+        case let .setTitle(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .scam(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -719,7 +744,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .leave(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .media(sectionId, _, _):
+        case let .media(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -735,12 +760,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
     
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         let arguments = arguments as! ChannelInfoArguments
-        let state = arguments.state as! ChannelInfoState
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeaderItem(initialSize, stableId: stableId.hashValue, context: arguments.context, peerView:peerView, viewType: viewType, editable: editable, updatingPhotoState: updatingPhotoState, firstNameEditableText: state.editingState?.editingName, textChangeHandler: { name, _ in
-                arguments.updateEditingName(name)
-            })
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -753,9 +775,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
         case let .userName(_, value, viewType):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
-                showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: arguments.context.window)
-            }, selectFullWord: true)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true)
         case let .sharedMedia(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: { () in
                 arguments.sharedMedia()
@@ -794,24 +814,26 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDiscussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .discussionDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoDiscussionDesc, viewType: viewType)
-        case let .setPhoto(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
-                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: arguments.context.window, completion: { paths in
-                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
-                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: arguments.context.window, animationType: .scaleCenter)
-                            _ = controller.result.start(next: { url, _ in
-                                arguments.updatePhoto(url.path)
-                            })
-                            
-                            controller.onClose = {
-                                removeFile(at: path)
-                            }
-                        })
-                    }
-                })
-            })
+        case let .setTitle(_, text, viewType):
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
+//
+//            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+//                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: arguments.context.window, completion: { paths in
+//                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+//                        _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
+//                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+//                            showModal(with: controller, for: arguments.context.window, animationType: .scaleCenter)
+//                            _ = controller.result.start(next: { url, _ in
+//                                arguments.updatePhoto(url.path)
+//                            })
+//
+//                            controller.onClose = {
+//                                removeFile(at: path)
+//                            }
+//                        })
+//                    }
+//                })
+//            })
         case let .aboutInput(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):
@@ -824,8 +846,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSignMessagesDesc, viewType: viewType)
         case let .leave(_, isCreator, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? L10n.peerInfoDeleteChannel : L10n.peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
-        case let .media(_, controller, viewType):
-            return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, viewType: viewType)
+        case let .media(_, controller, isVisible, viewType):
+            return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
             return GeneralRowItem(initialSize, height:30, stableId: stableId.hashValue, viewType: .separator)
         }
@@ -871,28 +893,28 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
         
         if let editingState = state.editingState {
             if channel.hasPermission(.changeInfo) {
-                infoBlock.append(.setPhoto(sectionId: .header, viewType: .singleItem))
+                infoBlock.append(.setTitle(sectionId: .header, text: editingState.editingName ?? "", viewType: .singleItem))
             }
-            
-            applyBlock(infoBlock)
             
             if channel.hasPermission(.changeInfo) && !channel.isScam {
-                entries.append(.aboutInput(sectionId: .desc, description: editingState.editingDescriptionText, viewType: .singleItem))
-                entries.append(.aboutDesc(sectionId: .desc, viewType: .textBottomItem))
+                infoBlock.append(.aboutInput(sectionId: .header, description: editingState.editingDescriptionText, viewType: .singleItem))
             }
-            if channel.flags.contains(.isCreator) {
-                entries.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .firstItem))
-                
+            applyBlock(infoBlock)
+            entries.append(.aboutDesc(sectionId: .header, viewType: .textBottomItem))
+
+            if channel.adminRights?.flags.contains(.canChangeInfo) == true || channel.flags.contains(.isCreator) {
+                if channel.flags.contains(.isCreator) {
+                    entries.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .firstItem))
+                }
                 let group: Peer?
                 if let cachedData = view.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
                     group = view.peers[linkedDiscussionPeerId]
                 } else {
                     group = nil
                 }
-                entries.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .lastItem))
+                entries.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: channel.flags.contains(.isCreator) ? .lastItem : .singleItem))
                 entries.append(.discussionDesc(sectionId: .type, viewType: .textBottomItem))
             }
-            
             
             let messagesShouldHaveSignatures:Bool
             switch channel.info {
@@ -906,16 +928,13 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 entries.append(.signMessages(sectionId: .sign, sign: messagesShouldHaveSignatures, viewType: .singleItem))
                 entries.append(.signDesc(sectionId: .sign, viewType: .textBottomItem))
             }
-            
-
-            entries.append(.leave(sectionId: .destruct, isCreator: channel.flags.contains(.isCreator), viewType: .singleItem))
+            if channel.flags.contains(.isCreator) {
+                entries.append(.leave(sectionId: .destruct, isCreator: channel.flags.contains(.isCreator), viewType: .singleItem))
+            }
             
         } else {
             
              applyBlock(infoBlock)
-            
-            
-            
             
             var aboutBlock:[ChannelInfoEntry] = []
             if channel.isScam {
@@ -938,14 +957,11 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 var membersCount:Int32? = nil
                 var adminsCount:Int32? = nil
                 var blockedCount:Int32? = nil
-                var canViewStats: Bool = false
-                
                 
                 if let cachedData = view.cachedData as? CachedChannelData {
                     membersCount = cachedData.participantsSummary.memberCount
                     adminsCount = cachedData.participantsSummary.adminCount
                     blockedCount = cachedData.participantsSummary.kickedCount
-                    canViewStats = cachedData.flags.contains(.canViewStats)
                 }
                 entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
                 entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
@@ -953,40 +969,11 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
                 
             }
-            
-     
-            var additionBlock:[ChannelInfoEntry] = []
-            
-            if !arguments.isAd {
-                additionBlock.append(.notifications(sectionId: .addition, settings: view.notificationSettings, viewType: .singleItem))
-            }
-            additionBlock.append(.sharedMedia(sectionId: .addition, viewType: .singleItem))
-            
-            var datacenterId: Int32 = 0
-            
-            if let cachedData = view.cachedData as? CachedChannelData {
-                datacenterId = cachedData.statsDatacenterId
-            }
-            
-            if datacenterId > 0 {
-                additionBlock.append(.statistics(sectionId: .addition, datacenterId: datacenterId, viewType: .innerItem))
-            }
-            
-            applyBlock(additionBlock)
-            
-            var destructBlock:[ChannelInfoEntry] = []
-            if !channel.flags.contains(.isCreator) {
-                destructBlock.append(.report(sectionId: .destruct, viewType: .singleItem))
-                if channel.participationStatus == .member {
-                    destructBlock.append(.leave(sectionId: .destruct, isCreator: false, viewType: .singleItem))
-                }
-            }
-            applyBlock(destructBlock)
         }
     }
     
-    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, state.editingState == nil, let controller = arguments.mediaController() {
-        entries.append(.media(sectionId: ChannelInfoSection.media, controller: controller, viewType: .singleItem))
+    if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
+        entries.append(.media(sectionId: ChannelInfoSection.media, controller: controller, isVisible: state.editingState == nil, viewType: .singleItem))
     }
     
     var items:[ChannelInfoEntry] = []
