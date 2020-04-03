@@ -335,6 +335,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                     return
                 }
                 self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: count)
+                _ = self.makeSize(self.width, oldWidth: 0)
                 self.redraw()
             }))
         }
