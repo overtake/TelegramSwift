@@ -518,18 +518,18 @@
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
         super.init(context)
     }
-    
-    private var temporaryTouchBar: Any?
-    
-    @available(OSX 10.12.2, *)
-    override func makeTouchBar() -> NSTouchBar? {
-        if temporaryTouchBar == nil {
-            temporaryTouchBar = PeerMediaTouchBar(chatInteraction: interactions, currentMode: tabsSignal.get() |> map { $0.selected }, toggleMode: { [weak self] value in
-                self?.modeValue.set(value)
-            })
-        }
-        return temporaryTouchBar as? NSTouchBar
-    }
+//
+//    private var temporaryTouchBar: Any?
+//
+//    @available(OSX 10.12.2, *)
+//    override func makeTouchBar() -> NSTouchBar? {
+//        if temporaryTouchBar == nil {
+//            temporaryTouchBar = PeerMediaTouchBar(chatInteraction: interactions, currentMode: tabsSignal.get() |> map { $0.selected }, toggleMode: { [weak self] value in
+//                self?.modeValue.set(value)
+//            })
+//        }
+//        return temporaryTouchBar as? NSTouchBar
+//    }
     
     var unableToHide: Bool {
         return self.genericView.activePanel is SearchContainerView || self.state != .Normal

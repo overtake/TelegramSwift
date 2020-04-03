@@ -251,8 +251,8 @@ class PeerInfoHeadItem: GeneralRowItem {
         return height
     }
     
-    fileprivate let statusLayout: TextViewLayout
-    fileprivate let nameLayout: TextViewLayout
+    fileprivate var statusLayout: TextViewLayout
+    fileprivate var nameLayout: TextViewLayout
     
     
     let context: AccountContext
@@ -260,11 +260,17 @@ class PeerInfoHeadItem: GeneralRowItem {
     let isVerified: Bool
     let isScam: Bool
     let peerView:PeerView
-    let result:PeerStatusStringResult
+    var result:PeerStatusStringResult {
+        didSet {
+            nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
+            statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
+        }
+    }
     
     private(set) fileprivate var items: [ActionItem] = []
     
     private let fetchPeerAvatar = MetaDisposable()
+    private let onlineMemberCountDisposable = MetaDisposable()
     
     fileprivate let editing: Bool
     fileprivate let updatingPhotoState:PeerInfoUpdatingPhotoState?
@@ -310,11 +316,28 @@ class PeerInfoHeadItem: GeneralRowItem {
             }
         }
         self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
-        
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
         statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
+        
+        
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
+        
+        if let cachedData = peerView.cachedData as? CachedChannelData {
+            let onlineMemberCount:Signal<Int32?, NoError>
+            if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+            } else {
+                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+            }
+            self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
+                guard let `self` = self else {
+                    return
+                }
+                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: count)
+                self.redraw()
+            }))
+        }
         
         _ = self.makeSize(initialSize.width, oldWidth: 0)
         
@@ -322,6 +345,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     deinit {
         fetchPeerAvatar.dispose()
+        onlineMemberCountDisposable.dispose()
     }
 
     override func viewClass() -> AnyClass {
