@@ -396,8 +396,6 @@ class PeerInfoController: EditableViewController<TableView> {
             
             _ = self?.peerView.swap(peerView)
             
-            
-            
             let editable:Bool
             if let peer = peerViewMainPeer(peerView) {
                 if let peer = peer as? TelegramChannel {
@@ -405,11 +403,15 @@ class PeerInfoController: EditableViewController<TableView> {
                     case .broadcast:
                         editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                     case .group:
-                        editable = true //peer.adminRights != nil || peer.flags.contains(.isCreator)
+                        editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                     }
-                    
-                } else if peer is TelegramGroup {
-                    editable = true
+                } else if let group = peer as? TelegramGroup {
+                    switch group.role {
+                    case .admin, .creator:
+                        editable = true
+                    default:
+                        editable = false
+                    }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
                     editable = context.account.peerId != peer.id
                 } else {
