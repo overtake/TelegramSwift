@@ -122,16 +122,22 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     let fitOnlyThreeItems = width - actionItemWidth < actionItemWidth * CGFloat(4) + CGFloat(4 + 1) * actionItemInsetWidth
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
-        items.append(ActionItem(text: "Message", image: theme.icons.profile_message, action: arguments.sendMessage))
+        if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
+            items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
+        }
         if peer.canCall && peer.id != item.context.peerId {
-            items.append(ActionItem(text: "Call", image: theme.icons.profile_call, action: arguments.call))
+            items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
         }
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? "Unmute" : "Mute", image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         if !peer.isBot {
-            items.append(ActionItem(text: "Secret Chat", image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
-            
+            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
+                items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
+            }
+            if peer.id != item.context.peerId, item.peerView.peerIsContact {
+                items.append(ActionItem(text: L10n.peerInfoShareContact, image: theme.icons.profile_more, action: arguments.shareContact))
+            }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
                 items.append(ActionItem(text: (!cachedData.isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), image: theme.icons.profile_more, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, false)
@@ -165,7 +171,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
             if !subItems.isEmpty {
-                items.append(ActionItem(text: "More", image: theme.icons.profile_more, action: { }, subItems: subItems))
+                items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
             }
         }
         
@@ -173,39 +179,39 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         let access = peer.groupAccess
         
         if access.canAddMembers {
-            items.append(ActionItem(text: "Add Members", image: theme.icons.profile_add_member, action: {
+            items.append(ActionItem(text: L10n.peerInfoActionAddMembers, image: theme.icons.profile_add_member, action: {
                 arguments.addMember(access.canCreateInviteLink)
             }))
         }
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? "Unmute" : "Mute", image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
-        items.append(ActionItem(text: "Leave", image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
         
         if access.canReport {
-            items.append(ActionItem(text: "Report", image: theme.icons.profile_leave, destruct: true, action: arguments.report))
+            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_leave, destruct: true, action: arguments.report))
         }
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? "Unmute" : "Mute", image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
-        items.append(ActionItem(text: "Leave", image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
         var subItems:[SubActionItem] = []
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if cachedData.statsDatacenterId > 0 {
-                subItems.append(SubActionItem(text: "Statistics", action: {
+                subItems.append(SubActionItem(text: L10n.peerInfoActionStatistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
             }
         }
-        subItems.append(SubActionItem(text: "Share", action: arguments.share))
+        subItems.append(SubActionItem(text: L10n.peerInfoActionShare, action: arguments.share))
         if peer.groupAccess.canReport {
-            subItems.append(SubActionItem(text: "Report", destruct: true, action: arguments.report))
+            subItems.append(SubActionItem(text: L10n.peerInfoActionReport, destruct: true, action: arguments.report))
         }
         if !subItems.isEmpty {
-            items.append(ActionItem(text: "More", image: theme.icons.profile_more, action: { }, subItems: subItems))
+            items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
         }
         
     }
@@ -219,7 +225,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             subItems.insert(SubActionItem(text: item.text, destruct: item.destruct, action: item.action), at: 0)
         }
         if !subItems.isEmpty {
-            items.append(ActionItem(text: "More", image: theme.icons.profile_more, action: { }, subItems: subItems))
+            items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
         }
     }
     
@@ -578,6 +584,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         layoutActionItems(item.items, animated: animated)
         
+        
+        photoView.userInteractionEnabled = !item.editing
         
         let containerRect: NSRect
         switch item.viewType {

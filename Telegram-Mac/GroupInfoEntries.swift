@@ -1304,7 +1304,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             entries.append(contentsOf: block)
         }
         
-        infoBlock.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: access.canEditGroupInfo ? state.editingState != nil : false, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
+        infoBlock.append(.info(section: GroupInfoSection.header.rawValue, view: view, editingState: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
         
         
         if let editingState = state.editingState {
@@ -1552,17 +1552,8 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
             }
             
-//            if let membersCount = cachedGroupData.participantsSummary.memberCount {
-//                entries.append(GroupInfoEntry.usersHeader(section: GroupInfoSection.members.rawValue, count: Int(membersCount), viewType: .textTopItem))
-//            }
-//
             var usersBlock:[GroupInfoEntry] = []
-            
-//            if access.canAddMembers  {
-//                usersBlock.append(.addMember(section: GroupInfoSection.members.rawValue, inviteViaLink: access.canCreateInviteLink, viewType: .singleItem))
-//            }
-//
-//
+
             
             var sortedParticipants = participants.filter({!$0.peer.rawDisplayTitle.isEmpty}).sorted(by: { lhs, rhs in
                 let lhsPresence = lhs.presences[lhs.peer.id] as? TelegramUserPresence

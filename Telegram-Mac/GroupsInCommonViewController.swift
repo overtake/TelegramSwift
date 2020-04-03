@@ -71,16 +71,24 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
         context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     })
     
-    let commonContext = GroupsInCommonContext(account: context.account, peerId: peerId)
-
-    let dataSignal = commonContext.state |> map {
+    let contextValue: Promise<GroupsInCommonContext> = Promise()
+    let peerId = context.account.postbox.peerView(id: peerId) |> take(1) |> map { view in
+        return peerViewMainPeer(view)?.id ?? peerId
+    }
+    contextValue.set(peerId |> map {
+        GroupsInCommonContext(account: context.account, peerId: $0)
+    })
+    let state = contextValue.get() |> mapToSignal {
+        $0.state
+    }
+    let dataSignal = state |> map {
         return InputDataSignalValue(entries: commonGroupsEntries(state: $0, arguments: arguments))
     }
     
     let controller = InputDataController(dataSignal: dataSignal, title: "")
     controller.bar = .init(height: 0)
     
-    controller.contextOject = commonContext
+    controller.contextOject = contextValue
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -94,7 +102,10 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
-                commonContext.loadMore()
+                _ = contextValue.get().start(next: { ctx in
+                    ctx.loadMore()
+                })
+                //commonContext.loadMore()
             default:
                 break
             }

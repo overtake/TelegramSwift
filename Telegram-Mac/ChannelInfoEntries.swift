@@ -371,12 +371,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
-    case sharedMedia(sectionId: ChannelInfoSection, viewType: GeneralViewType)
-    case notifications(sectionId: ChannelInfoSection, settings: PeerNotificationSettings?, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
-    case statistics(sectionId: ChannelInfoSection, datacenterId: Int32, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
@@ -397,12 +394,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
         case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
-        case let .sharedMedia(sectionId, _): return .sharedMedia(sectionId: sectionId, viewType: viewType)
-        case let .notifications(sectionId, settings, _): return .notifications(sectionId: sectionId, settings: settings, viewType: viewType)
         case let .admins(sectionId, count, _): return .admins(sectionId: sectionId, count: count, viewType: viewType)
         case let .blocked(sectionId, count, _): return .blocked(sectionId: sectionId, count: count, viewType: viewType)
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
-        case let .statistics(sectionId, datacenterId, _): return .statistics(sectionId: sectionId, datacenterId: datacenterId, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
@@ -482,25 +476,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .sharedMedia(sectionId, viewType):
-            switch entry {
-            case .sharedMedia(sectionId, viewType):
-                return true
-            default:
-                return false
-            }
-        case let .notifications(sectionId, lhsSettings, viewType):
-            switch entry {
-            case .notifications(sectionId, let rhsSettings, viewType):
-                if let lhsSettings = lhsSettings, let rhsSettings = rhsSettings {
-                    return lhsSettings.isEqual(to: rhsSettings)
-                } else if (lhsSettings != nil) != (rhsSettings != nil) {
-                    return false
-                }
-                return true
-            default:
-                return false
-            }
         case let .report(sectionId, viewType):
             switch entry {
             case .report(sectionId, viewType):
@@ -526,13 +501,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .statistics(sectionId, datacenterId, viewType):
-            if case .statistics(sectionId, datacenterId, viewType) = entry {
-                return true
-            } else {
-                return false
-            }
-            
         case let .link(sectionId, addressName, viewType):
             if case .link(sectionId, addressName, viewType) = entry {
                 return true
@@ -616,12 +584,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 3
         case .userName:
             return 4
-        case .notifications:
-            return 5
-        case .sharedMedia:
-            return 6
-        case .statistics:
-            return 7
         case .admins:
             return 8
         case .members:
@@ -665,17 +627,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .userName(sectionId, _, _):
             return sectionId.rawValue
-        case let .sharedMedia(sectionId, _):
-            return sectionId.rawValue
-        case let .notifications(sectionId, _, _):
-            return sectionId.rawValue
         case let .admins(sectionId, _, _):
             return sectionId.rawValue
         case let .blocked(sectionId, _, _):
             return sectionId.rawValue
         case let .members(sectionId, _, _):
-            return sectionId.rawValue
-        case let .statistics(sectionId, _, _):
             return sectionId.rawValue
         case let .link(sectionId, _, _):
             return sectionId.rawValue
@@ -714,17 +670,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .userName(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .sharedMedia(sectionId, _):
-            return (sectionId.rawValue * 1000) + stableIndex
-        case let .notifications(sectionId, _, _):
-            return (sectionId.rawValue * 1000) + stableIndex
         case let .admins(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .blocked(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .members(sectionId, _, _):
-            return (sectionId.rawValue * 1000) + stableIndex
-        case let .statistics(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .link(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -776,14 +726,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .userName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true)
-        case let .sharedMedia(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: { () in
-                arguments.sharedMedia()
-            })
-        case let .notifications(_, settings, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? false)), viewType: viewType, action: {
-               arguments.toggleNotifications()
-            })
         case let .report(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
@@ -794,10 +736,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
         case let .blocked(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
-        case let .statistics(_, datacenterId, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStatistics, type: .next, viewType: viewType, action: {
-                arguments.stats(datacenterId)
-            })
         case let .link(_, addressName: addressName, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
         case let .discussion(_, group, _, viewType):
@@ -816,24 +754,6 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoDiscussionDesc, viewType: viewType)
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
-//
-//            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetChannelPhoto, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
-//                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: arguments.context.window, completion: { paths in
-//                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-//                        _ = (putToTemp(image: image, compress: false) |> deliverOnMainQueue).start(next: { path in
-//                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-//                            showModal(with: controller, for: arguments.context.window, animationType: .scaleCenter)
-//                            _ = controller.result.start(next: { url, _ in
-//                                arguments.updatePhoto(url.path)
-//                            })
-//
-//                            controller.onClose = {
-//                                removeFile(at: path)
-//                            }
-//                        })
-//                    }
-//                })
-//            })
         case let .aboutInput(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):

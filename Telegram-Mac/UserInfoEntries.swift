@@ -98,7 +98,14 @@ class UserInfoArguments : PeerInfoArguments {
     private let callDisposable = MetaDisposable()
     
     func shareContact() {
-        shareDisposable.set((context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
+        let context = self.context
+        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
+            return peerViewMainPeer($0)
+        } |> deliverOnMainQueue
+        
+
+        
+        shareDisposable.set(peer.start(next: { [weak self] peer in
             if let context = self?.context, let peer = peer as? TelegramUser {
                 showModal(with: ShareModalController(ShareContactObject(context, user: peer)), for: context.window)
             }
@@ -223,7 +230,15 @@ class UserInfoArguments : PeerInfoArguments {
     
     func call() {
         let context = self.context
-        self.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
+            return peerViewMainPeer($0)?.id
+        } |> filter { $0 != nil } |> map { $0! }
+        
+        let call = peer |> mapToSignal {
+            phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: $0)
+        } |> deliverOnMainQueue
+        
+        self.callDisposable.set(call.start(next: { result in
             applyUIPCallResult(context.sharedContext, result)
         }))
     }
@@ -994,6 +1009,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
                 }
                 
+                
                 if !user.isBot {
                     if !view.peerIsContact {
                         infoBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
@@ -1001,28 +1017,28 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
                         }
                     }
-                    
                 }
-
+                if (peer is TelegramSecretChat) {
+                    infoBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
+                }
                 
                 applyBlock(infoBlock)
             }
             
             if let _ = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {
-                if state.editingState != nil, view.peerIsContact {
-                    destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
+                if state.editingState != nil {
+                    if peer is TelegramSecretChat {
+                        destructBlock.append(.deleteChat(sectionId: sectionId, viewType: .singleItem))
+                    }
+                    if view.peerIsContact {
+                        destructBlock.append(.deleteContact(sectionId: sectionId, viewType: .singleItem))
+                    }
                 }
-            }
-            if peer is TelegramSecretChat {
-                destructBlock.append(.deleteChat(sectionId: sectionId, viewType: .singleItem))
+               
             }
             applyBlock(destructBlock)
             
-            if !destructBlock.isEmpty {
-                entries.append(UserInfoEntry.section(sectionId: sectionId))
-                sectionId += 1
-            }
-           
+            
             if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
                 entries.append(UserInfoEntry.media(sectionId: sectionId, controller: controller, isVisible: state.editingState == nil, viewType: .singleItem))
             }
