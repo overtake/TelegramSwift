@@ -2158,15 +2158,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                tab_chats_active_filters: { generateChatTabFiltersIcon(NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon)) },
                                                tab_settings: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.grayIcon) },
                                                tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) },
-                                               profile_add_member: { generateProfileIcon(NSImage(named: "Icon_Profile_AddMember")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_call: { generateProfileIcon(NSImage(named: "Icon_Profile_Call")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_leave: { generateProfileIcon(NSImage(named: "Icon_Profile_Leave")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_message: { generateProfileIcon(NSImage(named: "Icon_Profile_Message")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_more: { generateProfileIcon(NSImage(named: "Icon_Profile_More")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_mute: { generateProfileIcon(NSImage(named: "Icon_Profile_Mute")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_unmute: { generateProfileIcon(NSImage(named: "Icon_Profile_Unmute")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_search: { generateProfileIcon(NSImage(named: "Icon_Profile_Search")!.precomposed(palette.accentIcon), backgroundColor: .white) },
-                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: .white) }, profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(.white)}
+                                               profile_add_member: { generateProfileIcon(NSImage(named: "Icon_Profile_AddMember")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_call: { generateProfileIcon(NSImage(named: "Icon_Profile_Call")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_leave: { generateProfileIcon(NSImage(named: "Icon_Profile_Leave")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_message: { generateProfileIcon(NSImage(named: "Icon_Profile_Message")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_more: { generateProfileIcon(NSImage(named: "Icon_Profile_More")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_mute: { generateProfileIcon(NSImage(named: "Icon_Profile_Mute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_unmute: { generateProfileIcon(NSImage(named: "Icon_Profile_Unmute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_search: { generateProfileIcon(NSImage(named: "Icon_Profile_Search")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) }, profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(palette.underSelectedColor)}
     )
 
 }

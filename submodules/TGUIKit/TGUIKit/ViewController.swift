@@ -264,7 +264,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!

@@ -380,7 +380,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
         
         let transition = arguments.get() |> mapToSignal { arguments in
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady)
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady)
                 |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _ -> Signal<(PeerView, TableUpdateTransition), NoError> in
                     
                     let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
