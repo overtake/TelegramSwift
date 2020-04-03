@@ -426,15 +426,24 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 
                 let lhsPeer = peerViewMainPeer(lhsPeerView)
                 let lhsCachedData = lhsPeerView.cachedData
+                let lhsNotificationSettings = lhsPeerView.notificationSettings
                 
                 let rhsPeer = peerViewMainPeer(rhsPeerView)
                 let rhsCachedData = rhsPeerView.cachedData
-                
+                let rhsNotificationSettings = rhsPeerView.notificationSettings
                 if let lhsPeer = lhsPeer, let rhsPeer = rhsPeer {
                     if !lhsPeer.isEqual(rhsPeer) {
                         return false
                     }
                 } else if (lhsPeer == nil) != (rhsPeer != nil) {
+                    return false
+                }
+                
+                if let lhsNotificationSettings = lhsNotificationSettings, let rhsNotificationSettings = rhsNotificationSettings {
+                    if !lhsNotificationSettings.isEqual(to: rhsNotificationSettings) {
+                        return false
+                    }
+                } else if (lhsNotificationSettings == nil) != (rhsNotificationSettings == nil) {
                     return false
                 }
                 if let lhsCachedData = lhsCachedData, let rhsCachedData = rhsCachedData {
