@@ -3035,6 +3035,10 @@ internal final class L10n {
   internal static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
   /// More Info
   internal static var genericErrorMoreInfo: String  { return L10n.tr("Localizable", "Generic.ErrorMoreInfo") }
+  /// Total
+  internal static var graphTotal: String  { return L10n.tr("Localizable", "Graph.Total") }
+  /// Zoom Out
+  internal static var graphZoomOut: String  { return L10n.tr("Localizable", "Graph.ZoomOut") }
   /// New Group
   internal static var groupCreateGroup: String  { return L10n.tr("Localizable", "Group.CreateGroup") }
   /// New Group
@@ -4439,8 +4443,6 @@ internal final class L10n {
   internal static var peerInfoSignMessages: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages") }
   /// Start Secret Chat
   internal static var peerInfoStartSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.StartSecretChat") }
-  /// Statistics
-  internal static var peerInfoStatistics: String  { return L10n.tr("Localizable", "PeerInfo.Statistics") }
   /// Stop Bot
   internal static var peerInfoStopBot: String  { return L10n.tr("Localizable", "PeerInfo.StopBot") }
   /// Subscribers
@@ -4451,6 +4453,28 @@ internal final class L10n {
   internal static var peerInfoUsername: String  { return L10n.tr("Localizable", "PeerInfo.username") }
   /// Description
   internal static var peerInfoAboutPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.About.Placeholder") }
+  /// Add
+  internal static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
+  /// Call
+  internal static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
+  /// Leave
+  internal static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }
+  /// Message
+  internal static var peerInfoActionMessage: String  { return L10n.tr("Localizable", "PeerInfo.Action.Message") }
+  /// More
+  internal static var peerInfoActionMore: String  { return L10n.tr("Localizable", "PeerInfo.Action.More") }
+  /// Mute
+  internal static var peerInfoActionMute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Mute") }
+  /// Report
+  internal static var peerInfoActionReport: String  { return L10n.tr("Localizable", "PeerInfo.Action.Report") }
+  /// Secret Chat
+  internal static var peerInfoActionSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.Action.SecretChat") }
+  /// Share
+  internal static var peerInfoActionShare: String  { return L10n.tr("Localizable", "PeerInfo.Action.Share") }
+  /// Statistics
+  internal static var peerInfoActionStatistics: String  { return L10n.tr("Localizable", "PeerInfo.Action.Statistics") }
+  /// Unmute
+  internal static var peerInfoActionUnmute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Unmute") }
   /// Add To Group
   internal static var peerInfoBotAddToGroup: String  { return L10n.tr("Localizable", "PeerInfo.Bot.AddToGroup") }
   /// Help
