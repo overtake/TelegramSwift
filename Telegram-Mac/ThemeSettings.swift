@@ -526,6 +526,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         }
     }
     init(decoder: PostboxDecoder) {
+        
         self.wallpaper = (decoder.decodeObjectForKey("wallpaper", decoder: { ThemeWallpaper(decoder: $0) }) as? ThemeWallpaper) ?? ThemeWallpaper()
         self.palette = ColorPalette.initWith(decoder: decoder)
         

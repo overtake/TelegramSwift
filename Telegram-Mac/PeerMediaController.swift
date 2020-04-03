@@ -275,19 +275,23 @@
     
     fileprivate func updateMainView(with view:NSView, animated:PeerMediaAnimationDirection?) {
         addSubview(view, positioned: .below, relativeTo: topPanelView)
+        
+        let timingFunction: CAMediaTimingFunctionName = .spring
+        let duration: TimeInterval = 0.35
+        
         if let animated = animated {
             if let mainView = mainView {
                 switch animated {
                 case .leftToRight:
-                    mainView._change(pos: NSMakePoint(-mainView.frame.width, mainView.frame.minY), animated: true, completion: { [weak mainView] _ in
+                    mainView._change(pos: NSMakePoint(-mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] _ in
                         mainView?.removeFromSuperview()
                     })
-                    view.layer?.animatePosition(from: NSMakePoint(view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY))
+                    view.layer?.animatePosition(from: NSMakePoint(view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY), duration: duration, timingFunction: timingFunction)
                 case .rightToLeft:
-                    mainView._change(pos: NSMakePoint(mainView.frame.width, mainView.frame.minY), animated: true, completion: { [weak mainView] _ in
+                    mainView._change(pos: NSMakePoint(mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] _ in
                         mainView?.removeFromSuperview()
                     })
-                    view.layer?.animatePosition(from: NSMakePoint(-view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY))
+                    view.layer?.animatePosition(from: NSMakePoint(-view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY), duration: duration, timingFunction: timingFunction)
                 }
             }
             self.mainView = view
