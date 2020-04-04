@@ -461,7 +461,7 @@
     private let commonGroups: ViewController
     
     
-    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice]
+    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .commonGroups]
     
     
     private var currentTagListIndex: Int {
