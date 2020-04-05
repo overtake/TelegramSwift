@@ -118,7 +118,7 @@ enum LocalAnimatedSticker {
         case .think_spectacular:
             playPolicy = .once
         case .success_saved:
-            playPolicy = .once
+            playPolicy = .onceEnd
         case .dice_idle:
             playPolicy = .once
         case .folder:
