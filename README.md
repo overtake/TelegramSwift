@@ -52,6 +52,9 @@ Telegram strives to protect your privacy.  This app asks for as few permissions 
 * **User-selected files**: You can save files or images to your Mac.
 * **Downloads folder**: Telegram can automatically download files or images you receive.
 
+## Shortcuts
+With [Shortcuts](https://github.com/zweeltow/TelegramSwift/wiki/Shortcuts-in-Telegram-for-macOS) you can learn how easy is navigate using your devices.
+
 ## License
 Telegram for macOS is licensed under the GNU Public License, version 2.0. See [LICENSE](LICENSE) for more information.
 
