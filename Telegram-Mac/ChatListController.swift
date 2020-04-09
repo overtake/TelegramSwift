@@ -456,6 +456,9 @@ class ChatListController : PeersListController {
             if lhs.sidebar != rhs.sidebar {
                 return false
             }
+            if lhs.filter != rhs.filter {
+                return false
+            }
             return true
         })
         

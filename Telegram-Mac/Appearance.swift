@@ -1365,7 +1365,7 @@ func getAverageColor(_ image: NSImage) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
-//    color = color.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+//    color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
@@ -1380,7 +1380,7 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
-    let color = color.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+    let color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)

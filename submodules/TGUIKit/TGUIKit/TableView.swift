@@ -886,6 +886,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     func layoutIfNeeded(with range:NSRange, oldWidth:CGFloat) {
         
+        
         let visibleItems = self.visibleItems()
         
         for i in range.min ..< range.max {
@@ -898,8 +899,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 noteHeightOfRow(i, false)
             }
         }
-        
-        saveScrollState(visibleItems)
+        if !tableView.inLiveResize {
+            saveScrollState(visibleItems)
+        }
     }
     
     private var liveScrollStartPosition: NSPoint?
@@ -2957,7 +2959,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
         
         //updateStickAfterScroll(false)
-        if oldWidth != newSize.width {
+        if oldWidth != newSize.width, !inLiveResize {
             saveScrollState(visible)
         }
     }
