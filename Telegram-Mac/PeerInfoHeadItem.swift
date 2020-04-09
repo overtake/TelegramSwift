@@ -355,7 +355,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         
         self.items = actionItems(item: self, width: width, theme: theme)
-        let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (isScam ? theme.icons.scam.backingSize.width + 5 : 0) - (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
+        let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (isScam ? theme.icons.chatScam.backingSize.width + 5 : 0) - (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
         nameLayout.measure(width: textWidth)
         statusLayout.measure(width: textWidth)
 
@@ -363,8 +363,8 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     
     fileprivate var nameSize: NSSize {
-        let stateHeight = max((isScam ? theme.icons.scam.backingSize.height : 0), (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.height : 0))
-        let width = nameLayout.layoutSize.width + (isScam ? theme.icons.scam.backingSize.width + 5 : 0) + (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
+        let stateHeight = max((isScam ? theme.icons.chatScam.backingSize.height : 0), (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.height : 0))
+        let width = nameLayout.layoutSize.width + (isScam ? theme.icons.chatScam.backingSize.width + 5 : 0) + (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
         return NSMakeSize(width, max(nameLayout.layoutSize.height, stateHeight))
     }
     
@@ -492,7 +492,7 @@ private final class NameContainer : View {
                 addSubview(stateImage!)
             }
             
-            stateImage?.image = item.isScam ? theme.icons.scam : theme.icons.peerInfoVerifyProfile
+            stateImage?.image = item.isScam ? theme.icons.chatScam : theme.icons.peerInfoVerifyProfile
             _ = stateImage?.sizeToFit()
         } else {
             stateImage?.removeFromSuperview()

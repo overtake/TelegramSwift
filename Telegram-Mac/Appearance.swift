@@ -2243,7 +2243,6 @@ private let appearanceDisposable = MetaDisposable()
 private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = nil, animated: Bool) {
     assertOnMainThread()
     updateTheme(theme)
-    NSLog("applyNewTheme, animated: \(animated)")
     if let window = window {
         
         if animated, let contentView = window.contentView {
