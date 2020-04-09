@@ -59,7 +59,7 @@ class LeftSidebarFolderItem: TableRowItem {
         self.selected = selected
         self.callback = callback
         self.menuItems = menuItems
-        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: .white, font: .medium(10)))
+        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: .white, font: .medium(10)), alignment: .center)
         nameLayout.measure(width: initialSize.width - 10)
         
         
@@ -107,7 +107,7 @@ class LeftSidebarFolderItem: TableRowItem {
                     
                     ctx.draw(folderIcon, in: rect.focus(folderIcon.size))
                     
-                    ctx.clip(to: NSMakeRect(rect.width - badge.size.width / 2 - 11, rect.height - badge.size.height + 4, badge.size.width + 4, badge.size.height + 4), mask: badge)
+                    ctx.clip(to: NSMakeRect(rect.width - badge.size.width / 2 - 11 / System.backingScale, rect.height - badge.size.height + 5 / System.backingScale, badge.size.width + 4, badge.size.height + 4), mask: badge)
                     
                     ctx.clear(rect)
                     
