@@ -175,15 +175,7 @@ extension PaletteAccentColor {
 
 extension ColorPalette  {
     func encode(_ encoder: PostboxEncoder) {
-        for child in Mirror(reflecting: self).children {
-            if let label = child.label {
-                if let value = child.value as? NSColor {
-                    var label = label
-                    _ = label.removeFirst()
-                    encoder.encodeInt32(Int32(bitPattern: value.argb), forKey: label)
-                }
-            }
-        }
+        
         encoder.encodeBool(self.isNative, forKey: "isNative")
         encoder.encodeString(self.name, forKey: "name")
         encoder.encodeString(self.copyright, forKey: "copyright")
@@ -194,6 +186,22 @@ extension ColorPalette  {
         encoder.encodeObjectArrayWithEncoder(self.accentList, forKey: "accentList_1", encoder: { value, encoder in
             return value.encode(encoder)
         })
+        
+        for child in Mirror(reflecting: self).children {
+            if let label = child.label {
+                if let value = child.value as? NSColor {
+                    var label = label
+                    _ = label.removeFirst()
+                    if label == "selectTextBubble_outgoing" {
+                        var bp:Int = 0
+                        bp += 1
+                    }
+                    NSColor.init(argb: value.argb).hexString
+                    encoder.encodeInt32(Int32(bitPattern: value.argb), forKey: label)
+                }
+            }
+        }
+        
        //encoder.encodeString(self.accentList.map { $0.hexString }.joined(separator: ","), forKey: "accentList")
     }
     
@@ -529,7 +537,7 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
         
         self.wallpaper = (decoder.decodeObjectForKey("wallpaper", decoder: { ThemeWallpaper(decoder: $0) }) as? ThemeWallpaper) ?? ThemeWallpaper()
         self.palette = ColorPalette.initWith(decoder: decoder)
-        
+    
         self.bubbled = decoder.decodeBoolForKey("bubbled", orElse: false)
         self.fontSize = CGFloat(decoder.decodeDoubleForKey("fontSize", orElse: 13))
         
@@ -714,17 +722,37 @@ struct ThemePaletteSettings: PreferencesEntry, Equatable {
 }
 
 func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
-    return lhs.palette == rhs.palette &&
-    lhs.fontSize == rhs.fontSize &&
-    lhs.bubbled == rhs.bubbled &&
-    lhs.wallpaper == rhs.wallpaper &&
-    lhs.defaultDay == rhs.defaultDay &&
-    lhs.defaultDark == rhs.defaultDark &&
-    lhs.cloudTheme == rhs.cloudTheme &&
-    lhs.wallpapers == rhs.wallpapers &&
-    lhs.accents == rhs.accents &&
-    lhs.defaultIsDark == rhs.defaultIsDark &&
-    lhs.associated == rhs.associated
+    if lhs.palette != rhs.palette {
+        return false
+    }
+    if lhs.fontSize != rhs.fontSize {
+        return false
+    }
+    if lhs.bubbled != rhs.bubbled {
+        return false
+    }
+    if lhs.wallpaper != rhs.wallpaper {
+        return false
+    }
+    if lhs.defaultDay != rhs.defaultDay {
+        return false
+    }
+    if lhs.defaultDark != rhs.defaultDark {
+        return false
+    }
+    if lhs.cloudTheme != rhs.cloudTheme {
+        return false
+    }
+    if lhs.wallpapers != rhs.wallpapers {
+        return false
+    }
+    if lhs.defaultIsDark != rhs.defaultIsDark {
+        return false
+    }
+    if lhs.associated != rhs.associated {
+        return false
+    }
+    return true
 }
 
 
@@ -738,6 +766,8 @@ func themeUnmodifiedSettings(accountManager: AccountManager)-> Signal<ThemePalet
 
 
 func updateThemeInteractivetly(accountManager: AccountManager, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
+    var bp:Int = 0
+    bp += 1
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
             return f(entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme)

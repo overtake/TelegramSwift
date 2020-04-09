@@ -918,7 +918,7 @@ public extension CGImage {
     }
     
     var size:NSSize {
-        return NSMakeSize(CGFloat(width), CGFloat(height))
+        return NSMakeSize(CGFloat(width) / System.backingScale, CGFloat(height) / System.backingScale)
     }
     
     var backingBounds: NSRect {
@@ -1353,7 +1353,9 @@ public extension NSColor {
         var b: CGFloat = 0
         var a: CGFloat = 0
         
-        let color = self.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        
+        
+        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
 
         
         var rInt, gInt, bInt, aInt: Int

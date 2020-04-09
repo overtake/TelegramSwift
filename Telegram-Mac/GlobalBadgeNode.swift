@@ -82,7 +82,7 @@ class GlobalBadgeNode: Node {
     
     private let getColor: (Bool) -> NSColor
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil, removeWhenSidebar: Bool = false) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
@@ -126,7 +126,7 @@ class GlobalBadgeNode: Node {
         let unreadKey: PostboxViewKey
         unreadKey = .unreadCounts(items: [])
         
-        let s:Signal<Result, NoError>
+        var s:Signal<Result, NoError>
         
         if let filter = filter {
             s = chatListFilterItems(account: account, accountManager: sharedContext.accountManager) |> map { value in
@@ -177,6 +177,9 @@ class GlobalBadgeNode: Node {
             } |> deliverOnMainQueue
         }
         
+        s = combineLatest(s, chatListFolderSettings(account.postbox)) |> map {
+            return Result(dockText: $0.dockText, total: $1.sidebar && removeWhenSidebar ? 0 : $0.total)
+        } |> deliverOnMainQueue
         
         self.disposable.set(s.start(next: { [weak self] result in
             if let strongSelf = self {

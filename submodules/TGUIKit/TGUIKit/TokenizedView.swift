@@ -176,7 +176,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         _tokensUpdater.set(.single(self.tokens))
         input.string = ""
         textDidChange(Notification(name: NSText.didChangeNotification))
-        (contentView as? TGClipView)?.scroll(to: NSMakePoint(0, container.frame.height - frame.height), animated: animated)
+        (contentView as? TGClipView)?.scroll(to: NSMakePoint(0, max(0, container.frame.height - frame.height)), animated: animated)
     }
     
     public func removeTokens(uniqueIds: [Int64], animated: Bool) {

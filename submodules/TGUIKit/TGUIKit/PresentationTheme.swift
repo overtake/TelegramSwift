@@ -110,7 +110,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
         let lhsValue = lhsChildren.value as? NSColor
         let rhsValue = Array(rhsMirror.children)[i].value as? NSColor
         if let lhsValue = lhsValue, let rhsValue = rhsValue {
-            if lhsValue != rhsValue {
+            if lhsValue.argb != rhsValue.argb {
                 return false
             }
         }
@@ -121,7 +121,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
 
 public struct PaletteAccentColor : Equatable {
     public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {
-        return lhs.accent == rhs.accent && lhs.messages?.top == rhs.messages?.top && lhs.messages?.bottom == rhs.messages?.bottom
+        return lhs.accent.argb == rhs.accent.argb && lhs.messages?.top.argb == rhs.messages?.top.argb && lhs.messages?.bottom.argb == rhs.messages?.bottom.argb
     }
     
     public let accent: NSColor
@@ -2235,7 +2235,7 @@ private final class MojavePalette : ColorPalette {
         return NSColor(0x323232)
     }
     private var controlAccentColor: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     private var selectedTextBackgroundColor: NSColor {
         return controlAccentColor.darker()
@@ -2335,19 +2335,19 @@ private final class MojavePalette : ColorPalette {
         return disabledControlTextColor
     }
     override var chatReplyTextDisabledBubble_outgoing: NSColor {
-        return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.white.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var groupPeerNameRed: NSColor {
-        return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var groupPeerNameBlue: NSColor {
-        return NSColor.systemBlue.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.systemBlue.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var groupPeerNameGreen: NSColor {
-        return NSColor.systemGreen.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.systemGreen.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var groupPeerNameOrange: NSColor {
-        return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var bubbleBackgroundTop_outgoing: NSColor {
         return controlAccentColor.darker(amount: 0.2)
@@ -2368,7 +2368,7 @@ private final class MojavePalette : ColorPalette {
         return controlAccentColor
     }
     override var linkBubble_outgoing: NSColor {
-        return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+        return NSColor.white.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     }
     override var selectTextBubble_incoming: NSColor {
         return selectedTextBackgroundColor

@@ -512,9 +512,13 @@ func initialize() -> [String] {
     array.append("profile_unmute")
     array.append("profile_search")
     array.append("profile_secret_chat")
-    
     array.append("profile_edit_photo")
-    
+    array.append("profile_block")
+    array.append("profile_report")
+    array.append("profile_share")
+    array.append("profile_stats")
+    array.append("profile_unblock")
+
     return array
 }
 

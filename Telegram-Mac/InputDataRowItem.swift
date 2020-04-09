@@ -45,7 +45,7 @@ enum InputDataRightItemAction : Equatable {
     
     case clearText
     case resort
-    case custom(()->Void)
+    case custom((TableRowItem, Control)->Void)
     case none
 }
 
@@ -710,8 +710,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 case let .custom(action):
                     rightActionView.userInteractionEnabled = true
                     rightActionView.autohighlight = true
-                    rightActionView.set(handler: { _ in
-                        action()
+                    rightActionView.set(handler: { control in
+                        action(item, control)
                     }, for: .Click)
                 }
             case .loading:
