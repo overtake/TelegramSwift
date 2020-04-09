@@ -17,6 +17,7 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
+
 #if !SHARE
 extension Account {
     var diceCache: DiceCache? {
@@ -181,8 +182,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
         
         
+//        let test = View()
+//        test.backgroundColor = NSColor.black.withAlphaComponent(0.87)
+//        test.frame = NSMakeRect(0, 0, leftSidebarWidth, Window.statusBarHeight)
+//        window.titleView?.addSubview(test, positioned: .below, relativeTo: window.titleView?.subviews.first)
         
-
         telegramUIDeclareEncodables()
         
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
@@ -220,6 +224,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchInterface() {
         initializeAccountManagement()
+        
         
         
         let rootPath = containerUrl!
@@ -281,7 +286,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
             
-
             
             updateTheme(with: themeSettings, for: window)
             
@@ -360,13 +364,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
                     var settings = settings
                     if isEnabled {
-                        if let theme = preference.theme.cloud {
-                            settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
-                                return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
-                            }
-                        } else {
-                            settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
-                        }
+                        settings = settings.withUpdatedToDefault(dark: isEnabled)
                     } else {
                         settings = settings.withUpdatedToDefault(dark: settings.defaultIsDark)
                     }
@@ -606,6 +604,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         context.context.isCurrent = true
                         context.applyNewTheme()
                         self.window.contentView?.addSubview(context.rootView, positioned: .below, relativeTo: self.window.contentView?.subviews.first)
+                        
                         context.runLaunchAction()
                         if let executeUrlAfterLogin = self.executeUrlAfterLogin {
                             self.executeUrlAfterLogin = nil

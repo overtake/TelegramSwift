@@ -825,5 +825,8 @@ open class Window: NSWindow {
         
     }
     
+    public static var statusBarHeight: CGFloat {
+        return 22
+    }
 
 }

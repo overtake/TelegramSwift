@@ -1365,7 +1365,7 @@ func getAverageColor(_ image: NSImage) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
-//    color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+//    color = color.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
@@ -1380,7 +1380,7 @@ private func getAverageColor(_ color: NSColor) -> NSColor {
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
     var alpha: CGFloat = 0.0
-    let color = color.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
+    let color = color.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
     color.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
     saturation = min(1.0, saturation + 0.1 + 0.1 * (1.0 - saturation))
     brightness = max(0.0, brightness * 0.65)
@@ -2166,7 +2166,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_mute: { generateProfileIcon(NSImage(named: "Icon_Profile_Mute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_unmute: { generateProfileIcon(NSImage(named: "Icon_Profile_Unmute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_search: { generateProfileIcon(NSImage(named: "Icon_Profile_Search")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
-                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) }, profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(palette.underSelectedColor)}
+                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(palette.underSelectedColor)},
+                                               profile_block: { generateProfileIcon(NSImage(named: "Icon_Profile_Block")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_report: { generateProfileIcon(NSImage(named: "Icon_Profile_Report")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_share: { generateProfileIcon(NSImage(named: "Icon_Profile_Share")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_stats: { generateProfileIcon(NSImage(named: "Icon_Profile_Stats")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) }
     )
 
 }
@@ -2237,6 +2243,7 @@ private let appearanceDisposable = MetaDisposable()
 private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = nil, animated: Bool) {
     assertOnMainThread()
     updateTheme(theme)
+    NSLog("applyNewTheme, animated: \(animated)")
     if let window = window {
         
         if animated, let contentView = window.contentView {

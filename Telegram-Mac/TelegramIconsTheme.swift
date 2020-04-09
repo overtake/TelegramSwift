@@ -6387,6 +6387,71 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_block: CGImage {
+      if let image = cached.with({ $0["profile_block"] }) {
+          return image
+      } else {
+          let image = _profile_block()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_block"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_report: CGImage {
+      if let image = cached.with({ $0["profile_report"] }) {
+          return image
+      } else {
+          let image = _profile_report()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_report"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_share: CGImage {
+      if let image = cached.with({ $0["profile_share"] }) {
+          return image
+      } else {
+          let image = _profile_share()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_share"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_stats: CGImage {
+      if let image = cached.with({ $0["profile_stats"] }) {
+          return image
+      } else {
+          let image = _profile_stats()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_stats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_unblock: CGImage {
+      if let image = cached.with({ $0["profile_unblock"] }) {
+          return image
+      } else {
+          let image = _profile_unblock()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_unblock"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6879,6 +6944,11 @@ final class TelegramIconsTheme {
   private let _profile_search: ()->CGImage
   private let _profile_secret_chat: ()->CGImage
   private let _profile_edit_photo: ()->CGImage
+  private let _profile_block: ()->CGImage
+  private let _profile_report: ()->CGImage
+  private let _profile_share: ()->CGImage
+  private let _profile_stats: ()->CGImage
+  private let _profile_unblock: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7371,7 +7441,12 @@ final class TelegramIconsTheme {
       profile_unmute: @escaping()->CGImage,
       profile_search: @escaping()->CGImage,
       profile_secret_chat: @escaping()->CGImage,
-      profile_edit_photo: @escaping()->CGImage
+      profile_edit_photo: @escaping()->CGImage,
+      profile_block: @escaping()->CGImage,
+      profile_report: @escaping()->CGImage,
+      profile_share: @escaping()->CGImage,
+      profile_stats: @escaping()->CGImage,
+      profile_unblock: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7864,5 +7939,10 @@ final class TelegramIconsTheme {
       self._profile_search = profile_search
       self._profile_secret_chat = profile_secret_chat
       self._profile_edit_photo = profile_edit_photo
+      self._profile_block = profile_block
+      self._profile_report = profile_report
+      self._profile_share = profile_share
+      self._profile_stats = profile_stats
+      self._profile_unblock = profile_unblock
   }
 }

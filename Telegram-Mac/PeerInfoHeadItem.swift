@@ -136,24 +136,27 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact {
-                items.append(ActionItem(text: L10n.peerInfoShareContact, image: theme.icons.profile_more, action: arguments.shareContact))
+                items.append(ActionItem(text: L10n.peerInfoShareContact, image: theme.icons.profile_share, action: arguments.shareContact))
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
-                items.append(ActionItem(text: (!cachedData.isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), image: theme.icons.profile_more, destruct: true, action: {
+                items.append(ActionItem(text: (!cachedData.isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, false)
                 }))
             }
         } else if let botInfo = peer.botInfo {
             var subItems:[SubActionItem] = []
             
-            if botInfo.flags.contains(.worksWithGroups) {
-                subItems.append(SubActionItem(text: L10n.peerInfoBotAddToGroup, action: arguments.botAddToGroup))
-            }
+            
             if let address = peer.addressName, !address.isEmpty {
-                subItems.append(SubActionItem(text: L10n.peerInfoBotShare, action: {
+                items.append(ActionItem(text: L10n.peerInfoBotShare, image: theme.icons.profile_share, action: {
                     arguments.botShare(address)
                 }))
             }
+            
+            if botInfo.flags.contains(.worksWithGroups) {
+                subItems.append(SubActionItem(text: L10n.peerInfoBotAddToGroup, action: arguments.botAddToGroup))
+            }
+           
             if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                 for command in botInfo.commands {
                     if command.text == "settings" {
@@ -190,30 +193,25 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
         
         if access.canReport {
-            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_leave, destruct: true, action: arguments.report))
+            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))
         }
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
-        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
-        var subItems:[SubActionItem] = []
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if cachedData.statsDatacenterId > 0 {
-                subItems.append(SubActionItem(text: L10n.peerInfoActionStatistics, action: {
+                items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
             }
         }
-        subItems.append(SubActionItem(text: L10n.peerInfoActionShare, action: arguments.share))
+        items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
         if peer.groupAccess.canReport {
-            subItems.append(SubActionItem(text: L10n.peerInfoActionReport, destruct: true, action: arguments.report))
+            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
         }
-        if !subItems.isEmpty {
-            items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
-        }
-        
+        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
     }
     
     let maxItemsCount: Int = fitOnlyThreeItems ? 3 : 4

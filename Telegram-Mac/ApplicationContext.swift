@@ -93,23 +93,73 @@ enum ApplicationContextLaunchAction {
     case preferences
 }
 
+
+let leftSidebarWidth: CGFloat = 72
+
+private final class ApplicationContainerView: View {
+    fileprivate let splitView: SplitView
+    
+    fileprivate private(set) var leftSideView: NSView?
+    
+    required init(frame frameRect: NSRect) {
+        splitView = SplitView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        super.init(frame: frameRect)
+        addSubview(splitView)
+        autoresizingMask = [.width, .height]
+    }
+    
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func updateLeftSideView(_ view: NSView?, animated: Bool) {
+        if let view = view {
+            addSubview(view)
+        } else {
+            self.leftSideView?.removeFromSuperview()
+        }
+        
+        self.leftSideView = view
+        needsLayout = true
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        splitView.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        if let leftSideView = leftSideView {
+            leftSideView.frame = NSMakeRect(0, 0, leftSidebarWidth, frame.height)
+            splitView.frame = NSMakeRect(leftSideView.frame.maxX, 0, frame.width - leftSideView.frame.maxX, frame.height)
+        } else {
+            splitView.frame = bounds
+        }
+        
+    }
+}
+
 final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     
     private var mediaKeyTap:SPMediaKeyTap?
     
     var rootView: View {
-        return splitView
+        return view
     }
     
     let context: AccountContext
     private let window:Window
-    private let splitView:SplitView
+    private let view:ApplicationContainerView
     private let leftController:MainViewController
     private let rightController:MajorNavigationController
     private let emptyController:EmptyChatViewController
     
     private var entertainment: EntertainmentViewController?
+    
+    private var leftSidebarController: LeftSidebarController?
     
     private let loggedOutDisposable = MetaDisposable()
     private let ringingStatesDisposable = MetaDisposable()
@@ -124,6 +174,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
+    private let updateFoldersDisposable = MetaDisposable()
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
         return _ready.get() |> filter { $0 } |> take (1)
@@ -132,7 +183,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     func applyNewTheme() {
         rightController.backgroundColor = theme.colors.background
         rightController.backgroundMode = theme.controllerBackgroundMode
-        splitView.backgroundColor = theme.colors.background
+        view.updateLocalizationAndTheme(theme: theme)
     }
     
     private var launchAction: ApplicationContextLaunchAction?
@@ -143,21 +194,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         emptyController = EmptyChatViewController(context)
         
         self.window = window
-        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
-        window.minSize = NSMakeSize(380, 500)
         
         if !window.initFromSaver {
             window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
             window.center()
         }
         
+        
         context.account.importableContacts.set(.single([:]))
         
-        self.splitView = SplitView(frame: window.contentView!.bounds)
+        self.view = ApplicationContainerView(frame: window.contentView!.bounds)
         
       
-        splitView.setProportion(proportion: SplitProportion(min:380, max:300+350), state: .single);
-        splitView.setProportion(proportion: SplitProportion(min:300+350, max:300+350+600), state: .dual)
+        self.view.splitView.setProportion(proportion: SplitProportion(min:380, max:300+350), state: .single);
+        self.view.splitView.setProportion(proportion: SplitProportion(min:300+350, max:300+350+600), state: .dual)
         
         
         
@@ -218,9 +268,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
-            self.splitView.state = state
+            self.view.splitView.state = state
         }, needFullsize: { [weak self] in
-            self?.splitView.needFullsize()
+            self?.view.splitView.needFullsize()
         }, displayUpgradeProgress: { progress in
                 
         })
@@ -252,14 +302,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
       
        // var forceNotice:Bool = false
         if FastSettings.isMinimisize {
-            self.splitView.mustMinimisize = true
+            self.view.splitView.mustMinimisize = true
            // forceNotice = true
         } else {
-            self.splitView.mustMinimisize = false
+            self.view.splitView.mustMinimisize = false
         }
         
-        splitView.delegate = self;
-        splitView.update(false)
+        self.view.splitView.delegate = self;
+        self.view.splitView.update(false)
         
        
         
@@ -411,7 +461,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in
-            context.sharedContext.bindings.rootNavigation().push(GlobalSearchModalController(context: context))
+            _ = updateChatListFolderSettings(context.account.postbox, {
+                $0.withUpdatedSidebar(!$0.sidebar)
+            }).start()
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
@@ -466,8 +518,23 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             }
         }))
         
-        splitView.layout()
+        
+        let foldersSemaphore = DispatchSemaphore(value: 0)
+        var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
+        
+        _ = (chatListFilterPreferences(postbox: context.account.postbox) |> take(1)).start(next: { value in
+            folders = value
+            foldersSemaphore.signal()
+        })
+        foldersSemaphore.wait()
+        
+        self.updateLeftSidebar(with: folders, animated: false)
+        
+        
+        self.view.splitView.layout()
 
+        
+   
         
         if let navigation = launchSettings.navigation {
             switch navigation {
@@ -530,8 +597,73 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 }
             })
         }
-            
+        
+        self.updateFoldersDisposable.set((chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] value in
+            self?.updateLeftSidebar(with: value, animated: true)
+        }))
+        
        // _ready.set(.single(true))
+    }
+    
+    private var folders: ChatListFolders?
+    private let foldersReadyDisposable = MetaDisposable()
+    private func updateLeftSidebar(with folders: ChatListFolders, animated: Bool) -> Void {
+        
+        let currentSidebar = !folders.list.isEmpty && folders.sidebar
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && self.folders!.sidebar
+
+        let readySignal: Signal<Bool, NoError>
+        
+        if currentSidebar != previousSidebar {
+            if folders.list.isEmpty || !folders.sidebar {
+                leftSidebarController?.removeFromSuperview()
+                leftSidebarController = nil
+                readySignal = .single(true)
+            } else {
+                let controller = LeftSidebarController(context, filterData: leftController.chatList.filterSignal, updateFilter: leftController.chatList.updateFilter)
+                controller._frameRect = NSMakeRect(0, 0, leftSidebarWidth, window.frame.height)
+                controller.loadViewIfNeeded()
+                self.leftSidebarController = controller
+                readySignal = controller.ready.get() |> take(1)
+            }
+            let enlarge: CGFloat
+            
+            if currentSidebar && previousSidebar != nil {
+                enlarge = leftSidebarWidth
+            } else {
+                if previousSidebar == true {
+                    enlarge = -leftSidebarWidth
+                } else {
+                    enlarge = 0
+                }
+            }
+            
+            foldersReadyDisposable.set(readySignal.start(next: { [weak self] _ in
+                guard let `self` = self else {
+                    return
+                }
+                self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
+                self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
+                self.updateMinMaxWindowSize(animated: animated)
+            }))
+                        
+            
+        }
+        self.folders = folders
+    }
+    
+    
+    private func updateMinMaxWindowSize(animated: Bool) {
+        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
+        var width: CGFloat = 380
+        if leftSidebarController != nil {
+            width += leftSidebarWidth
+        }
+        window.minSize = NSMakeSize(width, 500)
+        
+        if window.frame.width < window.minSize.width {
+            window.setFrame(NSMakeRect(max(0, window.frame.minX - (window.minSize.width - window.frame.width)), window.frame.minY, window.minSize.width, window.frame.height), display: true, animate: false)
+        }
     }
     
 
@@ -574,7 +706,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             let max_w = window.frame.width - 380
             let result = round(min(max(point.x, 300), max_w))
             FastSettings.updateLeftColumnWidth(result)
-            splitView.updateStartSize(size: NSMakeSize(result, result), controller: leftController)
+            self.view.splitView.updateStartSize(size: NSMakeSize(result, result), controller: leftController)
         }
         
     }
@@ -582,11 +714,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 
     
     func splitViewDidNeedSwapToLayout(state: SplitViewState) {
-        let previousState = splitView.state
-        splitView.removeAllControllers();
-        let w:CGFloat = FastSettings.leftColumnWidth;
+        let previousState = self.view.splitView.state
+        self.view.splitView.removeAllControllers()
+        let w:CGFloat = FastSettings.leftColumnWidth
         FastSettings.isMinimisize = false
-        splitView.mustMinimisize = false
+        self.view.splitView.mustMinimisize = false
         switch state {
         case .single:
             rightController.empty = leftController
@@ -599,7 +731,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.stackCount == 1, previousState != .none {
                 leftController.viewWillAppear(false)
             }
-            splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
+            self.view.splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
             if rightController.stackCount == 1, previousState != .none {
                 leftController.viewDidAppear(false)
             }
@@ -608,20 +740,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.controller is ForwardChatListController {
                 rightController.back(animated:false)
             }
-            splitView.addController(controller: leftController, proportion: SplitProportion(min:w, max:w))
-            splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
+            self.view.splitView.addController(controller: leftController, proportion: SplitProportion(min:w, max:w))
+            self.view.splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
         case .minimisize:
-            splitView.mustMinimisize = true
+            self.view.splitView.mustMinimisize = true
             FastSettings.isMinimisize = true
-            splitView.addController(controller: leftController, proportion: SplitProportion(min:70, max:70))
-            splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
+            self.view.splitView.addController(controller: leftController, proportion: SplitProportion(min:70, max:70))
+            self.view.splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
         default:
             break;
         }
 
         
         context.sharedContext.layoutHandler.set(state)
-        splitView.layout()
+        self.view.splitView.layout()
 
     }
     
@@ -659,6 +791,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
         updatesDisposable.dispose()
+        updateFoldersDisposable.dispose()
+        foldersReadyDisposable.dispose()
         context.cleanup()
         NotificationCenter.default.removeObserver(self)
     }

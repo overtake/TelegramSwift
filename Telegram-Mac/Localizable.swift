@@ -2221,6 +2221,14 @@ internal final class L10n {
   internal static var chatListFilterRecommendedAdd: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Add") }
   /// RECOMMENDED
   internal static var chatListFilterRecommendedHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Header") }
+  /// Tabs on the left are better if you have many folders.
+  internal static var chatListFilterTabBarDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.Desc") }
+  /// TABS VIEW
+  internal static var chatListFilterTabBarHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.Header") }
+  /// Tabs on the Left
+  internal static var chatListFilterTabBarOnTheLeft: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.OnTheLeft") }
+  /// Tabs on the Top
+  internal static var chatListFilterTabBarOnTheTop: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.OnTheTop") }
   /// Bots
   internal static var chatListFilterTilteDefaultBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Bots") }
   /// Channels
@@ -4467,7 +4475,7 @@ internal final class L10n {
   internal static var peerInfoActionMute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Mute") }
   /// Report
   internal static var peerInfoActionReport: String  { return L10n.tr("Localizable", "PeerInfo.Action.Report") }
-  /// Secret Chat
+  /// Secret
   internal static var peerInfoActionSecretChat: String  { return L10n.tr("Localizable", "PeerInfo.Action.SecretChat") }
   /// Share
   internal static var peerInfoActionShare: String  { return L10n.tr("Localizable", "PeerInfo.Action.Share") }

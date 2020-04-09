@@ -290,7 +290,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         
         
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.recentDismiss, .custom({
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.recentDismiss, .custom({ _, _ in 
             deleteOption(option.identifier)
         }))), placeholder: placeholder, inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
