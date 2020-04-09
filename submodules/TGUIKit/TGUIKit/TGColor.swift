@@ -242,20 +242,20 @@ public extension NSColor {
 
 public extension NSColor {
     convenience init(rgb: UInt32) {
-        self.init(calibratedRed: CGFloat((rgb >> 16) & 0xff) / 255.0, green: CGFloat((rgb >> 8) & 0xff) / 255.0, blue: CGFloat(rgb & 0xff) / 255.0, alpha: 1.0)
+        self.init(deviceRed: CGFloat((rgb >> 16) & 0xff) / 255.0, green: CGFloat((rgb >> 8) & 0xff) / 255.0, blue: CGFloat(rgb & 0xff) / 255.0, alpha: 1.0)
     }
     
     convenience init(rgb: UInt32, alpha: CGFloat) {
-        self.init(calibratedRed: CGFloat((rgb >> 16) & 0xff) / 255.0, green: CGFloat((rgb >> 8) & 0xff) / 255.0, blue: CGFloat(rgb & 0xff) / 255.0, alpha: alpha)
+        self.init(deviceRed: CGFloat((rgb >> 16) & 0xff) / 255.0, green: CGFloat((rgb >> 8) & 0xff) / 255.0, blue: CGFloat(rgb & 0xff) / 255.0, alpha: alpha)
     }
     
     convenience init(argb: UInt32) {
-        self.init(calibratedRed: CGFloat((argb >> 16) & 0xff) / 255.0, green: CGFloat((argb >> 8) & 0xff) / 255.0, blue: CGFloat(argb & 0xff) / 255.0, alpha: CGFloat((argb >> 24) & 0xff) / 255.0)
+        self.init(deviceRed: CGFloat((argb >> 16) & 0xff) / 255.0, green: CGFloat((argb >> 8) & 0xff) / 255.0, blue: CGFloat(argb & 0xff) / 255.0, alpha: CGFloat((argb >> 24) & 0xff) / 255.0)
     }
     
     var argb: UInt32 {
         
-        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        let color = self.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
         var red: CGFloat = 0.0
         var green: CGFloat = 0.0
         var blue: CGFloat = 0.0
@@ -267,7 +267,7 @@ public extension NSColor {
     
     var rgb: UInt32 {
         
-        let color = self.usingColorSpaceName(NSColorSpaceName.calibratedRGB)
+        let color = self.usingColorSpaceName(NSColorSpaceName.deviceRGB)
         if let color = color {
             let red: CGFloat = color.redComponent
             let green: CGFloat = color.greenComponent

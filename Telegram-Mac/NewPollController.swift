@@ -367,28 +367,28 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         index += 1
     }
     
-//    switch state.mode {
-//    case .quiz:
-//        entries.append(.sectionId(sectionId, type: .normal))
-//        sectionId += 1
-//        
-//        
-//        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("EXPLANATION"), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
-//        index += 1
-//        
-//        
-//        entries.append(.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, rightItem: .action(theme.icons.recentDismiss, .custom { _, _ in
-//            
-//            })), placeholder: nil, inputPlaceholder: "Add a Comment (Optional)", filter: { text in
-//                return text.trimmingCharacters(in: CharacterSet.newlines)
-//        }, limit: 255))
-//        index += 1
-//        
-//        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("Users will see this comment after choosing a wrong answer, good for educational purposes."), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-//        index += 1
-//    default:
-//        break
-//    }
+    switch state.mode {
+    case .quiz:
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("EXPLANATION"), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, rightItem: .action(theme.icons.recentDismiss, .custom { _, _ in
+            
+            })), placeholder: nil, inputPlaceholder: "Add a Comment (Optional)", filter: { text in
+                return text.trimmingCharacters(in: CharacterSet.newlines)
+        }, limit: 255))
+        index += 1
+        
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("Users will see this comment after choosing a wrong answer, good for educational purposes."), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    default:
+        break
+    }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
