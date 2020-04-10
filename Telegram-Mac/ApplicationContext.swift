@@ -642,8 +642,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 guard let `self` = self else {
                     return
                 }
-                self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
                 self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
+                self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
                 self.updateMinMaxWindowSize(animated: animated)
             }))
                         
