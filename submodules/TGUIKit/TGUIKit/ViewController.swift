@@ -831,6 +831,10 @@ open class ModalViewController : ViewController {
         return false
     }
     
+    open var shouldCloseAllTheSameModals: Bool {
+        return true
+    }
+    
     private var temporaryTouchBar: Any?
     
     @available(OSX 10.12.2, *)

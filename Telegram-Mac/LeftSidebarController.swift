@@ -86,6 +86,11 @@ final class LeftSidebarView: View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        
+        borderView.backgroundColor = theme.colors.border
+        self.backgroundColor = theme.colors.listBackground
+        self.borderView.isHidden = !theme.colors.isDark
+        self.visualEffectView.isHidden = theme.colors.isDark
     }
     
     required init?(coder: NSCoder) {

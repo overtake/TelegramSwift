@@ -126,25 +126,27 @@ private struct NewPollState : Equatable {
     private let random: UInt32
     let mode: NewPollMode
     let isQuiz: Bool?
-    init(title: String, options: [NewPollOption], random: UInt32, mode: NewPollMode, isQuiz: Bool?) {
+    let quizExplanation: NSAttributedString
+    init(title: String, options: [NewPollOption], random: UInt32, mode: NewPollMode, isQuiz: Bool?, quizExplanation: NSAttributedString) {
         self.title = title
         self.options = options
         self.random = random
         self.mode = mode
         self.isQuiz = isQuiz
+        self.quizExplanation = quizExplanation
     }
     
     func withUpdatedTitle(_ title: String) -> NewPollState {
-        return NewPollState(title: title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     func withDeleteOption(_ identifier: InputDataIdentifier) -> NewPollState {
         var options = self.options
         options.removeAll(where: {$0.identifier == identifier})
-        return NewPollState(title: title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     
     func withUnselectItems() -> NewPollState {
-        return NewPollState(title: self.title, options: self.options.map { $0.withUpdatedSelected(false) }, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: self.options.map { $0.withUpdatedSelected(false) }, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     
     func withUpdatedOption(_ f:(NewPollOption) -> NewPollOption, forKey identifier: InputDataIdentifier) -> NewPollState {
@@ -152,7 +154,7 @@ private struct NewPollState : Equatable {
         if let index = options.firstIndex(where: {$0.identifier == identifier}) {
             options[index] = f(options[index])
         }
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     
     func withUpdatedOptions(_ data:[InputDataIdentifier : InputDataValue]) -> NewPollState {
@@ -162,18 +164,18 @@ private struct NewPollState : Equatable {
                 options[index] = options[index].withUpdatedText(value.stringValue ?? options[index].text)
             }
         }
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     
     func withAddedOption(_ option: NewPollOption) -> NewPollState {
         var options = self.options
         options.append(option)
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     func withUpdatedPos(_ previous: Int, _ current: Int) -> NewPollState {
         var options = self.options
         options.move(at: previous, to: current)
-        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     
     func indexOf(_ identifier: InputDataIdentifier) -> Int? {
@@ -181,10 +183,13 @@ private struct NewPollState : Equatable {
     }
     
     func withUpdatedState() -> NewPollState {
-         return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode, isQuiz: self.isQuiz)
+         return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     func withUpdatedMode(_ mode: NewPollMode) -> NewPollState {
-        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz)
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz, quizExplanation: NSAttributedString())
+    }
+    func withUpdatedQuizExplanation(_ quizExplanation: NSAttributedString) -> NewPollState {
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: quizExplanation)
     }
     
     var isEnabled: Bool {
@@ -218,7 +223,15 @@ private struct NewPollState : Equatable {
             }
         }
         
-        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), publicity: mode.publicity, kind: mode.kind, text: title.trimmed, options: options, correctAnswers: answers, results: TelegramMediaPollResults(voters: nil, totalVoters: nil, recentVoters: [], solution: nil), isClosed: false, deadlineTimeout: nil)
+        let solution: TelegramMediaPollResults.Solution?
+        if !self.quizExplanation.string.isEmpty {
+            let entities = ChatTextInputState(inputText: self.quizExplanation.string, selectionRange: 0..<0, attributes: chatTextAttributes(from: self.quizExplanation))
+            solution = TelegramMediaPollResults.Solution(text: self.quizExplanation.string, entities: entities.messageTextEntities)
+        } else {
+            solution = nil
+        }
+        
+        return TelegramMediaPoll(pollId: MediaId(namespace: Namespaces.Media.LocalPoll, id: arc4random64()), publicity: mode.publicity, kind: mode.kind, text: title.trimmed, options: options, correctAnswers: answers, results: TelegramMediaPollResults(voters: nil, totalVoters: nil, recentVoters: [], solution: solution), isClosed: false, deadlineTimeout: nil)
     }
 }
 
@@ -234,7 +247,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
-    
+        
     entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
         
         var text = text
@@ -367,28 +380,26 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         index += 1
     }
     
-//    switch state.mode {
-//    case .quiz:
-//        entries.append(.sectionId(sectionId, type: .normal))
-//        sectionId += 1
-//        
-//        
-//        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("EXPLANATION"), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
-//        index += 1
-//        
-//        
-//        entries.append(.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, rightItem: .action(theme.icons.recentDismiss, .custom { _, _ in
-//            
-//            })), placeholder: nil, inputPlaceholder: "Add a Comment (Optional)", filter: { text in
-//                return text.trimmingCharacters(in: CharacterSet.newlines)
-//        }, limit: 255))
-//        index += 1
-//        
-//        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain("Users will see this comment after choosing a wrong answer, good for educational purposes."), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-//        index += 1
-//    default:
-//        break
-//    }
+    switch state.mode {
+    case .quiz:
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollExplanationHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .attributedString(state.quizExplanation), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, canMakeTransformations: true), placeholder: nil, inputPlaceholder: L10n.newPollExplanationPlaceholder, filter: { text in
+                return text.trimmingCharacters(in: CharacterSet.newlines)
+        }, limit: 200))
+        index += 1
+        
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollExplanationDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    default:
+        break
+    }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -406,7 +417,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         mode = .normal(anonymous: true)
     }
     
-    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: mode, isQuiz: isQuiz)
+    let initialState = NewPollState(title: "", options: [NewPollOption(identifier: _id_input_option(), text: "", selected: false), NewPollOption(identifier: _id_input_option(), text: "", selected: false)], random: arc4random(), mode: mode, isQuiz: isQuiz, quizExplanation: NSAttributedString())
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -497,7 +508,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     
     let context = chatInteraction.context
     
-    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> map { value in
+    let signal: Signal<InputDataSignalValue, NoError> = statePromise.get() |> deliverOnPrepareQueue |> map { value in
         return InputDataSignalValue(entries: newPollEntries(value, context: context, canBePublic: canBePublic, deleteOption: deleteOption, updateQuizSelected: updateQuizSelected, updateMode: updateMode), animated: animated.swap(true))
     }
     
@@ -556,7 +567,9 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         
     }, updateDatas: { data in
         updateState { state in
-            return state.withUpdatedTitle(data[_id_input_title]?.stringValue ?? state.title).withUpdatedOptions(data)
+            return state.withUpdatedTitle(data[_id_input_title]?.stringValue ?? state.title)
+                .withUpdatedOptions(data)
+                .withUpdatedQuizExplanation(data[_id_explanation]?.attributedString ?? state.quizExplanation)
         }
         return .none
     }, afterDisappear: {

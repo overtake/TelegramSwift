@@ -125,14 +125,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
             items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
         }
-        if peer.canCall && peer.id != item.context.peerId {
+        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
         }
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         if !peer.isBot {
-            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
+            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact {
@@ -190,7 +190,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
-        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        if let group = peer as? TelegramGroup {
+            if case .Member = group.membership {
+                items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+            }
+        } else if let group = peer as? TelegramChannel {
+            if case .member = group.participationStatus {
+                items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+            }
+        }
+        
         
         if access.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))
@@ -211,7 +220,12 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
         }
-        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        switch peer.participationStatus {
+        case .member:
+            items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        default:
+            break
+        }
     }
     
     let maxItemsCount: Int = fitOnlyThreeItems ? 3 : 4

@@ -519,6 +519,9 @@ func initialize() -> [String] {
     array.append("profile_stats")
     array.append("profile_unblock")
 
+    
+    array.append("chat_quiz_explanation")
+    
     return array
 }
 

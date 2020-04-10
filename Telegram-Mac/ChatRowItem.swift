@@ -783,7 +783,7 @@ class ChatRowItem: TableRowItem {
     var bubbleImage:(CGImage, NSEdgeInsets)? = nil
     var bubbleBorderImage:(CGImage, NSEdgeInsets)? = nil
     
-    private let downloadSettings: AutomaticMediaDownloadSettings
+    let downloadSettings: AutomaticMediaDownloadSettings
     
     let presentation: TelegramPresentationTheme
 

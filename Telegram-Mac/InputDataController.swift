@@ -43,6 +43,9 @@ public class InputDataModalController : ModalViewController {
             self?.closeModal()
         })
     }
+    public override var shouldCloseAllTheSameModals: Bool {
+        return false
+    }
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -727,6 +730,47 @@ class InputDataController: GenericViewController<InputDataView> {
             
         }, with: self, for: .F, priority: self.responderPriority, modifierFlags: nil)
         
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            
+            view?.makeBold()
+            return .invoked
+        }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeUrl()
+            return .invoked
+        }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeItalic()
+            return .invoked
+        }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
+        
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeMonospace()
+            return .invoked
+        }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
+        
+    }
+    
+    var findReponsderView: TableRowView? {
+        if let view = self.firstResponder() as? NSView {
+            var superview: NSView? = view
+            while superview != nil {
+                if let current = superview as? TableRowView {
+                    return current
+                } else {
+                    superview = superview?.superview
+                }
+            }
+        }
+        return nil
     }
     
     override func viewWillDisappear(_ animated: Bool) {

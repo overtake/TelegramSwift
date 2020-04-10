@@ -59,11 +59,11 @@ class LeftSidebarFolderItem: TableRowItem {
         self.selected = selected
         self.callback = callback
         self.menuItems = menuItems
-        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: .white, font: .medium(10)), alignment: .center)
+        var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
+        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
         nameLayout.measure(width: initialSize.width - 10)
         
         
-        var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
         
         let generateIcon:()->CGImage? = {
             let icon: CGImage?
