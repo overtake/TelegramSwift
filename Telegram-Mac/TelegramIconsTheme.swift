@@ -6452,6 +6452,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_quiz_explanation: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6949,6 +6962,7 @@ final class TelegramIconsTheme {
   private let _profile_share: ()->CGImage
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
+  private let _chat_quiz_explanation: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7446,7 +7460,8 @@ final class TelegramIconsTheme {
       profile_report: @escaping()->CGImage,
       profile_share: @escaping()->CGImage,
       profile_stats: @escaping()->CGImage,
-      profile_unblock: @escaping()->CGImage
+      profile_unblock: @escaping()->CGImage,
+      chat_quiz_explanation: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7944,5 +7959,6 @@ final class TelegramIconsTheme {
       self._profile_share = profile_share
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
+      self._chat_quiz_explanation = chat_quiz_explanation
   }
 }

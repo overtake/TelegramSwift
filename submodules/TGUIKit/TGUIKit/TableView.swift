@@ -899,7 +899,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 noteHeightOfRow(i, false)
             }
         }
-        if !tableView.inLiveResize {
+        if !tableView.inLiveResize && oldWidth != 0 {
             saveScrollState(visibleItems)
         }
     }

@@ -62,7 +62,7 @@ private final class TooltipCornerView : View {
 
 private final class TooltipView: View {
     let textView = TextView()
-    let cornerView = TooltipCornerView(frame: NSMakeRect(0, 0, 20, 10))
+    let cornerView = ImageView()
     var didRemoveFromWindow:(()->Void)?
     weak var view: NSView? {
         didSet {
@@ -95,18 +95,30 @@ private final class TooltipView: View {
         textView.backgroundColor = .black
         addSubview(textView)
         addSubview(cornerView)
-        textView.userInteractionEnabled = false
+        
+        cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
+            context.clear(CGRect(origin: CGPoint(), size: size))
+            context.setFillColor(NSColor.black.cgColor)
+            context.scaleBy(x: 0.333, y: 0.333)
+            let _ = try? drawSvgPath(context, path: "M85.882251,0 C79.5170552,0 73.4125613,2.52817247 68.9116882,7.02834833 L51.4264069,24.5109211 C46.7401154,29.1964866 39.1421356,29.1964866 34.4558441,24.5109211 L16.9705627,7.02834833 C12.4696897,2.52817247 6.36519576,0 0,0 L85.882251,0 ")
+            context.fillPath()
+        })!
+
+        cornerView.sizeToFit()
+        
         textView.isSelectable = false
         textView.layer?.cornerRadius = .cornerRadius
     }
     
-    func update(text: String, maxWidth: CGFloat, animated: Bool) {
-        let layout = TextViewLayout(.initialize(string: text, color: .white, font: .medium(.text)), alignment: .center, alwaysStaticItems: true)
+    func update(text: NSAttributedString, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
+        let layout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         layout.measure(width: maxWidth)
         textView.change(size: NSMakeSize(layout.layoutSize.width + 20, layout.layoutSize.height + 10), animated: animated)
         textView.set(layout: layout)
         change(size: NSMakeSize(textView.frame.width, textView.frame.height + 15), animated: animated)
         needsLayout = true
+        
+        layout.interactions = interactions
     }
     
     override func layout() {
@@ -142,7 +154,7 @@ private var removeShownAnimation:Bool = false
 
 private let delayDisposable = MetaDisposable()
 private var shouldRemoveTooltip: Bool = true
-public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, autoCorner: Bool = true, offset: NSPoint = .zero, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
+public func tooltip(for view: NSView, text: String, attributedText: NSAttributedString? = nil, interactions: TextViewInteractions = TextViewInteractions(), maxWidth: CGFloat = 350, autoCorner: Bool = true, offset: NSPoint = .zero, timeout: Double = 3.0, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
     guard let window = view.window as? Window else { return }
     
     
@@ -165,12 +177,14 @@ public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, aut
     
     let location = window.mouseLocationOutsideOfEventStream
     
+    let text = attributedText ?? NSAttributedString.initialize(string: text, color: .white, font: .medium(.text))
+    
     updateText() { [weak tooltip] text in
-        tooltip?.update(text: text, maxWidth: maxWidth, animated: false)
+        tooltip?.update(text: .initialize(string: text, color: .white, font: .medium(.text)), maxWidth: maxWidth, interactions: interactions, animated: false)
         return tooltip != nil
     }
     
-    tooltip.update(text: text, maxWidth: maxWidth, animated: isExists)
+    tooltip.update(text: text, maxWidth: maxWidth, interactions: interactions, animated: isExists)
     
     var point = view.convert(NSZeroPoint, to: nil)
     point.y += offset.y
@@ -224,7 +238,7 @@ public func tooltip(for view: NSView, text: String, maxWidth: CGFloat = 350, aut
         removeTooltip(true)
     }
     
-    delayDisposable.set((Signal<Never, NoError>.complete() |> delay(3.0, queue: .mainQueue())).start(completed: {
+    delayDisposable.set((Signal<Never, NoError>.complete() |> delay(timeout, queue: .mainQueue())).start(completed: {
         removeTooltip(true)
     }))
     

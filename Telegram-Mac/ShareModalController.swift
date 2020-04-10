@@ -340,7 +340,7 @@ class ShareObject {
 class ShareLinkObject : ShareObject {
     let link:String
     init(_ context: AccountContext, link:String) {
-        self.link = link
+        self.link = link.removingPercentEncoding ?? link
         super.init(context)
     }
     

@@ -281,6 +281,9 @@ class ChatListController : PeersListController {
         let current = _filterValue.modify(f)
         if previous?.filter?.id != current.filter?.id {
             self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
+            self.genericView.searchView.change(state: .None,  true)
+        } else {
+            scrollup(force: true)
         }
         filter.set(current)
         _  = first.swap(true)

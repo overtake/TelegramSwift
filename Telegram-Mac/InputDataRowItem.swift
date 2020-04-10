@@ -64,20 +64,24 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let filter:(String)->String
     let limit:Int32
     private let updated:(String)->Void
-    fileprivate(set) var currentText: String = "" {
+    fileprivate(set) var currentText: NSAttributedString = NSAttributedString() {
         didSet {
-            if currentText != oldValue {
-                updated(currentText)
-            }
+          //  if currentText != oldValue {
+                updated(currentText.string)
+          //  }
         }
     }
     
     var currentAttributed: NSAttributedString {
-        return .initialize(string: currentText, font: .normal(.text), coreText: false)
+        return currentText
     }
     
     var value: InputDataValue {
-        return .string(currentText)
+        if canMakeTransformations {
+            return .attributedString(currentText)
+        } else {
+            return .string(currentText.string)
+        }
     }
     
     fileprivate var inputHeight: CGFloat = 21
@@ -123,9 +127,10 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let defaultText: String?
     fileprivate let mode: InputDataInputMode
     fileprivate let rightItem: InputDataRightItem?
+    fileprivate let canMakeTransformations: Bool
     fileprivate let pasteFilter:((String)->(Bool, String))?
     private let maxBlockWidth: CGFloat?
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
@@ -133,6 +138,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.pasteFilter = pasteFilter
         self.defaultText = defaultText
         self.maxBlockWidth = maxBlockWidth
+        self.canMakeTransformations = canMakeTransformations
         self.rightItem = rightItem
         let holder = NSMutableAttributedString()
         switch mode {
@@ -144,7 +150,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.inputPlaceholder = holder
         placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
-        self.currentText = currentText
+        self.currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
         self.mode = mode
     
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error)
@@ -189,10 +195,11 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
-        _ = currentAttributed.append(string: (defaultText ?? "") + currentText, font: .normal(.text))
+        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text))
+        currentAttributed.append(currentText)
         
         if mode == .secure {
-            currentAttributed.setAttributedString(.init(string: String(currentText.map { _ in return "•" })))
+            currentAttributed.setAttributedString(.init(string: String(currentText.string.map { _ in return "•" })))
             currentAttributed.addAttribute(.font, value: NSFont.normal(15.0 + 3.22), range: currentAttributed.range)
         }
         
@@ -331,7 +338,45 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
     }
+    
+    func canTransformInputText() -> Bool {
+        guard let item = item as? InputDataRowItem else { return false }
+        return item.canMakeTransformations
+    }
+    
+    func makeBold() {
+        self.textView.boldWord()
+    }
+    func makeUrl() {
+        self.makeUrl(of: textView.selectedRange())
+    }
+    func makeItalic() {
+        self.textView.italicWord()
+    }
+    func makeMonospace() {
+        self.textView.codeWord()
+    }
 
+    func makeUrl(of range: NSRange) {
+        guard range.min != range.max, let window = window as? Window else {
+            return
+        }
+        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
+        let defaultTag: TGInputTextTag? = self.textView.attributedString().attribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), at: range.location, effectiveRange: &effectiveRange) as? TGInputTextTag
+        
+        
+        let defaultUrl = defaultTag?.attachment as? String
+        
+        if effectiveRange.location == NSNotFound || defaultTag == nil {
+            effectiveRange = range
+        }
+        
+        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
+            self?.textView.addLink(url, range: effectiveRange)
+        }), for: window)
+        
+    }
+    
     
     private var separatorFrame: NSRect {
         
@@ -558,7 +603,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 textView.setString(updated, animated: true)
                 NSSound.beep()
             } else {
-                item.currentText = string
+                item.currentText = textView.attributedString()
             }
             let prevInputHeight = item.realInputHeight
             let prevHeight = item.inputHeight
@@ -579,7 +624,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             if updated != string {
                 secureField.stringValue = updated
             } else {
-                item.currentText = string
+                item.currentText = .initialize(string: updated, color: theme.colors.text, font: .normal(.text))
             }
             let prevInputHeight = item.realInputHeight
             item.calculateHeight()
@@ -616,6 +661,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
+        textView.linkColor = theme.colors.link
+
         textView.setBackgroundColor(backdorColor)
         secureField.font = .normal(13)
         secureField.backgroundColor = backdorColor
@@ -833,9 +880,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             textView.setPlaceholderAttributedString(item.inputPlaceholder, update: false)
             if textView.defaultText != (item.defaultText ?? "") {
                 textView.defaultText = item.defaultText ?? ""
-                textView.setString(item.currentText, animated: false)
-            } else if item.currentText != textView.string() {
-                textView.setString(item.currentText, animated: false)
+                textView.setAttributedString(item.currentText, animated: false)
+            } else if item.currentText != textView.attributedString() {
+                textView.setAttributedString(item.currentText, animated: false)
             }
             textView.update(false)
             textView.needsDisplay = true
@@ -845,8 +892,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             secureField.isHidden = false
             
             textView.isHidden = true
-            if item.currentText != secureField.stringValue {
-                secureField.stringValue = item.currentText
+            if item.currentText.string != secureField.stringValue {
+                secureField.stringValue = item.currentText.string
             }
         }
         

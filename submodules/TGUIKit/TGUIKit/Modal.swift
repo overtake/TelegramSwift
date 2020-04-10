@@ -855,7 +855,7 @@ public enum ModalAnimationCloseBehaviour {
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
-        if weakModal.value?.controller?.className == controller.className {
+        if weakModal.value?.controller?.className == controller.className, weakModal.value?.controller?.shouldCloseAllTheSameModals == true {
             weakModal.value?.close()
         }
     }

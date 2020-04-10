@@ -43,6 +43,29 @@ private extension PeerAvatarReference {
     }
 }
 
+func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool {
+    if poll.isClosed {
+        return true
+    } else if let deadlineTimeout = poll.deadlineTimeout, message.id.namespace == Namespaces.Message.Cloud {
+        let startDate: Int32
+        if let forwardInfo = message.forwardInfo {
+            startDate = forwardInfo.date
+        } else {
+            startDate = message.timestamp
+        }
+        
+        let timestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+        if timestamp >= startDate + deadlineTimeout {
+            return true
+        } else {
+            return false
+        }
+    } else {
+        return false
+    }
+}
+
+
 
 private let mergedImageSize: CGFloat = 16.0
 private let mergedImageSpacing: CGFloat = 15.0
@@ -358,7 +381,10 @@ class ChatPollItem: ChatRowItem {
     fileprivate let poll: TelegramMediaPoll
     
     var actionButtonText: String? {
-        if poll.isClosed {
+        if self.isClosed {
+            if poll.results.totalVoters == 0 || poll.results.totalVoters == nil {
+                return nil
+            }
             if poll.publicity != .anonymous {
                 return L10n.chatPollViewResults
             } else {
@@ -402,7 +428,7 @@ class ChatPollItem: ChatRowItem {
     }
     
     var isClosed: Bool {
-        return poll.isClosed
+       return isPollEffectivelyClosed(message: message!, poll: poll)
     }
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
@@ -439,7 +465,7 @@ class ChatPollItem: ChatRowItem {
             let voted = poll.results.voters?.first(where: {$0.selected}) != nil
             
             var votedCount: Int32 = 0
-            if let vote = poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier}), let totalVoters = poll.results.totalVoters, (voted || poll.isClosed) {
+            if let vote = poll.results.voters?.first(where: {$0.opaqueIdentifier == option.opaqueIdentifier}), let totalVoters = poll.results.totalVoters, (voted || self.isClosed) {
                 percent = maximum == 0 ? 0 : (Float(percents[i]) / Float(maximum))
                 realPercent = totalVoters == 0 ? 0 : Float(percents[i])
                 isSelected = vote.selected
@@ -450,7 +476,7 @@ class ChatPollItem: ChatRowItem {
                    isCorrect = nil
                 }
             } else {
-                percent = poll.results.totalVoters == nil || poll.results.totalVoters == 0 ? nil : voted ? 0 : nil
+                percent = poll.results.totalVoters == nil || poll.results.totalVoters == 0 ? (isClosed ? 0 : nil) : voted ? 0 : (isClosed ? 0 : nil)
                 realPercent = 0
                 isSelected = false
                 isCorrect = nil
@@ -480,9 +506,9 @@ class ChatPollItem: ChatRowItem {
                 text = totalText
             } else {
                 if poll.isQuiz {
-                    text = poll.isClosed ? L10n.chatQuizTotalVotesResultEmpty : L10n.chatQuizTotalVotesEmpty
+                    text = self.isClosed ? L10n.chatQuizTotalVotesResultEmpty : L10n.chatQuizTotalVotesEmpty
                 } else {
-                    text = poll.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty
+                    text = self.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty
                 }
             }
             self.totalVotesText = TextViewLayout(.initialize(string: text, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -525,7 +551,7 @@ class ChatPollItem: ChatRowItem {
             guard let `self` = self, let message = self.message else { return items }
             var items = items
             if let poll = message.media.first as? TelegramMediaPoll {
-                if !poll.isClosed && !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
+                if !self.isClosed && !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                     var index: Int = 0
                     if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
                         items.insert(ContextMenuItem(L10n.chatPollUnvote, handler: { [weak self] in
@@ -584,7 +610,7 @@ class ChatPollItem: ChatRowItem {
             }
             chatInteraction.vote(message.id, identifiers, !self.poll.isMultiple)
         } else {
-            if self.options.contains(where: { $0.isSelected }) || self.poll.isClosed, self.poll.publicity == .public {
+            if self.options.contains(where: { $0.isSelected }) || self.isClosed, self.poll.publicity == .public {
                 guard let message = message else {
                     return
                 }
@@ -603,7 +629,7 @@ class ChatPollItem: ChatRowItem {
         if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
             return false
         }
-        if self.poll.isClosed {
+        if self.isClosed {
             return false
         }
         if self.options.contains(where: { $0.isLoading }) {
@@ -638,8 +664,20 @@ class ChatPollItem: ChatRowItem {
         let width = min(width, 320)
         
         
-        titleText.measure(width: width - bubbleContentInset)
-        titleTypeText.measure(width: width - bubbleContentInset)
+        var rightInset: CGFloat = 0
+        
+        if let _ = poll.results.solution, options.contains(where: { $0.isSelected }) || self.isClosed {
+            rightInset += theme.icons.chat_quiz_explanation.backingSize.width
+        }
+        let deadlineTimeout = poll.deadlineTimeout
+        let displayDeadline = !options.contains(where: { $0.isSelected })
+        if deadlineTimeout != nil, displayDeadline {
+            rightInset += 70
+        }
+        
+        
+        titleText.measure(width: width - bubbleContentInset - rightInset)
+        titleTypeText.measure(width: width - bubbleContentInset - rightInset)
         totalVotesText?.measure(width: width - bubbleContentInset)
         
         
@@ -672,6 +710,15 @@ class ChatPollItem: ChatRowItem {
         }
         
         return NSMakeSize(max(width, contentWidth), contentHeight)
+    }
+    
+    override func copyAndUpdate(animated: Bool) {
+        if let table = self.table {
+            let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
+            _ = item.makeSize(table.frame.width, oldWidth: 0)
+            let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
+            table.merge(with: transaction)
+        }
     }
     
 }
@@ -734,6 +781,7 @@ final class ChatPollItemView : ChatRowView {
         if FastSettings.inAppSounds {
             NSSound.beep()
         }
+        self.contentNode.showSolution()
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -744,8 +792,6 @@ final class ChatPollItemView : ChatRowView {
         contentNode.change(size: NSMakeSize(contentFrameModifier.width, item.contentSize.height), animated: animated)
         contentNode.update(with: item, animated: animated)
         
-       
-
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -1100,6 +1146,9 @@ private final class PollView : Control {
     
     private var mergedAvatarsView: MergedAvatarsView?
     
+    private var solutionButton: ImageButton?
+    private var timerView: PollBubbleTimerView?
+
     private var options:[PollOptionView] = []
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1215,6 +1264,103 @@ private final class PollView : Control {
             self.mergedAvatarsView = nil
         }
         
+        if let solution = item.poll.results.solution, item.options.contains(where: { $0.isSelected }) || item.isClosed {
+            var mayApplyAnimation = false
+            if solutionButton == nil {
+                solutionButton = ImageButton()
+                addSubview(solutionButton!)
+                mayApplyAnimation = animated
+            }
+            if let solutionButton = self.solutionButton {
+                solutionButton.set(image: theme.icons.chat_quiz_explanation, for: .Normal)
+                solutionButton.style = ControlStyle(font: nil, foregroundColor: theme.colors.accent, highlightColor: theme.colors.accent.withAlphaComponent(0.7))
+                _ = solutionButton.sizeToFit()
+                solutionButton.setFrameOrigin(NSMakePoint(frame.width - solutionButton.frame.width - 6, 0))
+                
+                if mayApplyAnimation {
+                    solutionButton.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.3)
+                }
+            }
+            solutionButton?.removeAllHandlers()
+            
+            
+            solutionButton?.set(handler: { [weak item] control in
+                
+                guard let item = item else {
+                    return
+                }
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                
+                tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
+            }, for: .Click)
+            
+        } else {
+            solutionButton?.removeFromSuperview()
+            solutionButton = nil
+        }
+        
+        let deadlineTimeout = item.poll.deadlineTimeout
+        var displayDeadline = true
+        if let voters = item.poll.results.voters {
+            for voter in voters {
+                if voter.selected {
+                    displayDeadline = false
+                    break
+                }
+            }
+        }
+
+        
+        if let deadlineTimeout = deadlineTimeout, displayDeadline, !item.isClosed {
+            let timerView: PollBubbleTimerView
+            if let current = self.timerView {
+                timerView = current
+            } else {
+                timerView = PollBubbleTimerView(frame: NSMakeRect(frame.width - 70 - 10, 0, 70, 22))
+                self.addSubview(timerView)
+                self.timerView = timerView
+                
+                if animated {
+                    timerView.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.3)
+                    timerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                }
+            }
+            
+            timerView.reachedTimeout = { [weak item] in
+                item?.copyAndUpdate(animated: true)
+            }
+            var endDate: Int32?
+            if message.id.namespace == Namespaces.Message.Cloud {
+                let startDate: Int32
+                if let forwardInfo = message.forwardInfo {
+                    startDate = forwardInfo.date
+                } else {
+                    startDate = message.timestamp
+                }
+                endDate = startDate + deadlineTimeout
+            }
+            timerView.update(regularColor: item.presentation.chat.textColor(item.isIncoming, item.isBubbled), proximityColor: item.presentation.chat.redUI(item.isIncoming, item.isBubbled), timeout: deadlineTimeout, deadlineTimestamp: endDate)
+            
+        } else if let timerView = self.timerView {
+            self.timerView = nil
+            if animated {
+                timerView.layer?.animateScaleSpring(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak timerView] _ in
+                    timerView?.removeFromSuperview()
+                })
+                timerView.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.3)
+            } else {
+                timerView.removeFromSuperview()
+            }
+        }
+        
+        
+        
+        
+        
+    }
+    
+    func showSolution() {
+        self.solutionButton?.send(event: .Click)
     }
     
     override func layout() {

@@ -2221,13 +2221,13 @@ internal final class L10n {
   internal static var chatListFilterRecommendedAdd: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Add") }
   /// RECOMMENDED
   internal static var chatListFilterRecommendedHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.Recommended.Header") }
-  /// Tabs on the left are better if you have many folders.
+  /// If you have many folders, try moving tabs to the left.
   internal static var chatListFilterTabBarDesc: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.Desc") }
   /// TABS VIEW
   internal static var chatListFilterTabBarHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.Header") }
-  /// Tabs on the Left
+  /// Tabs on the left
   internal static var chatListFilterTabBarOnTheLeft: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.OnTheLeft") }
-  /// Tabs on the Top
+  /// Tabs at the top
   internal static var chatListFilterTabBarOnTheTop: String  { return L10n.tr("Localizable", "ChatList.Filter.TabBar.OnTheTop") }
   /// Bots
   internal static var chatListFilterTilteDefaultBots: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Bots") }
@@ -3857,6 +3857,12 @@ internal final class L10n {
   internal static var newPollDisacardConfirmNo: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.No") }
   /// Discard
   internal static var newPollDisacardConfirmYes: String  { return L10n.tr("Localizable", "NewPoll.DisacardConfirm.Yes") }
+  /// Users will see this comment after choosing a wrong answer, good for educational purposes.
+  internal static var newPollExplanationDesc: String  { return L10n.tr("Localizable", "NewPoll.Explanation.Desc") }
+  /// EXPLANATION
+  internal static var newPollExplanationHeader: String  { return L10n.tr("Localizable", "NewPoll.Explanation.Header") }
+  /// Add a Comment (Optional)
+  internal static var newPollExplanationPlaceholder: String  { return L10n.tr("Localizable", "NewPoll.Explanation.Placeholder") }
   /// A quiz has one correct answer.
   internal static var newPollQuizMultipleError: String  { return L10n.tr("Localizable", "NewPoll.QuizMultiple.Error") }
   /// New Quiz
