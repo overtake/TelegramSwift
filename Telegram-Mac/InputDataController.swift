@@ -312,6 +312,10 @@ final class InputDataView : BackgroundView, AppearanceViewProtocol {
         tableView.updateLocalizationAndTheme(theme: theme)
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
