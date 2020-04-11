@@ -101,13 +101,13 @@ class LeftSidebarFolderItem: TableRowItem {
                     
                 })!
                 
-                folderIcon = generateImage(folderIcon.size, contextGenerator: { size, ctx in
+                folderIcon = generateImage(folderIcon.systemSize, contextGenerator: { size, ctx in
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
                     
-                    ctx.draw(folderIcon, in: rect.focus(folderIcon.size))
+                    ctx.draw(folderIcon, in: rect.focus(folderIcon.systemSize))
                     
-                    ctx.clip(to: NSMakeRect(rect.width - badge.size.width / 2 - 11 / System.backingScale, rect.height - badge.size.height + 5 / System.backingScale, badge.size.width + 4, badge.size.height + 4), mask: badge)
+                    ctx.clip(to: NSMakeRect(rect.width - badge.systemSize.width / 2 - 11 / System.backingScale, rect.height - badge.systemSize.height + 5 / System.backingScale, badge.systemSize.width + 4, badge.systemSize.height + 4), mask: badge)
                     
                     ctx.clear(rect)
                     
