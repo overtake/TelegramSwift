@@ -364,7 +364,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
                     var settings = settings
                     if isEnabled {
-                        settings = settings.withUpdatedToDefault(dark: isEnabled)
+                        if let theme = preference.theme.cloud {
+                            settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
+                                return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
+                            }
+                        } else {
+                            settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
+                        }
                     } else {
                         settings = settings.withUpdatedToDefault(dark: settings.defaultIsDark)
                     }
