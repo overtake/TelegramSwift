@@ -6465,6 +6465,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_quiz_explanation_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6963,6 +6989,8 @@ final class TelegramIconsTheme {
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
+  private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
+  private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7461,7 +7489,9 @@ final class TelegramIconsTheme {
       profile_share: @escaping()->CGImage,
       profile_stats: @escaping()->CGImage,
       profile_unblock: @escaping()->CGImage,
-      chat_quiz_explanation: @escaping()->CGImage
+      chat_quiz_explanation: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7960,5 +7990,7 @@ final class TelegramIconsTheme {
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
       self._chat_quiz_explanation = chat_quiz_explanation
+      self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
+      self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
   }
 }

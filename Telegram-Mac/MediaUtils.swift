@@ -295,7 +295,12 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             if let fullSizeData = fullSizeData {
                 if data.fullSizeComplete {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
-                        return image
+                        return generateImage(image.size, contextGenerator: { (size, ctx) in
+                            ctx.setFillColor(theme.colors.transparentBackground.cgColor)
+                            ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
+                        })
+                        
                     }
                     
                 }
@@ -322,7 +327,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                 
             }
             return generateImage(fittedSize, contextGenerator: { (size, ctx) in
-                ctx.setFillColor(theme.colors.background.cgColor)
+                ctx.setFillColor(theme.colors.transparentBackground.cgColor)
                 ctx.fill(NSMakeRect(0, 0, size.width, size.height))
             })
             

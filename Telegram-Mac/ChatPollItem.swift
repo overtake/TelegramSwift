@@ -667,12 +667,12 @@ class ChatPollItem: ChatRowItem {
         var rightInset: CGFloat = 0
         
         if let _ = poll.results.solution, options.contains(where: { $0.isSelected }) || self.isClosed {
-            rightInset += theme.icons.chat_quiz_explanation.backingSize.width
+            rightInset += 10
         }
         let deadlineTimeout = poll.deadlineTimeout
         let displayDeadline = !options.contains(where: { $0.isSelected })
         if deadlineTimeout != nil, displayDeadline {
-            rightInset += 70
+            rightInset += 50
         }
         
         
@@ -1272,7 +1272,7 @@ private final class PollView : Control {
                 mayApplyAnimation = animated
             }
             if let solutionButton = self.solutionButton {
-                solutionButton.set(image: theme.icons.chat_quiz_explanation, for: .Normal)
+                solutionButton.set(image: item.presentation.chat.quizSolution(item), for: .Normal)
                 solutionButton.style = ControlStyle(font: nil, foregroundColor: theme.colors.accent, highlightColor: theme.colors.accent.withAlphaComponent(0.7))
                 _ = solutionButton.sizeToFit()
                 solutionButton.setFrameOrigin(NSMakePoint(frame.width - solutionButton.frame.width - 6, 0))
