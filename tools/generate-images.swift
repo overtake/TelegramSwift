@@ -521,7 +521,8 @@ func initialize() -> [String] {
 
     
     array.append("chat_quiz_explanation")
-    
+    array.append("chat_quiz_explanation_bubble_incoming")
+    array.append("chat_quiz_explanation_bubble_outgoing")
     return array
 }
 

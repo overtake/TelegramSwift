@@ -1699,6 +1699,7 @@ extension Array {
 }
 
 func copyToClipboard(_ string:String) {
+    NSPasteboard.general.clearContents()
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
 }

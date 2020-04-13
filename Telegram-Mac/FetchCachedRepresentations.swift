@@ -671,3 +671,27 @@ private func fetchCachedDiceRepresentation(account: Account, data: Data, represe
         }
     }
 }
+
+func getAnimatedStickerThumb(data: Data) -> Signal<String?, NoError> {
+    
+    return .single(data) |> deliverOn(lottieThreadPool) |> map { data -> String? in
+        var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
+        if dataValue == nil {
+            dataValue = data
+        }
+        if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: nil), encoding: .utf8), json.length > 0 {
+            let rlottie = RLottieBridge(json: json, key: "\(arc4random())")
+            let unmanaged = rlottie?.renderFrame(0, width: Int(512 * 2), height: Int(512 * 2))
+            let colorImage = unmanaged?.takeRetainedValue()
+            
+            if let image = colorImage {
+                let rep = NSBitmapImageRep(cgImage: image)
+                let data = rep.representation(using: .png, properties: [:])
+                let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"
+                try? data?.write(to: URL(fileURLWithPath: path))
+                return path
+            }
+        }
+        return nil
+    } |> deliverOnMainQueue
+}

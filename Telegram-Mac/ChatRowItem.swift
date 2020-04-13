@@ -1889,6 +1889,20 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                             saveAs(file, account: account)
                         }))
                         
+                        #if BETA || ALPHA || DEBUG
+                        if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                            items.append(ContextMenuItem("Copy thumbnail", handler: {
+                                _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                                    if let path = path {
+                                        let pb = NSPasteboard.general
+                                        pb.clearContents()
+                                        pb.writeObjects([NSURL(fileURLWithPath: path)])
+                                    }
+                                })
+                            }))
+                        }
+                        #endif
+                        
                         if let downloadPath = downloadPath {
                             if !file.isVoice {
                                 let path: String

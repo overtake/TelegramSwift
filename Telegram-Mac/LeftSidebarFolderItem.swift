@@ -157,6 +157,8 @@ private final class LeftSidebarFolderView : TableRowView {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         textView.isEventLess = true
+        badgeView.isEventLess = true
+        imageView.isEventLess = true
     }
  
     override func updateIsResorting() {

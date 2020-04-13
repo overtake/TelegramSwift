@@ -449,6 +449,7 @@ class ChatMessageItem: ChatRowItem {
                         items.append(ContextMenuItem(text, handler: {
                             if let strongSelf = self {
                                 let pb = NSPasteboard.general
+                                pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
@@ -468,6 +469,7 @@ class ChatMessageItem: ChatRowItem {
                         if let result = result, let strongSelf = self, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
                                 let pb = NSPasteboard.general
+                                pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)

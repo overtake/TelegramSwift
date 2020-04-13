@@ -15,8 +15,6 @@ import SyncCore
 
 
 
-
-
 enum UIChatListEntryId : Hashable {
     case chatId(PeerId, Int32?)
     case groupId(PeerGroupId)
@@ -282,16 +280,18 @@ class ChatListController : PeersListController {
         scrollup(force: true)
         self.genericView.searchView.change(state: .None,  true)
         if previous?.filter?.id != current.filter?.id {
+            _  = first.swap(true)
+            _  = animated.swap(false)
             self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
         }
         filter.set(current)
-        _  = first.swap(true)
         setCenterTitle(self.defaultBarTitle)
     }
     
     private let request = Promise<ChatListIndexRequest>()
     private let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
     private let first = Atomic(value:true)
+    private let animated = Atomic(value: false)
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
@@ -328,7 +328,7 @@ class ChatListController : PeersListController {
         let scrollUp:Atomic<Bool> = self.first
         let groupId = self.mode.groupId
         let previousEntries:Atomic<[AppearanceWrapperEntry<UIChatListEntry>]?> = Atomic(value: nil)
-        let animated: Atomic<Bool> = Atomic(value: false)
+        let animated: Atomic<Bool> = self.animated
         let animateGroupNextTransition = self.animateGroupNextTransition
         var scroll:TableScrollState? = nil
 
@@ -944,38 +944,8 @@ class ChatListController : PeersListController {
                 }
             }
         }
-        
-//        #if !STABLE && !APP_STORE
-//        let view = self.previousChatList.modify({$0})
-//
-//
-//        if lastScrolledIndex == nil, view?.laterIndex != nil || genericView.tableView.scrollPosition().current.visibleRows.location > 0  {
-//            scrollToTop()
-//            return
-//        }
-//        let postbox = account.postbox
-//
-//        let signal:Signal<ChatListIndex?, NoError> = account.context.badgefilter.data.get() |> mapToSignal { filter -> Signal<ChatListIndex?, NoError> in
-//            return postbox.transaction { transaction -> ChatListIndex? in
-//                return transaction.getEarliestUnreadChatListIndex(filtered: filter == .filtered, earlierThan: lastScrolledIndex)
-//            }
-//            } |> deliverOnMainQueue
-//
-//        scrollDisposable.set(signal.start(next: { [weak self] index in
-//            guard let `self` = self else {return}
-//            if let index = index {
-//                self.lastScrolledIndex = index
-//                self.request.set(.single(ChatListIndexRequest.Index(index, TableScrollState.center(id: ChatLocation.peer(index.messageIndex.id.peerId), innerId: nil, animated: true, focus: .init(focus: true), inset: 0))))
-//            } else {
-//                self.lastScrolledIndex = nil
-//                scrollToTop()
-//            }
-//        }))
-//
-//        #else
-            scrollToTop()
-       // #endif
-        
+        scrollToTop()
+    
         
     }
     
@@ -1220,11 +1190,9 @@ class ChatListController : PeersListController {
         
         context.window.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.genericView.tableView.highlightNext(turnDirection: false)
-            
             while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
                 self?.genericView.tableView.highlightNext(turnDirection: false)
             }
-            
             return .invoked
         }, with: self, for: .DownArrow, priority: .low)
         
@@ -1355,6 +1323,12 @@ class ChatListController : PeersListController {
     override func escapeKeyAction() -> KeyHandlerResult {
         if !mode.isPlain, let navigation = navigationController {
             navigation.back()
+            return .invoked
+        }
+        if self.filterValue?.filter != nil {
+            updateFilter {
+                $0.withUpdatedFilter(nil)
+            }
             return .invoked
         }
         return super.escapeKeyAction()

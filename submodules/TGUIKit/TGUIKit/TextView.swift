@@ -1334,6 +1334,7 @@ public class TextView: Control, NSViewToolTipOwner {
                         guard let `self` = self else {return}
                         if let resolved = resolved {
                             let pb = NSPasteboard.general
+                            pb.clearContents()
                             pb.declareTypes([.string], owner: self)
                             pb.setString(resolved, forType: .string)
                         } else {
@@ -1673,6 +1674,7 @@ public class TextView: Control, NSViewToolTipOwner {
                 if !copy() && layout.selectedRange.range.location != NSNotFound {
                     if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
                         let pb = NSPasteboard.general
+                        pb.clearContents()
                         pb.declareTypes([.string], owner: self)
                         pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                     }
@@ -1680,6 +1682,7 @@ public class TextView: Control, NSViewToolTipOwner {
             } else if layout.selectedRange.range.location != NSNotFound {
                 if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
                     let pb = NSPasteboard.general
+                    pb.clearContents()
                     pb.declareTypes([.string], owner: self)
                     pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
