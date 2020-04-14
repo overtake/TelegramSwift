@@ -1565,8 +1565,7 @@ class ChatRowItem: TableRowItem {
         }
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
         
-        let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
-
+        let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 320)
         
         return max(max(nameWidth, forwardWidth), replyWidth)
     }

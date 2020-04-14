@@ -532,6 +532,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if let peer = inLinkPeer {
                             if ids[peer.id] == nil {
+                                ids[peer.id] = peer.id
                                 entries.append(.localPeer(peer, index, nil, .none, true))
                                 index += 1
                             }
@@ -643,7 +644,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             
-                            let peers = localPeers + remotePeers.0
+                            let peers = (localPeers + remotePeers.0)
 
                             
 
