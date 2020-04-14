@@ -151,7 +151,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .shortcuts(_, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Shortcuts", type: .next, viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .next, viewType: viewType, action: {
                 arguments.openShortcuts()
             })
         case let .emojiReplacements(sectionId: _, enabled, viewType):

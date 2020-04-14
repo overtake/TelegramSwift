@@ -75,7 +75,7 @@ fileprivate final class ActionButton : Control {
 }
 
 fileprivate let photoDimension:CGFloat = 100
-fileprivate let actionItemWidth: CGFloat = 60
+fileprivate let actionItemWidth: CGFloat = 70
 fileprivate let actionItemInsetWidth: CGFloat = 20
 
 private struct SubActionItem {
@@ -119,7 +119,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     var items:[ActionItem] = []
     
-    let fitOnlyThreeItems = width - actionItemWidth < actionItemWidth * CGFloat(4) + CGFloat(4 + 1) * actionItemInsetWidth
+    var rowItemsCount: Int = 1
+    
+    while width - actionItemWidth * 2 > actionItemWidth * CGFloat(rowItemsCount) + CGFloat(rowItemsCount + 1) * actionItemInsetWidth {
+        rowItemsCount += 1
+    }
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
@@ -228,11 +232,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
     }
     
-    let maxItemsCount: Int = fitOnlyThreeItems ? 3 : 4
     
-    if items.count > maxItemsCount {
+    if items.count > rowItemsCount {
         var subItems:[SubActionItem] = []
-        while items.count > maxItemsCount - 1 {
+        while items.count > rowItemsCount - 1 {
             let item = items.removeLast()
             subItems.insert(SubActionItem(text: item.text, destruct: item.destruct, action: item.action), at: 0)
         }

@@ -71,6 +71,9 @@ final class PollBubbleTimerView: View {
         
         self.addSubview(self.textView)
         self.addSubview(self.contentView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
     }
     
     required init?(coder: NSCoder) {
@@ -107,7 +110,7 @@ final class PollBubbleTimerView: View {
         
         if let deadlineTimestamp = params.deadlineTimestamp {
             let fractionalTimestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            fractionalTimeout = max(0.0, Double(deadlineTimestamp) - fractionalTimestamp)
+            fractionalTimeout = min(Double(params.timeout), max(0.0, Double(deadlineTimestamp) + 1.0 - fractionalTimestamp))
         } else {
             fractionalTimeout = Double(params.timeout)
         }

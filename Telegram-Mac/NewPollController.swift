@@ -186,7 +186,7 @@ private struct NewPollState : Equatable {
          return NewPollState(title: self.title, options: self.options, random: arc4random(), mode: self.mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     func withUpdatedMode(_ mode: NewPollMode) -> NewPollState {
-        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz, quizExplanation: NSAttributedString())
+        return NewPollState(title: self.title, options: self.options, random: self.random, mode: mode, isQuiz: self.isQuiz, quizExplanation: self.quizExplanation)
     }
     func withUpdatedQuizExplanation(_ quizExplanation: NSAttributedString) -> NewPollState {
         return NewPollState(title: self.title, options: self.options, random: self.random, mode: self.mode, isQuiz: self.isQuiz, quizExplanation: quizExplanation)
