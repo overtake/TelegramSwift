@@ -151,7 +151,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .shortcuts(_, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .next, viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
                 arguments.openShortcuts()
             })
         case let .emojiReplacements(sectionId: _, enabled, viewType):
@@ -270,11 +270,17 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     headerUnique -= 1
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab, viewType: .firstItem))
     entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .innerItem))
-    entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds, viewType: .innerItem))
-    entries.append(.shortcuts(sectionId: sectionId, viewType: .lastItem))
+    entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds, viewType: .lastItem))
+    
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsShortcutsHeader))
+    headerUnique -= 1
+    entries.append(.shortcuts(sectionId: sectionId, viewType: .singleItem))
 
 
-   
 	
     entries.append(.section(sectionId: sectionId))
     sectionId += 1

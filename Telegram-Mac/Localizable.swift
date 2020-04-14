@@ -1145,7 +1145,7 @@ internal final class L10n {
   internal static var channelStatsOverviewSharesPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.SharesPerPost") }
   /// Views Per Post
   internal static var channelStatsOverviewViewsPerPost: String  { return L10n.tr("Localizable", "ChannelStats.Overview.ViewsPerPost") }
-  /// TOP RECENT POSTS
+  /// RECENT POSTS
   internal static var channelStatsRecentHeader: String  { return L10n.tr("Localizable", "ChannelStats.Recent.Header") }
   /// Checking...
   internal static var channelVisibilityChecking: String  { return L10n.tr("Localizable", "ChannelVisibility.Checking") }
@@ -3017,8 +3017,10 @@ internal final class L10n {
   internal static var generalSettingsSendByCmdEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByCmdEnter") }
   /// Use Enter to send
   internal static var generalSettingsSendByEnter: String  { return L10n.tr("Localizable", "GeneralSettings.SendByEnter") }
-  /// Shortcuts
+  /// Keyboard Shortcuts
   internal static var generalSettingsShortcuts: String  { return L10n.tr("Localizable", "GeneralSettings.Shortcuts") }
+  /// SHORTCUTS
+  internal static var generalSettingsShortcutsHeader: String  { return L10n.tr("Localizable", "GeneralSettings.ShortcutsHeader") }
   /// Suggest Articles in Search
   internal static var generalSettingsShowArticlesInSearch: String  { return L10n.tr("Localizable", "GeneralSettings.ShowArticlesInSearch") }
   /// Show Calls Tab

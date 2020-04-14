@@ -508,7 +508,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 //            return .invoked
 //        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .shift])
         
-        
+        window.set(handler: { () -> KeyHandlerResult in
+            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            return .invoked
+        }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in

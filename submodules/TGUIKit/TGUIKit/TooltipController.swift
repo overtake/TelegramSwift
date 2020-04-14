@@ -172,7 +172,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     
     tooltip.view = view
     
-
+    
     window.contentView?.addSubview(tooltip)
     
     let location = window.mouseLocationOutsideOfEventStream
@@ -186,9 +186,26 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     
     tooltip.update(text: text, maxWidth: maxWidth, interactions: interactions, animated: isExists)
     
-    var point = view.convert(NSZeroPoint, to: nil)
-    point.y += offset.y
-    tooltip.change(pos: NSMakePoint(min(max(point.x - (tooltip.frame.width - view.frame.width) / 2, 10), window.frame.width - tooltip.frame.width - 10), point.y), animated: isExists)
+    
+    var removeTooltip:(Bool) -> Void = { _ in
+        fatalError("not implemented")
+    }
+   
+    let updatePosition:(Bool)->Void = { [weak tooltip, weak view] animated in
+        if let tooltip = tooltip, let view = view {
+            var point = view.convert(NSZeroPoint, to: nil)
+            point.y += offset.y
+            let pos = NSMakePoint(min(max(point.x - (tooltip.frame.width - view.frame.width) / 2, 10), window.frame.width - tooltip.frame.width - 10), point.y)
+            if view.visibleRect.height != view.frame.height {
+                removeTooltip(true)
+            } else {
+                tooltip.change(pos: pos, animated: isExists || animated)
+            }
+        }
+        
+    }
+    
+    updatePosition(isExists)
     
     
     if autoCorner {
@@ -199,8 +216,12 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         tooltip.move(corner: mousePoint.x, animated: isExists)
     }
     
-
     
+    let scroll = view.enclosingScrollView as? TableView
+
+    scroll?.addScroll(listener: TableScrollListener.init(dispatchWhenVisibleRangeUpdated: false, { _ in
+        updatePosition(true)
+    }))
     
     if !isExists && !removeShownAnimation {
         CATransaction.begin()
@@ -208,7 +229,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         tooltip.layer?.animatePosition(from: NSMakePoint(tooltip.frame.minX, tooltip.frame.minY - 5), to: tooltip.frame.origin)
         CATransaction.commit()
     }
-    let removeTooltip:(Bool) -> Void = { [weak tooltip] animated in
+    removeTooltip = { [weak tooltip] animated in
         guard let tooltip = tooltip else { return }
         if animated {
             CATransaction.begin()
@@ -254,12 +275,12 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     }, with: tooltip, for: .leftMouseUp, priority: .supreme)
     
 
-    
+
     window.set(mouseHandler: { _ -> KeyHandlerResult in
         removeTooltip(false)
         return .rejected
     }, with: tooltip, for: .scrollWheel, priority: .supreme)
-    
+
     
     window.set(handler: { () -> KeyHandlerResult in
         removeTooltip(false)
