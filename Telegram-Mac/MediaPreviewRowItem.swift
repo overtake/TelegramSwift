@@ -73,7 +73,7 @@ class MediaPreviewRowItem: TableRowItem {
     
     var contentSize: NSSize {
         let contentSize = layoutSize
-        return NSMakeSize(width - (media.isInteractiveMedia ? 20 : 60), overSize ?? contentSize.height)
+        return NSMakeSize(width - (media.isInteractiveMedia ? 20 : 48), overSize ?? contentSize.height)
     }
     
     override var layoutSize: NSSize {
