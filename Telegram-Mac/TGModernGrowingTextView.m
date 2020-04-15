@@ -190,6 +190,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 }
     
+    
+-(void)setSelectedRange:(NSRange)selectedRange {
+    [super setSelectedRange:selectedRange];
+}
 -(void)rightMouseDown:(NSEvent *)event {
     [self.window makeFirstResponder:self];
     [super rightMouseDown:event];
@@ -875,8 +879,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
         NSRange selectedRange = _textView.selectedRange;
         [_textView.textStorage setAttributedString:attr];
-        [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
         [self update:notification != nil];
+        [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
         if ([self.delegate respondsToSelector:@selector(textViewDidReachedLimit:)])
         [self.delegate textViewDidReachedLimit: self];
         return;
@@ -1424,11 +1428,18 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     }];
     
     
+    NSRange selectedRange = _textView.selectedRange;
+    if (selectedRange.location == self.textView.string.length) {
+        selectedRange = NSMakeRange(attr.length, 0);
+    }
     [_textView.textStorage setAttributedString:attr];
     BOOL o = self.animates;
     self.animates = animated;
     [self update:animated];
     self.animates = o;
+   
+    [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
+
 }
     
 -(NSString *)textWithDefault:(NSString *)string {
@@ -1585,6 +1596,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
+    NSLog(@"after: %@", NSStringFromRange(range));
     if(range.location != NSNotFound)
     [_textView setSelectedRange:range];
 }

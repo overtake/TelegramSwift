@@ -495,7 +495,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         if let item = item as? InputDataRowItem {
             switch item.mode {
             case .plain:
-                self.textView.shake()
+                if self.textView.selectedRange().max == self.textView.string().length {
+                    self.textView.shake()
+                }
             case .secure:
                 self.secureField.shake()
             }
