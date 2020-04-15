@@ -1363,6 +1363,8 @@ class ChatRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
         
+        captionLayout?.dropLayoutSize()
+        
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
@@ -1402,7 +1404,7 @@ class ChatRowItem: TableRowItem {
             widthForContent = maxContentWidth
         }
         
-        if let captionLayout = captionLayout {
+        if let captionLayout = captionLayout, captionLayout.layoutSize == .zero {
             captionLayout.measure(width: maxContentWidth)
         }
         
@@ -1565,7 +1567,7 @@ class ChatRowItem: TableRowItem {
         }
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
         
-        let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 320)
+        let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return max(max(nameWidth, forwardWidth), replyWidth)
     }

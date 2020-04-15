@@ -84,6 +84,18 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_strikethrough"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownStrikethrough, color: theme.colors.text, icon: nil, type: .context("~~"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
+    // OTHERS
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerOthers), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("lock_passcode"), data: InputDataGeneralData(name: L10n.shortcutsControllerOthersLockByPasscode, color: theme.colors.text, icon: nil, type: .context("⌘L"), viewType: .singleItem, enabled: true, description: nil)))
+    index += 1
+    
+    
     // MOUSE
     
     

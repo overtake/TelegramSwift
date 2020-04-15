@@ -598,7 +598,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 let view = actionsView.subviews[i] as! ActionButton
                 view.updateAndLayout(item: item, theme: theme)
                 view.setFrameSize(NSMakeSize(item.size.width, maxActionSize.height))
-                view.change(pos: NSMakePoint(x, 0), animated: animated)
+                view.change(pos: NSMakePoint(x, 0), animated: false)
                 x += maxActionSize.width + inset
             }
             
