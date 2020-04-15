@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 class VideoRecorderModalController: ModalViewController {
 
@@ -30,13 +31,14 @@ class VideoRecorderModalController: ModalViewController {
     init(chatInteraction: ChatInteraction, pipeline: VideoRecorderPipeline) {
         self.chatInteraction = chatInteraction
         self.pipeline = pipeline
-        super.init(frame: NSMakeRect(0, 0, 210, 210))
+        super.init(frame: NSMakeRect(0, 0, 240, 240))
         bar = .init(height: 0)
     }
     
     var pathForThumbnail: String {
         return NSTemporaryDirectory() + "video_last_thumbnail.jpg"
     }
+    
     
     private func saveThumbnail(_ thumb: CGImage) {
         var blurred: CGImage = thumb
@@ -60,20 +62,13 @@ class VideoRecorderModalController: ModalViewController {
         disposable.set((pipeline.statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] status in
             if let strongSelf = self {
                 switch status {
-                case let .finishRecording(path, _, thumb):
+                case let .finishRecording(path, _, _, thumb):
                     strongSelf.countdownDisposable.set(nil)
                     strongSelf.genericView.updateForPreview(path, preview: thumb)
                     strongSelf.pipeline.stopCapture()
                 case .recording:
                     strongSelf.genericView.didStartedRecording()
-                    strongSelf.countdownDisposable.set(countdown(VideoRecorderPipeline.videoMessageMaxDuration, delay: 0.2).start(next: { [weak strongSelf] value in
-                        strongSelf?.genericView.updateProgress(1.0 - Float(value) / Float(VideoRecorderPipeline.videoMessageMaxDuration))
-                        
-                        if value <= 0 {
-                            strongSelf?.stopAndMakeRecordedVideo()
-                        }
-                        
-                    }))
+                    strongSelf.runTimer()
                 case .madeThumbnail(let thumb):
                     strongSelf.saveThumbnail(thumb)
                 case let .stopped(thumb):
@@ -87,6 +82,23 @@ class VideoRecorderModalController: ModalViewController {
         }))
         
         
+    }
+    
+    private func runTimer() {
+        countdownDisposable.set((pipeline.powerAndDuration.get() |> deliverOnMainQueue).start(next: { [weak self] _, duration in
+            guard let `self` = self else {return}
+            self.genericView.updateProgress(Float(duration / VideoRecorderPipeline.videoMessageMaxDuration))
+            
+            if duration >= VideoRecorderPipeline.videoMessageMaxDuration {
+                self.stopAndMakeRecordedVideo()
+                if let stateData = self.chatInteraction.presentation.recordingState?.data {
+                    self.chatInteraction.mediaPromise.set(stateData)
+                }
+                self.chatInteraction.update({$0.withoutRecordingState()})
+                self.close()
+            }
+            
+        }))
     }
     
     deinit {
@@ -109,6 +121,9 @@ class VideoRecorderModalController: ModalViewController {
     
     
     override func escapeKeyAction() -> KeyHandlerResult {
+        close()
+        chatInteraction.presentation.recordingState?.stop()
+        chatInteraction.update({$0.withoutRecordingState()})
         return .invoked
     }
     

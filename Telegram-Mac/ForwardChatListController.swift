@@ -8,23 +8,30 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 class ForwardChatListController: ChatListController {
     override func getLeftBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.chatCancel))
+        let button = TextButtonBarView(controller: self, text: tr(L10n.chatCancel))
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
+            self?.navigationController?.removeModalAction()
             self?.navigationController?.back()
-            }, for: .Click)
+        }, for: .Click)
         
         return button
     }
     
-    init(_ account: Account) {
-        super.init(account, modal:true)
+    override func getRightBarViewOnce() -> BarView {
+        return BarView(controller: self)
+    }
+    
+    init(_ context: AccountContext) {
+        super.init(context, modal:true)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
+        navigationController?.removeModalAction()
         return .rejected
     }
     

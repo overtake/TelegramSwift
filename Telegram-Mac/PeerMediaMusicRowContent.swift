@@ -8,60 +8,123 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 class PeerMediaMusicRowItem: PeerMediaRowItem {
-    fileprivate var textLayout:TextViewLayout?
-    fileprivate var file:TelegramMediaFile!
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ account:Account, _ object: PeerMediaSharedEntry) {
-        super.init(initialSize,interface,account,object)
+    fileprivate let textLayout:TextViewLayout
+    fileprivate let descLayout:TextViewLayout?
+    fileprivate let file:TelegramMediaFile
+    fileprivate let thumbResource: ExternalMusicAlbumArtResource
+    fileprivate let isCompactPlayer: Bool
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, viewType: GeneralViewType = .legacy) {
+        self.isCompactPlayer = isCompactPlayer
         
-        file = message.media[0] as! TelegramMediaFile
-        let attr = NSMutableAttributedString()
+        file = object.message!.media[0] as! TelegramMediaFile
         let music = file.musicText
-        _ = attr.append(string: music.0, color: theme.colors.text, font: .medium(.header))
-        _ = attr.append(string: "\n")
-        _ = attr.append(string: music.1, color: theme.colors.grayText, font: .normal(.text))
-        textLayout = TextViewLayout(attr, maximumNumberOfLines: 2, truncationType: .middle)
+        self.textLayout = TextViewLayout(.initialize(string: music.0, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+
+        if !music.1.isEmpty {
+            self.descLayout = TextViewLayout(.initialize(string: music.1, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
+        } else if let size = file.size {
+            self.descLayout = TextViewLayout(.initialize(string: String.prettySized(with: size), color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
+        } else {
+            descLayout = nil
+        }
+        thumbResource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+
+        
+        
+        super.init(initialSize, interface, object, viewType: viewType)
+        
+    }
+    
+    override var inset: NSEdgeInsets {
+        if isCompactPlayer {
+            return NSEdgeInsetsMake(5, 10, 5, 10)
+        } else {
+            return NSEdgeInsetsMake(0, 30, 0, 30)
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
-        textLayout?.measure(width: width - 70)
-        return super.makeSize(width, oldWidth: oldWidth)
+        let success = super.makeSize(width, oldWidth: oldWidth)
+        textLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        descLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        return success
     }
     
     override func viewClass() -> AnyClass {
         return PeerMediaMusicRowView.self
     }
     
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        if isCompactPlayer {
+            return .single([])
+        } else {
+            return super.menuItems(in: location)
+        }
+    }
+    
 }
 
 class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     private let textView:TextView = TextView()
-    let statusView:RadialProgressView = RadialProgressView()
+    private let descView:TextView = TextView()
+
+    let thumbView:TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 40, 40))
     
     var fetchStatus: MediaResourceStatus?
     let statusDisposable = MetaDisposable()
     let fetchDisposable = MetaDisposable()
+    private var playAnimationView: PeerMediaPlayerAnimationView?
     private(set) var fetchControls:FetchControls!
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
+        
+        descView.isSelectable = false
+        descView.userInteractionEnabled = false
+        
         addSubview(textView)
-        addSubview(statusView)
-        fetchControls = FetchControls(fetch: { [weak self] in
-            self?.executeInteraction(true)
-        })
-        statusView.fetchControls = fetchControls
+        addSubview(descView)
+        addSubview(thumbView)
+//        fetchControls = FetchControls(fetch: { [weak self] in
+//            self?.executeInteraction(true)
+//        })
+       
+      //  thumbView.fetchControls = fetchControls
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        guard let item = item as? PeerMediaMusicRowItem else {
+            super.mouseUp(with: event)
+            return
+        }
+        if item.interface.presentation.state == .normal {
+            executeInteraction(true)
+        } else {
+            super.mouseUp(with: event)
+        }
     }
     
     override func layout() {
         super.layout()
-        if let item = item as? PeerMediaMusicRowItem, let layout = item.textLayout {
-            let f = focus(layout.layoutSize)
-            textView.update(layout, origin: NSMakePoint(60, f.minY))
-            statusView.centerY(x: 10)
+        if let item = item as? PeerMediaMusicRowItem {
+            textView.update(item.textLayout, origin: NSMakePoint(item.contentInset.left, item.contentInset.top + 2))
+            
+            if let descLayout = item.descLayout {
+                descView.update(descLayout, origin: NSMakePoint(item.contentInset.left, item.contentSize.height - descLayout.layoutSize.height - item.contentInset.bottom - 2))
+            } else {
+                descView.update(nil)
+                textView.centerY()
+            }
+            
+            thumbView.centerY(x: 0)
+            playAnimationView?.centerY(x: 0)
         }
     }
     
@@ -73,17 +136,17 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     }
     
     func songDidStartPlaying(song:APSongItem, for controller:APController) {
-        
+        checkState()
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController) {
-        
+        checkState()
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
-        
+        //checkState()
     }
     
     func audioDidCompleteQueue(for controller:APController) {
-        
+        checkState()
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
@@ -105,13 +168,28 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     func checkState() {
         if let item = item as? PeerMediaMusicRowItem {
             if let controller = globalAudio, let song = controller.currentSong {
-                if song.entry.isEqual(to: item.message), case .playing = song.state {
-                    statusView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
+                if song.entry.isEqual(to: item.message) {
+                    if playAnimationView == nil {
+                        playAnimationView = PeerMediaPlayerAnimationView()
+                        addSubview(playAnimationView!)
+                        playAnimationView?.centerY(x: 0)
+                    }
+                    if case .playing = song.state {
+                        playAnimationView?.isPlaying = true
+                    } else if case .stoped = song.state {
+                        playAnimationView?.removeFromSuperview()
+                        playAnimationView = nil
+                    } else  {
+                        playAnimationView?.isPlaying = false
+                    }
+                    
                 } else {
-                    statusView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                    playAnimationView?.removeFromSuperview()
+                    playAnimationView = nil
                 }
             } else {
-                statusView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                playAnimationView?.removeFromSuperview()
+                playAnimationView = nil
             }
         }
     }
@@ -122,39 +200,45 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         if let item = item as? PeerMediaMusicRowItem {
             var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
             textView.update(item.textLayout)
-            textView.centerY(x: 60)
+            textView.centerY(x: item.contentInset.left)
             textView.backgroundColor = backdorColor
             globalAudio?.add(listener: self)
             
+            
+            let imageCorners = ImageCorners(topLeft: .Corner(4.0), topRight: .Corner(4.0), bottomLeft: .Corner(4.0), bottomRight: .Corner(4.0))
+            let arguments = TransformImageArguments(corners: imageCorners, imageSize: PeerMediaIconSize, boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
+            
+            thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
+            thumbView.layer?.cornerRadius = .cornerRadius
+            
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: item.thumbResource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            
+            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
+            
+            thumbView.set(arguments: arguments)
+
+            
             if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.account, file: item.file), item.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                        if let pendingStatus = pendingStatus {
+                        if let pendingStatus = pendingStatus.0 {
                             return .Fetching(isActive: true, progress: pendingStatus.progress)
                         } else {
                             return resourceStatus
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: item.account, file: item.file) |> deliverOnMainQueue
+                updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: item.file) |> deliverOnMainQueue
             }
             
             
             if let updatedStatusSignal = updatedStatusSignal {
                 self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
-                    if let strongSelf = self {
-                        strongSelf.fetchStatus = status
-                        switch status {
-                        case let .Fetching(_, progress):
-                            strongSelf.statusView.state = .Fetching(progress: progress, force: false)
-                        case .Local, .Remote:
-                            strongSelf.statusView.state = .Play
-                        }
-                    }
+                    self?.fetchStatus = status
                 }))
                 checkState()
             }
-
+            needsLayout = true
         }
     }
     
@@ -163,30 +247,18 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
                 controller.playOrPause()
             } else {
-                let controller = APChatMusicController(account: item.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+                let controller = APChatMusicController(account: item.interface.context.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
-                addGlobalAudioToVisible()
             }
         }
     }
     
-    
-    func addGlobalAudioToVisible() {
-        if let controller = globalAudio {
-            item?.table?.enumerateViews(with: { (view) in
-                if  let view = (view as? PeerMediaMusicRowView) {
-                    controller.add(listener: view)
-                }
-                return true
-            })
-        }
-        
-    }
+
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: item.account, file: item.file).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file)).start())
         }
         open()
     }
@@ -194,7 +266,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: item.account, file: item.file).start())
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file))
         }
     }
     

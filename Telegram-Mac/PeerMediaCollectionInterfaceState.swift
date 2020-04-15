@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 final class PeerMediaCollectionInteraction : InterfaceObserver {
@@ -30,12 +31,12 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
     }
 }
 
-enum PeerMediaCollectionMode {
-    case photoOrVideo
-    case file
-    case music
-    case webpage
-    
+enum PeerMediaCollectionMode : Int {
+    case photoOrVideo = 0
+    case file = 1
+    case webpage = 2
+    case music = 3
+    case voice = 4
     var tagsValue:MessageTags {
         switch self {
         case .photoOrVideo:
@@ -46,22 +47,12 @@ enum PeerMediaCollectionMode {
             return .music
         case .webpage:
             return .webPage
+        case .voice:
+            return .voiceOrInstantVideo
         }
     }
 }
 
-func titleForPeerMediaCollectionMode(_ mode: PeerMediaCollectionMode) -> String {
-    switch mode {
-    case .photoOrVideo:
-        return "Shared Media"
-    case .file:
-        return "Shared Files"
-    case .music:
-        return "Shared Music"
-    case .webpage:
-        return "Shared Links"
-    }
-}
 
 struct PeerMediaCollectionInterfaceState: Equatable {
     let peer: Peer?
@@ -122,7 +113,7 @@ struct PeerMediaCollectionInterfaceState: Equatable {
             selectedIds.formUnion(selectionState.selectedIds)
         }
         selectedIds.insert(messageId)
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), mode: self.mode, selectingMode: self.selectingMode)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds, lastSelectedId: nil), mode: self.mode, selectingMode: self.selectingMode)
     }
     
     func withToggledSelectedMessage(_ messageId: MessageId) -> PeerMediaCollectionInterfaceState {
@@ -135,11 +126,11 @@ struct PeerMediaCollectionInterfaceState: Equatable {
         } else {
             selectedIds.insert(messageId)
         }
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), mode: self.mode, selectingMode: self.selectingMode)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds, lastSelectedId: nil), mode: self.mode, selectingMode: self.selectingMode)
     }
     
     func withSelectionState() -> PeerMediaCollectionInterfaceState {
-        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: self.selectionState ?? ChatInterfaceSelectionState(selectedIds: Set()), mode: self.mode, selectingMode: true)
+        return PeerMediaCollectionInterfaceState(peer: self.peer, selectionState: self.selectionState ?? ChatInterfaceSelectionState(selectedIds: Set(), lastSelectedId: nil), mode: self.mode, selectingMode: true)
     }
     
     func withoutSelectionState() -> PeerMediaCollectionInterfaceState {

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 class CallNavigationHeaderView: NavigationHeaderView {
     private let backgroundView = NSView()
@@ -21,6 +22,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private let dropCall:ImageButton = ImageButton()
     private let durationDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
+    private let peerDisposable = MetaDisposable()
     private var session:PCallSession? = nil {
         didSet {
             if let session = session {
@@ -61,21 +63,23 @@ class CallNavigationHeaderView: NavigationHeaderView {
     func update(with session: PCallSession) {
         self.session = session
         
-        let signal = session.account.viewTracker.peerView( session.peerId) |> deliverOnMainQueue |> beforeNext { [weak self] peerView in
-            
-            if let peer = peerViewMainPeer(peerView), let strongSelf = self {
-                strongSelf.callInfo.set(text: peer.displayTitle, for: .Normal)
-                strongSelf.needsLayout = true
-            }
-        } |> map {_ in return true}
+        let signal = Signal<Peer?, NoError>.single(session.peer) |> then(session.account.postbox.loadedPeerWithId(session.peerId) |> map(Optional.init) |> deliverOnMainQueue)
         
-        self.ready.set(signal)
+        peerDisposable.set(signal.start(next: { [weak self] peer in
+            if let peer = peer {
+                self?.callInfo.set(text: peer.displayTitle, for: .Normal)
+                self?.needsLayout = true
+            }
+        }))
+        
+        self.ready.set(.single(true))
         updateMutedBg(session, animated: false)
     }
     
     deinit {
         stateDisposable.dispose()
         durationDisposable.dispose()
+        peerDisposable.dispose()
     }
     
     override init(_ header: NavigationHeader) {
@@ -137,11 +141,11 @@ class CallNavigationHeaderView: NavigationHeaderView {
             }
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     private var blueColor:NSColor {
-        return theme.colors.blueSelect
+        return theme.colors.accentSelect
     }
     private var grayColor:NSColor {
         return theme.colors.grayText
@@ -153,7 +157,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
             backgroundView.layer?.animateBackground()
         }
         muteControl.set(image: !session.isMute ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
-        muteControl.sizeToFit()
+        _ = muteControl.sizeToFit()
         needsLayout = true
     }
     
@@ -166,18 +170,18 @@ class CallNavigationHeaderView: NavigationHeaderView {
         callInfo.center()
         dropCall.centerY(x: frame.width - dropCall.frame.width - 20)
         endCall.centerY(x: dropCall.frame.minX - 6 - endCall.frame.width)
-        callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - durationView.frame.maxX - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
+        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
         callInfo.center()
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         dropCall.set(image: theme.icons.callInlineDecline, for: .Normal)
-        dropCall.sizeToFit()
-        endCall.set(text: tr(.callHeaderEndCall), for: .Normal)
-        endCall.sizeToFit(NSZeroSize, NSMakeSize(80, 20), thatFit: true)
+        _ = dropCall.sizeToFit()
+        endCall.set(text: tr(L10n.callHeaderEndCall), for: .Normal)
+        _ = endCall.sizeToFit(NSZeroSize, NSMakeSize(80, 20), thatFit: true)
         durationView.textColor = .white
         callInfo.set(color: .white, for: .Normal)
         endCall.set(color: .white, for: .Normal)

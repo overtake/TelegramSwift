@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 
 class ChatMapContentView: ChatMediaContentView {
@@ -45,15 +46,65 @@ class ChatMapContentView: ChatMediaContentView {
         }
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false) {
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
+        var mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
         iconView.image = theme.icons.chatMapPin
         iconView.sizeToFit()
 
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated)
+        super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
         
-        if mediaUpdated, let parameters = parameters as? ChatMediaMapLayoutParameters {
-            imageView.setSignal(account: account, signal: chatWebpageSnippetPhoto(account: account, photo: parameters.image, scale: backingScaleFactor, small: parameters.isVenue))
+        if let positionFlags = positionFlags {
+            let path = CGMutablePath()
+            
+            let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+            let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+            
+            path.move(to: NSMakePoint(minx, midy))
+            
+            var topLeftRadius: CGFloat = .cornerRadius
+            var bottomLeftRadius: CGFloat = .cornerRadius
+            var topRightRadius: CGFloat = .cornerRadius
+            var bottomRightRadius: CGFloat = .cornerRadius
+            
+            
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+            
+            path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+            path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+            path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topLeftRadius)
+            path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topRightRadius)
+            
+            let maskLayer: CAShapeLayer = CAShapeLayer()
+            maskLayer.path = path
+            layer?.mask = maskLayer
+        } else {
+            layer?.mask = nil
+        }
+        
+        
+        
+        if let parameters = parameters as? ChatMediaMapLayoutParameters {
+            
+            imageView.setSignal(signal: cachedMedia(media: media, arguments: parameters.arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
+            mediaUpdated = mediaUpdated && !self.imageView.hasImage
+            
+            imageView.setSignal( chatWebpageSnippetPhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), clearInstantly: false, animate: mediaUpdated, cacheImage: { [weak media] result in
+                if let media = media {
+                    cacheMedia(result, media: media, arguments: parameters.arguments, scale: System.backingScale, positionFlags: positionFlags)
+                }
+            })
             
             if parameters.isVenue {
                 if textView == nil {
@@ -65,6 +116,7 @@ class ChatMapContentView: ChatMediaContentView {
                 
             }
         }
+        needsLayout = true
     }
     
 }

@@ -9,38 +9,56 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 #import <AVFoundation/AVFoundation.h>
-@interface ObjcUtils : NSObject
-+ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands;
-+(NSString *) md5:(NSString *)string;
-+ (NSArray<NSView *> *)findElementsByClass:(NSString *)className inView:(NSView *)view;
-+ (NSString *)stringForEmojiHashOfData:(NSData *)data count:(NSInteger)count positionExtractor:(int32_t (^)(uint8_t *, int32_t, int32_t))positionExtractor;
-+(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
-+(NSString *)callEmojies:(NSData *)keySha256;
-+(NSOpenPanel *)openPanel;
-+(NSSavePanel *)savePanel;
-+(NSEvent *)scrollEvent:(NSEvent *)from;
-+(NSSize)gifDimensionSize:(NSString *)path;
-+(int)colorMask:(int)idValue mainId:(int)mainId;
-+(NSArray<NSString *> *)notificationTones:(NSString *)def;
-+(NSString *)youtubeIdentifier:(NSString *)url;
+
+
+
+@interface OpenWithObject : NSObject
+@property (nonatomic, strong,readonly) NSString *fullname;
+@property (nonatomic, strong,readonly) NSURL *app;
+@property (nonatomic, strong,readonly) NSImage *icon;
+
+
+-(id)initWithFullname:(NSString *)fullname app:(NSURL *)app icon:(NSImage *)icon;
+
 @end
 
-@interface NSFileManager (Extension)
-+ (NSString *)xattrStringValueForKey:(NSString *)key atURL:(NSURL *)URL;
-+ (BOOL)setXAttrStringValue:(NSString *)value forKey:(NSString *)key atURL:(NSURL *)URL;
+
+
+@interface ObjcUtils : NSObject
++ (NSData *)dataFromHexString:(NSString *)string;
++ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention;
++(NSString * __nonnull) md5:(NSString *__nonnull)string;
++(NSArray<NSView *> *__nonnull)findElementsByClass:(NSString *__nonnull)className inView:(NSView *__nonnull)view;
++(NSString * __nonnull)stringForEmojiHashOfData:(NSData *__nonnull)data count:(NSInteger)count positionExtractor:(int32_t (^__nonnull)(uint8_t *__nonnull, int32_t, int32_t))positionExtractor;
++(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
++(NSString * __nonnull)callEmojies:(NSData *__nonnull)keySha256;
++ (NSArray<NSString *> * __nonnull)getEmojiFromString:(NSString * __nonnull)string;
++(NSOpenPanel * __nonnull)openPanel;
++(NSSavePanel * __nonnull)savePanel;
++(NSEvent * __nonnull)scrollEvent:(NSEvent *__nonnull)from;
++(NSSize)gifDimensionSize:(NSString * __nonnull)path;
++(int)colorMask:(int)idValue mainId:(int)mainId;
++(NSArray<NSString *> * __nonnull)notificationTones:(NSString * __nonnull)def;
++(NSString * __nullable)youtubeIdentifier:(NSString * __nonnull)url;;
++ (NSString * __nullable)_youtubeVideoIdFromText:(NSString * __nullable)text originalUrl:(NSString * __nullable)originalUrl startTime:(NSTimeInterval *)startTime;
++(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl;
+
 @end
+
+
+
 
 @interface NSMutableAttributedString(Extension)
 -(void)detectBoldColorInStringWithFont:(NSFont *)font;
 @end
 
-NSArray<NSString *> *cut_long_message(NSString *message, int max_length);
+NSArray<NSString *> *  __nonnull cut_long_message(NSString *message, int max_length);
 int64_t SystemIdleTime(void);
-NSDictionary<NSString *, NSString *> *audioTags(AVURLAsset *asset);
-NSImage *TGIdenticonImage(NSData *data, NSData *additionalData, CGSize size);
+NSDictionary<NSString *, NSString *> * __nonnull audioTags(AVURLAsset *asset);
+NSImage *  __nonnull TGIdenticonImage(NSData *data, NSData *additionalData, CGSize size);
 
 @interface NSData (TG)
-- (NSString *)stringByEncodingInHex;
+- (NSString *  __nonnull)stringByEncodingInHex;
 @end
 
 BOOL isEnterAccessObjc(NSEvent *theEvent, BOOL byCmdEnter);
@@ -49,3 +67,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 int colorIndexForGroupId(int64_t groupId);
 int64_t TGPeerIdFromChannelId(int32_t channelId);
 int colorIndexForUid(int32_t uid, int32_t myUserId);
+
+
+NSArray<NSString *> * __nonnull currentAppInputSource();
+NSEvent * __nullable createScrollWheelEvent();

@@ -8,14 +8,15 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 private class QuickSwitcherArguments {
-    let account:Account
-    init(_ account:Account) {
-        self.account = account
+    let context: AccountContext
+    init(_ context:AccountContext) {
+        self.context = context
     }
 }
 
@@ -25,52 +26,34 @@ private enum QuickSwitcherSeparator : Int32 {
 }
 
 private enum QuickSwitcherStableId : Hashable {
-    case peerId(PeerId)
+    case peerId(PeerId, SecretChatWrapper?)
     case separator(QuickSwitcherSeparator)
     case empty
     var hashValue: Int {
-        switch self {
-        case .peerId(let peerId):
-            return Int(peerId.id)
-        case .separator(let id):
-            return Int(id.hashValue)
-        case .empty:
-            return 0
-        }
+        return 0
     }
-    
-    static func ==(lhs:QuickSwitcherStableId, rhs: QuickSwitcherStableId) -> Bool {
-        switch lhs {
-        case .peerId(let peerId):
-            if case .peerId(peerId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .separator(let id):
-            if case .separator(id) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .empty:
-            if case .empty = rhs {
-                return true
-            } else {
-                return false
-            }
+    var effectivePeerId: PeerId? {
+        switch self {
+        case let .peerId(peerId, secretPeerId):
+            return secretPeerId?.peerId ?? peerId
+        default:
+            return nil
         }
     }
 }
 
+private struct SecretChatWrapper : Equatable {
+    let peerId:PeerId
+}
+
 private enum QuickSwitcherEntry : TableItemListNodeEntry {
-    case peer(Int32, Peer, Bool)
+    case peer(Int32, Peer, Bool, SecretChatWrapper?)
     case separator(Int32, QuickSwitcherSeparator)
     case empty
     var stableId:QuickSwitcherStableId {
         switch self {
-        case .peer(_, let peer, _):
-            return .peerId(peer.id)
+        case let .peer(_, peer, _, secretChat):
+            return .peerId(peer.id, secretChat)
         case .separator(_, let id):
             return .separator(id)
         case .empty:
@@ -80,7 +63,7 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case .peer(let index, _, _):
+        case .peer(let index, _, _, _):
             return index
         case .separator(let index, _):
             return index
@@ -91,17 +74,17 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
     
     func item(_ arguments: QuickSwitcherArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .peer(_, let peer, let drawSeparator):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), drawCustomSeparator: drawSeparator, action: {
+        case let .peer(_, peer, drawSeparator, secretChat):
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
                 
             })
         case .separator(_, let id):
             let text:String
             switch id {
             case .recently:
-                text = tr(.quickSwitcherRecently)
+                text = tr(L10n.quickSwitcherRecently)
             case .popular:
-                text = tr(.quickSwitcherPopular)
+                text = tr(L10n.quickSwitcherPopular)
             }
             return SeparatorRowItem(initialSize, stableId, string: text.uppercased())
         case .empty:
@@ -112,9 +95,12 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
 
 private func ==(lhs: QuickSwitcherEntry, rhs: QuickSwitcherEntry) -> Bool {
     switch lhs {
-    case let .peer(lhsIndex, lhsPeer, lhsDrawSeparator):
-        if case let .peer(rhsIndex, rhsPeer, rhsDrawSeparator) = rhs {
+    case let .peer(lhsIndex, lhsPeer, lhsDrawSeparator, lhsSecretChat):
+        if case let .peer(rhsIndex, rhsPeer, rhsDrawSeparator, rhsSecretChat) = rhs {
             if lhsIndex != rhsIndex {
+                return false
+            }
+            if lhsSecretChat != rhsSecretChat {
                 return false
             }
             if lhsDrawSeparator != rhsDrawSeparator {
@@ -162,7 +148,7 @@ private class QuickSwitcherView : View {
         separator.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.background
         let attributed = NSMutableAttributedString()
-        _ = attributed.append(string: tr(.quickSwitcherDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attributed.append(string: L10n.quickSwitcherDescription, color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .medium(.text))
         let descLayout = TextViewLayout(attributed, alignment: .center)
         descLayout.measure(width: frameRect.width - 20)
@@ -173,9 +159,9 @@ private class QuickSwitcherView : View {
     
     override func layout() {
         super.layout()
-        searchView.centerX(y: floorToScreenPixels((50 - 30)/2))
+        searchView.centerX(y: floorToScreenPixels(backingScaleFactor, (50 - 30)/2))
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 100)
-        textView.centerX(y: frame.height - floorToScreenPixels((50 - textView.frame.height)/2) - textView.frame.height)
+        textView.centerX(y: frame.height - floorToScreenPixels(backingScaleFactor, (50 - textView.frame.height)/2) - textView.frame.height)
         separator.frame = NSMakeRect(0, frame.height - 50, frame.width, .borderSize)
     }
     
@@ -185,7 +171,7 @@ private class QuickSwitcherView : View {
 }
 
 
-private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed:[Peer], isLoading: Bool) -> [QuickSwitcherEntry] {
+private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed:[(Peer, SecretChatWrapper?)], isLoading: Bool) -> [QuickSwitcherEntry] {
     var entries: [QuickSwitcherEntry] = []
     
     var index:Int32 = 0
@@ -198,10 +184,10 @@ private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed
     
     var isset:[PeerId:PeerId] = [:]
     for peer in recentlyUsed {
-        if account.peerId != peer.id, isset[peer.id] == nil {
-            entries.append(.peer(index, peer, peer.id != recentlyUsed.last?.id))
+        if isset[peer.0.id] == nil {
+            entries.append(.peer(index, peer.0, peer.0.id != recentlyUsed.last?.0.id, peer.1))
             index += 1
-            isset[peer.id] = peer.id
+            isset[peer.0.id] = peer.0.id
         }
     }
     
@@ -211,8 +197,8 @@ private func searchEntriesForPeers(_ peers:[Peer], account:Account, recentlyUsed
     }
     
     for peer in peers {
-        if account.peerId != peer.id, isset[peer.id] == nil {
-            entries.append(.peer(index, peer, true))
+        if isset[peer.id] == nil {
+            entries.append(.peer(index, peer, true, nil))
             index += 1
             isset[peer.id] = peer.id
         }
@@ -231,54 +217,104 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<QuickSwitcherEnt
         return entry.entry.item(arguments, initialSize: initialSize)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: false)
 }
 
 
 class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
-    private let account:Account
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
+    private let context:AccountContext
     private let search:ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     private let disposable = MetaDisposable()
-    fileprivate func start(account: Account, recentlyUsed:[PeerId], search:Signal<SearchState, Void>) -> Signal<([QuickSwitcherEntry], Bool), Void> {
+    fileprivate func start(context: AccountContext, recentlyUsed:[PeerId], search:Signal<SearchState, NoError>) -> Signal<([QuickSwitcherEntry], Bool), NoError> {
         
-        return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), Void> in
+        return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return combineLatest(account.postbox.recentPeers(), account.postbox.multiplePeersView(recentlyUsed) |> take(1))
+                return combineLatest(recentPeers(account: context.account) |> take(1), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
-                    |> mapToSignal { peers, view -> Signal<([QuickSwitcherEntry], Bool), Void> in
+                    |> mapToSignal { recentPeers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
                         
-                        var recentl:[Peer] = []
+                        var peers:[Peer] = []
+                        
+                        switch recentPeers {
+                        case let .peers(list):
+                            peers = list
+                        default:
+                            break
+                        }
+                        
+                        var recentl:[(Peer, SecretChatWrapper?)] = []
                         for peerId in recentlyUsed {
                             if let peer = view.peers[peerId] {
-                                recentl.append(peer)
+                                recentl.append((peer, nil))
                             }
                         }
-                        return .single((searchEntriesForPeers(peers, account: account, recentlyUsed: recentl, isLoading: false), false))
+                        let secretChats = recentl.compactMap { $0.0 as? TelegramSecretChat }.compactMap { $0.associatedPeerId }
+                        
+                        if !secretChats.isEmpty {
+                            return context.account.postbox.multiplePeersView(secretChats) |> take(1) |> map { secretPeers in
+                                var recentl:[(Peer, SecretChatWrapper?)] = []
+                                for peerId in recentlyUsed {
+                                    if let peer = view.peers[peerId] {
+                                        if let peer = peer as? TelegramSecretChat {
+                                            if let secretPeer = secretPeers.peers[peer.associatedPeerId!] {
+                                                recentl.append((secretPeer, SecretChatWrapper(peerId: peer.id)))
+                                            }
+                                        } else {
+                                            recentl.append((peer, nil))
+                                        }
+                                    }
+                                }
+                                return (searchEntriesForPeers(peers, account: context.account, recentlyUsed: recentl, isLoading: false), false)
+                            }
+                        } else {
+                            return .single((searchEntriesForPeers(peers, account: context.account, recentlyUsed: recentl, isLoading: false), false))
+                        }
                 }
                 
             } else  {
-                let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
                 
-                let foundRemotePeers = account.postbox.searchPeers(query: search.request.lowercased()) |> map {$0.flatMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})}
+                var all = search.request.transformKeyboard
+                all.insert(search.request.lowercased(), at: 0)
+                all = all.uniqueElements
+                let localPeers = combineLatest(all.map {
+                    return context.account.postbox.searchPeers(query: $0)
+                }) |> map { result in
+                    return result.reduce([], {
+                        return $0 + $1
+                    })
+                }
                 
-                return combineLatest(foundLocalPeers, foundRemotePeers) |> map { values -> ([Peer], Bool) in
-                    return (uniquePeers(from: (values.1 + values.0)), false)
+                let foundLocalPeers = localPeers |> map {
+                    return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
+                }
+                
+                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: context.account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
+                
+                return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values -> ([Peer], Bool) in
+                    var peers = values.0
+                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
+                        peers.insert(values.1, at: 0)
+                    }
+                    
+                    return (uniquePeers(from: peers), false)
                 }
                 |> runOn(prepareQueue)
                 |> map { values -> ([QuickSwitcherEntry], Bool) in
                     
-                    return (searchEntriesForPeers(values.0, account: account, recentlyUsed: [], isLoading: values.1), values.1)
+                    return (searchEntriesForPeers(values.0, account: context.account, recentlyUsed: [], isLoading: values.1), values.1)
                 }
             }
-            
         }
-        
     }
     
     
-    init(account:Account) {
-        self.account = account
+    init(_ context: AccountContext) {
+        self.context = context
         super.init(frame: NSMakeRect(0, 0, 300, 360))
         bar = .init(height: 0)
     }
@@ -307,7 +343,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return true
     }
     
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return item is ShortPeerRowItem
     }
     
@@ -326,13 +362,13 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         genericView.tableView.delegate = self
         search.set(SearchState(state: .None, request: nil))
         
-        let searchInteractions = SearchInteractions({ [weak self] state in
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
             self?.search.set(state)
         }, { [weak self] state in
             self?.search.set(state)
         })
         
-        let arguments = QuickSwitcherArguments(account)
+        let arguments = QuickSwitcherArguments(context)
         
         genericView.searchView.searchInteractions = searchInteractions
         
@@ -341,7 +377,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         
         let previous:Atomic<[AppearanceWrapperEntry<QuickSwitcherEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        disposable.set((combineLatest(start(account: account, recentlyUsed: account.context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
+        disposable.set((combineLatest(start(context: context, recentlyUsed: context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
             let entries = value.0.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments), value.1)
         } |> deliverOnMainQueue).start(next: { [weak self] value in
@@ -356,10 +392,27 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     
     override func returnKeyAction() -> KeyHandlerResult {
         if let selectedItem = genericView.tableView.selectedItem() as? ShortPeerRowItem {
-            account.context.mainNavigation?.push(ChatController(account: account, peerId: selectedItem.peer.id))
+            let query = self.genericView.searchView.query
+            var peerId = selectedItem.peer.id
+            var messageId: MessageId? = nil
+            let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+            switch link {
+            case let .followResolvedName(_, _, postId, _, _, _):
+                if let postId = postId {
+                    messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
+                }
+            default:
+                break
+            }
+            
+            if let stableId = selectedItem.stableId as? QuickSwitcherStableId, let effectivePeerId = stableId.effectivePeerId {
+                peerId = effectivePeerId
+            }
+            
+            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: messageId))
             close()
         }
-        return .rejected
+        return .invoked
     }
     
     override func viewDidAppear(_ animated: Bool) {

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
     let resource: TelegramMediaResource
     let title:String?
@@ -20,7 +21,7 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
     let showPlayer:(APController) -> Void
     let durationLayout:TextViewLayout
     let sizeLayout:TextViewLayout
-    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void) {
+    init(nameLayout:TextViewLayout, durationLayout:TextViewLayout, sizeLayout:TextViewLayout, resource:TelegramMediaResource, isWebpage: Bool, title:String?, performer:String?, showPlayer:@escaping(APController) -> Void, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.nameLayout = nameLayout
         self.sizeLayout = sizeLayout
         self.durationLayout = durationLayout
@@ -29,16 +30,41 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         self.title = title
         self.performer = performer
         self.resource = resource
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
     
+    var file: TelegramMediaFile {
+        return media as! TelegramMediaFile
+    }
+    
+    override func makeLabelsForWidth(_ width: CGFloat) {
+        nameLayout.measure(width: width - 40)
+        durationLayout.measure(width: width - 40)
+        sizeLayout.measure(width: width - 40)
+    }
 }
 
 class ChatMusicRowItem: ChatMediaItem {
     
     
-    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
-        super.init(initialSize, chatInteraction, account, object)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction)
+    override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
+        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
+        
+
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
+    }
+    
+    override var additionalLineForDateInBubbleState: CGFloat? {
+        if isForceRightLine {
+            return rightSize.height
+        }
+        if let parameters = parameters as? ChatMediaMusicLayoutParameters {
+            if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
+                return rightSize.height
+            }
+        }
+        
+        return super.additionalLineForDateInBubbleState
     }
     
     override var instantlyResize: Bool {
@@ -47,10 +73,8 @@ class ChatMusicRowItem: ChatMediaItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.nameLayout.measure(width: width - 20)
-            parameters.durationLayout.measure(width: width - 20)
-            parameters.sizeLayout.measure(width: width - 20)
-            return NSMakeSize(parameters.nameLayout.layoutSize.width + 50, 40)
+            parameters.makeLabelsForWidth(width)
+            return NSMakeSize(max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width) + 50, 40)
         }
         return NSZeroSize
     }

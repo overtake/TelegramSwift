@@ -8,81 +8,72 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
-
-fileprivate enum UsernameEntries : Comparable, Identifiable {
-    case whiteSpace(Int64, CGFloat)
-    case inputEntry(placeholder:String, state:AddressNameAvailabilityState)
-    case stateEntry(text:String, color:NSColor)
-    case descEntry(String)
+fileprivate enum UsernameEntryId : Hashable {
+    case section(Int32)
+    case inputEntry
+    case stateEntry
+    case descEntry
     
-    var index:Int64 {
+}
+
+fileprivate enum UsernameEntry : Comparable, Identifiable {
+    case section(Int32)
+    case inputEntry(sectionId: Int32, placeholder:String, state:AddressNameAvailabilityState, viewType: GeneralViewType)
+    case stateEntry(sectionId:Int32, text:String, color:NSColor, viewType: GeneralViewType)
+    case descEntry(sectionId:Int32, text: String, viewType: GeneralViewType)
+    
+    var index:Int32 {
         switch self {
-        case let .whiteSpace(index, _):
-            return index
-        case .inputEntry:
-            return 1000
-        case .stateEntry:
-            return 2000
-        case .descEntry:
-            return 3000
+        case let .section(sectionId):
+            return (sectionId + 1) * 1000 - sectionId
+        case let .inputEntry(sectionId, _, _, _):
+             return (sectionId * 1000) + 1
+        case let .stateEntry(sectionId, _, _, _):
+             return (sectionId * 1000) + 2
+        case let .descEntry(sectionId, _, _):
+             return (sectionId * 1000) + 3
         }
     }
     
-    fileprivate var stableId:Int64 {
-        return index
+    fileprivate var stableId:UsernameEntryId {
+        switch self {
+        case let .section(index):
+            return .section(index)
+        case .inputEntry:
+            return .inputEntry
+        case .stateEntry:
+            return .stateEntry
+        case .descEntry:
+            return .descEntry
+        }
     }
 
 }
 
-fileprivate func <(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
+fileprivate func <(lhs:UsernameEntry, rhs:UsernameEntry) ->Bool {
     return lhs.index < rhs.index
 }
 
-fileprivate func ==(lhs:UsernameEntries, rhs:UsernameEntries) ->Bool {
-    switch lhs {
-    case let .whiteSpace(lhsIndex, lhsHeight):
-        if case let .whiteSpace(rhsIndex, rhsHeight) = rhs {
-            return lhsIndex == rhsIndex && lhsHeight == rhsHeight
-        }
-        return false
-    case let .inputEntry(lhsState):
-        if case let .inputEntry(rhsState) = rhs , lhsState.state == rhsState.state {
-            return true
-        }
-        return false
-    case let .stateEntry(lhsState):
-        if case let .stateEntry(rhsState) = rhs, lhsState == rhsState {
-            return true
-        }
-        return false
-    case let .descEntry(lhsDesc):
-        if case let .descEntry(rhsDesc) = rhs, lhsDesc == rhsDesc {
-            return true
-        }
-        return false
-    }
-}
-
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntries>], to:[AppearanceWrapperEntry<UsernameEntries>], account:Account, initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition,Void> {
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntry>], to:[AppearanceWrapperEntry<UsernameEntry>], initialSize:NSSize, animated:Bool, availability:ValuePromise<String>) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
         let (removed, inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
             switch entry.entry {
-            case let .whiteSpace(index, height):
-                return GeneralRowItem(initialSize, height: height, stableId: index)
+            case .section:
+                return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
             case let .inputEntry(inputState):
-                
-                return UsernameInputRowItem(initialSize, stableId: entry.stableId, placeholder: inputState.placeholder, limit: 30, status: nil, text: inputState.state.username ?? "", changeHandler: { value in
-                    availability.set(value)
-                })
-            case let .stateEntry(state):
-                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: state.text, color: state.color, font: .normal(.text)), alignment: .left, inset:NSEdgeInsets(left: 30.0, right: 30.0, top:6, bottom:4))
-            case let .descEntry(desc):
-                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: desc)
+                return InputDataRowItem(initialSize, stableId: entry.stableId, mode: .plain, error: nil, viewType: inputState.viewType, currentText: inputState.state.username ?? "", placeholder: nil, inputPlaceholder: inputState.placeholder, filter: { $0 }, updated: { value in
+                     availability.set(value)
+                }, limit: 30)
+            case let .stateEntry(_, text, color, viewType):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
+            case let .descEntry(_, text, viewType):
+                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: text, viewType: viewType)
             }
         })
         
@@ -107,11 +98,8 @@ class UsernameSettingsViewController: TableViewController {
         return true
     }
     
-    var doneButton:Button? {
-        if let button = rightBarView as? TextButtonBarView {
-            return button.button
-        }
-        return nil
+    var doneButton:Control? {
+        return rightBarView
     }
     
     override func backKeyAction() -> KeyHandlerResult {
@@ -119,9 +107,9 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(.usernameSettingsDone))
+        let button = TextButtonBarView(controller: self, text: L10n.usernameSettingsDone)
         
-        button.button.set(handler: { [weak self] _ in
+        button.set(handler: { [weak self] _ in
             self?.saveUsername()
         }, for: .Click)
         
@@ -131,8 +119,16 @@ class UsernameSettingsViewController: TableViewController {
  
     
     func saveUsername() {
-        if let item = genericView.item(stableId: Int64(1000)) as? UsernameInputRowItem, let window = window {
-            updateDisposable.set(showModalProgress(signal: updateAddressName(account: account, domain: .account, name: item.text) |> mapError({_ in}), for: window).start())
+        if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
+            updateDisposable.set(showModalProgress(signal: updateAddressName(account: context.account, domain: .account, name: item.currentText), for: window).start(error: { error in
+                switch error {
+                case .generic:
+                    alert(for: mainWindow, info: L10n.unknownError)
+                }
+            }, completed: { [weak self] in
+                self?.navigationController?.back()
+                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 0.5).start()
+            }))
         }
     }
     
@@ -140,7 +136,7 @@ class UsernameSettingsViewController: TableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let rightView = self?.rightBarView as? TextButtonBarView, rightView.button.isEnabled  {
+            if let rightView = self?.rightBarView as? TextButtonBarView, rightView.isEnabled  {
                 self?.saveUsername()
                 return .rejected
             }
@@ -153,42 +149,39 @@ class UsernameSettingsViewController: TableViewController {
         
 
     
-        let previous:Atomic<[AppearanceWrapperEntry<UsernameEntries>]> = Atomic(value:[])
-        let entries:Promise<[UsernameEntries]> = Promise()
+        let previous:Atomic<[AppearanceWrapperEntry<UsernameEntry>]> = Atomic(value:[])
+        let entries:Promise<[UsernameEntry]> = Promise()
         let initialSize = self.atomicSize.modify({$0})
-        let account = self.account
+        let context = self.context
         let availability = self.availability
-        var mutableItems:[UsernameEntries] = [.whiteSpace(0, 16),
-                                              .inputEntry(placeholder: tr(.usernameSettingsInputPlaceholder), state:.none(username: nil)),
-                                              .descEntry(tr(.usernameSettingsChangeDescription))]
         
         
 
-        username.set(account.viewTracker.peerView( account.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, Void> in
-            if let peer = peerView.peers[account.peerId] {
+        username.set(context.account.viewTracker.peerView( context.peerId) |> deliverOnMainQueue |> mapToSignal { peerView -> Signal<String, NoError> in
+            if let peer = peerView.peers[context.peerId] {
                 return .single(peer.username ?? "")
             }
             return .complete()
         })
         
         
-        self.genericView.merge(with: combineLatest(entries.get(),username.get() |> distinctUntilChanged |> mapToSignal {username -> Signal<String,Void> in
+        self.genericView.merge(with: combineLatest(entries.get(),username.get() |> distinctUntilChanged |> mapToSignal {username -> Signal<String, NoError> in
             availability.set(username)
             return .single(username)
         }, appearanceSignal)
         |> deliverOnMainQueue
-        |> mapToSignal { items, username, appearance -> Signal<TableUpdateTransition, Void> in
+        |> mapToSignal { items, username, appearance -> Signal<TableUpdateTransition, NoError> in
             let items = items.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return prepareEntries(from: previous.swap(items), to: items, account: account, initialSize: initialSize, animated: true, availability:availability)
+            return prepareEntries(from: previous.swap(items), to: items, initialSize: initialSize, animated: true, availability:availability)
         })
 
         let availabilityChecker = combineLatest(availability.get(), username.get()
             |> distinctUntilChanged)
-            |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String),Void> in
+            |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String), NoError> in
                 if let error = checkAddressNameFormat(value) {
                     return .single((AddressNameAvailabilityState.fail(username: value, formatError: error, availability: .available), username))
                 } else {
-                    return .single((AddressNameAvailabilityState.progress(username: value), username)) |> then(addressNameAvailability(account: account, domain: .account, name: value)
+                    return .single((AddressNameAvailabilityState.progress(username: value), username)) |> then(addressNameAvailability(account: context.account, domain: .account, name: value)
                         |> map { availability -> (AddressNameAvailabilityState,String) in
                         switch availability {
                         case .available:
@@ -202,48 +195,54 @@ class UsernameSettingsViewController: TableViewController {
                 }
             }
             |> deliverOnMainQueue
-            |> mapToSignal { [weak self] (availability,address) -> Signal<Void, Void> in
-                mutableItems[1] = .inputEntry(placeholder: tr(.usernameSettingsInputPlaceholder), state:availability)
+            |> mapToSignal { [weak self] (availability,address) -> Signal<Void, NoError> in
+                //        var mutableItems:[UsernameEntry] = [.whiteSpace(0, 16),
+ //               .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
+//                .descEntry(tr(L10n.usernameSettingsChangeDescription))]
+
+                var items:[UsernameEntry] = []
+                var sectionId: Int32 = 0
+                
+                items.append(.section(sectionId))
+                sectionId += 1
+                
+                items.append(.inputEntry(sectionId: sectionId, placeholder: L10n.usernameSettingsInputPlaceholder, state: availability, viewType: .singleItem))
                 
                 switch availability {
                 case .none:
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
                     self?.doneButton?.isEnabled = true
                     break
                 case .progress:
                     self?.doneButton?.isEnabled = false
                     break
                 case let .success(username:username):
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
                     if address != username {
                         if username?.length != 0 {
-                            mutableItems.insert(.stateEntry(text:tr(.usernameSettingsAvailable(username ?? "")), color: theme.colors.blueUI), at: 2)
+                            items.append(.stateEntry(sectionId: sectionId, text: L10n.usernameSettingsAvailable(username ?? ""), color: theme.colors.accent, viewType: .textBottomItem))
                         }
                     }
                     self?.doneButton?.isEnabled = address != username
                 case let .fail(fail):
-                    if case .stateEntry = mutableItems[2] {
-                        mutableItems.remove(at: 2)
-                    }
-                    
                     let enabled = fail.username?.length == 0 && address.length != 0
-                    
-                    let stateEntry:UsernameEntries
+                     let stateEntry:UsernameEntry
                     if let error = fail.formatError {
-                        stateEntry = .stateEntry(text: error.description, color: theme.colors.redUI)
+                        stateEntry = .stateEntry(sectionId: sectionId, text: error.description, color: theme.colors.redUI, viewType: .textBottomItem)
                     } else {
-                        stateEntry = .stateEntry(text: fail.availability.description, color: theme.colors.redUI)
+                        stateEntry = .stateEntry(sectionId: sectionId, text: fail.availability.description(for: address), color: theme.colors.redUI, viewType: .textBottomItem)
                     }
                     if fail.username?.length != 0 {
-                        mutableItems.insert(stateEntry, at: 2)
+                        items.append(stateEntry)
                     }
                     self?.doneButton?.isEnabled = enabled
                 }
-                entries.set(.single(mutableItems))
+                
+                items.append(.descEntry(sectionId: sectionId, text: L10n.usernameSettingsChangeDescription, viewType: .textBottomItem))
+
+                
+                items.append(.section(sectionId))
+                sectionId += 1
+                
+                entries.set(.single(items))
                 
                 self?.readyOnce()
                 return .single(Void())
@@ -268,7 +267,7 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        if let item = genericView.item(stableId: Int64(1000)), let view = genericView.viewNecessary(at: item.index) as? GeneralInputRowView {
+        if let view = genericView.item(at: 1).view as? InputDataRowView {
             return view.textView
         }
         return nil

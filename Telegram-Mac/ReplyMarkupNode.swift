@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 
 class ReplyMarkupButtonLayout {
@@ -20,10 +21,10 @@ class ReplyMarkupButtonLayout {
     let style:ControlStyle
     let button:ReplyMarkupButton
     
-    init(_ button:ReplyMarkupButton, _ style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text)) {
+    init(button:ReplyMarkupButton, style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text), isInput: Bool) {
         self.button = button
         self.style = style
-        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.controllerBackgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
     }
     
     func measure(_ width:CGFloat) {
@@ -31,9 +32,18 @@ class ReplyMarkupButtonLayout {
         self.width = width
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
 }
 
 class ReplyMarkupNode: Node {
+
+    static let buttonHeight:CGFloat = 34
+    static let buttonPadding:CGFloat = 4
+    static let rowHeight = buttonHeight + buttonPadding
     
     private var width:CGFloat = 0
     private var height:CGFloat = 0
@@ -42,14 +52,15 @@ class ReplyMarkupNode: Node {
     private let flags:ReplyMarkupMessageFlags
     
     private let interactions:ReplyMarkupInteractions
-    
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil) {
+    private let isInput: Bool
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil, _ isInput: Bool = false) {
         self.flags = flags
+        self.isInput = isInput
         self.interactions = interactions
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
-                layoutRows[i].append(ReplyMarkupButtonLayout(button))
+                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, isInput: isInput))
             }
         }
         self.markup = layoutRows
@@ -63,7 +74,13 @@ class ReplyMarkupNode: Node {
                 
                 var urlView:ImageView?
                 switch button.button.action {
-                case .url, .switchInline:
+                case let .url(url):
+                    if !url.isSingleEmoji {
+                        urlView = ImageView()
+                        urlView?.image = theme.icons.chatActionUrl
+                        urlView?.sizeToFit()
+                    }
+                case .switchInline:
                     urlView = ImageView()
                     urlView?.image = theme.icons.chatActionUrl
                     urlView?.sizeToFit()
@@ -72,12 +89,14 @@ class ReplyMarkupNode: Node {
                 }
                 
                 let btnView = TextView()
-                btnView.set(handler: { [weak self] _ in
-                    self?.proccess(btnView,button.button)
+                btnView.set(handler: { [weak self, weak button] control in
+                    if let button = button {
+                        self?.proccess(control, button.button)
+                    }
                 }, for: .Click)
                 
                 btnView.set(handler: { control in
-                    control.change(opacity: 0.85, animated: true)
+                    control.change(opacity: 0.7, animated: true)
                 }, for: .Highlight)
                 btnView.set(handler: { control in
                     control.change(opacity: 1.0, animated: true)
@@ -87,6 +106,8 @@ class ReplyMarkupNode: Node {
                 }, for: .Hover)
                 btnView.layer?.cornerRadius = .cornerRadius
                 btnView.isSelectable = false
+                btnView.disableBackgroundDrawing = true
+
                 btnView.backgroundColor = button.style.backgroundColor
                 btnView.set(layout:button.text)
                 
@@ -100,8 +121,8 @@ class ReplyMarkupNode: Node {
     }
     
     func proccess(_ control:Control, _ button:ReplyMarkupButton) {
-        interactions.proccess(button, { loading in
-            control.backgroundColor = loading ? .black : theme.colors.grayBackground
+        interactions.proccess(button, { [weak control] loading in
+           // control?.backgroundColor = loading ? .black : theme.colors.grayBackground
         })
     }
     
@@ -117,9 +138,9 @@ class ReplyMarkupNode: Node {
                 if j == row.count - 1 {
                     w = self.width - rect.minX
                 }
-                rect.size = NSMakeSize(w, 34)
+                rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let button:View? = view?.subviews[i] as? View
-                button?.backgroundColor = theme.colors.grayBackground
+                button?.backgroundColor = theme.controllerBackgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
                 if let button = button {
                     button.frame = rect
                     button.setNeedsDisplayLayer()
@@ -128,11 +149,11 @@ class ReplyMarkupNode: Node {
                     }
                 }
                 
-                rect = rect.offsetBy(dx: w + 6, dy: 0)
+                rect = rect.offsetBy(dx: w + ReplyMarkupNode.buttonPadding, dy: 0)
                 i += 1
                 j += 1
             }
-            y += 40
+            y += ReplyMarkupNode.rowHeight
         }
     }
     
@@ -143,7 +164,7 @@ class ReplyMarkupNode: Node {
     override func measureSize(_ width: CGFloat) {
         for row in markup {
             let count = row.count
-            let single:CGFloat = floorToScreenPixels((width - CGFloat(6 * (count - 1))) / CGFloat(count))
+            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(6 * (count - 1))) / CGFloat(count))
             for button in row {
                 button.measure(single)
             }

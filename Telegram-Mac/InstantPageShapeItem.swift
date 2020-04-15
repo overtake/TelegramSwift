@@ -8,7 +8,8 @@
 
 import Cocoa
 
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 enum InstantPageShape {
     case rect
@@ -23,9 +24,10 @@ final class InstantPageShapeItem: InstantPageItem {
     let color: NSColor
     
     let medias: [InstantPageMedia] = []
-    let wantsNode: Bool = false
+    let wantsView: Bool = false
     let hasLinks: Bool = false
-    
+    let separatesTiles: Bool = false
+
     let isInteractive: Bool = false
     
     init(frame: CGRect, shapeFrame: CGRect, shape: InstantPageShape, color: NSColor) {
@@ -62,11 +64,11 @@ final class InstantPageShapeItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         return false
     }
     
-    func node(account: Account) -> InstantPageView? {
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
         return nil
     }
     

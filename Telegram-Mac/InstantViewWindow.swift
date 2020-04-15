@@ -8,17 +8,18 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 private final class InstantViewArguments {
-    let account: Account
+    let context: AccountContext
     let share:()->Void
     let back:()->Void
     let openInSafari:()->Void
     let enableSansSerif:(Bool)->Void
-    init(account: Account, share: @escaping()->Void, back: @escaping()->Void, openInSafari: @escaping()->Void, enableSansSerif:@escaping(Bool)->Void) {
-        self.account = account
+    init(context: AccountContext, share: @escaping()->Void, back: @escaping()->Void, openInSafari: @escaping()->Void, enableSansSerif:@escaping(Bool)->Void) {
+        self.context = context
         self.share = share
         self.back = back
         self.enableSansSerif = enableSansSerif
@@ -60,7 +61,7 @@ private class HeaderView : View {
     }
     
     private func initialize() {
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         addSubview(borderView)
         addSubview(share)
         addSubview(actions)
@@ -103,13 +104,13 @@ private class HeaderView : View {
         view.setFrameOrigin(view.frame.minX, view.frame.minY - 1)
         if animated {
             addSubview(view)
-            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: kCAMediaTimingFunctionSpring, completion: { [weak self, weak view] completed in
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak self, weak view] completed in
                 if completed {
                     self?.titleView?.removeFromSuperview()
                     self?.titleView = view
                 }
             })
-            titleView?.change(opacity: 0, timingFunction: kCAMediaTimingFunctionSpring)
+            titleView?.change(opacity: 0, timingFunction: CAMediaTimingFunctionName.spring)
         } else {
             titleView?.removeFromSuperview()
             titleView = view
@@ -143,8 +144,9 @@ private class HeaderView : View {
         back.centerY(x: 86)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
         borderView.backgroundColor = theme.colors.border
         backgroundColor = theme.colors.background
         titleView?.backgroundColor = theme.colors.background
@@ -157,10 +159,10 @@ private class HeaderView : View {
         safari.set(image: theme.icons.instantViewSafari, for: .Normal)
         back.set(image: theme.icons.instantViewBack, for: .Normal)
         
-        share.sizeToFit()
-        actions.sizeToFit()
-        safari.sizeToFit()
-        back.sizeToFit()
+        _ = share.sizeToFit()
+        _ = actions.sizeToFit()
+        _ = safari.sizeToFit()
+        _ = back.sizeToFit()
     }
     
     required init?(coder: NSCoder) {
@@ -171,6 +173,8 @@ private class HeaderView : View {
 class InstantWindowContentView : View {
     private let headerView: HeaderView = HeaderView(frame: NSZeroRect)
     private let contentView: View = View()
+    fileprivate let loadingIndicatorView: LinearProgressControl = LinearProgressControl(progressHeight: 2)
+
     fileprivate var arguments: InstantViewArguments? {
         didSet {
             headerView.arguments = arguments
@@ -186,14 +190,18 @@ class InstantWindowContentView : View {
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(contentView)
+        addSubview(loadingIndicatorView)
+        loadingIndicatorView.layer?.opacity = 0
+        flip = false
         contentView.autoresizesSubviews = false
         layout()
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         contentView.backgroundColor = theme.colors.background
         backgroundColor = theme.colors.background
+        loadingIndicatorView.style = ControlStyle(foregroundColor: theme.colors.text, backgroundColor: backgroundColor)
     }
     
     func updateTitle(_ title:String, animated: Bool) {
@@ -219,9 +227,11 @@ class InstantWindowContentView : View {
     
     override func layout() {
         super.layout()
-        headerView.frame = NSMakeRect(0, 0, frame.width, barHeight)
-        contentView.frame = NSMakeRect(0, headerView.frame.maxY, frame.width, frame.height - headerView.frame.height)
+        headerView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, barHeight)
+        contentView.frame = NSMakeRect(0, 0, min(frame.width, 720), frame.height - headerView.frame.height)
+        contentView.centerX()
         contentView.subviews.first?.frame = contentView.bounds
+        loadingIndicatorView.frame = NSMakeRect(0, frame.height - barHeight, frame.width, loadingIndicatorView.frame.height)
     }
 }
 
@@ -237,32 +247,32 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     fileprivate let _window:Window
     private let appearanceDisposable = MetaDisposable()
-    init( page: InstantPageViewController, account: Account) {
-        navigation = MajorNavigationController(ViewController.self, page)
-        navigation.alwaysAnimate = true
+    private let loadProgressDisposable = MetaDisposable()
+    init( page: InstantPageViewController, context: AccountContext) {
         let screen = NSScreen.main!
         
         self.page = page
         
         let height = (screen.frame.height * 0.7)
-        let center = NSMakeRect(floorToScreenPixels((screen.frame.width - 720)/2), floorToScreenPixels((screen.frame.height - height)/2), 720, height)
+        let center = NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - 720)/2), floorToScreenPixels(System.backingScale, (screen.frame.height - height)/2), 720, height)
         
         _window = Window(contentRect: center, styleMask: [.closable, .resizable, .miniaturizable, .fullSizeContentView, .titled, .unifiedTitleAndToolbar, .texturedBackground], backing: .buffered, defer: true)
-       
-        super.init(account)
-        
+        navigation = MajorNavigationController(ViewController.self, page, _window)
+        navigation.alwaysAnimate = true
+
+        super.init(context)
+        _window.isMovableByWindowBackground = false
         _window.name = "Telegram.InstantViewWindow"
         _window.initSaver()
         _window.contentView = genericView
         _window.titleVisibility = .hidden
         navigation._frameRect = NSMakeRect(0, 0, genericView.frame.width, genericView.frame.height - barHeight)
-
+        
         _window.titlebarAppearsTransparent = true
         _window.minSize = NSMakeSize(500, 600)
         genericView.customHandler.layout = { [weak self] _ in
             self?.windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
         }
-        
         
         windowDidNeedSaveState(Notification(name: Notification.Name(rawValue: "")))
         
@@ -273,7 +283,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             self?.genericView.updateBorder(value.position.rect.minY - value.documentSize.height > 0, animated: true)
         }
         
-        let arguments = InstantViewArguments(account: account, share: { [weak self] in
+        let arguments = InstantViewArguments(context: context, share: { [weak self] in
             self?.share()
         }, back: { [weak self] in
             self?.navigation.back()
@@ -281,18 +291,27 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             self?.openInSafari()
         }, enableSansSerif: { [weak self] enable in
             if let strongSelf = self {
-                _ = updateInstantViewAppearanceSettingsInteractively(postbox: strongSelf.account.postbox, {$0.withUpdatedFontSerif(enable)}).start()
+                _ = updateInstantViewAppearanceSettingsInteractively(postbox: strongSelf.context.account.postbox, {$0.withUpdatedFontSerif(enable)}).start()
             }
         })
 
         genericView.arguments = arguments
-        appearanceDisposable.set((ivAppearance(postbox: account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
+        appearanceDisposable.set((ivAppearance(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] appearance in
             self?.genericView.presenation = appearance
         }))
         
         _window.closeInterceptor = { [weak self] in
-            self?._window.orderOut(nil)
-            instantController = nil
+            if let window = self?._window, !window.styleMask.contains(.fullScreen) {
+                self?._window.orderOut(nil)
+                instantController = nil
+            } else {
+                self?._window.toggleFullScreen(nil)
+                delay(0.8, closure: {
+                    self?._window.orderOut(self)
+                    instantController = nil
+                })
+            }
+            return true
         }
         
         let closeKeyboardHandler:()->KeyHandlerResult = { [weak self] in
@@ -300,14 +319,54 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 if !window.styleMask.contains(.fullScreen) {
                     self?._window.orderOut(nil)
                     instantController = nil
+                } else {
+                    window.toggleFullScreen(nil)
+                    var bp:Int = 0
+                    bp += 1
                 }
             }
-            
+			
             return .invoked
         }
         
+        _window.set(handler: { [weak page] in
+            page?.scrollPage(direction: .up)
+            return .invoked
+        }, with: self, for: .UpArrow, priority: .medium)
+        
+        _window.set(handler: { [weak page] in
+            page?.scrollPage(direction: .down)
+            return .invoked
+        }, with: self, for: .DownArrow, priority: .medium)
+
+        
         _window.set(handler: closeKeyboardHandler, with: self, for: .Escape)
-        _window.set(handler: closeKeyboardHandler, with: self, for: .Space)
+		if FastSettings.instantViewScrollBySpace {
+			let spaceScrollDownKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+				if let window = self?._window {
+					if !window.styleMask.contains(.fullScreen) {
+						page?.scrollPage(direction: .down)
+					}
+				}
+				
+				return .invoked
+			}
+			_window.set(handler: spaceScrollDownKeyboardHandler, with: self, for: .Space, priority: .low)
+			
+			let spaceScrollUpKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+				if let window = self?._window {
+					if !window.styleMask.contains(.fullScreen) {
+						page?.scrollPage(direction: .up)
+					}
+				}
+				
+				return .invoked
+			}
+			
+			_window.set(handler: spaceScrollUpKeyboardHandler, with: self, for: .Space, priority: .medium, modifierFlags: [.shift])
+		} else {
+			_window.set(handler: closeKeyboardHandler, with: self, for: .Space)
+		}
 
         
         if let titleView = titleView {
@@ -320,6 +379,22 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
         }
         return nil
+    }
+    
+    func updateProgress(_ signal: Signal<CGFloat, NoError>, animated: Bool = true) {
+        loadProgressDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] value in
+            guard let `self` = self else {return}
+            self.genericView.loadingIndicatorView.set(progress: value, animated: animated, duration: 0.2)
+            if value == 1 || value == 0 {
+                self.genericView.loadingIndicatorView.change(opacity: 0, animated: animated, completion: { [weak self] completed in
+                    if completed {
+                        self?.genericView.loadingIndicatorView.set(progress: 0, animated: false)
+                    }
+                })
+            } else if value > 0 {
+                self.genericView.loadingIndicatorView.change(opacity: 1, animated: animated)
+            }
+        }))
     }
 
     
@@ -350,7 +425,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     private func share() {
         if let currentPageUrl = currentPageUrl {
-            showModal(with: ShareModalController(ShareLinkObject(account, link: currentPageUrl)), for: _window)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: currentPageUrl)), for: _window)
         }
     }
     
@@ -364,9 +439,10 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         }
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        _window.appearance = theme.dark ? NSAppearance(named:NSAppearance.Name.vibrantDark) : NSAppearance(named:NSAppearance.Name.vibrantLight)
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        _window.appearance = theme.appearance
         _window.backgroundColor = theme.colors.grayBackground
     }
     
@@ -379,12 +455,14 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
                 if !NSEqualRects(frame, titleView.frame) {
                     titleView.frame = frame
                 }
-                if let controls = titleView.subviews.first?.subviews {
-                    var xs:[CGFloat] = [18, 58, 38]
-                    for i in 0 ..< 3 {
-                        let view = controls[i]
-                        view.setFrameOrigin(xs[i], floorToScreenPixels((barHeight - view.frame.height)/2))
-                    }
+                let xs:[CGFloat] = [18, 58, 38]
+                let first = ObjcUtils.findElements(byClass: "_NSThemeCloseWidget", in: windowView).first
+                let second = ObjcUtils.findElements(byClass: "_NSThemeZoomWidget", in: windowView).first
+                let thrid = ObjcUtils.findElements(byClass: "_NSThemeWidget", in: windowView).first
+                let values:[NSView] = [first, second, thrid].compactMap { $0 }
+                for i in 0 ..< min(values.count, xs.count) {
+                    let view = values[i]
+                    view.setFrameOrigin(xs[i], floorToScreenPixels(System.backingScale, (barHeight - view.frame.height)/2))
                 }
             }
         }
@@ -393,7 +471,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     deinit {
         NotificationCenter.default.removeObserver(self)
         appearanceDisposable.dispose()
-        
+        loadProgressDisposable.dispose()
         if let titleView = titleView {
             NotificationCenter.default.removeObserver(titleView)
         }
@@ -413,8 +491,19 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     func show() {
         _show()
         self.ready.set(navigation.controller.ready.get() |> take(1) |> filter {$0} |> deliverOnMainQueue |> map { [weak self] value in
-            self?._window.makeKeyAndOrderFront(nil)
-
+            guard let `self` = self else {return value}
+            
+          //  let toRect = self._window.frame
+          //  let fromRect = NSMakeRect(toRect.minX + (toRect.width - 100) / 2, toRect.minY + (toRect.height - 100) / 2, 100, 100)
+            //self._window.setFrame(fromRect, display: true)
+            self._window.makeKeyAndOrderFront(nil)
+            
+         //   NSLog("\(self._window.contentView?.superview?.layer)")
+         //   self._window.contentView?.superview?.layer?.animateScaleCenter(from: 0, to: 1, duration: 0.4)
+            
+            //self._window.setFrame(toRect, display: false, animate: true)
+          //  self._window.contentView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            
             return value
         })
     }
@@ -422,12 +511,19 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
 
 func showInstantPage(_ page: InstantPageViewController) {
     if let instantController = instantController {
-        instantController.navigation.push(page, true)
-        instantController._window.orderFront(nil)
-        instantController._window.deminiaturize(nil)
+        if page.webPage.webpageId != (instantController.navigationController?.controller as? InstantPageViewController)?.webPage.webpageId {
+            instantController.navigation.push(page, true)
+            instantController.updateProgress(page.progressSignal, animated: false)
+            instantController._window.orderFront(nil)
+            instantController._window.deminiaturize(nil)
+        }
     } else {
-        instantController = InstantViewController(page: page, account: page.account)
+        instantController = InstantViewController(page: page, context: page.context)
         instantController?.show()
     }
 }
 
+func closeInstantView() {
+    instantController?.window?.orderOut(nil)
+    instantController = nil
+}

@@ -24,7 +24,7 @@ class VideoRecorderModalView: View {
     }
     
     init(frame frameRect: NSRect, thumbnail: CGImage?) {
-        progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.blueUI, icon: nil, iconInset: NSEdgeInsets(), lineWidth: 4), twist: false)
+        progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.accent, icon: nil, iconInset: NSEdgeInsets(), lineWidth: 4), twist: false)
         super.init(frame: frameRect)
         addSubview(shadowView)
         addSubview(captureContainer)
@@ -63,7 +63,7 @@ class VideoRecorderModalView: View {
     }
     
     func updateForPreview(_ path:String? = nil, preview: CGImage?) -> Void {
-        previewPlayer.set(path: path)
+        previewPlayer.set(data: AVGifData.dataFrom(path))
         placeholderView.image = preview
         
         previewPlayer.isHidden = path == nil
@@ -84,13 +84,13 @@ class VideoRecorderModalView: View {
     }
     
     func updateProgress(_ progress: Float) {
-        progressView.state = .ImpossibleFetching(progress: progress, force: false)
+        progressView.state = .ImpossibleFetching(progress: progress, force: true)
     }
     
     func didStartedRecording() {
-        placeholderView.change(opacity: 0)
         captureLayer.opacity = 1
-        captureLayer.animateAlpha(from: 0, to: 1, duration: 0.2)
+        placeholderView.change(opacity: 0.0, duration: 1.0)
+       
     }
     
     required init?(coder: NSCoder) {

@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 let sharedVideoLoader:ExternalVideoLoader = {
     let shared = ExternalVideoLoader()
@@ -17,20 +18,27 @@ let sharedVideoLoader:ExternalVideoLoader = {
 }()
 
 
+enum ExternalVideoServiceType {
+    case youtube
+    case vimeo
+    case none
+}
 
 final class ExternalVideo : Equatable {
     let dimensions:NSSize
     let quality:NSSize
     let stream:String
-    fileprivate init(dimensions:NSSize, stream:String, quality:NSSize) {
+    let date: TimeInterval
+    fileprivate init(dimensions:NSSize, stream:String, quality:NSSize, date: TimeInterval) {
         self.dimensions = dimensions
         self.stream = stream
         self.quality = quality
+        self.date = date
     }
 }
 
 func ==(lhs:ExternalVideo, rhs:ExternalVideo) -> Bool {
-    return lhs.stream == rhs.stream
+    return lhs.stream == rhs.stream && lhs.date == rhs.date
 }
 
 enum ExternalVideoStatus {
@@ -63,6 +71,7 @@ private final class ExternalVideoStatusContext {
 private let youtubeName = "YouTube"
 private let vimeoName = "Vimeo"
 
+fileprivate let twitterIcon = #imageLiteral(resourceName: "icons8-circled-play-48").precomposed()
 fileprivate let youtubeIcon = #imageLiteral(resourceName: "icon_YouTubePlay").precomposed()
 fileprivate let vimeoIcon = #imageLiteral(resourceName: "Icon_VimeoPlay").precomposed()
 
@@ -78,10 +87,16 @@ class ExternalVideoLoader {
     private var cancelTokensVimeo:[WrappedExternalVideoId: Any] = [:]
     
     static func isPlayable(_ content:TelegramMediaWebpageLoadedContent) -> Bool {
+        
         return (content.websiteName == youtubeName || content.websiteName == vimeoName) && content.image != nil
     }
     
     static func playIcon(_ content:TelegramMediaWebpageLoadedContent) -> CGImage? {
+        if let embedUrl = content.embedUrl {
+            if embedUrl.contains("twitter.com/i/videos") && content.image != nil {
+                return twitterIcon
+            }
+        }
         if content.websiteName == vimeoName  {
             return vimeoIcon
         } else if content.websiteName == youtubeName {
@@ -90,6 +105,15 @@ class ExternalVideoLoader {
         return nil
     }
     
+    
+    static func serviceType(_ content:TelegramMediaWebpageLoadedContent) -> ExternalVideoServiceType {
+        if content.websiteName == vimeoName  {
+            return .vimeo
+        } else if content.websiteName == youtubeName {
+            return .youtube
+        }
+        return .none
+    }
     
     func status(for content:TelegramMediaWebpageLoadedContent) -> Signal<ExternalVideoStatus?, Void> {
         return Signal { subscriber in
@@ -127,10 +151,10 @@ class ExternalVideoLoader {
     }
     
     func fetch(for content:TelegramMediaWebpageLoadedContent) -> Signal<ExternalVideo?,Void> {
-        if content.websiteName == youtubeName {
+        if content.displayUrl.lowercased().contains(youtubeName.lowercased()) {
             return fetchYoutubeContent(for: content.displayUrl)
         }
-        if content.websiteName == vimeoName {
+        if content.displayUrl.lowercased().contains(vimeoName.lowercased()) {
             return fetchVimeoContent(for: content.displayUrl)
         }
         return .fail(Void())
@@ -142,7 +166,7 @@ class ExternalVideoLoader {
             let disposable:MetaDisposable = MetaDisposable()
             
             self.statusQueue.async {
-                if let video = self.dataContexts[WrappedExternalVideoId(embed)] {
+                if let video = self.dataContexts[WrappedExternalVideoId(embed)], Date().timeIntervalSince1970 - 30 * 60 < video.date  {
                     subscriber.putNext(video)
                     subscriber.putCompletion()
                 } else if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], statusContext.status != nil {
@@ -180,7 +204,7 @@ class ExternalVideoLoader {
                                     stream = url.absoluteString
                                 }
                                 if let quality = quality, let stream = stream {
-                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality)
+                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
                                     self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
                                     status = .loaded(externalVideo!)
                                 } else {
@@ -188,6 +212,10 @@ class ExternalVideoLoader {
                                 }
                             } else {
                                 status = .fail
+                            }
+                            
+                            if self.statusContexts[WrappedExternalVideoId(embed)] == nil {
+                                self.statusContexts[WrappedExternalVideoId(embed)] = ExternalVideoStatusContext()
                             }
                             
                             if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)] {
@@ -205,15 +233,17 @@ class ExternalVideoLoader {
                     })
                 }
                 disposable.set(ActionDisposable {
-                    if let operation = self.cancelTokensYT[WrappedExternalVideoId(embed)] {
-                        operation.cancel()
-                        self.cancelTokensYT.removeValue(forKey: WrappedExternalVideoId(embed))
-                        
-                        if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], let status = statusContext.status, case .fetching = status {
-                            statusContext.status = nil
+                    self.statusQueue.async {
+                        if let operation = self.cancelTokensYT[WrappedExternalVideoId(embed)] {
+                            operation.cancel()
+                            self.cancelTokensYT.removeValue(forKey: WrappedExternalVideoId(embed))
                             
-                            for subscriber in statusContext.subscribers.copyItems() {
-                                subscriber(statusContext.status)
+                            if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], let status = statusContext.status, case .fetching = status {
+                                statusContext.status = nil
+                                
+                                for subscriber in statusContext.subscribers.copyItems() {
+                                    subscriber(statusContext.status)
+                                }
                             }
                         }
                     }
@@ -234,7 +264,7 @@ class ExternalVideoLoader {
                 
                 var canceled:Bool = false
                 
-                if let video = self.dataContexts[WrappedExternalVideoId(embed)] {
+                if let video = self.dataContexts[WrappedExternalVideoId(embed)], Date().timeIntervalSince1970 - 30 * 60 < video.date {
                     subscriber.putNext(video)
                     subscriber.putCompletion()
                 } else if self.cancelTokensVimeo[WrappedExternalVideoId(embed)] == nil  {
@@ -257,11 +287,15 @@ class ExternalVideoLoader {
                                 if let video = video {
                                     
                                     let quality:NSSize = NSMakeSize(1280, 720)
-                                    let stream:String = video.highestQualityStreamURL().absoluteString
+                                    let stream:String? = video.highestQualityStreamURL()?.absoluteString
+                                    if let stream = stream {
+                                        externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality, date: Date().timeIntervalSince1970)
+                                        self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
+                                        status = .loaded(externalVideo!)
+                                    } else {
+                                        status = .fail
+                                    }
                                    
-                                    externalVideo = ExternalVideo(dimensions: NSMakeSize(1280, 720), stream: stream, quality: quality)
-                                    self.dataContexts[WrappedExternalVideoId(embed)] = externalVideo!
-                                    status = .loaded(externalVideo!)
                                 } else {
                                     status = .fail
                                 }
@@ -283,14 +317,16 @@ class ExternalVideoLoader {
 
                 }
                 disposable.set(ActionDisposable {
-                    if let _ = self.cancelTokensVimeo[WrappedExternalVideoId(embed)] {
-                        self.cancelTokensVimeo.removeValue(forKey: WrappedExternalVideoId(embed))
-                        canceled = true
-                        if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], let status = statusContext.status, case .fetching = status {
-                            statusContext.status = nil
-                            
-                            for subscriber in statusContext.subscribers.copyItems() {
-                                subscriber(statusContext.status)
+                    self.statusQueue.async {
+                        if let _ = self.cancelTokensVimeo[WrappedExternalVideoId(embed)] {
+                            self.cancelTokensVimeo.removeValue(forKey: WrappedExternalVideoId(embed))
+                            canceled = true
+                            if let statusContext = self.statusContexts[WrappedExternalVideoId(embed)], let status = statusContext.status, case .fetching = status {
+                                statusContext.status = nil
+                                
+                                for subscriber in statusContext.subscribers.copyItems() {
+                                    subscriber(statusContext.status)
+                                }
                             }
                         }
                     }

@@ -8,18 +8,36 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 class ExMajorNavigationController: MajorNavigationController {
-    private let account:Account
+    private let context:AccountContext
     
     override var sidebar: ViewController? {
-        return account.context.entertainment
+        return context.sharedContext.bindings.entertainment()
     }
     
-    public init(_ account: Account, _ majorClass:AnyClass, _ empty:ViewController) {
-        self.account = account
-        super.init(majorClass, empty)
+    override var window: Window? {
+        return context.window
+    }
+    
+    open override var responderPriority: HandlerPriority {
+        return .medium
+    }
+    
+    public init(_ context: AccountContext, _ majorClass:AnyClass, _ empty:ViewController) {
+        self.context = context
+        super.init(majorClass, empty, context.window)
+    }
+    
+    override func push(_ controller: ViewController, _ animated: Bool, style: ViewControllerStyle?) {
+        super.push(controller, animated, style: style)
+    }
+    
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        return  controller.makeTouchBar()//globalAudio?.makeTouchBar()//
     }
     
 }

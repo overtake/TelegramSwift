@@ -9,7 +9,24 @@
 #import <Cocoa/Cocoa.h>
 #import "TGInputTextTag.h"
 
-extern NSString * _Nonnull const TGMentionUidAttributeName;
+extern NSString * _Nonnull const TGCustomLinkAttributeName;
+@class TGModernGrowingTextView;
+
+@interface MarkdownUndoItem : NSObject
+@property (nonatomic, strong) NSAttributedString *was;
+@property (nonatomic, strong) NSAttributedString *be;
+@property (nonatomic, assign) NSRange inRange;
+-(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be inRange:(NSRange)inRange;
+@end
+
+
+@interface SimpleUndoItem : NSObject
+@property (nonatomic, strong) NSAttributedString *was;
+@property (nonatomic, strong) NSAttributedString *be;
+@property (nonatomic, assign) NSRange wasRange;
+@property (nonatomic, assign) NSRange beRange;
+-(id)initWithAttributedString:(NSAttributedString *)was be: (NSAttributedString *)be wasRange:(NSRange)wasRange beRange:(NSRange)beRange;
+@end
 
 @protocol TGModernGrowingDelegate <NSObject>
 
@@ -18,24 +35,36 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void) textViewTextDidChange:(NSString * __nonnull)string;
 -(void) textViewTextDidChangeSelectedRange:(NSRange)range;
 -(BOOL)textViewDidPaste:(NSPasteboard * __nonnull)pasteboard;
--(int)maxCharactersLimit;
+-(int)maxCharactersLimit:(TGModernGrowingTextView *)textView;
 
--(NSSize)textViewSize;
+-(NSSize)textViewSize:(TGModernGrowingTextView *)textView;
 -(BOOL)textViewIsTypingEnabled;
 
 @optional
 - (void) textViewNeedClose:(id __nonnull)textView;
 - (BOOL) canTransformInputText;
+- (BOOL) supportContinuityCamera;
+- (void)textViewDidReachedLimit:(id __nonnull)textView;
+- (void)makeUrlOfRange: (NSRange)range;
+- (BOOL)copyTextWithRTF:(NSAttributedString *)rtf;
+- (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
+//func textView(_ textView: NSTextView, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItemIdentifier]) -> [NSTouchBarItemIdentifier] {
 @end
 
 
+void setInputLocalizationFunc(NSString* _Nonnull (^ _Nonnull localizationF)(NSString * _Nonnull key));
+void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
-
-@interface TGGrowingTextView : NSTextView
+@interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
+@property (nonatomic,weak) TGModernGrowingTextView  * _Nullable weakTextView;
+
+
 @end
 
-@interface TGModernGrowingTextView : NSView
+@interface TGModernGrowingTextView : NSView<NSServicesMenuRequestor>
+
+-(instancetype)initWithFrame:(NSRect)frameRect unscrollable:(BOOL)unscrollable;
 
 @property (nonatomic,assign) BOOL animates;
 
@@ -73,7 +102,7 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void)appendText:(id __nonnull)aString;
 -(void)insertText:(id __nonnull)aString replacementRange:(NSRange)replacementRange;
 -(void)addInputTextTag:(TGInputTextTag * __nonnull)tag range:(NSRange)range;
-
+-(void)scrollToCursor;
 -(void)replaceMention:(NSString * __nonnull)mention username:(bool)username userId:(int32_t)userId;
 
 -(void)paste:(id __nonnull)sender;
@@ -87,7 +116,12 @@ extern NSString * _Nonnull const TGMentionUidAttributeName;
 -(void)codeWord;
 -(void)italicWord;
 -(void)boldWord;
-
+-(void)addLink:(NSString *_Nullable)link;
+-(void)addLink:(NSString *_Nullable)link range: (NSRange)range;
 - (void)textDidChange:( NSNotification * _Nullable )notification;
+
+- (void)addSimpleItem:(SimpleUndoItem *)item;
+
+-(void)setBackgroundColor:(NSColor * __nonnull)color;
 
 @end

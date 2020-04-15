@@ -8,48 +8,126 @@
 
 import Cocoa
 import TGUIKit
-class GroupNameRowItem: GeneralInputRowItem {
+import TelegramCore
+import SyncCore
+import Postbox
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, placeholder: String, text:String = "", limit: Int32 = 140, textChangeHandler:@escaping(String)->Void = {_ in}) {
-        super.init(initialSize, stableId: stableId, placeholder: placeholder, limit: limit, textChangeHandler:textChangeHandler)
+class GroupNameRowItem: InputDataRowItem {
+
+    var photo:String?
+    fileprivate let pickPicture: ((Bool)->Void)?
+    fileprivate let account: Account
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, placeholder: String, photo: String? = nil, viewType: GeneralViewType = .legacy, text:String = "", limit: Int32 = 140, textChangeHandler:@escaping(String)->Void = {_ in}, pickPicture: ((Bool)->Void)? = nil) {
+        self.photo = photo
+        self.account = account
+        self.pickPicture = pickPicture
+        super.init(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, updated: textChangeHandler, limit: limit)
+
     }
     
     override func viewClass() -> AnyClass {
         return GroupNameRowView.self
     }
     
+    override var textFieldLeftInset: CGFloat {
+        return 60
+    }
+    
     override var height: CGFloat {
-        return 80
+        switch viewType {
+        case .legacy:
+            return max(80, super.height)
+        case let .modern(_, insets):
+            return max(insets.bottom + insets.top + 50, super.height)
+        }
     }
     
 }
 
 
-
-
-class GroupNameRowView : GeneralInputRowView {
+class GroupNameRowView : InputDataRowView {
     private let imageView:ImageView = ImageView()
-    private let sepator:View = View()
+    private let photoView: TransformImageView = TransformImageView()
+    private let tranparentView: View = View()
+    private let circleView = View(frame: NSMakeRect(0, 0, 50, 50))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        textView.isSingleLine = true
-        addSubview(sepator)
-        addSubview(imageView)
+        containerView.addSubview(photoView)
+        containerView.addSubview(tranparentView)
+        containerView.addSubview(imageView)
+        containerView.addSubview(circleView)
+        photoView.setFrameSize(50, 50)
+        tranparentView.setFrameSize(50, 50)
+        photoView.animatesAlphaOnFirstTransition = true
+        tranparentView.layer?.cornerRadius = 25
+        circleView.layer?.cornerRadius = 25
+        circleView.layer?.borderWidth = .borderSize
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
-        sepator.backgroundColor = theme.colors.border
+        
+        guard let item = item as? GroupNameRowItem else {return}
+        
+        photoView.isHidden = item.photo == nil
+        imageView.isHidden = item.photo != nil
+        if let path = item.photo, let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
+            
+            let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            photoView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor), clearInstantly: false, animate: true)
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: photoView.frame.width / 2), imageSize: photoView.frame.size, boundingSize: photoView.frame.size, intrinsicInsets: NSEdgeInsets())
+            photoView.set(arguments: arguments)
+            
+        }
+        circleView.isHidden = item.photo != nil
+        tranparentView.backgroundColor = NSColor.clear
         imageView.image = theme.icons.newChatCamera
         imageView.sizeToFit()
     }
     
+    override func updateColors() {
+        super.updateColors()
+        circleView.layer?.borderColor = theme.colors.grayIcon.cgColor
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        let point = containerView.convert(event.locationInWindow, from: nil)
+        if NSPointInRect(point, photoView.frame) {
+            if let item = item as? GroupNameRowItem {
+                if item.photo == nil {
+                    item.pickPicture?(true)
+                } else {
+                    ContextMenu.show(items: [ContextMenuItem(L10n.peerCreatePeerContextUpdatePhoto, handler: {
+                        item.pickPicture?(true)
+                    }), ContextMenuItem(L10n.peerCreatePeerContextRemovePhoto, handler: {
+                        item.pickPicture?(false)
+                    })], view: photoView, event: event)
+                }
+            }
+        }
+    }
+    
     override func layout() {
         super.layout()
-        textView.frame = NSMakeRect(100, 0, frame.width - 140 ,textView.frame.height)
-        textView.centerY()
-        imageView.setFrameOrigin(30 + floorToScreenPixels((50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels((50 - imageView.frame.height)/2.0))
-        sepator.frame = NSMakeRect(105, textView.frame.maxY - .borderSize, frame.width - 140, .borderSize)
+        
+        guard let item = item as? GroupNameRowItem else {return}
+
+        switch item.viewType {
+        case .legacy:
+            imageView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.height)/2.0))
+            photoView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - photoView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - photoView.frame.height)/2.0))
+            tranparentView.setFrameOrigin(30 + floorToScreenPixels(backingScaleFactor, (50 - tranparentView.frame.width)/2.0), 17 + floorToScreenPixels(backingScaleFactor, (50 - tranparentView.frame.height)/2.0))
+        case let .modern(_, insets):
+            circleView.setFrameOrigin(insets.left, insets.top)
+            imageView.setFrameOrigin(insets.left + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.width) / 2), insets.top + floorToScreenPixels(backingScaleFactor, (50 - imageView.frame.height) / 2))
+            photoView.setFrameOrigin(insets.left, insets.top)
+            tranparentView.setFrameOrigin(insets.left, insets.top)
+            textView.centerY(x: insets.left + item.textFieldLeftInset - 3)
+
+        }
+
     }
     
     override func textViewTextDidChange(_ string: String) {
@@ -57,17 +135,11 @@ class GroupNameRowView : GeneralInputRowView {
     }
     
     override func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        textView._change(pos: NSMakePoint(100, floorToScreenPixels((frame.height - height)/2.0)), animated: animated)
         super.textViewHeightChanged(height, animated: animated)
-        sepator._change(pos: NSMakePoint(105, textView.frame.maxY - .borderSize), animated: animated)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        ctx.setFillColor(theme.colors.background.cgColor)
-        ctx.fill(bounds)
-        ctx.setStrokeColor(theme.colors.grayIcon.cgColor)
-        ctx.setLineWidth(1.0)
-        ctx.strokeEllipse(in: NSMakeRect(30, 17, 50, 50))
+        super.draw(layer, in: ctx)
     }
     
     required init?(coder: NSCoder) {

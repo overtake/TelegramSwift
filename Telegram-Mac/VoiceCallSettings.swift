@@ -7,8 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 public enum VoiceCallDataSaving: Int32 {
     case never
@@ -17,22 +19,42 @@ public enum VoiceCallDataSaving: Int32 {
 }
 
 public struct VoiceCallSettings: PreferencesEntry, Equatable {
-    public let dataSaving: VoiceCallDataSaving
+    
+    let inputDeviceId: String?
+    let outputDeviceId: String?
+    let muteSounds: Bool
+    
     
     public static var defaultSettings: VoiceCallSettings {
-        return VoiceCallSettings(dataSaving: .never)
+        return VoiceCallSettings(inputDeviceId: nil, outputDeviceId: nil, muteSounds: true)
     }
     
-    init(dataSaving: VoiceCallDataSaving) {
-        self.dataSaving = dataSaving
+    init(inputDeviceId: String?, outputDeviceId: String?, muteSounds: Bool) {
+        self.inputDeviceId = inputDeviceId
+        self.outputDeviceId = outputDeviceId
+        self.muteSounds = muteSounds
     }
     
     public init(decoder: PostboxDecoder) {
-        self.dataSaving = VoiceCallDataSaving(rawValue: decoder.decodeInt32ForKey("ds", orElse: 0))!
+        self.inputDeviceId = decoder.decodeOptionalStringForKey("i")
+        self.outputDeviceId = decoder.decodeOptionalStringForKey("o")
+        self.muteSounds = decoder.decodeInt32ForKey("m", orElse: 1) == 1
     }
     
     public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.dataSaving.rawValue, forKey: "ds")
+        if let inputDeviceId = inputDeviceId {
+            encoder.encodeString(inputDeviceId, forKey: "i")
+        } else {
+            encoder.encodeNil(forKey: "i")
+        }
+        
+        if let outputDeviceId = outputDeviceId {
+            encoder.encodeString(outputDeviceId, forKey: "o")
+        } else {
+            encoder.encodeNil(forKey: "o")
+        }
+        
+        encoder.encodeInt32(muteSounds ? 1 : 0, forKey: "m")
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -43,18 +65,23 @@ public struct VoiceCallSettings: PreferencesEntry, Equatable {
         }
     }
     
-    public static func ==(lhs: VoiceCallSettings, rhs: VoiceCallSettings) -> Bool {
-        return lhs.dataSaving == rhs.dataSaving
+
+    func withUpdatedInputDeviceId(_ inputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: self.muteSounds)
     }
     
-    func withUpdatedDataSaving(_ dataSaving: VoiceCallDataSaving) -> VoiceCallSettings {
-        return VoiceCallSettings(dataSaving: dataSaving)
+    func withUpdatedOutputDeviceId(_ outputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: outputDeviceId, muteSounds: self.muteSounds)
+    }
+    
+    func withUpdatedMuteSounds(_ muteSounds: Bool) -> VoiceCallSettings {
+        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: muteSounds)
     }
 }
 
-func updateVoiceCallSettingsSettingsInteractively(postbox: Postbox, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.voiceCallSettings, { entry in
+func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
+    return accountManager.transaction { transaction -> Void in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.voiceCallSettings, { entry in
             let currentSettings: VoiceCallSettings
             if let entry = entry as? VoiceCallSettings {
                 currentSettings = entry
@@ -63,5 +90,12 @@ func updateVoiceCallSettingsSettingsInteractively(postbox: Postbox, _ f: @escapi
             }
             return f(currentSettings)
         })
+    }
+}
+
+
+func voiceCallSettings(_ accountManager: AccountManager) -> Signal<VoiceCallSettings, NoError>  {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.voiceCallSettings]) |> map { view in
+        return view.entries[ApplicationSharedPreferencesKeys.voiceCallSettings] as? VoiceCallSettings ?? VoiceCallSettings.defaultSettings
     }
 }

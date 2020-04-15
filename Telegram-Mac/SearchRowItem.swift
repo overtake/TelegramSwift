@@ -21,11 +21,12 @@ class SearchRowItem: GeneralRowItem {
     }
     
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left:30,right:30, top: 10, bottom: 10)) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, searchInteractions:SearchInteractions, isLoading:Bool = false, drawCustomSeparator: Bool = true, border: BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left:30,right:30, top: 10, bottom: 10), viewType: GeneralViewType = .legacy) {
         self.searchInteractions = searchInteractions
         self.isLoading = isLoading
-        super.init(initialSize, height: 0, stableId: stableId, type: .none, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
+        super.init(initialSize, height: 0, stableId: stableId, type: .none, viewType: viewType, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
+    
     
 }
 
@@ -40,15 +41,7 @@ class SearchRowView : TableRowView {
         super.init(frame: frameRect)
         addSubview(searchView)
         
-        searchView.searchInteractions = SearchInteractions ({ [weak self] state in
-            if let item = self?.item as? SearchRowItem {
-                item.searchInteractions.stateModified(state)
-            }
-        }, { [weak self] text in
-            if let item = self?.item as? SearchRowItem {
-                item.searchInteractions.textModified(text)
-            }
-        })
+        
     }
     
     
@@ -65,7 +58,18 @@ class SearchRowView : TableRowView {
         super.set(item: item)
         if let item = item as? SearchRowItem {
             self.searchView.isLoading = item.isLoading
-            self.searchView.updateLocalizationAndTheme()
+            self.searchView.updateLocalizationAndTheme(theme: theme)
+            
+            
+            searchView.searchInteractions = SearchInteractions ({ [weak self] state, animated in
+                if let item = self?.item as? SearchRowItem {
+                    item.searchInteractions.stateModified(state, animated)
+                }
+            }, { [weak self] text in
+                    if let item = self?.item as? SearchRowItem {
+                        item.searchInteractions.textModified(text)
+                }
+            })
         }
     }
 
@@ -75,6 +79,24 @@ class SearchRowView : TableRowView {
     
     override var firstResponder:NSResponder? {
         return searchView.input
+    }
+    
+    override func onRemove(_ animation: NSTableView.AnimationOptions) {
+        self.isHidden = true
+//        searchView.cancel(false)
+//        searchView.isHidden = true
+    }
+    
+    override func onInsert(_ animation: NSTableView.AnimationOptions) {
+        
+        if animation.contains(.effectFade) {
+            self.isHidden = true
+            self.searchView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut, completion: { [weak self] _ in
+                self?.isHidden = false
+            })
+        }
+        //        searchView.cancel(false)
+        //        searchView.isHidden = true
     }
     
     required init?(coder: NSCoder) {

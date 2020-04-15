@@ -80,6 +80,10 @@
 	
 	return self;
 }
+-(void)dealloc {
+    int bp = 0;
+    bp++;
+}
 
 - (NSString *) unscrambleSignature:(NSString *)scrambledSignature
 {

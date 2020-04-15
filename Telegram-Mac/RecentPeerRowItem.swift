@@ -8,18 +8,28 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 
 class RecentPeerRowItem: ShortPeerRowItem {
 
-    let removeAction:()->Void
-    let canRemoveFromRecent:Bool
-    
-    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, removeAction:@escaping()->Void = {}) {
+    fileprivate let removeAction:()->Void
+    fileprivate let canRemoveFromRecent:Bool
+    fileprivate let badge: BadgeNode?
+    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, removeAction:@escaping()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, unreadBadge: UnreadSearchBadge = .none) {
         self.canRemoveFromRecent = canRemoveFromRecent
         self.removeAction = removeAction
-        super.init(initialSize, peer: peer, account: account, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action)
+        switch unreadBadge {
+        case let .muted(count):
+            badge = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
+        case let .unmuted(count):
+            badge = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeBackgroundColor)
+        case .none:
+            self.badge = nil
+        }
+
+        super.init(initialSize, peer: peer, account: account, stableId: stableId, enabled: enabled, height: height, photoSize: photoSize, titleStyle: titleStyle, titleAddition: titleAddition, leftImage: leftImage, statusStyle: statusStyle, status: status, borderType: borderType, drawCustomSeparator: drawCustomSeparator, isLookSavedMessage: isLookSavedMessage, deleteInset: deleteInset, drawLastSeparator: drawLastSeparator, inset: inset, drawSeparatorIgnoringInset: drawSeparatorIgnoringInset, interactionType: interactionType, generalType: generalType, action: action, contextMenuItems: contextMenuItems, highlightVerified: true)
     }
     
     
@@ -28,17 +38,19 @@ class RecentPeerRowItem: ShortPeerRowItem {
     }
     
     override var textAdditionInset:CGFloat {
-        return 15
+        return 20 + (highlightVerified ? 25 : 0)
     }
 }
 
 class RecentPeerRowView : ShortPeerRowView {
     private var trackingArea:NSTrackingArea?
     private let removeControl:ImageButton = ImageButton()
+    private var badgeView:View?
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         //removeControl.autohighlight = false
-    
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         removeControl.isHidden = true
         
         removeControl.set(handler: { [weak self] _ in
@@ -93,30 +105,56 @@ class RecentPeerRowView : ShortPeerRowView {
     }
     
     override func updateMouse() {
-        if mouseInside() {
+        if mouseInside(), removeControl.superview != nil {
             removeControl.isHidden = false
+            badgeView?.isHidden = true
         } else {
             removeControl.isHidden = true
+            badgeView?.isHidden = false
         }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         removeControl.set(image: isSelect ? theme.icons.recentDismissActive : theme.icons.recentDismiss, for: .Normal)
-        removeControl.sizeToFit()
+        _ = removeControl.sizeToFit()
         if let item = item as? RecentPeerRowItem {
             if item.canRemoveFromRecent {
                 addSubview(removeControl)
             } else {
                 removeControl.removeFromSuperview()
             }
+            
+            if let badgeNode = item.badge {
+                if badgeView == nil {
+                    badgeView = View()
+                    addSubview(badgeView!)
+                }
+                badgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = badgeView
+                badgeNode.setNeedDisplay()
+            } else {
+                badgeView?.removeFromSuperview()
+                badgeView = nil
+            }
         }
         needsLayout = true
     }
     
+    override var backdorColor: NSColor {
+        if let item = item {
+            return item.isHighlighted && !item.isSelected ? theme.colors.grayForeground : super.backdorColor
+        } else {
+            return super.backdorColor
+        }
+    }
+    
     override func layout() {
         super.layout()
-        removeControl.centerY(x: frame.width - removeControl.frame.width - 10)
+        removeControl.centerY(x: frame.width - removeControl.frame.width - 13)
+        if let badgeView = badgeView {
+            badgeView.centerY(x: frame.width - badgeView.frame.width - 10)
+        }
     }
     
     required init?(coder: NSCoder) {

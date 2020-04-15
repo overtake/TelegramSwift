@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 
 class ChatRightView: View {
@@ -20,72 +21,73 @@ class ChatRightView: View {
 
     private weak var item:ChatRowItem?
     
+    var isReversed: Bool {
+        guard let item = item else {return false}
+        
+        return item.isBubbled && !item.isIncoming
+    }
+    
     func set(item:ChatRowItem, animated:Bool) {
         self.item = item
         self.toolTip = item.fullDate
-        if let message = item.message {
-            if !message.flags.contains(.Incoming) && !item.chatInteraction.isLogInteraction {
-                
-                if message.flags.contains(.Unsent) {
-                    stateView?.removeFromSuperview()
-                    stateView = nil
-                    readImageView?.removeFromSuperview()
-                    readImageView = nil
-                    sendingView?.removeFromSuperview()
-                    sendingView = nil
-                    
-                    if sendingView == nil {
-                        sendingView = SendingClockProgress()
-                        sendingView?.setFrameOrigin(0,2)
-                        addSubview(sendingView!)
-                    }
-                } else {
-                    
-                    sendingView?.removeFromSuperview()
-                    sendingView = nil
-                    
-                    
-                    if let peer = item.peer as? TelegramChannel, case .broadcast = peer.info {
-                        stateView?.removeFromSuperview()
-                        stateView = nil
-                        readImageView?.removeFromSuperview()
-                        readImageView = nil
-                    } else {
-                        let stateImage = message.flags.contains(.Failed) ? theme.icons.sentFailed : theme.icons.chatReadMark1
-                        
-                        if stateView == nil {
-                            stateView = ImageView()
-                            self.addSubview(stateView!)
-                        }
-                        
-                        if item.isRead && !message.flags.contains(.Failed) {
-                            if readImageView == nil {
-                                readImageView = ImageView(frame: NSMakeRect(0, 0, theme.icons.chatReadMark2.backingSize.width, theme.icons.chatReadMark2.backingSize.height))
-                                addSubview(readImageView!)
-                            }
-                            
-                        } else {
-                            readImageView?.removeFromSuperview()
-                            readImageView = nil
-                        }
-                        
-                        stateView?.image = stateImage
-                        stateView?.setFrameSize(NSMakeSize(stateImage.backingSize.width, stateImage.backingSize.height))
-                    }
-                   
-                }
-           } else {
+        if !item.isIncoming || item.isUnsent || item.isFailed
+            && !item.chatInteraction.isLogInteraction {
+            if item.isUnsent {
                 stateView?.removeFromSuperview()
                 stateView = nil
                 readImageView?.removeFromSuperview()
                 readImageView = nil
+                if sendingView == nil {
+                    sendingView = SendingClockProgress()
+                    addSubview(sendingView!)
+                    needsLayout = true
+                }
+            } else {
+                
                 sendingView?.removeFromSuperview()
                 sendingView = nil
+                
+                
+                if let peer = item.peer as? TelegramChannel, peer.isChannel && !item.isFailed {
+                    stateView?.removeFromSuperview()
+                    stateView = nil
+                    readImageView?.removeFromSuperview()
+                    readImageView = nil
+                } else {
+                    let stateImage = item.presentation.chat.stateStateIcon(item)
+                    
+                    if stateView == nil {
+                        stateView = ImageView()
+                        self.addSubview(stateView!)
+                    }
+                    
+                    if item.isRead && !item.isFailed && !item.isStorage {
+                        if readImageView == nil {
+                            readImageView = ImageView()
+                            addSubview(readImageView!)
+                        }
+                        
+                    } else {
+                        readImageView?.removeFromSuperview()
+                        readImageView = nil
+                    }
+                    
+                    stateView?.image = stateImage
+                    stateView?.setFrameSize(NSMakeSize(stateImage.backingSize.width, stateImage.backingSize.height))
+                }
+                
             }
-            readImageView?.image = theme.icons.chatReadMark2
-            self.sendingView?.backgroundColor = theme.colors.background
+        } else {
+            stateView?.removeFromSuperview()
+            stateView = nil
+            readImageView?.removeFromSuperview()
+            readImageView = nil
+            sendingView?.removeFromSuperview()
+            sendingView = nil
         }
-        
+        readImageView?.image = theme.chat.readStateIcon(item)
+        readImageView?.sizeToFit()
+        sendingView?.set(item: item)
         self.needsLayout = true
 
     }
@@ -93,46 +95,82 @@ class ChatRightView: View {
 
     override func layout() {
         super.layout()
-        if let item = item, let message = item.message {
+        if let item = item {
             var rightInset:CGFloat = 0
             if let date = item.date {
-                rightInset = date.0.size.width + 20
+                if !isReversed {
+                    rightInset = date.0.size.width + (item.isBubbled ? 16 : 20)
+                }
             }
             
             if let stateView = stateView {
-                stateView.setFrameOrigin(frame.width - rightInset, message.flags.contains(.Failed) ? 0 : 2)
+                rightInset += (isReversed ? stateView.frame.width : 0)
+                if isReversed {
+                    rightInset += 3
+                }
+                if item.isFailed {
+                    rightInset -= 2
+                }
+                stateView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, item.isFailed ? (item.isStateOverlayLayout ? 2 : 1) : (item.isStateOverlayLayout ? 3 : 2))
             }
+            
+            if let sendingView = sendingView {
+                if isReversed {
+                    sendingView.setFrameOrigin(frame.width - sendingView.frame.width - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 2 : 1))
+                } else {
+                    sendingView.setFrameOrigin(frame.width - rightInset - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 2 : 1))
+                }
+            }
+
+            
             if let readImageView = readImageView {
-                readImageView.setFrameOrigin((frame.width - rightInset) + 4, 2)
+                readImageView.setFrameOrigin((frame.width - rightInset) + 4 - item.stateOverlayAdditionCorner, (item.isStateOverlayLayout ? 3 : 2))
             }
         }
         self.setNeedsDisplay()
     }
     
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
         
         if let item = item {
+            
+            if item.isStateOverlayLayout {
+                ctx.round(frame.size, frame.height/2)
+                ctx.setFillColor(item.stateOverlayBackgroundColor.cgColor)
+                ctx.fill(layer.bounds)
+            }
+            
+           // super.draw(layer, in: ctx)
+
+            let additional: CGFloat = 0
+            
             if let date = item.date {
-                date.1.draw(NSMakeRect(NSWidth(layer.bounds) - date.0.size.width, 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                date.1.draw(NSMakeRect(frame.width - date.0.size.width - (isReversed ? 16 : 0) - item.stateOverlayAdditionCorner - additional, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, date.0.size.width, date.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                
+                if let editLabel = item.editedLabel {
+                    editLabel.1.draw(NSMakeRect(frame.width - date.0.size.width - editLabel.0.size.width - item.stateOverlayAdditionCorner - (isReversed || (stateView != nil) ? 23 : 5), item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, editLabel.0.size.width, editLabel.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                }
             }
             if let channelViews = item.channelViews {
-                ctx.draw(theme.icons.chatChannelViews, in: NSMakeRect(channelViews.0.size.width + 2, 0, theme.icons.chatChannelViews.backingSize.width, theme.icons.chatChannelViews.backingSize.height))
+                let icon = theme.chat.channelViewsIcon(item)
+                ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
                 
-                channelViews.1.draw(NSMakeRect(0, 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
                 
                 if let postAuthor = item.postAuthor {
-                    postAuthor.1.draw(NSMakeRect(theme.icons.chatChannelViews.backingSize.width + channelViews.0.size.width + 8, 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                    postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
                 
-            } else {
-                if let editLabel = item.editedLabel {
-                    editLabel.1.draw(NSMakeRect(0, 0, editLabel.0.size.width, editLabel.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
-                }
             }
+            
         }
         
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        superview?.mouseUp(with: event)
     }
     
     

@@ -8,35 +8,60 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
-    let previous:ImageButton = ImageButton()
-    let next:ImageButton = ImageButton()
-    let playOrPause:ImageButton = ImageButton()
-    let dismiss:ImageButton = ImageButton()
-    let repeatControl:ImageButton = ImageButton()
-    let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
-    let textView:TextView = TextView()
-    let containerView:View = View()
-    let separator:View = View()
-    private var controller:APController?
+    private let previous:ImageButton = ImageButton()
+    private let next:ImageButton = ImageButton()
+    private let playOrPause:ImageButton = ImageButton()
+    private let dismiss:ImageButton = ImageButton()
+    private let repeatControl:ImageButton = ImageButton()
+    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
+    private let textView:TextView = TextView()
+    private let containerView:Control
+    private let separator:View = View()
+    private let playingSpeed: ImageButton = ImageButton()
+    private var controller:APController? {
+        didSet {
+            if let controller = controller {
+                self.bufferingStatusDisposable.set((controller.bufferingStatus
+                    |> deliverOnMainQueue).start(next: { [weak self] status in
+                        if let status = status {
+                            self?.updateStatus(status.0, status.1)
+                        }
+                    }))
+                controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
+            } else {
+                self.bufferingStatusDisposable.set(nil)
+            }
+            self.playingSpeed.isHidden = !(controller is APChatVoiceController)
+        }
+    }
+    private var context: AccountContext?
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
+    private var ranges: (IndexSet, Int)?
+    
+    private var bufferingStatusDisposable: MetaDisposable = MetaDisposable()
+    
+   
     
     override init(_ header: NavigationHeader) {
         
         separator.backgroundColor = .border
         
+        dismiss.disableActions()
+        repeatControl.disableActions()
         
         textView.isSelectable = false
         
-
+        containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))
         
         super.init(header)
 
@@ -65,14 +90,30 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             
         }, for: .Click)
         
+        
         progressView.onUserChanged = { [weak self] progress in
             self?.controller?.set(trackProgress: progress)
+            self?.progressView.set(progress: CGFloat(progress), animated: false)
+        }
+        
+        var paused: Bool = false
+        
+        progressView.startScrobbling = { [weak self]  in
+            self?.controller?.pause()
+            paused = true
+        }
+        
+        progressView.endScrobbling = { [weak self]  in
+            if paused {
+                self?.controller?.play()
+            }
         }
         
         progressView.set(handler: { [weak self] control in
             let control = control as! LinearProgressControl
             if let strongSelf = self {
                 strongSelf.controller?.set(trackProgress: control.interactiveValue)
+                strongSelf.progressView.set(progress: CGFloat(control.interactiveValue), animated: false)
             }
         }, for: .Click)
         
@@ -82,29 +123,81 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         containerView.addSubview(dismiss)
         containerView.addSubview(repeatControl)
         containerView.addSubview(textView)
+        containerView.addSubview(playingSpeed)
         addSubview(containerView)
         addSubview(separator)
         addSubview(progressView)
         
         textView.userInteractionEnabled = false
+        textView.isEventLess = true
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.showAudioPlayerList()
+        }, for: .LongOver)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.gotoMessage()
+        }, for: .SingleClick)
+        
+        playingSpeed.set(handler: { [weak self] control in
+            FastSettings.setPlayingRate(FastSettings.playingRate == 1.7 ? 1.0 : 1.7)
+            self?.controller?.baseRate = FastSettings.playingRate
+            (control as! ImageButton).set(image: FastSettings.playingRate == 1.7 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
+
+        }, for: .Click)
     }
     
+    private func showAudioPlayerList() {
+        guard let window = kitWindow, let context = context else {return}
+        let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        if NSPointInRect(point, textView.frame) {
+            if let song = controller?.currentSong, controller is APChatMusicController {
+                switch song.stableId {
+                case let .message(message):
+                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: context, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
+    func updateStatus(_ ranges: IndexSet, _ size: Int) {
+        self.ranges = (ranges, size)
+        
+        if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
+            for range in ranges.0.rangeView {
+                var progress = (CGFloat(range.count) / CGFloat(ranges.1))
+                progress = progress == 1.0 ? 0 : progress
+                progressView.set(fetchingProgress: progress, animated: progress > 0)
+                
+                break
+            }
+        }
+    }
+    
+
+    
     private var playProgressStyle:ControlStyle {
-        return ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: .clear)
+        return ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear)
     }
     private var fetchProgressStyle:ControlStyle {
         return ControlStyle(foregroundColor: theme.colors.grayTransparent, backgroundColor: .clear)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        playingSpeed.set(image: FastSettings.playingRate != 1.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
         previous.set(image: theme.icons.audioPlayerPrev, for: .Normal)
         next.set(image: theme.icons.audioPlayerNext, for: .Normal)
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
         dismiss.set(image: theme.icons.auduiPlayerDismiss, for: .Normal)
+        
+        progressView.fetchingColor = theme.colors.accent.withAlphaComponent(0.5)
+        
         if let controller = controller {
             repeatControl.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
             if let song = controller.currentSong {
@@ -115,11 +208,17 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             repeatControl.set(image: theme.icons.audioPlayerRepeat, for: .Normal)
         }
         
-        previous.sizeToFit()
-        next.sizeToFit()
-        playOrPause.sizeToFit()
-        dismiss.sizeToFit()
-        repeatControl.sizeToFit()
+        _ = previous.sizeToFit()
+        _ = next.sizeToFit()
+        _ = playOrPause.sizeToFit()
+        _ = dismiss.sizeToFit()
+        _ = repeatControl.sizeToFit()
+        _ = playingSpeed.sizeToFit()
+
+        
+        previous.centerY(x: 20)
+        playOrPause.centerY(x: previous.frame.maxX + 5)
+        next.centerY(x: playOrPause.frame.maxX + 5)
         
         backgroundColor = theme.colors.background
         containerView.backgroundColor = theme.colors.background
@@ -127,31 +226,68 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         separator.backgroundColor = theme.colors.border
     }
     
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        if let message = message, let controller = controller, let navigation = controller.account.context.mainNavigation {
-            if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
-                controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: false, inset: 0))
+    private func gotoMessage() {
+        if let message = message, let context = context {
+            if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
+                controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
-                navigation.push(ChatController(account: controller.account, peerId: message.id.peerId, messageId: message.id))
+                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }
         }
     }
     
-    func update(with controller:APController, tableView:TableView) {
+    func update(with controller:APController, context: AccountContext, tableView:TableView?, supportTableView: TableView? = nil) {
         self.controller?.remove(listener: self)
         self.controller = controller
+        self.context = context
         self.controller?.add(listener: self)
         self.ready.set(controller.ready.get())
         
         repeatControl.isHidden = !(controller is APChatMusicController)
-        self.instantVideoPip = InstantVideoPIP(controller, window: mainWindow)
-        self.instantVideoPip?.updateTableView(tableView)
+        if let tableView = tableView {
+            if self.instantVideoPip == nil {
+                self.instantVideoPip = InstantVideoPIP(controller, context: context, window: mainWindow)
+            }
+            self.instantVideoPip?.updateTableView(tableView, context: context, controller: controller)
+            addGlobalAudioToVisible(tableView: tableView)
+        }
+        if let supportTableView = supportTableView {
+            addGlobalAudioToVisible(tableView: supportTableView)
+        }
+        
+    }
+    
+    private func addGlobalAudioToVisible(tableView: TableView) {
+        if let controller = controller {
+            tableView.enumerateViews(with: { (view) in
+                var contentView: NSView? = (view as? ChatRowView)?.contentView.subviews.last ?? (view as? PeerMediaMusicRowView)
+                if let view = ((view as? ChatMessageView)?.webpageContent as? WPMediaContentView)?.contentNode {
+                    contentView = view
+                }
+                
+                if let view = contentView as? ChatAudioContentView {
+                    controller.add(listener: view)
+                } else if let view = contentView as? ChatVideoMessageContentView {
+                    controller.add(listener: view)
+                } else if let view = contentView as? WPMediaContentView {
+                    if let contentNode = view.contentNode as? ChatAudioContentView {
+                        controller.add(listener: contentNode)
+                    }
+                } else if let view = view as? PeerMediaMusicRowView {
+                    controller.add(listener: view)
+                } else if let view = view as? PeerMediaVoiceRowView {
+                    controller.add(listener: view)
+                }
+                return true
+            })
+            controller.notifyGlobalStateChanged()
+        }
     }
     
     deinit {
         controller?.remove(listener: self)
         controller?.stop()
+        bufferingStatusDisposable.dispose()
     }
     
     func attributedTitle(for song:APSongItem) -> NSAttributedString {
@@ -190,7 +326,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             progressView.set(progress: 0, animated:true)
         case let .playing(data):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(data.progress), animated:data.animated)
+            progressView.set(progress: CGFloat(data.progress == .nan ? 0 : data.progress), animated: data.animated, duration: 0.2)
             playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
             break
         case let .fetching(progress, animated):
@@ -215,27 +351,27 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         stopAndHide(true)
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        separator.setFrameSize(newSize.width, .borderSize)
-    }
-    
     override func layout() {
         super.layout()
-        containerView.frame = NSMakeRect(0, 0, frame.width, frame.height)
-        previous.centerY(x: 20)
-        playOrPause.centerY(x: previous.frame.maxX + 20)
-        next.centerY(x: playOrPause.frame.maxX + 20)
+        containerView.frame = bounds
+
+        
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        repeatControl.centerY(x: frame.width - dismiss.frame.width - 40 - repeatControl.frame.width)
-        progressView.frame = NSMakeRect(0, frame.height - 10, frame.width, 10)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20))
+        repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
+        progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
+        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 20 + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 40)))
         textView.update(textView.layout)
         
-        let w = dismiss.frame.minX - next.frame.maxX
+        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)
+
         
-        textView.centerY(x: next.frame.maxX + floorToScreenPixels((w - textView.frame.width)/2))
-        separator.setFrameOrigin(0, frame.height - .borderSize)
+        let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
+        
+        //textView.centerY(x: next.frame.maxX + floorToScreenPixels(backingScaleFactor, (w - textView.frame.width)/2), addition: -2)
+        
+        textView.center()
+        
+        separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
     func stopAndHide(_ animated:Bool) -> Void {

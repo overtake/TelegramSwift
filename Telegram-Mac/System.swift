@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 import TGUIKit
-import PostboxMac
+import Postbox
 private let _dQueue = Queue.init(name: "chatListQueue")
 private let _sQueue = Queue.init(name: "ChatQueue")
 
@@ -36,9 +37,24 @@ var mainWindow:Window {
     fatalError("window not found")
 }
 
+var systemAppearance: NSAppearance {
+    if #available(OSX 10.14, *) {
+        return NSApp.effectiveAppearance
+    } else {
+        return NSAppearance.current
+    }
+}
+
 
 public func deliverOnPrepareQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
     return signal |> deliverOn(prepareQueue)
+}
+public func deliverOnMessagesViewQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
+    return signal |> deliverOn(messagesViewQueue)
+}
+
+public func deliverOnResourceQueue<T, E>(_ signal: Signal<T, E>) -> Signal<T, E> {
+    return signal |> deliverOn(resourcesQueue)
 }
 
 
@@ -102,16 +118,8 @@ func link(path:String?, ext:String) -> String? {
     if let path = path, path.nsstring.pathExtension.length == 0 && FileManager.default.fileExists(atPath: path) {
         let path = path.nsstring.appendingPathExtension(ext)!
         if !FileManager.default.fileExists(atPath: path) {
-            do {
-                try FileManager.default.removeItem(atPath: path)
-            }
-            catch  {
-            }
-            do {
-                try FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
-            }
-            catch {
-            }
+            try? FileManager.default.removeItem(atPath: path)
+            try? FileManager.default.createSymbolicLink(atPath: path, withDestinationPath: realPath!)
         }
         realPath = path
     }
@@ -124,10 +132,19 @@ func delay(_ delay:Double, closure:@escaping ()->()) {
 }
 
 
-func fileSize(_ path:String) -> Int32? {
+func fs(_ path:String) -> Int32? {
     
-    if let attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
+    if var attrs = try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary {
+    
+        if attrs["NSFileType"] as? String == "NSFileTypeSymbolicLink" {
+            if let path = try? FileManager.default.destinationOfSymbolicLink(atPath: path) {
+                attrs = (try? FileManager.default.attributesOfItem(atPath: path) as NSDictionary) ?? attrs
+            }
+        }
+        
+        
         let size = attrs.fileSize()
+    
         if size > UInt64(INT32_MAX) {
             return INT32_MAX
         }
@@ -135,6 +152,7 @@ func fileSize(_ path:String) -> Int32? {
     }
     return nil
 }
+
 
 
 

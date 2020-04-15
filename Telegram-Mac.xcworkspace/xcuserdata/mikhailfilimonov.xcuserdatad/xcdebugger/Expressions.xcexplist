@@ -69,6 +69,14 @@
          contextName = "ChannelTypeSettingsViewController.privateEntries(with : CreateChannelResult) -&gt; [ChannelTypeEntry]:ChannelTypeSettingsViewController.swift">
       </ContextState>
       <ContextState
+         contextName = "VideoMessageCorner.draw(_:in:):ChatVideoMessageContentView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "bounds">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "specialized ChatListController.(loadOnScroll(Account, TGTableScrollUpdate) -&gt; ()).(closure #1).(closure #1).(closure #1):ChatListController.swift">
          <PersistentStrings>
             <PersistentString
@@ -245,6 +253,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #20 in ChatController.viewDidLoad():ChatController.swift">
+      </ContextState>
+      <ContextState
          contextName = "CalendarMonthView.layout() -&gt; ():CalendarMonthController.swift">
          <PersistentStrings>
             <PersistentString
@@ -374,6 +385,9 @@
          contextName = "proccessEntries&lt;A, B where ...&gt; ([B]?, right : [B], (B) -&gt; A) -&gt; ([Int], [(Int, A, Int?)]):System.swift">
       </ContextState>
       <ContextState
+         contextName = "TableView.merge(with:):TableView.swift">
+      </ContextState>
+      <ContextState
          contextName = "GeneralTextRowView.set(item : TableRowItem, animated : Bool) -&gt; ():GeneralTextRowItem.swift">
       </ContextState>
       <ContextState
@@ -501,6 +515,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "AppearanceViewEntries(dark:settings:):AppearanceViewController.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatInputActionsView.(stop() -&gt; ()).(closure #1):ChatInputActionsView.swift">
       </ContextState>
       <ContextState
@@ -538,7 +555,7 @@
          contextName = "historyEntriesForView(MessageHistoryView, Bool) -&gt; [ChatHistoryEntry]:System.swift">
       </ContextState>
       <ContextState
-         contextName = "ViewController.(viewDidAppear(Bool) -&gt; ()).(closure #1):ViewController.swift">
+         contextName = "closure #5 in SearchController.viewDidLoad():SearchController.swift">
       </ContextState>
       <ContextState
          contextName = "ChatListController.(loadView() -&gt; ()).(closure #9):ChatListController.swift">
@@ -548,6 +565,12 @@
       </ContextState>
       <ContextState
          contextName = "ChatServiceItem.init(TableView, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatServiceItem:ChatServiceItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ViewController.(viewDidAppear(Bool) -&gt; ()).(closure #1):ViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in transformOutgoingMessageMedia(postbox:network:media:opportunistic:):TransformOutgoingMessageMedia.swift">
       </ContextState>
       <ContextState
          contextName = "ChatRowItem.rightSize.getter:ChatRowItem.swift">
@@ -568,6 +591,17 @@
       </ContextState>
       <ContextState
          contextName = "UsernameInputRowView.set(item : TableRowItem, animated : Bool) -&gt; ():UsernameInputRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "WPArticleLayout.isFullImageSize.getter:WPArticleLayout.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "content">
+            </PersistentString>
+            <PersistentString
+               value = "content.type">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatInputView.defaultContentHeight.getter:ChatInputView.swift">
@@ -674,6 +708,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #6 in searchMessages(account:peerId:query:fromId:tagMask:):SearchMessages.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "result">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(init(account : Account, peerId : PeerId, message : Message?, navigation : NavigationViewController) -&gt; ChatController).(closure #4):ChatController.swift">
       </ContextState>
       <ContextState
@@ -749,12 +791,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "MessageHistoryView.init(_:):MessageHistoryView.swift">
+      </ContextState>
+      <ContextState
          contextName = "static ChatRowItem.item(TableView, from : ChatHistoryEntry, with : Account, interaction : ChatInteraction) -&gt; ChatRowItem:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
                value = "message.media[0]">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "APSongItem.init(_:_:):AudioPlayerController.swift">
       </ContextState>
       <ContextState
          contextName = "TabBarView.draw(CALayer, in : CGContext) -&gt; ():TabBarView.swift">
@@ -823,6 +871,9 @@
       </ContextState>
       <ContextState
          contextName = "ChatController.viewDidAppear(Bool) -&gt; ():ChatController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PeerMediaFileRowItem.makeSize(_:oldWidth:):PeerMediaFileRowContent.swift">
       </ContextState>
       <ContextState
          contextName = "GalleryPagerNode.animateIn(from : NSView?, completion : () -&gt; ()?) -&gt; ():GalleryPagerNode.swift">
@@ -909,6 +960,14 @@
          contextName = "ManagedAudioRecorderContext.start() -&gt; ():AudioRecorder.swift">
       </ContextState>
       <ContextState
+         contextName = "TGImageByReferencingRectOfExistingImage:NSImage+RHResizableImageAdditions.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "image.representations">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TableView.reloadData(row : Int) -&gt; ():TableView.swift">
          <PersistentStrings>
             <PersistentString
@@ -920,12 +979,18 @@
          contextName = "GalleryControls.animateIn() -&gt; ():GalleryControls.swift">
       </ContextState>
       <ContextState
+         contextName = "ChatRowItem.init(_:_:_:_:):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(init(account : Account, peerId : PeerId, message : Message?, navigation : NavigationViewController) -&gt; ChatController).(closure #16):ChatController.swift">
          <PersistentStrings>
             <PersistentString
                value = "interfaceState">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.menuItems():ChatRowItem.swift">
       </ContextState>
       <ContextState
          contextName = "EditableViewController.update(with : ViewControllerState) -&gt; ():EditableViewController.swift">
@@ -1048,6 +1113,14 @@
          contextName = "ChatRightView.draw(CALayer, in : CGContext) -&gt; ():ChatRightView.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #3 in searchPeers(account:query:):SearchPeers.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "result">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "UpdateMessageService.mtProto(MTProto!, receivedMessage : MTIncomingMessage!) -&gt; ():UpdateMessageService.swift">
       </ContextState>
       <ContextState
@@ -1081,6 +1154,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "_NSLocalizedString(_:):LocalizableExtension.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "language.strings">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatRowItem.makeSize(CGFloat) -&gt; Bool:ChatRowItem.swift">
          <PersistentStrings>
             <PersistentString
@@ -1090,9 +1174,6 @@
                value = "_contentSize">
             </PersistentString>
          </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatRowItem.(init(CGSize, ChatInteraction, Account, ChatHistoryEntry) -&gt; ChatRowItem).(closure #1):ChatRowItem.swift">
       </ContextState>
       <ContextState
          contextName = "NavigationViewController.show(ViewController, ViewControllerStyle) -&gt; ():NavigationViewController.swift">
@@ -1110,6 +1191,14 @@
       </ContextState>
       <ContextState
          contextName = "Popover.hide() -&gt; ():Popover.swift">
+      </ContextState>
+      <ContextState
+         contextName = "PassportController.viewDidLoad():PassportController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "errors">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "ChatRowView.setItem(item : TGTableRowItem, selected : Bool) -&gt; ():ChatRowView.swift">
@@ -1224,6 +1313,9 @@
          contextName = "Window.set(handler : () -&gt; (), with : AnyObject, for : KeyboardKey, priority : HandlerPriority, modifierFlags : NSEventModifierFlags?) -&gt; ():Window.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #3 in searchPeers(account:query:):SearchPeers.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatController.(viewDidLoad() -&gt; ()).(closure #38):ChatController.swift">
          <PersistentStrings>
             <PersistentString
@@ -1315,6 +1407,9 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "chatMessageFileDatas(account:file:pathExtension:progressive:justThumbail:):MediaUtils.swift">
+      </ContextState>
+      <ContextState
          contextName = "__48-[TGOpusAudioRecorder prepareRecord:completion:]_block_invoke:TGOpusAudioRecorder.m">
       </ContextState>
       <ContextState
@@ -1387,6 +1482,9 @@
                value = "fromView">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #6 in closure #1 in SearchController.viewDidLoad():SearchController.swift">
       </ContextState>
       <ContextState
          contextName = "TGTableView.moveItem(from : Int, to : Int, changeItem : TGTableRowItem?, redraw : Bool, animation : NSTableViewAnimationOptions) -&gt; ():TGTableView.swift">

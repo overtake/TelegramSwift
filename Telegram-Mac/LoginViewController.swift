@@ -8,57 +8,193 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
-import MtProtoKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
+
 private let manager = CountryManager()
 
 final class LoginAuthViewArguments {
     let sendCode:(String)->Void
+    let updatePhoneNumberField:(String)->Void
     let resendCode:()->Void
     let editPhone:()->Void
     let checkCode:(String)->Void
     let checkPassword:(String)->Void
-    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void) {
+    let requestPasswordRecovery: (@escaping(PasswordRecoveryOption)-> Void)->Void
+    let resetAccount: ()->Void
+    let signUp:(String, String, URL?) -> Void
+    let cancelQrAuth:()->Void
+    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void, cancelQrAuth: @escaping()->Void, updatePhoneNumberField:@escaping(String)->Void) {
         self.sendCode = sendCode
         self.resendCode = resendCode
         self.editPhone = editPhone
         self.checkCode = checkCode
         self.checkPassword = checkPassword
+        self.requestPasswordRecovery = requestPasswordRecovery
+        self.resetAccount = resetAccount
+        self.signUp = signUp
+        self.cancelQrAuth = cancelQrAuth
+        self.updatePhoneNumberField = updatePhoneNumberField
     }
 }
 
-private class SignupView : View {
-    let textView:TextView = TextView()
-    let button:TitleButton = TitleButton()
+private class SignupView : View, NSTextFieldDelegate {
+    
+    let firstName:NSTextField = NSTextField()
+    let lastName:NSTextField = NSTextField()
+    
+    private var photoUrl: URL?
+    
+    private let firstNameSeparator: View = View()
+    private let lastNameSeparator: View = View()
+
+    private let photoView = ImageView()
+    private let descView: TextView = TextView()
+    private let addPhotoView: TextView = TextView()
     var arguments: LoginAuthViewArguments?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(textView)
-        addSubview(button)
+        addSubview(firstName)
+        addSubview(lastName)
+        addSubview(firstNameSeparator)
+        addSubview(lastNameSeparator)
+        addSubview(addPhotoView)
+        addSubview(photoView)
+        addSubview(descView)
+        descView.userInteractionEnabled = false
+        descView.isSelectable = false
+        addPhotoView.userInteractionEnabled = false
+        addPhotoView.isSelectable = false
+
         
-        button.set(font: .medium(.title), for: .Normal)
-        button.set(color: .blueUI, for: .Normal)
-        button.set(text: tr(.alertOK), for: .Normal)
+        firstName.isBordered = false
+        firstName.usesSingleLineMode = true
+        firstName.isBezeled = false
+        firstName.focusRingType = .none
+        firstName.drawsBackground = false
         
-        button.sizeToFit()
+        firstName.delegate = self
+        lastName.delegate = self
         
-        button.set(handler: { [weak self] _ in
-            self?.arguments?.editPhone()
-        }, for: .Click)
         
-        let layout = TextViewLayout(.initialize(string: tr(.loginPhoneNumberNotRegistred), color: .text, font: .normal(.title)), alignment: .center)
-        layout.measure(width: frameRect.width - 20)
-        textView.update(layout)
+        lastName.isBordered = false
+        lastName.usesSingleLineMode = true
+        lastName.isBezeled = false
+        lastName.focusRingType = .none
+        lastName.drawsBackground = false
+        
+        firstName.cell?.wraps = false
+        firstName.cell?.isScrollable = true
+        
+        firstName.nextKeyView = lastName
+        firstName.nextResponder = lastName.textView
+       // lastName.nextKeyView = firstName
+        
+        lastName.cell?.wraps = false
+        lastName.cell?.isScrollable = true
+        
+        lastName.font = .medium(14)
+        firstName.font = .medium(14)
+        
+        photoView.layer?.cornerRadius = 50
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        
+        if commandSelector == #selector(insertNewline(_:)) {
+            trySignUp()
+            return true
+        }
+        
+        return false
+    }
+    
+    func trySignUp() {
+        if firstName.stringValue.isEmpty {
+            firstName.shake()
+            
+            if firstName.textView != window?.firstResponder {
+                window?.makeFirstResponder(firstName.textView)
+            }
+        } else {
+            arguments?.signUp(firstName.stringValue, lastName.stringValue, self.photoUrl)
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        firstNameSeparator.backgroundColor = theme.colors.border
+        lastNameSeparator.backgroundColor = theme.colors.border
+        
+        lastName.placeholderAttributedString = .initialize(string: L10n.loginRegisterLastNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+        firstName.placeholderAttributedString = .initialize(string: L10n.loginRegisterFirstNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+
+        lastName.textColor = theme.colors.text
+        firstName.textColor = theme.colors.text
+
+        let descLayout = TextViewLayout(.initialize(string: L10n.loginRegisterDesc, color: theme.colors.grayText, font: .normal(.text)))
+        descLayout.measure(width: frame.width)
+        descView.update(descLayout)
+        
+        let addPhotoLayout = TextViewLayout(.initialize(string: L10n.loginRegisterAddPhotoPlaceholder, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        addPhotoLayout.measure(width: 90)
+        addPhotoView.update(addPhotoLayout)
+        
+        photoView.layer?.borderColor = theme.colors.border.cgColor
+        photoView.layer?.borderWidth = 1.0
+
+    
+        needsLayout = true
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        if photoView._mouseInside() {
+            
+            let updatePhoto:(URL) -> Void = { [weak self] url in
+                self?.photoView.image = NSImage.init(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                self?.photoUrl = url
+            }
+            
+            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                    _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                        let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                        showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                        _ = (controller.result |> deliverOnMainQueue).start(next: { url, _ in
+                            updatePhoto(url)
+                            //arguments.updatePhoto(url.path)
+                        })
+                        
+                        controller.onClose = {
+                            removeFile(at: path)
+                        }
+                    })
+                }
+            })
+        } else {
+            super.mouseDown(with: event)
+        }
     }
     
     override func layout() {
         super.layout()
-        textView.layout?.measure(width: frame.width - 20)
-        textView.update(textView.layout)
-        textView.centerX(y: 30)
-        button.centerX(y: textView.frame.maxY + 35)
+        
+        photoView.frame = NSMakeRect(0, 0, 100, 100)
+        
+        addPhotoView.setFrameOrigin(NSMakePoint( floorToScreenPixels(backingScaleFactor, (photoView.frame.width - addPhotoView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (photoView.frame.height - addPhotoView.frame.height) / 2)))
+        
+        firstName.frame = NSMakeRect(photoView.frame.maxX + 10, 20, frame.width - (photoView.frame.maxX + 10), 20)
+        lastName.frame = NSMakeRect(photoView.frame.maxX + 10, 70, frame.width - (photoView.frame.maxX + 10), 20)
+
+        
+        firstNameSeparator.frame = NSMakeRect(photoView.frame.maxX + 10, 50, frame.width, .borderSize)
+        lastNameSeparator.frame = NSMakeRect(photoView.frame.maxX + 10, 100, frame.width, .borderSize)
+
+        descView.centerX(y: photoView.frame.maxY + 50)
     }
     
     required init?(coder: NSCoder) {
@@ -74,12 +210,12 @@ private class InputPasswordContainerView : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+        input.stringValue = ""
         input.isBordered = false
         input.isBezeled = false
         input.focusRingType = .none
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         addSubview(input)
 
@@ -88,20 +224,23 @@ private class InputPasswordContainerView : View {
         input.action = #selector(action)
         input.target = self
         
-        addSubview(passwordLabel)
+      //  addSubview(passwordLabel)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.loginPasswordPlaceholder), color: .grayText, font: .normal(.title))
+        _ = attr.append(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
+        input.backgroundColor = theme.colors.background
         input.placeholderAttributedString = attr
-        input.font = NSFont.normal(FontSize.text)
-        input.textColor = .text
+        input.font = .normal(.text)
+        input.textColor = theme.colors.text
         input.sizeToFit()
         
-        passwordLabel.attributedString = .initialize(string: tr(.loginYourPasswordLabel), color: .grayText, font: .normal(FontSize.title))
-        passwordLabel.sizeToFit()
+        
+        needsDisplay = true
+        
+        
     }
     
     @objc func action() {
@@ -114,7 +253,7 @@ private class InputPasswordContainerView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(passwordLabel.frame.maxX + 20, frame.height - .borderSize, frame.width, .borderSize))
+        ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
     }
     
     required init?(coder: NSCoder) {
@@ -140,6 +279,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
     let textView:TextView = TextView()
     let delayView:TextView = TextView()
     
+    private let forgotPasswordView = TitleButton()
+    private let resetAccountView = TitleButton()
+    
     fileprivate var selectedItem:CountryItem?
     
     fileprivate var undo:[String] = []
@@ -161,9 +303,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         delayView.isSelectable = false
         
         editControl.set(font: .medium(.title), for: .Normal)
-        editControl.set(color: .blueUI, for: .Normal)
-        editControl.set(text: tr(.navigationEdit), for: .Normal)
-        editControl.sizeToFit()
+        editControl.set(color: theme.colors.accent, for: .Normal)
+        editControl.set(text: tr(L10n.navigationEdit), for: .Normal)
+        _ = editControl.sizeToFit()
         
         editControl.set(handler: { [weak self] _ in
             self?.arguments?.editPhone()
@@ -172,21 +314,22 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         
         
-        addSubview(yourPhoneLabel)
-        addSubview(codeLabel)
+       // addSubview(yourPhoneLabel)
+     //   addSubview(codeLabel)
         addSubview(editControl)
         
-        
+      
        
+
         
         
-        codeText.textColor = .text
         codeText.font = NSFont.normal(.title)
         
         
         
+        codeText.textColor = theme.colors.text
+        numberText.textColor = theme.colors.grayText
         
-        numberText.textColor = .grayText
         numberText.font = NSFont.normal(.title)
         numberText.isSelectable = false
         numberText.isEditable = false
@@ -214,26 +357,82 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         addSubview(delayView)
         addSubview(errorLabel)
 
+        
+        addSubview(forgotPasswordView)
+        addSubview(resetAccountView)
+        
+        forgotPasswordView.isHidden = true
+        resetAccountView.isHidden = true
+        
+        forgotPasswordView.set(font: .normal(.title), for: .Normal)
+        resetAccountView.set(font: .normal(.title), for: .Normal)
+        
+       
+        forgotPasswordView.set(handler: { [weak self]  _ in
+            self?.arguments?.requestPasswordRecovery({ [weak self] option in
+                switch option {
+                case .email:
+                    self?.resetAccountView.isHidden = false
+                case .none:
+                    alert(for: mainWindow, info: L10n.loginRecoveryMailFailed)
+                    self?.resetAccountView.isHidden = false
+                }
+            })
+        }, for: .Click)
+        
+        resetAccountView.set(handler: { [weak self] _ in
+            self?.arguments?.resetAccount()
+        }, for: .Click)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
-        yourPhoneLabel.attributedString = .initialize(string: tr(.loginYourPhoneLabel), color: .grayText, font: NSFont.normal(FontSize.title))
+        editControl.set(color: theme.colors.accent, for: .Normal)
+        
+        
+        codeText.textColor = theme.colors.text
+        numberText.textColor = theme.colors.grayText
+        
+        yourPhoneLabel.backgroundColor = theme.colors.background
+        numberText.backgroundColor = theme.colors.background
+        codeText.backgroundColor = theme.colors.background
+        
+        
+        errorLabel.backgroundColor = theme.colors.background
+        delayView.backgroundColor = theme.colors.background
+        textView.backgroundColor = theme.colors.background
+
+        yourPhoneLabel.attributedString = .initialize(string: L10n.loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
         yourPhoneLabel.sizeToFit()
         
-        codeLabel.attributedString = .initialize(string: tr(.loginYourCodeLabel), color: .grayText, font: NSFont.normal(FontSize.title))
+        codeLabel.attributedString = .initialize(string: L10n.loginYourCodeLabel, color: theme.colors.grayText, font: .normal(.title))
         codeLabel.sizeToFit()
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(.loginPhoneFieldPlaceholder), color: .grayText, font: NSFont.normal(.header), coreText: false)
         
-        codeText.placeholderAttributedString = NSAttributedString.initialize(string: tr(.loginCodePlaceholder), color: .grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = .initialize(string: L10n.loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        codeText.placeholderAttributedString = .initialize(string: L10n.loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        
+        
+        forgotPasswordView.set(color: theme.colors.accent, for: .Normal)
+        resetAccountView.set(color: theme.colors.redUI, for: .Normal)
+        
+        forgotPasswordView.set(text: L10n.loginPasswordForgot, for: .Normal)
+        resetAccountView.set(text: L10n.loginResetAccountText, for: .Normal)
+        
+        
+        _ = forgotPasswordView.sizeToFit()
+        _ = resetAccountView.sizeToFit()
+        
+       
+        
+        needsLayout = true
+        needsDisplay = true
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    let defaultInset:CGFloat = 30
 
     
     fileprivate override func layout() {
@@ -242,28 +441,38 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         numberText.sizeToFit()
         
         
-        let maxInset = max(yourPhoneLabel.frame.width, codeLabel.frame.width)
-        let contentInset = maxInset + 20 + 5 + defaultInset
-        
-        yourPhoneLabel.setFrameOrigin(maxInset - yourPhoneLabel.frame.width + defaultInset, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
-        codeLabel.setFrameOrigin(maxInset - codeLabel.frame.width + defaultInset, floorToScreenPixels(75 - codeLabel.frame.height/2))
-        
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(75 - codeText.frame.height/2))
-        
-        numberText.setFrameOrigin(contentInset, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
-        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(25 - yourPhoneLabel.frame.height/2))
         
         
-        textView.centerX(y: codeText.frame.maxY + 60 + (passwordEnabled ? inputPassword.frame.height : 0))
-        delayView.centerX(y: textView.frame.maxY + 20)
-        errorLabel.centerX(y: codeText.frame.maxY + 30 + (passwordEnabled ? inputPassword.frame.height : 0))
+        codeText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
         
-        inputPassword.passwordLabel.centerY()
-        inputPassword.passwordLabel.setFrameOrigin(contentInset - inputPassword.passwordLabel.frame.width - 25, inputPassword.passwordLabel.frame.minY)
-        inputPassword.input.setFrameSize(inputPassword.frame.width - inputPassword.passwordLabel.frame.minX, inputPassword.input.frame.height)
-        inputPassword.input.centerY(x:inputPassword.passwordLabel.frame.maxX + 25)
+        numberText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        editControl.setFrameOrigin(frame.width - editControl.frame.width, floorToScreenPixels(backingScaleFactor, 25 - yourPhoneLabel.frame.height/2))
+        
+        
+        var topOffset: CGFloat = codeText.frame.minY
+        
+        if !codeText.isHidden {
+            topOffset += 50
+        }
+        if numberText.isHidden {
+            topOffset -= 50
+        }
 
-        inputPassword.setFrameOrigin(0, 101)
+        
+        
+        textView.centerX(y: topOffset + 20 + (passwordEnabled ? inputPassword.frame.height : 0))
+        delayView.centerX(y: textView.frame.maxY + 20)
+        errorLabel.centerX(y: codeText.frame.maxY + 25 + (passwordEnabled ? inputPassword.frame.height : 0))
+        
+        forgotPasswordView.centerX(y: textView.frame.maxY + 10)
+        resetAccountView.centerX(y: forgotPasswordView.frame.maxY + 5)
+        
+        inputPassword.input.setFrameSize(inputPassword.frame.width - inputPassword.passwordLabel.frame.minX, inputPassword.input.frame.height)
+        inputPassword.input.centerY()
+
+        
+        
+        inputPassword.setFrameOrigin(0, topOffset)
     }
     
     fileprivate func update(with type:SentAuthorizationCodeType, nextType:AuthorizationCodeNextType? = nil, timeout:Int32?) {
@@ -304,14 +513,14 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         switch type {
         case let .otherSession(length: length):
             codeLength = Int(length)
-            basic = tr(.loginEnterCodeFromApp)
-            nextText = tr(.loginSendSmsIfNotReceivedAppCode)
+            basic = L10n.loginEnterCodeFromApp
+            nextText = L10n.loginSendSmsIfNotReceivedAppCode
         case let .sms(length: length):
             codeLength = Int(length)
-            basic = tr(.loginJustSentSms)
+            basic = L10n.loginJustSentSms
         case let .call(length: length):
             codeLength = Int(length)
-            basic = tr(.loginPhoneCalledCode)
+            basic = L10n.loginPhoneCalledCode
         default:
             break
         }
@@ -327,10 +536,10 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 if timeout > 0 {
                     switch nextType {
                     case .call:
-                        nextText = tr(.loginWillCall(minutes, secValue))
+                        nextText = L10n.loginWillCall(minutes, secValue)
                         break
                     case .sms:
-                        nextText = tr(.loginWillSendSms(minutes, secValue))
+                        nextText = L10n.loginWillSendSms(minutes, secValue)
                         break
                     default:
                         break
@@ -338,8 +547,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 } else {
                     switch nextType {
                     case .call:
-                        basic = tr(.loginPhoneCalledCode)
-                        nextText = tr(.loginPhoneDialed)
+                        basic = L10n.loginPhoneCalledCode
+                        nextText = L10n.loginPhoneDialed
                         break
                     default:
                         break
@@ -347,11 +556,11 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 }
                 
             } else {
-                nextText = tr(.loginSendSmsIfNotReceivedAppCode)
+                nextText = tr(L10n.loginSendSmsIfNotReceivedAppCode)
             }
         }
         
-        _ = attr.append(string: basic, color: .grayText, font: .normal(.title))
+        _ = attr.append(string: basic, color: theme.colors.grayText, font: .normal(.title))
         let textLayout = TextViewLayout(attr, alignment: .center)
         textLayout.measure(width: 300)
         textView.update(textLayout)
@@ -361,17 +570,17 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
             let attr = NSMutableAttributedString()
             
             if case .otherSession = type  {
-                _ = attr.append(string: nextText, color: .link , font: .normal(.title))
+                _ = attr.append(string: nextText, color: theme.colors.link , font: .normal(.title))
                 attr.add(link: inAppLink.callback("resend", { [weak self] link in
                     self?.arguments?.resendCode()
                 }), for: attr.range)
                 if  timeout == nil {
-                    attr.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: attr.range)
+                    attr.addAttribute(NSAttributedString.Key.foregroundColor, value: theme.colors.link, range: attr.range)
                 } else if let timeout = timeout {
-                    attr.addAttribute(NSAttributedStringKey.foregroundColor, value: timeout <= 0 ? theme.colors.link : theme.colors.grayText, range: attr.range)
+                    attr.addAttribute(NSAttributedString.Key.foregroundColor, value: timeout <= 0 ? theme.colors.link : theme.colors.grayText, range: attr.range)
                 }
             } else {
-                _ = attr.append(string: nextText, color: .grayText, font: .normal(.title))
+                _ = attr.append(string: nextText, color: theme.colors.grayText, font: .normal(.title))
             }
             let layout = TextViewLayout(attr)
             layout.interactions = globalLinkExecutor
@@ -385,12 +594,14 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
 
     func update(number: String, type: SentAuthorizationCodeType, hash: String, timeout: Int32?, nextType: AuthorizationCodeNextType?, animated: Bool) {
         self.passwordEnabled = false
-        self.numberText.stringValue = number
-        self.codeText.textColor = .text
+        self.numberText.stringValue = formatPhoneNumber(number)
         self.codeText.stringValue = ""
         self.codeText.isEditable = true
         self.codeText.isSelectable = true
         inputPassword.isHidden = true
+        forgotPasswordView.isHidden = true
+        resetAccountView.isHidden = true
+        clearError()
         self.update(with: type, nextType: nextType, timeout: timeout)
     }
     
@@ -398,11 +609,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let textError:String
         switch error {
         case .limitExceeded:
-            textError = tr(.loginFloodWait)
+            textError = L10n.loginFloodWait
         case .invalidCode:
-            textError = tr(.phoneCodeInvalid)
+            textError = L10n.phoneCodeInvalid
         case .generic:
-            textError = tr(.phoneCodeExpired)
+            textError = L10n.phoneCodeExpired
+        case .codeExpired:
+            textError = L10n.phoneCodeExpired
         }
         errorLabel.state.set(.single(.error(textError)))
         codeText.shake()
@@ -412,9 +625,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPassword:
-            text = tr(.passwordHashInvalid)
+            text = L10n.passwordHashInvalid
         case .limitExceeded:
-            text = tr(.loginFloodWait)
+            text = L10n.loginFloodWait
         case .generic:
             text = "undefined error"
         }
@@ -431,21 +644,28 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
     func showPasswordInput(_ hint:String, _ number:String, _ code:String, animated: Bool) {
         errorLabel.state.set(.single(.normal))
         self.passwordEnabled = true
+        
+        self.codeText.isHidden = code.isEmpty
+        self.numberText.isHidden = number.isEmpty
+        self.editControl.isHidden = number.isEmpty
+        
         self.numberText.stringValue = number
         self.codeText.stringValue = code
         if !hint.isEmpty {
-            self.inputPassword.input.placeholderAttributedString = NSAttributedString.initialize(string: hint, color: .grayText, font: .normal(.title))
+            self.inputPassword.input.placeholderAttributedString = .initialize(string: hint, color: theme.colors.grayText, font: .normal(.title))
         } else {
-            self.inputPassword.input.placeholderAttributedString = NSAttributedString.initialize(string: tr(.loginPasswordPlaceholder), color: .grayText, font: .normal(.title))
+            self.inputPassword.input.placeholderAttributedString = .initialize(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
         }
         self.inputPassword.isHidden = false
-        self.codeText.textColor = .grayText
+        self.codeText.textColor = theme.colors.grayText
         self.codeText.isEditable = false
         self.codeText.isSelectable = false
         
-        let textLayout = TextViewLayout(.initialize(string: tr(.loginEnterPasswordDescription), color: .grayText, font: .normal(.title)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: L10n.loginEnterPasswordDescription, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
         textLayout.measure(width: 300)
         textView.update(textLayout)
+        
+        
         
         disposable.set(nil)
         delayView.isHidden = true
@@ -456,10 +676,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         textView.centerX()
         textView.change(pos: NSMakePoint(textView.frame.minX, textView.frame.minY + inputPassword.frame.height), animated: animated)
         
+        forgotPasswordView.isHidden = false
+        
         needsLayout = true
+        needsDisplay = true
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
+    func controlTextDidChange(_ obj: Notification) {
         let code = codeText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined().prefix(codeLength)
         codeText.stringValue = code
         codeText.sizeToFit()
@@ -481,10 +704,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         super.draw(layer, in: ctx)
         
         
-        let maxInset = max(yourPhoneLabel.frame.width, codeLabel.frame.width) + 20
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(defaultInset + maxInset, 50, frame.width - maxInset, .borderSize))
-        ctx.fill(NSMakeRect(defaultInset + maxInset, 100, frame.width - maxInset, .borderSize))
+        if !self.numberText.isHidden {
+            ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
+        }
+        if !codeText.isHidden {
+            ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -518,30 +744,29 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         super.init(frame: frameRect)
         
         
-        countrySelector.style = ControlStyle(font: NSFont.medium(.title), foregroundColor: NSColor(0x007ee5), backgroundColor:.white)
+        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
         countrySelector.set(text: "France", for: .Normal)
-        countrySelector.sizeToFit()
+        _ = countrySelector.sizeToFit()
         addSubview(countrySelector)
         
        
         
-        
-        addSubview(countryLabel)
-        addSubview(numberLabel)
+       // addSubview(countryLabel)
+       // addSubview(numberLabel)
         
         countrySelector.set(handler: { [weak self] _ in
             self?.showCountrySelector()
         }, for: .Click)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
         
         codeText.stringValue = "+"
         
-        codeText.textColor = .text
-        codeText.font = NSFont.normal(.title)
+       
         
-        numberText.textColor = .text
-        numberText.font = NSFont.normal(.title)
+        codeText.font = .normal(.title)
+        
+        numberText.font = .normal(.title)
         
         numberText.isBordered = false
         numberText.isBezeled = false
@@ -569,29 +794,42 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
-        countryLabel.attributedString = .initialize(string: tr(.loginCountryLabel), color: .grayText, font: NSFont.normal(FontSize.title))
+        countrySelector.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
+        
+        
+        codeText.backgroundColor = theme.colors.background
+        numberText.backgroundColor = theme.colors.background
+        
+        countryLabel.attributedString = .initialize(string: L10n.loginCountryLabel, color: theme.colors.grayText, font: .normal(.title))
         countryLabel.sizeToFit()
         
-        numberLabel.attributedString = .initialize(string: tr(.loginYourPhoneLabel), color: .grayText, font: NSFont.normal(FontSize.title))
+        numberLabel.attributedString = .initialize(string: L10n.loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
         numberLabel.sizeToFit()
         
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(.loginPhoneFieldPlaceholder), color: .grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = .initialize(string: L10n.loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         
         needsLayout = true
+        needsDisplay = true
     }
     
     func setPhoneError(_ error: AuthorizationCodeRequestError) {
         let text:String
         switch error {
         case .invalidPhoneNumber:
-            text = tr(.phoneNumberInvalid)
+            text = tr(L10n.phoneNumberInvalid)
         case .limitExceeded:
-            text = tr(.loginFloodWait)
+            text = tr(L10n.loginFloodWait)
         case .generic:
             text = "undefined error"
+        case .phoneLimitExceeded:
+            text = "undefined error"
+        case .phoneBanned:
+            text = "PHONE BANNED"
+        case .timeout:
+            text = "timeout"
         }
         errorLabel.state.set(.single(.error(text)))
     }
@@ -610,26 +848,26 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         codeText.sizeToFit()
         numberText.sizeToFit()
         
-        let maxInset = max(countryLabel.frame.width,numberLabel.frame.width)
-        let contentInset = maxInset + 20 + 5
-        countrySelector.setFrameOrigin(contentInset, floorToScreenPixels(25 - countrySelector.frame.height/2))
+      //  let maxInset: CGFloat = max(countryLabel.frame.width,numberLabel.frame.width)
+      //  let contentInset = maxInset + 20 + 5
+        countrySelector.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 25 - countrySelector.frame.height/2))
         
-        countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(25 - countryLabel.frame.height/2))
-        numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(75 - numberLabel.frame.height/2))
+     //  countryLabel.setFrameOrigin(maxInset - countryLabel.frame.width, floorToScreenPixels(backingScaleFactor, 25 - countryLabel.frame.height/2))
+     //   numberLabel.setFrameOrigin(maxInset - numberLabel.frame.width, floorToScreenPixels(backingScaleFactor, 75 - numberLabel.frame.height/2))
         
-        codeText.setFrameOrigin(contentInset, floorToScreenPixels(75 - codeText.frame.height/2))
-        numberText.setFrameOrigin(contentInset + separatorInset, floorToScreenPixels(75 - codeText.frame.height/2))
-        errorLabel.centerX(y: 120)
+        codeText.setFrameOrigin(0, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
+        numberText.setFrameOrigin(separatorInset, floorToScreenPixels(backingScaleFactor, 75 - codeText.frame.height/2))
+        errorLabel.centerX(y: 110)
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         
-        let maxInset = max(countryLabel.frame.width,numberLabel.frame.width) + 20
+       // let maxInset = max(countryLabel.frame.width,numberLabel.frame.width) + 20
         ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(maxInset, 50, frame.width - maxInset, .borderSize))
-        ctx.fill(NSMakeRect(maxInset, 100, frame.width - maxInset, .borderSize))
+        ctx.fill(NSMakeRect(0, 50, frame.width, .borderSize))
+        ctx.fill(NSMakeRect(0, 100, frame.width, .borderSize))
         //  ctx.fill(NSMakeRect(maxInset + separatorInset, 50, .borderSize, 50))
     }
     
@@ -651,9 +889,10 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         
     }
     
-    override func controlTextDidChange(_ obj: Notification) {
-        
+    func controlTextDidChange(_ obj: Notification) {
         if let field = obj.object as? NSTextField {
+            hasChanges = true
+
             let code = codeText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
             let dec = code.prefix(4)
             
@@ -661,7 +900,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
                 
                 
                 if code.length > 4 {
-                    let list = Array(code.characters).map {String($0)}
+                    let list = code.map {String($0)}
                     let reduced = list.reduce([], { current, value -> [String] in
                         var current = current
                         current.append((current.last ?? "") + value)
@@ -704,12 +943,18 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
                 
                 
             } else if field == numberText {
-                var formated = formatPhoneNumber(dec + numberText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined())
+                let current = dec + numberText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                var formated: String = current
+                if !current.hasPrefix("99288") {
+                   formated = formatPhoneNumber(current)
+                }
                 if formated.hasPrefix("+") {
                     formated = formated.fromSuffix(2)
                 }
                 formated = formated.substring(from: dec.endIndex).prefix(17)
                 numberText.stringValue = formated
+                
+                self.arguments?.updatePhoneNumberField(formated)
             }
             
         }
@@ -744,10 +989,12 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         return false
     }
     
+    fileprivate var hasChanges: Bool = false
+    
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
-            countrySelector.set(text: selectedItem?.shortName ?? tr(.loginInvalidCountryCode), for: .Normal)
+            countrySelector.set(text: selectedItem?.shortName ?? tr(L10n.loginInvalidCountryCode), for: .Normal)
             countrySelector.sizeToFit()
             if updateCode {
                 codeText.stringValue = selectedItem != nil ? "+\(selectedItem!.code)" : "+"
@@ -766,11 +1013,132 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
     
 }
 
+
+private func timerValueString(days: Int32, hours: Int32, minutes: Int32) -> String {
+    var string = NSMutableAttributedString()
+    
+    var daysString = ""
+    if days > 0 {
+        daysString = "**" + L10n.timerDaysCountable(Int(days)) + "** "
+    }
+    
+    var hoursString = ""
+    if hours > 0 || days > 0 {
+        hoursString = "**" + L10n.timerHoursCountable(Int(hours)) + "** "
+    }
+    
+    let minutesString = "**" + L10n.timerMinutesCountable(Int(minutes)) + "**"
+    
+    return daysString + hoursString + minutesString
+}
+
+private final class AwaitingResetConfirmationView : View {
+    private let textView: TextView = TextView()
+    private let reset: TitleButton = TitleButton()
+    private var phoneNumber: String = ""
+    private var protectedUntil: Int32 = 0
+    private var timer: SwiftSignalKit.Timer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        textView.isSelectable = false
+        addSubview(textView)
+        addSubview(reset)
+        
+        reset.set(font: .bold(.title), for: .Normal)
+    }
+    
+    func update(with phoneNumber: String, until:Int32, reset: @escaping()-> Void) -> Void {
+        self.phoneNumber = phoneNumber
+        self.protectedUntil = until
+        updateLocalizationAndTheme(theme: theme)
+        
+        self.reset.removeAllHandlers()
+        self.reset.set(handler: { _ in
+            reset()
+        }, for: .Click)
+        
+        if self.timer == nil {
+            let timer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
+                self?.updateTimerValue()
+                }, queue: Queue.mainQueue())
+            self.timer = timer
+            timer.start()
+        }
+    }
+    
+    deinit {
+        timer?.invalidate()
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        reset.set(color: theme.colors.redUI, for: .Normal)
+        reset.set(text: L10n.loginResetAccount, for: .Normal)
+        _ = reset.sizeToFit()
+        updateTimerValue()
+    }
+    
+    private func updateTimerValue() {
+        let timerSeconds = max(0, self.protectedUntil - Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970))
+        
+        let secondsInAMinute: Int32 = 60
+        let secondsInAnHour: Int32 = 60 * secondsInAMinute
+        let secondsInADay: Int32 = 24 * secondsInAnHour
+        
+        let days = timerSeconds / secondsInADay
+        
+        let hourSeconds = timerSeconds % secondsInADay
+        let hours = hourSeconds / secondsInAnHour
+        
+        let minuteSeconds = hourSeconds % secondsInAnHour
+        var minutes = minuteSeconds / secondsInAMinute
+        
+        if days == 0 && hours == 0 && minutes == 0 && timerSeconds > 0 {
+            minutes = 1
+        }
+        
+        
+        let attr = NSMutableAttributedString()
+        
+        
+        _ = attr.append(string: L10n.twoStepAuthResetDescription(self.phoneNumber, timerValueString(days: days, hours: hours, minutes: minutes)), color: theme.colors.grayText, font: .normal(.text))
+        attr.detectBoldColorInString(with: .bold(.text))
+        
+        let layout = TextViewLayout(attr, alignment: .left, alwaysStaticItems: true)
+        layout.measure(width: frame.width)
+        
+        textView.update(layout)
+        needsLayout = true
+        
+        self.reset.isEnabled = timerSeconds <= 0
+        
+        if timerSeconds <= 0 {
+            timer?.invalidate()
+            timer = nil
+        }
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.centerX()
+        reset.setFrameOrigin(0, textView.frame.maxY + 20)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 class LoginAuthInfoView : View {
 
     fileprivate var state: UnauthorizedAccountStateContents = .empty
     
     private let phoneNumberContainer:PhoneNumberContainerView
+    private let resetAccountContainer:AwaitingResetConfirmationView
+
     private let codeInputContainer:InputCodeContainerView
     private let signupView:SignupView
     var arguments:LoginAuthViewArguments? {
@@ -784,6 +1152,9 @@ class LoginAuthInfoView : View {
     
     var phoneNumber:String {
         return phoneNumberContainer.codeText.stringValue + phoneNumberContainer.numberText.stringValue
+    }
+    func trySignUp() {
+        signupView.trySignUp()
     }
    
     var code:String {
@@ -809,12 +1180,20 @@ class LoginAuthInfoView : View {
     required init(frame frameRect: NSRect) {
         codeInputContainer = InputCodeContainerView(frame: frameRect)
         phoneNumberContainer = PhoneNumberContainerView(frame: frameRect)
+        resetAccountContainer = AwaitingResetConfirmationView(frame: frameRect)
         signupView = SignupView(frame: frameRect)
         super.init(frame:frameRect)
         
         addSubview(codeInputContainer)
         addSubview(phoneNumberContainer)
         addSubview(signupView)
+        addSubview(resetAccountContainer)
+    }
+    
+    func updateCountryCode(_ code: String) {
+        if !phoneNumberContainer.hasChanges {
+            phoneNumberContainer.update(selectedItem: manager.item(bySmallCountryName: code), update: true)
+        }
     }
     
 
@@ -836,6 +1215,11 @@ class LoginAuthInfoView : View {
                 return codeInputContainer.inputPassword.input
             }
             return window?.firstResponder
+        case .signUp:
+            if window?.firstResponder != signupView.firstName.textView || window?.firstResponder != signupView.lastName.textView {
+                return signupView.firstName
+            }
+            return window?.firstResponder
         default:
             return nil
         }
@@ -846,7 +1230,7 @@ class LoginAuthInfoView : View {
         
         switch state {
         case let .phoneEntry(countryCode, phoneNumber):
-            phoneNumberContainer.updateLocalizationAndTheme()
+            phoneNumberContainer.updateLocalizationAndTheme(theme: theme)
             phoneNumberContainer.errorLabel.state.set(.single(.normal))
             phoneNumberContainer.update(countryCode: countryCode, number: phoneNumber)
             phoneNumberContainer.isHidden = false
@@ -855,58 +1239,93 @@ class LoginAuthInfoView : View {
                 if completed {
                     self?.codeInputContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
             codeInputContainer.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
         case .empty:
-            phoneNumberContainer.updateLocalizationAndTheme()
+            phoneNumberContainer.updateLocalizationAndTheme(theme: theme)
             phoneNumberContainer.isHidden = false
             phoneNumberContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.codeInputContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
-        case let .confirmationCodeEntry(number, type, hash, timeout, nextType):
-            codeInputContainer.updateLocalizationAndTheme()
+            codeInputContainer.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
+
+        case let .confirmationCodeEntry(number, type, hash, timeout, nextType, _):
+            codeInputContainer.updateLocalizationAndTheme(theme: theme)
             codeInputContainer.isHidden = false
             codeInputContainer.undo = []
             codeInputContainer.update(number: number, type: type, hash: hash, timeout: timeout, nextType: nextType, animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
+
+
 
             codeInputContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
-        case let .passwordEntry(hint, number, code):
-            codeInputContainer.updateLocalizationAndTheme()
+        case let .passwordEntry(hint, number, code, _, _):
+            codeInputContainer.updateLocalizationAndTheme(theme: theme)
             codeInputContainer.isHidden = false
             codeInputContainer.showPasswordInput(hint, number ?? "", code ?? "", animated: animated)
             phoneNumberContainer.change(opacity: 0, animated: animated)
             signupView.change(opacity: 0, animated: animated)
+            resetAccountContainer.change(opacity: 0, animated: animated)
 
             codeInputContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.signupView.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
 
                 }
             })
         case .signUp:
-            signupView.updateLocalizationAndTheme()
+            signupView.updateLocalizationAndTheme(theme: theme)
             signupView.isHidden = false
             phoneNumberContainer.change(opacity: 0, animated: animated)
             codeInputContainer.change(opacity: 0, animated: animated)
-            
+            resetAccountContainer.change(opacity: 0, animated: animated)
+
             signupView.change(opacity: 1, animated: animated, completion: { [weak self] completed in
                 if completed {
                     self?.phoneNumberContainer.isHidden = true
                     self?.codeInputContainer.isHidden = true
+                    self?.resetAccountContainer.isHidden = true
                 }
             })
+        case .passwordRecovery:
+            //TODO
+            break
+        case .awaitingAccountReset(let protectedUntil, let number, _):
+            resetAccountContainer.isHidden = false
+            
+            resetAccountContainer.update(with: number ?? "", until: protectedUntil, reset: { [weak self] in
+                self?.arguments?.resetAccount()
+            })
+            resetAccountContainer.change(opacity: 1, animated: animated, completion: { [weak self] completed in
+                if completed {
+                    self?.signupView.isHidden = true
+                    self?.phoneNumberContainer.isHidden = true
+                    self?.codeInputContainer.isHidden = true
+                }
+            })
+            phoneNumberContainer.change(opacity: 0, animated: animated)
+            codeInputContainer.change(opacity: 0, animated: animated)
+            signupView.change(opacity: 0, animated: animated)
         }
         window?.makeFirstResponder(firstResponder())
     }
@@ -917,6 +1336,12 @@ class LoginAuthInfoView : View {
         phoneNumberContainer.setFrameSize(newSize)
         codeInputContainer.setFrameSize(newSize)
         signupView.setFrameSize(newSize)
+        resetAccountContainer.setFrameSize(newSize)
+        
+        phoneNumberContainer.centerX()
+        codeInputContainer.centerX()
+        signupView.centerX()
+        resetAccountContainer.centerX()
     }
     
 

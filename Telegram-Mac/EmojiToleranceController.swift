@@ -8,36 +8,38 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
+import Postbox
 private class EmojiTolerance : View {
     
     
-    init(frame frameRect: NSRect, emoji:String, handle:@escaping(String)->Void) {
+    init(frame frameRect: NSRect, emoji:String, handle:@escaping(String, String?)->Void) {
         super.init(frame: frameRect)
+        
+        
         let modifiers = emoji.emojiSkinToneModifiers
         var x:CGFloat = 2
         
-        let add:(String)->Void = { [weak self] emoji in
+        let add:(String, String, String?)->Void = { [weak self] emoji, notModified, modifier in
             let button: TitleButton = TitleButton()
             button.set(font: .normal(.header), for: .Normal)
             button.set(text: emoji, for: .Normal)
             button.setFrameSize(NSMakeSize(30, 30))
-            button.centerY(x: x)
-            button.set(background: theme.colors.background, for: .Normal)
+            button.centerY(x: x, addition: 4)
+            button.set(background: .clear, for: .Normal)
             button.set(background: theme.colors.grayForeground, for: .Highlight)
             button.layer?.cornerRadius = .cornerRadius
             self?.addSubview(button)
             x += button.frame.width
             
             button.set(handler: { _ in
-                handle(emoji)
+                handle(notModified, modifier)
             }, for: .Click)
         }
         
-        add(emoji)
+        add(emoji, emoji, nil)
         
         for modifier in modifiers {
-           add("\(emoji)\(modifier)")
+           add(emoji.emojiWithSkinModifier(modifier), emoji, modifier)
         }
         
     }
@@ -62,12 +64,12 @@ class EmojiToleranceController: NSViewController {
     
     private let emoji:String
     
-    init(_ emoji:String, postbox: Postbox, handle:@escaping(String)->Void) {
+    init(_ emoji:String, postbox: Postbox, handle:@escaping(String, String?)->Void) {
         self.emoji = emoji
         super.init(nibName: nil, bundle: nil)
         
        
-        self.view = EmojiTolerance(frame: NSMakeRect(0, 0, 30 * 6 + 4, 34), emoji: emoji, handle: handle)
+        self.view = EmojiTolerance(frame: NSMakeRect(0, 4, 30 * 6 + 4, 34), emoji: emoji, handle: handle)
     }
     
     required init?(coder: NSCoder) {

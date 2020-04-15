@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 private final class CachedAdminIdsContext {
     var hash:Int32 = 0
@@ -21,11 +22,7 @@ private func hashForIdsReverse(_ ids: [Int32]) -> Int32 {
     var acc: UInt32 = 0
     
     for id in ids {
-        let low = UInt32(UInt32(bitPattern: id) & (0xffffffff as UInt32))
-        let high = UInt32((UInt32(bitPattern: id) >> 32) & (0xffffffff as UInt32))
-        
-        acc = (acc &* 20261) &+ high
-        acc = (acc &* 20261) &+ low
+        acc = (acc &* 20261) &+ UInt32(bitPattern: id)
     }
     return Int32(bitPattern: acc & UInt32(0x7FFFFFFF))
 }
@@ -37,7 +34,7 @@ class CachedAdminIds: NSObject {
     private var idsContexts: [PeerId: CachedAdminIdsContext] = [:]
 
     private var disposableTokens:[PeerId: Disposable] = [:]
-    func ids(postbox: Postbox, network:Network, peerId:PeerId) -> Signal<[PeerId], Void> {
+    func ids(postbox: Postbox, network:Network, peerId:PeerId) -> Signal<[PeerId], NoError> {
         if peerId.namespace != Namespaces.Peer.CloudChannel {
             return .single([])
         }
@@ -64,7 +61,7 @@ class CachedAdminIds: NSObject {
                 
                 
                 let signal = channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> deliverOn(self.statusQueue) |> then( deferred {
-                    return channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> delay(60, queue: self.statusQueue)
+                    return channelAdminIds(postbox: postbox, network: network, peerId: peerId, hash: idsContexts.hash) |> delay(60 * 5, queue: self.statusQueue)
                 } |> restart)
                 
                 self.disposableTokens[peerId] = signal.start(next: { ids in

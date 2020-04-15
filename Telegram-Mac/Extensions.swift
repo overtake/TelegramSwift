@@ -8,10 +8,11 @@
 
 import Foundation
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
-
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
+import LocalAuthentication
 extension Message {
     
     var chatStableId:ChatHistoryEntryId {
@@ -19,17 +20,10 @@ extension Message {
     }
 }
 
-extension MessageHistoryHole {
-    
-    var chatStableId:ChatHistoryEntryId {
-        return ChatHistoryEntryId.hole(self)
-    }
-}
-
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, account:Account? = nil, color:NSColor = .link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxySettings)->Void)? = nil) -> Void {
-        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands))
+    func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
         
@@ -40,12 +34,12 @@ extension NSMutableAttributedString {
                 
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
-                    if let account = account {
-                        self.addAttribute(NSAttributedStringKey.link, value: inApp(for: sublink as NSString, account: account, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
+                    if let context = context {
+                        self.addAttribute(NSAttributedString.Key.link, value: inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
                     } else {
-                        self.addAttribute(NSAttributedStringKey.link, value: inAppLink.external(link: sublink, false), range: range)
+                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
                     }
-                    self.addAttribute(NSAttributedStringKey.foregroundColor, value: theme.colors.link, range: range)
+                    self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                     self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
                 }
                 
@@ -64,8 +58,8 @@ extension NSMutableAttributedString {
             }
             return false
         }
-        
-        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️")]
+
+        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️"), (from: "♥", to: "❤️"), (from: "⁉", to: "⁉️"), (from: "❣", to: "❣️"), (from: "⬅", to: "⬅️"), (from: "◻", to: "◻️"), (from: "➡", to: "➡️"), (from: "◼", to: "◼️")]
         for symbol in symbols {
             while changeSymbol(symbol.from, to: symbol.to) {
                 
@@ -95,72 +89,32 @@ public extension String {
         str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
         str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
         str = str.replacingOccurrences(of: "❤", with: "❤️")
+        str = str.replacingOccurrences(of: "♥", with: "❤️")
         str = str.replacingOccurrences(of: "☁", with: "☁️")
         str = str.replacingOccurrences(of: "✍", with: "✍️")
+        str = str.replacingOccurrences(of: "⁉", with: "⁉️")
+        str = str.replacingOccurrences(of: "❣", with: "❣️")
+        str = str.replacingOccurrences(of: "⬅", with: "⬅️")
+        str = str.replacingOccurrences(of: "◻", with: "◻️")
+        str = str.replacingOccurrences(of: "◼", with: "◼️")
+        str = str.replacingOccurrences(of: "➡", with: "➡️")
+        
+
         return str
     }
     
     static func stringForShortCallDurationSeconds(for seconds: Int32) -> String {
         if seconds < 60 {
-            return tr(.callShortSecondsCountable(Int(seconds)))
+            return tr(L10n.callShortSecondsCountable(Int(seconds)))
         }
         else {
             let number = Int(seconds) / 60
-            return tr(.callShortMinutesCountable(number))
+            return tr(L10n.callShortMinutesCountable(number))
         }
     }
     
     
-    var trimmed:String {
-        
-        var string:String = self
-        while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines), index.lowerBound == string.startIndex {
-            string = String(string[index.upperBound..<string.endIndex])
-        }
-        while !string.isEmpty, let index = string.rangeOfCharacter(from: NSCharacterSet.whitespacesAndNewlines, options: .literal, range: string.index(string.endIndex, offsetBy: -1) ..< string.endIndex) {
-            string = String(string[..<index.lowerBound])
-        }
-        
-        return string
-    }
     
-    var fullTrimmed: String {
-        var copy: String = self
-        var index: String.Index = copy.index(after: copy.startIndex)
-        
-        var newLineIndexEnd: String.Index? = nil
-        
-        while index != copy.endIndex {
-            
-            if let idx = newLineIndexEnd {
-                let substring = copy[index..<copy.index(after: idx)]
-                let symbols = substring.filter({$0 != "\n"})
-                let newLines = substring.filter({$0 == "\n"})
-                if symbols.isEmpty {
-                    newLineIndexEnd = copy.index(after: idx)
-                } else {
-                    if newLines.utf8.count > 2 {
-                        copy = String(copy[..<index] + "\n\n" + copy[idx..<copy.endIndex])
-                        newLineIndexEnd = nil
-                        index = copy.index(after: copy.startIndex)
-                    } else {
-                        index = copy.index(after: idx)
-                        newLineIndexEnd = nil
-                    }
-                }
-            } else {
-                let first = String(copy[index..<copy.index(after: index)])
-                
-                if first == "\n" {
-                    newLineIndexEnd = copy.index(after: index)
-                } else {
-                    index = copy.index(after: index)
-                }
-            }
-            
-        }
-        return copy
-    }
     
     var stringEmojiReplacements:String {
         var text:NSString = self.nsstring
@@ -1617,6 +1571,7 @@ private let emojiReplacements:[String:String] = {
     dictionary[":>"] = "😆"
     dictionary[":->"] = "😆"
     dictionary["XD"] = "😆"
+    dictionary["xD"] = "😂"
     dictionary["O:)"] = "😇"
     dictionary["3-)"] = "😌"
     dictionary[":P"] = "😛"
@@ -1678,7 +1633,7 @@ func ==(lhs: EmojiClue, rhs: EmojiClue) -> Bool {
     return lhs.emoji == rhs.emoji && lhs.label == rhs.label && lhs.replacement == rhs.replacement
 }
 
-func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], Void> {
+func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], NoError> {
     return recentUsedEmoji(postbox: postbox) |> deliverOn(resourcesQueue) |> map { recent in
         
         
@@ -1700,6 +1655,11 @@ func searchEmojiClue(query: String, postbox: Postbox) -> Signal<[EmojiClue], Voi
     }
 }
 
+func randomInt32() -> Int32 {
+    let uRandom = arc4random()
+    return Int32(bitPattern: uRandom)
+}
+
 
 func + <K,V>(left: Dictionary<K,V>, right: Dictionary<K,V>)
     -> Dictionary<K,V>
@@ -1714,11 +1674,66 @@ func + <K,V>(left: Dictionary<K,V>, right: Dictionary<K,V>)
     return map
 }
 
+extension Array {
+    func subarray(with range: NSRange) -> Array {
+        return Array(self[range.min ..< range.max])
+    }
+    mutating func move(at oldIndex: Int, to newIndex: Int) {
+        self.insert(self.remove(at: oldIndex), at: newIndex)
+    }
+}
+extension Array {
+    func chunks(_ chunkSize: Int) -> [[Element]] {
+        return stride(from: 0, to: self.count, by: chunkSize).map {
+            Array(self[$0..<Swift.min($0 + chunkSize, self.count)])
+        }
+    }
+    func toDictionary<Key: Hashable>(with selectKey: (Element) -> Key) -> [Key:Element] {
+        var dict = [Key:Element]()
+        for element in self {
+            dict[selectKey(element)] = element
+        }
+        return dict
+    }
+}
+
 func copyToClipboard(_ string:String) {
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
 }
 
+extension LAPolicy {
+    static var applicationPolicy: LAPolicy {
+        if #available(OSX 10.12.2, *) {
+            #if DEBUG
+                return .deviceOwnerAuthentication
+            #endif
+            return .deviceOwnerAuthenticationWithBiometrics
+        } else {
+            return .deviceOwnerAuthentication
+        }
+    }
+}
+
+extension LAContext {
+    var canUseBiometric: Bool {
+        if #available(OSX 10.12.2, *) {
+            #if DEBUG
+                return true
+            #endif
+            if canEvaluatePolicy( .deviceOwnerAuthenticationWithBiometrics, error: nil) {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            #if DEBUG
+                return true
+            #endif
+            return false
+        }
+    }
+}
 
 
 extension CVImageBuffer {
@@ -1807,4 +1822,505 @@ func synced(_ lock: Any, closure: ()->Void) {
     objc_sync_enter(lock)
     closure()
     objc_sync_exit(lock)
+}
+
+
+extension NSData {
+    
+    var hexString: String {
+        let buf = bytes.assumingMemoryBound(to: UInt8.self)
+        let charA = UInt8(UnicodeScalar("a").value)
+        let char0 = UInt8(UnicodeScalar("0").value)
+        
+        func itoh(_ value: UInt8) -> UInt8 {
+            return (value > 9) ? (charA + value - 10) : (char0 + value)
+        }
+        
+        let hexLen = length * 2
+        let ptr = UnsafeMutablePointer<UInt8>.allocate(capacity: hexLen)
+        
+        for i in 0 ..< length {
+            ptr[i*2] = itoh((buf[i] >> 4) & 0xF)
+            ptr[i*2+1] = itoh(buf[i] & 0xF)
+        }
+        
+        return String(bytesNoCopy: ptr, length: hexLen, encoding: .utf8, freeWhenDone: true)!
+    }
+}
+
+extension NSTextView {
+    
+    var selectedRangeRect: NSRect {
+
+        var rect: NSRect = firstRect(forCharacterRange: selectedRange(), actualRange: nil)
+        
+        
+
+        
+        if let window = window {
+            //rect = window.convertFromScreen(rect)
+            
+            var textViewBounds: NSRect = convert(bounds, to: nil)
+            textViewBounds = window.convertToScreen(textViewBounds)
+            
+            rect.origin.x -= textViewBounds.origin.x;
+            rect.origin.y -= (textViewBounds.origin.y );
+        }
+        
+//        if let superview = superview {
+//            rect = superview.convert(rect, from: nil)
+//        }
+      //  rect.origin.y += 10
+        return rect
+    }
+    
+
+    
+}
+
+extension CGContext {
+    func round(_ size:NSSize,_ cornerRadius:CGFloat = .cornerRadius, positionFlags: LayoutPositionFlags? = nil) {
+        let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
+        let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
+        
+        self.move(to: NSMakePoint(minx, midy))
+        
+        var topLeftRadius: CGFloat = cornerRadius
+        var bottomLeftRadius: CGFloat = cornerRadius
+        var topRightRadius: CGFloat = cornerRadius
+        var bottomRightRadius: CGFloat = cornerRadius
+        
+        
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+        }
+        
+        self.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: topLeftRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: topRightRadius)
+        self.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: bottomRightRadius)
+        self.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: bottomLeftRadius)
+        
+        self.closePath()
+        self.clip()
+        
+    }
+}
+
+
+
+
+
+
+extension NSControl.ImagePosition {
+    
+    var touchBarDefaultSize: CGFloat {
+        switch self {
+        case .imageOnly:
+            return 56.0
+        case .imageLeading:
+            return 175.0
+        default:
+            return 150.0
+        }
+    }
+    
+}
+
+extension NSButton {
+    
+    func addTouchBarButtonWidthConstraint() {
+        switch self.imagePosition {
+        case .imageLeading:
+            addWidthConstraint(relation: .lessThanOrEqual,
+                               size: self.imagePosition.touchBarDefaultSize)
+        default:
+            addWidthConstraint(relation: .equal,
+                               size: self.imagePosition.touchBarDefaultSize)
+        }
+    }
+    
+}
+
+
+@available(OSX 10.12.2, *)
+extension NSImage {
+    
+    // MARK: Project drawables
+    
+    
+    static let defaultBg    = NSImage(named: "DefaultBackground")!
+    
+    static let shuffling    = #imageLiteral(resourceName: "Icon_DFRShuffle").forUI()
+    static let repeating    = #imageLiteral(resourceName: "Icon_DFRRepeat").forUI()
+    
+    static let previous     = NSImage(named: NSImage.touchBarRewindTemplateName)!
+    static let next         = NSImage(named: NSImage.touchBarFastForwardTemplateName)!
+    static let play         = NSImage(named: NSImage.touchBarPlayTemplateName)!
+    static let pause        = NSImage(named: NSImage.touchBarPauseTemplateName)!
+    
+    static let volumeLow    = NSImage(named: NSImage.touchBarAudioOutputVolumeLowTemplateName)
+    static let volumeMedium = NSImage(named: NSImage.touchBarAudioOutputVolumeMediumTemplateName)
+    static let volumeHigh   = NSImage(named: NSImage.touchBarAudioOutputVolumeHighTemplateName)
+    
+    static let playhead     = NSImage(named: NSImage.touchBarPlayheadTemplateName)
+    static let playbar      = #imageLiteral(resourceName: "Icon_Playbar")
+    
+}
+
+extension NSImage {
+    
+    // MARK: Extended functions
+    
+    /**
+     Returns the NSImage with 'isTemplate' enabled
+     This lets the UI draw the appropriate color
+     according to background (e.g. dark in TouchBar)
+     */
+    func forUI() -> NSImage {
+        self.isTemplate = true
+        
+        return self
+    }
+    
+    func edit(size: NSSize? = nil,
+              editCommand: @escaping (NSImage, NSSize) -> ()) -> NSImage {
+        let temp = NSImage(size: size ?? self.size)
+        
+        guard temp.size.width > 0, temp.size.height > 0 else { return self }
+        
+        temp.lockFocus()
+        editCommand(self, temp.size)
+        temp.unlockFocus()
+        
+        return temp
+    }
+    
+    /**
+     Resizes NSImage
+     - parameter newSize: the requested image size
+     - parameter squareCrop: if true
+     - returns: self scaled to requested size
+     */
+    func resized(to newSize: CGSize, squareCrop: Bool = true) -> NSImage {
+        return self.edit(size: newSize) {
+            image, size in
+            
+            var fromRect = NSZeroRect
+            let inRect   = NSMakeRect(0, 0, size.width, size.height)
+            
+            if squareCrop, image.size.width != image.size.height {
+                let minSize = min(image.size.width, image.size.height)
+                let maxSize = max(image.size.width, image.size.height)
+                let start   = ( maxSize - minSize ) / 2
+                
+                fromRect = NSMakeRect(
+                    image.size.width   != minSize ? start : 0,
+                    image.size.height  != minSize ? start : 0,
+                    minSize,
+                    minSize
+                )
+            }
+            
+            image.draw(in:        inRect,
+                       from:      fromRect,
+                       operation: .sourceOver,
+                       fraction:  1.0)
+        }
+    }
+    
+    /**
+     Changes NSImage alpha
+     - parameter alpha: the requested alpha value
+     - returns: self with requested alpha value
+     */
+    func withAlpha(_ alpha: CGFloat) -> NSImage {
+        return self.edit {
+            image, size in
+            image.draw(in: NSMakeRect(0, 0, size.width, size.height),
+                       from: NSZeroRect,
+                       operation: .sourceOver,
+                       fraction: alpha)
+        }
+    }
+    
+}
+
+
+extension Window {
+    var titleView: NSView? {
+        if let windowView = contentView?.superview {
+            return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
+        }
+        return nil
+    }
+}
+
+func quadraticEaseOut <T: FloatingPoint> (_ x: T) -> T {
+    return -x * (x - 2)
+}
+
+extension Date {
+    var startOfDay: Date {
+        var calendar = NSCalendar.current
+        return calendar.startOfDay(for: self)
+    }
+    
+    var startOfDayUTC: Date {
+        var calendar = NSCalendar.current
+        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+        return calendar.startOfDay(for: self)
+    }
+    
+    var endOfDay: Date {
+        var components = DateComponents()
+        components.day = 1
+        components.second = -1
+        var calendar = NSCalendar.current
+        return calendar.date(byAdding: components, to: startOfDay)!
+    }
+    
+    var startOfMonth: Date {
+        let components = Calendar.current.dateComponents([.year, .month], from: startOfDay)
+        return Calendar.current.date(from: components)!
+    }
+    
+    var endOfMonth: Date {
+        var components = DateComponents()
+        components.month = 1
+        components.second = -1
+        return Calendar.current.date(byAdding: components, to: startOfMonth)!
+    }
+}
+
+
+
+
+public extension NSAttributedString {
+
+    func applyRtf() -> (NSAttributedString, [NSTextAttachment]) {
+        let string = self.mutableCopy() as! NSMutableAttributedString
+        
+        let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
+        
+        
+        var index: Int = 1
+        while true {
+            let range = modified.string.nsstring.range(of: "\t0")
+            if range.location != NSNotFound {
+                modified.replaceCharacters(in: range, with: "\t\(index)")
+                index += 1
+            } else {
+                break
+            }
+        }
+        
+        var attachments:[NSTextAttachment] = []
+        
+        string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
+            if let url = attr[.link] {
+                var string: String?
+                if let url = url as? NSURL, let link = url.absoluteString {
+                    string = link
+                } else if let link = url as? String {
+                    string = link
+                }
+                if let string = string {
+                    let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+                    if let tag = tag {
+                        modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    }
+                }
+            } else if let font = attr[.font] as? NSFont {
+                let newFont: NSFont
+                if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {
+                    newFont = .boldItalic(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(.bold) {
+                    newFont = .bold(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(.italic) {
+                    newFont = .italic(theme.fontSize)
+                } else if font.fontDescriptor.symbolicTraits.contains(NSFontDescriptor.SymbolicTraits.monoSpace) {
+                    newFont = .code(theme.fontSize)
+                } else {
+                    newFont = .normal(theme.fontSize)
+                }
+                modified.addAttribute(.font, value: newFont, range: range)
+            }
+            for key in attr.keys {
+                switch key {
+                case .font, .link:
+                    break
+                case .attachment:
+                    modified.removeAttribute(key, range: range)
+                    attachments.append(attr[key] as! NSTextAttachment)
+                default:
+                    modified.removeAttribute(key, range: range)
+                }
+            }
+        })
+        
+        return (modified.trimmed, attachments)
+    }
+    
+    func appendAttributedString(_ string: NSAttributedString, selectedRange: NSRange = NSMakeRange(0, 0)) -> (NSAttributedString, NSRange) {
+        let inputText = self.mutableCopy() as! NSMutableAttributedString
+        
+        
+        var range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
+        if selectedRange.upperBound - selectedRange.lowerBound > 0 {
+            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: string)
+        } else {
+            inputText.insert(string, at: selectedRange.lowerBound)
+        }
+        return (inputText, range)
+    }
+}
+
+
+extension Date {
+    
+    static var kernelBootTimeSecs:Int32 {
+        var mib = [ CTL_KERN, KERN_BOOTTIME ]
+        var bootTime = timeval()
+        var bootTimeSize = MemoryLayout<timeval>.size
+        
+        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
+            fatalError("Could not get boot time, errno: \(errno)")
+        }
+        
+        return Int32(bootTime.tv_sec)
+    }
+}
+
+
+
+
+
+private let colorKeyRegex = try? NSRegularExpression(pattern: "\"k\":\\[[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\,[\\d\\.]+\\]")
+
+func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -> Data {
+    if let fitzModifier = fitzModifier, var string = String(data: data, encoding: .utf8) {
+        let color1: NSColor
+        let color2: NSColor
+        let color3: NSColor
+        let color4: NSColor
+        
+        var colors: [NSColor] = [0xf77e41, 0xffb139, 0xffd140, 0xffdf79].map { NSColor(rgb: $0) }
+        let replacementColors: [NSColor]
+        switch fitzModifier {
+        case .type12:
+            replacementColors = [0xca907a, 0xedc5a5, 0xf7e3c3, 0xfbefd6].map { NSColor(rgb: $0) }
+        case .type3:
+            replacementColors = [0xaa7c60, 0xc8a987, 0xddc89f, 0xe6d6b2].map { NSColor(rgb: $0) }
+        case .type4:
+            replacementColors = [0x8c6148, 0xad8562, 0xc49e76, 0xd4b188].map { NSColor(rgb: $0) }
+        case .type5:
+            replacementColors = [0x6e3c2c, 0x925a34, 0xa16e46, 0xac7a52].map { NSColor(rgb: $0) }
+        case .type6:
+            replacementColors = [0x291c12, 0x472a22, 0x573b30, 0x68493c].map { NSColor(rgb: $0) }
+        }
+        
+        func colorToString(_ color: NSColor) -> String {
+            var r: CGFloat = 0.0
+            var g: CGFloat = 0.0
+            var b: CGFloat = 0.0
+            color.getRed(&r, green: &g, blue: &b, alpha: nil)
+            return "\"k\":[\(r),\(g),\(b),1]"
+        }
+        
+        func match(_ a: Double, _ b: Double, eps: Double) -> Bool {
+            return abs(a - b) < eps
+        }
+        
+        var replacements: [(NSTextCheckingResult, String)] = []
+        
+        if let colorKeyRegex = colorKeyRegex {
+            let results = colorKeyRegex.matches(in: string, range: NSRange(string.startIndex..., in: string))
+            for result in results.reversed()  {
+                if let range = Range(result.range, in: string) {
+                    let substring = String(string[range])
+                    let color = substring[substring.index(string.startIndex, offsetBy: "\"k\":[".count) ..< substring.index(before: substring.endIndex)]
+                    let components = color.split(separator: ",")
+                    if components.count == 4, let r = Double(components[0]), let g = Double(components[1]), let b = Double(components[2]), let a = Double(components[3]) {
+                        if match(a, 1.0, eps: 0.01) {
+                            for i in 0 ..< colors.count {
+                                let color = colors[i]
+                                var cr: CGFloat = 0.0
+                                var cg: CGFloat = 0.0
+                                var cb: CGFloat = 0.0
+                                color.getRed(&cr, green: &cg, blue: &cb, alpha: nil)
+                                if match(r, Double(cr), eps: 0.01) && match(g, Double(cg), eps: 0.01) && match(b, Double(cb), eps: 0.01) {
+                                    replacements.append((result, colorToString(replacementColors[i])))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        for (result, text) in replacements {
+            if let range = Range(result.range, in: string) {
+                string = string.replacingCharacters(in: range, with: text)
+            }
+        }
+        
+        return string.data(using: .utf8) ?? data
+    } else {
+        return data
+    }
+}
+
+
+extension Double {
+    
+    func toString(decimal: Int = 9) -> String {
+        let value = decimal < 0 ? 0 : decimal
+        var string = String(format: "%.\(value)f", self)
+        
+        while string.last == "0" || string.last == "." {
+            if string.last == "." { string = String(string.dropLast()); break}
+            string = String(string.dropLast())
+        }
+        return string
+    }
+}
+
+
+public extension String {
+    func rightJustified(width: Int, pad: String = " ", truncate: Bool = false) -> String {
+        guard width > count else {
+            return truncate ? String(suffix(width)) : self
+        }
+        return String(repeating: pad, count: width - count) + self
+    }
+    
+    func leftJustified(width: Int, pad: String = " ", truncate: Bool = false) -> String {
+        guard width > count else {
+            return truncate ? String(prefix(width)) : self
+        }
+        return self + String(repeating: pad, count: width - count)
+    }
+}
+
+
+
+extension CGImage {
+    var data: Data? {
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+            let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(destination, self, nil)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return mutableData as Data
+    }
 }

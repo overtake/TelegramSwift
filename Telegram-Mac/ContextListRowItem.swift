@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 
 
@@ -19,57 +20,54 @@ class ContextListRowItem: TableRowItem {
     let result:ChatContextResult
     let results:ChatContextResultCollection
     private let _index:Int64
-    let account:Account
-    let iconSignal:Signal<(TransformImageArguments)->DrawingContext?,Void>
+    let context: AccountContext
+    let iconSignal:Signal<ImageDataTransformation, NoError>
     let arguments:TransformImageArguments?
     var textLayout:(TextNodeLayout, TextNode)?
     let capImage:CGImage?
     var fileResource:TelegramMediaResource?
     let chatInteraction:ChatInteraction
     var audioWrapper:APSingleWrapper?
+    private(set) var file: TelegramMediaFile?
     private var vClass:AnyClass = ContextListImageView.self
     private let text:NSAttributedString
     override var stableId: AnyHashable {
         return Int64(_index)
     }
     
-    init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ account:Account, _ chatInteraction:ChatInteraction) {
+    init(_ initialSize: NSSize, _ results:ChatContextResultCollection, _ result:ChatContextResult, _ index:Int64, _ context: AccountContext, _ chatInteraction:ChatInteraction) {
         self.result = result
         self.results = results
         self.chatInteraction = chatInteraction
         self._index = index
-        self.account = account
-        var imageResource: TelegramMediaResource?
+        self.context = context
+        var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
         switch result {
-        case let .externalReference(_, _, title, description, url, thumbnailUrl, contentUrl, contentType, _, _, _):
-            if let thumbnailUrl = thumbnailUrl {
-                imageResource = HttpReferenceMediaResource(url: thumbnailUrl, size: nil)
+        case let .externalReference(_, _, _, title, description, url, content, thumbnail, _):
+            if let thumbnail = thumbnail {
+                representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource)
             }
-            if let contentUrl = contentUrl {
-                fileResource = HttpReferenceMediaResource(url: contentUrl, size: nil)
-                if let contentType = contentType {
-                    if contentType.hasPrefix("audio") {
-                        vClass = ContextListAudioView.self
-                        audioWrapper = APSingleWrapper(resource: fileResource!, name: title, performer: description, id:result.maybeId)
-                    } else if contentType == "video/mp4" {
-                        vClass = ContextListGIFView.self
-                    }
+            if let content = content {
+                if content.mimeType.hasPrefix("audio") {
+                    vClass = ContextListAudioView.self
+                    audioWrapper = APSingleWrapper(resource: content.resource, name: title, performer: description, id: result.maybeId)
+                } else if content.mimeType == "video/mp4" {
+                    vClass = ContextListGIFView.self
                 }
             }
             var selectedUrl: String?
             if let url = url {
                 selectedUrl = url
-            } else if let contentUrl = contentUrl {
-                selectedUrl = contentUrl
             }
             if let selectedUrl = selectedUrl, let parsedUrl = URL(string: selectedUrl) {
                 if let host = parsedUrl.host, !host.isEmpty {
-                    iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(.custom(25)))
+                    iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(25.0))
                 }
             }
-        case let .internalReference(_, _, title, description, image, file, _):
+        case let .internalReference(_, _, _, title, description, image, file, _):
             if let file = file {
+                self.file = file
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
                     vClass = ContextListAudioView.self
@@ -79,23 +77,22 @@ class ContextListRowItem: TableRowItem {
                 }
             }
             if let image = image {
-                imageResource = smallestImageRepresentation(image.representations)?.resource
+                representation = smallestImageRepresentation(image.representations)
             } else if let file = file {
-                imageResource = smallestImageRepresentation(file.previewRepresentations)?.resource
+                representation = smallestImageRepresentation(file.previewRepresentations)
             }
         }
         
         
         
-        if let imageResource = imageResource {
-            let iconRepresentation = TelegramMediaImageRepresentation(dimensions: CGSize(width: 55.0, height: 55.0), resource: imageResource)
-            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconRepresentation])
-            iconSignal = chatWebpageSnippetPhoto(account: account, photo: tmpImage, scale: 2.0, small:true)
+        if let representation = representation {
+            let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            iconSignal = chatWebpageSnippetPhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: tmpImage), scale: 2.0, small:true)
             
-            let iconSize = iconRepresentation.dimensions.aspectFilled(CGSize(width: 50, height: 50))
+            let iconSize = representation.dimensions.size.aspectFilled(CGSize(width: 50, height: 50))
             
             let imageCorners = ImageCorners(topLeft: .Corner(2.0), topRight: .Corner(2.0), bottomLeft: .Corner(2.0), bottomRight: .Corner(2.0))
-            arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
+            arguments = TransformImageArguments(corners: imageCorners, imageSize: representation.dimensions.size, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
             iconText = nil
         } else {
             arguments = nil
@@ -104,7 +101,7 @@ class ContextListRowItem: TableRowItem {
             if iconText == nil {
                 if let title = result.title, !title.isEmpty {
                     let titleText = title.substring(to: title.index(after: title.startIndex)).uppercased()
-                    iconText = NSAttributedString.initialize(string: titleText, color: .white, font: .medium(.custom(25)))
+                    iconText = .initialize(string: titleText, color: .white, font: .medium(25.0))
                 }
             }
         }
@@ -131,12 +128,13 @@ class ContextListRowItem: TableRowItem {
 
         self.text = attr.copy() as! NSAttributedString
         super.init(initialSize)
-        prepare(isSelected)
+        _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         prepare(isSelected)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func prepare(_ selected: Bool) {
@@ -157,7 +155,7 @@ class ContextListRowItem: TableRowItem {
 class ContextListRowView : TableRowView {
 
     override var backdorColor: NSColor {
-        return item?.isSelected ?? false ? theme.colors.blueSelect : theme.colors.background
+        return item?.isSelected ?? false ? theme.colors.accentSelect : theme.colors.background
     }
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -171,10 +169,16 @@ class ContextListRowView : TableRowView {
             
             if let layout = item.textLayout {
                 let f = focus(layout.0.size)
-                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
-            needsLayout = true
+            
         }
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        needsDisplay = true
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -183,6 +187,7 @@ class ContextListRowView : TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
 }
 
@@ -190,12 +195,13 @@ class ContextListImageView : TableRowView {
     let image:TransformImageView = TransformImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         image.setFrameSize(NSMakeSize(50, 50))
         addSubview(image)
     }
     
     override var backdorColor: NSColor {
-        return item?.isSelected ?? false ? theme.colors.blueSelect : theme.colors.background
+        return item?.isSelected ?? false ? theme.colors.accentSelect : theme.colors.background
     }
     
     override func layout() {
@@ -218,7 +224,7 @@ class ContextListImageView : TableRowView {
             
             if let layout = item.textLayout {
                 let f = focus(layout.0.size)
-                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                layout.1.draw(NSMakeRect(item.textInset.left, f.minY, layout.0.size.width, layout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             needsLayout = true
         }
@@ -232,9 +238,10 @@ class ContextListImageView : TableRowView {
             if let capImage = item.capImage {
                 self.image.layer?.contents = capImage
             } else {
-                image.setSignal(account: item.account, signal: item.iconSignal)
+                image.setSignal( item.iconSignal)
             }
         }
+        needsDisplay = true
     }
 
     required init?(coder: NSCoder) {
@@ -264,10 +271,10 @@ class ContextListGIFView : ContextListRowView {
     
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
-        super.set(item: item)
+        super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
-            player.update(with: resource, size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), account: item.account, table: item.table, iconSignal: item.iconSignal)
+            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), file: item.file, context: item.context, table: item.table, iconSignal: item.iconSignal)
             player.needsLayout = true
         }
     }
@@ -286,6 +293,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         progressView.fetchControls = FetchControls(fetch: { [weak self] in
             self?.checkOperation()
         })
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(progressView)
     }
     
@@ -300,7 +308,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                     if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: wrapper) {
                         controller.playOrPause()
                     } else {
-                        let controller = APSingleResourceController(account: item.account, wrapper: wrapper)
+                        let controller = APSingleResourceController(account: item.context.account, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
                         item.chatInteraction.inlineAudioPlayer(controller)
                         controller.start()
@@ -337,12 +345,12 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     func checkState() {
         if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: wrapper), case .playing = song.state {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
             } else {
-                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+                progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
             }
         } else {
-            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.blueFill, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
+            progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPlay, iconInset:NSEdgeInsets(left:1))
         }
     }
     
@@ -353,11 +361,11 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     
     override func set(item: TableRowItem, animated: Bool) {
         let updated = self.item != item
-        super.set(item: item)
+        super.set(item: item, animated: animated)
         
         if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
             
-            let updatedStatusSignal = item.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
+            let updatedStatusSignal = item.context.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
 
             statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 if let strongSelf = self {

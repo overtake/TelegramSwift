@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 extension CATiledLayer {
     func fadeDuration() -> CFTimeInterval {
@@ -16,7 +16,7 @@ extension CATiledLayer {
     }
 }
 
-class ETiledLayer : CATiledLayer {
+class ETiledLayer : CALayer {
     
     
     fileprivate var layoutNextRequest: Bool = true
@@ -29,22 +29,23 @@ class ETiledLayer : CATiledLayer {
 //    }
 }
 
-private class EmojiSegmentView: NSView, CALayerDelegate {
+private class EmojiSegmentView: View {
     
     fileprivate override var isFlipped: Bool {
         return true
     }
     
-    private let item:Atomic<EBlockItem?> = Atomic(value: nil)
+    private var item: EBlockItem?
     
-    fileprivate func draw(_ layer: CALayer, in ctx: CGContext) {
+    fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        if let item = item.modify({$0}) {
+        if let item = self.item {
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             var ts:NSPoint = NSMakePoint(17, 29)
             
             for segment in item.lineAttr {
                 for line in segment {
+
                     ctx.textPosition = ts
                     CTLineDraw(CTLineCreateWithAttributedString(line), ctx)
                     ts.x+=xAdd
@@ -57,17 +58,9 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     }
     
     
-    var tiled:ETiledLayer = ETiledLayer()
     
-    required override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        wantsLayer = true
-        self.layer?.addSublayer(tiled)
-        tiled.frame = self.bounds
-        tiled.levelsOfDetailBias = Int(backingScaleFactor)
-        self.tiled.delegate = self
-        
-        //tiled.shouldRasterize
     }
     
     required init?(coder: NSCoder) {
@@ -76,31 +69,11 @@ private class EmojiSegmentView: NSView, CALayerDelegate {
     
     override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
-        tiled.levelsOfDetailBias = Int(backingScaleFactor)
     }
     
-    override var needsDisplay: Bool {
-        get {
-            return super.needsDisplay
-        }
-        set {
-            super.needsDisplay = true
-        }
-    }
-    
-    override func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        tiled.frame = bounds
-        tiled.tileSize = bounds.size
-    }
     
     func update(with item:EBlockItem?) -> Void {
-        _ = self.item.swap(item)
-        tiled.layoutNextRequest = true
+        self.item = item
         background = theme.colors.background
         self.needsDisplay = true
     }
@@ -112,10 +85,8 @@ private let yAdd:CGFloat = 34
 
 class EBlockRowView: TableRowView {
     
-   // var tiled:CATiledLayer = CATiledLayer()
-    
     var button:Control = Control()
-    private var segmentView:EmojiSegmentView = EmojiSegmentView()
+    private var segmentView:EmojiSegmentView = EmojiSegmentView(frame: NSZeroRect)
     var mouseDown:Bool = false
     private var popover: NSPopover?
     
@@ -150,7 +121,7 @@ class EBlockRowView: TableRowView {
     
     func update(with location:NSPoint) -> Bool {
         
-        if self.mouse(location, in: self.visibleRect) {
+        if self.isMousePoint(location, in: self.visibleRect) {
             if let item = item as? EBlockItem {
                 
                 var point:NSPoint = location
@@ -187,7 +158,7 @@ class EBlockRowView: TableRowView {
                 
                 if point != button.frame.origin {
                     if self.button.isSelected {
-                        button.layer?.animatePosition(from: button.frame.origin, to: point, duration: 0.1, timingFunction: kCAMediaTimingFunctionLinear)
+                        button.layer?.animatePosition(from: button.frame.origin, to: point, duration: 0.1, timingFunction: CAMediaTimingFunctionName.linear)
                     }
                     button.frame = NSMakeRect(point.x, point.y, button.frame.width, button.frame.height)
                     
@@ -210,9 +181,9 @@ class EBlockRowView: TableRowView {
         if selectedEmoji.emojiUnmodified != selectedEmoji, let item = item as? EBlockItem {
             popover?.close()
             popover = NSPopover()
-            popover?.contentViewController = EmojiToleranceController(selectedEmoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak self, weak item] emoji in
+            popover?.contentViewController = EmojiToleranceController(selectedEmoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak self, weak item] emoji, modifier in
                 if let item = item {
-                    _ = modifySkinEmoji(emoji, postbox: item.account.postbox).start()
+                    _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
                 }
                 self?.popover?.close()
                 self?.popover = nil
@@ -226,17 +197,16 @@ class EBlockRowView: TableRowView {
         
         self.button.isSelected = self.update(with: segmentView.convert(event.locationInWindow, from: nil))
         let emoji = selectedEmoji
-        
         let lhs = emoji.emojiUnmodified.glyphCount
-        let rhs = ( emoji.emojiUnmodified + "🏻").glyphCount
-        longHandle.set((Signal<Void, Void>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
+        let rhs = emoji.emojiUnmodified.emojiWithSkinModifier("🏻").glyphCount
+        longHandle.set((Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
             if let strongSelf = self, lhs == rhs, let item = self?.item as? EBlockItem {
                 strongSelf.useEmoji = false
                 strongSelf.popover?.close()
                 strongSelf.popover = NSPopover()
-                strongSelf.popover?.contentViewController = EmojiToleranceController(emoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak strongSelf, weak item] emoji in
+                strongSelf.popover?.contentViewController = EmojiToleranceController(emoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak strongSelf, weak item] emoji, modifier in
                     if let item = item {
-                        _ = modifySkinEmoji(emoji, postbox: item.account.postbox).start()
+                        _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
                     }
                     strongSelf?.popover?.close()
                     strongSelf?.popover = nil
@@ -296,6 +266,7 @@ class EBlockRowView: TableRowView {
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+        segmentView.frame = bounds
       //  tiled.frame = bounds
       //  tiled.tileSize = bounds.size
     }

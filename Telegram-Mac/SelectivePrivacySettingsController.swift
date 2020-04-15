@@ -8,21 +8,25 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 enum SelectivePrivacySettingsKind {
     case presence
     case groupInvitations
     case voiceCalls
+    case profilePhoto
+    case forwards
+    case phoneNumber
 }
 
 private enum SelectivePrivacySettingType {
     case everybody
     case contacts
     case nobody
-    
+
     init(_ setting: SelectivePrivacySettings) {
         switch setting {
         case .disableEveryone:
@@ -35,18 +39,27 @@ private enum SelectivePrivacySettingType {
     }
 }
 
+enum SelectivePrivacySettingsPeerTarget {
+    case main
+    case callP2P
+}
+
+
 private final class SelectivePrivacySettingsControllerArguments {
-    let account: Account
-    
+    let context: AccountContext
+
     let updateType: (SelectivePrivacySettingType) -> Void
-    let openEnableFor: () -> Void
-    let openDisableFor: () -> Void
-    
-    init(account: Account, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping () -> Void, openDisableFor: @escaping () -> Void) {
-        self.account = account
+    let openEnableFor: (SelectivePrivacySettingsPeerTarget) -> Void
+    let openDisableFor: (SelectivePrivacySettingsPeerTarget) -> Void
+    let p2pMode: (SelectivePrivacySettingType) -> Void
+    let updatePhoneDiscovery:(Bool)->Void
+    init(context: AccountContext, updateType: @escaping (SelectivePrivacySettingType) -> Void, openEnableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, openDisableFor: @escaping (SelectivePrivacySettingsPeerTarget) -> Void, p2pMode: @escaping(SelectivePrivacySettingType) -> Void, updatePhoneDiscovery:@escaping(Bool)->Void) {
+        self.context = context
         self.updateType = updateType
         self.openEnableFor = openEnableFor
         self.openDisableFor = openDisableFor
+        self.updatePhoneDiscovery = updatePhoneDiscovery
+        self.p2pMode = p2pMode
     }
 }
 
@@ -57,327 +70,390 @@ private enum SelectivePrivacySettingsSection: Int32 {
 
 private func stringForUserCount(_ count: Int) -> String {
     if count == 0 {
-        return tr(.privacySettingsControllerAddUsers)
+        return tr(L10n.privacySettingsControllerAddUsers)
     } else {
-        return tr(.privacySettingsControllerUserCountCountable(count))
+        return tr(L10n.privacySettingsControllerUserCountCountable(count))
     }
 }
 
 private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
-    case settingHeader(Int32, String)
-    case everybody(Int32, Bool)
-    case contacts(Int32, Bool)
-    case nobody(Int32, Bool)
-    case settingInfo(Int32, String)
-    case disableFor(Int32, String, Int)
-    case enableFor(Int32, String, Int)
-    case peersInfo(Int32)
+    case settingHeader(Int32, String, GeneralViewType)
+    case everybody(Int32, Bool, GeneralViewType)
+    case contacts(Int32, Bool, GeneralViewType)
+    case nobody(Int32, Bool, GeneralViewType)
+    case p2pAlways(Int32, Bool, GeneralViewType)
+    case p2pContacts(Int32, Bool, GeneralViewType)
+    case p2pNever(Int32, Bool, GeneralViewType)
+    case p2pHeader(Int32, String, GeneralViewType)
+    case p2pDesc(Int32, String, GeneralViewType)
+    case settingInfo(Int32, String, GeneralViewType)
+    case disableFor(Int32, String, Int, GeneralViewType)
+    case enableFor(Int32, String, Int, GeneralViewType)
+    case p2pDisableFor(Int32, String, Int, GeneralViewType)
+    case p2pEnableFor(Int32, String, Int, GeneralViewType)
+    case p2pPeersInfo(Int32, GeneralViewType)
+    case phoneDiscoveryHeader(Int32, String, GeneralViewType)
+    case phoneDiscoveryEverybody(Int32, String, Bool, GeneralViewType)
+    case phoneDiscoveryMyContacts(Int32, String, Bool, GeneralViewType)
+    case phoneDiscoveryInfo(Int32, String, GeneralViewType)
+    case peersInfo(Int32, GeneralViewType)
     case section(Int32)
-    
+
     var stableId: Int32 {
         switch self {
-        case .settingHeader:
-            return 0
-        case .everybody:
-            return 1
-        case .contacts:
-            return 2
-        case .nobody:
-            return 3
-        case .settingInfo:
-            return 4
-        case .disableFor:
-            return 5
-        case .enableFor:
-            return 6
-        case .peersInfo:
-            return 7
-        case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+        case .settingHeader: return 0
+        case .everybody: return 1
+        case .contacts: return 2
+        case .nobody: return 3
+        case .settingInfo: return 4
+        case .disableFor: return 5
+        case .enableFor: return 6
+        case .peersInfo: return 7
+        case .p2pHeader: return 8
+        case .p2pAlways: return 9
+        case .p2pContacts: return 10
+        case .p2pNever: return 11
+        case .p2pDesc: return 12
+        case .p2pDisableFor: return 13
+        case .p2pEnableFor: return 14
+        case .p2pPeersInfo: return 15
+        case .phoneDiscoveryHeader: return 16
+        case .phoneDiscoveryEverybody: return 17
+        case .phoneDiscoveryMyContacts: return 18
+        case .phoneDiscoveryInfo: return 19
+
+        case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
-    
+
     var index:Int32 {
         switch self {
-        case .settingHeader(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .everybody(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .contacts(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .nobody(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .settingInfo(let sectionId, _):
-            return (sectionId * 1000) + stableId
-        case .disableFor(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .enableFor(let sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case .peersInfo(let sectionId):
-            return (sectionId * 1000) + stableId
-        case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+        case .settingHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .everybody(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .contacts(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .nobody(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .settingInfo(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .disableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .enableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .peersInfo(let sectionId, _):  return (sectionId * 1000) + stableId
+        case .p2pAlways(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pContacts(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pNever(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pDesc(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .p2pDisableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .p2pEnableFor(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .p2pPeersInfo(let sectionId, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryHeader(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryEverybody(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryMyContacts(let sectionId, _, _, _): return (sectionId * 1000) + stableId
+        case .phoneDiscoveryInfo(let sectionId, _, _): return (sectionId * 1000) + stableId
+        case .section(let sectionId): return (sectionId + 1) * 1000 - sectionId
         }
     }
-    
-    static func ==(lhs: SelectivePrivacySettingsEntry, rhs: SelectivePrivacySettingsEntry) -> Bool {
-        switch lhs {
-        case let .settingHeader(sectionId, text):
-            if case .settingHeader(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .everybody(sectionId, value):
-            if case .everybody(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .contacts(sectionId, value):
-            if case .contacts(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .nobody(sectionId, value):
-            if case .nobody(sectionId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .settingInfo(sectionId, text):
-            if case .settingInfo(sectionId, text) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .disableFor(sectionId, title, count):
-            if case .disableFor(sectionId, title, count) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .enableFor(sectionId, title, count):
-            if case .enableFor(sectionId, title, count) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .peersInfo(let sectionId):
-            if case .peersInfo(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .section(let sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-    
+
+
     static func <(lhs: SelectivePrivacySettingsEntry, rhs: SelectivePrivacySettingsEntry) -> Bool {
         return lhs.index < rhs.index
     }
-    
+
     func item(_ arguments: SelectivePrivacySettingsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .settingHeader(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0, top:2, bottom:6))
-        case let .everybody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsControllerEverbody), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: { 
+        case let .settingHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .everybody(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)
             })
 
-        case let .contacts(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsControllerMyContacts), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: {
+        case let .contacts(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerMyContacts, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.contacts)
             })
-        case let .nobody(_, value):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.privacySettingsControllerNobody), type: .selectable(stateback: { () -> Bool in
-                return value
-            }), action: {
+        case let .nobody(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerNobody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.nobody)
             })
-        case let .settingInfo(_, text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case let .disableFor(_, title, count):
-            
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stateback: { () -> String in
-                return stringForUserCount(count)
-            }), action: {
-                arguments.openDisableFor()
+        case let .p2pHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .p2pAlways(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pAlways, type: .selectable(value), viewType: viewType, action: {
+                arguments.p2pMode(.everybody)
             })
-
-        case let .enableFor(_, title, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stateback: { () -> String in
-                return stringForUserCount(count)
-            }), action: {
-                arguments.openEnableFor()
+        case let .p2pContacts(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pContacts, type: .selectable(value), viewType: viewType, action: {
+                arguments.p2pMode(.contacts)
             })
-        case .peersInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.privacySettingsControllerPeerInfo))
+        case let .p2pNever(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pNever, type: .selectable(value), viewType: viewType, action: {
+                arguments.p2pMode(.nobody)
+            })
+        case let .p2pDesc(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .settingInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .disableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+                arguments.openDisableFor(.main)
+            })
+        case let .enableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+                arguments.openEnableFor(.main)
+            })
+        case let .peersInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+        case let .p2pDisableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+                arguments.openDisableFor(.callP2P)
+            })
+        case let .p2pEnableFor(_, title, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
+                arguments.openEnableFor(.callP2P)
+            })
+        case let .p2pPeersInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+        case let .phoneDiscoveryHeader(_, title, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: title, viewType: viewType)
+        case let .phoneDiscoveryEverybody(_, title, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), viewType: viewType, action: {
+                arguments.updatePhoneDiscovery(true)
+            })
+        case let .phoneDiscoveryMyContacts(_, title, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .selectable(selected), viewType: viewType, action: {
+                arguments.updatePhoneDiscovery(false)
+            })
+        case let .phoneDiscoveryInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
     }
 }
 
 private struct SelectivePrivacySettingsControllerState: Equatable {
     let setting: SelectivePrivacySettingType
-    let enableFor: Set<PeerId>
-    let disableFor: Set<PeerId>
-    
+    let enableFor: [PeerId: SelectivePrivacyPeer]
+    let disableFor: [PeerId: SelectivePrivacyPeer]
+
+
     let saving: Bool
-    
-    init(setting: SelectivePrivacySettingType, enableFor: Set<PeerId>, disableFor: Set<PeerId>, saving: Bool) {
+
+    let callP2PMode: SelectivePrivacySettingType?
+    let callP2PEnableFor: [PeerId: SelectivePrivacyPeer]
+    let callP2PDisableFor: [PeerId: SelectivePrivacyPeer]
+    let phoneDiscoveryEnabled: Bool?
+
+    init(setting: SelectivePrivacySettingType, enableFor: [PeerId: SelectivePrivacyPeer], disableFor: [PeerId: SelectivePrivacyPeer], saving: Bool, callP2PMode: SelectivePrivacySettingType?, callP2PEnableFor: [PeerId: SelectivePrivacyPeer], callP2PDisableFor: [PeerId: SelectivePrivacyPeer], phoneDiscoveryEnabled: Bool?) {
         self.setting = setting
         self.enableFor = enableFor
         self.disableFor = disableFor
         self.saving = saving
+        self.callP2PMode = callP2PMode
+        self.callP2PEnableFor = callP2PEnableFor
+        self.callP2PDisableFor = callP2PDisableFor
+        self.phoneDiscoveryEnabled = phoneDiscoveryEnabled
+
     }
-    
-    static func ==(lhs: SelectivePrivacySettingsControllerState, rhs: SelectivePrivacySettingsControllerState) -> Bool {
-        if lhs.setting != rhs.setting {
-            return false
-        }
-        if lhs.enableFor != rhs.enableFor {
-            return false
-        }
-        if lhs.disableFor != rhs.disableFor {
-            return false
-        }
-        if lhs.saving != rhs.saving {
-            return false
-        }
-        
-        return true
-    }
-    
+
     func withUpdatedSetting(_ setting: SelectivePrivacySettingType) -> SelectivePrivacySettingsControllerState {
-        return SelectivePrivacySettingsControllerState(setting: setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving)
+        return SelectivePrivacySettingsControllerState(setting: setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
     }
-    
-    func withUpdatedEnableFor(_ enableFor: Set<PeerId>) -> SelectivePrivacySettingsControllerState {
-        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: enableFor, disableFor: self.disableFor, saving: self.saving)
+
+    func withUpdatedEnableFor(_ enableFor: [PeerId: SelectivePrivacyPeer]) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: enableFor, disableFor: self.disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
     }
-    
-    func withUpdatedDisableFor(_ disableFor: Set<PeerId>) -> SelectivePrivacySettingsControllerState {
-        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: disableFor, saving: self.saving)
+
+    func withUpdatedDisableFor(_ disableFor: [PeerId: SelectivePrivacyPeer]) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
     }
-    
+
     func withUpdatedSaving(_ saving: Bool) -> SelectivePrivacySettingsControllerState {
-        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: saving)
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
     }
+
+    func withUpdatedCallP2PMode(_ mode: SelectivePrivacySettingType) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving,  callP2PMode: mode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
+    }
+
+    func withUpdatedCallP2PEnableFor(_ enableFor: [PeerId: SelectivePrivacyPeer]) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: enableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
+    }
+
+    func withUpdatedCallP2PDisableFor(_ disableFor: [PeerId: SelectivePrivacyPeer]) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: disableFor, phoneDiscoveryEnabled: self.phoneDiscoveryEnabled)
+    }
+    func withUpdatedPhoneDiscoveryEnabled(_ phoneDiscoveryEnabled: Bool?) -> SelectivePrivacySettingsControllerState {
+        return SelectivePrivacySettingsControllerState(setting: self.setting, enableFor: self.enableFor, disableFor: self.disableFor, saving: self.saving, callP2PMode: self.callP2PMode, callP2PEnableFor: self.callP2PEnableFor, callP2PDisableFor: self.callP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled)
+    }
+
 }
 
 private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySettingsKind, state: SelectivePrivacySettingsControllerState) -> [SelectivePrivacySettingsEntry] {
     var entries: [SelectivePrivacySettingsEntry] = []
-    
+
     var sectionId:Int32 = 1
     entries.append(.section(sectionId))
     sectionId += 1
-    
+
     let settingTitle: String
-    let settingInfoText: String
+    let settingInfoText: String?
     let disableForText: String
     let enableForText: String
     switch kind {
     case .presence:
-        settingTitle = tr(.privacySettingsControllerLastSeenHeader)
-        settingInfoText = tr(.privacySettingsControllerLastSeenDescription)
-        disableForText = tr(.privacySettingsControllerNeverShareWith)
-        enableForText = tr(.privacySettingsControllerAlwaysShareWith)
+        settingTitle = L10n.privacySettingsControllerLastSeenHeader
+        settingInfoText = L10n.privacySettingsControllerLastSeenDescription
+        disableForText = L10n.privacySettingsControllerNeverShareWith
+        enableForText = L10n.privacySettingsControllerAlwaysShareWith
     case .groupInvitations:
-        settingTitle = tr(.privacySettingsControllerGroupHeader)
-        settingInfoText = tr(.privacySettingsControllerGroupDescription)
-        disableForText = tr(.privacySettingsControllerNeverAllow)
-        enableForText = tr(.privacySettingsControllerAlwaysAllow)
+        settingTitle = L10n.privacySettingsControllerGroupHeader
+        settingInfoText = L10n.privacySettingsControllerGroupDescription
+        disableForText = L10n.privacySettingsControllerNeverAllow
+        enableForText = L10n.privacySettingsControllerAlwaysAllow
     case .voiceCalls:
-        settingTitle = tr(.privacySettingsControllerPhoneCallHeader)
-        settingInfoText = tr(.privacySettingsControllerPhoneCallDescription)
-        disableForText = tr(.privacySettingsControllerNeverAllow)
-        enableForText = tr(.privacySettingsControllerAlwaysAllow)
+        settingTitle = L10n.privacySettingsControllerPhoneCallHeader
+        settingInfoText = L10n.privacySettingsControllerPhoneCallDescription
+        disableForText = L10n.privacySettingsControllerNeverAllow
+        enableForText = L10n.privacySettingsControllerAlwaysAllow
+    case .profilePhoto:
+        settingTitle = L10n.privacySettingsControllerProfilePhotoWhoCanSeeMyPhoto
+        settingInfoText = L10n.privacySettingsControllerProfilePhotoCustomHelp
+        disableForText = L10n.privacySettingsControllerNeverShareWith
+        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+    case .forwards:
+        settingTitle = L10n.privacySettingsControllerForwardsWhoCanForward
+        settingInfoText = L10n.privacySettingsControllerForwardsCustomHelp
+        disableForText = L10n.privacySettingsControllerNeverAllow
+        enableForText = L10n.privacySettingsControllerAlwaysAllow
+    case .phoneNumber:
+        if state.setting == .nobody {
+            settingInfoText = nil
+        } else {
+            settingInfoText = L10n.privacySettingsControllerPhoneNumberCustomHelp
+        }
+        settingTitle = L10n.privacySettingsControllerPhoneNumberWhoCanSeePhoneNumber
+        disableForText = L10n.privacySettingsControllerNeverShareWith
+        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+
     }
+
+    entries.append(.settingHeader(sectionId, settingTitle, .textTopItem))
+
+    entries.append(.everybody(sectionId, state.setting == .everybody, .firstItem))
     
-    entries.append(.settingHeader(sectionId, settingTitle))
-    
-    entries.append(.everybody(sectionId, state.setting == .everybody))
-    entries.append(.contacts(sectionId, state.setting == .contacts))
     switch kind {
-    case .presence, .voiceCalls:
-        entries.append(.nobody(sectionId, state.setting == .nobody))
-    case .groupInvitations:
-        break
+    case .presence, .voiceCalls, .forwards, .phoneNumber:
+        entries.append(.contacts(sectionId, state.setting == .contacts, .innerItem))
+        entries.append(.nobody(sectionId, state.setting == .nobody, .lastItem))
+    default:
+        entries.append(.contacts(sectionId, state.setting == .contacts, .lastItem))
     }
-    entries.append(.settingInfo(sectionId, settingInfoText))
+    if let settingInfoText = settingInfoText {
+        entries.append(.settingInfo(sectionId, settingInfoText, .textBottomItem))
+    }
+
     
     entries.append(.section(sectionId))
     sectionId += 1
     
+    if case .phoneNumber = kind, state.setting == .nobody {
+        entries.append(.phoneDiscoveryHeader(sectionId, L10n.privacyPhoneNumberSettingsDiscoveryHeader, .textTopItem))
+        entries.append(.phoneDiscoveryEverybody(sectionId, L10n.privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false, .firstItem))
+        entries.append(.phoneDiscoveryMyContacts(sectionId, L10n.privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false, .lastItem))
+        entries.append(.phoneDiscoveryInfo(sectionId, L10n.privacyPhoneNumberSettingsCustomDisabledHelp, .textBottomItem))
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+    }
+    
+
+
     switch state.setting {
     case .everybody:
-        entries.append(.disableFor(sectionId, disableForText, state.disableFor.count))
+        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .singleItem))
     case .contacts:
-        entries.append(.disableFor(sectionId, disableForText, state.disableFor.count))
-        entries.append(.enableFor(sectionId, enableForText, state.enableFor.count))
+        entries.append(.disableFor(sectionId, disableForText, countForSelectivePeers(state.disableFor), .firstItem))
+        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .lastItem))
     case .nobody:
-        entries.append(.enableFor(sectionId, enableForText, state.enableFor.count))
+        entries.append(.enableFor(sectionId, enableForText, countForSelectivePeers(state.enableFor), .singleItem))
     }
-    entries.append(.peersInfo(sectionId))
-    
+    entries.append(.peersInfo(sectionId, .textBottomItem))
+
+    if let callSettings = state.callP2PMode {
+        switch kind {
+        case .voiceCalls:
+            entries.append(.section(sectionId))
+            sectionId += 1
+            entries.append(.p2pHeader(sectionId, L10n.privacySettingsControllerP2pHeader, .textTopItem))
+            entries.append(.p2pAlways(sectionId, callSettings == .everybody, .firstItem))
+            entries.append(.p2pContacts(sectionId, callSettings == .contacts, .innerItem))
+            entries.append(.p2pNever(sectionId, callSettings == .nobody, .lastItem))
+            entries.append(.p2pDesc(sectionId, L10n.privacySettingsControllerP2pDesc, .textBottomItem))
+
+            entries.append(.section(sectionId))
+            sectionId += 1
+
+            switch callSettings {
+            case .everybody:
+                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .singleItem))
+            case .contacts:
+                entries.append(.p2pDisableFor(sectionId, disableForText, countForSelectivePeers(state.callP2PDisableFor), .firstItem))
+                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor), .lastItem))
+            case .nobody:
+                entries.append(.p2pEnableFor(sectionId, enableForText, countForSelectivePeers(state.callP2PEnableFor), .singleItem))
+            }
+            entries.append(.p2pPeersInfo(sectionId, .textBottomItem))
+
+        default:
+            break
+        }
+    }
+
+
     return entries
 }
 
 fileprivate func prepareTransition(left:[SelectivePrivacySettingsEntry], right: [SelectivePrivacySettingsEntry], initialSize:NSSize, arguments:SelectivePrivacySettingsControllerArguments) -> TableUpdateTransition {
-    
+
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.item(arguments, initialSize: initialSize)
     }
-    
+
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-class SelectivePrivacySettingsController: EditableViewController<TableView> {
+class SelectivePrivacySettingsController: TableViewController {
     private let kind: SelectivePrivacySettingsKind
     private let current: SelectivePrivacySettings
-    private let updated: (SelectivePrivacySettings) -> Void
+    private let updated: (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?) -> Void
     private var savePressed:(()->Void)?
-    init(account: Account, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, updated: @escaping (SelectivePrivacySettings) -> Void) {
+    private let callSettings: SelectivePrivacySettings?
+    private let phoneDiscoveryEnabled: Bool?
+    init(_ context: AccountContext, kind: SelectivePrivacySettingsKind, current: SelectivePrivacySettings, callSettings: SelectivePrivacySettings? = nil, phoneDiscoveryEnabled: Bool?, updated: @escaping (SelectivePrivacySettings, SelectivePrivacySettings?, Bool?) -> Void) {
         self.kind = kind
         self.current = current
         self.updated = updated
-        super.init(account)
-    }
-    
-    override func changeState() {
-        super.changeState()
-        savePressed?()
-    }
-   
-    override var normalString:String {
-        return ""
+        self.phoneDiscoveryEnabled = phoneDiscoveryEnabled
+        self.callSettings = callSettings
+        super.init(context)
     }
 
-    
+
+
     override func viewDidLoad() {
-        let account = self.account
+        super.viewDidLoad()
+        
+        let context = self.context
         let kind = self.kind
         let current = self.current
         let updated = self.updated
-        
+
         let initialSize = self.atomicSize
         let previous:Atomic<[SelectivePrivacySettingsEntry]> = Atomic(value: [])
-        
-        var initialEnableFor = Set<PeerId>()
-        var initialDisableFor = Set<PeerId>()
+
+        var initialEnableFor: [PeerId: SelectivePrivacyPeer] = [:]
+        var initialDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
+
         switch current {
         case let .disableEveryone(enableFor):
             initialEnableFor = enableFor
@@ -387,149 +463,252 @@ class SelectivePrivacySettingsController: EditableViewController<TableView> {
         case let .enableEveryone(disableFor):
             initialDisableFor = disableFor
         }
-        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false)
-        
+
+        var initialCallP2PEnableFor: [PeerId: SelectivePrivacyPeer] = [:]
+        var initialCallP2PDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
+
+        if let callCurrent = callSettings {
+            switch callCurrent {
+            case let .disableEveryone(enableFor):
+                initialCallP2PEnableFor = enableFor
+                initialCallP2PDisableFor = [:]
+            case let .enableContacts(enableFor, disableFor):
+                initialCallP2PEnableFor = enableFor
+                initialCallP2PDisableFor = disableFor
+            case let .enableEveryone(disableFor):
+                initialCallP2PEnableFor = [:]
+                initialCallP2PDisableFor = disableFor
+            }
+
+        }
+
+
+        let initialState = SelectivePrivacySettingsControllerState(setting: SelectivePrivacySettingType(current), enableFor: initialEnableFor, disableFor: initialDisableFor, saving: false, callP2PMode: callSettings != nil ? SelectivePrivacySettingType(callSettings!) : nil, callP2PEnableFor: initialCallP2PEnableFor, callP2PDisableFor: initialCallP2PDisableFor, phoneDiscoveryEnabled: phoneDiscoveryEnabled)
+
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
         let updateState: ((SelectivePrivacySettingsControllerState) -> SelectivePrivacySettingsControllerState) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
         }
-        
+
         var dismissImpl: (() -> Void)?
         var pushControllerImpl: ((ViewController) -> Void)?
-        
+
         let actionsDisposable = DisposableSet()
-        
+
         let updateSettingsDisposable = MetaDisposable()
-        actionsDisposable.add(updateSettingsDisposable)
-        
-        let arguments = SelectivePrivacySettingsControllerArguments(account: account, updateType: { type in
+      //  actionsDisposable.add(updateSettingsDisposable)
+
+
+        let arguments = SelectivePrivacySettingsControllerArguments(context: context, updateType: { type in
             updateState {
                 $0.withUpdatedSetting(type)
             }
-        }, openEnableFor: {
+        }, openEnableFor: { target in
             let title: String
             switch kind {
             case .presence:
-                title = tr(.privacySettingsControllerAlwaysShare)
+                title = L10n.privacySettingsControllerAlwaysShare
             case .groupInvitations:
-                title = tr(.privacySettingsControllerAlwaysAllow)
+                title = L10n.privacySettingsControllerAlwaysAllow
             case .voiceCalls:
-                title = tr(.privacySettingsControllerAlwaysAllow)
+                title = L10n.privacySettingsControllerAlwaysAllow
+            case .profilePhoto:
+                title = L10n.privacySettingsControllerAlwaysShare
+            case .forwards:
+                title = L10n.privacySettingsControllerAlwaysAllow
+            case .phoneNumber:
+                title = L10n.privacySettingsControllerAlwaysShareWith
             }
-            var peerIds = Set<PeerId>()
+            var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
                 peerIds = state.enableFor
                 return state
             }
-            
-            
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(account: account, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, updated: { updatedPeerIds in
                 updateState { state in
-                    return state.withUpdatedEnableFor(Set(updatedPeerIds)).withUpdatedDisableFor(state.disableFor.subtracting(Set(updatedPeerIds)))
+                    switch target {
+                    case .main:
+                        var disableFor = state.disableFor
+                        for (key, _) in updatedPeerIds {
+                            disableFor.removeValue(forKey: key)
+                        }
+                        return state.withUpdatedEnableFor(updatedPeerIds).withUpdatedDisableFor(disableFor)
+                    case .callP2P:
+                        var callP2PDisableFor = state.callP2PDisableFor
+                        //var disableFor = state.disableFor
+                        for (key, _) in updatedPeerIds {
+                            callP2PDisableFor.removeValue(forKey: key)
+                        }
+                        return state.withUpdatedCallP2PEnableFor(updatedPeerIds).withUpdatedCallP2PDisableFor(callP2PDisableFor)
+                    }
                 }
             }))
-        }, openDisableFor: {
+        }, openDisableFor: { target in
             let title: String
             switch kind {
             case .presence:
-                title = tr(.privacySettingsControllerNeverShareWith)
+                title = L10n.privacySettingsControllerNeverShareWith
             case .groupInvitations:
-                title = tr(.privacySettingsControllerNeverAllow)
+                title = L10n.privacySettingsControllerNeverAllow
             case .voiceCalls:
-                title = tr(.privacySettingsControllerNeverAllow)
+                title = L10n.privacySettingsControllerNeverAllow
+            case .profilePhoto:
+                title = L10n.privacySettingsControllerNeverShareWith
+            case .forwards:
+                title = L10n.privacySettingsControllerNeverAllow
+            case .phoneNumber:
+                title = L10n.privacySettingsControllerNeverShareWith
             }
-            var peerIds = Set<PeerId>()
+            var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
                 peerIds = state.disableFor
                 return state
             }
-            pushControllerImpl?(SelectivePrivacySettingsPeersController(account: account, title: title, initialPeerIds: Array(peerIds), updated: { updatedPeerIds in
+            pushControllerImpl?(SelectivePrivacySettingsPeersController(context, title: title, initialPeers: peerIds, updated: { updatedPeerIds in
                 updateState { state in
-                    return state.withUpdatedDisableFor(Set(updatedPeerIds)).withUpdatedEnableFor(state.enableFor.subtracting(Set(updatedPeerIds)))
-                }
-            }))
-        })
-        
-        let signal = statePromise.get() |> deliverOnMainQueue
-            |> map { [weak self] state -> TableUpdateTransition in
-                
-                if state.saving {
-                    self?.state = .Edit
-                } else {
-                    self?.state = initialState == state ? .Normal : .Edit
-                    
-                    self?.savePressed = {
-                        var wasSaving = false
-                        var settings: SelectivePrivacySettings?
-                        updateState { state in
-                            wasSaving = state.saving
-                            switch state.setting {
-                            case .everybody:
-                                settings = SelectivePrivacySettings.enableEveryone(disableFor: state.disableFor)
-                            case .contacts:
-                                settings = SelectivePrivacySettings.enableContacts(enableFor: state.enableFor, disableFor: state.disableFor)
-                            case .nobody:
-                                settings = SelectivePrivacySettings.disableEveryone(enableFor: state.enableFor)
-                            }
-                            return state.withUpdatedSaving(true)
+                    switch target {
+                    case .main:
+                        var enableFor = state.enableFor
+                        for (key, _) in updatedPeerIds {
+                            enableFor.removeValue(forKey: key)
                         }
-                        
-                        if let settings = settings, !wasSaving {
-                            let type: UpdateSelectiveAccountPrivacySettingsType
-                            switch kind {
-                            case .presence:
-                                type = .presence
-                            case .groupInvitations:
-                                type = .groupInvitations
-                            case .voiceCalls:
-                                type = .voiceCalls
-                            }
-                            
-                            updateSettingsDisposable.set((updateSelectiveAccountPrivacySettings(account: account, type: type, settings: settings) |> deliverOnMainQueue).start(completed: {
-                                updateState { state in
-                                    return state.withUpdatedSaving(false)
-                                }
-                                updated(settings)
-                                dismissImpl?()
-                            }))
+                        return state.withUpdatedDisableFor(updatedPeerIds).withUpdatedEnableFor(enableFor)
+                    case .callP2P:
+                        var callP2PEnableFor = state.callP2PEnableFor
+                        for (key, _) in updatedPeerIds {
+                            callP2PEnableFor.removeValue(forKey: key)
                         }
+                        return state.withUpdatedCallP2PDisableFor(updatedPeerIds).withUpdatedCallP2PEnableFor(callP2PEnableFor)
                     }
                 }
+            }))
+        }, p2pMode: { mode in
+            updateState { state in
+                return state.withUpdatedCallP2PMode(mode)
+            }
+        }, updatePhoneDiscovery: { value in
+            updateState { state in
+                return state.withUpdatedPhoneDiscoveryEnabled(value)
+            }
+        })
+
+
+        savePressed = {
+            var wasSaving = false
+            var settings: SelectivePrivacySettings?
+            var callSettings: SelectivePrivacySettings?
+            var phoneDiscoveryEnabled: Bool? = nil
+            updateState { state in
+                phoneDiscoveryEnabled = state.phoneDiscoveryEnabled
+                wasSaving = state.saving
+                switch state.setting {
+                case .everybody:
+                    settings = SelectivePrivacySettings.enableEveryone(disableFor: state.disableFor)
+                case .contacts:
+                    settings = SelectivePrivacySettings.enableContacts(enableFor: state.enableFor, disableFor: state.disableFor)
+                case .nobody:
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: state.enableFor)
+                }
+
+                if let mode = state.callP2PMode {
+                    switch mode {
+                    case .everybody:
+                        callSettings = SelectivePrivacySettings.enableEveryone(disableFor: state.callP2PDisableFor)
+                    case .contacts:
+                        callSettings = SelectivePrivacySettings.enableContacts(enableFor: state.callP2PEnableFor, disableFor: state.callP2PDisableFor)
+                    case .nobody:
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: state.callP2PEnableFor)
+                    }
+                }
+
+                return state.withUpdatedSaving(true)
+            }
+
+            if let settings = settings, !wasSaving {
+                let type: UpdateSelectiveAccountPrivacySettingsType
+                switch kind {
+                case .presence:
+                    type = .presence
+                case .groupInvitations:
+                    type = .groupInvitations
+                case .voiceCalls:
+                    type = .voiceCalls
+                case .profilePhoto:
+                    type = .profilePhoto
+                case .forwards:
+                    type = .forwards
+                case .phoneNumber:
+                    type = .phoneNumber
+                }
                 
+                var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
+                if let phoneDiscoveryEnabled = phoneDiscoveryEnabled {
+                    updatePhoneDiscoverySignal = updatePhoneNumberDiscovery(account: context.account, value: phoneDiscoveryEnabled)
+                }
+                
+                let basic = updateSelectiveAccountPrivacySettings(account: context.account, type: type, settings: settings)
+                
+
+                updateSettingsDisposable.set(combineLatest(queue: .mainQueue(), updatePhoneDiscoverySignal, basic).start(completed: {
+                    updateState { state in
+                        return state.withUpdatedSaving(false)
+                    }
+                    updated(settings, callSettings, phoneDiscoveryEnabled)
+                    dismissImpl?()
+                }))
+            }
+        }
+
+        let signal = statePromise.get() |> deliverOnMainQueue
+            |> map { [weak self] state -> TableUpdateTransition in
+
+
                 let title: String
                 switch kind {
                 case .presence:
-                    title = tr(.privacySettingsLastSeen)
+                    title = L10n.privacySettingsLastSeen
                 case .groupInvitations:
-                    title = tr(.privacySettingsGroups)
+                    title = L10n.privacySettingsGroups
                 case .voiceCalls:
-                    title = tr(.privacySettingsVoiceCalls)
+                    title = L10n.privacySettingsVoiceCalls
+                case .profilePhoto:
+                    title = L10n.privacySettingsProfilePhoto
+                case .forwards:
+                    title = L10n.privacySettingsForwards
+                case .phoneNumber:
+                    title = L10n.privacySettingsPhoneNumber
                 }
-                
+
                 self?.setCenterTitle(title)
-                
+
                 let entries = selectivePrivacySettingsControllerEntries(kind: kind, state: state)
                 return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
             } |> afterDisposed {
                 actionsDisposable.dispose()
         }
-        
+
         genericView.merge(with: signal)
         readyOnce()
-        
+
         pushControllerImpl = { [weak self] c in
             self?.navigationController?.push(c)
         }
 
         dismissImpl = { [weak self] in
-            self?.navigationController?.back()
+            if self?.navigationController?.controller == self {
+                self?.navigationController?.back()
+            }
         }
-        
+
     }
-    
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+
     override func didRemovedFromStack() {
         super.didRemovedFromStack()
-        
+        savePressed?()
     }
 }

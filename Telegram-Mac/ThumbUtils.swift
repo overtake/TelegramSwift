@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
 private let extensionImageCache = Atomic<[String: CGImage]>(value: [:])
 
@@ -36,57 +36,57 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
     return generateImage(CGSize(width: 42.0, height: 42.0), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         
+        context.round(CGRect(origin: CGPoint(), size: size), flags: [.left, .bottom, .right])
+        
         context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
         context.scaleBy(x: 1.0, y: -1.0)
         context.translateBy(x: -size.width / 2.0 + 1.0, y: -size.height / 2.0 + 1.0)
-//        
-//        let radius: CGFloat = 2.0
-//        let cornerSize: CGFloat = 10.0
-        let size = CGSize(width: 42.0, height: 42.0)
         
-        context.setFillColor(NSColor(colors.0).cgColor)
-       // context.beginPath()
-        context.fillEllipse(in: NSMakeRect(0, 0, size.width - 2, size.height - 2))
-//        context.move(to: CGPoint(x: 0.0, y: radius))
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: radius, y: 0.0), radius: radius)
-//        }
-//        context.addLine(to: CGPoint(x: size.width - cornerSize, y: 0.0))
-//        context.addLine(to: CGPoint(x: size.width - cornerSize + cornerSize / 4.0, y: cornerSize - cornerSize / 4.0))
-//        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
-//        context.addLine(to: CGPoint(x: size.width, y: size.height - radius))
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: size.width, y: size.height), tangent2End: CGPoint(x: size.width - radius, y: size.height), radius: radius)
-//        }
-//        context.addLine(to: CGPoint(x: radius, y: size.height))
-//        
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: 0.0, y: size.height), tangent2End: CGPoint(x: 0.0, y: size.height - radius), radius: radius)
-//        }
-//        context.closePath()
-//        context.fillPath()
-//        
-//        context.setFillColor(NSColor(colors.1).cgColor)
-//        context.beginPath()
-//        context.move(to: CGPoint(x: size.width - cornerSize, y: 0.0))
-//        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
-//        context.addLine(to: CGPoint(x: size.width - cornerSize + radius, y: cornerSize))
-//        
-//        if !radius.isZero {
-//            context.addArc(tangent1End: CGPoint(x: size.width - cornerSize, y: cornerSize), tangent2End: CGPoint(x: size.width - cornerSize, y: cornerSize - radius), radius: radius)
-//        }
-//        
-      //  context.closePath()
-      //  context.fillPath()
+        let radius: CGFloat = .cornerRadius
+        let cornerSize: CGFloat = 10.0
         
+        context.setFillColor(NSColor(rgb: colors.0).cgColor)
+        context.beginPath()
+        context.move(to: CGPoint(x: 0.0, y: radius))
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: radius, y: 0.0), radius: radius)
+        }
+        context.addLine(to: CGPoint(x: size.width - cornerSize, y: 0.0))
+        context.addLine(to: CGPoint(x: size.width - cornerSize + cornerSize / 4.0, y: cornerSize - cornerSize / 4.0))
+        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
+        context.addLine(to: CGPoint(x: size.width, y: size.height - radius))
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: size.width, y: size.height), tangent2End: CGPoint(x: size.width - radius, y: size.height), radius: radius)
+        }
+        context.addLine(to: CGPoint(x: radius, y: size.height))
+        
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: 0.0, y: size.height), tangent2End: CGPoint(x: 0.0, y: size.height - 5), radius: 5)
+        }
+        context.closePath()
+        context.fillPath()
+        
+        context.setFillColor(NSColor(rgb: colors.1).cgColor)
+        context.beginPath()
+        context.move(to: CGPoint(x: size.width - cornerSize, y: 0.0))
+        context.addLine(to: CGPoint(x: size.width, y: cornerSize))
+        context.addLine(to: CGPoint(x: size.width - cornerSize + radius, y: cornerSize))
+        
+        if !radius.isZero {
+            context.addArc(tangent1End: CGPoint(x: size.width - cornerSize, y: cornerSize), tangent2End: CGPoint(x: size.width - cornerSize, y: cornerSize - radius), radius: radius)
+        }
+        
+        context.closePath()
+        context.fillPath()
+
         
         
-        let layout = TextViewLayout(.initialize(string: ext, color: .white, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+        let layout = TextViewLayout(.initialize(string: ext, color: .white, font: .medium(.short)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: size.width - 4)
         if !layout.lines.isEmpty {
             let line = layout.lines[0]
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-            context.textPosition = NSMakePoint(floorToScreenPixels((size.width - line.frame.width)/2.0) - 1, floorToScreenPixels((size.height )/2.0) + 4)
+            context.textPosition = NSMakePoint(floorToScreenPixels(System.backingScale, (size.width - line.frame.width)/2.0) - 1, floorToScreenPixels(System.backingScale, (size.height )/2.0) + 4)
             
             CTLineDraw(line.line, context)
         } 
@@ -94,20 +94,20 @@ func generateExtensionImage(colors: (UInt32, UInt32), ext:String) -> CGImage? {
 }
 
 
-func generateMediaEmptyLinkThumb(color: NSColor, host:String) -> CGImage? {
-    return generateImage(CGSize(width: 50, height: 50), contextGenerator: { size, context in
+func generateMediaEmptyLinkThumb(color: NSColor, textColor: NSColor, host:String) -> CGImage? {
+    return generateImage(CGSize(width: 40, height: 40), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
         let host = host.isEmpty ? "L" : host
-        context.round(size, 25)
+        context.round(size, .cornerRadius)
         context.setFillColor(color.cgColor)
         context.fill(CGRect(origin: CGPoint(), size: size))
         if !host.isEmpty {
-            let layout = TextViewLayout(.initialize(string: host, color: .white, font: .normal(.custom(16))), maximumNumberOfLines: 1, truncationType: .middle)
+            let layout = TextViewLayout(.initialize(string: host, color: textColor, font: .bold(.huge)), maximumNumberOfLines: 1, truncationType: .middle)
             layout.measure(width: size.width - 4)
             let line = layout.lines[0]
             
             context.textMatrix = CGAffineTransform(scaleX: 1.0, y: 1.0)
-            context.textPosition = NSMakePoint(floorToScreenPixels((size.width - line.frame.width)/2.0) , floorToScreenPixels((size.height - line.frame.width)/2.0))
+            context.textPosition = NSMakePoint(floorToScreenPixels(System.backingScale, (size.width - line.frame.width)/2.0) , floorToScreenPixels(System.backingScale, (size.height - line.frame.width)/2.0))
             CTLineDraw(line.line, context)
         }
     })
@@ -150,8 +150,8 @@ func capIcon(for text:NSAttributedString, size:NSSize = NSMakeSize(50, 50), corn
         let rect = CTLineGetBoundsWithOptions(line, [.excludeTypographicLeading])
         
 
-        ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-        ctx.textPosition = NSMakePoint(floorToScreenPixels((size.width - rect.width)/2.0), size.height - floorToScreenPixels((size.height - rect.height)/2.0) - 6 )
+        ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: 1.0)
+        ctx.textPosition = NSMakePoint(floorToScreenPixels(System.backingScale, (size.width - rect.width)/2.0), floorToScreenPixels(System.backingScale, (size.height - rect.height)/2.0) + 6 )
         
         CTLineDraw(line, ctx)
         
@@ -181,6 +181,13 @@ let playerPauseThumb = generateImage(CGSize(width: 40, height: 40), contextGener
 })
 
 
+let stopFetchStreamableControl = generateImage(CGSize(width: 6, height: 6), contextGenerator: { size, context in
+    context.clear(CGRect(origin: CGPoint(), size: size))
+    context.round(size, 2)
+    context.setFillColor(NSColor.white.cgColor)
+    context.fill(NSMakeRect(0, 0, size.width, size.height))
+})
+
 
 public struct PreviewOptions: OptionSet {
     public var rawValue: UInt32
@@ -196,53 +203,48 @@ public struct PreviewOptions: OptionSet {
     public init(_ flags: PreviewOptions) {
         var rawValue: UInt32 = 0
         
-        if flags.contains(PreviewOptions.image) {
-            rawValue |= PreviewOptions.image.rawValue
-        }
-        
-        if flags.contains(PreviewOptions.video) {
-            rawValue |= PreviewOptions.video.rawValue
-        }
         
         if flags.contains(PreviewOptions.file) {
             rawValue |= PreviewOptions.file.rawValue
         }
         
-        if flags.contains(PreviewOptions.mixed) {
-            rawValue |= PreviewOptions.mixed.rawValue
+        if flags.contains(PreviewOptions.media) {
+            rawValue |= PreviewOptions.media.rawValue
         }
         
         self.rawValue = rawValue
     }
     
-    public static let image = PreviewOptions(rawValue: 1)
-    public static let video = PreviewOptions(rawValue: 2)
-    public static let file = PreviewOptions(rawValue: 4)
-    public static let mixed = PreviewOptions(rawValue: 8)
+    public static let media = PreviewOptions(rawValue: 1)
+    public static let file = PreviewOptions(rawValue: 8)
 }
 
 func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
     var options:[PreviewOptions] = []
     for url in urls {
-        let mime = MIMEType(url.path.nsstring.pathExtension)
-        let isImage = mime.hasPrefix("image") && !mime.hasSuffix("gif")
-        let isVideo = mime.hasPrefix("video/mp4")
-        if isImage && !options.contains(.image) {
-            options.append(.image)
-        }
-        if isVideo && !options.contains(.video) {
-            options.append(.video)
-        }
+        let mime = MIMEType(url.path)
         
-        if !isImage && !isVideo {
-            if !options.contains(.file) {
-                options.append(.file)
+        if mime.hasPrefix("image") {
+            if let image = NSImage(contentsOf: url) {
+                if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                    continue
+                } else if image.size.height / 10 > image.size.width || image.size.width < 40 {
+                    continue
+                }
+            } else {
+                continue
             }
         }
         
-        if options.count > 1 && (options.contains(.video) || options.contains(.image)) {
-            if !options.contains(.mixed) {
-                options.append(.mixed)
+        let media = mime.hasPrefix("image") || mime.hasSuffix("gif") || mime.hasPrefix("video/mp4") || mime.hasPrefix("video/mov")
+
+        if media {
+            if !options.contains(.media) {
+                options.append(.media)
+            }
+        } else {
+            if !options.contains(.file) {
+                options.append(.file)
             }
         }
     }
@@ -375,15 +377,27 @@ private func generateUploadFileAnimatedImage(_ animationValue:CGFloat, backgroun
        // let round: CGFloat = 1.25
         var dotsColor = NSColor(backgroundColor)
         context.setFillColor(dotsColor.cgColor)
-        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
+        context.addPath(CGPath(roundedRect: CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+     //   context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
         dotsColor = NSColor(foregroundColor, 0.3)
         context.setFillColor(dotsColor.cgColor)
-        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
+        
+        context.addPath(CGPath(roundedRect: CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+        
+//        context.fill(CGRect(x: leftPadding, y: topPadding, width: progressWidth, height: progressHeight))
         progress = interpolate(from: 0.0, to: progressWidth * 2.0, value: animationValue)
         dotsColor = NSColor(foregroundColor, 1.0)
         context.setFillColor(dotsColor.cgColor)
         context.setBlendMode(.sourceIn)
-        context.fill(CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight))
+      //  context.fill(CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight))
+        context.addPath(CGPath(roundedRect: CGRect(x: CGFloat(leftPadding - progressWidth + progress), y: topPadding, width: progressWidth, height: progressHeight), cornerWidth: 2, cornerHeight: 2, transform: nil))
+        context.closePath()
+        context.fillPath()
+
         
     })!
     

@@ -9,6 +9,22 @@
 import Cocoa
 import TGUIKit
 
+var APP_VERSION_STRING: String {
+    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1") (\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0"))"
+    
+    
+    #if STABLE
+    vText += " Stable"
+    #elseif APP_STORE
+    vText += " AppStore"
+    #elseif ALPHA
+    vText += " Alpha"
+    #else
+    vText += " Beta"
+    #endif
+    return vText
+}
+
 fileprivate class AboutModalView : Control {
     fileprivate let copyright:TextView = TextView()
     fileprivate let descView:TextView = TextView()
@@ -19,35 +35,42 @@ fileprivate class AboutModalView : Control {
         formatter.dateFormat = "yyyy"
         
         
-        let copyrightLayout = TextViewLayout(NSAttributedString.initialize(string: "Copyright © 2016 - \(formatter.string(from: Date(timeIntervalSinceReferenceDate: Date.timeIntervalSinceReferenceDate))) TELEGRAM MESSENGER", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        let copyrightLayout = TextViewLayout(.initialize(string: "Copyright © 2016 - \(formatter.string(from: Date(timeIntervalSinceReferenceDate: Date.timeIntervalSinceReferenceDate))) TELEGRAM MESSENGER", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         copyrightLayout.measure(width:frameRect.width - 40)
         
         
-        var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1").\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0")"
-        
-
-        #if STABLE
-            vText += " Stable"
-        #elseif APP_STORE
-            vText += " AppStore"
-        #else
-            vText += " Beta"
-        #endif
+        let vText = APP_VERSION_STRING
 
         let attr = NSMutableAttributedString()
         
         _ = attr.append(string: appName, color: theme.colors.text, font: .medium(.header))
         _ = attr.append(string: "\n\(vText)", color: theme.colors.grayText, font: .medium(.text))
         
+        _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
+
+        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
+        attr.addAttribute(.link, value: "copy", range: range)
+        _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
+
         _ = attr.append(string: "\n\n")
         
-        _ = attr.append(string: tr(.aboutDescription), color: theme.colors.text, font: .normal(.text))
+        
+
+        _ = attr.append(string: L10n.aboutDescription, color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
         descLayout.measure(width:frameRect.width - 40)
         
 
-       
+        descLayout.interactions.copy = {
+            copyToClipboard(APP_VERSION_STRING)
+            return true
+        }
+        
+        descLayout.interactions.processURL = { _ in
+            var bp:Int = 0
+            bp += 1
+        }
         
         copyright.update(copyrightLayout)
         descView.update(descLayout)
@@ -56,6 +79,8 @@ fileprivate class AboutModalView : Control {
         addSubview(copyright)
         addSubview(descView)
         
+        
+ 
         
         descView.isSelectable = false
         copyright.isSelectable = false
@@ -84,15 +109,23 @@ class AboutModalController: ModalViewController {
         bar = .init(height: 0)
     }
     
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.descView.layout?.interactions = TextViewInteractions(processURL: {[weak self] (url) in
+        genericView.descView.layout?.interactions.processURL = { [weak self] url in
             if let url = url as? inAppLink {
                 execute(inapp: url)
+            } else if let url = url as? String, url == "copy" {
+                copyToClipboard(APP_VERSION_STRING)
+                self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                return
             }
             self?.close()
-        })
+        }
         readyOnce()
     }
     

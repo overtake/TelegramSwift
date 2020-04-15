@@ -7,77 +7,84 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 struct GroupAccess {
     let highlightAdmins:Bool
-    let canManageMembers:Bool
-    let canManageGroup:Bool
+    let canEditGroupInfo:Bool
+    let canEditMembers:Bool
+    let canAddMembers: Bool
+    let isPublic:Bool
     let isCreator:Bool
+    let canCreateInviteLink: Bool
 }
 
 extension Peer {
     
     var groupAccess:GroupAccess {
         var highlightAdmins = false
-        var canManageGroup = false
-        var canManageMembers = false
+        var canEditGroupInfo = false
+        var canEditMembers = false
+        var canAddMembers = false
+        var isPublic = false
         var isCreator = false
         if let group = self as? TelegramGroup {
-            if group.flags.contains(.adminsEnabled) {
-                highlightAdmins = true
-                switch group.role {
-                case .creator:
-                    canManageGroup = true
-                    canManageMembers = true
-                    isCreator = true
-                case .admin:
-                    canManageGroup = true
-                    canManageMembers = true
-                case .member:
-                    break
-                }
-            } else {
-                canManageGroup = group.membership == .Member
-                canManageMembers = group.membership == .Member
-                switch group.role {
-                case .creator:
-                    isCreator = true
-                default:
-                    break
-                }
+            if case .creator = group.role {
+                isCreator = true
+            }
+            highlightAdmins = true
+            switch group.role {
+            case .admin, .creator:
+                canEditGroupInfo = true
+                canEditMembers = true
+                canAddMembers = true
+            case .member:
+                break
+            }
+            if !group.hasBannedPermission(.banChangeInfo) {
+                canEditGroupInfo = true
+            }
+            if !group.hasBannedPermission(.banAddMembers) {
+                canAddMembers = true
             }
         } else if let channel = self as? TelegramChannel {
             highlightAdmins = true
+            isPublic = channel.username != nil
             isCreator = channel.flags.contains(.isCreator)
-            canManageGroup = channel.adminRights != nil || channel.flags.contains(.isCreator)
-            canManageMembers = channel.hasAdminRights(.canBanUsers)
-
+            if channel.hasPermission(.changeInfo) {
+                canEditGroupInfo = true
+            }
+            if channel.hasPermission(.banMembers) {
+                canEditMembers = true
+            }
+            if channel.hasPermission(.inviteMembers) {
+                canAddMembers = true
+            }
         }
-        return GroupAccess(highlightAdmins: highlightAdmins, canManageMembers: canManageMembers, canManageGroup: canManageGroup, isCreator: isCreator)
+        
+        var canCreateInviteLink = false
+        if let group = self as? TelegramGroup {
+            if case .creator = group.role {
+                canCreateInviteLink = true
+            }
+        } else if let channel = self as? TelegramChannel {
+            if channel.hasPermission(.inviteMembers) {
+                canCreateInviteLink = true
+            }
+        }
+        
+
+
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink)
     }
     
     var canInviteUsers:Bool {
         if let peer = self as? TelegramChannel {
-            switch peer.info {
-            case .group(let info):
-                return peer.hasAdminRights(.canInviteUsers) || info.flags.contains(.everyMemberCanInviteMembers)
-            default:
-                break
-            }
-            return peer.hasAdminRights(.canInviteUsers)
+            return peer.hasPermission(.inviteMembers)
         } else if let group = self as? TelegramGroup {
-            if group.flags.contains(.adminsEnabled) {
-                switch group.role {
-                case .creator, .admin:
-                    return true
-                default:
-                    return false
-                }
-            } else {
-                return true
-            }
+            return !group.hasBannedRights(.banAddMembers)
         }
         
         
@@ -110,10 +117,10 @@ extension TelegramGroup {
 
 extension TelegramChannel {
     func canRemoveParticipant(_ participant: ChannelParticipant, accountId:PeerId) -> Bool {
-        let hasRight = hasAdminRights(.canBanUsers)
+        let hasRight = hasPermission(.banMembers)
         
         switch participant {
-        case let .member(_, _,  adminInfo, _):
+        case let .member(_, _,  adminInfo, _, _):
             if let adminInfo = adminInfo {
                 return accountId == adminInfo.promotedBy || flags.contains(.isCreator)
             } else {
@@ -166,11 +173,11 @@ func <(lhs:ChannelParticipant, rhs: ChannelParticipant) -> Bool {
     switch lhs {
     case .creator:
         return false
-    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo):
+    case let .member(lhsId, lhsInvitedAt, lhsAdminInfo, lhsBanInfo, lhsRank):
         switch rhs {
         case .creator:
             return true
-        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo):
+        case let .member(rhsId, rhsInvitedAt, rhsAdminInfo, rhsBanInfo, rhsRank):
             return lhsInvitedAt < rhsInvitedAt
         }
     }

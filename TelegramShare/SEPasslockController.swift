@@ -19,41 +19,37 @@ import TGUIKit
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
-enum PasscodeViewState {
-    case login
-}
+
 
 private class PasscodeLockView : Control, NSTextFieldDelegate {
-    fileprivate let photoView:AvatarControl = AvatarControl(font: .avatar(.custom(23)))
     fileprivate let nameView:TextView = TextView()
     fileprivate let input:NSSecureTextField
     private let nextButton:TitleButton = TitleButton()
-    private var state:PasscodeViewState?
     
     fileprivate var cancel:ImageButton = ImageButton()
     
     fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
     required init(frame frameRect: NSRect) {
         input = NSSecureTextField(frame: NSZeroRect)
+        input.stringValue = ""
         super.init(frame: frameRect)
-        photoView.setFrameSize(NSMakeSize(80, 80))
         self.backgroundColor = theme.colors.background
-        nextButton.set(color: theme.colors.blueUI, for: .Normal)
+        nextButton.set(color: theme.colors.accent, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: tr(.shareExtensionPasscodeNext), for: .Normal)
-        nextButton.sizeToFit()
+        nextButton.set(text: tr(L10n.shareExtensionPasscodeNext), for: .Normal)
+        _ = nextButton.sizeToFit()
         
         cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
-        cancel.sizeToFit()
+        _ = cancel.sizeToFit()
 
         
         nameView.backgroundColor = theme.colors.background
-        addSubview(photoView)
         addSubview(nameView)
         addSubview(input)
         addSubview(nextButton)
@@ -66,7 +62,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: tr(L10n.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.backgroundColor = theme.colors.background
@@ -93,22 +89,15 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         value.set(input.stringValue)
     }
     
-    func update(with state:PasscodeViewState, account:Account, peer:Peer) {
-        self.state = state
-        
-        photoView.setPeer(account: account, peer: peer)
-        let layout = TextViewLayout(.initialize(string:peer.displayTitle, color: theme.colors.text, font:.normal(.title)))
+    func update() {
+        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.colors.text, font:.normal(.title)))
         layout.measure(width: frame.width - 40)
         nameView.update(layout)
         
         needsLayout = true
-        changeInput(state)
         
     }
     
-    fileprivate func changeInput(_ state:PasscodeViewState) {
-       
-    }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -119,10 +108,9 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     override func layout() {
         super.layout()
         
-        photoView.center()
-        photoView.setFrameOrigin(photoView.frame.minX, photoView.frame.minY - floorToScreenPixels((20 + input.frame.height + 60)/2.0) - 20)
+        nameView.center()
+        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
         input.setFrameSize(200, input.frame.height)
-        nameView.centerX(y: photoView.frame.maxY + 20)
         input.centerX(y: nameView.frame.minY + 30 + 20)
         input.setFrameOrigin(input.frame.minX, input.frame.minY)
         setNeedsDisplayLayer()
@@ -138,34 +126,26 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
 }
 
 class SEPasslockController: ModalViewController {
-    private let account:Account
-    private var state: PasscodeViewState {
-        didSet {
-            self.genericView.changeInput(state)
-        }
-    }
+    private let context: SharedAccountContext
+
     private let disposable:MetaDisposable = MetaDisposable()
     private let valueDisposable = MetaDisposable()
     private let logoutDisposable = MetaDisposable()
     private var passcodeValues:[String] = []
     private let _doneValue:Promise<Bool> = Promise()
     
-    var doneValue:Signal<Bool, Void> {
+    var doneValue:Signal<Bool, NoError> {
         return _doneValue.get()
     }
     private let cancelImpl:()->Void
-    init(_ account:Account, _ state: PasscodeViewState, cancelImpl:@escaping()->Void) {
-        self.account = account
-        self.state = state
+    init(_ context: SharedAccountContext, cancelImpl:@escaping()->Void) {
+        self.context = context
         self.cancelImpl = cancelImpl
         super.init(frame: NSMakeRect(0, 0, 340, 310))
     }
     
     override var isFullScreen: Bool {
-        switch state {
-        case .login:
-            return true
-        }
+        return true
     }
     
     private var genericView:PasscodeLockView {
@@ -173,14 +153,11 @@ class SEPasslockController: ModalViewController {
     }
     
     private func checkNextValue(_ passcode: String, _ current:String?) {
-        switch state {
-        case .login:
-            if current == passcode {
-                _doneValue.set(.single(true))
-                close()
-            } else {
-                genericView.input.shake()
-            }
+        if current == passcode {
+            _doneValue.set(.single(true))
+            close()
+        } else {
+            genericView.input.shake()
         }
     }
     
@@ -190,13 +167,14 @@ class SEPasslockController: ModalViewController {
         genericView.cancel.set(handler: { [weak self] _ in
             self?.cancelImpl()
         }, for: .Click)
+        
         valueDisposable.set((genericView.value.get() |> mapToSignal { [weak self] value in
             if let strongSelf = self {
-                return strongSelf.account.postbox.modify { modifier -> (String, String?) in
-                    switch modifier.getAccessChallengeData() {
+                return strongSelf.context.accountManager.transaction { transaction -> (String, String?) in
+                    switch transaction.getAccessChallengeData() {
                     case .none:
                         return (value, nil)
-                    case let .plaintextPassword(passcode, _, _), let .numericalPassword(passcode, _, _):
+                    case let .plaintextPassword(passcode), let .numericalPassword(passcode):
                         return (value, passcode)
                     }
                 }
@@ -206,12 +184,8 @@ class SEPasslockController: ModalViewController {
                 self?.checkNextValue(value, current)
             }))
         
-        disposable.set((account.postbox.loadedPeerWithId(account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-            if let strongSelf = self {
-                strongSelf.genericView.update(with: strongSelf.state, account: strongSelf.account, peer: peer)
-                strongSelf.readyOnce()
-            }
-        }))
+        genericView.update()
+        readyOnce()
         
     }
     

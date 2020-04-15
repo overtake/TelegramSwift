@@ -13,10 +13,12 @@ struct CalendarMonthInteractions {
     let selectAction:(Date)->Void
     let backAction:((Date)->Void)?
     let nextAction:((Date)->Void)?
-    init(selectAction:@escaping (Date)->Void, backAction:((Date)->Void)? = nil, nextAction:((Date)->Void)? = nil) {
+    let changeYear: (Int32, Date)->Void
+    init(selectAction:@escaping (Date)->Void, backAction:((Date)->Void)? = nil, nextAction:((Date)->Void)? = nil, changeYear: @escaping(Int32, Date)->Void) {
         self.selectAction = selectAction
         self.backAction = backAction
         self.nextAction = nextAction
+        self.changeYear = changeYear
     }
 }
 
@@ -34,8 +36,10 @@ struct CalendarMonthStruct {
     
     let components:DateComponents
     let dayHandler:(Int)->Void
-    init(month:Date, dayHandler:@escaping (Int)->Void) {
+    let onlyFuture: Bool
+    init(month:Date, selectDayAnyway: Bool, onlyFuture: Bool, dayHandler:@escaping (Int)->Void) {
         self.month = month
+        self.onlyFuture = onlyFuture
         self.dayHandler = dayHandler
         self.prevMonth = CalendarUtils.stepMonth(-1, date: month)
         self.nextMonth = CalendarUtils.stepMonth(1, date: month)
@@ -44,11 +48,11 @@ struct CalendarMonthStruct {
         self.lastDayOfNextMonth = CalendarUtils.lastDay(ofTheMonth: month)
         var calendar = NSCalendar.current
         
-        calendar.timeZone = TimeZone(abbreviation: "UTC")!
+//        calendar.timeZone = TimeZone(abbreviation: "UTC")!
         let components = calendar.dateComponents([.year, .month, .day], from: month)
         self.currentStartDay = CalendarUtils.weekDay(Date(timeIntervalSince1970: month.timeIntervalSince1970 - TimeInterval(components.day! * 24*60*60)))
         
-        if CalendarUtils.isSameDate(month, date: Date(), checkDay: false) {
+        if selectDayAnyway {
             selectedDay = components.day!
         } else {
             selectedDay = nil
@@ -77,6 +81,7 @@ class CalendarMonthView : View {
             let day = TitleButton()
             day.set(font: .normal(.text), for: .Normal)
             day.set(background: theme.colors.background, for: .Normal)
+            
             let current:Int
             if i + 1 < month.currentStartDay {
                 current = (month.lastDayOfPrevMonth - month.currentStartDay) + i + 2
@@ -88,30 +93,48 @@ class CalendarMonthView : View {
             } else {
                 current = (i + 1) - month.currentStartDay + 1
                 
-                day.set(color: .white, for: .Highlight)
+                var skipDay: Bool = false
                 
-                if (i + 1) % 7 == 0 || (i + 2) % 7 == 0 {
-                    day.set(color: theme.colors.redUI, for: .Normal)
-                } else {
-                    day.set(color: theme.colors.text, for: .Normal)
+                var calendar = NSCalendar.current
+//                calendar.timeZone = TimeZone(abbreviation: "UTC")!
+                let components = calendar.dateComponents([.day, .year, .month], from: Date())
+                
+                if month.onlyFuture, CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false) {
+                    if current < components.day! {
+                        day.set(color: .grayText, for: .Normal)
+                        skipDay = true
+                    }
+                } else if month.onlyFuture, components.year! + 1 == month.components.year! && components.month! == month.components.month!  {
+                    if current > components.day! {
+                        day.set(color: .grayText, for: .Normal)
+                        skipDay = true
+                    }
                 }
-                
-                day.layer?.cornerRadius = .cornerRadius
-                
-                if let selectedDay = month.selectedDay, current == selectedDay {
-                    day.isSelected = true
-                    day.set(background: theme.colors.blueSelect, for: .Highlight)
-                    day.apply(state: .Highlight)
-                } else {
-                    day.set(background: theme.colors.blueUI, for: .Highlight)
+                if !skipDay {
+                    day.set(color: .white, for: .Highlight)
+                    
+                    if (i + 1) % 7 == 0 || (i + 2) % 7 == 0 {
+                        day.set(color: theme.colors.redUI, for: .Normal)
+                    } else {
+                        day.set(color: theme.colors.text, for: .Normal)
+                    }
+                    
+                    day.layer?.cornerRadius = .cornerRadius
+                    
+                    if let selectedDay = month.selectedDay, current == selectedDay {
+                        day.isSelected = true
+                        day.set(background: theme.colors.accentSelect, for: .Highlight)
+                        day.apply(state: .Highlight)
+                    } else {
+                        day.set(background: theme.colors.accent, for: .Highlight)
+                    }
+                    
+                    day.set(handler: { (control) in
+                        
+                        month.dayHandler(current)
+                        
+                    }, for: .Click)
                 }
-                
-                day.set(handler: { (control) in
-                    
-                    month.dayHandler(current)
-                    
-                }, for: .Click)
-                
             }
             day.set(text: "\(current)", for: .Normal)
             
@@ -123,7 +146,7 @@ class CalendarMonthView : View {
     
     override func layout() {
         super.layout()
-        let oneSize:NSSize = NSMakeSize(floorToScreenPixels(frame.width / 7), floorToScreenPixels(frame.height / 6))
+        let oneSize:NSSize = NSMakeSize(floorToScreenPixels(backingScaleFactor, frame.width / 7), floorToScreenPixels(backingScaleFactor, frame.height / 6))
         var inset:NSPoint = NSMakePoint(0, 0)
         for i in 0 ..< subviews.count {
             subviews[i].frame = NSMakeRect(inset.x, inset.y, oneSize.width, oneSize.height)
@@ -147,8 +170,10 @@ class CalendarMonthView : View {
 class CalendarMonthController: GenericViewController<CalendarMonthView> {
     let interactions:CalendarMonthInteractions
     let month:CalendarMonthStruct
-    init(_ month:Date, interactions:CalendarMonthInteractions) {
-        self.month = CalendarMonthStruct(month: month, dayHandler: { day in
+    let onlyFuture: Bool
+    init(_ month:Date, onlyFuture: Bool, selectDayAnyway: Bool, interactions:CalendarMonthInteractions) {
+        self.onlyFuture = onlyFuture
+        self.month = CalendarMonthStruct(month: month, selectDayAnyway: selectDayAnyway, onlyFuture: self.onlyFuture, dayHandler: { day in
             interactions.selectAction(CalendarUtils.monthDay(day, date: month))
         })
         self.interactions = interactions
@@ -159,20 +184,68 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     
     override func getCenterBarViewOnce() -> TitledBarView {
         let formatter:DateFormatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US")
+        formatter.locale = Locale(identifier: appAppearance.language.languageCode)
         formatter.dateFormat = "MMMM"
         let monthString:String = formatter.string(from: month.month)
         formatter.dateFormat = "yyyy"
         let yearString:String = formatter.string(from: month.month)
         
-        return TitledBarView(controller: self, .initialize(string: monthString, color: theme.colors.text, font:.medium(.text)), .initialize(string:yearString, color: theme.colors.grayText, font:.normal(.small)))
+        let barView = TitledBarView(controller: self, .initialize(string: monthString, color: theme.colors.text, font:.medium(.text)), .initialize(string:yearString, color: theme.colors.grayText, font:.normal(.small)))
+        
+        barView.set(handler: { [weak self] control in
+            
+            guard let `self` = self else {
+                return
+            }
+            
+            let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+            
+            var now: time_t = time_t(nowTimestamp)
+            var timeinfoNow: tm = tm()
+            localtime_r(&now, &timeinfoNow)
+            
+             var items:[SPopoverItem] = []
+            
+            for i in stride(from: 1900 + timeinfoNow.tm_year - 1, to: 2012, by: -1) {
+                items.append(.init("\(i)", { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.interactions.changeYear(i, self.month.month)
+                }))
+            }
+            if !items.isEmpty {
+                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(30, -50))
+            }
+            
+        }, for: .Click)
+        
+        return barView
     }
     
     var isNextEnabled:Bool {
+        if self.onlyFuture {
+            
+            var calendar = NSCalendar.current
+            
+//            calendar.timeZone = TimeZone(abbreviation: "UTC")!
+            let components = calendar.dateComponents([.year, .month, .day], from: Date())
+
+            
+            if month.components.year! == components.year! {
+                return true
+            } else if components.year! + 1 == month.components.year! {
+                return month.components.month! < components.month!
+            }
+            return true
+        }
         return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
     }
     
     var isPrevEnabled:Bool {
+        if self.onlyFuture {
+            return !CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false)
+        }
         return month.components.year! > 2013 || (month.components.year == 2013 && month.components.month! >= 9)
     }
     
@@ -224,7 +297,10 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         readyOnce()
     }
 
-    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     
 }

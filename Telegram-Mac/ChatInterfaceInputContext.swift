@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 struct PossibleContextQueryTypes: OptionSet {
     var rawValue: Int32
@@ -27,6 +28,7 @@ struct PossibleContextQueryTypes: OptionSet {
     static let contextRequest = PossibleContextQueryTypes(rawValue: (1 << 3))
     static let stickers = PossibleContextQueryTypes(rawValue: (1 << 4))
     static let emoji = PossibleContextQueryTypes(rawValue: (1 << 5))
+    static let emojiFast = PossibleContextQueryTypes(rawValue: (1 << 6))
 }
 
 private func makeScalar(_ c: Character) -> Character {
@@ -80,15 +82,8 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             }
         }
         
-        if inputText.isSingleEmoji {
-            var inputText = inputText
-            if inputText.canHaveSkinToneModifier {
-                inputText = inputText.emojiUnmodified
-            }
-            return (inputText.startIndex ..< inputText.endIndex, [.stickers], nil)
-        }
         
-        let maxUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: inputState.selectionRange.lowerBound)
+        let maxUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: min(inputState.selectionRange.lowerBound, inputText.utf16.count))
         guard let maxIndex = maxUtfIndex.samePosition(in: inputText) else {
             return nil
         }
@@ -97,9 +92,19 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         var index = inputText.index(before: maxIndex)
         
+        if inputText.length <= 6, inputText.isSingleEmoji {
+            var inputText = inputText
+            if inputText.canHaveSkinToneModifier {
+                inputText = inputText.emojiUnmodified
+            }
+            return (inputText.startIndex ..< maxIndex, [.stickers], nil)
+        }
+        
+       
+        
         var possibleQueryRange: Range<String.Index>?
         
-        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji])
+        var possibleTypes = PossibleContextQueryTypes([.command, .mention, .emoji, .hashtag, .emojiFast])
         //var possibleTypes = PossibleContextQueryTypes([.command, .mention])
 
 
@@ -107,15 +112,38 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         func check() {
             if inputText.startIndex != inputText.index(before: index) {
                 let prev = inputText.index(before: inputText.index(before: index))
-                if (inputText[prev] != spaceScalar && inputText[prev] != newlineScalar) {
+                let scalars:CharacterSet = CharacterSet.alphanumerics
+                if let scalar = inputText[prev].unicodeScalars.first, scalars.contains(scalar) && inputText[prev] != newlineScalar {
                     possibleTypes = []
+                }
+                switch possibleTypes {
+                case .emoji:
+                    if index != inputText.endIndex {
+                        if let scalar = inputText[index].unicodeScalars.first {
+                            if !scalars.contains(scalar) {
+                                possibleTypes = []
+                            }
+                        } else {
+                            possibleTypes = []
+                        }
+                    } else {
+                        // possibleTypes = []
+                    }
+                    
+                default:
+                    break
                 }
             }
         }
         
         var definedType = false
         
-        while true {
+        var characterSet = CharacterSet.alphanumerics
+        characterSet.insert(hashScalar.unicodeScalars.first!)
+        characterSet.insert(atScalar.unicodeScalars.first!)
+        characterSet.insert(slashScalar.unicodeScalars.first!)
+        characterSet.insert(emojiScalar.unicodeScalars.first!)
+        for _ in 0 ..< 20 {
             let c = inputText[index]
             
             
@@ -123,7 +151,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             
             //if index == inputText.startIndex {
                 //|| (inputText[inputText.index(before: index)] == spaceScalar || inputText[inputText.index(before: index)] == newlineScalar)
-                if c == spaceScalar || c == newlineScalar {
+                if !characterSet.contains(c.unicodeScalars.first!) {
                     possibleTypes = []
                 } else if c == hashScalar {
                     possibleTypes = possibleTypes.intersection([.hashtag])
@@ -173,6 +201,13 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
             }
         }
         
+        if inputText.trimmingCharacters(in: CharacterSet.letters).isEmpty, !inputText.isEmpty  {
+            possibleTypes = possibleTypes.intersection([.emojiFast])
+            definedType = true
+            possibleQueryRange = index ..< maxIndex
+        }
+        
+        
         if let possibleQueryRange = possibleQueryRange, definedType && !possibleTypes.isEmpty {
             return (possibleQueryRange, possibleTypes, nil)
         }
@@ -183,22 +218,49 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
 func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, includeContext: Bool) -> ChatPresentationInputQuery {
     let inputState = chatPresentationInterfaceState.effectiveInput
     if let (possibleQueryRange, possibleTypes, additionalStringRange) = textInputStateContextQueryRangeAndType(inputState, includeContext: includeContext) {
-        let query = String(inputState.inputText[possibleQueryRange]) //.substring(with: possibleQueryRange)
+        
+        if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention] && possibleTypes != [.emoji]) {
+            return .none
+        }
+        var possibleQueryRange = possibleQueryRange
+//        if possibleQueryRange.upperBound > inputState.inputText.endIndex {
+//            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
+//        }
+        
+//        possibleQueryRange.lowerBound.encodedOffset
+//        
+//        if let index = inputState.inputText.index(possibleQueryRange.upperBound, offsetBy: 0, limitedBy: inputState.inputText.endIndex) {
+//            possibleQueryRange = possibleQueryRange.lowerBound ..< index
+//        } else {
+//            return .none
+//        }
+
+
+        
+        let value = inputState.inputText[possibleQueryRange]
+        let query = String(value) 
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
         } else if possibleTypes == [.mention] {
-            return .mention(query: query, includeRecent: inputState.inputText.startIndex == inputState.inputText.index(before: possibleQueryRange.lowerBound))
+            return .mention(query: query, includeRecent: inputState.inputText.startIndex == inputState.inputText.index(before: possibleQueryRange.lowerBound) && chatPresentationInterfaceState.state == .normal)
         } else if possibleTypes == [.command] {
             return .command(query)
         } else if possibleTypes == [.contextRequest], let additionalStringRange = additionalStringRange {
-            let additionalString = inputState.inputText.substring(with: additionalStringRange)
+            let additionalString = String(inputState.inputText[additionalStringRange])
             return .contextRequest(addressName: query, query: additionalString)
-        } else if possibleTypes == [.stickers], chatPresentationInterfaceState.editState == nil {
-            return .stickers(query)
+        } else if possibleTypes == [.stickers] {
+            return .stickers(query.emojiUnmodified)
         } else if possibleTypes == [.emoji] {
-            return .emoji(query)
+            if query.trimmingCharacters(in: CharacterSet.letters).isEmpty {
+                return .emoji(query, firstWord: false)
+            } else {
+                return .none
+            }
+        } else if possibleTypes == [.emojiFast] {
+            return .emoji(query, firstWord: true)
         }
         return .none
+
     } else {
         return .none
     }

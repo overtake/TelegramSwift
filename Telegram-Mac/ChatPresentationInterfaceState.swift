@@ -8,10 +8,11 @@
 
 import Cocoa
 
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 enum ChatPresentationInputContext {
     case none
@@ -21,7 +22,11 @@ enum ChatPresentationInputContext {
     case emoji
 }
 
-
+enum RestrictedMediaType {
+    case stickers
+    case media
+    
+}
 
 
 enum ChatPresentationInputQuery: Equatable {
@@ -30,54 +35,8 @@ enum ChatPresentationInputQuery: Equatable {
     case mention(query: String, includeRecent: Bool)
     case command(String)
     case contextRequest(addressName: String, query: String)
-    case emoji(String)
+    case emoji(String, firstWord: Bool)
     case stickers(String)
-    static func ==(lhs: ChatPresentationInputQuery, rhs: ChatPresentationInputQuery) -> Bool {
-        switch lhs {
-        case let .hashtag(query):
-            if case .hashtag(query) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .stickers(query):
-            if case .stickers(query) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .emoji(query):
-            if case .emoji(query) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .mention(query, includeInline):
-            if case .mention(query, includeInline) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .command(query):
-            if case .command(query) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .contextRequest(addressName, query):
-            if case .contextRequest(addressName, query) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .none:
-            if case .none = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 enum ChatPresentationInputQueryResult: Equatable {
@@ -85,7 +44,8 @@ enum ChatPresentationInputQueryResult: Equatable {
     case mentions([Peer])
     case commands([PeerCommand])
     case stickers([FoundStickerItem])
-    case emoji([EmojiClue])
+    case emoji([String], Bool)
+    case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), [Peer], String)
     case contextRequestResult(Peer, ChatContextResultCollection?)
     
     static func ==(lhs: ChatPresentationInputQueryResult, rhs: ChatPresentationInputQueryResult) -> Bool {
@@ -102,9 +62,33 @@ enum ChatPresentationInputQueryResult: Equatable {
                 } else {
                     return false
             }
-        case let .emoji(lhsResults):
-            if case let .emoji(rhsResults) = rhs {
-                return lhsResults == rhsResults
+        case let .emoji(lhsResults, lhsFirstWord):
+            if case let .emoji(rhsResults, rhsFirstWord) = rhs {
+                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord
+            } else {
+                return false
+            }
+        case let .searchMessages(lhsMessages, lhsPeers, lhsSearchText):
+            if case let .searchMessages(rhsMessages, rhsPeers, rhsSearchText) = rhs {
+                if lhsPeers.count == rhsPeers.count {
+                    for i in 0 ..< rhsPeers.count {
+                        if !lhsPeers[i].isEqual(rhsPeers[i]) {
+                            return false
+                        }
+                    }
+                } else {
+                    return false
+                }
+                if lhsMessages.0.count == rhsMessages.0.count {
+                    for i in 0 ..< lhsMessages.0.count {
+                        if !isEqualMessages(lhsMessages.0[i], rhsMessages.0[i]) {
+                            return false
+                        }
+                    }
+                    return lhsSearchText == rhsSearchText && lhsMessages.1 == rhsMessages.1
+                } else {
+                    return false
+                }
             } else {
                 return false
             }
@@ -149,36 +133,6 @@ enum ChatPresentationInputQueryResult: Equatable {
 }
 
 
-final class ChatEditState : Equatable {
-    let inputState:ChatTextInputState
-    let message:Message
-    init(message:Message, state:ChatTextInputState? = nil) {
-        self.message = message
-        if let state = state {
-            self.inputState = state
-        } else {
-            var attribute:TextEntitiesMessageAttribute?
-            for attr in message.attributes {
-                if let attr = attr as? TextEntitiesMessageAttribute {
-                    attribute = attr
-                }
-            }
-            var attributes:[ChatTextInputAttribute] = []
-            if let attribute = attribute {
-                attributes = chatTextAttributes(from: attribute)
-            }
-            self.inputState = ChatTextInputState(inputText:message.text, selectionRange:message.text.length ..< message.text.length, attributes: attributes )
-        }
-    }
-    
-    func withUpdated(state:ChatTextInputState) -> ChatEditState {
-        return ChatEditState(message:message, state:state)
-    }
-    
-    static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
-        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState
-    }
-}
 
 
 enum ChatRecordingStatus : Equatable {
@@ -186,24 +140,16 @@ enum ChatRecordingStatus : Equatable {
     case recording(duration: Double)
 }
 
-func ==(lhs: ChatRecordingStatus, rhs: ChatRecordingStatus) -> Bool {
-    switch lhs {
-    case .paused:
-        if case .paused = rhs {
-            return true
-        } else {
-            return false
-        }
-    case .recording(let duration):
-        if case .recording(duration) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 class ChatRecordingState : Equatable {
+  
+    let autohold: Bool
+    let holdpromise: ValuePromise<Bool> = ValuePromise()
+    init(autohold: Bool) {
+        self.autohold = autohold
+        holdpromise.set(autohold)
+    }
+    
     var micLevel: Signal<Float, NoError> {
         return .complete()
     }
@@ -236,9 +182,12 @@ func ==(lhs:ChatRecordingState, rhs:ChatRecordingState) -> Bool {
 
 final class ChatRecordingVideoState : ChatRecordingState {
     let pipeline: VideoRecorderPipeline
-    private let path: String = NSTemporaryDirectory() + "video_message\(arc4random()).mp4"
-    override init() {
-        pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path))
+    private let path: String
+    init(account: Account, liveUpload:Bool, autohold: Bool) {
+        let id:Int64 = arc4random64()
+        self.path = NSTemporaryDirectory() + "video_message\(id).mp4"
+        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), liveUploading: liveUpload ? PreUploadManager(path, account: account, id: id) : nil)
+        super.init(autohold: autohold)
     }
     
     override var micLevel: Signal<Float, NoError> {
@@ -259,8 +208,8 @@ final class ChatRecordingVideoState : ChatRecordingState {
             }
         } |> take(1) |> map { state in
             switch state {
-            case let .finishRecording(path, duration, _):
-                return [VideoMessageSenderContainer(path: path, duration: duration, size: CGSize(width: 200, height: 200))]
+            case let .finishRecording(path, duration, id, _):
+                return [VideoMessageSenderContainer(path: path, duration: duration, size: CGSize(width: 200, height: 200), id: id)]
             default:
                 return []
             }
@@ -300,7 +249,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
     override var data: Signal<[MediaSenderContainer], NoError> {
         return recorder.takenRecordedData() |> map { value in
             if let value = value, value.duration > 0.5 {
-                return [VoiceSenderContainer(data: value)]
+                return [VoiceSenderContainer(data: value, id: value.id)]
             }
             return []
         }
@@ -312,9 +261,17 @@ final class ChatRecordingAudioState : ChatRecordingState {
     
     
     
-    override init() {
-        recorder = ManagedAudioRecorder()
+    init(account: Account, liveUpload: Bool, autohold: Bool) {
+        let id = arc4random64()
+        let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
+        let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, account: account, id: id) : nil
+        let dataItem = TGDataItem(filePath: path)
+        
+        recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
+        super.init(autohold: autohold)
     }
+    
+    
     
     override func start() {
         recorder.start()
@@ -328,7 +285,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
         recorder.stop()
         _ = data.start(next: { data in
             for container in data {
-                try? FileManager.default.removeItem(atPath: container.path)
+               // try? FileManager.default.removeItem(atPath: container.path)
             }
         })
     }
@@ -346,6 +303,7 @@ enum ChatState : Equatable {
     case selecting
     case block(String)
     case action(String, (ChatInteraction)->Void)
+    case channelWithDiscussion(discussionGroupId: PeerId?, leftAction: String, rightAction: String)
     case editing
     case recording(ChatRecordingState)
     case restricted(String)
@@ -355,6 +313,12 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
     switch lhs {
     case .normal:
         if case .normal = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .channelWithDiscussion(discussionGroupId, leftAction, rightAction):
+        if case .channelWithDiscussion(discussionGroupId, leftAction, rightAction) = rhs {
             return true
         } else {
             return false
@@ -398,31 +362,86 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
     }
 }
 
+struct ChatPeerStatus : Equatable {
+    let canAddContact: Bool
+    let peerStatusSettings: PeerStatusSettings?
+    init(canAddContact: Bool, peerStatusSettings: PeerStatusSettings?) {
+        self.canAddContact = canAddContact
+        self.peerStatusSettings = peerStatusSettings
+    }
+}
+
+struct SlowMode : Equatable {
+    let validUntil: Int32?
+    let timeout: Int32?
+    let sendingIds: [MessageId]
+    init(validUntil: Int32? = nil, timeout: Int32? = nil, sendingIds: [MessageId] = []) {
+        self.validUntil = validUntil
+        self.timeout = timeout
+        self.sendingIds = sendingIds
+    }
+    func withUpdatedValidUntil(_ validUntil: Int32?) -> SlowMode {
+        return SlowMode(validUntil: validUntil, timeout: self.timeout, sendingIds: self.sendingIds)
+    }
+    func withUpdatedTimeout(_ timeout: Int32?) -> SlowMode {
+        return SlowMode(validUntil: self.validUntil, timeout: timeout, sendingIds: self.sendingIds)
+    }
+    func withUpdatedSendingIds(_ sendingIds: [MessageId]) -> SlowMode {
+        return SlowMode(validUntil: self.validUntil, timeout: self.timeout, sendingIds: sendingIds)
+    }
+    
+    var hasLocked: Bool {
+        return timeout != nil || !sendingIds.isEmpty
+    }
+    
+    var sendingLocked: Bool {
+        return timeout != nil
+    }
+    
+    var errorText: String? {
+        if let timeout = timeout {
+            return slowModeTooltipText(timeout)
+        } else if !sendingIds.isEmpty {
+            return L10n.slowModeMultipleError
+        } else {
+            return nil
+        }
+    }
+}
+
 struct ChatPresentationInterfaceState: Equatable {
     let interfaceState: ChatInterfaceState
     let peer: Peer?
-    let isSearchMode:Bool
+    let mainPeer: Peer?
+    let chatLocation: ChatLocation
+    let isSearchMode:(Bool, Peer?)
     let notificationSettings: TelegramPeerNotificationSettings?
     let inputQueryResult: ChatPresentationInputQueryResult?
     let keyboardButtonsMessage: Message?
     let initialAction:ChatInitialAction?
     let historyCount:Int?
     let isBlocked:Bool?
-    let editState:ChatEditState?
     let recordingState:ChatRecordingState?
-    let reportStatus:PeerReportStatus
+    let peerStatus:ChatPeerStatus?
     let pinnedMessageId:MessageId?
+    let cachedPinnedMessage: Message?
     let urlPreview: (String, TelegramMediaWebpage)?
     let selectionState: ChatInterfaceSelectionState?
-    
+    let limitConfiguration: LimitsConfiguration
+   
     let sidebarEnabled:Bool?
     let sidebarShown:Bool?
     let layout:SplitViewState?
-    
+    let discussionGroupId: PeerId?
     let canAddContact:Bool?
     let isEmojiSection: Bool
+    let canInvokeBasicActions:(delete: Bool, forward: Bool)
+    let isNotAccessible: Bool
+    let hasScheduled: Bool
+    let slowMode: SlowMode?
+    let failedMessageIds:Set<MessageId>
     
-    
+    let restrictionInfo: PeerAccessRestrictionInfo?
     var inputContext: ChatPresentationInputQuery {
         return inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
     }
@@ -437,59 +456,91 @@ struct ChatPresentationInterfaceState: Equatable {
     
     var state:ChatState {
         if self.selectionState == nil {
-            if self.editState != nil {
+            if self.interfaceState.editState != nil {
                 return .editing
             }
+            
             if let peer = peer as? TelegramChannel {
+                #if APP_STORE
+                if let restrictionInfo = restrictionInfo {
+                    for rule in restrictionInfo.rules {
+                        if rule.platform == "ios" || rule.platform == "all" {
+                            return .action(L10n.chatInputClose, { chatInteraction in
+                                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                            })
+                        }
+                    }
+                }
+                #endif
+                
+                
+                
                 if peer.participationStatus == .left {
-                    return .action(tr(.chatInputJoin), { chatInteraction in
+                    return .action(L10n.chatInputJoin, { chatInteraction in
                         chatInteraction.joinChannel()
                     })
                 } else if peer.participationStatus == .kicked {
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
-                } else if peer.hasBannedRights(.banSendMessages), let bannedRights = peer.bannedRights {
-                    
-                    return .restricted(bannedRights.untilDate != Int32.max ? tr(.channelPersmissionDeniedSendMessagesUntil(bannedRights.formattedUntilDate)) : tr(.channelPersmissionDeniedSendMessagesForever))
+                } else if let permissionText = permissionText(from: peer, for: .banSendMessages) {
+                    return .restricted(permissionText)
                 } else if !peer.canSendMessage, let notificationSettings = notificationSettings {
-                    return .action(notificationSettings.isMuted ? tr(.chatInputUnmute) : tr(.chatInputMute), { chatInteraction in
-                        chatInteraction.toggleNotifications()
+                    switch peer.info {
+                    case let .broadcast(info):
+                        if info.flags.contains(.hasDiscussionGroup) {
+                            return .channelWithDiscussion(discussionGroupId: discussionGroupId, leftAction: notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, rightAction: L10n.chatInputDiscuss)
+                        }
+                    default:
+                        break
+                    }
+                    return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
+                        chatInteraction.toggleNotifications(nil)
                     })
                 }
             } else if let peer = peer as? TelegramGroup {
                 if  peer.membership == .Left {
-                    return .action(tr(.chatInputReturn),{ chatInteraction in
+                    return .action(L10n.chatInputReturn,{ chatInteraction in
                         chatInteraction.returnGroup()
                     })
                 } else if peer.membership == .Removed {
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
                 }
-            } else if let peer = peer as? TelegramSecretChat {
+            } else if let peer = peer as? TelegramSecretChat, let mainPeer = mainPeer {
                 
                 switch peer.embeddedState {
                 case .terminated:
-                    return .action(tr(.chatInputDelete), { chatInteraction in
+                    return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
                     })
                 case .handshake:
-                    return .action(tr(.chatInputSecretChatWaitingToOnline), { chatInteraction in
-                        
-                    })
+                    return .restricted(L10n.chatInputSecretChatWaitingToUserOnline(mainPeer.compactDisplayTitle))
                 default:
                     break
                 }
             }
             
             if let blocked = isBlocked, blocked {
-                return .action(tr(.chatInputUnblock), { chatInteraction in
+                
+                if let peer = peer, peer.isBot {
+                    return .action(L10n.chatInputRestart, { chatInteraction in
+                        chatInteraction.unblock()
+                        chatInteraction.startBot()
+                    })
+                }
+                
+                return .action(tr(L10n.chatInputUnblock), { chatInteraction in
                     chatInteraction.unblock()
                 })
             }
             
-            if self.editState != nil {
+            if let peer = peer, let permissionText = permissionText(from: peer, for: .banSendMessages) {
+                return .restricted(permissionText)
+            }
+            
+            if self.interfaceState.editState != nil {
                 return .editing
             }
             
@@ -498,7 +549,7 @@ struct ChatPresentationInterfaceState: Equatable {
             }
 
             if let initialAction = initialAction, case .start(_) = initialAction  {
-                return .action(tr(.chatInputStartBot), { chatInteraction in
+                return .action(tr(L10n.chatInputStartBot), { chatInteraction in
                     chatInteraction.invokeInitialAction()
                 })
             }
@@ -506,11 +557,12 @@ struct ChatPresentationInterfaceState: Equatable {
             if let peer = peer as? TelegramUser {
                 
                 if peer.botInfo != nil, let historyCount = historyCount, historyCount == 0 {
-                    return .action(tr(.chatInputStartBot), { chatInteraction in
+                    return .action(tr(L10n.chatInputStartBot), { chatInteraction in
                         chatInteraction.startBot()
                     })
                 }
             }
+           
             
             return .normal
         } else {
@@ -533,12 +585,54 @@ struct ChatPresentationInterfaceState: Equatable {
         return false
     }
     
-
+    var slowModeMultipleLocked: Bool {
+        if let _ = self.slowMode {
+            
+            var keys:[Int64:Int64] = [:]
+            var forwardMessages:[Message] = []
+            for message in self.interfaceState.forwardMessages {
+                if let groupingKey = message.groupingKey {
+                    if keys[groupingKey] == nil {
+                        keys[groupingKey] = groupingKey
+                        forwardMessages.append(message)
+                    }
+                } else {
+                    forwardMessages.append(message)
+                }
+            }
+            if forwardMessages.count > 1 || (!effectiveInput.inputText.isEmpty && forwardMessages.count == 1) {
+                return true
+            } else if effectiveInput.inputText.length > 4096 {
+                return true
+            }
+        }
+        return false
+    }
+    
+    var slowModeErrorText: String? {
+        if let slowMode = self.slowMode, slowMode.hasLocked {
+            return slowMode.errorText
+        } else if slowModeMultipleLocked {
+            if effectiveInput.inputText.length > 4096 {
+                return L10n.slowModeTooLongError
+            }
+            return L10n.slowModeForwardCommentError
+        } else {
+            return nil
+        }
+    }
     
     var abilityToSend:Bool {
         if state == .normal {
-            return !effectiveInput.inputText.isEmpty || !interfaceState.forwardMessageIds.isEmpty
-        } else if let editState = editState {
+            if let slowMode = self.slowMode {
+                if slowMode.hasLocked {
+                    return false
+                } else if self.slowModeMultipleLocked {
+                    return false
+                }
+            }
+            return (!effectiveInput.inputText.isEmpty || !interfaceState.forwardMessageIds.isEmpty)
+        } else if let editState = interfaceState.editState {
             if editState.message.media.count == 0 {
                 return !effectiveInput.inputText.isEmpty
             } else {
@@ -554,37 +648,37 @@ struct ChatPresentationInterfaceState: Equatable {
         return false
     }
     
-    let maxInput:Int32 = 10000
-    let maxShortInput:Int32 = 200
-    
+    static let maxInput:Int32 = 50000
+    static let maxShortInput:Int32 = 1024
+    static let textLimit: Int32 = 4096
     var maxInputCharacters:Int32 {
         if state == .normal {
-            return maxInput
-        } else if let editState = editState {
+            return ChatPresentationInterfaceState.maxInput
+        } else if let editState = interfaceState.editState {
             if editState.message.media.count == 0 {
-                return maxInput
+                return ChatPresentationInterfaceState.textLimit
             } else {
                 for media in editState.message.media {
                     if !(media is TelegramMediaWebpage) {
-                        return maxShortInput
+                        return ChatPresentationInterfaceState.maxShortInput
                     }
                 }
-                return maxInput
+                return ChatPresentationInterfaceState.textLimit
             }
         }
         
-        return 0
+        return ChatPresentationInterfaceState.maxInput
     }
     
     var effectiveInput:ChatTextInputState {
-        if let editState = editState {
+        if let editState = interfaceState.editState {
             return editState.inputState
         } else {
             return interfaceState.inputState
         }
     }
     
-    init() {
+    init(_ chatLocation: ChatLocation) {
         self.interfaceState = ChatInterfaceState()
         self.peer = nil
         self.notificationSettings = nil
@@ -592,11 +686,10 @@ struct ChatPresentationInterfaceState: Equatable {
         self.keyboardButtonsMessage = nil
         self.initialAction = nil
         self.historyCount = 0
-        self.isSearchMode = false
+        self.isSearchMode = (false, nil)
         self.recordingState = nil
-        self.editState = nil
         self.isBlocked = nil
-        self.reportStatus = .unknown
+        self.peerStatus = nil
         self.pinnedMessageId = nil
         self.urlPreview = nil
         self.selectionState = nil
@@ -605,9 +698,20 @@ struct ChatPresentationInterfaceState: Equatable {
         self.layout = nil
         self.canAddContact = nil
         self.isEmojiSection = FastSettings.entertainmentState == .emoji
+        self.chatLocation = chatLocation
+        self.canInvokeBasicActions = (delete: false, forward: false)
+        self.isNotAccessible = false
+        self.restrictionInfo = nil
+        self.cachedPinnedMessage = nil
+        self.mainPeer = nil
+        self.limitConfiguration = LimitsConfiguration.defaultValue
+        self.discussionGroupId = nil
+        self.slowMode = nil
+        self.hasScheduled = false
+        self.failedMessageIds = Set()
     }
     
-    init(interfaceState: ChatInterfaceState, peer: Peer?, notificationSettings:TelegramPeerNotificationSettings?, inputQueryResult: ChatPresentationInputQueryResult?, keyboardButtonsMessage:Message?, initialAction:ChatInitialAction?, historyCount:Int?, isSearchMode:Bool, editState: ChatEditState?, recordingState: ChatRecordingState?, isBlocked:Bool?, reportStatus: PeerReportStatus, pinnedMessageId:MessageId?, urlPreview: (String, TelegramMediaWebpage)?, selectionState: ChatInterfaceSelectionState?, sidebarEnabled: Bool?, sidebarShown: Bool?, layout:SplitViewState?, canAddContact:Bool?, isEmojiSection: Bool) {
+    init(interfaceState: ChatInterfaceState, peer: Peer?, notificationSettings:TelegramPeerNotificationSettings?, inputQueryResult: ChatPresentationInputQueryResult?, keyboardButtonsMessage:Message?, initialAction:ChatInitialAction?, historyCount:Int?, isSearchMode:(Bool, Peer?), recordingState: ChatRecordingState?, isBlocked:Bool?, peerStatus: ChatPeerStatus?, pinnedMessageId:MessageId?, urlPreview: (String, TelegramMediaWebpage)?, selectionState: ChatInterfaceSelectionState?, sidebarEnabled: Bool?, sidebarShown: Bool?, layout:SplitViewState?, canAddContact:Bool?, isEmojiSection: Bool, chatLocation: ChatLocation, canInvokeBasicActions: (delete: Bool, forward: Bool), isNotAccessible: Bool, restrictionInfo: PeerAccessRestrictionInfo?, cachedPinnedMessage: Message?, mainPeer: Peer?, limitConfiguration: LimitsConfiguration, discussionGroupId: PeerId?, slowMode: SlowMode?, hasScheduled: Bool, failedMessageIds: Set<MessageId>) {
         self.interfaceState = interfaceState
         self.peer = peer
         self.notificationSettings = notificationSettings
@@ -616,10 +720,9 @@ struct ChatPresentationInterfaceState: Equatable {
         self.initialAction = initialAction
         self.historyCount = historyCount
         self.isSearchMode = isSearchMode
-        self.editState = editState
         self.recordingState = recordingState
         self.isBlocked = isBlocked
-        self.reportStatus = reportStatus
+        self.peerStatus = peerStatus
         self.pinnedMessageId = pinnedMessageId
         self.urlPreview = urlPreview
         self.selectionState = selectionState
@@ -628,10 +731,24 @@ struct ChatPresentationInterfaceState: Equatable {
         self.layout = layout
         self.canAddContact = canAddContact
         self.isEmojiSection = isEmojiSection
+        self.chatLocation = chatLocation
+        self.canInvokeBasicActions = canInvokeBasicActions
+        self.isNotAccessible = isNotAccessible
+        self.restrictionInfo = restrictionInfo
+        self.cachedPinnedMessage = cachedPinnedMessage
+        self.mainPeer = mainPeer
+        self.limitConfiguration = limitConfiguration
+        self.discussionGroupId = discussionGroupId
+        self.slowMode = slowMode
+        self.hasScheduled = hasScheduled
+        self.failedMessageIds = failedMessageIds
     }
     
     static func ==(lhs: ChatPresentationInterfaceState, rhs: ChatPresentationInterfaceState) -> Bool {
         if lhs.interfaceState != rhs.interfaceState {
+            return false
+        }
+        if lhs.discussionGroupId != rhs.discussionGroupId {
             return false
         }
         if let lhsPeer = lhs.peer, let rhsPeer = rhs.peer {
@@ -642,15 +759,44 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.inputContext != rhs.inputContext {
+        if let lhsPeer = lhs.mainPeer, let rhsPeer = rhs.mainPeer {
+            if !lhsPeer.isEqual(rhsPeer) {
+                return false
+            }
+        } else if (lhs.mainPeer == nil) != (rhs.mainPeer == nil) {
+            return false
+        }
+        
+        if lhs.restrictionInfo != rhs.restrictionInfo {
+            return false
+        }
+        if lhs.limitConfiguration != rhs.limitConfiguration {
+            return false
+        }
+        
+        if let lhsMessage = lhs.cachedPinnedMessage, let rhsMessage = rhs.cachedPinnedMessage {
+            if !isEqualMessages(lhsMessage, rhsMessage) {
+                return false
+            }
+        } else if (lhs.cachedPinnedMessage != nil) != (rhs.cachedPinnedMessage != nil) {
+            return false
+        }
+        
+        
+        if lhs.chatLocation != rhs.chatLocation {
+            return false
+        }
+        if lhs.hasScheduled != rhs.hasScheduled {
             return false
         }
         
         if lhs.state != rhs.state {
             return false
         }
-        
-        if lhs.isSearchMode != rhs.isSearchMode {
+        if lhs.slowMode != rhs.slowMode {
+            return false
+        }
+        if lhs.isSearchMode.0 != rhs.isSearchMode.0 {
             return false
         }
         if lhs.sidebarEnabled != rhs.sidebarEnabled {
@@ -670,10 +816,6 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.editState != rhs.editState {
-            return false
-        }
-        
         if lhs.inputQueryResult != rhs.inputQueryResult {
             return false
         }
@@ -690,7 +832,10 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.reportStatus != rhs.reportStatus {
+        if lhs.peerStatus != rhs.peerStatus {
+            return false
+        }
+        if lhs.isNotAccessible != rhs.isNotAccessible {
             return false
         }
         
@@ -704,12 +849,15 @@ struct ChatPresentationInterfaceState: Equatable {
         if lhs.isEmojiSection != rhs.isEmojiSection {
             return false
         }
+        if lhs.failedMessageIds != rhs.failedMessageIds {
+            return false
+        }
         
         if let lhsUrlPreview = lhs.urlPreview, let rhsUrlPreview = rhs.urlPreview {
             if lhsUrlPreview.0 != rhsUrlPreview.0 {
                 return false
             }
-            if !lhsUrlPreview.1.isEqual(rhsUrlPreview.1) {
+            if !lhsUrlPreview.1.isEqual(to: rhsUrlPreview.1) {
                 return false
             }
         } else if (lhs.urlPreview != nil) != (rhs.urlPreview != nil) {
@@ -724,16 +872,22 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
+        if lhs.inputContext != rhs.inputContext {
+            return false
+        }
+        if lhs.canInvokeBasicActions != rhs.canInvokeBasicActions {
+            return false
+        }
         return true
     }
     
     func updatedInterfaceState(_ f: (ChatInterfaceState) -> ChatInterfaceState) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: f(self.interfaceState), peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: f(self.interfaceState), peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
         
     }
     
     func updatedKeyboardButtonsMessage(_ message: Message?) -> ChatPresentationInterfaceState {
-        let interface = ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:message, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        let interface = ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:message, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
         
         if let peerId = peer?.id, let keyboardMessage = interface.keyboardButtonsMessage {
             if keyboardButtonsMessage?.id != keyboardMessage.id || keyboardButtonsMessage?.stableVersion != keyboardMessage.stableVersion {
@@ -747,69 +901,82 @@ struct ChatPresentationInterfaceState: Equatable {
     }
     
     func updatedPeer(_ f: (Peer?) -> Peer?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: f(self.peer), notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        
+        let peer = f(self.peer)
+        
+        var restrictionInfo: PeerAccessRestrictionInfo? = self.restrictionInfo
+        if let peer = peer as? TelegramChannel, let info = peer.restrictionInfo {
+            restrictionInfo = info
+        }
+        
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func updatedMainPeer(_ mainPeer: Peer?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func updatedNotificationSettings(_ notificationSettings:TelegramPeerNotificationSettings?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     
     
     func updatedHistoryCount(_ historyCount:Int?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
-    func updatedSearchMode(_ searchMode: Bool) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: searchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+    func updatedSearchMode(_ isSearchMode: (Bool, Peer?)) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func updatedInputQueryResult(_ f: (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: f(self.inputQueryResult), keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: f(self.inputQueryResult), keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func updatedInitialAction(_ initialAction:ChatInitialAction?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
-    func withEditMessage(_ message:Message) -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: ChatEditState(message: message), recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
-    }
-    
-    func withoutEditMessage() -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: nil, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
-    }
     
     func withRecordingState(_ state:ChatRecordingState) -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: state, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: state, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withoutRecordingState() -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: nil, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: nil, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedBlocked(_ blocked:Bool) -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: blocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: blocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedPinnedMessageId(_ messageId:MessageId?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: messageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: messageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
-    func withUpdatedReportStatus(_ reportStatus:PeerReportStatus) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+    func withUpdatedCachedPinnedMessage(_ cachedPinnedMessage:Message?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withUpdatedPeerStatusSettings(_ peerStatus:ChatPeerStatus?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withEditMessage(_ message:Message) -> ChatPresentationInterfaceState {
+        return self.updatedInterfaceState({$0.withEditMessage(message)})
+    }
+    
+    func withoutEditMessage() -> ChatPresentationInterfaceState {
+        return self.updatedInterfaceState({$0.withoutEditMessage()})
     }
     
     func withUpdatedEffectiveInputState(_ inputState: ChatTextInputState) -> ChatPresentationInterfaceState {
-        if let editState = self.editState {
-            return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage: self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: ChatEditState(message: editState.message, state: inputState), recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
-        } else {
-            return self.updatedInterfaceState({$0.withUpdatedInputState(inputState)})
-        }
+        return self.updatedInterfaceState({$0.withUpdatedInputState(inputState)})
     }
     
     func updatedUrlPreview(_ urlPreview: (String, TelegramMediaWebpage)?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     
@@ -825,13 +992,17 @@ struct ChatPresentationInterfaceState: Equatable {
         if let selectionState = self.selectionState {
             selectedIds.formUnion(selectionState.selectedIds)
         }
-        selectedIds.insert(messageId)
+        if selectedIds.count < 100 {
+            selectedIds.insert(messageId)
+        } else {
+            NSSound.beep()
+        }
         
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState?.withUpdatedSelectedIds(selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedSelectedMessages(_ ids:Set<MessageId>) -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: ids), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState?.withUpdatedSelectedIds(ids), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withToggledSelectedMessage(_ messageId: MessageId) -> ChatPresentationInterfaceState {
@@ -839,41 +1010,112 @@ struct ChatPresentationInterfaceState: Equatable {
         if let selectionState = self.selectionState {
             selectedIds.formUnion(selectionState.selectedIds)
         }
-        if selectedIds.contains(messageId) {
+        let isSelected: Bool = selectedIds.contains(messageId)
+        if isSelected {
             let _ = selectedIds.remove(messageId)
         } else {
-            selectedIds.insert(messageId)
+            if selectedIds.count < 100 {
+                selectedIds.insert(messageId)
+            } else {
+                NSSound.beep()
+            }
         }
         
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        var selectionState: ChatInterfaceSelectionState = self.selectionState?.withUpdatedSelectedIds(selectedIds) ?? ChatInterfaceSelectionState(selectedIds: selectedIds, lastSelectedId: nil)
+        
+        if let event = NSApp.currentEvent {
+            if !event.modifierFlags.contains(.shift) {
+                if !isSelected {
+                    selectionState = selectionState.withUpdatedLastSelected(messageId)
+                } else {
+                    var foundBestOption: Bool = false
+                    for id in selectedIds {
+                        if id > messageId {
+                            selectionState = selectionState.withUpdatedLastSelected(id)
+                            foundBestOption = true
+                            break
+                        }
+                    }
+                    if !foundBestOption {
+                        selectionState = selectionState.withUpdatedLastSelected(messageId)
+                    }
+                }
+            }
+        }
+        
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
+    func withRemovedSelectedMessage(_ messageId: MessageId) -> ChatPresentationInterfaceState {
+        var selectedIds = Set<MessageId>()
+        if let selectionState = self.selectionState {
+            selectedIds.formUnion(selectionState.selectedIds)
+        }
+        let _ = selectedIds.remove(messageId)
+        
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState?.withUpdatedSelectedIds(selectedIds), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+
+    
     func withoutSelectionState() -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState:nil, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: nil, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withSelectionState() -> ChatPresentationInterfaceState {
-         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: []), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: ChatInterfaceSelectionState(selectedIds: [], lastSelectedId: nil), sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
 
     func withToggledSidebarEnabled(_ enabled: Bool?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: enabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: enabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withToggledSidebarShown(_ shown: Bool?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: shown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: shown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedLayout(_ layout: SplitViewState?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withoutInitialAction() -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: nil, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedContactAdding(_ canAddContact:Bool?) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: canAddContact, isEmojiSection: self.isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
     func withUpdatedIsEmojiSection(_ isEmojiSection:Bool) -> ChatPresentationInterfaceState {
-        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, editState: self.editState, recordingState: self.recordingState, isBlocked: self.isBlocked, reportStatus: self.reportStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: isEmojiSection)
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withUpdatedBasicActions(_ canInvokeBasicActions:(delete: Bool, forward: Bool)) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
 
+    
+    func withUpdatedIsNotAccessible(_ isNotAccessible:Bool) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withUpdatedRestrictionInfo(_ restrictionInfo:PeerAccessRestrictionInfo?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withUpdatedLimitConfiguration(_ limitConfiguration:LimitsConfiguration) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    
+    func withUpdatedDiscussionGroupId(_ discussionGroupId: PeerId?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: limitConfiguration, discussionGroupId: discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    func updateSlowMode(_ f: (SlowMode?)->SlowMode?) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: f(self.slowMode), hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    func withUpdatedHasScheduled(_ hasScheduled: Bool) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: limitConfiguration, discussionGroupId: discussionGroupId, slowMode: self.slowMode, hasScheduled: hasScheduled, failedMessageIds: self.failedMessageIds)
+    }
+    func withUpdatedFailedMessageIds(_ failedMessageIds: Set<MessageId>) -> ChatPresentationInterfaceState {
+        return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer: self.peer, notificationSettings: self.notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction: self.initialAction, historyCount: self.historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: limitConfiguration, discussionGroupId: discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: failedMessageIds)
+    }
 }

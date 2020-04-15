@@ -1,12 +1,11 @@
-fastlane/Appfile
-fastlane/Fastfile
 fastlane/README.md
-fastlane/report.xml
 fastlane/actions/hockey_sparkle.rb
 fastlane/sparkle/dsa_priv.pem
 fastlane/sparkle/dsa_pub.pem
 fastlane/sparkle/sign_update
 Telegram-Mac/Config.swift
+
+xcuserstate
 
 # Created by https://www.gitignore.io/api/osx,xcode,swift,fastlane,objective-c
 # Edit at https://www.gitignore.io/?templates=osx,xcode,swift,fastlane,objective-c

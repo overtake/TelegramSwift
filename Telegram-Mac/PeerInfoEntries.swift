@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 import TGUIKit
 
 
@@ -75,7 +76,7 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant]) -> [PeerInfoEntry] {
     if peerViewMainPeer(view) is TelegramUser {
         return userInfoEntries(view: view, arguments: arguments)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
@@ -83,10 +84,10 @@ func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments) -> [PeerInfoE
         case .broadcast:
             return channelInfoEntries(view: view, arguments: arguments)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities)
     }
     return []
 }

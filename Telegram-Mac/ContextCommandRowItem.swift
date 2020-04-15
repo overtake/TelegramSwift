@@ -8,14 +8,15 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 class ContextCommandRowItem: TableRowItem {
 
     fileprivate let _stableId:Int64
-    fileprivate let account:Account
+    fileprivate let account: Account
     let command:PeerCommand
     
     private let title:TextViewLayout
@@ -50,11 +51,12 @@ class ContextCommandRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         title.measure(width: width - 60)
         desc.measure(width: width - 60)
         titleSelected.measure(width: width - 60)
         descSelected.measure(width: width - 60)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     var ctxTitle:TextViewLayout {
@@ -75,6 +77,7 @@ class ContextCommandRowView : TableRowView {
     private let photoView:AvatarControl = AvatarControl(font: .avatar(.title))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         textView.userInteractionEnabled = false
         descView.userInteractionEnabled = false
         photoView.userInteractionEnabled = false
@@ -87,8 +90,8 @@ class ContextCommandRowView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? ContextCommandRowItem {
-            textView.update(item.ctxTitle, origin:NSMakePoint(50, floorToScreenPixels(frame.height / 2 - item.ctxTitle.layoutSize.height)))
-            descView.update(item.ctxDesc, origin:NSMakePoint(50, floorToScreenPixels(frame.height / 2)))
+            textView.update(item.ctxTitle, origin:NSMakePoint(50, floorToScreenPixels(backingScaleFactor, frame.height / 2 - item.ctxTitle.layoutSize.height)))
+            descView.update(item.ctxDesc, origin:NSMakePoint(50, floorToScreenPixels(backingScaleFactor, frame.height / 2)))
         }
     }
     
@@ -98,7 +101,7 @@ class ContextCommandRowView : TableRowView {
     
     override var backdorColor: NSColor {
         if let item = item {
-            return item.isSelected ? theme.colors.blueSelect : theme.colors.background
+            return item.isSelected ? theme.colors.accentSelect : theme.colors.background
         } else {
             return theme.colors.background
         }

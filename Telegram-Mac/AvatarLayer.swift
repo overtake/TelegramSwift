@@ -7,16 +7,19 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
+import SyncCore
+
 private class AvatarNodeParameters: NSObject {
     let account: Account
-    let peerId: PeerId
+    let peerId: Peer
     let letters: [String]
     let font: NSFont
-    init(account: Account, peerId: PeerId, letters: [String], font: NSFont) {
+    init(account: Account, peerId: Peer, letters: [String], font: NSFont) {
         self.account = account
         self.peerId = peerId
         self.letters = letters
@@ -27,17 +30,21 @@ private class AvatarNodeParameters: NSObject {
 
 
 
-private enum AvatarNodeState: Equatable {
+enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(PeerId, [String], TelegramMediaImageRepresentation?, CGFloat)
+    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?)
+    case ArchivedChats
+
 }
 
-private func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
+func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeerId, lhsLetters, lhsPhotoRepresentations, lhsScale), .PeerAvatar(rhsPeerId, rhsLetters, rhsPhotoRepresentations, rhsScale)):
-        return lhsPeerId == rhsPeerId && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsScale == rhsScale
+    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _)):
+        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
+    case (.ArchivedChats, .ArchivedChats):
+        return true
     default:
         return false
     }
@@ -54,9 +61,6 @@ class AvatarControl: NSView {
     var font: NSFont {
         didSet {
             if oldValue !== font {
-                if let parameters = self.parameters {
-                    self.parameters = AvatarNodeParameters(account: parameters.account, peerId: parameters.peerId, letters: parameters.letters, font: self.font)
-                }
                 
                 if !self.displaySuspended {
                     self.needsDisplay = true
@@ -64,20 +68,30 @@ class AvatarControl: NSView {
             }
         }
     }
-    private var parameters: AvatarNodeParameters?
     private let disposable = MetaDisposable()
 
     private var state: AvatarNodeState = .Empty
     private var account:Account?
-    private var peer:Peer?
-    
+    private var contentScale: CGFloat = 0
     
     public var animated: Bool = false
+    private var _attemptLoadNextSynchronous: Bool = false
+    public var attemptLoadNextSynchronous: Bool {
+        get {
+            let result = _attemptLoadNextSynchronous
+            _attemptLoadNextSynchronous = false
+            return result
+        }
+        set {
+            _attemptLoadNextSynchronous = newValue
+        }
+    }
     
     public init(font: NSFont) {
         self.font = font
         super.init(frame: NSZeroRect)
         wantsLayer = true
+        layerContentsRedrawPolicy = .never
     }
     
 
@@ -101,10 +115,28 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?) {
+    public func setState(account: Account, state: AvatarNodeState) {
         self.account = account
-        self.peer = peer
-        self.viewDidChangeBackingProperties()
+        if state != self.state {
+            contentScale = 0
+            self.state = state
+            self.viewDidChangeBackingProperties()
+        }
+    }
+    
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil) {
+        self.account = account
+        let state: AvatarNodeState
+        if let peer = peer {
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
+        } else {
+            state = .Empty
+        }
+        if self.state != state {
+            self.state = state
+            contentScale = 0
+            self.viewDidChangeBackingProperties()
+        }
     }
     
     func set(handler:@escaping (AvatarControl) -> Void, for event:ControlEvent) -> Void {
@@ -166,34 +198,47 @@ class AvatarControl: NSView {
         
         layer?.contentsScale = backingScaleFactor
         
-        if let account = account, let peer = peer {
-            let updatedState = AvatarNodeState.PeerAvatar(peer.id, peer.displayLetters, peer.smallProfileImage, backingScaleFactor)
-            if updatedState != self.state {
-                self.state = updatedState
-                
-                let parameters = AvatarNodeParameters(account: account, peerId: peer.id, letters: peer.displayLetters, font: self.font)
-                
+        
+        if let account = account, self.state != .Empty {
+            if contentScale != backingScaleFactor {
+                contentScale = backingScaleFactor
                 self.displaySuspended = true
                 self.layer?.contents = nil
-                
-                if let signal = peerAvatarImage(account: account, peer: peer, displayDimensions:frame.size, scale:backingScaleFactor, font: self.font) {
-                    setSignal(signal, animated: animated)
-                    
+                let photo: PeerPhoto?
+                switch state {
+                case let .PeerAvatar(peer, letters, representation, message):
+                    if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
+                        photo = nil
+                        self.setState(account: account, state: .Empty)
+                        let icon = theme.icons.deletedAccount
+                        self.setSignal(generateEmptyPhoto(frame.size, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(frame.size.width - 20, frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+                        return
+                    } else {
+                        photo = .peer(peer, representation, letters, message)
+                    }
+                case .Empty:
+                    photo = nil
+                default:
+                    photo = nil
+                }
+                if let photo = photo {
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous))
                 } else {
+                    let content = self.layer?.contents
                     self.displaySuspended = false
+                    self.layer?.contents = content
                 }
-                if self.parameters == nil || self.parameters != parameters {
-                    self.parameters = parameters
-                    self.needsDisplay = true
-                }
+                
             }
+        } else {
+            self.state = .Empty
         }
     }
     
-    public func setSignal(_ signal: Signal<CGImage?, NoError>, animated: Bool) {
-        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] next in
+    public func setSignal(_ signal: Signal<(CGImage?, Bool), NoError>) {
+        self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, animated in
             if let strongSelf = self {
-                strongSelf.layer?.contents = next
+                strongSelf.layer?.contents = image
                 if animated {
                     strongSelf.layer?.animateContents()
                 }
@@ -212,7 +257,7 @@ class AvatarControl: NSView {
         trackingArea = nil
         
         if let _ = window {
-            let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeInKeyWindow, .inVisibleRect]
+            let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeAlways, .inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)

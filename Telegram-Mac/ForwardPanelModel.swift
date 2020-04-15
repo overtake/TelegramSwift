@@ -8,37 +8,25 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 class ForwardPanelModel: ChatAccessoryModel {
     
     
     
     private var account:Account
-    private var forwardIds:[MessageId]
     private var forwardMessages:[Message] = []
     
-    private var disposable:MetaDisposable = MetaDisposable()
-
-    init(forwardIds:[MessageId], account:Account) {
+    init(forwardMessages:[Message], account:Account) {
         
         self.account = account
-        self.forwardIds = forwardIds
+        self.forwardMessages = forwardMessages
         super.init()
-        
-        
-        disposable.set((account.postbox.messagesAtIds(forwardIds)
-            |> deliverOnMainQueue).start(next: { [weak self] result in
-                if let strongSelf = self {
-                    strongSelf.forwardMessages = result
-                    strongSelf.make()
-                }
-        }))
+        self.make()
     }
-    
     deinit {
-        disposable.dispose()
     }
     
     
@@ -48,22 +36,35 @@ class ForwardPanelModel: ChatAccessoryModel {
         
         var used:Set<PeerId> = Set()
         
+        var keys:[Int64:Int64] = [:]
+        var forwardMessages:[Message] = []
+        for message in self.forwardMessages {
+            if let groupingKey = message.groupingKey {
+                if keys[groupingKey] == nil {
+                    keys[groupingKey] = groupingKey
+                    forwardMessages.append(message)
+                }
+            } else {
+                forwardMessages.append(message)
+            }
+        }
+        
+        
         for message in forwardMessages {
-            if let peer = messageMainPeer(message), let author = message.author  {
+            if let author = message.chatPeer(account.peerId) {
                 if !used.contains(author.id) {
                     used.insert(author.id)
-                    if peer.isChannel {
-                        names.append(peer.displayTitle)
+                    if author.isChannel {
+                        names.append(author.displayTitle)
                     } else {
                         names.append(author.displayTitle)
                     }
                 }
             }
-            
         }
         
-        self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.blueUI, font: .medium(.text))
-        self.messageAttr = NSAttributedString.initialize(string: tr(.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
+        self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.accent, font: .medium(.text))
+        self.messageAttr = NSAttributedString.initialize(string: tr(L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
 
         nodeReady.set(.single(true))
         self.setNeedDisplay()

@@ -8,9 +8,10 @@
 
 import Cocoa
 
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 import TGUIKit
 
 enum ChatHistoryInitialSearchLocation {
@@ -21,15 +22,37 @@ enum ChatHistoryInitialSearchLocation {
 enum ChatHistoryLocation: Equatable {
     case Initial(count: Int)
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)
-    case Navigation(index: MessageIndex, anchorIndex: MessageIndex)
-    case Scroll(index: MessageIndex, anchorIndex: MessageIndex, sourceIndex: MessageIndex, scrollPosition: TableScrollState, animated: Bool)
+    case Navigation(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, count: Int, side: TableSavingSide)
+    case Scroll(index: MessageHistoryAnchorIndex, anchorIndex: MessageHistoryAnchorIndex, sourceIndex: MessageHistoryAnchorIndex, scrollPosition: TableScrollState, count: Int, animated: Bool)
+    
+    var count: Int {
+        switch self {
+        case let .Initial(count):
+            return count
+        case let .InitialSearch(_, count):
+            return count
+        case let .Navigation(_, _, count, _):
+            return count
+        case let .Scroll(_, _, _, _, count, _):
+            return count
+        }
+    }
+    
+    var side: TableSavingSide? {
+        switch self {
+        case let .Navigation(_, _, _, side):
+            return side
+        default:
+            return nil
+        }
+    }
 }
 
 func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
     switch lhs {
-    case let .Navigation(lhsIndex, lhsAnchorIndex):
+    case let .Navigation(lhsIndex, lhsAnchorIndex, lhsCount, lhsSide):
         switch rhs {
-        case let .Navigation(rhsIndex, rhsAnchorIndex) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex:
+        case let .Navigation(rhsIndex, rhsAnchorIndex, rhsCount, rhsSide) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex && lhsCount == rhsCount && lhsSide == rhsSide:
             return true
         default:
             return false
@@ -41,17 +64,44 @@ func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
 
 
 
-enum ChatHistoryViewScrollPosition {
+enum ChatHistoryViewScrollPosition : Equatable {
     case unread(index: MessageIndex)
     case positionRestoration(index: MessageIndex, relativeOffset: CGFloat)
-    case index(index: MessageIndex, position: TableScrollState, directionHint: ListViewScrollToItemDirectionHint, animated: Bool)
+    case index(index: MessageHistoryAnchorIndex, position: TableScrollState, directionHint: ListViewScrollToItemDirectionHint, animated: Bool)
+}
+
+func ==(lhs: ChatHistoryViewScrollPosition, rhs: ChatHistoryViewScrollPosition) -> Bool {
+    switch lhs {
+    case let .unread(index):
+        if case .unread(index: index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .positionRestoration(index, relativeOffset):
+        if case .positionRestoration(index: index, relativeOffset: relativeOffset) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .index(index, position, directionHint, animated):
+        if case .index(index: index, position: position, directionHint: directionHint, animated: animated) = rhs {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 public struct ChatHistoryCombinedInitialData {
     let initialData: InitialMessageHistoryData?
     let buttonKeyboardMessage: Message?
     let cachedData: CachedPeerData?
-    let readStateData: ChatHistoryCombinedInitialReadStateData?
+    let cachedDataMessages:[MessageId: Message]?
+    let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
+    let limitsConfiguration: LimitsConfiguration
+    let autoplayMedia: AutoplayMediaPreferences
+    let autodownloadSettings: AutomaticMediaDownloadSettings
 }
 
 enum ChatHistoryViewUpdateType {
@@ -62,46 +112,47 @@ enum ChatHistoryViewUpdateType {
 public struct ChatHistoryCombinedInitialReadStateData {
     public let unreadCount: Int32
     public let totalUnreadCount: Int32
+    public let notificationSettings: PeerNotificationSettings?
 }
 
+
+
 enum ChatHistoryViewUpdate {
-    case Loading(initialData: InitialMessageHistoryData?)
+    case Loading(initialData: ChatHistoryCombinedInitialData, type: ChatHistoryViewUpdateType)
     case HistoryView(view: MessageHistoryView, type: ChatHistoryViewUpdateType, scrollPosition: ChatHistoryViewScrollPosition?, initialData: ChatHistoryCombinedInitialData)
 }
 
 
-func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Account, peerId: PeerId, fixedCombinedReadState: CombinedPeerReadState?, tagMask: MessageTags?, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = []) -> Signal<ChatHistoryViewUpdate, NoError> {
+func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Account, chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = []) -> Signal<ChatHistoryViewUpdate, NoError> {
+    
+    
+
+    
     switch location {
     case let .Initial(count):
         var preloaded = false
         var fadeIn = false
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
-        if let tagMask = tagMask {
-            signal = account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: MessageIndex.upperBound(peerId: peerId), count: count, anchorIndex: MessageIndex.upperBound(peerId: peerId), fixedCombinedReadState: nil, tagMask: tagMask, orderStatistics: orderStatistics)
-        } else {
-            signal = account.viewTracker.aroundMessageOfInterestHistoryViewForPeerId(peerId, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
-        }
-        return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
+        
+        switch mode {
+        case .history:
+            if let tagMask = tagMask {
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: .upperBound, anchorIndex: .upperBound, count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
+            } else {
+                signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocation, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
+        case .scheduled:
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+        }
+        
+        
+        return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
 
             
             if preloaded {
-                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: combinedInitialData)
             } else {
                 var scrollPosition: ChatHistoryViewScrollPosition?
                 
@@ -117,49 +168,43 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
                         }
                     }
                     
-                    let maxIndex = min(view.entries.count, targetIndex + count / 2)
+                    let maxIndex = targetIndex + count / 2
+                    let minIndex = targetIndex - count / 2
+                    if minIndex <= 0 && view.holeEarlier {
+                        fadeIn = true
+                        return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
+                    }
                     if maxIndex >= targetIndex {
-                        for i in targetIndex ..< maxIndex {
-                            if case .HoleEntry = view.entries[i] {
-                                var incomingCount: Int32 = 0
-                                inner: for entry in view.entries.reversed() {
-                                    switch entry {
-                                    case .HoleEntry:
-                                        break inner
-                                    case let .MessageEntry(message, _, _, _):
-                                        if message.flags.contains(.Incoming) {
-                                            incomingCount += 1
-                                        }
-                                    }
+                        if view.holeLater {
+                            fadeIn = true
+                            return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
+                        }
+                        if view.holeEarlier {
+                            var incomingCount: Int32 = 0
+                            inner: for entry in view.entries.reversed() {
+                                if entry.message.flags.contains(.Incoming) {
+                                    incomingCount += 1
                                 }
-                                if let combinedReadState = view.combinedReadState, combinedReadState.count == incomingCount {
-                                    
-                                } else {
-                                    fadeIn = true
-                                    return .Loading(initialData: initialData)
-                                }
+                            }
+                            if case let .peer(peerId) = chatLocation, let combinedReadStates = view.fixedReadStates, case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId], readState.count == incomingCount {
+                            } else {
+                                fadeIn = true
+                                return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
                             }
                         }
                     }
+
                 } else if let historyScrollState = (initialData?.chatInterfaceState as? ChatInterfaceState)?.historyScrollState {
                     scrollPosition = .positionRestoration(index: historyScrollState.messageIndex, relativeOffset: CGFloat(historyScrollState.relativeOffset))
                 } else {
-                    var messageCount = 0
-                    for entry in view.entries.reversed() {
-                        if case .HoleEntry = entry {
-                            fadeIn = true
-                            return .Loading(initialData: initialData)
-                        } else {
-                            messageCount += 1
-                        }
-                        if messageCount >= 1 {
-                            break
-                        }
+                    if view.entries.isEmpty && (view.holeEarlier || view.holeLater) {
+                        fadeIn = true
+                        return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
                     }
                 }
                 
                 preloaded = true
-                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: scrollPosition, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: scrollPosition, initialData: combinedInitialData)
             }
         }
     case let .InitialSearch(searchLocation, count):
@@ -167,86 +212,98 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
         var fadeIn = false
         
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
-        switch searchLocation {
-        case let .index(index):
-            signal = account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, count: count, anchorIndex: index, fixedCombinedReadState: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
-        case let .id(id):
-            signal = account.viewTracker.aroundIdMessageHistoryViewForPeerId(peerId, count: count, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+        
+        switch mode {
+        case .history:
+            switch searchLocation {
+            case let .index(index):
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            case let .id(id):
+                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocation, count: count, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+            }
+        case .scheduled:
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
         }
         
+        
+        
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
+
             
             if preloaded {
-                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: combinedInitialData)
             } else {
                 let anchorIndex = view.anchorIndex
                 
                 var targetIndex = 0
                 for i in 0 ..< view.entries.count {
-                    if view.entries[i].index >= anchorIndex {
+                    //if view.entries[i].index >= anchorIndex
+                    if anchorIndex.isLessOrEqual(to: view.entries[i].index) {
                         targetIndex = i
                         break
                     }
                 }
                 
-                let maxIndex = min(view.entries.count, targetIndex + count / 2)
-                if maxIndex >= targetIndex {
-                    for i in targetIndex ..< maxIndex {
-                        if case .HoleEntry = view.entries[i] {
-                            fadeIn = true
-                            return .Loading(initialData: initialData)
-                        }
+                
+                if !view.entries.isEmpty {
+                    let minIndex = max(0, targetIndex - count / 2)
+                    let maxIndex = min(view.entries.count, targetIndex + count / 2)
+                    if minIndex == 0 && view.holeEarlier {
+                        fadeIn = true
+                        return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
                     }
+                    if maxIndex == view.entries.count && view.holeLater {
+                        fadeIn = true
+                        return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
+                    }
+                } else if view.holeEarlier || view.holeLater {
+                    fadeIn = true
+                    return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
                 }
                 
+
+                var reportUpdateType: ChatHistoryViewUpdateType = .Initial(fadeIn: fadeIn)
+                if case .FillHole = updateType {
+                    reportUpdateType = .Generic(type: updateType)
+                }
+
                 preloaded = true
                
                 var scroll: TableScrollState
-                
-                if view.entries.count > targetIndex, let message = view.entries[targetIndex].message {
-                    scroll = .center(id: ChatHistoryEntryId.message(message), animated: false, focus: true, inset: 0)
+                if view.entries.count > targetIndex {
+                    let focusMessage = view.entries[targetIndex].message
+                    let mustToFocus: Bool
+                    switch searchLocation {
+                    case let .index(index):
+                        mustToFocus = view.entries[targetIndex].index == index
+                    case let .id(id):
+                        mustToFocus = view.entries[targetIndex].message.id == id
+                    }
+                    scroll = .center(id: ChatHistoryEntryId.message(focusMessage), innerId: nil, animated: false, focus: .init(focus: mustToFocus), inset: 0)
                 } else {
                     scroll = .none(nil)
                 }
                 
-                return .HistoryView(view: view, type: .Initial(fadeIn: fadeIn), scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+                return .HistoryView(view: view, type: reportUpdateType, scrollPosition: .index(index: anchorIndex, position: scroll, directionHint: .Down, animated: false), initialData: combinedInitialData)
             }
         }
-    case let .Navigation(index, anchorIndex):
+    case let .Navigation(index, anchorIndex, count, _):
         var first = true
-        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, count: 140, anchorIndex: anchorIndex, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+        
+        let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
+        switch mode {
+        case .history:
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+        case .scheduled:
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+        }
+        
+        return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+            
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
             if first {
@@ -255,29 +312,24 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             } else {
                 genericType = updateType
             }
-            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: nil, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: nil, initialData: combinedInitialData)
         }
-    case let .Scroll(index, anchorIndex, sourceIndex, scrollPosition, animated):
+    case let .Scroll(index, anchorIndex, sourceIndex, scrollPosition, count, animated):
         let directionHint: ListViewScrollToItemDirectionHint = sourceIndex > index ? .Down : .Up
         let chatScrollPosition = ChatHistoryViewScrollPosition.index(index: index, position: scrollPosition, directionHint: directionHint, animated: animated)
         var first = true
-        return account.viewTracker.aroundMessageHistoryViewForPeerId(peerId, index: index, count: 140, anchorIndex: anchorIndex, fixedCombinedReadState: fixedCombinedReadState, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData) |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            var cachedData: CachedPeerData?
-            var readStateData: ChatHistoryCombinedInitialReadStateData?
-            for data in view.additionalData {
-                switch data {
-                case let .cachedPeerData(peerIdValue, value):
-                    if peerIdValue == peerId {
-                        cachedData = value
-                    }
-                case let .totalUnreadCount(totalUnreadCount):
-                    if let readState = view.combinedReadState {
-                        readStateData = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: totalUnreadCount)
-                    }
-                default:
-                    break
-                }
-            }
+        
+        let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
+        switch mode {
+        case .history:
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+        case .scheduled:
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+        }
+        
+        return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
             let scrollPosition: ChatHistoryViewScrollPosition? = first ? chatScrollPosition : nil
@@ -287,7 +339,78 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, account: Accoun
             } else {
                 genericType = updateType
             }
-            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: scrollPosition, initialData: ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, readStateData: readStateData))
+            return .HistoryView(view: view, type: .Generic(type: genericType), scrollPosition: scrollPosition, initialData: combinedInitialData)
         }
     }
+}
+
+private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatLocation) -> (
+    cachedData: CachedPeerData?,
+    cachedDataMessages: [MessageId: Message]?,
+    readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?,
+    limitsConfiguration: LimitsConfiguration,
+    autoplayMedia: AutoplayMediaPreferences,
+    autodownloadSettings: AutomaticMediaDownloadSettings
+    ) {
+        var cachedData: CachedPeerData?
+        var cachedDataMessages: [MessageId: Message]?
+        var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData] = [:]
+        var notificationSettings: PeerNotificationSettings?
+        var limitsConfiguration: LimitsConfiguration = LimitsConfiguration.defaultValue
+        var autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings
+        var autodownloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings
+        loop: for data in view.additionalData {
+            switch data {
+            case let .peerNotificationSettings(value):
+                notificationSettings = value
+                break loop
+            default:
+                break
+            }
+        }
+        
+        for data in view.additionalData {
+            switch data {
+            case let .peerNotificationSettings(value):
+                notificationSettings = value
+            case let .cachedPeerData(peerIdValue, value):
+                if case .peer(peerIdValue) = chatLocation {
+                    cachedData = value
+                }
+            case let .cachedPeerDataMessages(peerIdValue, value):
+                if case .peer(peerIdValue) = chatLocation {
+                    cachedDataMessages = value
+                }
+            case let .preferencesEntry(key, value):
+                if key == PreferencesKeys.limitsConfiguration {
+                    limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue
+                }
+                if key == ApplicationSpecificPreferencesKeys.autoplayMedia {
+                    autoplayMedia = value as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings
+                    
+                }
+                
+                if key == ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings {
+                    autodownloadSettings = value as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+                }
+            case let .totalUnreadState(unreadState):
+                
+                switch chatLocation {
+                case let .peer(peerId):
+                    break
+                    if let combinedReadStates = view.fixedReadStates {
+                        if case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId] {
+                            readStateData[peerId] = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: 0, notificationSettings: notificationSettings)
+                        }
+                    }
+                }
+            default:
+                break
+            }
+        }
+        
+        autoplayMedia = autoplayMedia.withUpdatedAutoplayPreloadVideos(autoplayMedia.preloadVideos && autodownloadSettings.automaticDownload && (autodownloadSettings.categories.video.fileSize ?? 0) >= 5 * 1024 * 1024)
+
+        
+        return (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings)
 }

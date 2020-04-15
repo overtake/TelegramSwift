@@ -25,6 +25,7 @@ class SeparatorRowItem: TableRowItem {
     let rightText:NSAttributedString?
     var border:BorderType = [.Right]
     let state:SeparatorBlockState
+    let action: (()->Void)?
     override var height: CGFloat {
         return h
     }
@@ -33,9 +34,10 @@ class SeparatorRowItem: TableRowItem {
         return _stableId
     }
     
-    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0) {
+    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: (()->Void)? = nil) {
         self._stableId = stableId
         self.h = height
+        self.action = action
         self.state = state
         text = .initialize(string: string, color: theme.colors.grayText, font:.normal(.short))
         if let right = right {
@@ -46,6 +48,9 @@ class SeparatorRowItem: TableRowItem {
         
         
         super.init(initialSize)
+    }
+    override var instantlyResize: Bool {
+        return true
     }
     
     
@@ -62,6 +67,7 @@ class SeparatorRowView: TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     override var backdorColor: NSColor {
@@ -72,11 +78,35 @@ class SeparatorRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func mouseDown(with event: NSEvent) {
+        guard let item = item as? SeparatorRowItem else {return}
+        let point = convert(event.locationInWindow, from: nil)
+        
+        if let text = item.rightText {
+            let (layout, _) = TextNode.layoutText(maybeNode: stateText, text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil, false, .left)
+
+            let rect = NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, frame.height)
+            if NSPointInRect(point, rect) {
+                if let action = item.action {
+                    action()
+                } else {
+                    super.mouseDown(with: event)
+                }
+            }
+        } else {
+            super.mouseDown(with: event)
+        }
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         
         super.draw(layer, in: ctx)
         
+        if backingScaleFactor == 1.0 {
+            ctx.setFillColor(backdorColor.cgColor)
+            ctx.fill(layer.bounds)
+        }
         
         if let item = self.item as? SeparatorRowItem {
             let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil,false, .left)
@@ -84,13 +114,13 @@ class SeparatorRowView: TableRowView {
             if let text = item.rightText {
                 textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
                 let (layout, apply) = TextNode.layoutText(maybeNode: stateText, text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil, false, .left)
-                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
             } else {
                 textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
                 
             }
-            apply.draw(NSMakeRect(textPoint.x, textPoint.y, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            apply.draw(NSMakeRect(textPoint.x, textPoint.y, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     
@@ -99,7 +129,7 @@ class SeparatorRowView: TableRowView {
         if let item = item as? SeparatorRowItem {
             self.border = item.border
         }
-        
+        needsDisplay = true
     }
 }
 

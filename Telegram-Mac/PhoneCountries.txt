@@ -229,3 +229,4 @@
 1;PR;Puerto Rico
 1;DO;Dominican Rep.
 1;CA;Canada
+383;XK;Kosovo

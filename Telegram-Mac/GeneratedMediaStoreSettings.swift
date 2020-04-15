@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
 public struct GeneratedMediaStoreSettings: PreferencesEntry, Equatable {
     public let storeEditedPhotos: Bool
@@ -47,8 +47,8 @@ public struct GeneratedMediaStoreSettings: PreferencesEntry, Equatable {
 }
 
 func updateGeneratedMediaStoreSettingsInteractively(postbox: Postbox, _ f: @escaping (GeneratedMediaStoreSettings) -> GeneratedMediaStoreSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings, { entry in
             let currentSettings: GeneratedMediaStoreSettings
             if let entry = entry as? GeneratedMediaStoreSettings {
                 currentSettings = entry

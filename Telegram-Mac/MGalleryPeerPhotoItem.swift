@@ -7,76 +7,102 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 class MGalleryPeerPhotoItem: MGalleryItem {
-    private let media:TelegramMediaImage
-    override init(_ account: Account, _ entry: GalleryEntry, _ pagerSize: NSSize) {
+    let media:TelegramMediaImage
+    override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         
         self.media = entry.photo!
-        super.init(account, entry, pagerSize)
+        super.init(context, entry, pagerSize)
     }
     
     override var sizeValue: NSSize {
-        if let largest = media.representations.last {
-            return largest.dimensions.fitted(pagerSize)
+        if let largest = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
+            return largest.dimensions.size.fitted(pagerSize)
         }
         return NSZeroSize
     }
     
-    override func smallestValue(for size: NSSize) -> Signal<NSSize, Void> {
-        if let largest = media.representations.last {
-            return .single(largest.dimensions.fitted(size))
+    override func smallestValue(for size: NSSize) -> NSSize {
+        if let largest = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
+            return largest.dimensions.size.fitted(size)
         }
-        return .single(pagerSize)
+        return pagerSize
+    }
+    
+    override var status:Signal<MediaResourceStatus, NoError> {
+        if let largestRepresentation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
+            return context.account.postbox.mediaBox.resourceStatus(largestRepresentation.resource)
+        } else {
+            return .never()
+        }
     }
     
     override func request(immediately: Bool) {
         
         
-        let account = self.account
+        let context = self.context
         let media = self.media
+        let entry = self.entry
         
-        let result = size.get() |> mapToSignal { [weak self] size -> Signal<NSSize, Void> in
-            if let strongSelf = self {
-                return strongSelf.smallestValue(for: size)
-            }
-            return .complete()
-        } |> distinctUntilChanged |> mapToSignal { size -> Signal<((TransformImageArguments) -> DrawingContext?, TransformImageArguments), Void> in
-                return chatMessagePhoto(account: account, photo: media, scale: System.backingScale) |> deliverOn(account.graphicsThreadPool) |> map { transform in
-                    return (transform, TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+        let result = combineLatest(size.get(), rotate.get()) |> mapToSignal { [weak self] size, orientation -> Signal<(NSSize, ImageOrientation?), NoError> in
+            guard let `self` = self else {return .complete()}
+            var newSize = self.smallestValue(for: size)
+            if let orientation = orientation {
+                if orientation == .right || orientation == .left {
+                    newSize = NSMakeSize(newSize.height, newSize.width)
                 }
-        } |> mapToThrottled { (transform, arguments) -> Signal<CGImage?, Void> in
-                return .single(transform(arguments)?.generateImage())
+            }
+            return .single((newSize, orientation))
+         } |> mapToSignal { size, orientation -> Signal<(NSImage?, ImageOrientation?), NoError> in
+            return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), toRepresentationSize: NSMakeSize(1280, 1280), peer: entry.peer, scale: System.backingScale, synchronousLoad: true)
+                    |> map { transform in
+                        let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                        if let orientation = orientation {
+                            let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
+                            if let transformed = transformed {
+                                return (NSImage(cgImage: transformed, size: transformed.size), orientation)
+                            }
+                        }
+                        if let image = image {
+                            return (NSImage(cgImage: image, size: image.size), orientation)
+                        } else {
+                            return (nil, nil)
+                        }
+                }
         }
-        
 
-        if let representation = media.representations.last {
-            path.set(account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, Void> in
+        if let representation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))  {
+            path.set(context.account.postbox.mediaBox.resourceData(representation.resource) |> mapToSignal { (resource) -> Signal<String, NoError> in
                 
                 if resource.complete {
                     return .single(link(path:resource.path, ext:kMediaImageExt)!)
                 }
                 return .never()
             })
-        }
+        } 
         
-        self.image.set(result |> deliverOnMainQueue)
+        self.image.set(result |> map { .image($0.0, $0.1) } |> deliverOnMainQueue)
         
         
         fetch()
     }
     
     override func fetch() -> Void {
-        fetching.set(chatMessagePhotoInteractiveFetched(account: account, photo: media).start())
+        fetching.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: self.entry.peerPhotoResource()).start())
     }
     
     override func cancel() -> Void {
         super.cancel()
-        chatMessagePhotoCancelInteractiveFetch(account: account, photo: media)
+        if let representation = media.representationForDisplayAtSize(PixelDimensions(1280, 1280))  {
+            cancelFreeMediaFileInteractiveFetch(context: context, resource: representation.resource)
+        }
+        fetching.set(nil)
     }
 
 }

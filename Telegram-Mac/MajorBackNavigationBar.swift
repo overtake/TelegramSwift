@@ -8,33 +8,42 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 class MajorBackNavigationBar: BackNavigationBar {
     private let disposable:MetaDisposable = MetaDisposable()
-    private let account:Account
+    private let context:AccountContext
     private let peerId:PeerId
     private let badgeNode:GlobalBadgeNode
-    init(_ controller: ViewController, account:Account, excludePeerId:PeerId) {
-        self.account = account
+    init(_ controller: ViewController, context: AccountContext, excludePeerId:PeerId) {
+        self.context = context
         self.peerId = excludePeerId
-        badgeNode = GlobalBadgeNode(account, excludePeerId: excludePeerId)
-        badgeNode.xInset = -22
+        
+        var layoutChanged:(()->Void)? = nil
+        badgeNode = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, excludeGroupId: Namespaces.PeerGroup.archive, view: View(), layoutChanged: {
+            layoutChanged?()
+        })
+        badgeNode.xInset = 0
+        
+        
         super.init(controller)
         
-        disposable.set((account.applicationContext as? TelegramApplicationContext)?.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self {
-                switch state {
-                case .single:
-                    strongSelf.badgeNode.view?.isHidden = false
-                default:
-                    strongSelf.badgeNode.view?.isHidden = true
-                }
-            }
-        }))
         addSubview(badgeNode.view!)
 
+        
+        layoutChanged = { [weak self] in
+           self?.needsLayout = true
+        }
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        self.badgeNode.view!.setFrameOrigin(NSMakePoint(min(frame.width == minWidth ? 30 : 22, frame.width - self.badgeNode.view!.frame.width - 4), 4))
+        
     }
     
     deinit {

@@ -1,8 +1,9 @@
 #import <Foundation/Foundation.h>
 
+
 @interface TGDataItem : NSObject
 
-- (instancetype)initWithTempFile;
+
 - (instancetype)initWithFilePath:(NSString *)filePath;
 
 - (void)moveToPath:(NSString *)path;

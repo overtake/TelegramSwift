@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 enum ChatActivityAnimation {
     case none
@@ -25,7 +26,7 @@ class ChatActivitiesView : View {
     
     
     private let textView:TextView = TextView()
-    private let animationView:ImageView = ImageView(frame: NSMakeRect(0,-4,30,20))
+    private let animationView:NSView = NSView(frame: NSMakeRect(0,-4,30,20))
     private var isAnimating:Bool = false
     
     private var type:ChatActivityAnimation?
@@ -33,8 +34,10 @@ class ChatActivitiesView : View {
     
     override init() {
         super.init()
+        animationView.wantsLayer = true
         addSubview(textView)
         addSubview(animationView)
+        layer?.disableActions()
     }
     
     override func layout() {
@@ -56,7 +59,6 @@ class ChatActivitiesView : View {
         } else {
             startAnimation(params.0, theme:theme)
         }
-        
         if let layout = params.1 {
             setFrameSize(layout.layoutSize.width + animationView.frame.width, layout.layoutSize.height)
         }
@@ -64,24 +66,35 @@ class ChatActivitiesView : View {
     }
     
     func startAnimation(_ type:ChatActivityAnimation, theme:ActivitiesTheme) {
-        self.type = type
-        self.theme = theme
-        isAnimating = true
-        let animation = CAKeyframeAnimation(keyPath: "contents")
-        switch type {
-        case .recording:
-            animation.values = theme.recording
-            animation.duration = 0.7
-        case .uploading:
-            animation.values = theme.uploading
-            animation.duration = 1.75
-        default:
-            animation.values = theme.text
-            animation.duration = 0.7
+        if self.type != type || theme != self.theme {
+            self.type = type
+            self.theme = theme
+            isAnimating = true
+            let animation = CAKeyframeAnimation(keyPath: "contents")
+            switch type {
+            case .recording:
+                animationView.layer?.contents = theme.recording.first
+                animationView.setFrameSize(theme.recording.first!.backingSize)
+                
+                animation.values = theme.recording
+                animation.duration = 0.7
+            case .uploading:
+                animationView.layer?.contents = theme.uploading.first
+                animationView.setFrameSize(theme.recording.first!.backingSize)
+                animation.values = theme.uploading
+                animation.duration = 1.75
+            default:
+                animationView.layer?.contents = theme.text.first
+                animationView.setFrameSize(theme.recording.first!.backingSize)
+                animation.values = theme.text
+                animation.duration = 0.7
+            }
+            
+            animationView.layer?.removeAllAnimations()
+            animation.repeatCount = .infinity
+            animation.isRemovedOnCompletion = false
+            animationView.layer?.add(animation, forKey: "contents")
         }
-        animation.repeatCount = .greatestFiniteMagnitude
-        animationView.layer?.add(animation, forKey: "contents")
-        
     }
     
     override func viewDidMoveToWindow() {
@@ -98,9 +111,6 @@ class ChatActivitiesView : View {
         if realyStop {
             isAnimating = false
         }
-        animationView.layer?.removeAllAnimations()
-        animationView.image = nil
-        animationView.sizeToFit()
     }
     
     required init(frame frameRect: NSRect) {
@@ -120,9 +130,10 @@ class ChatActivitiesModel: Node {
     private(set) var isActive:Bool = false
     private let activityView:ChatActivitiesView
     private let disposable:MetaDisposable = MetaDisposable()
-    
+    private(set) var theme: ActivitiesTheme?
     func update(with activities:(PeerId, [(Peer, PeerInputActivity)]), for width:CGFloat, theme:ActivitiesTheme, layout:@escaping(Bool)->Void) {
         isActive = !activities.1.isEmpty
+        self.theme = theme
         activityView.updateBackground(theme.backgroundColor)
         disposable.set(renderedActivities(activities, for: width, theme:theme).start(next: { [weak self] data in
             self?.activityView.layout(with: data, width: width, theme: theme)
@@ -130,11 +141,10 @@ class ChatActivitiesModel: Node {
         }))
     }
     
-    private func renderedActivities(_ activities:(PeerId, [(Peer, PeerInputActivity)]), for width:CGFloat, theme: ActivitiesTheme) -> Signal <(ChatActivityAnimation, TextViewLayout?), Void> {
+    private func renderedActivities(_ activities:(PeerId, [(Peer, PeerInputActivity)]), for width:CGFloat, theme: ActivitiesTheme) -> Signal <(ChatActivityAnimation, TextViewLayout?), NoError> {
         return Signal { subscriber in
             
 
-            
             if !activities.1.isEmpty {
                 let layout:TextViewLayout
                 var animation:ChatActivityAnimation = .text
@@ -153,35 +163,37 @@ class ChatActivitiesModel: Node {
                 }
                 
                 if isFew {
+                    let firstTitle: String = activities.1[0].0.displayTitle
                     if sameActivity {
                         let activity = activities.1[0].1
                         switch activity {
                             case .recordingVoice:
                                 animation = .recording
-                            _ = text.append(string: tr(.peerActivityChatMultiRecordingAudio(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string:
+                                tr(L10n.peerActivityChatMultiRecordingAudio1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingFile:
                              animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingFile(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingFile1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingPhoto:
                             animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingPhoto(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingPhoto1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .uploadingVideo:
                             animation = .uploading
-                            _ = text.append(string: tr(.peerActivityChatMultiSendingVideo(activities.1.count)), color: theme.textColor, font: .normal(.text))
-                        //case .playingGame:
-                            
-                            //_ = text.append(string: tr(.peerActivityChatMultiPlayingGame(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiSendingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .recordingInstantVideo:
                             animation = .recording
-                            _ = text.append(string: tr(.peerActivityChatMultiRecordingVideo(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
+                        case .playingGame:
+                            animation = .text
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiPlayingGame1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         default:
                             animation = .text
-                            break
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         }
                     } else {
                         animation = .text
                         if activities.1.count > 2 {
-                            _ = text.append(string: tr(.peerActivityChatMultiTypingText(activities.1.count)), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiTypingText1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         } else {
                             let names = activities.1.map({$0.0.compactDisplayTitle}).joined(separator: ", ")
                             _ = text.append(string: names, color: theme.textColor, font: .normal(.text))
@@ -194,47 +206,54 @@ class ChatActivitiesModel: Node {
                     case .recordingVoice:
                         animation = .recording
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
-                            _ = text.append(string: tr(.peerActivityUserRecordingAudio), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityUserRecordingAudio), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatRecordingAudio(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingFile:
                         animation = .uploading
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             
-                            _ = text.append(string:tr(.peerActivityUserSendingFile), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string:tr(L10n.peerActivityUserSendingFile), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingFile(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingVideo:
                         animation = .uploading
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             
-                            _ = text.append(string:tr(.peerActivityUserSendingVideo), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string:tr(L10n.peerActivityUserSendingVideo), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingVideo(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .uploadingPhoto:
                         animation = .uploading
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
                             
-                            _ = text.append(string:tr(.peerActivityUserSendingPhoto), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string:tr(L10n.peerActivityUserSendingPhoto), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatSendingPhoto(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     case .recordingInstantVideo:
                         animation = .recording
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
-                            _ = text.append(string: tr(.peerActivityUserRecordingVideo), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityUserRecordingVideo), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatRecordingVideo(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
+                        }
+                    case .playingGame:
+                        animation = .text
+                        if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
+                            _ = text.append(string: L10n.peerActivityUserPlayingGame, color: theme.textColor, font: .normal(.text))
+                        } else {
+                            _ = text.append(string: L10n.peerActivityChatPlayingGame(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     default:
                         animation = .text
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
-                            _ = text.append(string: tr(.peerActivityUserTypingText), color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: tr(L10n.peerActivityUserTypingText), color: theme.textColor, font: .normal(.text))
                         } else {
-                            _ = text.append(string: peer.compactDisplayTitle, color: theme.textColor, font: .normal(.text))
+                            _ = text.append(string: L10n.peerActivityChatTypingText(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
                     }
                 }

@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_flags@1x.png",
+      "filename" : "Flag.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_flags@2x.png",
+      "filename" : "Flag@2x.png",
       "scale" : "2x"
     },
     {

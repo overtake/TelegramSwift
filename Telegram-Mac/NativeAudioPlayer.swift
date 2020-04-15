@@ -31,7 +31,7 @@ class NativeAudioPlayer: AudioPlayer {
         
         if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &deviceIdRequest, 0, nil, &deviceIdSize, &deviceId) == noErr {
             var masterClock:CMClock?
-            CMAudioDeviceClockCreateFromAudioDeviceID(kCFAllocatorDefault, deviceId, &masterClock)
+            CMAudioDeviceClockCreateFromAudioDeviceID(allocator: kCFAllocatorDefault, deviceID: deviceId, clockOut: &masterClock)
             _player.masterClock = masterClock
         }
         
@@ -86,7 +86,7 @@ class NativeAudioPlayer: AudioPlayer {
     override func playFrom(position: TimeInterval) {
         queue.async {
             if position > 0 {
-                self._player.seek(to: CMTimeMakeWithSeconds(position, 10000), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+                self._player.seek(to: CMTimeMakeWithSeconds(position, preferredTimescale: 10000), toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
             }
             self._player.play()
             self.delegate?.audioPlayerDidChangedTimebase(self)
@@ -96,7 +96,7 @@ class NativeAudioPlayer: AudioPlayer {
     
     override func set(position:TimeInterval) {
         queue.async {
-            self._player.seek(to: CMTimeMakeWithSeconds(position, 10000), toleranceBefore: kCMTimeZero, toleranceAfter: kCMTimeZero)
+            self._player.seek(to: CMTimeMakeWithSeconds(position, preferredTimescale: 10000), toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
             self.delegate?.audioPlayerDidChangedTimebase(self)
         }
     }
@@ -120,7 +120,7 @@ class NativeAudioPlayer: AudioPlayer {
     
     override func stop() {
         queue.async {
-            self._player.seek(to: CMTimeMake(0, self._player.currentTime().timescale))
+            self._player.seek(to: CMTimeMake(value: 0, timescale: self._player.currentTime().timescale))
             self._player.pause()
         }
     }

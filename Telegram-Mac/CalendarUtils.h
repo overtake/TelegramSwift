@@ -12,5 +12,5 @@
 + (NSDate*) monthDay:(NSInteger)day date:(NSDate *)date;
 + (NSInteger)weekDay:(NSDate *)date;
 + (NSDate *) stepMonth:(NSInteger)dm date:(NSDate *)date;
-
++ (NSDate *) year:(NSInteger)dm date:(NSDate *)date;
 @end

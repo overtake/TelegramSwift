@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 
-class RestrictionWrappedView : View {
+class RestrictionWrappedView : Control {
     let textView: TextView = TextView()
     let text:String
     required init(frame frameRect: NSRect) {
@@ -21,13 +21,14 @@ class RestrictionWrappedView : View {
         super.init()
         addSubview(textView)
         textView.userInteractionEnabled = false
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.backgroundColor = theme.colors.background
-        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 2, alignment: .center)
+        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         textView.update(layout)
+        textView.backgroundColor = theme.colors.background
     }
     
     required init?(coder: NSCoder) {
@@ -72,7 +73,7 @@ class VideoDurationView : View {
         ctx.fill(bounds)
         
         let f = focus(textNode.0.size)
-        textNode.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor)
+        textNode.1.draw(f, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
     }
     
     required init?(coder: NSCoder) {
@@ -81,5 +82,106 @@ class VideoDurationView : View {
     
     required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
+    }
+}
+
+class CornerView : View {
+
+    var positionFlags: LayoutPositionFlags? {
+        didSet {
+            needsLayout = true
+        }
+    }
+    
+    override var backgroundColor: NSColor {
+        didSet {
+            layer?.backgroundColor = .clear
+        }
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        
+        ctx.round(frame.size, .cornerRadius, positionFlags: positionFlags)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(bounds)
+//        if let positionFlags = positionFlags {
+//
+//            let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+//            let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+//
+//            ctx.move(to: NSMakePoint(minx, midy))
+//
+//            var topLeftRadius: CGFloat = .cornerRadius
+//            var bottomLeftRadius: CGFloat = .cornerRadius
+//            var topRightRadius: CGFloat = .cornerRadius
+//            var bottomRightRadius: CGFloat = .cornerRadius
+//
+//
+//            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+//                topLeftRadius = topLeftRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+//                topRightRadius = topRightRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+//                bottomLeftRadius = bottomLeftRadius * 3 + 2
+//            }
+//            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+//                bottomRightRadius = bottomRightRadius * 3 + 2
+//            }
+//
+//            ctx.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topLeftRadius)
+//            ctx.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topRightRadius)
+//
+//            ctx.closePath()
+//            ctx.clip()
+//        }
+//
+//        ctx.setFillColor(backgroundColor.cgColor)
+//        ctx.fill(bounds)
+//
+    }
+    
+}
+
+
+class SearchTitleBarView : TitledBarView {
+    private var search:ImageButton = ImageButton()
+    init(controller: ViewController, title:NSAttributedString, handler:@escaping() ->Void) {
+        super.init(controller: controller, title)
+        search.set(handler: { _ in
+            handler()
+        }, for: .Click)
+        addSubview(search)
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func updateSearchVisibility(_ visible: Bool) {
+        search.isHidden = !visible
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        search.set(image: theme.icons.chatSearch, for: .Normal)
+        _ = search.sizeToFit()
+        backgroundColor = theme.colors.background
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        search.centerY(x: frame.width - search.frame.width)
+    }
+    
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }

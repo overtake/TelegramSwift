@@ -8,11 +8,17 @@
 
 import Cocoa
 import TGUIKit
+import TelegramCore
+import SyncCore
+import Postbox
+
 class ChatListMessageRowItem: ChatListRowItem {
 
+    init(_ initialSize:NSSize,  context: AccountContext, message: Message, query: String, renderedPeer:RenderedPeer, readState: CombinedPeerReadState?) {
+        super.init(initialSize, context: context, message: message, readState: readState, renderedPeer: renderedPeer, highlightText: query, showBadge: false)
+    }
+    
     override var stableId: AnyHashable {
         return message!.id
     }
-    
-    
 }

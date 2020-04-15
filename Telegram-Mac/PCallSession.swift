@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 enum CallTone {
@@ -45,9 +46,12 @@ func pullCurrentSession(_ f:@escaping (PCallSession?)->Void) {
 
 class PCallSession {
     let peerId:PeerId
-    let account:Account
+    let account: Account
+    let sharedContext: SharedAccountContext
     let id:CallSessionInternalId
     
+    private(set) var peer: Peer?
+    private let peerDisposable = MetaDisposable()
     private var contextRef: Unmanaged<CallBridge>?
     
     private let stateDisposable = MetaDisposable()
@@ -65,7 +69,9 @@ class PCallSession {
     private var completed: Bool = false
     let durationPromise:Promise<TimeInterval> = Promise()
     private var callSessionValue:CallSession? = nil
-    init(account:Account, peerId:PeerId, id: CallSessionInternalId) {
+    private let proxyDisposable = MetaDisposable()
+    private let requestMicroAccessDisposable = MetaDisposable()
+    init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -73,27 +79,52 @@ class PCallSession {
         
         assert(callQueue.isCurrent())
         
+        
+        
         self.account = account
+        self.sharedContext = sharedContext
         self.peerId = peerId
         self.id = id
+        
+        
+        peerDisposable.set((account.postbox.multiplePeersView([peerId]) |> deliverOnMainQueue).start(next: { [weak self] view in
+            self?.peer = view.peers[peerId]
+        }))
 
-        let signal = account.callSessionManager.callState(internalId: id) |> deliverOnMainQueue |> beforeNext { [weak self] session in
-            self?.proccessState(session)
+
+        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
+            return account.postbox.transaction { transaction in
+                return (session, currentVoipConfiguration(transaction: transaction))
+            }
+        } |> deliverOnMainQueue |> beforeNext { [weak self] session, configuration in
+            self?.proccessState(session, configuration)
         }
         
-        state.set(signal |> map {$0.state})
         
-        callQueue.async {
+        state.set(signal |> map { $0.0.state})
+        
+        proxyDisposable.set((combineLatest(queue: callQueue, proxySettings(accountManager: sharedContext.accountManager), voiceCallSettings(sharedContext.accountManager))).start(next: { [weak self] proxySetttings, callSettings in
+            guard let `self` = self else {return}
             callSession = self
-            let bridge = CallBridge()
+            let bridge:CallBridge
+            if let server = proxySetttings.effectiveActiveServer, proxySetttings.useForCalls {
+                switch server.connection {
+                case let .socks5(username, password):
+                    bridge = CallBridge(proxy: CProxy(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
+                default:
+                    bridge = CallBridge(proxy: nil)
+                }
+            } else {
+                bridge = CallBridge(proxy: nil)
+            }
             
-            if let inputDeviceId = UserDefaults.standard.object(forKey: "call_inputDevice") as? String {
+            if let inputDeviceId = callSettings.inputDeviceId {
                 bridge.setCurrentInputDeviceId(inputDeviceId)
             }
-            if let outputDeviceId = UserDefaults.standard.object(forKey: "call_outputDevice") as? String {
+            if let outputDeviceId = callSettings.outputDeviceId {
                 bridge.setCurrentOutputDeviceId(outputDeviceId)
             }
-
+            bridge.setMutedOtherSounds(callSettings.muteSounds)
             
             self.contextRef = Unmanaged.passRetained(bridge)
             bridge.stateChangeHandler = { value in
@@ -103,7 +134,13 @@ class PCallSession {
                     }
                 }
             }
+        }))
+        
+        callQueue.async {
+           
         }
+        
+       
         
     }
     
@@ -113,7 +150,7 @@ class PCallSession {
             if (startTime < Double.ulpOfOne) {
                 stopAudio()
                 startTime = CFAbsoluteTimeGetCurrent();
-                durationPromise.set((.single(duration) |> deliverOnMainQueue) |> then (Signal<()->TimeInterval, Void>.single({[weak self] in return self?.duration ?? 0}) |> map {$0()} |> delay(1.01, queue: Queue.mainQueue()) |> restart))
+                durationPromise.set((.single(duration) |> deliverOnMainQueue) |> then (Signal<()->TimeInterval, NoError>.single({[weak self] in return self?.duration ?? 0}) |> map {$0()} |> delay(1.01, queue: Queue.mainQueue()) |> restart))
             }
         case .failed:
             playTone(.callToneFailed)
@@ -124,84 +161,14 @@ class PCallSession {
     }
     
     private func startTimeout(_ duration:TimeInterval, discardReason: CallSessionTerminationReason) {
-        timeoutDisposable.set((Signal<Void, Void>.complete() |> delay(duration, queue: Queue.mainQueue())).start(completed: { [weak self] in
+        timeoutDisposable.set((Signal<Void, NoError>.complete() |> delay(duration, queue: Queue.mainQueue())).start(completed: { [weak self] in
             self?.discardCurrentCallWithReason(discardReason)
         }))
     }
     
-    func inputDevices() -> Signal<[AudioDevice], Void> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.inputDevices())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    
-    func currentInputDeviceId()-> Signal<String, Void> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.currentInputDeviceId())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    func currentOutputDeviceId()-> Signal<String, Void> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.currentOutputDeviceId())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
-    func setCurrentInputDevice(_ device:AudioDevice) {
-        UserDefaults.standard.set(device.deviceId, forKey: "call_inputDevice")
-        UserDefaults.standard.synchronize()
-        withContext { context in
-            context.setCurrentInputDeviceId(device.deviceId);
-        }
-    }
-    
-    func setCurrentOutputDevice(_ device:AudioDevice) {
-        UserDefaults.standard.set(device.deviceId, forKey: "call_outputDevice")
-        UserDefaults.standard.synchronize()
-        withContext { context in
-            context.setCurrentOutputDeviceId(device.deviceId);
-        }
-    }
-    
-    func outputDevices() -> Signal<[AudioDevice], Void> {
-        return Signal { [weak self] subscriber in
-            var cancel = false
-            self?.withContext { context in
-                if !cancel {
-                    subscriber.putNext(context.outputDevices())
-                    subscriber.putCompletion()
-                }
-            }
-            return ActionDisposable {
-                cancel = true
-            }
-        }
-    }
+
+
+
     
     private func invalidateTimeout() {
         timeoutDisposable.set(nil)
@@ -244,12 +211,29 @@ class PCallSession {
     }
     
     func drop(_ reason:DropCallReason) {
-        account.callSessionManager.drop(internalId: id, reason: reason)
+        account.callSessionManager.drop(internalId: id, reason: reason, debugLog: .single(nil))
+    }
+    private func acceptAfterAccess() {
+        callAcceptedTime = CFAbsoluteTimeGetCurrent()
+        account.callSessionManager.accept(internalId: id)
     }
     
     func acceptCallSession() {
-        callAcceptedTime = CFAbsoluteTimeGetCurrent()
-        account.callSessionManager.accept(internalId: id)
+        requestMicroAccessDisposable.set((requestAudioPermission() |> deliverOnMainQueue).start(next: { [weak self] access in
+            if access {
+                self?.acceptAfterAccess()
+            } else {
+                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        openSystemSettings(.microphone)
+                    default:
+                        break
+                    }
+                })
+            }
+        }))
+        
     }
     
     func mute() {
@@ -277,17 +261,17 @@ class PCallSession {
         }
     }
     
-    private func proccessState(_ session: CallSession) {
+    private func proccessState(_ session: CallSession, _ configuration: VoipConfiguration) {
         self.callSessionValue = session
         
         switch session.state {
-        case .active(let key, _, let connection):
+        case .active(let id, let key, _, let connection, let maxLayer, let allowP2p):
             playTone(.callToneConnecting)
             
-            let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)})
+            let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)}, maxLayer: maxLayer)
             
             withContext { context in
-                context.startTransmissionIfNeeded(session.isOutgoing, connection: cdata)
+                context.startTransmissionIfNeeded(session.isOutgoing, allowP2p: allowP2p, serializedData: configuration.serializedData ?? "", connection: cdata)
             }
             invalidateTimeout()
         case .ringing:
@@ -302,14 +286,14 @@ class PCallSession {
             invalidateTimeout()
             stopAudio()
             break
-        case .terminated(let reason, let report):
+        case .terminated(_, let reason, let report):
             stopTransmission()
             invalidateTimeout()
             switch reason {
             case .error:
                 playTone(.callToneFailed)
             default:
-                stopAudio()
+                playTone(.callToneEnded)
             }
 //            if let report = report {
 //                let account = self.account
@@ -324,8 +308,10 @@ class PCallSession {
     }
     
     deinit {
+        peerDisposable.dispose()
         stateDisposable.dispose()
         drop(.disconnect)
+        proxyDisposable.dispose()
         let contextRef = self.contextRef
         callQueue.async {
             contextRef?.release()
@@ -459,41 +445,57 @@ enum PCallResult {
     case samePeer(PCallSession)
 }
 
-func phoneCall(_ account:Account, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, Void> {
-    return Signal { subscriber in
-        
-        assert(callQueue.isCurrent())
-        
-        if let session = callSession, session.peerId == peerId, !ignoreSame {
-            subscriber.putNext(.samePeer(session))
-            subscriber.putCompletion()
-        } else {
-            let confirmation:Signal<Bool, Void>
-            if let session = callSession {
-                confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), Void> in
-                    return account.postbox.loadedPeerWithId(session.peerId) |> map {(new:peer, previous:$0)}
-                } |> mapToSignal { value in
-                    return confirmSignal(for: mainWindow, header: tr(.callConfirmDiscardCurrentHeader), information: tr(.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle)))
+func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
+    return requestAudioPermission() |> deliverOnMainQueue |> mapToSignal { hasAccess -> Signal<PCallResult, NoError> in
+        if hasAccess {
+            return Signal { subscriber in
+                
+                assert(callQueue.isCurrent())
+                
+                if let session = callSession, session.peerId == peerId, !ignoreSame {
+                    subscriber.putNext(.samePeer(session))
+                    subscriber.putCompletion()
+                } else {
+                    let confirmation:Signal<Bool, NoError>
+                    if let sessionPeerId = callSession?.peerId {
+                        confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
+                            return account.postbox.loadedPeerWithId(sessionPeerId) |> map { (new: peer, previous: $0) }
+                            } |> mapToSignal { value in
+                                return confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader, information: L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle))
+                        }
+                        
+                    } else {
+                        confirmation = .single(true)
+                    }
+                    
+                    return (confirmation |> filter {$0} |> map { _ in
+                        callSession?.hangUpCurrentCall()
+                        } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
+                            subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
+                            subscriber.putCompletion()
+                        })
                 }
-
-            } else {
-                confirmation = .single(true)
-            }
-            
-            return (confirmation |> filter {$0} |> map { _ in
-                callSession?.hangUpCurrentCall()
-            } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
-                subscriber.putNext(.success(PCallSession(account: account, peerId: peerId, id: id)))
-                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            } |> runOn(callQueue)
+        } else {
+            confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                switch result {
+                case .thrid:
+                    openSystemSettings(.microphone)
+                default:
+                    break
+                }
+                //[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"]];
             })
+            return .complete()
         }
-        
-        return EmptyDisposable
-        
-    } |> runOn(callQueue)
+    }
+    
 }
 
-func _callSession() -> Signal<PCallSession?, Void> {
+func _callSession() -> Signal<PCallSession?, NoError> {
     return Signal { subscriber in
         var cancel: Bool = false
         pullCurrentSession({ session in

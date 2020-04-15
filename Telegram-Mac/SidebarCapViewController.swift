@@ -8,17 +8,19 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
-import TelegramCoreMac
-import SwiftSignalKitMac
+import Postbox
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 class SidebarCapView : View {
     private let text:NSTextField = NSTextField()
     fileprivate let close:TitleButton = TitleButton()
+    fileprivate var restrictedByPeer: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        text.font = .normal(.custom(15))
+        text.font = .normal(.header)
         text.drawsBackground = false
        // text.backgroundColor = .clear
         text.isSelectable = false
@@ -34,18 +36,18 @@ class SidebarCapView : View {
        
         
         addSubview(close)
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         text.textColor = theme.colors.grayText
-        text.stringValue = tr(.sidebarAvalability);
+        text.stringValue = restrictedByPeer ? L10n.sidebarPeerRestricted : L10n.sidebarAvalability
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
         self.background = theme.colors.background.withAlphaComponent(0.97)
-        close.set(color: theme.colors.blueUI, for: .Normal)
-        close.set(text: tr(.navigationClose), for: .Normal)
-        close.sizeToFit()
+        close.set(color: theme.colors.accent, for: .Normal)
+        close.set(text: tr(L10n.sidebarHide), for: .Normal)
+        _ = close.sizeToFit()
         needsLayout = true
     }
     
@@ -70,41 +72,67 @@ class SidebarCapView : View {
 }
 
 class SidebarCapViewController: GenericViewController<SidebarCapView> {
-    private let account:Account
-    init(account:Account) {
-        self.account = account
+    private let context:AccountContext
+    private let globalPeerDisposable = MetaDisposable()
+    private var inChatAbility: Bool = true {
+        didSet {
+            navigationWillChangeController()
+        }
+    }
+    init(_ context:AccountContext) {
+        self.context = context
         super.init()
         
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigation?.add(listener: WeakReference(value: self))
+        self.navigationController = context.sharedContext.bindings.rootNavigation()
+        (navigationController as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         genericView.close.set(handler: { [weak self] _ in
-            self?.navigation?.closeSidebar()
+            self?.context.sharedContext.bindings.rootNavigation().closeSidebar()
             FastSettings.toggleSidebarShown(false)
-            self?.account.context.entertainment.closedBySide()
+            self?.context.sharedContext.bindings.entertainment().closedBySide()
         }, for: .Click)
+        
+        let postbox = self.context.account.postbox
+        
+        globalPeerDisposable.set((context.globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
+            if let value = value {
+                switch value {
+                case let .peer(peerId):
+                    return postbox.transaction { transaction -> Bool in
+                        return transaction.getPeer(peerId)?.canSendMessage ?? false
+                    }
+                }
+            } else {
+                return .single(false)
+            }
+        } |> deliverOnMainQueue).start(next: { [weak self] accept in
+            self?.readyOnce()
+            self?.inChatAbility = accept
+        }))
     }
     
     deinit {
-        navigation?.remove(listener: WeakReference(value: self))
-    }
-    
-    var navigation:MajorNavigationController? {
-        return self.account.context.mainNavigation as? MajorNavigationController
-    }
-    
-    override func navigationWillChangeController() {
-        self.view.setFrameSize(account.context.entertainment.frame.size)
         
-        if navigation?.controller is ChatController {
+    }
+    
+
+    override func navigationWillChangeController() {
+        
+        self.genericView.restrictedByPeer = !inChatAbility
+        self.genericView.updateLocalizationAndTheme(theme: theme)
+        
+        self.view.setFrameSize(context.sharedContext.bindings.entertainment().frame.size)
+        
+        if context.sharedContext.bindings.rootNavigation().controller is ChatController, inChatAbility {
             view.removeFromSuperview()
         } else {
-            self.account.context.entertainment.addSubview(view)
+            context.sharedContext.bindings.entertainment().addSubview(view)
         }
         
-        NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: mainWindow)
+       // NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: mainWindow)
 
     }
     

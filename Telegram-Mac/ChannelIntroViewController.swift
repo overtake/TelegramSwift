@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
     let imageView:ImageView = ImageView()
@@ -23,22 +24,30 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         wantsLayer = true
         documentView?.addSubview(imageView)
         documentView?.addSubview(textView)
-        
-        updateLocalizationAndTheme()
+        documentView?.addSubview(button)
+
+        button.set(font: .medium(.title), for: .Normal)
+        updateLocalizationAndTheme(theme: theme)
         
     }
-    func updateLocalizationAndTheme() {
-        
+    func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let theme = (theme as! TelegramPresentationTheme)
         imageView.image = theme.icons.channelIntro
         imageView.sizeToFit()
+        
+        
+        button.set(text: L10n.channelIntroCreateChannel, for: .Normal)
+
+        button.set(color: theme.colors.accent, for: .Normal)
+        _ = button.sizeToFit()
         
         backgroundColor = theme.colors.background
         textView.background = theme.colors.background
         documentView?.background = theme.colors.background
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(.channelIntroDescriptionHeader), color: theme.colors.text, font: .medium(.header))
+        _ = attr.append(string: tr(L10n.channelIntroDescriptionHeader), color: theme.colors.text, font: .medium(.header))
         _ = attr.append(string:"\n\n")
-        _ = attr.append(string: tr(.channelIntroDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: tr(L10n.channelIntroDescription), color: theme.colors.grayText, font: .normal(.text))
         textView.set(layout: TextViewLayout(attr, alignment:.center))
         
     }
@@ -52,7 +61,11 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         textView.update(textView.layout)
         imageView.centerX(y:30)
         textView.centerX(y:imageView.frame.maxY + 30)
-        containerView.setFrameSize(frame.width, textView.frame.maxY + 30)
+        
+        button.centerX(y: textView.frame.maxY + 30)
+        
+        containerView.setFrameSize(frame.width, button.frame.maxY + 30)
+
     }
     
     required init?(coder: NSCoder) {
@@ -65,7 +78,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
 
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(.channelCreate), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: tr(L10n.channelCreate), style: navigationButtonStyle, alignment:.Right)
     }
     
     override var removeAfterDisapper: Bool {
@@ -80,6 +93,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
         onComplete.set(.single(Void()))
     }
     
+    
     override func returnKeyAction() -> KeyHandlerResult {
         executeNext()
         return .rejected
@@ -88,7 +102,11 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] control in
+        (self.rightBarView as? TextButtonBarView)?.set(handler:{ [weak self] _ in
+            self?.executeNext()
+        }, for: .Click)
+        
+        self.genericView.button.set(handler: { [weak self] _ in
             self?.executeNext()
         }, for: .Click)
         

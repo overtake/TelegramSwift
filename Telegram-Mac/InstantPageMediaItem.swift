@@ -8,18 +8,21 @@
 
 import Cocoa
 
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 enum InstantPageMediaArguments {
     case image(interactive: Bool, roundCorners: Bool, fit: Bool)
     case video(interactive: Bool, autoplay: Bool)
-    
+    case map(InstantPageMapAttribute)
     var isInteractive: Bool {
         switch self {
         case .image(let interactive, _, _):
             return interactive
         case .video(let interactive, _):
             return interactive
+        case .map:
+            return false
         }
     }
 }
@@ -38,24 +41,25 @@ final class InstantPageMediaItem: InstantPageItem {
     
     let arguments: InstantPageMediaArguments
     
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
-    
+    let separatesTiles: Bool = false
+
     init(frame: CGRect, media: InstantPageMedia, arguments: InstantPageMediaArguments) {
         self.frame = frame
         self.media = media
         self.arguments = arguments
     }
     
-    func node(account: Account) -> InstantPageView? {
-        return InstantPageMediaView(account: account, media: self.media, arguments: self.arguments)
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
+        return InstantPageMediaView(context: arguments.context, media: self.media, arguments: self.arguments)
     }
     
     func matchesAnchor(_ anchor: String) -> Bool {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let node = node as? InstantPageMediaView {
             return node.media == self.media
         } else {

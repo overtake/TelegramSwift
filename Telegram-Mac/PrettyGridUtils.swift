@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 import TGUIKit
 
 
@@ -25,9 +26,9 @@ let kBotInlineTypeFile:String = "file";
 let kBotInlineTypeVoice:String = "voice";
 
 enum InputMediaContextEntry : Equatable {
-    case gif(thumb:TelegramMediaImage?, file:TelegramMediaResource)
+    case gif(thumb: ImageMediaReference?, file: FileMediaReference)
     case photo(image:TelegramMediaImage)
-    case sticker(thumb: TelegramMediaImage?, file:TelegramMediaFile)
+    case sticker(thumb: TelegramMediaImage?, file: TelegramMediaFile)
 
 }
 
@@ -36,12 +37,12 @@ func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
     switch lhs {
     case let .gif(lhsData):
         if case let .gif(rhsData) = rhs {
-            if !lhsData.file.isEqual(to: rhsData.file) {
+            if !lhsData.file.media.isEqual(to: rhsData.file.media) {
                 return false
             }
             if (lhsData.thumb == nil) != (lhsData.thumb == nil) {
                 return false
-            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb != rhsThumb {
+            } else if let lhsThumb = lhsData.thumb, let rhsThumb = rhsData.thumb, lhsThumb.media != rhsThumb.media {
                 return false
             }
             
@@ -121,7 +122,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
         var row:[NSSize] = []
         var idx:Int = 0
         for dimension in dimensions {
-            var fitted = dimension.fitted(NSMakeSize(perSize.width, maxHeight))
+            var fitted = dimension.aspectFitted(NSMakeSize(80, maxHeight))
             
             if fitted.width < maxHeight || fitted.height < maxHeight {
                 let more: CGFloat = max(maxHeight - fitted.width, maxHeight - fitted.height)
@@ -129,7 +130,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
                 fitted.height += more
             }
             
-            if !isLastRow && idx == dimensions.count - 1 && !fitToHeight {
+            if !isLastRow && idx == dimensions.count - 1 {
                 let width:CGFloat = row.reduce(0, { (acc, size) -> CGFloat in
                     return acc + size.width
                 })
@@ -147,28 +148,30 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
         return row
     }
     var rows:[NSSize] = []
+    var plus: Int = 0
     while true {
-        rows = sizeup(dimensions)
+        let about = Array(dimensions.prefix(Int(ceil(perSize.width / perSize.height)) + plus))
+        rows = sizeup(about)
+
         let width:CGFloat = rows.reduce(0, { (acc, size) -> CGFloat in
             return acc + size.width
         })
-        
-        if width - perSize.width > 0 && dimensions.count > 1 {
-            dimensions.removeLast()
+
+        if perSize.width < width {
+            plus -= 1
             continue
         }
-        if (width < perSize.width && !isLastRow) && !dimensions.isEmpty && !fitToHeight {
+        if (width < perSize.width && !isLastRow) && !fitToHeight {
             maxHeight += CGFloat(6 * dimensions.count)
         } else {
             break
         }
     }
-    
     return rows
 }
 
 func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSize:NSSize = NSMakeSize(80, 80)) -> [InputMediaStickersRow] {
-    let s = floorToScreenPixels(initialSize.width/floor(initialSize.width/maxSize.width))
+    let s = floorToScreenPixels(System.backingScale, initialSize.width/floor(initialSize.width/maxSize.width))
     let perRow = Int(initialSize.width / s)
     
     var entries:[InputMediaContextEntry] = []
@@ -180,7 +183,7 @@ func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSi
     
     while !stickers.isEmpty {
         let sticker = stickers[0]
-        entries.append(.sticker(thumb: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: sticker.file.previewRepresentations), file: sticker.file))
+        entries.append(.sticker(thumb: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: sticker.file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: []), file: sticker.file))
         sizes.append(NSMakeSize(s, s))
         items.append(sticker)
         if entries.count == perRow {
@@ -199,7 +202,7 @@ func makeStickerEntries(_ stickers:[FoundStickerItem], initialSize:NSSize, maxSi
     return rows
 }
 
-func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [InputMediaContextRow] {
+func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSize:NSSize) -> [InputMediaContextRow] {
     var entries:[InputMediaContextEntry] = []
     var rows:[InputMediaContextRow] = []
 
@@ -214,21 +217,27 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
         case let .externalReference(data):
             switch data.type {
             case kBotInlineTypeGif:
-                if let dimension = data.dimensions, let contentUrl = data.contentUrl {
-                    var image:TelegramMediaImage? = nil
-                    if let thumbUrl = data.thumbnailUrl {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))])
+                if let content = data.content {
+                    var image:ImageMediaReference? = nil
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        image = isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
-                    entries.append(.gif(thumb: image, file: HttpReferenceMediaResource(url: contentUrl, size: nil)))
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated])
+                    entries.append(.gif(thumb: image, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
                 }
                 
             case kBotInlineTypePhoto:
-                let dimension = data.dimensions ?? NSMakeSize(100, 100)
                 var image:TelegramMediaImage? = nil
-                if let thumbUrl = data.thumbnailUrl {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))])
+                if let content = data.content, let dimensions = content.dimensions {
+                    var representations: [TelegramMediaImageRepresentation] = []
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource))
+                    }
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: content.resource))
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 }
                 if let image = image {
                     entries.append(.photo(image: image))
@@ -236,12 +245,12 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
                     removeResultIndexes.append(i)
                 }
             case kBotInlineTypeSticker:
-                if let dimension = data.dimensions, let contentUrl = data.contentUrl {
+                if let content = data.content {
                     var image:TelegramMediaImage? = nil
-                    if let thumbUrl = data.thumbnailUrl {
-                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimension, resource: HttpReferenceMediaResource(url: thumbUrl, size: nil))])
+                    if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
+                        image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile.init(fileId: MediaId(namespace: 0, id: 0), resource: HttpReferenceMediaResource(url: contentUrl, size: nil), previewRepresentations: [], mimeType: "image/webp", size: nil, attributes: [])))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: content.attributes)))
                 } else {
                     removeResultIndexes.append(i)
                 }
@@ -253,14 +262,21 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
             case kBotInlineTypeGif:
                 if let file = data.file {
                     dimension = file.videoSize
-                    entries.append(.gif(thumb: data.image, file: file.resource))
+                    var thumb: ImageMediaReference? = nil
+                    if let image = data.image {
+                        thumb = ImageMediaReference.standalone(media: image)
+                    } else if !file.previewRepresentations.isEmpty {
+                        let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        thumb =  isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
+                    }
+                    entries.append(.gif(thumb: thumb, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
                 }
             
             case kBotInlineTypePhoto:
                 if let image = data.image, let representation = image.representations.last {
-                    dimension = representation.dimensions
+                    dimension = representation.dimensions.size
                     entries.append(.photo(image: image))
                 } else {
                     removeResultIndexes.append(i)
@@ -284,13 +300,19 @@ func makeMediaEnties(_ results:[ChatContextResult], initialSize:NSSize) -> [Inpu
     for i in removeResultIndexes.reversed() {
         results.remove(at: i)
     }
-    
     var fitted:[[NSSize]] = []
     let f:Int = Int(round(initialSize.width / initialSize.height))
     while !dimensions.isEmpty {
         let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
         fitted.append(row)
         dimensions.removeSubrange(0 ..< row.count)
+    }
+    
+    
+    if fitted.count >= 2, fitted[fitted.count - 1].count == 1 && fitted[fitted.count - 2].reduce(0, { $0 + $1.width}) < (initialSize.width - 50) {
+        let width = fitted[fitted.count - 2].reduce(0, { $0 + $1.width})
+        let last = fitted.removeLast()
+        fitted[fitted.count - 1] = fitted[fitted.count - 1] + [NSMakeSize(initialSize.width - width, last[0].height)]
     }
     
     for row in fitted {

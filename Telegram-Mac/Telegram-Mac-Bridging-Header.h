@@ -16,6 +16,40 @@
 #import <Security/Security.h>
 #import <AVFoundation/AVFoundation.h>
 #import <OpenGL/gl.h>
+#import "MP4Atom.h"
+#import "HackUtils.h"
+#import "BuildConfig.h"
+#import "TGModernGrowingTextView.h"
+
+
+#ifndef SHARE
+#import "ffmpeg/include/libavcodec/avcodec.h"
+#import "ffmpeg/include/libavformat/avformat.h"
+#import "libjpeg-turbo/jpeglib.h"
+#import "libjpeg-turbo/jerror.h"
+#import "libjpeg-turbo/turbojpeg.h"
+#import "libjpeg-turbo/jmorecfg.h"
+#import "FFMpegRemuxer.h"
+#import "FFMpegGlobals.h"
+#import "FFMpegAVFormatContext.h"
+#import "FFMpegAVIOContext.h"
+#import "FFMpegAVCodec.h"
+#import "FFMpegAVCodecContext.h"
+#import "FFMpegAVFrame.h"
+#import "FFMpegPacket.h"
+#import "FFMpegSwResample.h"
+#import "GZip.h"
+#import "Svg.h"
+#endif
+
+#import "CallBridge.h"
+#import "CalendarUtils.h"
+#import "RingBuffer.h"
+#import "ocr.h"
+#import "TGPassportMRZ.h"
+#import "EDSunriseSet.h"
+#import "ObjcUtils.h"
+
 
 //#import <ChromiumTabs/ChromiumTabs.h>
 //#include <Cocoa/Cocoa.h>
@@ -32,164 +66,17 @@
 #define nullable
 #endif
 
+void stickerThumbnailAlphaBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
+void telegramFastBlurMore(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
 void telegramFastBlur(int imageWidth, int imageHeight, int imageStride, void * __nullable pixels);
-NSArray<NSString *> * __nonnull cut_long_message(NSString * __nonnull message, int max_length);
 int64_t SystemIdleTime(void);
 NSDictionary<NSString * , NSString *> * __nonnull audioTags(AVURLAsset * __nonnull asset);
 NSImage * __nonnull TGIdenticonImage(NSData * __nonnull data, NSData * __nonnull additionalData, CGSize size);
 
 CGImageRef __nullable convertFromWebP(NSData *__nonnull data);
 
-@interface ObjcUtils : NSObject
-+ (NSArray * __nullable)textCheckingResultsForText:(NSString *__nonnull)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands;
-+(NSString * __nonnull) md5:(NSString *__nonnull)string;
-+(NSArray<NSView *> *__nonnull)findElementsByClass:(NSString *__nonnull)className inView:(NSView *__nonnull)view;
-+(NSString * __nonnull)stringForEmojiHashOfData:(NSData *__nonnull)data count:(NSInteger)count positionExtractor:(int32_t (^__nonnull)(uint8_t *__nonnull, int32_t, int32_t))positionExtractor;
-+(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer;
-+(NSString * __nonnull)callEmojies:(NSData *__nonnull)keySha256;
-+(NSOpenPanel * __nonnull)openPanel;
-+(NSSavePanel * __nonnull)savePanel;
-+(NSEvent * __nonnull)scrollEvent:(NSEvent *__nonnull)from;
-+(NSSize)gifDimensionSize:(NSString * __nonnull)path;
-+(int)colorMask:(int)idValue mainId:(int)mainId;
-+(NSArray<NSString *> * __nonnull)notificationTones:(NSString * __nonnull)def;
-+(NSString * __nullable)youtubeIdentifier:(NSString * __nonnull)url;;
-@end
-
-int colorIndexForGroupId(int64_t groupId);
-int64_t TGPeerIdFromChannelId(int32_t channelId);
-int colorIndexForUid(int32_t uid, int32_t myUserId);
-
-@interface NSData (TG)
-- (NSString *__nonnull)stringByEncodingInHex;
-@end
 
 
-@interface NSFileManager (Extension)
-+ (NSString * __nonnull)xattrStringValueForKey:(NSString *__nonnull)key atURL:(NSURL *__nonnull)URL;
-+ (BOOL)setXAttrStringValue:(NSString *__nonnull)value forKey:(NSString *__nonnull)key atURL:(NSURL *__nonnull)URL;
-@end
-
-@interface NSMutableAttributedString(Extension)
--(void)detectBoldColorInStringWithFont:(NSFont *__nonnull)font;
-@end
-
-@interface CalendarUtils : NSObject
-
-+ (BOOL) isSameDate:(NSDate*__nonnull)d1 date:(NSDate* __nonnull)d2 checkDay:(BOOL)checkDay;
-+ (NSString*__nonnull) dd:(NSDate*__nonnull)d;
-+ (NSInteger) colForDay:(NSInteger)day;
-+ (NSInteger) lastDayOfTheMonth:(NSDate *__nonnull)date;
-+ (NSDate*__nonnull) toUTC:(NSDate*__nonnull)d;
-+ (NSDate*__nonnull) monthDay:(NSInteger)day date:(NSDate *__nonnull)date;
-+ (NSInteger)weekDay:(NSDate *__nonnull)date;
-+ (NSDate *__nonnull) stepMonth:(NSInteger)dm date:(NSDate *__nonnull)date;
-
-@end
-
-extern NSString *__nonnull const TGMentionUidAttributeName;
-
-
-@interface TGInputTextAttribute : NSObject
-@property (nonatomic,strong,readonly) NSString * __nonnull name;
-@property (nonatomic,strong,readonly) id __nonnull  value;
--(id __nonnull )initWithName:(NSString * __nonnull)name value:(id __nonnull)value;
-@end
-
-@interface TGInputTextTag : NSTextAttachment
-
-@property (nonatomic, readonly) int64_t uniqueId;
-@property (nonatomic, strong, readonly) id __nonnull  attachment;
-
-@property (nonatomic,strong, readonly) TGInputTextAttribute * __nonnull attribute;
-
--(instancetype __nonnull )initWithUniqueId:(int64_t)uniqueId attachment:(id __nonnull )attachment attribute:(TGInputTextAttribute * __nonnull )attribute;
-
-@end
-
-@interface TGInputTextTagAndRange : NSObject
-
-@property (nonatomic, strong, readonly) TGInputTextTag *__nonnull tag;
-@property (nonatomic) NSRange range;
-
-- (instancetype __nonnull )initWithTag:(TGInputTextTag * __nonnull )tag range:(NSRange)range;
-
-@end
-
-@protocol TGModernGrowingDelegate <NSObject>
-
--(void) textViewHeightChanged:(CGFloat)height animated:(BOOL)animated;
--(BOOL) textViewEnterPressed:(NSEvent * __nonnull)event;
--(void) textViewTextDidChange:(NSString * __nonnull)string;
--(void) textViewTextDidChangeSelectedRange:(NSRange)range;
--(BOOL)textViewDidPaste:(NSPasteboard * __nonnull)pasteboard;
--(NSSize)textViewSize;
--(BOOL)textViewIsTypingEnabled;
--(int)maxCharactersLimit;
-
-@optional
-- (void) textViewNeedClose:(id __nonnull)textView;
-- (BOOL) canTransformInputText;
-@end
-
-
-
-
-@interface TGGrowingTextView : NSTextView
-@property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
-@end
-
-@interface TGModernGrowingTextView : NSView
-
-@property (nonatomic,assign) BOOL animates;
-@property (nonatomic,assign) int min_height;
-@property (nonatomic,assign) int max_height;
-
-@property (nonatomic,assign) BOOL isSingleLine;
-@property (nonatomic,assign) BOOL isWhitespaceDisabled;
-@property (nonatomic,strong) NSColor * __nonnull cursorColor;
-@property (nonatomic,strong) NSColor * __nonnull textColor;
-@property (nonatomic,strong) NSColor * __nonnull linkColor;
-@property (nonatomic,strong) NSFont * __nonnull textFont;
-@property (nonatomic,strong,readonly) TGGrowingTextView * __nonnull inputView;
-@property (nonatomic,strong) NSString * __nonnull defaultText;
-
-@property (nonatomic,strong, nullable) NSAttributedString *placeholderAttributedString;
-
--(void)setPlaceholderAttributedString:(NSAttributedString * __nonnull)placeholderAttributedString update:(BOOL)update;
-
-@property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable delegate;
-
--(int)height;
-
-
--(void)update:(BOOL)notify;
-
--(NSAttributedString * __nonnull)attributedString;
--(void)setAttributedString:(NSAttributedString * __nonnull)attributedString animated:(BOOL)animated;
--(NSString * __nonnull)string;
--(void)setString:(NSString * __nonnull)string animated:(BOOL)animated;
--(void)setString:(NSString * __nonnull)string;
--(NSRange)selectedRange;
--(void)appendText:(id __nonnull)aString;
--(void)insertText:(id __nonnull)aString replacementRange:(NSRange)replacementRange;
--(void)addInputTextTag:(TGInputTextTag * __nonnull)tag range:(NSRange)range;
-
--(void)replaceMention:(NSString * __nonnull)mention username:(bool)username userId:(int32_t)userId;
-
--(void)paste:(id __nonnull)sender;
-
--(void)setSelectedRange:(NSRange)range;
-
--(Class __nonnull)_textViewClass;
--(int)_startXPlaceholder;
--(BOOL)_needShowPlaceholder;
-
--(void)codeWord;
--(void)italicWord;
--(void)boldWord;
-- (void)textDidChange:( NSNotification * _Nullable )notification;
-@end
 
 
 @interface NSWeakReference : NSObject
@@ -231,9 +118,10 @@ extern NSString *__nonnull const TGMentionUidAttributeName;
 
 
 //BEGIN AUDIO HEADER
+
+
 @interface TGDataItem : NSObject
 
-- (instancetype __nonnull)initWithTempFile;
 - (instancetype __nonnull)initWithFilePath:(NSString * __nonnull)filePath;
 
 - (void)moveToPath:(NSString * __nonnull)path;
@@ -259,20 +147,7 @@ extern NSString *__nonnull const TGMentionUidAttributeName;
 - (uint16_t * __nonnull)sampleList;
 @end
 
-@interface TGOpusAudioRecorder : NSObject
 
-@property (nonatomic, copy) void (^__nullable pauseRecording)();
-@property (nonatomic, copy) void (^__nullable micLevel)(CGFloat);
-
-- (instancetype __nonnull)initWithFileEncryption:(bool)fileEncryption;
-
-- (void)_beginAudioSession:(bool)speaker;
-- (void)prepareRecord:(bool)playTone completion:(void (^__nonnull)())completion;
-- (void)record;
-- (TGDataItem * __nonnull)stopRecording:(NSTimeInterval * __nonnull)recordedDuration waveform:(__autoreleasing TGAudioWaveform * __nullable* __nullable)waveform;
-- (NSTimeInterval)currentDuration;
-
-@end
 
 double mappingRange(double x, double in_min, double in_max, double out_min, double out_max);
 
@@ -302,6 +177,8 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
 
 + (void)setDateLocalizationFunc:(NSString*  __nonnull (^__nonnull)(NSString * __nonnull key))localizationF;
 @end
+
+NSString * NSLocalized(NSString * key, NSString *comment);
 
 
 
@@ -348,9 +225,9 @@ typedef NS_ENUM(NSUInteger, YTVimeoVideoQuality) {
 
 @property (nonatomic, readonly) NSDictionary *metaData;
 
--(NSURL *)highestQualityStreamURL;
+-(NSURL * __nullable)highestQualityStreamURL;
 
--(NSURL *)lowestQualityStreamURL;
+-(NSURL * __nullable)lowestQualityStreamURL;
 
 @property (nonatomic, readonly, nullable) NSURL *HTTPLiveStreamURL;
 
@@ -492,54 +369,6 @@ BOOL isEnterEventObjc(NSEvent *theEvent);
 
 
 
-@interface TGCallConnectionDescription : NSObject
-    
-    @property (nonatomic, readonly) int64_t identifier;
-    @property (nonatomic, strong, readonly) NSString *ipv4;
-    @property (nonatomic, strong, readonly) NSString *ipv6;
-    @property (nonatomic, readonly) int32_t port;
-    @property (nonatomic, strong, readonly) NSData *peerTag;
-    
-- (instancetype)initWithIdentifier:(int64_t)identifier ipv4:(NSString *)ipv4 ipv6:(NSString *)ipv6 port:(int32_t)port peerTag:(NSData *)peerTag;
-    
-@end
-
-
-@interface TGCallConnection : NSObject
-    
-    @property (nonatomic, strong, readonly) NSData *key;
-    @property (nonatomic, strong, readonly) NSData *keyHash;
-    @property (nonatomic, strong, readonly) TGCallConnectionDescription *defaultConnection;
-    @property (nonatomic, strong, readonly) NSArray<TGCallConnectionDescription *> *alternativeConnections;
-    
-- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections;
-    
-@end
-
-@interface AudioDevice : NSObject
-@property(nonatomic, strong, readonly) NSString *deviceId;
-@property(nonatomic, strong, readonly) NSString *deviceName;
--(id)initWithDeviceId:(NSString*)deviceId deviceName:(NSString *)deviceName;
-@end
-
-@interface CallBridge : NSObject
--(void)startTransmissionIfNeeded:(bool)outgoing connection:(TGCallConnection *)connection;
-
--(void)mute;
--(void)unmute;
--(BOOL)isMuted;
-
--(NSString *)currentOutputDeviceId;
--(NSString *)currentInputDeviceId;
--(NSArray<AudioDevice *> *)outputDevices;
--(NSArray<AudioDevice *> *)inputDevices;
--(void)setCurrentOutputDeviceId:(NSString *)deviceId;
--(void)setCurrentInputDeviceId:(NSString *)deviceId;
-
-@property (nonatomic, copy) void (^stateChangeHandler)(int);
-
-@end
-
 @interface TGCurrencyFormatterEntry : NSObject
 
 @property (nonatomic, strong, readonly) NSString *symbol;
@@ -582,42 +411,6 @@ NS_ASSUME_NONNULL_END
 
 @interface EmojiSuggestionBridge : NSObject
 +(NSArray<CEmojiSuggestion *> * __nonnull)getSuggestions:(NSString * __nonnull)q;
-@end
-
-typedef enum {
-    MIHSliderTransitionFade,
-    MIHSliderTransitionPushVertical,
-    MIHSliderTransitionPushHorizontalFromLeft,
-    MIHSliderTransitionPushHorizontalFromRight
-} MIHSliderTransition;
-
-@class MIHSliderDotsControl;
-
-@interface MIHSliderView : NSView
-
-@property (retain, readonly) NSArray * __nonnull slides;
-
-- (void)addSlide:(NSView * __nonnull)aSlide;
-- (void)removeSlide:(NSView * __nonnull)aSlide;
-@property (assign, readonly) NSUInteger indexOfDisplayedSlide;
-@property (retain, readonly) NSView * __nonnull displayedSlide;
-- (void)displaySlideAtIndex:(NSUInteger)aIndex;
-@property (assign) MIHSliderTransition transitionStyle;
-@property (assign) BOOL scheduledTransition;
-@property (assign) BOOL repeatingScheduledTransition;
-@property (assign) NSTimeInterval scheduledTransitionInterval;
-@property (assign) NSTimeInterval transitionAnimationDuration;
-
-@property (retain) MIHSliderDotsControl * __nonnull dotsControl;
-
-@end
-
-@interface MIHSliderDotsControl : NSView
-
-@property (retain) NSImage * __nullable normalDotImage;
-
-@property (retain) NSImage * __nullable highlightedDotImage;
-
 @end
 
 @interface TGVideoCameraGLRenderer : NSObject
@@ -701,5 +494,88 @@ typedef enum
 + (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset;
 
 @end
+
+
+@class RHResizableImage;
+
+
+typedef NSEdgeInsets RHEdgeInsets;
+
+
+extern RHEdgeInsets RHEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right);
+extern CGRect RHEdgeInsetsInsetRect(CGRect rect, RHEdgeInsets insets, BOOL flipped); // If flipped origin is top-left otherwise origin is bottom-left (OSX Default is NO)
+extern BOOL RHEdgeInsetsEqualToEdgeInsets(RHEdgeInsets insets1, RHEdgeInsets insets2);
+extern const RHEdgeInsets RHEdgeInsetsZero;
+
+extern NSString *NSStringFromRHEdgeInsets(RHEdgeInsets insets);
+extern RHEdgeInsets RHEdgeInsetsFromString(NSString* string);
+
+
+typedef NSImageResizingMode RHResizableImageResizingMode;
+enum {
+    RHResizableImageResizingModeTile = NSImageResizingModeTile,
+    RHResizableImageResizingModeStretch = NSImageResizingModeStretch,
+};
+
+
+
+@interface NSImage (RHResizableImageAdditions)
+
+-(RHResizableImage *)resizableImageWithCapInsets:(RHEdgeInsets)capInsets; // Create a resizable version of this image. the interior is tiled when drawn.
+-(RHResizableImage *)resizableImageWithCapInsets:(RHEdgeInsets)capInsets resizingMode:(RHResizableImageResizingMode)resizingMode; // The interior is resized according to the resizingMode
+
+-(RHResizableImage *)stretchableImageWithLeftCapWidth:(CGFloat)leftCapWidth topCapHeight:(CGFloat)topCapHeight; // Right cap is calculated as width - leftCapWidth - 1; bottom cap is calculated as height - topCapWidth - 1;
+
+
+-(void)drawTiledInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)delta;
+-(void)drawStretchedInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)delta;
+
+@end
+
+
+
+@interface RHResizableImage : NSImage <NSCopying> {
+    // ivars are private
+    RHEdgeInsets _capInsets;
+    RHResizableImageResizingMode _resizingMode;
+    
+    NSArray *_imagePieces;
+    
+    NSBitmapImageRep *_cachedImageRep;
+    NSSize _cachedImageSize;
+    CGFloat _cachedImageDeviceScale;
+}
+
+-(id)initWithImage:(NSImage *)image leftCapWidth:(CGFloat)leftCapWidth topCapHeight:(CGFloat)topCapHeight; // right cap is calculated as width - leftCapWidth - 1; bottom cap is calculated as height - topCapWidth - 1;
+
+-(id)initWithImage:(NSImage *)image capInsets:(RHEdgeInsets)capInsets;
+-(id)initWithImage:(NSImage *)image capInsets:(RHEdgeInsets)capInsets resizingMode:(RHResizableImageResizingMode)resizingMode; // designated initializer
+
+@property RHEdgeInsets capInsets; // Default is RHEdgeInsetsZero
+@property RHResizableImageResizingMode resizingMode; // Default is UIImageResizingModeTile
+
+-(void)drawInRect:(NSRect)rect;
+-(void)drawInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha;
+-(void)drawInRect:(NSRect)rect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints;
+-(void)drawInRect:(NSRect)rect fromRect:(NSRect)fromRect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints;
+
+-(void)originalDrawInRect:(NSRect)rect fromRect:(NSRect)fromRect operation:(NSCompositingOperation)op fraction:(CGFloat)requestedAlpha respectFlipped:(BOOL)respectContextIsFlipped hints:(NSDictionary *)hints; //super passthrough
+
+
+@end
+
+// utilities
+extern NSImage* RHImageByReferencingRectOfExistingImage(NSImage *image, NSRect rect);
+extern NSArray* RHNinePartPiecesFromImageWithInsets(NSImage *image, RHEdgeInsets capInsets);
+extern CGFloat RHContextGetDeviceScale(CGContextRef context);
+
+// nine part
+extern void RHDrawNinePartImage(NSRect frame, NSImage *topLeftCorner, NSImage *topEdgeFill, NSImage *topRightCorner, NSImage *leftEdgeFill, NSImage *centerFill, NSImage *rightEdgeFill, NSImage *bottomLeftCorner, NSImage *bottomEdgeFill, NSImage *bottomRightCorner, NSCompositingOperation op, CGFloat alphaFraction, BOOL shouldTile);
+
+extern void RHDrawImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction, BOOL tile);
+extern void RHDrawTiledImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction);
+extern void RHDrawStretchedImageInRect(NSImage* image, NSRect rect, NSCompositingOperation op, CGFloat fraction);
+
+
 
 #endif /* Telegram_Mac_Bridging_Header_h */

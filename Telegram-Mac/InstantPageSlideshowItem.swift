@@ -7,19 +7,24 @@
 //
 
 import Cocoa
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
 
 class InstantPageSlideshowItem: InstantPageItem {
     var frame: CGRect
     
     let medias: [InstantPageMedia]
-    let wantsNode: Bool = true
+    let wantsView: Bool = true
     let hasLinks: Bool = false
     let isInteractive: Bool = true
+    let separatesTiles: Bool = false
+
+    let webPage: TelegramMediaWebpage
     
-    init(frame: CGRect, medias:[InstantPageMedia]) {
+    init(frame: CGRect, webPage: TelegramMediaWebpage, medias: [InstantPageMedia]) {
         self.frame = frame
+        self.webPage = webPage
         self.medias = medias
     }
     
@@ -31,7 +36,7 @@ class InstantPageSlideshowItem: InstantPageItem {
         return false
     }
     
-    func matchesNode(_ node: InstantPageView) -> Bool {
+    func matchesView(_ node: InstantPageView) -> Bool {
         if let view = node as? InstantPageSlideshowView {
             return self.medias == view.medias
         }
@@ -39,8 +44,8 @@ class InstantPageSlideshowItem: InstantPageItem {
     }
 
     
-    func node(account: Account) -> InstantPageView? {
-        return InstantPageSlideshowView(frameRect: frame, medias: medias, account: account)
+    func view(arguments: InstantPageItemArguments, currentExpandedDetails: [Int : Bool]?) -> (InstantPageView & NSView)? {
+        return InstantPageSlideshowView(frameRect: frame, medias: medias, context: arguments.context)
     }
     
     func linkSelectionViews() -> [InstantPageLinkSelectionView] {
@@ -59,18 +64,29 @@ class InstantPageSlideshowItem: InstantPageItem {
 
 class InstantPageSlideshowView : View, InstantPageView {
     fileprivate let medias: [InstantPageMedia]
-    private let slideView: MIHSliderView
-    init(frameRect: NSRect, medias: [InstantPageMedia], account: Account) {
+    private let slideView: SliderView
+    init(frameRect: NSRect, medias: [InstantPageMedia], context: AccountContext) {
         self.medias = medias
-        slideView = MIHSliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        slideView = SliderView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(slideView)
         
         for media in medias {
-            let view = InstantPageMediaView(account: account, media: media, arguments: .image(interactive: true, roundCorners: false, fit: false))
+            var arguments: InstantPageMediaArguments = .image(interactive: true, roundCorners: false, fit: false)
+            if let media = media.media as? TelegramMediaFile {
+                if media.isVideo {
+                    arguments = .video(interactive: true, autoplay: media.isAnimated)
+                }
+            }
+            let view = InstantPageMediaView(context: context, media: media, arguments: arguments)
             slideView.addSlide(view)
         }
         
+    }
+    
+    override func layout() {
+        super.layout()
+        slideView.center()
     }
     
     var indexOfDisplayedSlide: Int {
@@ -79,7 +95,7 @@ class InstantPageSlideshowView : View, InstantPageView {
     
     override func copy() -> Any {
         
-        return slideView.displayedSlide.copy()
+        return slideView.displayedSlide?.copy() ?? super.copy()
     }
     
     func updateIsVisible(_ isVisible: Bool) {

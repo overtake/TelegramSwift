@@ -8,15 +8,19 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 
-class ChatInputAttachView: ImageButton {
-        
+class ChatInputAttachView: ImageButton, Notifable {
+    
+    
+    
     private var chatInteraction:ChatInteraction
     private var controller:SPopoverViewController?
+    private let editMediaAccessory: ImageView = ImageView()
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init(frame: frameRect)
@@ -27,107 +31,182 @@ class ChatInputAttachView: ImageButton {
         
         updateLayout()
         
-        set(handler: { (event) in
+        
+        set(handler: { [weak self] control in
             
-        }, for: .Click)
-        
-        let attachPhotoOrVideo = { [weak self] in
-            if let strongSelf = self, let window = strongSelf.kitWindow {
-                filePanel(with:mediaExts, for:window, completion:{(result) in
-                    if let result = result {
-                        let previous = result.count
-                        
-                        let result = result.filter { path -> Bool in
-                            if let size = fileSize(path) {
-                                return size <= 1500000000
-                            }
-                            return false
-                        }
-                        
-                        let afterSizeCheck = result.count
-                        
-                        if afterSizeCheck == 0 && previous != afterSizeCheck {
-                            alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
-                        } else {
-                            strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true)
-                        }
-                    }
-                })
-            }
-        }
-        
-        set(handler: { [weak self] (state) in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.presentation.peer {
+            guard let `self` = self else {return}
+            if let peer = chatInteraction.presentation.peer {
                 
-                if let peer = peer as? TelegramChannel {
-                    if peer.hasBannedRights(.banSendMedia) {
-                        return
-                    }
-                }
-                
-                let items = [SPopoverItem(tr(.inputAttachPopoverPhotoOrVideo), {
-                    attachPhotoOrVideo()
-                }, theme.icons.chatAttachPhoto), SPopoverItem(tr(.inputAttachPopoverPicture), { [weak strongSelf] in
-                    if  let strongSelf = strongSelf, let window = strongSelf.kitWindow {
-                        pickImage(for: window, completion: { (image) in
-                            if let image = image {
-                                strongSelf.chatInteraction.mediaPromise.set(putToTemp(image: image) |> map({[MediaSenderContainer(path:$0)]}))
-                            }
-                        })
+                var items:[SPopoverItem] = []
+                if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                    }, theme.icons.chatAttachPhoto))
+                    
+                    if editState.message.groupingKey == nil {
+                        items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                            self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                        }, theme.icons.chatAttachFile))
                     }
                     
-                }, theme.icons.chatAttachCamera), SPopoverItem(tr(.inputAttachPopoverFile), { [weak strongSelf] in
-                    if let strongSelf = strongSelf, let window = strongSelf.kitWindow {
-                        filePanel(for:window, completion:{(result) in
-                            if let result = result {
-                                
-                                let previous = result.count
-                                
-                                let result = result.filter { path -> Bool in
-                                    if let size = fileSize(path) {
-                                        return size <= 1500000000
-                                    }
-                                    return false
-                                }
-                                
-                                let afterSizeCheck = result.count
-                                
-                                if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                    alert(for: mainWindow, header: appName, info: tr(.appMaxFileSize))
-                                } else {
-                                    strongSelf.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, false)
-                                }
-                                
-                            }
-                        })
+                    if media is TelegramMediaImage {
+                        items.append(SPopoverItem(L10n.editMessageEditCurrentPhoto, { [weak self] in
+                            self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
+                        }, theme.icons.editMessageCurrentPhoto))
                     }
-                }, theme.icons.chatAttachFile)]
+                    
+                    
+                } else if chatInteraction.presentation.interfaceState.editState == nil {
+                    
+                    if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                        showSlowModeTimeoutTooltip(slowMode, for: control)
+                        return
+                    }
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
+                        self?.chatInteraction.attachPhotoOrVideo()
+                    }, theme.icons.chatAttachPhoto))
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
+                        guard let `self` = self else {return}
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
+                        self.chatInteraction.attachPicture()
+                    }, theme.icons.chatAttachCamera))
+                    
+                    var canAttachPoll: Bool = false
+                    if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
+                        canAttachPoll = true
+                    }
+                    if let peer = chatInteraction.presentation.mainPeer, peer.isBot {
+                        canAttachPoll = true
+                    }
+                    
+                    if let peer = chatInteraction.presentation.peer as? TelegramChannel {
+                        if peer.hasPermission(.sendMessages) {
+                            canAttachPoll = true
+                        }
+                    }
+                    if canAttachPoll && permissionText(from: peer, for: .banSendPolls) != nil {
+                        canAttachPoll = false
+                    }
+                   
+                    if canAttachPoll {
+                        items.append(SPopoverItem(L10n.inputAttachPopoverPoll, { [weak self] in
+                            guard let `self` = self else {return}
+                            if let permissionText = permissionText(from: peer, for: .banSendPolls) {
+                                alert(for: mainWindow, info: permissionText)
+                                return
+                            }
+                            showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: mainWindow)
+                        }, theme.icons.chatAttachPoll))
+                    }
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: mainWindow, info: permissionText)
+                            return
+                        }
+                        self?.chatInteraction.attachFile(false)
+                    }, theme.icons.chatAttachFile))
+                    
+                    items.append(SPopoverItem(L10n.inputAttachPopoverLocation, { [weak self] in
+                        self?.chatInteraction.attachLocation()
+                    }, theme.icons.chatAttachLocation))
+                }
                 
-                strongSelf.controller = SPopoverViewController(items: items)
-                showPopover(for: strongSelf, with: strongSelf.controller!, edge: nil, inset: NSMakePoint(0,0))
+                
+                if !items.isEmpty {
+                    self.controller = SPopoverViewController(items: items, visibility: 10)
+                    showPopover(for: self, with: self.controller!, edge: nil, inset: NSMakePoint(0,0))
+                }
+               
             }
         }, for: .Hover)
         
-        set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer {
-                if peer.mediaRestricted {
-                    alertForMediaRestriction(peer)
-                    return
-                }
-                self?.controller?.popover?.hide()
-                Queue.mainQueue().justDispatch {
-                    attachPhotoOrVideo()
-                }
-                
+        set(handler: { [weak self] control in
+            guard let `self` = self else {return}
+            
+            if let editState = chatInteraction.presentation.interfaceState.editState {
+                return
             }
             
-            
+            if let peer = self.chatInteraction.presentation.peer {
+                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                    alert(for: mainWindow, info: permissionText)
+                    return
+                }
+                self.controller?.popover?.hide()
+                Queue.mainQueue().justDispatch {
+                    if self.chatInteraction.presentation.interfaceState.editState != nil {
+                        self.chatInteraction.updateEditingMessageMedia(nil, true)
+                    } else {
+                        self.chatInteraction.attachFile(true)
+                    }
+                }
+            }
         }, for: .Click)
 
+        chatInteraction.add(observer: self)
+        addSubview(editMediaAccessory)
+        editMediaAccessory.layer?.opacity = 0
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func isEqual(to other: Notifable) -> Bool {
+        if let view = other as? ChatInputAttachView {
+            return view === self
+        } else {
+            return false
+        }
+    }
+    
+    func notify(with value: Any, oldValue: Any, animated: Bool) {
+        let value = value as? ChatPresentationInterfaceState
+        let oldValue = oldValue as? ChatPresentationInterfaceState
+        
+        if value?.interfaceState.editState != oldValue?.interfaceState.editState {
+            if let editState = value?.interfaceState.editState {
+                let isMedia = editState.message.media.first is TelegramMediaFile || editState.message.media.first is TelegramMediaImage
+                editMediaAccessory.change(opacity: isMedia ? 1 : 0)
+                self.highlightHovered = isMedia
+                self.autohighlight = isMedia
+            } else {
+                editMediaAccessory.change(opacity: 0)
+                self.highlightHovered = true
+                self.autohighlight = true
+            }
+        }
+       
+//        if let slowMode = value?.slowMode {
+//            if slowMode.hasError  {
+//                self.highlightHovered = false
+//                self.autohighlight = false
+//            }
+//        }
+    }
+    
+    override func layout() {
+        super.layout()
+        editMediaAccessory.setFrameOrigin(46 - editMediaAccessory.frame.width, 23)
+    }
+    
+    deinit {
+        chatInteraction.remove(observer: self)
     }
 
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        editMediaAccessory.image = theme.icons.editMessageMedia
+        editMediaAccessory.sizeToFit()
         set(image: theme.icons.chatAttach, for: .Normal)
     }
     

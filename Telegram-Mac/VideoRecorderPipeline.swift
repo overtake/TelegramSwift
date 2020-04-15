@@ -7,9 +7,10 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
+import SwiftSignalKit
 import Accelerate
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 import TGUIKit
 
 
@@ -30,7 +31,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     func movieRecorderDidFinishRecording(_ recorder: TGVideoCameraMovieRecorder!) {
-        status = .finishRecording(path: url.path, duration: resultDuration, thumb: thumbnail)
+        liveUploading?.fileDidChangedSize(true)
+        status = .finishRecording(path: url.path, duration: resultDuration, id: liveUploading?.id, thumb: thumbnail)
     }
     
     
@@ -80,11 +82,12 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     private let startRecordAfterAudioBuffer:Atomic<Bool> = Atomic(value: false)
 
-    static let videoMessageMaxDuration: Double = 59.6
+    static let videoMessageMaxDuration: Double = 60
 
-    
-    init(url:URL) {
+    private let liveUploading: PreUploadManager?
+    init(url:URL, liveUploading: PreUploadManager?) {
         self.url = url
+        self.liveUploading = liveUploading
         super.init()
         
         recorder = TGVideoCameraMovieRecorder(url: url, delegate: self, callbackQueue: VideoRecorderPipeline.queue.queue)
@@ -204,7 +207,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
         
-        if self.skip.modify({min($0 + 1, 24)}) < 24 {
+        if self.skip.modify({min($0 + 1, 3)}) < 3 {
             return
         }
         
@@ -235,7 +238,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
                 }
             }
         }
-       
+        liveUploading?.fileDidChangedSize(false)
     }
     
 
@@ -258,6 +261,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
             }
             recorder?.appendVideoPixelBuffer(renderedPixelBuffer, withPresentationTime: timestamp)
         }
+        
     }
     
 
@@ -298,14 +302,19 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     func stop() {
         VideoRecorderPipeline.queue.async {
+            if case .finishRecording = self.status {
+                return
+            }
             self.status = .stoppingRecording
             self.videoOutput.setSampleBufferDelegate(nil, queue: nil)
             self.audioOutput.setSampleBufferDelegate(nil, queue: nil)
             let duration = self.recorder.videoDuration()
-            if !duration.isNaN {
-                self.resultDuration = Int(duration)
+            if !duration.isNaN && duration >= 0.5 {
+                self.resultDuration = Int(ceil(duration))
+                self.recorder.finishRecording()
+            } else {
+                self.dispose()
             }
-            self.recorder.finishRecording()
         }
     }
     
@@ -317,10 +326,13 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     func dispose() {
         VideoRecorderPipeline.queue.async {
+            if case .finishRecording = self.status {
+                return
+            }
             self.status = .stopped(thumb: self.thumbnail)
             let duration = self.recorder.videoDuration()
             if !duration.isNaN {
-                self.resultDuration = Int(duration)
+                self.resultDuration = Int(ceil(duration))
             }
         }
     }

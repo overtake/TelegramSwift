@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 /*
  func songDidStopPlaying(song:APSongItem, for controller:APController) {
@@ -36,8 +37,34 @@ private let instantVideoMutedThumb = generateImage(NSMakeSize(30, 30), contextGe
     ctx.round(size, size.width / 2.0)
     ctx.fill(CGRect(origin: CGPoint(), size: size))
     let icon = #imageLiteral(resourceName: "Icon_VideoMessageMutedIcon").precomposed()
-    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels((size.width - icon.backingSize.width) / 2), floorToScreenPixels((size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
+    ctx.draw(icon, in: NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height))
 })
+
+final class VideoMessageCorner : View {
+    
+    override var backgroundColor: NSColor {
+        set {
+            super.backgroundColor = .clear
+            borderBackground = newValue
+        }
+        get {
+            return super.backgroundColor
+        }
+    }
+    private var borderBackground: NSColor = .black {
+        didSet {
+            needsLayout = true
+        }
+    }
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        //ctx.round(frame.size, frame.size.height / 2)
+        ctx.setStrokeColor(theme.colors.background.cgColor)
+        ctx.setLineWidth(2.0)
+        ctx.setLineCap(.round)
+        
+        ctx.strokeEllipse(in: NSMakeRect(1, 1, bounds.width - 2, bounds.height - 2))
+    }
+}
 
 
 class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
@@ -49,10 +76,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     private let statusDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
     private let playerDisposable = MetaDisposable()
+    private let updateMouseDisposable = MetaDisposable()
     
-    private var durationView:TextView = TextView()
-    
-    private var path:String? {
+    private var durationView:ChatMessageAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
+    private let videoCorner: VideoMessageCorner = VideoMessageCorner()
+    private var data:AVGifData? {
         didSet {
             updatePlayerIfNeeded()
         }
@@ -61,12 +89,14 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(player)
+        videoCorner.userInteractionEnabled = false
         playingProgressView.userInteractionEnabled = false
         stateThumbView.image = instantVideoMutedThumb
         stateThumbView.sizeToFit()
         player.addSubview(stateThumbView)
-        addSubview(durationView)
+        player.addSubview(videoCorner)
         addSubview(playingProgressView)
+        addSubview(durationView)
     }
     
     required init?(coder: NSCoder) {
@@ -75,18 +105,6 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
-        
-        if let parent = parent, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters  {
-            for attr in parent.attributes {
-                if let attr = attr as? ConsumableContentMessageAttribute {
-                    if !attr.consumed {
-                        ctx.setFillColor(theme.colors.blueUI.cgColor)
-                        ctx.fillEllipse(in: NSMakeRect(parameters.durationLayout.layoutSize.width + 3, frame.height - floorToScreenPixels((durationView.frame.height - 5)/2) - 5, 5, 5))
-                    }
-                    break
-                }
-            }
-        }
     }
     
     var isIncomingConsumed:Bool {
@@ -109,6 +127,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         removeNotificationListeners()
     }
     
+    
     override func cancel() {
         fetchDisposable.set(nil)
         statusDisposable.set(nil)
@@ -116,27 +135,27 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var singleWrapper:APSingleWrapper? {
         if let media = media as? TelegramMediaFile {
-            return APSingleWrapper(resource: media.resource, name: tr(.audioControllerVideoMessage), performer: parent?.author?.displayTitle, id: media.fileId)
+            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: L10n.audioControllerVideoMessage, performer: parent?.author?.displayTitle, id: media.fileId)
         }
         return nil
     }
     
     override func open() {
-        if let parent = parent, let account = account {
+        if let parent = parent, let context = context {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
                 if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                     controller.playOrPause()
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
-                        controller = APSingleResourceController(account: account, wrapper: wrapper)
+                        controller = APSingleResourceController(account: context.account, wrapper: wrapper, streamable: false)
+                      //  controller.set(trackProgress: controller.c)
                     } else {
-                        controller = APChatVoiceController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                        controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                     }
                     
                     parameters.showPlayer(controller)
                     controller.start()
-                    addGlobalAudioToVisible()
                 }
                 
             }
@@ -147,31 +166,31 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
        
     }
     func songDidChangedState(song: APSongItem, for controller: APController) {
-        
-
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-            if song.entry.isEqual(to: parent) {
-                
+            var singleEqual: Bool = false
+            if let single = singleWrapper {
+                singleEqual = song.entry.isEqual(to: single)
+            }
+            if song.entry.isEqual(to: parent) || singleEqual {
                 switch song.state {
                 case let .playing(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
-                    let layout = parameters.duration(for: data.current)
-                    layout.measure(width: frame.width - 50)
-                    durationView.update(layout)
-                    break
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true)
+                    stateThumbView.isHidden = true
                 case .stoped, .waiting, .fetching:
                     playingProgressView.state = .None
-                    durationView.update(parameters.durationLayout)
+                    durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true)
+                    stateThumbView.isHidden = false
                 case let .paused(data):
                     playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
-                    let layout = parameters.duration(for: data.current)
-                    layout.measure(width: frame.width - 50)
-                    durationView.update(layout)
+                    durationView.updateText(String.durationTransformed(elapsed: Int(data.current)), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true)
+                    stateThumbView.isHidden = false
                 }
                 
             } else {
                 playingProgressView.state = .None
-                durationView.update(parameters.durationLayout)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true)
+                stateThumbView.isHidden = false
             }
         }
     }
@@ -202,7 +221,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     func audioDidCompleteQueue(for controller:APController) {
-        
+        if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
+            playingProgressView.state = .None
+            durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true)
+            stateThumbView.isHidden = false
+        }
     }
     
     func checkState() {
@@ -211,21 +234,22 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     override func cancelFetching() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            chatMessageFileCancelInteractiveFetch(account: account, file: media)
+        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
+            messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
         }
     }
     
     override func fetch() {
-        if let account = account, let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
+        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
         }
     }
     
     override func layout() {
         super.layout()
         player.frame = bounds
-        playingProgressView.frame = bounds
+        videoCorner.frame = NSMakeRect(bounds.minX - 0.5, bounds.minY - 0.5, bounds.width + 1.0, bounds.height + 1.0)
+        playingProgressView.frame = NSMakeRect(1.5, 1.5, bounds.width - 3, bounds.height - 3)
         progressView?.center()
         stateThumbView.centerX(y: 10)
         durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
@@ -239,12 +263,18 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     var acceptVisibility:Bool {
-        return window != nil && !NSIsEmptyRect(visibleRect)
+        return window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !isDynamicContentLocked
+    }
+    
+    override func viewDidUpdatedDynamicContent() {
+        super.viewDidUpdatedDynamicContent()
+        updatePlayerIfNeeded()
     }
     
     @objc func updatePlayerIfNeeded() {
         let timebase:CMTimebase? = globalAudio?.currentSong?.stableId == parent?.chatStableId ? globalAudio?.timebase : nil
-        player.set(path: acceptVisibility ? path : nil, timebase: timebase)
+        player.set(data: acceptVisibility ? data : nil, timebase: timebase)
+        
     }
     
     func updateListeners() {
@@ -263,65 +293,89 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     deinit {
-        player.set(path: nil)
+        player.set(data: nil)
+        updateMouseDisposable.dispose()
+        
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false) {
-        let mediaUpdated = self.media == nil || !self.media!.isEqual(media)
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        let mediaUpdated = self.media == nil || !self.media!.isSemanticallyEqual(to: media)
         
         
-        super.update(with: media, size: size, account: account, parent:parent,table:table, parameters:parameters, animated: animated)
+        super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         
         updateListeners()
         
         if let media = media as? TelegramMediaFile {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                durationView.update(parameters.durationLayout)
+                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: animated)
             }
             
+            
             if mediaUpdated {
+                
+                globalAudio?.add(listener: self)
+                
                 player.layer?.cornerRadius = size.height / 2
-                
-                path = nil
-                
-                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations)
+                data = nil
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
-                
-                player.setSignal(account: account, signal: chatMessagePhoto(account: account, photo: image, scale: backingScaleFactor))
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                
+                player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: mediaUpdated)
+                if player.hasImage {
+                    var bp:Int = 0
+                    bp += 1
+                }
+               
+                player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    }
+                })
+
+                
                 player.set(arguments: arguments)
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                    updatedStatusSignal = combineLatest(chatMessageFileStatus(account: account, file: media), account.pendingMessageManager.pendingMessageStatus(parent.id))
+                    updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
-                            if let pendingStatus = pendingStatus {
+                            if let pendingStatus = pendingStatus.0 {
                                 return .Fetching(isActive: true, progress: pendingStatus.progress)
                             } else {
                                 return resourceStatus
                             }
                         } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessageFileStatus(account: account, file: media)
+                    updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue)
                 }
                 
                 if let updatedStatusSignal = updatedStatusSignal {
                     
                     
-                    self.statusDisposable.set((combineLatest(updatedStatusSignal, account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnMainQueue).start(next: { [weak self] (status,resource) in
+                    self.statusDisposable.set((combineLatest(updatedStatusSignal, context.account.postbox.mediaBox.resourceData(media.resource)) |> deliverOnResourceQueue |> map {  status, resource -> (MediaResourceStatus, AVGifData?) in
+                        if resource.complete {
+                            return (status, AVGifData.dataFrom(resource.path))
+                        } else if status == .Local, let resource = media.resource as? LocalFileReferenceMediaResource {
+                            return (status, AVGifData.dataFrom(resource.localFilePath))
+                        } else {
+                            return (status, nil)
+                        }
+                    } |> deliverOnMainQueue).start(next: { [weak self] status,data in
                         if let strongSelf = self {
                             
-                            if resource.complete {
-                                strongSelf.path = resource.path
-                            } else {
-                                strongSelf.path = nil
-                            }
+                            strongSelf.data = data
                             
                             strongSelf.fetchStatus = status
                             if case .Local = status {
                                 if let progressView = strongSelf.progressView {
-                                    progressView.removeFromSuperview()
+                                    progressView.state = .Fetching(progress: 1.0, force: false)
                                     strongSelf.progressView = nil
+                                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                        if completed {
+                                            progressView?.removeFromSuperview()
+                                        }
+                                    })
                                 }
                                 
                             } else {
@@ -346,12 +400,14 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                         }
                     }))
                 }
-                
-                fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
-                
+                                
             }
             
         }
+    }
+    
+    override var contents: Any? {
+        return player.layer?.contents
     }
     
     override func copy() -> Any {

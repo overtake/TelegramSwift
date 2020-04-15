@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "glyph-info.png",
+      "filename" : "ic_info.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "glyph-info@2x.png",
+      "filename" : "ic_info@2x.png",
       "scale" : "2x"
     },
     {

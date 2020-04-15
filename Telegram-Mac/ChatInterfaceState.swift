@@ -9,46 +9,48 @@
 
 import Cocoa
 
-import PostboxMac
-import SwiftSignalKitMac
-import TelegramCoreMac
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+
+struct ChatTextFontAttributes: OptionSet {
+    var rawValue: Int32 = 0
+    
+    static let bold = ChatTextFontAttributes(rawValue: 1 << 0)
+    static let italic = ChatTextFontAttributes(rawValue: 1 << 1)
+    static let monospace = ChatTextFontAttributes(rawValue: 1 << 2)
+    static let blockQuote = ChatTextFontAttributes(rawValue: 1 << 3)
+}
 
 
-struct ChatInterfaceSelectionState: PostboxCoding, Equatable {
+
+struct ChatInterfaceSelectionState: Equatable {
     let selectedIds: Set<MessageId>
+    let lastSelectedId: MessageId?
     
-    static func ==(lhs: ChatInterfaceSelectionState, rhs: ChatInterfaceSelectionState) -> Bool {
-        return lhs.selectedIds == rhs.selectedIds
-    }
-    
-    init(selectedIds: Set<MessageId>) {
+    init(selectedIds: Set<MessageId>, lastSelectedId: MessageId?) {
         self.selectedIds = selectedIds
+        self.lastSelectedId = lastSelectedId
     }
-    
-    init(decoder: PostboxDecoder) {
-        if let data = decoder.decodeBytesForKeyNoCopy("i") {
-            self.selectedIds = Set(MessageId.decodeArrayFromBuffer(data))
-        } else {
-            self.selectedIds = Set()
-        }
+    func withUpdatedSelectedIds(_ ids: Set<MessageId>) -> ChatInterfaceSelectionState {
+        return ChatInterfaceSelectionState(selectedIds: ids, lastSelectedId: self.lastSelectedId)
     }
-    
-    func encode(_ encoder: PostboxEncoder) {
-        let buffer = WriteBuffer()
-        MessageId.encodeArrayToBuffer(Array(selectedIds), buffer: buffer)
-        encoder.encodeBytes(buffer, forKey: "i")
+    func withUpdatedLastSelected(_ lastSelectedId: MessageId?) -> ChatInterfaceSelectionState {
+        return ChatInterfaceSelectionState(selectedIds: self.selectedIds, lastSelectedId: lastSelectedId)
     }
 }
 
 enum ChatTextInputAttribute : Equatable, PostboxCoding {
     case bold(Range<Int>)
+    case strikethrough(Range<Int>)
     case italic(Range<Int>)
     case pre(Range<Int>)
     case code(Range<Int>)
     case uid(Range<Int>, Int32)
-    
+    case url(Range<Int>, String)
     init(decoder: PostboxDecoder) {
-        let range = Range<Int>(Int(decoder.decodeInt32ForKey("start", orElse: 0)) ..< Int(decoder.decodeInt32ForKey("end", orElse: 0)))
+        let range = Int(decoder.decodeInt32ForKey("start", orElse: 0)) ..< Int(decoder.decodeInt32ForKey("end", orElse: 0)) // Range()
         
         let type: Int32 = decoder.decodeInt32ForKey("_rawValue", orElse: 0)
         switch type {
@@ -62,6 +64,10 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
             self = .uid(range, decoder.decodeInt32ForKey("uid", orElse: 0))
         case 4:
             self = .code(range)
+        case 5:
+            self = .url(range, decoder.decodeStringForKey("url", orElse: ""))
+        case 6:
+            self = .strikethrough(range)
         default:
             fatalError("input attribute not supported")
         }
@@ -79,9 +85,14 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
             encoder.encodeInt32(2, forKey: "_rawValue")
         case .code:
             encoder.encodeInt32(4, forKey: "_rawValue")
+        case .strikethrough:
+            encoder.encodeInt32(6, forKey: "_rawValue")
         case let .uid(_, uid):
             encoder.encodeInt32(3, forKey: "_rawValue")
             encoder.encodeInt32(uid, forKey: "uid")
+        case let .url(_, url):
+            encoder.encodeInt32(5, forKey: "_rawValue")
+            encoder.encodeString(url, forKey: "url")
         }
     }
     
@@ -91,61 +102,34 @@ extension ChatTextInputAttribute {
     var attribute:(String, Any, NSRange) {
         switch self {
         case let .bold(range):
-            return (NSAttributedStringKey.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .strikethrough(range):
+            return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .italic(range):
-            return (NSAttributedStringKey.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
-            return (NSAttributedStringKey.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .uid(range, uid):
-            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedStringKey.foregroundColor.rawValue, value: theme.colors.link))
-            return (TGMentionUidAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+            return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .url(range, url):
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+            return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
     
     var range:Range<Int> {
         switch self {
-        case let .bold(range), let .italic(range), let .pre(range), let .code(range):
+        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range):
             return range
         case let .uid(range, _):
+            return range
+        case let .url(range, _):
             return range
         }
     }
 }
 
-func ==(lhs: ChatTextInputAttribute, rhs: ChatTextInputAttribute) -> Bool {
-    switch lhs {
-    case let .bold(range):
-        if case .bold(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .italic(range):
-        if case .italic(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .pre(range):
-        if case .pre(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .code(range):
-        if case .code(range) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .uid(range, uid):
-        if case .uid(range, uid) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatTextInputAttribute] {
     var inputAttributes:[ChatTextInputAttribute] = []
@@ -161,6 +145,10 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.pre(entity.range))
         case let .TextMention(peerId: peerId):
             inputAttributes.append(.uid(entity.range, peerId.id))
+        case let .TextUrl(url):
+            inputAttributes.append(.url(entity.range, url))
+        case .Strikethrough:
+            inputAttributes.append(.strikethrough(entity.range))
         default:
             break
         }
@@ -172,44 +160,54 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
     
     var inputAttributes:[ChatTextInputAttribute] = []
     
-    attributed.enumerateAttribute(NSAttributedStringKey.font, in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { font, range, _ in
-        if let font = font as? NSFont {
-            let descriptor = font.fontDescriptor
-            let symTraits = descriptor.symbolicTraits
-            let traitSet = NSFontTraitMask(rawValue: UInt(symTraits.rawValue))
-            let isBold = traitSet.contains(.boldFontMask)
-            let isItalic = traitSet.contains(.italicFontMask)
-            let isMonospace = font.fontName == "Menlo-Regular"
-            
-            if isBold {
-                inputAttributes.append(.bold(range.location ..< range.location + range.length))
-            } else if isItalic {
-                inputAttributes.append(.italic(range.location ..< range.location + range.length))
-            } else if isMonospace {
-                inputAttributes.append(.code(range.location ..< range.location + range.length))
+    
+    attributed.enumerateAttributes(in: attributed.range, options: []) { (keys, range, _) in
+        for (_, value) in keys {
+            if let font = value as? NSFont {
+                let descriptor = font.fontDescriptor
+                let symTraits = descriptor.symbolicTraits
+                let traitSet = NSFontTraitMask(rawValue: UInt(symTraits.rawValue))
+                let isBold = traitSet.contains(.boldFontMask)
+                let isItalic = traitSet.contains(.italicFontMask)
+                let isMonospace = font.fontName == "Menlo-Regular"
+                
+                if isItalic {
+                    inputAttributes.append(.italic(range.location ..< range.location + range.length))
+                }
+                if isBold {
+                    inputAttributes.append(.bold(range.location ..< range.location + range.length))
+                }
+                if isMonospace {
+                    inputAttributes.append(.code(range.location ..< range.location + range.length))
+                }
+            } else if let tag = value as? TGInputTextTag {
+                if let uid = tag.attachment as? NSNumber {
+                    inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
+                } else if let url = tag.attachment as? String {
+                    inputAttributes.append(.url(range.location ..< range.location + range.length, url))
+                }
             }
         }
     }
     
-    attributed.enumerateAttribute(NSAttributedStringKey(rawValue: TGMentionUidAttributeName), in: NSMakeRange(0, attributed.length), options: .init(rawValue: 0)) { tag, range, _ in
-        if let tag = tag as? TGInputTextTag, let uid = tag.attachment as? NSNumber {
-            inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
-        }
-    }
-    return inputAttributes
+
+    return Array(inputAttributes.prefix(100))
 }
 
-private let markdownRegexFormat = "(^|\\s)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`)([^\\n]+?)\\7([\\s\\.,:?!;]|$)"
+//x/m
+private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
+
+
 private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
 
-struct ChatTextInputState: PostboxCoding, Equatable {
+final class ChatTextInputState: PostboxCoding, Equatable {
+    static func == (lhs: ChatTextInputState, rhs: ChatTextInputState) -> Bool {
+        return lhs.selectionRange == rhs.selectionRange && lhs.attributes == rhs.attributes && lhs.inputText == rhs.inputText 
+    }
+    
     let inputText: String
     let attributes:[ChatTextInputAttribute]
     let selectionRange: Range<Int>
-    
-    static func ==(lhs: ChatTextInputState, rhs: ChatTextInputState) -> Bool {
-        return lhs.inputText == rhs.inputText && lhs.selectionRange == rhs.selectionRange  && lhs.attributes == rhs.attributes
-    }
     
     init() {
         self.inputText = ""
@@ -244,24 +242,120 @@ struct ChatTextInputState: PostboxCoding, Equatable {
     
     var attributedString:NSAttributedString {
         let string = NSMutableAttributedString()
-        _ = string.append(string: inputText, color: .text, font: .normal(.text), coreText: false)
+        _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
+        
+        
+        string.fixEmojiesFont(theme.fontSize)
+        
+        var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
+        
+        loop: for attribute in attributes {
+            let attr = attribute.attribute
+            
+            inner: switch attribute {
+            case .bold:
+                if let fontAttribute = fontAttributes[attr.2] {
+                    fontAttributes[attr.2] = fontAttribute.union(.bold)
+                } else {
+                    fontAttributes[attr.2] = .bold
+                }
+                continue loop
+            case .italic:
+                if let fontAttribute = fontAttributes[attr.2] {
+                    fontAttributes[attr.2] = fontAttribute.union(.italic)
+                } else {
+                    fontAttributes[attr.2] = .italic
+                }
+                continue loop
+            case .pre, .code:
+                if let fontAttribute = fontAttributes[attr.2] {
+                    fontAttributes[attr.2] = fontAttribute.union(.monospace)
+                } else {
+                    fontAttributes[attr.2] = .monospace
+                }
+                continue loop
+            default:
+                break inner
+            }
+            
+            string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
+        }
+        for (range, fontAttributes) in fontAttributes {
+            var font: NSFont?
+            if fontAttributes.contains(.blockQuote) {
+                font = .code(theme.fontSize)
+            } else if fontAttributes == [.bold, .italic] {
+                font = .boldItalic(theme.fontSize)
+            } else if fontAttributes == [.bold] {
+                font = .bold(theme.fontSize)
+            } else if fontAttributes == [.italic] {
+                font = .italic(theme.fontSize)
+            }else if fontAttributes == [.monospace] {
+                font = .code(theme.fontSize)
+            }
+            if let font = font {
+                string.addAttribute(.font, value: font, range: range)
+            }
+        }
+        return string.copy() as! NSAttributedString
+    }
+    
+    func makeAttributeString(addPreAsBlock: Bool = false) -> NSAttributedString {
+        let string = NSMutableAttributedString()
+        _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
+        var pres:[Range<Int>] = []
+        var strikethrough:[Range<Int>] = []
+
         for attribute in attributes {
             let attr = attribute.attribute
-            string.addAttribute(NSAttributedStringKey(rawValue: attr.0), value: attr.1, range: attr.2)
+            
+            switch attribute {
+            case let .pre(range):
+                if addPreAsBlock {
+                    pres.append(range)
+                } else {
+                    string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
+                }
+            case let .strikethrough(range):
+                strikethrough.append(range)
+            default:
+                string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
+            }
         }
+        if addPreAsBlock {
+            var offset: Int = 0
+            for pre in pres.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+                let symbols = "```"
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.lowerBound + offset)
+                offset += symbols.count
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.upperBound + offset)
+                offset += symbols.count
+            }
+            for strikethrough in strikethrough.sorted(by: { $0.lowerBound < $1.lowerBound }) {
+                let symbols = "~~"
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.lowerBound + offset)
+                offset += symbols.count
+                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.upperBound + offset)
+                offset += symbols.count
+            }
+        }
+        
         return string.copy() as! NSAttributedString
     }
     
     
     func subInputState(from range: NSRange) -> ChatTextInputState {
         
-        var subText = inputText.nsstring.substring(with: range)
+        var subText = attributedString.attributedSubstring(from: range).trimmed
         
-        var raw:String = subText
+        let localAttributes = chatTextAttributes(from: subText)
         
+        
+        var raw:String = subText.string
+        var appliedText = subText.string
         var attributes:[ChatTextInputAttribute] = []
         
-        
+        var offsetRanges:[(NSRange, Int)] = []
         if let regex = markdownRegex {
             
             var rawOffset:Int = 0
@@ -275,23 +369,42 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 
                 
                 if pre.location != NSNotFound {
-                    let text = raw.nsstring.substring(with: pre)
+                    let text = raw.nsstring.substring(with: pre).trimmed
                     
                     rawOffset -= match.range(at: 2).length + match.range(at: 4).length
                     newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
                     attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
+                    offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 1).length, text.length), 6))
                 }
                 
                 pre = match.range(at: 8)
                 if pre.location != NSNotFound {
                     let text = raw.nsstring.substring(with: pre)
                     
-                    newText.append(raw.nsstring.substring(with: match.range(at: 6)) + text + raw.nsstring.substring(with: match.range(at: 9)))
-                    attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     
+                    let entity = raw.nsstring.substring(with: match.range(at: 7))
+                    
+                    newText.append(raw.nsstring.substring(with: match.range(at: 6)) + text + raw.nsstring.substring(with: match.range(at: 9)))
+
+                    switch entity {
+                    case "`":
+                        attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 6).length * 2))
+                    case "**":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
+                        attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                    case "~~":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
+                        attributes.append(.strikethrough(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                    case "__":
+                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
+                        attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
+                    default:
+                        break
+                    }
+
                     rawOffset -= match.range(at: 7).length * 2
                 }
-                
                 
                 raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
                 rawOffset += match.range.location + match.range(at: 0).length
@@ -299,30 +412,39 @@ struct ChatTextInputState: PostboxCoding, Equatable {
             }
             
             newText.append(raw)
-            subText = newText.joined()
+            appliedText = newText.joined()
         }
         
         
         
-        for attr in self.attributes {
-            let newRange = Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
-            if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
-                switch attr {
-                case .bold:
-                    attributes.append(.bold(newRange))
-                case .italic:
-                    attributes.append(.italic(newRange))
-                case .pre:
-                    attributes.append(.pre(newRange))
-                case .code:
-                    attributes.append(.code(newRange))
-                case let .uid(_, uid):
-                    attributes.append(.uid(newRange, uid))
+        for attr in localAttributes {
+            var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound)) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
+            for offsetRange in offsetRanges {
+                if offsetRange.0.max < newRange.location {
+                    newRange.location -= offsetRange.1
                 }
             }
+            //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
+                switch attr {
+                case .bold:
+                    attributes.append(.bold(newRange.min ..< newRange.max))
+                case .italic:
+                    attributes.append(.italic(newRange.min ..< newRange.max))
+                case .pre:
+                    attributes.append(.pre(newRange.min ..< newRange.max))
+                case .code:
+                    attributes.append(.code(newRange.min ..< newRange.max))
+                case .strikethrough:
+                    attributes.append(.strikethrough(newRange.min ..< newRange.max))
+                case let .uid(_, uid):
+                    attributes.append(.uid(newRange.min ..< newRange.max, uid))
+                case let .url(_, url):
+                    attributes.append(.url(newRange.min ..< newRange.max, url))
+                }
+          //  }
         }
         
-        return ChatTextInputState(inputText: subText, selectionRange: 0 ..< 0, attributes: attributes)
+        return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
     }
     
     
@@ -332,6 +454,8 @@ struct ChatTextInputState: PostboxCoding, Equatable {
             switch attribute {
             case let .bold(range):
                 entities.append(.init(range: range, type: .Bold))
+            case let .strikethrough(range):
+                entities.append(.init(range: range, type: .Strikethrough))
             case let .italic(range):
                 entities.append(.init(range: range, type: .Italic))
             case let .pre(range):
@@ -340,8 +464,27 @@ struct ChatTextInputState: PostboxCoding, Equatable {
                 entities.append(.init(range: range, type: .Code))
             case let .uid(range, uid):
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: uid))))
+            case let .url(range, url):
+                entities.append(.init(range: range, type: .TextUrl(url: url)))
             }
         }
+        
+        let attr = NSMutableAttributedString(string: inputText)
+        attr.detectLinks(type: .Hashtags)
+        
+        attr.enumerateAttribute(NSAttributedString.Key.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+            if let value = value as? inAppLink {
+                switch value {
+                case let .external(link, _):
+                    if link.hasPrefix("#") {
+                        entities.append(MessageTextEntity(range: range.lowerBound ..< range.upperBound, type: .Hashtag))
+                    }
+                default:
+                    break
+                }
+            }
+        })
+        
         return entities
     }
     
@@ -365,6 +508,11 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
     init(closedButtonKeyboardMessageId: MessageId?, processedSetupReplyMessageId: MessageId?) {
         self.closedButtonKeyboardMessageId = closedButtonKeyboardMessageId
         self.processedSetupReplyMessageId = processedSetupReplyMessageId
+        
+        if processedSetupReplyMessageId?.id == 349 {
+            var bp:Int = 0
+            bp += 1
+        }
     }
     
     init(decoder: PostboxDecoder) {
@@ -376,6 +524,11 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
         
         if let processedMessageIdPeerId = (decoder.decodeOptionalInt64ForKey("pb.p") as Int64?), let processedMessageIdNamespace = (decoder.decodeOptionalInt32ForKey("pb.n") as Int32?), let processedMessageIdId = (decoder.decodeOptionalInt32ForKey("pb.i") as Int32?) {
             self.processedSetupReplyMessageId = MessageId(peerId: PeerId(processedMessageIdPeerId), namespace: processedMessageIdNamespace, id: processedMessageIdId)
+            
+            if processedMessageIdId == 349 {
+                var bp:Int = 0
+                bp += 1
+            }
         } else {
             self.processedSetupReplyMessageId = nil
         }
@@ -403,9 +556,6 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
         }
     }
     
-    static func ==(lhs: ChatInterfaceMessageActionsState, rhs: ChatInterfaceMessageActionsState) -> Bool {
-        return lhs.closedButtonKeyboardMessageId == rhs.closedButtonKeyboardMessageId && lhs.processedSetupReplyMessageId == rhs.processedSetupReplyMessageId
-    }
     
     func withUpdatedClosedButtonKeyboardMessageId(_ closedButtonKeyboardMessageId: MessageId?) -> ChatInterfaceMessageActionsState {
         return ChatInterfaceMessageActionsState(closedButtonKeyboardMessageId: closedButtonKeyboardMessageId, processedSetupReplyMessageId: self.processedSetupReplyMessageId)
@@ -478,23 +628,108 @@ struct ChatInterfaceHistoryScrollState: PostboxCoding, Equatable {
     }
 }
 
+enum EditStateLoading : Equatable {
+    case none
+    case loading
+    case progress(Float)
+}
+
+final class ChatEditState : Equatable {
+    let inputState:ChatTextInputState
+    let originalMedia: Media?
+    let message:Message
+    let editMedia: RequestEditMessageMedia
+    let loadingState: EditStateLoading
+    let editedData: EditedImageData?
+
+    init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil) {
+        self.message = message
+        if originalMedia == nil {
+            self.originalMedia = message.media.first
+        } else {
+            self.originalMedia = originalMedia
+        }
+        if let state = state {
+            self.inputState = state
+        } else {
+            var attribute:TextEntitiesMessageAttribute?
+            for attr in message.attributes {
+                if let attr = attr as? TextEntitiesMessageAttribute {
+                    attribute = attr
+                }
+            }
+            var attributes:[ChatTextInputAttribute] = []
+            if let attribute = attribute {
+                attributes = chatTextAttributes(from: attribute)
+            }
+            let temporaryState = ChatTextInputState(inputText:message.text, selectionRange: 0 ..< 0, attributes: attributes)
+            
+            
+            let newText = temporaryState.makeAttributeString(addPreAsBlock: true)
+            
+            self.inputState = ChatTextInputState(inputText: newText.string, selectionRange: newText.string.length ..< newText.string.length, attributes: chatTextAttributes(from: newText))
+
+        }
+        self.loadingState = loadingState
+        self.editMedia = editMedia
+        self.editedData = editedData
+    }
+    
+    var canEditMedia: Bool {
+        return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile)
+    }
+    func withUpdatedMedia(_ media: Media) -> ChatEditState {
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.media.first, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
+    }
+    func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
+    }
+    func withUpdated(state:ChatTextInputState) -> ChatEditState {
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: state, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
+    }
+    
+    func withUpdatedEditedData(_ editedData: EditedImageData?) -> ChatEditState {
+        return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: self.loadingState, editMedia: self.editMedia, editedData: editedData)
+    }
+    
+    static func ==(lhs:ChatEditState, rhs:ChatEditState) -> Bool {
+        return lhs.message.id == rhs.message.id && lhs.inputState == rhs.inputState && lhs.loadingState == rhs.loadingState && lhs.editMedia == rhs.editMedia && lhs.editedData == rhs.editedData
+    }
+    
+}
 
 
-final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
+
+struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
+    static func == (lhs: ChatInterfaceState, rhs: ChatInterfaceState) -> Bool {
+        
+        return lhs.associatedMessageIds == rhs.associatedMessageIds && lhs.historyScrollMessageIndex == rhs.historyScrollMessageIndex && lhs.historyScrollState == rhs.historyScrollState && lhs.editState == rhs.editState && lhs.timestamp == rhs.timestamp && lhs.inputState == rhs.inputState && lhs.replyMessageId == rhs.replyMessageId && lhs.forwardMessageIds == rhs.forwardMessageIds && lhs.dismissedPinnedMessageId == rhs.dismissedPinnedMessageId && lhs.composeDisableUrlPreview == rhs.composeDisableUrlPreview && lhs.dismissedForceReplyId == rhs.dismissedForceReplyId && lhs.messageActionsState == rhs.messageActionsState && isEqualMessageList(lhs: lhs.forwardMessages, rhs: rhs.forwardMessages)
+    }
+    
+    
+    
+    var associatedMessageIds: [MessageId] {
+        return []
+    }
+
+    
     
     var historyScrollMessageIndex: MessageIndex? {
         return self.historyScrollState?.messageIndex
     }
     
     let historyScrollState: ChatInterfaceHistoryScrollState?
-    
+    let editState:ChatEditState?
     let timestamp: Int32
     let inputState: ChatTextInputState
     let replyMessageId: MessageId?
+    let replyMessage: Message?
+
     let forwardMessageIds: [MessageId]
+    let forwardMessages: [Message]
     let dismissedPinnedMessageId:MessageId?
     let composeDisableUrlPreview: String?
-    
+    let dismissedForceReplyId: MessageId?
     
     let messageActionsState: ChatInterfaceMessageActionsState
     var chatListEmbeddedState: PeerChatListEmbeddedInterfaceState? {
@@ -506,15 +741,21 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
     }
     
     var synchronizeableInputState: SynchronizeableChatInputState? {
-        if self.inputState.inputText.isEmpty {
+        if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
-            return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, timestamp: self.timestamp)
+            return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities, timestamp: self.timestamp)
         }
     }
     
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> SynchronizeableChatInterfaceState {
-        return self.withUpdatedInputState(ChatTextInputState(inputText: state?.text ?? "")).withUpdatedReplyMessageId(state?.replyToMessageId)
+        var result = self.withUpdatedInputState(ChatTextInputState(inputText: state?.text ?? "")).withUpdatedReplyMessageId(state?.replyToMessageId)
+        
+        if let timestamp = state?.timestamp {
+            result = result.withUpdatedTimestamp(timestamp)
+        }
+
+        return result
     }
     
     
@@ -522,14 +763,18 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         self.timestamp = 0
         self.inputState = ChatTextInputState()
         self.replyMessageId = nil
+        self.replyMessage = nil
         self.forwardMessageIds = []
+        self.forwardMessages = []
         self.messageActionsState = ChatInterfaceMessageActionsState()
         self.dismissedPinnedMessageId = nil
         self.composeDisableUrlPreview = nil
         self.historyScrollState = nil
+        self.dismissedForceReplyId = nil
+        self.editState = nil
     }
     
-    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: MessageId?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: MessageId?, composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?) {
+    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: MessageId?, replyMessage: Message?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: MessageId?, composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?, dismissedForceReplyId:MessageId?, editState: ChatEditState?, forwardMessages:[Message]) {
         self.timestamp = timestamp
         self.inputState = inputState
         self.replyMessageId = replyMessageId
@@ -538,11 +783,15 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         self.dismissedPinnedMessageId = dismissedPinnedMessageId
         self.composeDisableUrlPreview = composeDisableUrlPreview
         self.historyScrollState = historyScrollState
+        self.dismissedForceReplyId = dismissedForceReplyId
+        self.editState = editState
+        self.replyMessage = replyMessage
+        self.forwardMessages = forwardMessages
     }
     
     init(decoder: PostboxDecoder) {
         self.timestamp = decoder.decodeInt32ForKey("ts", orElse: 0)
-        if let inputState = decoder.decodeObjectForKey("is", decoder: { return ChatTextInputState(decoder: $0) }) as? ChatTextInputState {
+        if let inputState = decoder.decodeObjectForKey("is", decoder: { ChatTextInputState(decoder: $0) }) as? ChatTextInputState {
             self.inputState = inputState
         } else {
             self.inputState = ChatTextInputState()
@@ -586,6 +835,18 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         self.historyScrollState = decoder.decodeObjectForKey("hss", decoder: { ChatInterfaceHistoryScrollState(decoder: $0) }) as? ChatInterfaceHistoryScrollState
         
         
+        let dismissedForceReplyIdPeerId: Int64? = decoder.decodeOptionalInt64ForKey("d.f.p")
+        let dismissedForceReplyIdNamespace: Int32? = decoder.decodeOptionalInt32ForKey("d.f.n")
+        let dismissedForceReplyIdId: Int32? = decoder.decodeOptionalInt32ForKey("d.f.i")
+        if let dismissedForceReplyIdPeerId = dismissedForceReplyIdPeerId, let dismissedForceReplyIdNamespace = dismissedForceReplyIdNamespace, let dismissedForceReplyIdId = dismissedForceReplyIdId {
+            self.dismissedForceReplyId = MessageId(peerId: PeerId(dismissedForceReplyIdPeerId), namespace: dismissedForceReplyIdNamespace, id: dismissedForceReplyIdId)
+        } else {
+            self.dismissedForceReplyId = nil
+        }
+        //TODO
+        self.editState = nil
+        self.replyMessage = nil
+        self.forwardMessages = []
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -635,6 +896,17 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
             encoder.encodeNil(forKey: "hss")
         }
         
+        if let dismissedForceReplyId = self.dismissedForceReplyId {
+            encoder.encodeInt64(dismissedForceReplyId.peerId.toInt64(), forKey: "d.f.p")
+            encoder.encodeInt32(dismissedForceReplyId.namespace, forKey: "d.f.n")
+            encoder.encodeInt32(dismissedForceReplyId.id, forKey: "d.f.i")
+        } else {
+            encoder.encodeNil(forKey: "d.f.p")
+            encoder.encodeNil(forKey: "d.f.n")
+            encoder.encodeNil(forKey: "d.f.i")
+        }
+        
+        //TODO
     }
     
     func isEqual(to: PeerChatInterfaceState) -> Bool {
@@ -645,45 +917,65 @@ final class ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         }
     }
     
-    static func ==(lhs: ChatInterfaceState, rhs: ChatInterfaceState) -> Bool {
-        return lhs.inputState == rhs.inputState && lhs.replyMessageId == rhs.replyMessageId && lhs.forwardMessageIds == rhs.forwardMessageIds && lhs.messageActionsState == rhs.messageActionsState && lhs.timestamp == rhs.timestamp && lhs.dismissedPinnedMessageId == rhs.dismissedPinnedMessageId && lhs.composeDisableUrlPreview == rhs.composeDisableUrlPreview && lhs.historyScrollState == rhs.historyScrollState
-    }
-    
     func withUpdatedInputState(_ inputState: ChatTextInputState) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.editState == nil ? inputState : self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState?.withUpdated(state: inputState), forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedDismissedPinnedId(_ dismissedPinnedId: MessageId?) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: dismissedPinnedId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: dismissedPinnedId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
+    }
+    
+    func withUpdatedDismissedForceReplyId(_ dismissedId: MessageId?) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: dismissedId, editState: self.editState, forwardMessages: self.forwardMessages)
+    }
+    
+    func updatedEditState(_ f:(ChatEditState?)->ChatEditState?) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: f(self.editState), forwardMessages: self.forwardMessages)
+    }
+    
+    func withEditMessage(_ message:Message) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: ChatEditState(message: message), forwardMessages: self.forwardMessages)
+    }
+    
+    func withoutEditMessage() -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: nil, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedReplyMessageId(_ replyMessageId: MessageId?) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: replyMessageId, replyMessage: nil, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
+    }
+    
+    func withUpdatedReplyMessage(_ replyMessage: Message?) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedForwardMessageIds(_ forwardMessageIds: [MessageId]) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
+    }
+    
+    func withUpdatedForwardMessages(_ forwardMessages: [Message]) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: forwardMessages)
     }
     
     func withoutForwardMessages() -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: [], messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: [], messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedTimestamp(_ timestamp: Int32) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     
     func withUpdatedMessageActionsState(_ f: (ChatInterfaceMessageActionsState) -> ChatInterfaceMessageActionsState) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState:f(self.messageActionsState), dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:f(self.messageActionsState), dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedComposeDisableUrlPreview(_ disableUrlPreview: String?) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState: self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: disableUrlPreview, historyScrollState: self.historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState: self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: disableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedHistoryScrollState(_ historyScrollState: ChatInterfaceHistoryScrollState?) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, forwardMessageIds: self.forwardMessageIds, messageActionsState: self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: historyScrollState)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState: self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     

@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 class InstantPageChannelView : View, InstantPageView {
     private let channel: TelegramChannel
@@ -27,7 +28,7 @@ class InstantPageChannelView : View, InstantPageView {
         self.openChannel = openChannel
         checkView.image = theme.icons.ivChannelJoined
         checkView.sizeToFit()
-        joinLayout = TextNode.layoutText(.initialize(string: tr(.ivChannelJoin), color: .white, font: .normal(.huge)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+        joinLayout = TextNode.layoutText(.initialize(string: tr(L10n.ivChannelJoin), color: .white, font: .normal(.huge)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
         
         nameLayout = TextNode.layoutText(.initialize(string: channel.displayTitle, color: .white, font: .normal(.huge)), nil, 1, .end, NSMakeSize(frameRect.width - 40 - joinLayout.0.size.width, .greatestFiniteMagnitude), nil, false, .left)
         super.init(frame: frameRect)
@@ -37,7 +38,7 @@ class InstantPageChannelView : View, InstantPageView {
     
     override func layout() {
         super.layout()
-        joinLayout = TextNode.layoutText(.initialize(string: tr(.ivChannelJoin), color: overlay ? .white : theme.colors.text, font: .normal(.huge)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+        joinLayout = TextNode.layoutText(.initialize(string: tr(L10n.ivChannelJoin), color: overlay ? .white : theme.colors.text, font: .normal(.huge)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
         
         nameLayout = TextNode.layoutText(.initialize(string: channel.displayTitle, color: overlay ? .white : theme.colors.text, font: .normal(.huge)), nil, 1, .end, NSMakeSize(frame.width - 40 - joinLayout.0.size.width, .greatestFiniteMagnitude), nil, false, .left)
         checkView.centerY(x: frame.width - checkView.frame.width - 20)
@@ -66,7 +67,7 @@ class InstantPageChannelView : View, InstantPageView {
         ctx.fill(bounds)
         
         let f = focus(nameLayout.0.size)
-        nameLayout.1.draw(NSMakeRect(40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor)
+        nameLayout.1.draw(NSMakeRect(40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
         switch channel.participationStatus {
         case .member:
@@ -74,7 +75,7 @@ class InstantPageChannelView : View, InstantPageView {
         default:
             checkView.isHidden = true
             let f = focus(joinLayout.0.size)
-            joinLayout.1.draw(NSMakeRect(frame.width - f.width - 40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor)
+            joinLayout.1.draw(NSMakeRect(frame.width - f.width - 40, f.minY, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     

@@ -8,10 +8,28 @@
 
 import Cocoa
 
-import PostboxMac
-import SwiftSignalKitMac
+import Postbox
+import SwiftSignalKit
 
-public struct IVReadState : PostboxCoding {
+public enum InstantPageThemeType: Int32 {
+    case light = 0
+    case dark = 1
+    case sepia = 2
+    case gray = 3
+}
+
+public enum InstantPagePresentationFontSize: Int32 {
+    case small = 0
+    case standard = 1
+    case large = 2
+    case xlarge = 3
+    case xxlarge = 4
+}
+
+
+
+
+public struct IVReadState : PostboxCoding, Equatable {
     let blockId:Int32
     let blockOffset: Int32
     public init(blockId:Int32, blockOffset: Int32) {
@@ -27,6 +45,7 @@ public struct IVReadState : PostboxCoding {
         encoder.encodeInt32(blockId, forKey: "bi")
         encoder.encodeInt32(blockOffset, forKey: "bo")
     }
+
     
 }
 
@@ -61,7 +80,7 @@ public struct InstantViewAppearance: PreferencesEntry, Equatable {
     }
     
     public static func ==(lhs: InstantViewAppearance, rhs: InstantViewAppearance) -> Bool {
-        return lhs.fontSerif == rhs.fontSerif
+        return lhs.fontSerif == rhs.fontSerif && lhs.state == rhs.state
     }
     
     func withUpdatedFontSerif(_ fontSerif: Bool) -> InstantViewAppearance {
@@ -76,8 +95,8 @@ public struct InstantViewAppearance: PreferencesEntry, Equatable {
 }
 
 func updateInstantViewAppearanceSettingsInteractively(postbox: Postbox, _ f: @escaping (InstantViewAppearance) -> InstantViewAppearance) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.instantViewAppearance, { entry in
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.instantViewAppearance, { entry in
             let currentSettings: InstantViewAppearance
             if let entry = entry as? InstantViewAppearance {
                 currentSettings = entry
@@ -89,7 +108,7 @@ func updateInstantViewAppearanceSettingsInteractively(postbox: Postbox, _ f: @es
     }
 }
 
-func ivAppearance(postbox: Postbox) -> Signal<InstantViewAppearance, Void> {
+func ivAppearance(postbox: Postbox) -> Signal<InstantViewAppearance, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.instantViewAppearance]) |> map { preferences in
         return (preferences.values[ApplicationSpecificPreferencesKeys.instantViewAppearance] as? InstantViewAppearance) ?? InstantViewAppearance.defaultSettings
     }

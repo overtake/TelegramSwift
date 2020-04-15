@@ -6,25 +6,69 @@
 //  Copyright © 2017 Telegram. All rights reserved.
 //
 
-import Cocoa
-import PostboxMac
-import SwiftSignalKitMac
+
+public enum TotalUnreadCountDisplayStyle: Int32 {
+    case filtered = 0
+    case raw = 1
+    
+    var category: ChatListTotalUnreadStateCategory {
+        switch self {
+        case .filtered:
+            return .filtered
+        case .raw:
+            return .raw
+        }
+    }
+}
+
+public enum TotalUnreadCountDisplayCategory: Int32 {
+    case chats = 0
+    case messages = 1
+    
+    var statsType: ChatListTotalUnreadStateStats {
+        switch self {
+        case .chats:
+            return .chats
+        case .messages:
+            return .messages
+        }
+    }
+}
+
+import Postbox
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import SyncCore
+
 struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let enabled: Bool
     let playSounds: Bool
     let tone: String
     let displayPreviews: Bool
     let muteUntil: Int32
+    let notifyAllAccounts: Bool
+    let totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle
+    let totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory
+    let totalUnreadCountIncludeTags: PeerSummaryCounterTags
+    let showNotificationsOutOfFocus: Bool
+    let badgeEnabled: Bool
     static var defaultSettings: InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0)
+        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: .all, notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true)
     }
     
-    init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32) {
+    init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags, notifyAllAccounts: Bool, showNotificationsOutOfFocus: Bool, badgeEnabled: Bool) {
         self.enabled = enabled
         self.playSounds = playSounds
         self.tone = tone
         self.displayPreviews = displayPreviews
         self.muteUntil = muteUntil
+        self.notifyAllAccounts = notifyAllAccounts
+        self.totalUnreadCountDisplayStyle = totalUnreadCountDisplayStyle
+        self.totalUnreadCountDisplayCategory = totalUnreadCountDisplayCategory
+        self.totalUnreadCountIncludeTags = totalUnreadCountIncludeTags
+        self.showNotificationsOutOfFocus = showNotificationsOutOfFocus
+        self.badgeEnabled = badgeEnabled
     }
     
     init(decoder: PostboxDecoder) {
@@ -33,6 +77,32 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         self.tone = decoder.decodeStringForKey("t", orElse: "")
         self.displayPreviews = decoder.decodeInt32ForKey("p", orElse: 0) != 0
         self.muteUntil = decoder.decodeInt32ForKey("m2", orElse: 0)
+        self.notifyAllAccounts = decoder.decodeBoolForKey("naa", orElse: true)
+        self.totalUnreadCountDisplayStyle = TotalUnreadCountDisplayStyle(rawValue: decoder.decodeInt32ForKey("tds", orElse: 1)) ?? .filtered
+        self.totalUnreadCountDisplayCategory = TotalUnreadCountDisplayCategory(rawValue: decoder.decodeInt32ForKey("totalUnreadCountDisplayCategory", orElse: 1)) ?? .chats
+        if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags_2") {
+            self.totalUnreadCountIncludeTags = PeerSummaryCounterTags(rawValue: value)
+        } else if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags") {
+            var resultTags: PeerSummaryCounterTags = []
+            for legacyTag in LegacyPeerSummaryCounterTags(rawValue: value) {
+                if legacyTag == .regularChatsAndPrivateGroups {
+                    resultTags.insert(.contact)
+                    resultTags.insert(.nonContact)
+                    resultTags.insert(.bot)
+                    resultTags.insert(.group)
+                } else if legacyTag == .publicGroups {
+                    resultTags.insert(.group)
+                } else if legacyTag == .channels {
+                    resultTags.insert(.channel)
+                }
+            }
+            self.totalUnreadCountIncludeTags = resultTags
+        } else {
+            self.totalUnreadCountIncludeTags = .all
+        }
+
+        self.showNotificationsOutOfFocus = decoder.decodeInt32ForKey("snoof", orElse: 1) != 0
+        self.badgeEnabled = decoder.decodeBoolForKey("badge", orElse: true)
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -41,26 +111,56 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         encoder.encodeString(self.tone, forKey: "t")
         encoder.encodeInt32(self.displayPreviews ? 1 : 0, forKey: "p")
         encoder.encodeInt32(self.muteUntil, forKey: "m2")
+        encoder.encodeBool(self.notifyAllAccounts, forKey: "naa")
+        encoder.encodeInt32(self.totalUnreadCountDisplayStyle.rawValue, forKey: "tds")
+        encoder.encodeInt32(self.totalUnreadCountDisplayCategory.rawValue, forKey: "totalUnreadCountDisplayCategory")
+        encoder.encodeInt32(self.totalUnreadCountIncludeTags.rawValue, forKey: "totalUnreadCountIncludeTags_2")
+        encoder.encodeInt32(self.showNotificationsOutOfFocus ? 1 : 0, forKey: "snoof")
+        encoder.encodeBool(self.badgeEnabled, forKey: "badge")
     }
     
     func withUpdatedEnables(_ enabled: Bool) -> InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil)
+        return InAppNotificationSettings(enabled: enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
     }
     
     func withUpdatedPlaySounds(_ playSounds: Bool) -> InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: self.enabled, playSounds: playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil)
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
     }
     
     func withUpdatedTone(_ tone: String) -> InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil)
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
     }
     
     func withUpdatedDisplayPreviews(_ displayPreviews: Bool) -> InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: displayPreviews, muteUntil: self.muteUntil)
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
     }
     
     func withUpdatedMuteUntil(_ muteUntil: Int32) -> InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil)
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedTotalUnreadCountDisplayCategory(_ totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedTotalUnreadCountDisplayStyle(_ totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedNotifyAllAccounts(_ notifyAllAccounts: Bool) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedTotalUnreadCountIncludeTags(_ totalUnreadCountIncludeTags: PeerSummaryCounterTags) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedSnoof(_ showNotificationsOutOfFocus: Bool) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled)
+    }
+    
+    func withUpdatedBadgeEnabled(_ badgeEnabled: Bool) -> InAppNotificationSettings {
+        return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: badgeEnabled)
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -70,30 +170,12 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
             return false
         }
     }
-    
-    static func ==(lhs: InAppNotificationSettings, rhs: InAppNotificationSettings) -> Bool {
-        if lhs.enabled != rhs.enabled {
-            return false
-        }
-        if lhs.playSounds != rhs.playSounds {
-            return false
-        }
-        if lhs.tone != rhs.tone {
-            return false
-        }
-        if lhs.displayPreviews != rhs.displayPreviews {
-            return false
-        }
-        if lhs.muteUntil != rhs.muteUntil {
-            return false
-        }
-        return true
-    }
 }
 
-func updateInAppNotificationSettingsInteractively(postbox: Postbox, _ f: @escaping (InAppNotificationSettings) -> InAppNotificationSettings) -> Signal<Void, NoError> {
-    return postbox.modify { modifier -> Void in
-        modifier.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.inAppNotificationSettings, { entry in
+func updateInAppNotificationSettingsInteractively(accountManager: AccountManager, _ f: @escaping (InAppNotificationSettings) -> InAppNotificationSettings) -> Signal<Void, NoError> {
+    
+    return accountManager.transaction { transaction in
+        transaction.updateSharedData(ApplicationSharedPreferencesKeys.inAppNotificationSettings, { entry in
             let currentSettings: InAppNotificationSettings
             if let entry = entry as? InAppNotificationSettings {
                 currentSettings = entry
@@ -105,8 +187,19 @@ func updateInAppNotificationSettingsInteractively(postbox: Postbox, _ f: @escapi
     }
 }
 
-func appNotificationSettings(postbox: Postbox) -> Signal<InAppNotificationSettings, Void> {
-    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.inAppNotificationSettings]) |> map { preferences in
-        return (preferences.values[ApplicationSpecificPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings) ?? InAppNotificationSettings.defaultSettings
+func appNotificationSettings(accountManager: AccountManager) -> Signal<InAppNotificationSettings, NoError> {
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.inAppNotificationSettings]) |> map { view in
+        return view.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings ?? InAppNotificationSettings.defaultSettings
+    }
+}
+func globalNotificationSettings(postbox: Postbox) -> Signal<GlobalNotificationSettingsSet, NoError> {
+    return postbox.preferencesView(keys: [PreferencesKeys.globalNotifications]) |> map { view in
+        let viewSettings: GlobalNotificationSettingsSet
+        if let settings = view.values[PreferencesKeys.globalNotifications] as? GlobalNotificationSettings {
+            viewSettings = settings.effective
+        } else {
+            viewSettings = GlobalNotificationSettingsSet.defaultSettings
+        }
+        return viewSettings
     }
 }

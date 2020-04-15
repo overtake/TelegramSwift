@@ -8,12 +8,13 @@
 
 import Cocoa
 
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 
 final class PeerPresenceStatusManager {
     private let update: () -> Void
-    private var timer: SwiftSignalKitMac.Timer?
+    private var timer: SwiftSignalKit.Timer?
     
     init(update: @escaping () -> Void) {
         self.update = update
@@ -23,14 +24,14 @@ final class PeerPresenceStatusManager {
         self.timer?.invalidate()
     }
     
-    func reset(presence: TelegramUserPresence) {
+    func reset(presence: TelegramUserPresence, timeDifference: Int32) {
         timer?.invalidate()
         timer = nil
         
         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-        let timeout = userPresenceStringRefreshTimeout(presence, relativeTo: Int32(timestamp))
+        let timeout = userPresenceStringRefreshTimeout(presence, timeDifference: timeDifference, relativeTo: Int32(timestamp))
         if timeout.isFinite {
-            self.timer = SwiftSignalKitMac.Timer(timeout: timeout, repeat: false, completion: { [weak self] in
+            self.timer = SwiftSignalKit.Timer(timeout: timeout, repeat: false, completion: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.update()
                 }

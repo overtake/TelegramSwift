@@ -7,10 +7,11 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 
 class ChatVoiceContentView: ChatAudioContentView {
@@ -29,6 +30,8 @@ class ChatVoiceContentView: ChatAudioContentView {
     }
     
     let waveformView:AudioWaveformView
+    private var acceptDragging: Bool = false
+    private var playAfterDragging: Bool = false
     required init(frame frameRect: NSRect) {
         waveformView = AudioWaveformView(frame: NSMakeRect(0, 20, 100, 20))
         super.init(frame: frameRect)
@@ -41,29 +44,34 @@ class ChatVoiceContentView: ChatAudioContentView {
     }
     
     override func open() {
-        if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let account = account, let parent = parent  {
+        if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                 controller.playOrPause()
             } else {
                 
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId))
+                    controller = APSingleResourceController(account: context.account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
                 } else {
-                    controller = APChatVoiceController(account: account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()
-                addGlobalAudioToVisible()
             }
         }
     }
     
     var wBackgroundColor:NSColor {
+        if let parameters = parameters {
+            return parameters.presentation.waveformBackground
+        }
         return theme.colors.grayIcon.withAlphaComponent(0.7)
     } 
     var wForegroundColor:NSColor {
-        return theme.colors.blueFill
+        if let parameters = parameters {
+            return parameters.presentation.waveformForeground
+        }
+        return theme.colors.accent
     }
     
     override func checkState() {
@@ -78,16 +86,16 @@ class ChatVoiceContentView: ChatAudioContentView {
                     switch song.state {
                     case let .playing(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(data.progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
+                        let width = floorToScreenPixels(backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated && !acceptDragging)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
                         durationView.update(layout)
                         break
                     case let .fetching(progress, animated):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: animated)
+                        let width = floorToScreenPixels(backingScaleFactor, parameters.waveformWidth * CGFloat(progress))
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: animated && !acceptDragging)
                         durationView.update(parameters.durationLayout)
                     case .stoped, .waiting:
                         waveformView.set(foregroundColor: isIncomingConsumed ? wBackgroundColor : wForegroundColor, backgroundColor: wBackgroundColor)
@@ -95,8 +103,8 @@ class ChatVoiceContentView: ChatAudioContentView {
                         durationView.update(parameters.durationLayout)
                     case let .paused(data):
                         waveformView.set(foregroundColor: wForegroundColor, backgroundColor: wBackgroundColor)
-                        let width = floorToScreenPixels(parameters.waveformWidth * CGFloat(data.progress))
-                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated)
+                        let width = floorToScreenPixels(backingScaleFactor, parameters.waveformWidth * CGFloat(data.progress))
+                        waveformView.foregroundClipingView.change(size: NSMakeSize(width, waveformView.frame.height), animated: data.animated && !acceptDragging)
                         let layout = parameters.duration(for: data.current)
                         layout.measure(width: frame.width - 50)
                         durationView.update(layout)
@@ -117,8 +125,78 @@ class ChatVoiceContentView: ChatAudioContentView {
         
     }
     
-    override func update(with media: Media, size: NSSize, account: Account, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false) {
-        super.update(with: media, size: size, account: account, parent: parent, table: table, parameters: parameters, animated: animated)
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
+        
+        if acceptDragging, let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+            if song.entry.isEqual(to: parent) {
+                let point = waveformView.convert(event.locationInWindow, from: nil)
+                let progress = Float(min(max(point.x, 0), waveformView.frame.width)/waveformView.frame.width)
+                switch song.state {
+                case .playing:
+                    _ = controller.pause()
+                    playAfterDragging = true
+                default:
+                    break
+                }
+                controller.set(trackProgress: progress)
+            } else {
+                super.mouseDragged(with: event)
+            }
+        }
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        acceptDragging = waveformView.mouseInside()
+        if !acceptDragging {
+            super.mouseDown(with: event)
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        if acceptDragging && playAfterDragging {
+            _ = globalAudio?.play()
+        }
+        playAfterDragging = false
+        acceptDragging = false
+    }
+    
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags)
+        
+        
+        var updatedStatusSignal: Signal<MediaResourceStatus, NoError>
+        
+        let file:TelegramMediaFile = media as! TelegramMediaFile
+ 
+        if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+                |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
+                    if let pendingStatus = pendingStatus.0 {
+                        return .Fetching(isActive: true, progress: pendingStatus.progress)
+                    } else {
+                        return resourceStatus
+                    }
+                } |> deliverOnMainQueue
+        } else {
+            updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
+        }
+        
+        self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
+            if let strongSelf = self {
+                strongSelf.fetchStatus = status
+                
+                switch status {
+                case let .Fetching(_, progress):
+                    strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                case .Remote:
+                    strongSelf.progressView.state = .Remote
+                case .Local:
+                    strongSelf.progressView.state = .Play
+                }
+            }
+        }))
         
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.waveform = parameters.waveform
@@ -127,10 +205,9 @@ class ChatVoiceContentView: ChatAudioContentView {
             checkState()
         }
         
+        
+        
         needsLayout = true
-        if let media = media as? TelegramMediaFile {
-            fetchDisposable.set(chatMessageFileInteractiveFetched(account: account, file: media).start())
-        }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -140,8 +217,8 @@ class ChatVoiceContentView: ChatAudioContentView {
             for attr in parent.attributes {
                 if let attr = attr as? ConsumableContentMessageAttribute {
                     if !attr.consumed {
-                        let center = floorToScreenPixels(frame.height / 2.0)
-                        ctx.setFillColor(theme.colors.blueUI.cgColor)
+                        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2.0)
+                        ctx.setFillColor(parameters.presentation.activityBackground.cgColor)
                         ctx.fillEllipse(in: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, center + 8, 5, 5))
                     }
                     break
@@ -153,7 +230,7 @@ class ChatVoiceContentView: ChatAudioContentView {
 
     override func layout() {
         super.layout()
-        let center = floorToScreenPixels(frame.height / 2.0)
+        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2.0)
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.setFrameSize(parameters.waveformWidth, waveformView.frame.height)
         }

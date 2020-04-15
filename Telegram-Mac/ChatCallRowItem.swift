@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 class ChatCallRowItem: ChatRowItem {
     
@@ -24,31 +25,32 @@ class ChatCallRowItem: ChatRowItem {
         return ChatCallRowView.self
     }
     
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         let message = object.message!
         let action = message.media[0] as! TelegramMediaAction
+        let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
         outgoing = !message.flags.contains(.Incoming)
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(.chatCallOutgoing) : tr(.chatCallIncoming), color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration):
             let attr = NSMutableAttributedString()
             
            
-            
+
             if let duration = duration, duration > 0 {
-                _ = attr.append(string: String.stringForShortCallDurationSeconds(for: duration), color: theme.colors.grayText, font: .normal(.text))
+                _ = attr.append(string: String.stringForShortCallDurationSeconds(for: duration), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 failed = false
             } else if let reason = reason {
                 switch reason {
                 case .busy:
-                    _ = attr.append(string: outgoing ? "Cancelled" : "Missed", color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .disconnect:
-                    _ = attr.append(string: "Disconnected", color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .hangup:
-                    _ = attr.append(string: outgoing ? "Cancelled" : "Missed", color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .missed:
-                    _ = attr.append(string: outgoing ? "Cancelled" : "Missed", color: theme.colors.grayText, font: .normal(.text))
+                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 }
                 failed = true
             } else {
@@ -60,7 +62,7 @@ class ChatCallRowItem: ChatRowItem {
             failed = true
         }
         
-        super.init(initialSize, chatInteraction, account, object)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -74,10 +76,10 @@ class ChatCallRowItem: ChatRowItem {
     
     func requestCall() {
         if let peerId = message?.id.peerId {
-            let account = self.account!
+            let context = self.context
             
-            requestSessionId.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(account, result)
+            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             }))
         }
     }
@@ -123,10 +125,10 @@ private class ChatCallRowView : ChatRowView {
         
         if let item = item as? ChatCallRowItem {
             
-            fallbackControl.set(image: theme.icons.chatFallbackCall, for: .Normal)
+            fallbackControl.set(image: theme.chat.chatCallFallbackIcon(item), for: .Normal)
             fallbackControl.sizeToFit()
             
-            imageView.image = item.outgoing ? (item.failed ? theme.icons.chatOutgoingFailedCall : theme.icons.chatOutgoingCall) : (item.failed ? theme.icons.chatIncomingFailedCall : theme.icons.chatIncomingCall)
+            imageView.image = theme.chat.chatCallIcon(item)
             imageView.sizeToFit()
             headerView.update(item.headerLayout, origin: NSMakePoint(fallbackControl.frame.maxX + 10, 0))
             timeView.update(item.timeLayout, origin: NSMakePoint(fallbackControl.frame.maxX + 14 + imageView.frame.width, item.headerLayout.layoutSize.height + 3))

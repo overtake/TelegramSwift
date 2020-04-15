@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 enum InstantVideoPIPCornerAlignment {
     case topLeft
@@ -51,7 +52,8 @@ class InstantVideoPIPView : GIFContainerView {
 }
 
 class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
-    private let controller:APController
+    private var controller:APController
+    private var context: AccountContext
     private weak var tableView:TableView?
     private var listener:TableScrollListener!
     
@@ -59,15 +61,15 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     private var scrollTime: TimeInterval = CFAbsoluteTimeGetCurrent()
     private var alignment:InstantVideoPIPCornerAlignment = .topRight
     private var isShown:Bool = false
-    init(_ controller:APController, window:Window) {
+    init(_ controller:APController, context: AccountContext, window:Window) {
         self.controller = controller
-        
+        self.context = context
         super.init()
         listener = TableScrollListener({ [weak self] _ in
             self?.updateScrolled()
         })
         controller.add(listener: self)
-        (controller.account.context.mainNavigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
+        context.sharedContext.bindings.rootNavigation().add(listener: WeakReference(value: self))
     }
     
     override var window:Window? {
@@ -82,10 +84,10 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     
     override func navigationWillChangeController() {
-        if let controller = controller.account.context.mainNavigation?.controller as? ChatController {
-            updateTableView(controller.genericView.tableView)
+        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+            updateTableView(controller.genericView.tableView, context: context, controller: self.controller)
         } else {
-            updateTableView(nil)
+            updateTableView(nil, context: context, controller: self.controller)
         }
     }
     
@@ -133,10 +135,11 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     func showIfNeeded(animated: Bool = true) {
         loadViewIfNeeded()
         isShown = true
-        if let media = currentMessage?.media.first as? TelegramMediaFile {
-            let signal:Signal<(TransformImageArguments) -> DrawingContext?, NoError>
-            signal = chatWebpageSnippetPhoto(account: controller.account, photo: TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: media.previewRepresentations), scale: view.backingScaleFactor, small:true)
-            genericView.update(with: media.resource, size: NSMakeSize(150, 150), viewSize: NSMakeSize(150, 150), account: controller.account, table: nil, iconSignal: signal)
+        genericView.player.animatesAlphaOnFirstTransition = false
+        if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
+            let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
+            
+            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(200, 200), viewSize: NSMakeSize(200, 200), file: media, context: context, table: nil, ignoreWindowKey: true, iconSignal: .complete())
         }
 
         if let contentView = window?.contentView, genericView.superview == nil {
@@ -275,10 +278,16 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         }
     }
     
-    func updateTableView(_ tableView:TableView?) {
+    func updateTableView(_ tableView:TableView?, context: AccountContext, controller: APController) {
         self.tableView?.removeScroll(listener: listener)
         self.tableView = tableView
+        self.context = context
         self.tableView?.addScroll(listener: listener)
+        if controller != self.controller {
+            self.controller = controller
+            controller.add(listener: self)
+        }
+        
         updateScrolled()
     }
     
@@ -298,12 +307,12 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         if let msg = msg {
             if let currentMessage = currentMessage, !isShown && currentMessage.id != msg.id, CFAbsoluteTimeGetCurrent() - scrollTime > 1.0 {
                 if let item = tableView?.item(stableId: msg.chatStableId) {
-                    tableView?.scroll(to: .center(id: item.stableId, animated: true, focus: false, inset: 0))
+                    tableView?.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
                 }
             }
             
             currentMessage = msg
-            genericView.timebase = controller.timebase
+           // genericView.timebase = controller.timebase
             
         } else {
             currentMessage = nil

@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-import PostboxMac
+import Postbox
 
 
 
@@ -21,16 +21,16 @@ class PeerMediaEmptyRowItem: TableRowItem {
         let attr:NSAttributedString
         if tags.contains(.file) {
             image = theme.icons.mediaEmptyFiles
-            attr = .initialize(string: tr(.peerMediaSharedFilesEmptyList), color: theme.colors.grayText, font: .normal(.header))
-        } else if tags.contains(.music) {
+            attr = .initialize(string: tr(L10n.peerMediaSharedFilesEmptyList), color: theme.colors.grayText, font: .normal(.header))
+        } else if tags.contains(.music) || tags.contains(.voiceOrInstantVideo) {
             image = theme.icons.mediaEmptyMusic
-            attr = .initialize(string: tr(.peerMediaSharedMusicEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tags.contains(.voiceOrInstantVideo) ? L10n.peerMediaSharedVoiceEmptyList : L10n.peerMediaSharedMusicEmptyList, color: theme.colors.grayText, font: .normal(.header))
         } else if tags.contains(.webPage) {
             image = theme.icons.mediaEmptyLinks
-            attr = .initialize(string: tr(.peerMediaSharedLinksEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedLinksEmptyList), color: theme.colors.grayText, font: .normal(.header))
         } else {
             image = theme.icons.mediaEmptyShared
-            attr = .initialize(string: tr(.peerMediaSharedMediaEmptyList), color: theme.colors.grayText, font: .normal(.header))
+            attr = .initialize(string: tr(L10n.peerMediaSharedMediaEmptyList), color: theme.colors.grayText, font: .normal(.header))
         }
         textLayout = TextViewLayout(attr, alignment: .center)
         super.init(initialSize)
@@ -63,23 +63,31 @@ class PeerMediaEmptyRowView : TableRowView {
         addSubview(imageView)
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        textView.backgroundColor = backdorColor
+    }
+    
     override func layout() {
         super.layout()
         if let item = item as? PeerMediaEmptyRowItem {
-            
-            item.textLayout.measure(width: frame.width - 40)
-            let f = focus(item.textLayout.layoutSize)
-            textView.update(item.textLayout, origin:f.origin)
-            imageView.centerX(y:f.minY - imageView.frame.height - 20)
+            imageView.centerX(y: bounds.midY - imageView.frame.height - 40)
+            item.textLayout.measure(width: frame.width - 60)
+            textView.update(item.textLayout)
+            textView.centerX(y: imageView.frame.maxY + 16)
         }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         if let item = item as? PeerMediaEmptyRowItem {
-            textView.backgroundColor = theme.colors.background
             imageView.image = item.image
             imageView.sizeToFit()
+            needsLayout = true
         }
     }
     

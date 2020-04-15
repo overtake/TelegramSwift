@@ -8,16 +8,17 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 private final class RecentCallsArguments {
     let call:(PeerId)->Void
     let removeCalls:([MessageId]) -> Void
-    let account:Account
-    init(account: Account, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId]) ->Void ) {
-        self.account = account
+    let context:AccountContext
+    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId]) ->Void ) {
+        self.context = context
         self.removeCalls = removeCalls
         self.call = call
     }
@@ -118,9 +119,9 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             
             let statusText:String
             if failed {
-                statusText = tr(.callRecentMissed)
+                statusText = tr(L10n.callRecentMissed)
             } else {
-                let text = outgoing ? tr(.callRecentOutgoing) : tr(.callRecentIncoming)
+                let text = outgoing ? tr(L10n.callRecentOutgoing) : tr(L10n.callRecentIncoming)
                 if messages.count == 1 {
                     if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_,_,let duration) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
@@ -140,13 +141,13 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.account, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(stateback: {return DateUtils.string(forMessageListDate: messages.first!.timestamp)}), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
                 if !editing {
                     arguments.call(peer.id)
                 }
             })
         case .empty(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(.recentCallsEmpty), border: [.Right])
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(L10n.recentCallsEmpty), border: [.Right])
         }
     }
 }
@@ -155,11 +156,21 @@ private enum RecentCallEntry : TableItemListNodeEntry {
 
 class RecentCallsViewController: NavigationViewController {
     private var layoutController:LayoutRecentCallsViewController
-    init(_ account:Account) {
-        self.layoutController = LayoutRecentCallsViewController(account)
-        super.init(layoutController)
+    init(_ context:AccountContext) {
+        self.layoutController = LayoutRecentCallsViewController(context)
+        super.init(layoutController, context.window)
         bar = .init(height: 0)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
         self.push(layoutController, false)
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        navigationBar.frame = NSMakeRect(0, 0, bounds.width, layoutController.bar.height)
+        layoutController.frame = NSMakeRect(0, layoutController.bar.height, bounds.width, bounds.height - layoutController.bar.height)
     }
     
     
@@ -259,7 +270,6 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
             let outgoing: Bool = !message.flags.contains(.Incoming)
             if let action = message.media.first as? TelegramMediaAction {
                 if case .phoneCall(_, let discardReason, _) = action.action {
-                    
                     var missed: Bool = false
                     if let reason = discardReason {
                         switch reason {
@@ -270,7 +280,6 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
                         }
                     }
                     failed = !outgoing && missed
-
                 }
             }
             entries.append(.calls( message, messages, state.editing, failed))
@@ -293,7 +302,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     private let callDisposable:MetaDisposable = MetaDisposable()
     private let againDisposable:MetaDisposable = MetaDisposable()
     private var first:Bool = false
-
+    private let disposable = MetaDisposable()
     
     
     var navigation:NavigationViewController? {
@@ -301,11 +310,11 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     }
     
     override var enableBack: Bool {
-        return false
+        return true
     }
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        navigationController?.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        navigationController?.updateLocalizationAndTheme(theme: theme)
     }
     
     override func viewDidLoad() {
@@ -313,19 +322,9 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         genericView.border = [.Right]
         self.rightBarView.border = [.Right]
         
-    }
-    
-    override func update(with state: ViewControllerState) {
-        super.update(with: state)
-        self.statePromise.set(stateValue.modify({$0.withUpdatedEditing(state == .Edit)}))
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        updateLocalizationAndTheme()
         let previous = self.previous
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         
         
         let updateState: ((RecentCallsControllerState) -> RecentCallsControllerState) -> Void = { [weak self] f in
@@ -334,37 +333,42 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             }
         }
         
-        let arguments = RecentCallsArguments(account: account, call: { [weak self] peerId in
-            self?.callDisposable.set((phoneCall(account, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(account, result)
+        let arguments = RecentCallsArguments(context: context, call: { [weak self] peerId in
+            self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context.sharedContext, result)
             }))
-        }, removeCalls: { [weak self] messageIds in
-            _ = deleteMessagesInteractively(postbox: account.postbox, messageIds: messageIds, type: .forLocalPeer).start()
-            updateState({$0.withAdditionalIgnoringIds(messageIds)})
-            
-            if let strongSelf = self {
-                strongSelf.againDisposable.set((Signal<()->Void, Void>.single({ [weak strongSelf] in
-                    strongSelf?.viewWillAppear(false)
-                }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
-            }
-            self?.viewWillAppear(false)
+            }, removeCalls: { [weak self] messageIds in
+                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forLocalPeer).start()
+                updateState({$0.withAdditionalIgnoringIds(messageIds)})
+                
+                if let strongSelf = self {
+                    strongSelf.againDisposable.set((Signal<()->Void, NoError>.single({ [weak strongSelf] in
+                        strongSelf?.viewWillAppear(false)
+                    }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
+                }
+                self?.viewWillAppear(false)
         })
         
         
         let callListView:Atomic<CallListView?> = Atomic(value: nil)
         
         let location:ValuePromise<MessageIndex> = ValuePromise()
-       
+        
         let first:Atomic<Bool> = Atomic(value: true)
-        let signal = location.get() |> distinctUntilChanged |> mapToSignal { index in
-            return account.viewTracker.callListView(type: .all, index: index, count: 200)
+        let signal: Signal<CallListView, NoError> = location.get() |> distinctUntilChanged |> mapToSignal { index in
+            return context.account.viewTracker.callListView(type: .all, index: index, count: 100)
         }
         
-        genericView.merge(with: combineLatest(signal |> deliverOn(prepareQueue), statePromise.get() |> deliverOn(prepareQueue), appearanceSignal |> deliverOn(prepareQueue)) |> map { result in
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, signal, statePromise.get(), appearanceSignal) |> map { result in
             _ = callListView.swap(result.0)
             let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
-        } |> deliverOnMainQueue)
+            } |> deliverOnMainQueue
+        
+        disposable.set(transition.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+        }))
+        
         
         readyOnce()
         
@@ -393,6 +397,23 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         
     }
     
+    override func update(with state: ViewControllerState) {
+        super.update(with: state)
+        self.statePromise.set(stateValue.modify({$0.withUpdatedEditing(state == .Edit)}))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func backSettings() -> (String, CGImage?) {
+        return ("", theme.icons.callSettings)
+    }
+    
+    override func executeReturn() {
+        showModal(with: CallSettingsModalController(context.sharedContext), for: context.window)
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -403,6 +424,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     deinit {
         callDisposable.dispose()
         againDisposable.dispose()
+        disposable.dispose()
     }
     
 }

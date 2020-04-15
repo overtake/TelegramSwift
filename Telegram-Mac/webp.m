@@ -25,7 +25,12 @@ CGImageRef convertFromWebP(NSData *imgData) {
     
     void *targetMemory = malloc((int)(targetBytesPerRow * targetContextSize.height));
     
+    
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    
+    if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_11_2)
+        colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3);
+    
     CGBitmapInfo bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
     
     CGContextRef targetContext = CGBitmapContextCreate(targetMemory, (int)targetContextSize.width, (int)targetContextSize.height, 8, targetBytesPerRow, colorSpace, bitmapInfo);

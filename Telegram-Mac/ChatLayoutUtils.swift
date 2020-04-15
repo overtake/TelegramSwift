@@ -7,38 +7,77 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import Postbox
 
 class ChatLayoutUtils: NSObject {
 
-    static func contentSize(for media:Media, with width: CGFloat) -> NSSize {
+    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false) -> NSSize {
         
         var size:NSSize = NSMakeSize(width, 40.0)
         
         let maxSize = NSMakeSize(min(width,320), min(width,320))
         
         if let image = media as? TelegramMediaImage {
-            size = image.representationForDisplayAtSize(maxSize)?.dimensions.fitted(maxSize) ?? maxSize
-            size = NSMakeSize(max(40, size.width), max(40, size.height))
+            size = image.representationForDisplayAtSize(PixelDimensions(maxSize))?.dimensions.size.fitted(maxSize) ?? maxSize
+            if size.width < 100 && size.height < 100 {
+                size = size.aspectFitted(NSMakeSize(200, 200))
+            }
+            if hasText {
+                size.width = max(maxSize.width, size.width)
+            }
+            size.width = max(size.width, 100)
+            size = NSMakeSize(max(46, size.width), max(46, size.height))
         } else if let file = media as? TelegramMediaFile {
             
             var contentSize:NSSize = NSZeroSize
             for attr in file.attributes {
                 if case let .ImageSize(size) = attr {
-                    contentSize = size
+                    contentSize = size.size
                 } else if case let .Video(_,video, _) = attr {
-                    contentSize = video
+                    contentSize = video.size
+                    if contentSize.width < 50 && contentSize.height < 50 {
+                        contentSize = maxSize
+                    }
+                } else if case .Audio = attr {
+                    return NSMakeSize(width, 40)
                 }
             }
-            
-            if file.isSticker {
-                size = contentSize.aspectFitted(NSMakeSize(180, 180))
+            if file.isAnimatedSticker {
+                let dimensions = file.dimensions?.size
+                size = NSMakeSize(240, 240)
+                if file.isEmojiAnimatedSticker {
+                    size = NSMakeSize(112, 112)
+                }
+                if let dimensions = dimensions {
+                    size = dimensions.aspectFitted(size)
+                }
+            } else if file.isStaticSticker {
+                if contentSize == NSZeroSize {
+                    return NSMakeSize(210, 210)
+                }
+                size = contentSize.aspectFitted(NSMakeSize(210, 210))
+                size = NSMakeSize(max(size.width, 40), max(size.height, 40))
             } else if file.isInstantVideo {
-                size = contentSize.fitted(NSMakeSize(200, 200))
-            } else if file.isVideo || file.isAnimated {
-                size = contentSize.fitted(maxSize)
+                size = NSMakeSize(250, 250)
+            } else if file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) {
+
+                if file.isVideo && contentSize.width > contentSize.height {
+                    size = contentSize.aspectFitted(NSMakeSize(min(420, width), contentSize.height))
+                } else {
+                    size = contentSize.fitted(maxSize)
+                    if hasText {
+                      //  size.width = max(maxSize.width, size.width)
+                    }
+                }
+                if hasText {
+                    size.width = max(maxSize.width, size.width)
+                }
+                
             } else if contentSize.height > 0 {
+                size = NSMakeSize(width, 70)
+            } else if !file.previewRepresentations.isEmpty {
                 size = NSMakeSize(width, 70)
             }
             
@@ -52,6 +91,8 @@ class ChatLayoutUtils: NSObject {
             if let file = media.file {
                 return contentSize(for: file, with: width)
             }
+        } else if media is TelegramMediaDice {
+            size = NSMakeSize(128, 128)
         }
         
         return size
@@ -62,13 +103,15 @@ class ChatLayoutUtils: NSObject {
         if media is TelegramMediaImage {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
-            if file.isSticker {
+            if file.isAnimatedSticker {
+                return MediaAnimatedStickerView.self
+            } else if file.isStaticSticker {
                 return ChatStickerContentView.self
             } else if file.isInstantVideo {
                 return ChatVideoMessageContentView.self
             } else if file.isVideo && !file.isAnimated {
                 return ChatInteractiveContentView.self
-            }  else if file.isAnimated {
+            }  else if file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") {
                 return ChatGIFContentView.self
             } else if file.isVoice {
                 return ChatVoiceContentView.self
@@ -79,6 +122,8 @@ class ChatLayoutUtils: NSObject {
             }
         } else if media is TelegramMediaMap {
             return ChatMapContentView.self
+        } else if media is TelegramMediaDice {
+            return ChatDiceContentView.self
         } else if let media = media as? TelegramMediaGame {
             if let file = media.file {
                 return contentNode(for: file)

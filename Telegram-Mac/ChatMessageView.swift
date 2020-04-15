@@ -8,12 +8,35 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-class ChatMessageView: ChatRowView {
-    private var text:TextView = TextView()
-
-    private var webpageContent:WPContentView?
+import SwiftSignalKit
+class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
+    
+    
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
+        if let webpageContent = webpageContent {
+            return webpageContent.fileAtPoint(convert(point, from: self))
+        }
+        
+        return nil
+    }
+    
+    override func forceClick(in location: NSPoint) {
+        if previewMediaIfPossible() {
+            
+        } else {
+            super.forceClick(in: location)
+        }
+    }
+    
+    override func previewMediaIfPossible() -> Bool {
+        return webpageContent?.previewMediaIfPossible() ?? false
+    }
+    
+    private let text:TextView = TextView()
+
+    private(set) var webpageContent:WPContentView?
+    private var actionButton: TitleButton?
     override func draw(_ dirtyRect: NSRect) {
         
         // Drawing code here.
@@ -22,18 +45,27 @@ class ChatMessageView: ChatRowView {
     required init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
+       // self.layerContentsRedrawPolicy = .never
         self.addSubview(text)
     }
     
     override func layout() {
         super.layout()
         if let item = self.item as? ChatMessageItem {
-            self.text.update(item.textLayout)
-            
+
             if let webpageLayout = item.webpageLayout {
-                webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentTopOffset, webpageLayout.size.width, webpageLayout.size.height)
+                webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
+                
+                if let webpageContent = webpageContent, let actionButton = actionButton {
+                    actionButton.setFrameOrigin(0, webpageContent.frame.maxY + 6)
+                }
+            } else {
+                if let actionButton = actionButton {
+                    actionButton.setFrameOrigin(0, contentView.frame.height - actionButton.frame.height)
+                }
             }
-        }
+           
+        } 
     }
     
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {
@@ -54,10 +86,27 @@ class ChatMessageView: ChatRowView {
 //        }
         return views
     }
+    
+    override func updateMouse() {
+        super.updateMouse()
+        webpageContent?.updateMouse()
+    }
+    
+    override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
+        let point = self.contentView.convert(location, from: nil)
+        if let webpageContent = webpageContent {
+            return !NSPointInRect(point, webpageContent.frame)
+        }
+        return true
+    }
 
     override func set(item:TableRowItem, animated:Bool = false) {
         
         if let item = item as? ChatMessageItem {
+            
+            self.text.update(item.textLayout)
+
+            
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
                 
@@ -72,21 +121,63 @@ class ChatMessageView: ChatRowView {
                 webpageContent?.removeFromSuperview()
                 webpageContent = nil
             }
+            
+            
+            if let text = item.actionButtonText {
+                if actionButton == nil {
+                    actionButton = TitleButton()
+                    actionButton?.layer?.cornerRadius = .cornerRadius
+                    actionButton?.layer?.borderWidth = 1
+                    actionButton?.disableActions()
+                    actionButton?.set(font: .normal(.text), for: .Normal)
+                    addSubview(actionButton!)
+                }
+                actionButton?.removeAllHandlers()
+                actionButton?.set(handler: { [weak item] _ in
+                    item?.invokeAction()
+                }, for: .Click)
+                actionButton?.set(text: text, for: .Normal)
+                actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
+                actionButton?.set(color: item.wpPresentation.activity, for: .Normal)
+                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 30), thatFit: true)
+                
+            } else {
+                actionButton?.removeFromSuperview()
+                actionButton = nil
+            }
+
         }
         super.set(item: item, animated: animated)
 
     }
     
+    override func clickInContent(point: NSPoint) -> Bool {
+        guard let item = item as? ChatMessageItem else {return true}
+        
+        let point = text.convert(point, from: self)
+        let layout = item.textLayout
+        
+        let index = layout.findIndex(location: point)
+        return index >= 0 && point.x < layout.lines[index].frame.maxX
+    }
     
-    
-    override var interactionContentView: NSView {
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         if let webpageContent = webpageContent {
-            return webpageContent.interactionContentView
+            return webpageContent.interactionContentView(for: innerId, animateIn: animateIn)
         }
         return self
     }
     
 
+    override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        let main = super.convertWindowPointToContent(point)
+        
+        if let webpageContent = webpageContent, NSPointInRect(main, webpageContent.frame) {
+            return webpageContent.convertWindowPointToContent(point)
+        } else {
+            return main
+        }
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

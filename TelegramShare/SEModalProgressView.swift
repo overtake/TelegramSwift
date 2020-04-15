@@ -25,21 +25,21 @@ class SEModalProgressView: View {
         addSubview(containerView)
         self.backgroundColor = theme.colors.blackTransparent
         self.containerView.backgroundColor = theme.colors.grayBackground
-        let layout = TextViewLayout(.initialize(string: tr(.shareExtensionShare), color: theme.colors.text, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: tr(L10n.shareExtensionShare), color: theme.colors.text, font: .normal(.title)))
         layout.measure(width: .greatestFiniteMagnitude)
         
         header.update(layout)
         header.backgroundColor = theme.colors.grayBackground
         containerView.setFrameSize(250, 80)
         containerView.layer?.cornerRadius = .cornerRadius
-        progress.style = ControlStyle(foregroundColor: theme.colors.blueUI, backgroundColor: theme.colors.grayBackground)
+        progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: theme.colors.grayBackground)
         progress.setFrameSize(250, 4)
         
         
         cancel.set(font: .medium(.title), for: .Normal)
-        cancel.set(color: theme.colors.blueUI, for: .Normal)
-        cancel.set(text: tr(.shareExtensionCancel), for: .Normal)
-        cancel.sizeToFit()
+        cancel.set(color: theme.colors.accent, for: .Normal)
+        cancel.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
+        _ = cancel.sizeToFit()
         
         cancel.set(handler: { [weak self] _ in
             self?.cancelImpl?()

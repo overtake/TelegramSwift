@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import PostboxMac
-import TelegramCoreMac
+import Postbox
+import TelegramCore
+import SyncCore
 import TGUIKit
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)
@@ -27,11 +28,11 @@ func stringForUserPresence(day: UserPresenceDay, hours: Int32, minutes: Int32) -
     let dayString: String
     switch day {
     case .today:
-        dayString = tr(.peerStatusToday)
+        dayString = tr(L10n.peerStatusToday)
     case .yesterday:
-        dayString = tr(.peerStatusYesterday)
+        dayString = tr(L10n.peerStatusYesterday)
     }
-    return tr(.peerStatusLastSeenAt(dayString, stringForTime(hours: hours, minutes: minutes)))
+    return tr(L10n.peerStatusLastSeenAt(dayString, stringForTime(hours: hours, minutes: minutes)))
 }
 
 enum RelativeUserPresenceLastSeen {
@@ -53,18 +54,26 @@ enum RelativeUserPresenceStatus {
     case lastMonth
 }
 
-func relativeUserPresenceStatus(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> RelativeUserPresenceStatus {
+func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32) -> RelativeUserPresenceStatus {
     switch presence.status {
     case .none:
         return .offline
     case let .present(statusTimestamp):
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp >= timestamp {
             return .online(at: statusTimestamp)
         } else {
             return .lastSeen(at: statusTimestamp)
         }
+        
     case .recently:
-        return .recently
+        let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
+        if activeUntil >= timestamp {
+            return .online(at: activeUntil)
+        } else {
+            return .recently
+        }
     case .lastWeek:
         return .lastWeek
     case .lastMonth:
@@ -72,21 +81,23 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, relativeTo tim
     }
 }
 
-func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> (String, Bool, NSColor) {
+func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32, expanded: Bool = false) -> (String, Bool, NSColor) {
     switch presence.status {
     case .none:
-        return (tr(.peerStatusRecently), false, theme.colors.grayText)
+        return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
     case let .present(statusTimestamp):
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp >= timestamp {
-            return (tr(.peerStatusOnline), true, theme.colors.blueText)
+            return (L10n.peerStatusOnline, true, theme.colors.accent)
         } else {
             let difference = timestamp - statusTimestamp
             if difference < 59 {
-                return (tr(.peerStatusJustNow), false, theme.colors.grayText)
-            } else if difference < 60 * 60 {
+                return (tr(L10n.peerStatusJustNow), false, theme.colors.grayText)
+            } else if difference < 60 * 60 && !expanded {
                 let minutes = max(difference / 60, 1)
                 
-                return (tr(.peerStatusMinAgoCountable(Int(minutes))), false, theme.colors.grayText)
+                return (L10n.peerStatusMinAgoCountable(Int(minutes)), false, theme.colors.grayText)
             } else {
                 var t: time_t = time_t(statusTimestamp)
                 var timeinfo: tm = tm()
@@ -97,35 +108,53 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, relative
                 localtime_r(&now, &timeinfoNow)
                 
                 if timeinfo.tm_year != timeinfoNow.tm_year {
-                    return ("\(tr(.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
                 
                 let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
                 if dayDifference == 0 || dayDifference == -1 {
                     let day: UserPresenceDay
                     if dayDifference == 0 {
-                        day = .today
+                        if expanded {
+                            day = .today
+                        } else {
+                            let minutes = difference / (60 * 60)
+                            
+                            return (L10n.lastSeenHoursAgoCountable(Int(minutes)), false, theme.colors.grayText)
+                        }
                     } else {
                         day = .yesterday
                     }
                     return (stringForUserPresence(day: day, hours: timeinfo.tm_hour, minutes: timeinfo.tm_min), false, theme.colors.grayText)
                 } else {
-                    return ("\(tr(.timeLastSeen)) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
                 }
             }
         }
     case .recently:
-        return (tr(.peerStatusRecently), false, theme.colors.grayText)
+        let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
+        if activeUntil >= timestamp {
+            return (L10n.peerStatusOnline, true, theme.colors.accent)
+        } else {
+            return (L10n.peerStatusRecently, false, theme.colors.grayText)
+        }
     case .lastWeek:
-        return (tr(.peerStatusLastWeek), false, theme.colors.grayText)
+        return (L10n.peerStatusLastWeek, false, theme.colors.grayText)
     case .lastMonth:
-        return (tr(.peerStatusLastMonth), false, theme.colors.grayText)
+        return (L10n.peerStatusLastMonth, false, theme.colors.grayText)
     }
 }
 
-func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relativeTo timestamp: Int32) -> Double {
+func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDifference: Int32, relativeTo timestamp: Int32) -> Double {
     switch presence.status {
     case let .present(statusTimestamp):
+        
+        let statusTimestampInt: Int = Int(statusTimestamp)
+        let statusTimestamp = Int32(min(statusTimestampInt, Int(INT32_MAX)))
+        
+        if statusTimestamp > INT32_MAX - 1 {
+            return Double.infinity
+        }
         if statusTimestamp >= timestamp {
             return Double(statusTimestamp - timestamp)
         } else {
@@ -138,7 +167,99 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, relative
                 return Double.infinity
             }
         }
-    case .recently, .none, .lastWeek, .lastMonth:
+    case .recently:
+        let activeUntil = presence.lastActivity - timeDifference + 30
+        if activeUntil >= timestamp {
+            return Double(activeUntil - timestamp + 1)
+        } else {
+            return Double.infinity
+        }
+
+    case .none, .lastWeek, .lastMonth:
         return Double.infinity
+    }
+}
+
+
+func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+    var t: time_t = time_t(relativeTimestamp)
+    var timeinfo: tm = tm()
+    localtime_r(&t, &timeinfo)
+    
+    var now: time_t = time_t(timestamp)
+    var timeinfoNow: tm = tm()
+    localtime_r(&now, &timeinfoNow)
+    
+    let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
+    
+    let hours = timeinfo.tm_hour
+    let minutes = timeinfo.tm_min
+    
+    if dayDifference == 0 {
+        return L10n.timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
+    } else {
+        return stringForFullDate(timestamp: relativeTimestamp)
+    }
+}
+
+
+
+func stringForShortTimestamp(hours: Int32, minutes: Int32) -> String {
+    let hourString: String
+    if hours == 0 {
+        hourString = "12"
+    } else if hours > 12 {
+        hourString = "\(hours - 12)"
+    } else {
+        hourString = "\(hours)"
+    }
+    
+    let periodString: String
+    if hours >= 12 {
+        periodString = "PM"
+    } else {
+        periodString = "AM"
+    }
+    if minutes >= 10 {
+        return "\(hourString):\(minutes) \(periodString)"
+    } else {
+        return "\(hourString):0\(minutes) \(periodString)"
+    }
+}
+
+
+
+func stringForFullDate(timestamp: Int32) -> String {
+    var t: time_t = Int(timestamp)
+    var timeinfo = tm()
+    localtime_r(&t, &timeinfo);
+    
+    switch timeinfo.tm_mon + 1 {
+    case 1:
+        return L10n.timePreciseDateM1("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 2:
+        return L10n.timePreciseDateM2("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 3:
+        return L10n.timePreciseDateM3("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 4:
+        return L10n.timePreciseDateM4("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 5:
+        return L10n.timePreciseDateM5("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 6:
+        return L10n.timePreciseDateM6("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 7:
+        return L10n.timePreciseDateM7("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 8:
+        return L10n.timePreciseDateM8("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 9:
+        return L10n.timePreciseDateM9("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 10:
+        return L10n.timePreciseDateM10("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 11:
+        return L10n.timePreciseDateM11("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    case 12:
+        return L10n.timePreciseDateM12("\(timeinfo.tm_mday)", "\(2000 + timeinfo.tm_year - 100)", stringForShortTimestamp(hours: Int32(timeinfo.tm_hour), minutes: Int32(timeinfo.tm_min)))
+    default:
+        return ""
     }
 }

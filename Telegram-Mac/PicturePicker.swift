@@ -15,7 +15,15 @@ fileprivate class PickerObserver {
     
     @objc fileprivate func validated(_ picker:IKPictureTaker, _ code:Int, _ contextInfo:Any?) {
         if code == NSApplication.ModalResponse.OK.rawValue {
-            let image = picker.outputImage()
+            var image = picker.outputImage()
+            if let img = image {
+                let size = img.size.aspectFilled(NSMakeSize(640, 640))
+                let resized = generateImage(size, contextGenerator: { size, ctx in
+                    ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                    ctx.draw(img.precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
+                })!
+                image = NSImage(cgImage: resized, size: size)
+            }
             completion(image)
         }
     }
@@ -32,5 +40,16 @@ func pickImage(for window:Window, maxSize:NSSize = NSMakeSize(640, 640), fileFir
     if fileFirst {
     }
     observer.completion = completion
+    
+    if let window = NSApp.window(withWindowNumber: taker.windowNumber) {
+        window.appearance = theme.appearance
+    }
+
+
     taker.beginSheet(for: window, withDelegate: observer, didEnd: #selector(PickerObserver.validated(_:_:_:)), contextInfo: nil)
+    
+    
+    
+        //.appearance = theme.appearance
+
 }

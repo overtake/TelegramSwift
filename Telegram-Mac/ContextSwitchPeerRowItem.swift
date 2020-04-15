@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 class ContextSwitchPeerRowItem: TableRowItem {
     fileprivate let account:Account
     fileprivate let peerId:PeerId
@@ -28,8 +29,9 @@ class ContextSwitchPeerRowItem: TableRowItem {
     }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
+        let success = super.makeSize(width, oldWidth: oldWidth)
         layout.measure(width: width - 40)
-        return super.makeSize(width, oldWidth: oldWidth)
+        return success
     }
     
     override func viewClass() -> AnyClass {
@@ -47,6 +49,7 @@ class ContextSwitchPeerRowView: TableRowView {
     private let overlay:OverlayControl = OverlayControl()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
         textView.userInteractionEnabled = false
         addSubview(overlay)
         addSubview(textView)

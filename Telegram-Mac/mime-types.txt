@@ -19,6 +19,7 @@ aip:text/x-audiosoft-intra
 ani:application/x-navi-animation
 aos:application/x-nokia-9000-communicator-add-on-software
 aps:application/mime
+tgs:application/x-tgsticker
 arc:application/octet-stream
 arj:application/arj
 arj:application/octet-stream
@@ -247,6 +248,7 @@ m:text/plain
 m:text/x-m
 m1v:video/mpeg
 mp4:video/mp4
+m4v:video/m4v
 m2a:audio/mpeg
 m2v:video/mpeg
 m3u:audio/x-mpequrl
@@ -287,7 +289,7 @@ mme:application/base64
 mod:audio/mod
 mod:audio/x-mod
 moov:video/quicktime
-mov:video/quicktime
+mov:video/mov
 movie:video/x-sgi-movie
 mp2:audio/mpeg
 mp2:audio/x-mpeg
@@ -559,7 +561,7 @@ wml:text/vnd.wap.wml
 wmlc:application/vnd.wap.wmlc
 wmls:text/vnd.wap.wmlscript
 wmlsc:application/vnd.wap.wmlscriptc
-word:application/msword
+doc:application/msword
 wp:application/wordperfect
 wp5:application/wordperfect
 wp5:application/wordperfect6.0

@@ -7,8 +7,9 @@
 //
 
 import Cocoa
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
-public let globalPeerHandler:Promise<PeerId?> = Promise()
+let archiver: ArchiverContext = ArchiverContext()

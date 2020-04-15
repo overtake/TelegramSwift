@@ -1,0 +1,64 @@
+before_script:
+    - bash ./buildbox/sync-toolbox.sh
+
+stages:
+    - deploy
+
+variables:
+    LANG: "en_US.UTF-8"
+    LC_ALL: "en_US.UTF-8"
+    GIT_SUBMODULE_STRATEGY: recursive
+    GIT_STRATEGY: fetch
+
+
+beta:
+    tags:
+        - beta
+    stage: deploy
+    only:
+        - beta
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh beta
+    environment:
+        name: beta
+
+alpha:
+    tags:
+        - alpha
+    stage: deploy
+    only:
+        - alpha
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh alpha
+    environment:
+        name: alpha
+
+appstore:
+    tags:
+        - appstore
+    stage: deploy
+    only:
+        - appstore
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh appstore
+    environment:
+        name: appstore
+
+release:
+    tags:
+        - release
+    stage: deploy
+    only:
+        - release
+    except:
+        - tags
+    script:
+        - bash ./buildbox/internal.sh release
+    environment:
+        name: release

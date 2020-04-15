@@ -8,7 +8,8 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 class EmptyChatView : View {
     private let containerView: View = View()
@@ -16,20 +17,39 @@ class EmptyChatView : View {
     private let imageView:ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.layer = CAGradientLayer()
+        self.layer?.disableActions()
+        
         addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)
-        updateLocalizationAndTheme()
+        label.userInteractionEnabled = false
+        label.isSelectable = false
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         containerView.backgroundColor = theme.colors.background
-        self.background = theme.colors.background
+        let theme = (theme as! TelegramPresentationTheme)
+        //theme.chatServiceItemColor
+        
+        self.background = .clear
         imageView.image = theme.icons.chatEmpty
+        switch theme.controllerBackgroundMode {
+        case .plain:
+            imageView.isHidden = false
+        default:
+            imageView.isHidden = true
+        }
+        
+        containerView.backgroundColor = imageView.isHidden ? .clear : theme.chatBackground
+
+        
         imageView.sizeToFit()
-        label.backgroundColor = theme.colors.background
-        label.update(TextViewLayout(.initialize(string: tr(.emptyPeerDescription), color: theme.colors.grayText, font: .normal(.header)), maximumNumberOfLines: 1))
+        label.disableBackgroundDrawing = true
+        label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.chatBackground
+        label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? theme.chatServiceItemTextColor : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
         needsLayout = true
     }
     
@@ -41,18 +61,53 @@ class EmptyChatView : View {
         super.layout()
         label.layout?.measure(width: frame.size.width - 20)
         label.update(label.layout)
-        containerView.setFrameSize(frame.size.width - 20, imageView.frame.size.height + label.frame.size.height + 30)
-        imageView.centerX()
-        containerView.center()
-        label.centerX(y: imageView.frame.maxY + 30)
+        
+        if imageView.isHidden {
+            
+            label.setFrameSize(label.frame.width + 16, label.frame.height + 6)
+            
+            containerView.setFrameSize(label.frame.width + 20, 24)
+            containerView.center()
+            label.center()
+            label.layer?.cornerRadius = label.frame.height / 2
+            containerView.layer?.cornerRadius = containerView.frame.height / 2
+        } else {
+            containerView.setFrameSize(max(imageView.frame.width, label.frame.width) + 40, imageView.frame.size.height + label.frame.size.height + 70)
+            imageView.centerX(y: 20)
+            containerView.center()
+            label.centerX(y: imageView.frame.maxY + 30)
+            containerView.layer?.cornerRadius = 0
+        }
+        
+        
+       
     }
 }
 
 class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     
-    override init(_ account: Account) {
-        super.init(account)
+    
+    override init(_ context: AccountContext) {
+        super.init(context)
         self.bar = NavigationBarStyle(height:0)
+    }
+    
+    private var temporaryTouchBar: Any?
+    
+    @available(OSX 10.12.2, *)
+    override func makeTouchBar() -> NSTouchBar? {
+        if temporaryTouchBar == nil {
+            temporaryTouchBar = ChatListTouchBar(context: self.context, search: { [weak self] in
+                self?.context.sharedContext.bindings.globalSearch("")
+            }, newGroup: { [weak self] in
+                self?.context.composeCreateGroup()
+            }, newSecretChat: { [weak self] in
+                self?.context.composeCreateSecretChat()
+            }, newChannel: { [weak self] in
+                self?.context.composeCreateChannel()
+            })
+        }
+        return temporaryTouchBar as? NSTouchBar
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -63,10 +118,23 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     override func escapeKeyAction() -> KeyHandlerResult {
         return .rejected
     }
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        updateBackgroundColor(theme.controllerBackgroundMode)
+    }
+    
+    override public var isOpaque: Bool {
+        return false
+    }
+    
+    override var responderPriority: HandlerPriority {
+        return .medium
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        globalPeerHandler.set(.single(nil))
+        context.globalPeerHandler.set(.single(nil))
     }
     
     override func viewDidLoad() {

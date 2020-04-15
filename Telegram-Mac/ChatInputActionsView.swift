@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
 
 
 //
@@ -22,13 +23,19 @@ class ChatInputActionsView: View, Notifable {
     private let voice:ImageButton = ImageButton()
     private let muteChannelMessages:ImageButton = ImageButton()
     private let entertaiments:ImageButton = ImageButton()
+    private let slowModeTimeout:TitleButton = TitleButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
+    private var scheduled:ImageButton?
+
     private var secretTimer:ImageButton?
+    private var inlineProgress: ProgressIndicator? = nil
+    
+    private var prevView: View
     
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
-       
+        self.prevView = self.send
         super.init(frame: frameRect)
         
         addSubview(keyboard)
@@ -36,52 +43,39 @@ class ChatInputActionsView: View, Notifable {
         addSubview(voice)
         addSubview(inlineCancel)
         addSubview(muteChannelMessages)
+        addSubview(slowModeTimeout)
         inlineCancel.isHidden = true
         send.isHidden = true
         voice.isHidden = true
         muteChannelMessages.isHidden = true
-        
+        slowModeTimeout.isHidden = true
         voice.autohighlight = false
         muteChannelMessages.autohighlight = false
+        send.autohighlight = false
         
         voice.set(handler: { [weak self] _ in
+            guard let `self` = self else { return }
+            
             FastSettings.toggleRecordingState()
-            self?.voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
+            
+            self.voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
+            
+            getAppTooltip(for: FastSettings.recordingState == .voice ? .voiceRecording : .videoRecording, callback: { value in
+                tooltip(for: self.voice, text: value)
+            })
+            
         }, for: .Click)
         
-        voice.set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer, peer.mediaRestricted {
-                alertForMediaRestriction(peer)
-            }
-        }, for: .Up)
         
-        voice.set(handler: { [weak self] _ in
-            self?.stop()
-        }, for: .Up)
-        
-        
-        
-        voice.set(handler: { [weak self] _ in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.presentation.peer {
-                if peer.mediaRestricted {
-                    return alertForMediaRestriction(peer)
-                }
-                if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                    strongSelf.start()
-                }
-            }
+        voice.set(handler: { [weak self] control in
+            self?.chatInteraction.startRecording(false, control)
         }, for: .LongMouseDown)
-        
-        voice.set(handler: { [weak self] _ in
-            if let peer = self?.chatInteraction.presentation.peer, peer.mediaRestricted {
-                alertForMediaRestriction(peer)
-            }
-        }, for: .Up)
+
         
         muteChannelMessages.set(handler: { [weak self] _ in
             if let chatInteraction = self?.chatInteraction {
                 FastSettings.toggleChannelMessagesMuted(chatInteraction.peerId)
-                self?.updateLocalizationAndTheme()
+                (self?.superview?.superview as? View)?.updateLocalizationAndTheme(theme: theme)
             }
         }, for: .Click)
 
@@ -106,53 +100,78 @@ class ChatInputActionsView: View, Notifable {
         addHoverObserver()
         addClickObserver()
         entertaiments.canHighlight = false
+        muteChannelMessages.hideAnimated = false
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        send.set(image: theme.icons.chatSendMessage, for: .Normal)
-        send.sizeToFit()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        send.set(image: self.chatInteraction.presentation.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
+        _ = send.sizeToFit()
         voice.set(image: FastSettings.recordingState == .voice ? theme.icons.chatRecordVoice : theme.icons.chatRecordVideo, for: .Normal)
-        voice.sizeToFit()
+        _ = voice.sizeToFit()
         
         let muted = FastSettings.isChannelMessagesMuted(chatInteraction.peerId)
         muteChannelMessages.set(image: !muted ? theme.icons.inputChannelMute : theme.icons.inputChannelUnmute, for: .Normal)
-        muteChannelMessages.sizeToFit()
+        _ = muteChannelMessages.sizeToFit()
         
+        
+        updateEntertainmentIcon()
         
         keyboard.set(image: theme.icons.chatActiveReplyMarkup, for: .Normal)
-        keyboard.sizeToFit()
+        _ = keyboard.sizeToFit()
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
-        inlineCancel.sizeToFit()
-        entertaiments.set(image: chatInteraction.presentation.isEmojiSection ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
-        entertaiments.sizeToFit()
+        _ = inlineCancel.sizeToFit()
         secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+        
+        scheduled?.set(image: theme.icons.scheduledInputAction, for: .Normal)
 
+        
+        slowModeTimeout.set(font: .normal(.text), for: .Normal)
+        slowModeTimeout.set(color: theme.colors.grayIcon, for: .Normal)
+        _ = self.slowModeTimeout.sizeToFit(NSZeroSize, NSMakeSize(38, 30), thatFit: true)
+
+    }
+    
+    private func updateEntertainmentIcon() {
+        entertaiments.set(image: chatInteraction.presentation.isEmojiSection || chatInteraction.presentation.state == .editing ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
+        entertaiments.setFrameSize(60, 40)
+    }
+    
+    var entertaimentsPopover: ViewController {
+        if chatInteraction.presentation.state == .editing {
+            let emoji = EmojiViewController(chatInteraction.context, search: .single(SearchState(state: .None, request: nil)))
+            if let interactions = chatInteraction.context.sharedContext.bindings.entertainment().interactions {
+                emoji.update(with: interactions)
+            }
+            return emoji
+        }
+        return chatInteraction.context.sharedContext.bindings.entertainment()
     }
     
     private func addHoverObserver() {
         
         entertaiments.set(handler: { [weak self] (state) in
-            if let strongSelf = self {
-                let chatInteraction = strongSelf.chatInteraction
-                var enabled = false
-                
-                if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
-                    enabled = sidebarEnabled
-                }
-                if !((mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize)) || !enabled {
-                    if !hasPopover(mainWindow) {
-                        let rect = NSMakeRect(0, 0, 350, 350)
-                        chatInteraction.account.context.entertainment._frameRect = rect
-                        chatInteraction.account.context.entertainment.view.frame = rect
-                        showPopover(for: strongSelf.entertaiments, with: chatInteraction.account.context.entertainment, edge: .maxX, inset:NSMakePoint(strongSelf.frame.width - strongSelf.entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
-                    }
-                    
-                }
+            guard let `self` = self else {return}
+            let chatInteraction = self.chatInteraction
+            var enabled = false
+            
+            if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
+                enabled = sidebarEnabled
+            }
+            if !((mainWindow.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize)) || !enabled {
+                self.showEntertainment()
             }
         }, for: .Hover)
+    }
+    
+    private func showEntertainment() {
+        let rect = NSMakeRect(0, 0, 350, max(mainWindow.frame.height - 400, 300))
+        entertaimentsPopover._frameRect = rect
+        entertaimentsPopover.view.frame = rect
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
     }
     
     private func addClickObserver() {
@@ -160,7 +179,7 @@ class ChatInputActionsView: View, Notifable {
             if let strongSelf = self {
                 let chatInteraction = strongSelf.chatInteraction
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if mainWindow.frame.width >= 1100 && chatInteraction.account.context.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.account.context.layout == .minimisize {
+                    if mainWindow.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
                         
                         chatInteraction.toggleSidebar()
                     }
@@ -168,7 +187,9 @@ class ChatInputActionsView: View, Notifable {
             }
         }, for: .Click)
     }
-    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
     
     func toggleKeyboard() {
         let keyboardId = chatInteraction.presentation.keyboardButtonsMessage?.id
@@ -180,14 +201,23 @@ class ChatInputActionsView: View, Notifable {
     
     override func layout() {
         super.layout()
-        inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset)
+        inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset - 6)
+        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 10)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
-        entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - iconsInset)
-        secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width - iconsInset)
-        keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width - iconsInset)
-        muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width - iconsInset)
+        slowModeTimeout.centerY(x: frame.width - slowModeTimeout.frame.width - iconsInset)
+        entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
+        secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
+        keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
+        muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
         
+        if let scheduled = scheduled {
+            if muteChannelMessages.isHidden {
+                scheduled.centerY(x: (keyboard.isHidden ? entertaiments.frame.minX : keyboard.frame.minX) - scheduled.frame.width)
+            } else {
+                scheduled.centerY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset)
+            }
+        }
     }
     
     func stop() {
@@ -215,47 +245,65 @@ class ChatInputActionsView: View, Notifable {
         return false
     }
     
-    func start() {
-        let state: ChatRecordingState
-        
-        switch FastSettings.recordingState {
-        case .voice:
-            state = ChatRecordingAudioState()
-            state.start()
-        case .video:
-            state = ChatRecordingVideoState()
-            showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: (state as! ChatRecordingVideoState).pipeline), for: mainWindow)
+    var currentActionView: NSView {
+        if !self.send.isHidden {
+            return self.send
+        } else if !self.voice.isHidden {
+            return self.voice
+        } else if !self.slowModeTimeout.isHidden {
+            return self.slowModeTimeout
+        } else {
+            return self
         }
-     
-        chatInteraction.update({$0.withRecordingState(state)})
     }
+    
     
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || value.editState != oldValue.editState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled {
             
-                var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width + iconsInset * 2, frame.height)
+                var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
                 
                 if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                     size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
                 }
+                send.animates = false
+                send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
+                send.animates = true
               
                 if let peer = value.peer {
-                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage
+                    muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil
                 }
                 
                 if !muteChannelMessages.isHidden {
-                    size.width += muteChannelMessages.frame.width + iconsInset
+                    size.width += muteChannelMessages.frame.width
                 }
                 
                 var newInlineRequest = value.inputQueryResult != oldValue.inputQueryResult
                 var oldInlineRequest = newInlineRequest
+                var newInlineLoading: Bool = false
+                var oldInlineLoading: Bool = false
+                
+                if let query = value.inputQueryResult, case .contextRequestResult(_, let data) = query {
+                    newInlineLoading = data == nil && !value.effectiveInput.inputText.isEmpty
+                }
+                
+                
                 if let query = value.inputQueryResult, case .contextRequestResult = query, newInlineRequest || first {
                     newInlineRequest = true
                 } else {
                     newInlineRequest = false
                 }
+                
+
+                
+                if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
+                    oldInlineLoading = data == nil
+                }
+                
+                let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
+                let oldSlowModeCounter: Bool = oldValue.slowMode?.timeout != nil && oldValue.interfaceState.editState == nil && !oldInlineLoading && !oldInlineRequest
                 
                 
                 if let query = oldValue.inputQueryResult, case .contextRequestResult = query, oldInlineRequest || first {
@@ -264,27 +312,32 @@ class ChatInputActionsView: View, Notifable {
                     oldInlineRequest = false
                 }
                 
+//                newInlineLoading = newInlineLoading && newInlineRequest
+//                oldInlineLoading = oldInlineLoading && oldInlineRequest
+
+                
                 let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing
                 let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
                 
-                let anim = animated && (sNew != sOld || newInlineRequest != oldInlineRequest)
-                if sNew != sOld || first || newInlineRequest != oldInlineRequest {
+                if sNew != sOld || first || newInlineRequest != oldInlineRequest || oldInlineLoading != newInlineLoading || newSlowModeCounter != oldSlowModeCounter {
                     first = false
                     
-                    let prevView:View
+                    let prevView:View = self.prevView
                     let newView:View
                     
-                    if newInlineRequest {
-                        prevView = !sOld ? voice : send
+                    if newSlowModeCounter {
+                        newView = slowModeTimeout
+                    } else if newInlineRequest {
                         newView = inlineCancel
                     } else if oldInlineRequest {
-                        prevView = inlineCancel
                         newView = sNew ? send : voice
                     } else {
-                        prevView = sNew ? voice : send
                         newView = sNew ? send : voice
                     }
 
+                    self.prevView = newView
+                    
+                    let anim = animated && prevView != newView
                     
                     newView.isHidden = false
                     newView.layer?.opacity = 1.0
@@ -297,13 +350,46 @@ class ChatInputActionsView: View, Notifable {
                                 prevView.isHidden = true
                             }
                         })
-                    } else {
+                    } else if prevView != newView {
                         prevView.isHidden = true
+                    } else {
+                        prevView.isHidden = false
+                        prevView.layer?.opacity = 1.0
                     }
                 }
                 
+                inlineCancel.isHidden = inlineCancel.isHidden || newInlineLoading
+               
+                if newInlineLoading {
+                    if inlineProgress == nil {
+                        inlineProgress = ProgressIndicator(frame: NSMakeRect(0, 0, 22, 22))
+                        inlineProgress?.progressColor = theme.colors.grayIcon
+                        addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
+                        inlineProgress?.set(handler: { [weak self] _ in
+                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
+                                if request.query.isEmpty {
+                                    self?.chatInteraction.clearInput()
+                                } else {
+                                    self?.chatInteraction.clearContextQuery()
+                                }
+                            }
+                        }, for: .Click)
+                    }
+                } else {
+                    if let inlineProgress = inlineProgress {
+                        self.inlineProgress = nil
+                        if animated {
+                            inlineProgress.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak inlineProgress] _ in
+                                inlineProgress?.removeFromSuperview()
+                            })
+                        } else {
+                            inlineProgress.removeFromSuperview()
+                        }
+                    }
+                }
+       
                 entertaiments.apply(state: .Normal)
-                entertaiments.isSelected = value.isShowSidebar || (chatInteraction.account.context.entertainment.popover?.isShown ?? false)
+                entertaiments.isSelected = value.isShowSidebar 
                 
                 keyboard.isHidden = !value.isKeyboardActive
                 
@@ -318,13 +404,35 @@ class ChatInputActionsView: View, Notifable {
                     }
 
                 }
-                self.change(size: size, animated: false)
+                if let slowMode = value.slowMode, let timeout = slowMode.timeout, timeout >= 0 {
+                    let minutes = timeout / 60
+                    let seconds = timeout % 60
+                    let string = String(format: "%@:%@", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+                    self.slowModeTimeout.set(text: string, for: .Normal)
+                }
                 
-           
+                if value.hasScheduled && value.effectiveInput.inputText.isEmpty && value.interfaceState.editState == nil {
+                    if scheduled == nil {
+                        scheduled = ImageButton()
+                        addSubview(scheduled!)
+                    }
+                    scheduled?.removeAllHandlers()
+                    scheduled?.set(handler: { [weak self] _ in
+                        self?.chatInteraction.openScheduledMessages()
+                    }, for: .Click)
+                    scheduled!.set(image: theme.icons.chatInputScheduled, for: .Normal)
+                    _ = scheduled!.sizeToFit()
+                    size.width += scheduled!.frame.width + iconsInset + (muteChannelMessages.isHidden ? 0 : iconsInset)
+                } else {
+                    scheduled?.removeFromSuperview()
+                    scheduled = nil
+                }
                 
-                self.needsLayout = true
+                setFrameSize(size)
+                updateEntertainmentIcon()
+                needsLayout = true
             } else if value.isEmojiSection != oldValue.isEmojiSection {
-                entertaiments.set(image: value.isEmojiSection ? theme.icons.chatEntertainment : theme.icons.chatEntertainmentSticker, for: .Normal)
+                updateEntertainmentIcon()
             }
         }
     }
@@ -341,9 +449,54 @@ class ChatInputActionsView: View, Notifable {
     }
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
-        send.set(handler: { _ in
-            chatInteraction.sendMessage()
+        
+        let handler:(Control)->Void = { [weak chatInteraction] control in
+            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat {
+                let context = chatInteraction.context
+                if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
+                    return
+                }
+                if chatInteraction.presentation.state != .normal {
+                    return
+                }
+                var items:[SPopoverItem] = []
+                
+                if peer.id != chatInteraction.context.account.peerId {
+                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
+                        chatInteraction?.sendMessage(true, nil)
+                    }))
+                }
+                switch chatInteraction.mode {
+                case .history:
+                    items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak chatInteraction] date in
+                            chatInteraction?.sendMessage(false, date)
+                        }), for: context.window)
+                    }))
+                case .scheduled:
+                    break
+                }
+                
+                if !items.isEmpty {
+                    showPopover(for: control, with: SPopoverViewController(items: items))
+                }
+            }
+        }
+        
+        send.set(handler: handler, for: .RightDown)
+        send.set(handler: handler, for: .LongMouseDown)
+
+        
+        send.set(handler: { [weak chatInteraction] control in
+             chatInteraction?.sendMessage(false, nil)
         }, for: .Click)
+        
+        slowModeTimeout.set(handler: { [weak chatInteraction] control in
+            if let slowMode = chatInteraction?.presentation.slowMode {
+                showSlowModeTimeoutTooltip(slowMode, for: control)
+            }
+        }, for: .Click)
+        
         
         chatInteraction.add(observer: self)
         notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
@@ -351,7 +504,7 @@ class ChatInputActionsView: View, Notifable {
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             secretTimer = ImageButton()
             secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
-            secretTimer?.sizeToFit()
+            _ = secretTimer?.sizeToFit()
             addSubview(secretTimer!)
             
             secretTimer?.set(handler: { [weak self] control in
@@ -381,7 +534,7 @@ class ChatInputActionsView: View, Notifable {
         if let peer = chatInteraction.presentation.peer as? TelegramSecretChat {
             if peer.messageAutoremoveTimeout != nil {
                 
-                items.append(SPopoverItem(tr(.secretTimerOff), { [weak self] in
+                items.append(SPopoverItem(tr(L10n.secretTimerOff), { [weak self] in
                     self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(nil)
                 }))
             }
@@ -390,24 +543,24 @@ class ChatInputActionsView: View, Notifable {
         
         for i in 0 ..< 30 {
             
-            items.append(SPopoverItem(tr(.timerSecondsCountable(i + 1)), { [weak self] in
+            items.append(SPopoverItem(tr(L10n.timerSecondsCountable(i + 1)), { [weak self] in
                 self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(Int32(i + 1))
             }))
         }
         
-        items.append(SPopoverItem(tr(.timerMinutesCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerMinutesCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60)
         }))
         
-        items.append(SPopoverItem(tr(.timerHoursCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerHoursCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60)
         }))
         
-        items.append(SPopoverItem(tr(.timerDaysCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerDaysCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60 * 24)
         }))
         
-        items.append(SPopoverItem(tr(.timerWeeksCountable(1)), { [weak self] in
+        items.append(SPopoverItem(tr(L10n.timerWeeksCountable(1)), { [weak self] in
             self?.chatInteraction.setSecretChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
         }))
         

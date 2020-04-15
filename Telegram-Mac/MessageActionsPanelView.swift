@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
-import PostboxMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
+import Postbox
 
 
 
@@ -19,9 +20,7 @@ class MessageActionsPanelView: Control, Notifable {
     private var deleteButton:TitleButton = TitleButton()
     private var forwardButton:TitleButton = TitleButton()
     private var countTitle:TitleButton = TitleButton()
-    
-    private let loadMessagesDisposable:MetaDisposable = MetaDisposable()
-    
+        
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -39,11 +38,11 @@ class MessageActionsPanelView: Control, Notifable {
         addSubview(forwardButton)
         addSubview(countTitle)
         
-        updateLocalizationAndTheme()
+        updateLocalizationAndTheme(theme: theme)
     }
     
     private var buttonActiveStyle:ControlStyle {
-        return ControlStyle(font:.normal(.header), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor: theme.colors.blueIcon)
+        return ControlStyle(font:.normal(.header), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentIcon)
     }
     private var deleteButtonActiveStyle:ControlStyle {
         return ControlStyle(font:.normal(.header), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
@@ -82,40 +81,24 @@ class MessageActionsPanelView: Control, Notifable {
         forwardButton.userInteractionEnabled = canForward
         
         deleteButton.set(color: !canDelete ? theme.colors.grayText : theme.colors.redUI, for: .Normal)
-        forwardButton.set(color: !canForward ? theme.colors.grayText : theme.colors.blueUI, for: .Normal)
+        forwardButton.set(color: !canForward ? theme.colors.grayText : theme.colors.accent, for: .Normal)
         
         deleteButton.set(image: !deleteButton.userInteractionEnabled ? theme.icons.chatDeleteMessagesInactive : theme.icons.chatDeleteMessagesActive, for: .Normal)
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)
         
-        countTitle.set(text: count == 0 ? tr(.messageActionsPanelEmptySelected) : tr(.messageActionsPanelSelectedCountCountable(count)), for: .Normal)
+        countTitle.set(text: count == 0 ? tr(L10n.messageActionsPanelEmptySelected) : tr(L10n.messageActionsPanelSelectedCountCountable(count)), for: .Normal)
         countTitle.set(color: (!canForward && !canDelete) || count == 0 ? theme.colors.grayText : theme.colors.text, for: .Normal)
         countTitle.sizeToFit(NSZeroSize, NSMakeSize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80, frame.height))
         countTitle.center()
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
-        if let selectingState = (value as? ChatPresentationInterfaceState)?.selectionState, let account = chatInteraction?.account {
-            let ids = Array(selectingState.selectedIds)
-            loadMessagesDisposable.set((account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
-                var canDelete:Bool = !ids.isEmpty
-                var canForward:Bool = !ids.isEmpty
-                for message in messages {
-                    if !canDeleteMessage(message, account: account) {
-                        canDelete = false
-                    }
-                    if !canForwardMessage(message, account: account) {
-                        canForward = false
-                    }
-                }
-                self?.updateUI(canDelete, canForward, ids.count)
-                
-            }))
-           
+        if let value = value as? ChatPresentationInterfaceState, let selectionState = value.selectionState {
+            updateUI(value.canInvokeBasicActions.delete, value.canInvokeBasicActions.forward, selectionState.selectedIds.count)
         }
     }
     
     deinit {
-        loadMessagesDisposable.dispose()
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -144,20 +127,20 @@ class MessageActionsPanelView: Control, Notifable {
     }
     
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
-        
-        deleteButton.set(text: tr(.messageActionsPanelDelete), for: .Normal)
-        forwardButton.set(text: tr(.messageActionsPanelForward), for: .Normal)
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        deleteButton.set(text: tr(L10n.messageActionsPanelDelete), for: .Normal)
+        forwardButton.set(text: tr(L10n.messageActionsPanelForward), for: .Normal)
         
         deleteButton.set(image: !deleteButton.userInteractionEnabled ? theme.icons.chatDeleteMessagesInactive : theme.icons.chatDeleteMessagesActive, for: .Normal)
         forwardButton.set(image: !forwardButton.userInteractionEnabled ? theme.icons.chatForwardMessagesInactive : theme.icons.chatForwardMessagesActive, for: .Normal)
         
         deleteButton.set(color: !deleteButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.redUI, for: .Normal)
-        forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.blueUI, for: .Normal)
+        forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayText : theme.colors.accent, for: .Normal)
         
-        deleteButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
-        forwardButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
+        _ = deleteButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
+        _ = forwardButton.sizeToFit(NSZeroSize, NSMakeSize(0, frame.height))
         
         deleteButton.style = deleteButtonActiveStyle
         forwardButton.style = buttonActiveStyle

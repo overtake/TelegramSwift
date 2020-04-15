@@ -7,25 +7,29 @@
 //
 
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 
 class ChatInvoiceItem: ChatRowItem {
     fileprivate let media:TelegramMediaInvoice
     fileprivate let textLayout:TextViewLayout
     fileprivate var arguments:TransformImageArguments?
-    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ account: Account, _ object: ChatHistoryEntry) {
+    override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message = object.message!
+        
+        let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
+
         self.media = message.media[0] as! TelegramMediaInvoice
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: media.description, color: .text, font: .normal(.text))
-        attr.detectLinks(type: [.Links])
+        _ = attr.append(string: media.description, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
+        attr.detectLinks(type: [.Links], color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
         
         textLayout = TextViewLayout(attr)
         
-        super.init(initialSize, chatInteraction, account, object)
+        super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
     }
     
@@ -37,10 +41,9 @@ class ChatInvoiceItem: ChatRowItem {
             
             for attr in photo.attributes {
                 switch attr {
-                case .ImageSize(let size):
-                    //videoSize.fitted()
-                    contentSize = size.fitted(NSMakeSize(200, 200))
-                    arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: size, boundingSize: contentSize, intrinsicInsets: NSEdgeInsets())
+                case let .ImageSize(size):
+                    contentSize = size.size.fitted(NSMakeSize(200, 200))
+                    arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: size.size, boundingSize: contentSize, intrinsicInsets: NSEdgeInsets())
 
                 default:
                     break
@@ -85,10 +88,11 @@ class ChatInvoiceView : ChatRowView {
             textView.update(item.textLayout)
             if let photo = item.media.photo, let arguments = item.arguments {
                 addSubview(imageView)
-                imageView.setSignal(account: item.account, signal: chatMessageWebFilePhoto(account: item.account, photo: photo, scale: backingScaleFactor))
+                imageView.setSignal( chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
                 imageView.set(arguments: arguments)
                 imageView.setFrameSize(arguments.boundingSize)
-                _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()
+                _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+              //  _ = item.account.postbox.mediaBox.fetchedResource(photo.resource, tag: nil).start()
 
             } else {
                 imageView.removeFromSuperview()

@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 fileprivate enum SearchResultEntry : Comparable, Identifiable {
     case message(Message)
@@ -52,15 +53,15 @@ fileprivate class SearchResultModalView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        separator.backgroundColor = .border
-        
+        separator.backgroundColor = theme.colors.border
+        textView.backgroundColor = theme.colors.background
         addSubview(table)
         addSubview(textView)
         addSubview(separator)
     }
     
     func updateTitle(_ string:String) {
-        textView.set(layout: TextViewLayout(.initialize(string: string, color: .text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
+        textView.set(layout: TextViewLayout(.initialize(string: string, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1, truncationType:.middle))
         self.needsLayout = true
     }
     
@@ -68,7 +69,7 @@ fileprivate class SearchResultModalView : View {
         super.layout()
         textView.layout?.measure(width: frame.width - 40)
         textView.update(textView.layout)
-        textView.centerX(y:floorToScreenPixels((50 - textView.frame.height)/2.0))
+        textView.centerX(y:floorToScreenPixels(backingScaleFactor, (50 - textView.frame.height)/2.0))
         separator.frame = NSMakeRect(0, 50 - .borderSize, frame.width, .borderSize)
         table.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         
@@ -78,32 +79,37 @@ fileprivate class SearchResultModalView : View {
     }
 }
 
-fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry], initialSize:NSSize, account:Account) -> TableUpdateTransition {
+fileprivate func prepareEntries(from:[SearchResultEntry], to:[SearchResultEntry], initialSize:NSSize, context: AccountContext) -> TableUpdateTransition {
     let (removed,inserted,updated) = proccessEntriesWithoutReverse(from, right: to) { entry -> TableRowItem in
         switch entry {
         case let .message(message):
-            return ChatListMessageRowItem(initialSize, account: account, message: message, renderedPeer: RenderedPeer(message: message))
+            return ChatListMessageRowItem(initialSize, context: context, message: message, query: "", renderedPeer: RenderedPeer(message: message), readState: nil)
         }
     }
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)
 }
 
 class SearchResultModalController: ModalViewController, TableViewDelegate {
-    private let account:Account
+    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
+    
+    private let context:AccountContext
     private let entries:Atomic<[SearchResultEntry]> = Atomic(value:[])
     private let promise:Promise<[Message]> = Promise()
     private let query:String
     private let chatInteraction:ChatInteraction
-    init(_ account:Account, messages:[Message] = [], query:String, chatInteraction:ChatInteraction) {
-        self.account = account
+    init(_ context: AccountContext, messages:[Message] = [], query:String, chatInteraction:ChatInteraction) {
+        self.context = context
         self.query = query
         self.chatInteraction = chatInteraction
         promise.set(.single(messages))
         super.init(frame: NSMakeRect(0, 0, 300, 360))
     }
     
-    init(_ account:Account, request:Signal<[Message],Void>, query:String, chatInteraction:ChatInteraction) {
-        self.account = account
+    init(_ context: AccountContext, request:Signal<[Message], NoError>, query:String, chatInteraction:ChatInteraction) {
+        self.context = context
         self.query = query
         promise.set(request)
         self.chatInteraction = chatInteraction
@@ -125,7 +131,7 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
         genericView.updateTitle(query)
         let entries = self.entries
         let initialSize = self.atomicSize
-        let account = self.account
+        let context = self.context
         genericView.table.delegate = self
         
         genericView.table.merge(with: promise.get()
@@ -133,17 +139,17 @@ class SearchResultModalController: ModalViewController, TableViewDelegate {
             return messages.map({.message($0)})
         } |> map { [weak self] new -> TableUpdateTransition in
             self?.readyOnce()
-            return prepareEntries(from: entries.swap(new), to: entries.modify({$0}), initialSize: initialSize.modify({$0}), account: account)
+            return prepareEntries(from: entries.swap(new), to: entries.modify({$0}), initialSize: initialSize.modify({$0}), context: context)
         })
     }
     
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         if let item = item as? ChatListMessageRowItem, let message = item.message {
-            chatInteraction.focusMessageId(nil, message.id, .center(id: 0, animated: true, focus: true, inset: 0))
+            chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
         }
         close()
     }
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return true
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {

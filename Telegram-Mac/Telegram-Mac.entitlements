@@ -3,22 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<false/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>$(TeamIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<string>6N38VWS5BX.ru.keepcoder.Telegram</string>
+		<string>6N38VWS5BX.ru.keepcoder.Telegram.TelegramShare</string>
 	</array>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
 	<key>com.apple.security.device.camera</key>
-	<true/>
-	<key>com.apple.security.device.microphone</key>
-	<true/>
-	<key>com.apple.security.files.downloads.read-write</key>
-	<true/>
-	<key>com.apple.security.files.user-selected.read-write</key>
-	<true/>
-	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.security.network.server</key>
 	<true/>
 </dict>
 </plist>

@@ -28,7 +28,7 @@
     @property (nonatomic, strong, readonly) NSData *keyHash;
     @property (nonatomic, strong, readonly) TGCallConnectionDescription *defaultConnection;
     @property (nonatomic, strong, readonly) NSArray<TGCallConnectionDescription *> *alternativeConnections;
-    
-- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections;
+    @property (nonatomic, readonly) int32_t maxLayer;
+- (instancetype)initWithKey:(NSData *)key keyHash:(NSData *)keyHash defaultConnection:(TGCallConnectionDescription *)defaultConnection alternativeConnections:(NSArray<TGCallConnectionDescription *> *)alternativeConnections maxLayer:(int32_t)maxLayer;
     
 @end

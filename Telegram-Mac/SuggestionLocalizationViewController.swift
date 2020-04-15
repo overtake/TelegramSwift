@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 
 private class SuggestionControllerView : View {
     let textView:TextView = TextView()
@@ -24,10 +25,12 @@ private class SuggestionControllerView : View {
         addSubview(tableView)
         addSubview(suggestTextView)
        
+        textView.backgroundColor = theme.colors.background
+        suggestTextView.backgroundColor = theme.colors.background
         
         tableView.setFrameSize(NSMakeSize(frameRect.width, frameRect.height - 50))
         separatorView.setFrameSize(frameRect.width, .borderSize)
-        separatorView.backgroundColor = .border
+        separatorView.backgroundColor = theme.colors.border
         layout()
     }
     
@@ -58,11 +61,11 @@ private class SuggestionControllerView : View {
 }
 
 class SuggestionLocalizationViewController: ModalViewController {
-    private let account:Account
+    private let context:AccountContext
     private let suggestionInfo:SuggestedLocalizationInfo
     private var languageCode:String = "en"
-    init(_ account:Account, suggestionInfo: SuggestedLocalizationInfo) {
-        self.account = account
+    init(_ context: AccountContext, suggestionInfo: SuggestedLocalizationInfo) {
+        self.context = context
         self.suggestionInfo = suggestionInfo
         super.init(frame: NSMakeRect(0, 0, 280, 198))
         bar = .init(height: 0)
@@ -73,11 +76,11 @@ class SuggestionLocalizationViewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
-                _ = showModalProgress(signal: downoadAndApplyLocalization(postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
+                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
+                _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, postbox: strongSelf.context.account.postbox, network: strongSelf.context.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
             }
         }, drawBorder: true, height: 40)
     }
@@ -129,29 +132,27 @@ class SuggestionLocalizationViewController: ModalViewController {
         
         if let info = enInfo {
             
-            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 0, selected: selected == 0, value: info, action: { [weak self] in
+            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 0, selected: selected == 0, deletable: false, value: info, action: { [weak self] in
                 self?.reloadItems(0, swap)
             }, reversed: true), at: 0)
             
         }
         if let info = currentInfo {
-            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 1, selected: selected == 1, value: info, action: { [weak self] in
+            _ = genericView.tableView.insert(item: LanguageRowItem(initialSize: initialSize, stableId: 1, selected: selected == 1, deletable: false, value: info, action: { [weak self] in
                 self?.reloadItems(1, swap)
             }, reversed: true), at: swap ? 0 : 1)
         }
-        
-        let otherInfo = LocalizationInfo(languageCode: "", title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other") )
 
-        _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, value: otherInfo, action: { [weak self] in
+        //    public init(languageCode: String, baseLanguageCode: String?, customPluralizationCode: String?, title: String, localizedTitle: String, isOfficial: Bool, totalStringCount: Int32, translatedStringCount: Int32, platformUrl: String) {
+        let otherInfo = LocalizationInfo(languageCode: "", baseLanguageCode: nil, customPluralizationCode: nil, title: NativeLocalization("Suggest.Localization.Other"), localizedTitle: suggestionInfo.localizedKey("Suggest.Localization.Other"), isOfficial: true, totalStringCount: 0, translatedStringCount: 0, platformUrl: "" )
+
+        _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, deletable: false, value: otherInfo, action: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                strongSelf.account.context.mainNavigation?.push(LanguageViewController(strongSelf.account))
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
+                strongSelf.context.sharedContext.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
+                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
             }
         }, reversed: true))
-        
-//        _ = genericView.tableView.addItem(item: GeneralInteractedRowItem(initialSize, name: suggestionInfo.localizedKey("Suggest.Localization.Other"), type: .next, action: { [weak self] in
-//            
-//        }, drawCustomSeparator: false, inset: NSEdgeInsets(left: 25, right: 25)))
+    
     }
 }

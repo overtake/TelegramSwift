@@ -8,9 +8,10 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 
 
@@ -18,12 +19,15 @@ class WPMediaLayout: WPLayout {
 
     var mediaSize:NSSize = NSZeroSize
     private(set) var media:TelegramMediaFile
-    var parameters:ChatMediaLayoutParameters?
-    override init(with content: TelegramMediaWebpageLoadedContent, account: Account, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat) {
-        self.media = content.file! 
-        super.init(with: content, account: account, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize)
+    let parameters:ChatMediaLayoutParameters?
+    init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences) {
+        self.media = content.file!
+        if let representations = content.image?.representations {
+            self.media = self.media.withUpdatedPreviewRepresentations(representations)
+        }
+        self.parameters = ChatMediaLayoutParameters.layout(for: content.file!, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: context.account, renderType: presentation.renderType), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), autoplayMedia: autoplayMedia)
+        super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: self.media, isWebpage: true, chatInteraction: chatInteraction)
     }
     
     override func measure(width: CGFloat) {
@@ -42,10 +46,10 @@ class WPMediaLayout: WPLayout {
             parameters.name = TextNode.layoutText(maybeNode: parameters.nameNode, NSAttributedString.initialize(string: parameters.fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (parameters.hasThumb ? 80 : 50), 20), nil,false, .left)
         }
         
+        parameters?.makeLabelsForWidth(contentSize.width - 50)
+        
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.nameLayout.measure(width: contentSize.width - 50)
-            parameters.durationLayout.measure(width: contentSize.width - 50)
-            parameters.sizeLayout.measure(width: contentSize.width - 50)
+            contentSize.width = 50 + max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width)
         }
         
         layout(with: contentSize)
@@ -53,7 +57,7 @@ class WPMediaLayout: WPLayout {
     }
     
     public func contentNode() -> ChatMediaContentView.Type {
-      return ChatLayoutUtils.contentNode(for: media)
+        return ChatLayoutUtils.contentNode(for: media)
     }
     
     override func viewClass() -> AnyClass {

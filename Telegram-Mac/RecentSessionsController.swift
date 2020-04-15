@@ -10,17 +10,18 @@ import Cocoa
 
 import Foundation
 import TGUIKit
-import SwiftSignalKitMac
-import PostboxMac
-import TelegramCoreMac
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import SyncCore
 
 private final class RecentSessionsControllerArguments {
-    let account: Account
+    let context: AccountContext
     
     let removeSession: (Int64) -> Void
     let terminateOthers:() -> Void
-    init(account: Account, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void) {
-        self.account = account
+    init(context: AccountContext, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void) {
+        self.context = context
         self.removeSession = removeSession
         self.terminateOthers = terminateOthers
     }
@@ -42,39 +43,21 @@ private enum RecentSessionsEntryStableId: Hashable {
         }
     }
     
-    static func ==(lhs: RecentSessionsEntryStableId, rhs: RecentSessionsEntryStableId) -> Bool {
-        switch lhs {
-        case let .session(hash):
-            if case .session(hash) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .index(index):
-            if case .index(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
 }
 
 private enum RecentSessionsEntry: Comparable, Identifiable {
     case loading(sectionId:Int)
-    case currentSessionHeader(sectionId:Int)
-    case currentSession(sectionId:Int, RecentAccountSession)
-    case terminateOtherSessions(sectionId:Int)
-    case currentSessionInfo(sectionId:Int)
+    case currentSessionHeader(sectionId:Int, viewType: GeneralViewType)
+    case currentSession(sectionId:Int, RecentAccountSession, viewType: GeneralViewType)
+    case terminateOtherSessions(sectionId:Int, viewType: GeneralViewType)
+    case currentSessionInfo(sectionId:Int, viewType: GeneralViewType)
     
-    case otherSessionsHeader(sectionId:Int)
-    case session(sectionId:Int, index: Int32, session: RecentAccountSession, enabled: Bool, editing: Bool)
+    case otherSessionsHeader(sectionId:Int, viewType: GeneralViewType)
+    
+    case incompleteHeader(sectionId: Int, viewType: GeneralViewType)
+    case incompleteDesc(sectionId: Int, viewType: GeneralViewType)
+    
+    case session(sectionId:Int, index: Int32, session: RecentAccountSession, enabled: Bool, editing: Bool, viewType: GeneralViewType)
     case section(sectionId:Int)
 
     
@@ -91,9 +74,13 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return .index(3)
         case .currentSessionInfo:
             return .index(4)
-        case .otherSessionsHeader:
+        case .incompleteHeader:
             return .index(5)
-        case let .session(_, _, session, _, _):
+        case .incompleteDesc:
+            return .index(6)
+        case .otherSessionsHeader:
+            return .index(7)
+        case let .session(_, _, session, _, _, _):
             return .session(session.hash)
         case let .section(sectionId):
             return .section(sectionId)
@@ -112,9 +99,13 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return 3
         case .currentSessionInfo:
             return 4
-        case .otherSessionsHeader:
+        case .incompleteHeader:
             return 5
-        case let .session(_, _, _, _, _):
+        case .incompleteDesc:
+            return 6
+        case .otherSessionsHeader:
+            return 7
+        case .session:
             fatalError()
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -125,17 +116,21 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         switch self {
         case let .loading(sectionId):
             return sectionId
-        case let .currentSessionHeader(sectionId):
+        case let .currentSessionHeader(sectionId, _):
             return sectionId
-        case let .currentSession(sectionId, _):
+        case let .currentSession(sectionId, _, _):
             return sectionId
-        case let .terminateOtherSessions(sectionId):
+        case let .terminateOtherSessions(sectionId, _):
             return sectionId
-        case let .currentSessionInfo(sectionId):
+        case let .currentSessionInfo(sectionIdv):
             return sectionId
-        case let .otherSessionsHeader(sectionId):
+        case let .incompleteHeader(sectionId, _):
             return sectionId
-        case let .session(sectionId, _, _, _, _):
+        case let .incompleteDesc(sectionId, _):
+            return sectionId
+        case let .otherSessionsHeader(sectionId, _):
+            return sectionId
+        case let .session(sectionId, _, _, _, _, _):
             return sectionId
         case let .section(sectionId):
             return sectionId
@@ -146,42 +141,26 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         switch self {
         case let .loading(sectionId):
             return (sectionId * 1000) + stableIndex
-        case let .currentSessionHeader(sectionId):
+        case let .currentSessionHeader(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .currentSession(sectionId, _):
+        case let .currentSession(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .terminateOtherSessions(sectionId):
+        case let .terminateOtherSessions(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .currentSessionInfo(sectionId):
+        case let .currentSessionInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .otherSessionsHeader(sectionId):
+        case let .incompleteHeader(sectionId, _):
             return (sectionId * 1000) + stableIndex
-        case let .session(sectionId, index, _, _, _):
+        case let .incompleteDesc(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .otherSessionsHeader(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .session(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + Int(index) + 100
         case let .section(sectionId):
             return (sectionId * 1000) + stableIndex
         }
     }
-    
-    static func ==(lhs: RecentSessionsEntry, rhs: RecentSessionsEntry) -> Bool {
-        switch lhs {
-        case .currentSessionHeader, .terminateOtherSessions, .currentSessionInfo, .otherSessionsHeader, .section, .loading:
-            return lhs.stableId == rhs.stableId && lhs.sectionId == rhs.sectionId
-        case let .currentSession(sectionId, session):
-            if case .currentSession(sectionId, session) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .session(sectionId, index, session, enabled, editing):
-            if case .session(sectionId, index, session, enabled, editing) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
-    
     
     
     static func <(lhs: RecentSessionsEntry, rhs: RecentSessionsEntry) -> Bool {
@@ -190,24 +169,28 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
     
     func item(_ arguments: RecentSessionsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .currentSessionHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsCurrentSessionHeader))
-        case let .currentSession(_, session):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, revoke: {})
-        case .terminateOtherSessions:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(.sessionsTerminateOthers), nameStyle: redActionButton, type: .none, action: {
+        case let .currentSessionHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsCurrentSessionHeader, viewType: viewType)
+        case let .currentSession(_, session, viewType):
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, revoke: {})
+        case let .terminateOtherSessions(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.terminateOthers()
             })
-        case .currentSessionInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsTerminateDescription))
-        case .otherSessionsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: tr(.sessionsActiveSessionsHeader))
-        case let .session(_, _, session, _, _):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, revoke: {
+        case let .currentSessionInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsTerminateDescription, viewType: viewType)
+        case let .incompleteHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptHeader, viewType: viewType)
+        case let .incompleteDesc(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptDesc, viewType: viewType)
+        case let .otherSessionsHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsActiveSessionsHeader, viewType: viewType)
+        case let .session(_, _, session, _, _, viewType):
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, revoke: {
                 arguments.removeSession(session.hash)
             })
         case .section(sectionId: _):
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         }
@@ -268,34 +251,57 @@ private func recentSessionsControllerEntries(state: RecentSessionsControllerStat
         sectionId += 1
         
         var existingSessionIds = Set<Int64>()
-        entries.append(.currentSessionHeader(sectionId: sectionId))
-        if let index = sessions.index(where: { $0.hash == 0 }) {
+        entries.append(.currentSessionHeader(sectionId: sectionId, viewType: .textTopItem))
+        if let index = sessions.firstIndex(where: { $0.hash == 0 }) {
             existingSessionIds.insert(sessions[index].hash)
-            entries.append(.currentSession(sectionId: sectionId, sessions[index]))
+            entries.append(.currentSession(sectionId: sectionId, sessions[index], viewType: .firstItem))
         }
-        entries.append(.terminateOtherSessions(sectionId: sectionId))
-        entries.append(.currentSessionInfo(sectionId: sectionId))
+        entries.append(.terminateOtherSessions(sectionId: sectionId, viewType: .lastItem))
+        entries.append(.currentSessionInfo(sectionId: sectionId, viewType: .textBottomItem))
         
         if sessions.count > 1 {
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
             
-            entries.append(.otherSessionsHeader(sectionId: sectionId))
-             
             let filteredSessions: [RecentAccountSession] = sessions.sorted(by: { lhs, rhs in
                 return lhs.activityDate > rhs.activityDate
             })
             
-            for i in 0 ..< filteredSessions.count {
-                if !existingSessionIds.contains(sessions[i].hash) {
-                    existingSessionIds.insert(sessions[i].hash)
-                    let session = sessions[i]
-                    let enabled = state.removingSessionId != sessions[i].hash
-                    entries.append(.session(sectionId: sectionId, index: Int32(i), session: session, enabled: enabled, editing: state.editing))
+            let nonApplied = filteredSessions.filter {$0.flags.contains(.passwordPending)}
+            let applied = filteredSessions.filter {!$0.flags.contains(.passwordPending)}
+            
+            var index: Int32 = 0
+            
+            if !nonApplied.isEmpty {
+                entries.append(.incompleteHeader(sectionId: sectionId, viewType: .textTopItem))
+                
+                let nonApplied = nonApplied.filter({
+                    !existingSessionIds.contains($0.hash)
+                })
+                for session in nonApplied {
+                    existingSessionIds.insert(session.hash)
+                    let enabled = state.removingSessionId != session.hash
+                    entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(nonApplied, for: session)))
+                    index += 1
                 }
+                entries.append(.incompleteDesc(sectionId: sectionId, viewType: .textBottomItem))
+                
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
             }
+            
+            entries.append(.otherSessionsHeader(sectionId: sectionId, viewType: .textTopItem))
+            let newApplied = applied.filter({
+                !existingSessionIds.contains($0.hash)
+            })
+            for session in newApplied {
+                existingSessionIds.insert(session.hash)
+                let enabled = state.removingSessionId != session.hash
+                entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(newApplied, for: session)))
+                index += 1
+            }
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
         }
     } else {
         entries.append(.loading(sectionId: 1))
@@ -316,26 +322,30 @@ private func prepareSessions(left:[AppearanceWrapperEntry<RecentSessionsEntry>],
 class RecentSessionsController : TableViewController {
     
     override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        
+        
         let statePromise = ValuePromise(RecentSessionsControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: RecentSessionsControllerState())
         let updateState: ((RecentSessionsControllerState) -> RecentSessionsControllerState) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
         }
-        let account = self.account
+        let context = self.context
         let initialSize = self.atomicSize
         let actionsDisposable = DisposableSet()
         
         let removeSessionDisposable = MetaDisposable()
         actionsDisposable.add(removeSessionDisposable)
         
-        let sessionsPromise = Promise<[RecentAccountSession]?>(nil)
+        let sessionsPromise = Promise<[RecentAccountSession]?>()
         
-        let arguments = RecentSessionsControllerArguments(account: account, removeSession: { sessionId in
+        let arguments = RecentSessionsControllerArguments(context: context, removeSession: { sessionId in
             updateState {
                 return $0.withUpdatedRemovingSessionId(sessionId)
             }
             
-            let applySessions: Signal<Void, NoError> = sessionsPromise.get()
+            let applySessions: Signal<Void, TerminateSessionError> = sessionsPromise.get()
                 |> filter { $0 != nil }
                 |> take(1)
                 |> deliverOnMainQueue
@@ -352,9 +362,10 @@ class RecentSessionsController : TableViewController {
                     }
                     
                     return .complete()
-            }
+                } |> mapError {_ in return .generic}
+
             
-            removeSessionDisposable.set((terminateAccountSession(account: account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { _ in
+            removeSessionDisposable.set((terminateAccountSession(account: context.account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingSessionId(nil)
                 }
@@ -364,10 +375,16 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            _ = (confirmSignal(for: mainWindow, header: appName, information: tr(.recentSessionsConfirmTerminateOthers)) |> filter {$0} |> map {_ in} |> mapToSignal{terminateOtherAccountSessions(account: account)}).start()
+            confirm(for: context.window, information: L10n.recentSessionsConfirmTerminateOthers, successHandler: { _ in
+                _ = showModalProgress(signal: terminateOtherAccountSessions(account: context.account), for: context.window).start(error: { error in
+                    
+                })
+            })
         })
         
-        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = .single(nil) |> then(requestRecentAccountSessions(account: account) |> map { Optional($0) })
+        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = context.activeSessionsContext.state |> map {
+            $0.sessions
+        }
         
         sessionsPromise.set(sessionsSignal)
         
@@ -383,6 +400,16 @@ class RecentSessionsController : TableViewController {
         }
         
         genericView.merge(with: signal)
+        
+        genericView.setScrollHandler { position in
+            switch position.direction {
+            case .bottom:
+                context.activeSessionsContext.loadMore()
+            default:
+                break
+            }
+        }
+        
         readyOnce()
     }
     

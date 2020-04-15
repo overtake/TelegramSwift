@@ -8,37 +8,16 @@
 
 import Cocoa
 
-import TelegramCoreMac
-import SwiftSignalKitMac
-import PostboxMac
+import TelegramCore
+import SyncCore
+import SwiftSignalKit
+import Postbox
 
 enum AddressNameValidationStatus: Equatable {
     case checking
     case invalidFormat(AddressNameFormatError)
     case availability(AddressNameAvailability)
-    
-    static func ==(lhs: AddressNameValidationStatus, rhs: AddressNameValidationStatus) -> Bool {
-        switch lhs {
-        case .checking:
-            if case .checking = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .invalidFormat(error):
-            if case .invalidFormat(error) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .availability(availability):
-            if case .availability(availability) = rhs {
-                return true
-            } else {
-                return false
-            }
-        }
-    }
+
 }
 
 func validateAddressNameInteractive(account: Account, domain: AddressNameDomain, name: String) -> Signal<AddressNameValidationStatus, NoError> {

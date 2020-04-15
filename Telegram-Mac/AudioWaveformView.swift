@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 
 fileprivate class AudioWaveformContainerView : View {
-    var color:NSColor = .blueUI {
+    var color:NSColor = .accent {
         didSet {
             self.setNeedsDisplayLayer()
         }
@@ -31,7 +31,7 @@ fileprivate class AudioWaveformContainerView : View {
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
+        //super.draw(layer, in: ctx)
         
         let sampleWidth:CGFloat = 2
         let halfSampleWidth:CGFloat = 1
@@ -137,8 +137,10 @@ class AudioWaveformView: View {
         //foregroundClipingView.clipsToBounds = true;
         foregroundClipingView.addSubview(foregroundView)
         addSubview(foregroundClipingView)
-
-        
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
     }
     
     override func setFrameSize(_ newSize: NSSize) {

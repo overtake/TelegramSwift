@@ -1,0 +1,232 @@
+1876;JM;Jamaica;JAM
+1869;KN;Saint Kitts & Nevis;KNA
+1868;TT;Trinidad & Tobago;TTO
+1784;VC;Saint Vincent & the Grenadines;VCT
+1767;DM;Dominica;DMA
+1758;LC;Saint Lucia;LCA
+1721;SX;Sint Maarten;SXM
+1684;AS;American Samoa;ASM
+1671;GU;Guam;GUM
+1670;MP;Northern Mariana Islands;MNP
+1664;MS;Montserrat;MSR
+1649;TC;Turks & Caicos Islands;TCA
+1473;GD;Grenada;GRD
+1441;BM;Bermuda;BMU
+1345;KY;Cayman Islands;CYM
+1340;VI;US Virgin Islands;VIR
+1284;VG;British Virgin Islands;VGB
+1268;AG;Antigua & Barbuda;ATG
+1264;AI;Anguilla;AIA
+1246;BB;Barbados;BRB
+1242;BS;Bahamas;BHS
+998;UZ;Uzbekistan;UZB
+996;KG;Kyrgyzstan;KGZ
+995;GE;Georgia;GEO
+994;AZ;Azerbaijan;AZE
+993;TM;Turkmenistan;TKM
+992;TJ;Tajikistan;TJK
+977;NP;Nepal;NPL
+976;MN;Mongolia;MNG
+975;BT;Bhutan;BTN
+974;QA;Qatar;QAT
+973;BH;Bahrain;BHR
+972;IL;Israel;ISR
+971;AE;United Arab Emirates;ARE
+970;PS;Palestine;PSE
+968;OM;Oman;OMN
+967;YE;Yemen;YEM
+966;SA;Saudi Arabia;SAU
+965;KW;Kuwait;KWT
+964;IQ;Iraq;IRQ
+963;SY;Syrian Arab Republic;SYR
+962;JO;Jordan;JOR
+961;LB;Lebanon;LBN
+960;MV;Maldives;MDV
+886;TW;Taiwan;TWN
+880;BD;Bangladesh;BGD
+856;LA;Laos;LAO
+855;KH;Cambodia;KHM
+853;MO;Macau;MAC
+852;HK;Hong Kong;HKG
+850;KP;North Korea;PRK
+692;MH;Marshall Islands;MHL
+691;FM;Micronesia;FSM
+690;TK;Tokelau;TKL
+689;PF;French Polynesia;PYF
+688;TV;Tuvalu;TUV
+687;NC;New Caledonia;NCL
+686;KI;Kiribati;KIR
+685;WS;Samoa;WSM
+683;NU;Niue;NIU
+682;CK;Cook Islands;COK
+681;WF;Wallis & Futuna;WLF
+680;PW;Palau;PLW
+679;FJ;Fiji;FJI
+678;VU;Vanuatu;VUT
+677;SB;Solomon Islands;SLB
+676;TO;Tonga;TON
+675;PG;Papua New Guinea;PNG
+674;NR;Nauru;NRU
+673;BN;Brunei Darussalam;BRN
+672;NF;Norfolk Island;NFK
+670;TL;Timor-Leste;TLS
+599;BQ;Bonaire, Sint Eustatius & Saba;BES
+599;CW;Curaçao;CUW
+598;UY;Uruguay;URY
+597;SR;Suriname;SUR
+596;MQ;Martinique;MTQ
+595;PY;Paraguay;PRY
+594;GF;French Guiana;GUF
+593;EC;Ecuador;ECU
+592;GY;Guyana;GUY
+591;BO;Bolivia;BOL
+590;GP;Guadeloupe;GLP
+509;HT;Haiti;HTI
+508;PM;Saint Pierre & Miquelon;SPM
+507;PA;Panama;PAN
+506;CR;Costa Rica;CRI
+505;NI;Nicaragua;NIC
+504;HN;Honduras;HND
+503;SV;El Salvador;SLV
+502;GT;Guatemala;GTM
+501;BZ;Belize;BLZ
+500;FK;Falkland Islands;FLK
+423;LI;Liechtenstein;LIE
+421;SK;Slovakia;SVK
+420;CZ;Czech Republic;CZE
+383;XK;Kosovo;UNK
+389;MK;Macedonia;MKD
+387;BA;Bosnia & Herzegovina;BIH
+386;SI;Slovenia;SVN
+385;HR;Croatia;HRV
+382;ME;Montenegro;MNE
+381;RS;Serbia;SRB
+380;UA;Ukraine;UKR
+378;SM;San Marino;SMR
+377;MC;Monaco;MCO
+376;AD;Andorra;AND
+375;BY;Belarus;BLR
+374;AM;Armenia;ARM
+373;MD;Moldova;MDA
+372;EE;Estonia;EST
+371;LV;Latvia;LVA
+370;LT;Lithuania;LTU
+359;BG;Bulgaria;BGR
+358;FI;Finland;FIN
+357;CY;Cyprus;CYP
+356;MT;Malta;MLT
+355;AL;Albania;ALB
+354;IS;Iceland;ISL
+353;IE;Ireland;IRL
+352;LU;Luxembourg;LUX
+351;PT;Portugal;PRT
+350;GI;Gibraltar;GIB
+299;GL;Greenland;GRL
+298;FO;Faroe Islands;FRO
+297;AW;Aruba;ABW
+291;ER;Eritrea;ERI
+290;SH;Saint Helena;SHN
+269;KM;Comoros;COM
+268;SZ;Swaziland;SWZ
+267;BW;Botswana;BWA
+266;LS;Lesotho;LSO
+265;MW;Malawi;MWI
+264;NA;Namibia;NAM
+263;ZW;Zimbabwe;ZWE
+262;RE;Réunion;REU
+261;MG;Madagascar;MDG
+260;ZM;Zambia;ZMB
+258;MZ;Mozambique;MOZ
+257;BI;Burundi;BDI
+256;UG;Uganda;UGA
+255;TZ;Tanzania;TZA
+254;KE;Kenya;KEN
+253;DJ;Djibouti;DJI
+252;SO;Somalia;SOM
+251;ET;Ethiopia;ETH
+250;RW;Rwanda;RWA
+249;SD;Sudan;SDN
+248;SC;Seychelles;SYC
+247;SH;Saint Helena;SHN
+246;IO;Diego Garcia;DGA
+245;GW;Guinea-Bissau;GNB
+244;AO;Angola;AGO
+243;CD;Congo (Dem. Rep.);COD
+242;CG;Congo (Rep.);COG
+241;GA;Gabon;GAB
+240;GQ;Equatorial Guinea;GNQ
+239;ST;São Tomé & Príncipe;STP
+238;CV;Cape Verde;CPV
+237;CM;Cameroon;CMR
+236;CF;Central African Rep.;CAF
+235;TD;Chad;TCD
+234;NG;Nigeria;NGA
+233;GH;Ghana;GHA
+232;SL;Sierra Leone;SLE
+231;LR;Liberia;LBR
+230;MU;Mauritius;MUS
+229;BJ;Benin;BEN
+228;TG;Togo;TGO
+227;NE;Niger;NER
+226;BF;Burkina Faso;BFA
+225;CI;Côte d`Ivoire;CIV
+224;GN;Guinea;GIN
+223;ML;Mali;MLI
+222;MR;Mauritania;MRT
+221;SN;Senegal;SEN
+220;GM;Gambia;GMB
+218;LY;Libya;LBY
+216;TN;Tunisia;TUN
+213;DZ;Algeria;DZA
+212;MA;Morocco;MAR
+211;SS;South Sudan;SSD
+98;IR;Iran;IRN
+95;MM;Myanmar;MMR
+94;LK;Sri Lanka;LKA
+93;AF;Afghanistan;AFG
+92;PK;Pakistan;PAK
+91;IN;India;IND
+90;TR;Turkey;TUR
+86;CN;China;CHN
+84;VN;Vietnam;VNM
+82;KR;South Korea;KOR
+81;JP;Japan;JPN
+66;TH;Thailand;THA
+65;SG;Singapore;SGP
+64;NZ;New Zealand;NZL
+63;PH;Philippines;PHL
+62;ID;Indonesia;IDN
+61;AU;Australia;AUS
+60;MY;Malaysia;MYS
+58;VE;Venezuela;VEN
+57;CO;Colombia;COL
+56;CL;Chile;CHL
+55;BR;Brazil;BRA
+54;AR;Argentina;ARG
+53;CU;Cuba;CUB
+52;MX;Mexico;MEX
+51;PE;Peru;PER
+49;DE;Germany;DEU
+48;PL;Poland;POL
+47;NO;Norway;NOR
+46;SE;Sweden;SWE
+45;DK;Denmark;DNK
+44;GB;United Kingdom;GBR,GBD,GBN,GBO,GBP,GBS
+43;AT;Austria;AUT
+41;CH;Switzerland;CHE
+40;RO;Romania;ROM
+39;IT;Italy;ITA
+36;HU;Hungary;HUN
+34;ES;Spain;ESP
+33;FR;France;FRA
+32;BE;Belgium;BEL
+31;NL;Netherlands;NLD
+30;GR;Greece;GRC
+27;ZA;South Africa;ZAF
+20;EG;Egypt;EGY
+7;RU;Russian Federation;RUS
+7;KZ;Kazakhstan;KAZ
+1;US;USA;USA,UMI
+1;PR;Puerto Rico;PRI
+1;DO;Dominican Rep.;DOM
+1;CA;Canada;CAN

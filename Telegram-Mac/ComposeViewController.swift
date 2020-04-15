@@ -8,8 +8,9 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
-import TelegramCoreMac
+import SwiftSignalKit
+import TelegramCore
+import SyncCore
 struct ComposeTitles {
     let center:String
     let done:String
@@ -31,13 +32,13 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
     }
     
     override func executeReturn() -> Void {
-        onCancel.set(Signal<Void, Void>.single(Void()))
+        onCancel.set(Signal<Void, NoError>.single(Void()))
         super.executeReturn()
     }
     
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
-        (self.rightBarView as? TextButtonBarView)?.button.style = navigationButtonStyle
+        rightBarView.style = navigationButtonStyle
     }
 
     public override func returnKeyAction() -> KeyHandlerResult {
@@ -47,7 +48,7 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
 
     func nextEnabled(_ enable:Bool) {
         self.enableNext = enable
-        (self.rightBarView as? TextButtonBarView)?.button.isEnabled = enable
+        rightBarView.isEnabled = enable
     }
     
     func executeNext() -> Void {
@@ -62,15 +63,15 @@ class ComposeViewController<T, I, V>: EmptyComposeController<I, T, V> where V: N
         super.loadView()
         
         setCenterTitle(titles.center)
-        (self.rightBarView as? TextButtonBarView)?.button.set(handler:{ [weak self] _ in
+        self.rightBarView.set(handler:{ [weak self] _ in
             self?.executeNext()
         }, for: .Click)
     }
     
     
     
-    public init(titles:ComposeTitles, account:Account) {
+    public init(titles:ComposeTitles, context: AccountContext) {
         self.titles = titles
-        super.init(account)
+        super.init(context)
     }
 }

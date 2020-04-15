@@ -8,29 +8,13 @@
 
 import Cocoa
 import TGUIKit
-import SwiftSignalKitMac
+import SwiftSignalKit
 
 enum TokenSearchState : Equatable {
     case none
     case from(query: String, complete: Bool)
 }
 
-func ==(lhs: TokenSearchState, rhs: TokenSearchState) -> Bool {
-    switch lhs {
-    case .none:
-        if case .none = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .from(query, complete):
-        if case .from(query, complete) = rhs {
-            return true
-        } else {
-            return false
-        }
-    }
-}
 
 class ChatSearchView: SearchView {
     private let fromView: TextView = TextView()
@@ -49,7 +33,7 @@ class ChatSearchView: SearchView {
                 countView.removeFromSuperview()
                 updateClearVisibility(true)
             }
-            updateLocalizationAndTheme()
+            updateLocalizationAndTheme(theme: theme)
             self.needsLayout = true
         }
     }
@@ -69,8 +53,8 @@ class ChatSearchView: SearchView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func updateLocalizationAndTheme() {
-        let fromLayout = TextViewLayout(.initialize(string: "\(tr(.chatSearchFrom)) ", color: theme.colors.text, font: .normal(.text)))
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        let fromLayout = TextViewLayout(.initialize(string: "\(tr(L10n.chatSearchFrom)) ", color: theme.colors.text, font: .normal(.text)))
         fromLayout.measure(width: .greatestFiniteMagnitude)
         fromView.update(fromLayout)
         fromView.backgroundColor = theme.colors.grayBackground
@@ -78,10 +62,10 @@ class ChatSearchView: SearchView {
         
         countView.backgroundColor = theme.colors.grayBackground
 
-        let countLayout = TextViewLayout(.initialize(string: tr(.chatSearchCount(countValue.current, countValue.total)), color: theme.search.placeholderColor, font: .normal(.text)))
+        let countLayout = TextViewLayout(.initialize(string: tr(L10n.chatSearchCount(countValue.current, countValue.total)), color: theme.search.placeholderColor, font: .normal(.text)))
         countLayout.measure(width: .greatestFiniteMagnitude)
         countView.update(countLayout)
-        super.updateLocalizationAndTheme()
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     override func cancelSearch() {
@@ -107,7 +91,12 @@ class ChatSearchView: SearchView {
     func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(deleteBackward(_:)) {
             if query.isEmpty {
-                cancelSearch()
+                switch tokenState {
+                case .none:
+                    break
+                default:
+                    cancelSearch()
+                }
                 return true
             }
         }
@@ -175,7 +164,7 @@ class ChatSearchView: SearchView {
                     tokenView.removeFromSuperview()
                 }
             }
-            updateLocalizationAndTheme()
+            updateLocalizationAndTheme(theme: theme)
             self.needsLayout = true
         }
     }

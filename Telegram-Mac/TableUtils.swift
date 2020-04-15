@@ -9,11 +9,16 @@
 import Cocoa
 
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 protocol TableItemListNodeEntry: Comparable, Identifiable {
     associatedtype ItemGenerationArguments
     
     func item(_ arguments: ItemGenerationArguments, initialSize: NSSize) -> TableRowItem
+}
+
+protocol ItemListItemTag {
+    func isEqual(to other: ItemListItemTag) -> Bool
 }
 

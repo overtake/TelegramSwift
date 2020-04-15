@@ -9,10 +9,47 @@
 #import "ObjcUtils.h"
 #import <CommonCrypto/CommonCrypto.h>
 #import <AVFoundation/AVFoundation.h>
+#import <Carbon/Carbon.h>
 
+@implementation OpenWithObject
+
+-(id)initWithFullname:(NSString *)fullname app:(NSURL *)app icon:(NSImage *)icon {
+    if(self = [super init]) {
+        _fullname = fullname;
+        _app = app;
+        _icon = icon;
+    }
+    
+    return self;
+}
+
+
+@end
 
 @implementation ObjcUtils
-+ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands
+
+
++ (NSData *)dataFromHexString:(NSString *)string
+{
+    string = [string lowercaseString];
+    NSMutableData *data= [NSMutableData new];
+    unsigned char whole_byte;
+    char byte_chars[3] = {'\0','\0','\0'};
+    int i = 0;
+    int length = string.length;
+    while (i < length-1) {
+        char c = [string characterAtIndex:i++];
+        if (c < '0' || (c > '9' && c < 'a') || c > 'f')
+            continue;
+        byte_chars[0] = c;
+        byte_chars[1] = [string characterAtIndex:i++];
+        whole_byte = strtol(byte_chars, NULL, 16);
+        [data appendBytes:&whole_byte length:1];
+    }
+    return data;
+}
+
++ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention
 {
     bool containsSomething = false;
     
@@ -111,7 +148,8 @@
              {
                  @try {
                      NSTextCheckingType type = [match resultType];
-                     if (type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber)
+                     NSString *scheme = [[[match URL] scheme] lowercaseString];
+                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || scheme == nil))
                      {
                          [results addObject:[NSValue valueWithRange:match.range]];
                      }
@@ -146,7 +184,7 @@
                 {
                     if (mentionStart != -1)
                     {
-                        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_'))
+                        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_' || (dotInMention && c == '.'))))
                         {
                             if (i > mentionStart + 1)
                             {
@@ -238,6 +276,265 @@
     return nil;
 }
 
++ (NSString *)_youtubeVideoIdFromText:(NSString *)text originalUrl:(NSString *)originalUrl startTime:(NSTimeInterval *)startTime {
+    if ([text hasPrefix:@"http://www.youtube.com/watch?v="] || [text hasPrefix:@"https://www.youtube.com/watch?v="] || [text hasPrefix:@"http://m.youtube.com/watch?v="] || [text hasPrefix:@"https://m.youtube.com/watch?v="])
+    {
+        NSRange range1 = [text rangeOfString:@"?v="];
+        bool match = true;
+        for (NSInteger i = range1.location + range1.length; i < (NSInteger)text.length; i++)
+        {
+            unichar c = [text characterAtIndex:i];
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '=' || c == '&' || c == '#'))
+            {
+                match = false;
+                break;
+            }
+        }
+        
+        if (match)
+        {
+            NSString *videoId = nil;
+            NSRange ampRange = [text rangeOfString:@"&"];
+            NSRange hashRange = [text rangeOfString:@"#"];
+            if (ampRange.location != NSNotFound || hashRange.location != NSNotFound)
+            {
+                NSInteger location = MIN(ampRange.location, hashRange.location);
+                videoId = [text substringWithRange:NSMakeRange(range1.location + range1.length, location - range1.location - range1.length)];
+            }
+            else
+            videoId = [text substringFromIndex:range1.location + range1.length];
+            
+            if (videoId.length != 0)
+            return videoId;
+        }
+    }
+    else if ([text hasPrefix:@"http://youtu.be/"] || [text hasPrefix:@"https://youtu.be/"] || [text hasPrefix:@"http://www.youtube.com/embed/"] || [text hasPrefix:@"https://www.youtube.com/embed/"])
+    {
+        NSString *suffix = @"";
+        
+        NSMutableArray *prefixes = [NSMutableArray arrayWithArray:@
+                                    [
+                                     @"http://youtu.be/",
+                                     @"https://youtu.be/",
+                                     @"http://www.youtube.com/embed/",
+                                     @"https://www.youtube.com/embed/"
+                                     ]];
+        
+        while (suffix.length == 0 && prefixes.count > 0)
+        {
+            NSString *prefix = prefixes.firstObject;
+            if ([text hasPrefix:prefix])
+            {
+                suffix = [text substringFromIndex:prefix.length];
+                break;
+            }
+            else
+            {
+                [prefixes removeObjectAtIndex:0];
+            }
+        }
+        
+        NSString *queryString = nil;
+        for (int i = 0; i < (int)suffix.length; i++)
+        {
+            unichar c = [suffix characterAtIndex:i];
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '=' || c == '&' || c == '#'))
+            {
+                if (c == '?')
+                {
+                    queryString = [suffix substringFromIndex:i + 1];
+                    suffix = [suffix substringToIndex:i];
+                    break;
+                }
+                else
+                {
+                    return nil;
+                }
+            }
+        }
+        
+        if (startTime != NULL)
+        {
+            NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+            NSString *queryString = [NSURL URLWithString:originalUrl].query;
+            for (NSString *param in [queryString componentsSeparatedByString:@"&"])
+            {
+                NSArray *components = [param componentsSeparatedByString:@"="];
+                if (components.count < 2)
+                continue;
+                [params setObject:components.lastObject forKey:components.firstObject];
+            }
+            
+            NSString *timeParam = params[@"t"];
+            if (timeParam != nil)
+            {
+                NSTimeInterval position = 0.0;
+                if ([timeParam rangeOfString:@"s"].location != NSNotFound)
+                {
+                    NSString *value;
+                    NSUInteger location = 0;
+                    for (NSUInteger i = 0; i < timeParam.length; i++)
+                    {
+                        unichar c = [timeParam characterAtIndex:i];
+                        if ((c < '0' || c > '9'))
+                        {
+                            value = [timeParam substringWithRange:NSMakeRange(location, i - location)];
+                            location = i + 1;
+                            switch (c)
+                            {
+                                case 's':
+                                position += value.doubleValue;
+                                break;
+                                
+                                case 'm':
+                                position += value.doubleValue * 60.0;
+                                break;
+                                
+                                case 'h':
+                                position += value.doubleValue * 3600.0;
+                                break;
+                                
+                                default:
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    position = timeParam.doubleValue;
+                }
+                
+                *startTime = position;
+            }
+        }
+        
+        return suffix;
+    }
+    
+    return nil;
+}
+
++ (void) fillAppByUrl:(NSURL*)url bundle:(NSString**)bundle name:(NSString**)name version:(NSString**)version icon:(NSImage**)icon {
+    NSBundle *b = [NSBundle bundleWithURL:url];
+    if (b) {
+        NSString *path = [url path];
+        *name = [[NSFileManager defaultManager] displayNameAtPath: path];
+        if (!*name) *name = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        if (!*name) *name = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleName"];
+        if (*name) {
+            *bundle = [b bundleIdentifier];
+            if (bundle) {
+                *version = (NSString*)[b objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+                *icon = [[NSWorkspace sharedWorkspace] iconForFile: path];
+                if (*icon && [*icon isValid]) [*icon setSize: CGSizeMake(16., 16.)];
+                return;
+            }
+        }
+    }
+    *bundle = *name = *version = nil;
+    *icon = nil;
+}
+
++(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl {
+
+    NSArray *appsList = (__bridge NSArray*)LSCopyApplicationURLsForURL((__bridge CFURLRef)[NSURL fileURLWithPath:fileUrl], kLSRolesAll);
+    NSMutableDictionary *data = [NSMutableDictionary dictionaryWithCapacity:16];
+    int fullcount = 0;
+    for (id app in appsList) {
+        if (fullcount > 15) break;
+        
+        NSString *bundle = nil, *name = nil, *version = nil;
+        NSImage *icon = nil;
+        [ObjcUtils fillAppByUrl:(NSURL*)app bundle:&bundle name:&name version:&version icon:&icon];
+        if (bundle && name) {
+            NSString *key = [[NSArray arrayWithObjects:bundle, name, nil] componentsJoinedByString:@"|"];
+            if (!version) version = @"";
+            
+            NSMutableDictionary *versions = (NSMutableDictionary*)[data objectForKey:key];
+            if (!versions) {
+                versions = [NSMutableDictionary dictionaryWithCapacity:2];
+                [data setValue:versions forKey:key];
+            }
+            if (![versions objectForKey:version]) {
+                [versions setValue:[NSArray arrayWithObjects:name, icon, app, nil] forKey:version];
+                ++fullcount;
+            }
+        }
+    }
+    
+    
+    NSMutableArray *apps = [NSMutableArray arrayWithCapacity:fullcount];
+    for (id key in data) {
+        NSMutableDictionary *val = (NSMutableDictionary*)[data objectForKey:key];
+        for (id ver in val) {
+            NSArray *app = (NSArray*)[val objectForKey:ver];
+            
+            NSString *fullname = (NSString*)[app objectAtIndex:0], *version = (NSString*)ver;
+            BOOL showVersion = ([val count] > 1);
+            if (!showVersion) {
+                NSError *error = NULL;
+                NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"^\\d+\\.\\d+\\.\\d+(\\.\\d+)?$" options:NSRegularExpressionCaseInsensitive error:&error];
+                showVersion = ![regex numberOfMatchesInString:version options:NSMatchingWithoutAnchoringBounds range:NSMakeRange(0,[version length])];
+            }
+            if (showVersion) fullname = [[NSArray arrayWithObjects:fullname, @" (", version, @")", nil] componentsJoinedByString:@""];
+            OpenWithObject *a = [[OpenWithObject alloc] initWithFullname:fullname app:app[2] icon:app[1]];
+            
+            [apps addObject:a];
+        }
+    }
+    
+    
+    return apps;
+}
+    
++ (NSArray<NSString *> *)getEmojiFromString:(NSString *)string {
+    
+    __block NSMutableDictionary *temp = [NSMutableDictionary dictionary];
+    
+    
+    [string enumerateSubstringsInRange: NSMakeRange(0, [string length]) options:NSStringEnumerationByComposedCharacterSequences usingBlock:
+     ^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop){
+         
+         const unichar hs = [substring characterAtIndex: 0];
+         
+         
+         // surrogate pair
+         if (0xd800 <= hs && hs <= 0xdbff) {
+             if (substring.length > 1) {
+                 unichar ls = [substring characterAtIndex:1];
+                 int uc = ((hs - 0xd800) * 0x400) + (ls - 0xdc00) + 0x10000;
+                 if (0x1d000 <= uc && uc <= 129300) {
+                     
+                     [temp setObject:substring forKey:@(uc)];
+                 }
+             }
+         } else if (substring.length > 1) {
+             const unichar ls = [substring characterAtIndex:1];
+             if (ls == 0x20e3 || ls == 65039) {
+                 [temp setObject:substring forKey:@(ls)];
+             }
+             
+         } else {
+             // non surrogate
+             if (0x2100 <= hs && hs <= 0x27ff) {
+                 [temp setObject:substring forKey:@(hs)];
+             } else if (0x2B05 <= hs && hs <= 0x2b07) {
+                 [temp setObject:substring forKey:@(hs)];
+             } else if (0x2934 <= hs && hs <= 0x2935) {
+                 [temp setObject:substring forKey:@(hs)];
+             } else if (0x3297 <= hs && hs <= 0x3299) {
+                 [temp setObject:substring forKey:@(hs)];
+             } else if (hs == 0xa9 || hs == 0xae || hs == 0x303d || hs == 0x3030 || hs == 0x2b55 || hs == 0x2b1c || hs == 0x2b1b || hs == 0x2b50) {
+                 [temp setObject:substring forKey:@(hs)];
+             }
+         }
+         
+     }];
+    
+    return [temp allValues];
+    
+}
 
 +(NSArray<NSNumber *> *)bufferList:(CMSampleBufferRef)sampleBuffer {
     
@@ -296,6 +593,8 @@
     }
     return array;
 }
+    
+    
 
 
 +(NSString *) md5:(NSString *)string {
@@ -646,7 +945,8 @@ double mappingRange(double x, double in_min, double in_max, double out_min, doub
     
     [list addObject:@"NotificationSettingsToneNone"];
     
-    NSArray *dirContents = [fm contentsOfDirectoryAtPath:@"~/Library/Sounds" error:nil];
+    NSString *homeSoundsPath = [NSHomeDirectory() stringByAppendingString:@"/Library/Sounds"];
+    NSArray *dirContents = [fm contentsOfDirectoryAtPath:homeSoundsPath error:nil];
     [list addObjectsFromArray:[dirContents filteredArrayUsingPredicate:fltr]];
     
     dirContents = [fm contentsOfDirectoryAtPath:@"/Library/Sounds" error:nil];
@@ -900,7 +1200,6 @@ NSDictionary<NSString *, NSString *> *audioTags(AVURLAsset *asset) {
         NSArray *metadata = [asset metadataForFormat:obj];
         
         for (AVMutableMetadataItem *metaItem in metadata) {
-            NSLog(@"%@ : %@", metaItem.identifier, (NSString *)metaItem.value);
             if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataLeadPerformer]) {
                 artistName = (NSString *) metaItem.value;
             } else if([metaItem.identifier isEqualToString:AVMetadataIdentifierID3MetadataTitleDescription]) {
@@ -968,7 +1267,7 @@ BOOL isEnterEventObjc(NSEvent *theEvent) {
 BOOL isEnterAccessObjc(NSEvent *theEvent, BOOL byCmdEnter) {
     if(isEnterEventObjc(theEvent)) {
         NSUInteger flags = (theEvent.modifierFlags & NSDeviceIndependentModifierFlagsMask);
-        return !byCmdEnter ? flags == 0 || flags == 65536 : (theEvent.modifierFlags & NSCommandKeyMask) > 0;
+        return !byCmdEnter ? flags == 0 || flags == 65536 || flags == 2097152 : (theEvent.modifierFlags & NSCommandKeyMask) > 0;
     }
     return NO;
 }
@@ -1007,3 +1306,36 @@ inline int colorIndexForGroupId(int64_t groupId)
     return colorIndex;
 }
 
+/*
+ Sorry guys there was a code which caused a crash on text input
+ */
+
+NSArray<NSString *> * __nonnull currentAppInputSource()
+{
+    
+    CFArrayRef inputSourcesList = TISCreateInputSourceList(NULL, false);
+    
+    CFIndex inputSourcesCount = CFArrayGetCount(inputSourcesList);
+    
+    NSMutableArray<NSString *> *inputs = [[NSMutableArray alloc] init];
+    
+    for (int i = 0; i < inputSourcesCount; i++) {
+        NSArray* list = (__bridge NSArray *)(TISGetInputSourceProperty(CFArrayGetValueAtIndex(inputSourcesList, i), kTISPropertyInputSourceLanguages));
+        if ([list count] > 0 && list[0] != nil) {
+            [inputs addObject:list[0]];
+        }
+        
+    }
+    
+    return inputs;
+}
+
+NSEvent * __nullable createScrollWheelEvent() {
+    CGEventRef upEvent = CGEventCreateScrollWheelEvent(
+                                                       NULL,
+                                                       kCGScrollEventUnitPixel,
+                                                       1, 0, 0 );
+    NSEvent *event = [NSEvent eventWithCGEvent:upEvent];
+    CFRelease(upEvent);
+    return event;
+}

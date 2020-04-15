@@ -8,11 +8,16 @@
 
 import Cocoa
 import TGUIKit
-import TelegramCoreMac
+import TelegramCore
+import SyncCore
 
 
-class WPContentView: View, MultipleSelectable {
+class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
     
+    
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
+        return nil
+    }
     
     var header: String? {
         return nil
@@ -33,11 +38,23 @@ class WPContentView: View, MultipleSelectable {
             
             containerView.backgroundColor = backgroundColor
             for subview in containerView.subviews {
-                subview.background = backgroundColor
+                if !(subview is TransformImageView) {
+                    subview.background = backgroundColor
+                }
             }
-            instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
-            instantPageButton?.layer?.borderColor = theme.colors.blueIcon.cgColor
-            instantPageButton?.set(color: theme.colors.blueIcon, for: .Normal)
+            if let content = content {
+                instantPageButton?.layer?.borderColor = content.presentation.activity.cgColor
+                instantPageButton?.set(color: content.presentation.activity, for: .Normal)
+                
+                if content.hasInstantPage {
+                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Normal)
+                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Highlight)
+                } else {
+                    instantPageButton?.removeImage(for: .Normal)
+                    instantPageButton?.removeImage(for: .Highlight)
+                }
+            }
+            
             setNeedsDisplay()
         }
     }
@@ -46,19 +63,23 @@ class WPContentView: View, MultipleSelectable {
         return [textView]
     }
     
+    func previewMediaIfPossible() -> Bool {
+        return false
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        ctx.setFillColor(theme.colors.blueFill.cgColor)
+        guard let content = content else {return}
+        
+        ctx.setFillColor(content.presentation.activity.cgColor)
         let radius:CGFloat = 1.0
         ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
         ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
         
-        if let content = content {
-            if let siteName = content.siteName {
-                siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor)
-            }
+        if let siteName = content.siteName {
+            siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         }
     }
     
@@ -69,10 +90,15 @@ class WPContentView: View, MultipleSelectable {
             if !textView.isEqual(to: content.textLayout) {
                 textView.update(content.textLayout)
             }
-            instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 30), thatFit: false)
+            textView.isHidden = content.textLayout == nil
+            _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 30), thatFit: true)
             instantPageButton?.setFrameOrigin(0, content.contentRect.height - 30)
         }
         needsDisplay = true
+    }
+    
+    func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
+        return convert(point, from: nil)
     }
     
     required public override init() {
@@ -96,11 +122,16 @@ class WPContentView: View, MultipleSelectable {
     deinit {
         containerView.removeAllSubviews()
     }
+    
+    func updateMouse() {
+        
+    }
 
     func update(with layout:WPLayout) -> Void {
         self.content = layout
         
-        if layout.hasInstantPage {
+        
+        if layout.hasInstantPage || layout.isProxyConfig {
             if instantPageButton == nil {
                 instantPageButton = TitleButton()
                 
@@ -110,18 +141,23 @@ class WPContentView: View, MultipleSelectable {
                 
              addSubview(instantPageButton!)
             }
-            instantPageButton?.layer?.borderColor = theme.colors.blueIcon.cgColor
-            instantPageButton?.set(color: theme.colors.blueIcon, for: .Normal)
-            instantPageButton?.set(image: theme.icons.chatInstantView, for: .Normal)
+            instantPageButton?.layer?.borderColor = theme.colors.accentIcon.cgColor
+
+            instantPageButton?.set(color: theme.colors.accentIcon, for: .Normal)
+         
             instantPageButton?.set(font: .medium(.title), for: .Normal)
-            instantPageButton?.set(background: theme.colors.background, for: .Normal)
-            instantPageButton?.set(text: tr(.chatInstantView), for: .Normal)
-            instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
+            instantPageButton?.set(background: .clear, for: .Normal)
+            instantPageButton?.set(text: layout.isProxyConfig ? L10n.chatApplyProxy : L10n.chatInstantView, for: .Normal)
+            _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()
             instantPageButton?.set(handler : { [weak layout] _ in
                 if let content = layout {
-                   showInstantPage(InstantPageViewController(content.account, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
+                    if content.hasInstantPage {
+                        showInstantPage(InstantPageViewController(content.context, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
+                    } else if let proxyConfig = content.proxyConfig {
+                        applyExternalProxy(proxyConfig, accountManager: content.context.sharedContext.accountManager)
+                    }
                 }
             }, for: .Click)
             
@@ -133,7 +169,7 @@ class WPContentView: View, MultipleSelectable {
         self.needsLayout = true
     }
     
-    var interactionContentView: NSView {
+    func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return self.containerView
     }
     

@@ -7,35 +7,33 @@
 //
 
 import Cocoa
-import TelegramCoreMac
-import PostboxMac
-import SwiftSignalKitMac
+import TelegramCore
+import SyncCore
+import Postbox
+import SwiftSignalKit
 import TGUIKit
 
 class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView {
 
-    let account:Account
+    let context:AccountContext
     private let languageDisposable:MetaDisposable = MetaDisposable()
-    init(_ account:Account) {
-        self.account = account
+    init(_ context:AccountContext) {
+        self.context = context
         super.init()
     }
     
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        let ignore:Atomic<Bool> = Atomic(value: true)
-        languageDisposable.set(combineLatest(appearanceSignal, ready.get() |> deliverOnMainQueue |> take(1)).start(next: { [weak self] _ in
-            if !ignore.swap(false) {
-                self?.updateLocalizationAndTheme()
-            }
+        languageDisposable.set(appearanceSignal.start(next: { [weak self] appearance in
+            self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
     }
     
-    override func updateLocalizationAndTheme() {
-        super.updateLocalizationAndTheme()
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
         
-        self.genericView.background = theme.colors.background
+        (self.genericView as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()
         requestUpdateRightBar()
@@ -55,6 +53,7 @@ class TelegramViewController: TelegramGenericViewController<NSView> {
 
 class TableViewController: TelegramGenericViewController<TableView>, TableViewDelegate {
     
+   
     
     override func loadView() {
         super.loadView()
@@ -63,20 +62,28 @@ class TableViewController: TelegramGenericViewController<TableView>, TableViewDe
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        genericView.getBackgroundColor = {
+           return theme.colors.listBackground
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
     }
     
     
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
     }
-    func selectionWillChange(row:Int, item:TableRowItem) -> Bool {
+    func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return false
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {
         return false
     }
-    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
     
     override var enableBack: Bool {
         return true
@@ -147,13 +154,13 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     func updateEditStateTitles() -> Void {
         switch state {
         case .Edit:
-            editBar.button.set(text: doneString, for: .Normal)
+            editBar.set(text: doneString, for: .Normal)
         case .Normal:
-            editBar.button.set(text: normalString, for: .Normal)
+            editBar.set(text: normalString, for: .Normal)
         case .Some:
-            editBar.button.set(text: someString, for: .Normal)
+            editBar.set(text: someString, for: .Normal)
         }
-        editBar.button.set(color: presentation.colors.blueUI, for: .Normal)
+        editBar.set(color: presentation.colors.accent, for: .Normal)
         self.editBar.needsLayout = true
     }
     
@@ -163,17 +170,23 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     func addHandler() -> Void {
-        editBar.button.set (handler:{[weak self] _ in
+        editBar.set (handler:{[weak self] _ in
             if let strongSelf = self {
                 strongSelf.changeState()
             }
         }, for:.Click)
     }
     
-    override init(_ account:Account) {
-        super.init(account)
+    override func loadView() {
         editBar = TextButtonBarView(controller: self, text: "", style: navigationButtonStyle, alignment:.Right)
         addHandler()
+        rightBarView = editBar
+        updateEditStateTitles()
+        super.loadView()
+    }
+    
+    override init(_ context:AccountContext) {
+        super.init(context)
     }
 
     func update(with state:ViewControllerState) -> Void {
@@ -181,18 +194,17 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
     }
     
     public func set(editable: Bool) ->Void {
-        editBar.button.isHidden = !editable
+        editBar.isHidden = !editable
     }
     
     public func set(enabled: Bool) ->Void {
-        editBar.button.isEnabled = enabled
+        editBar.isEnabled = enabled
     }
     
     override func updateNavigation(_ navigation: NavigationViewController?) {
         super.updateNavigation(navigation)
         if navigation != nil {
-            rightBarView = editBar
-            updateEditStateTitles()
+            
         }
     }
     
@@ -203,16 +215,20 @@ class EditableViewController<T>: TelegramGenericViewController<T> where T: NSVie
 }
 
 final class Appearance : Equatable {
-    let language:Language
+    let language: TelegramLocalization
     var presentation: TelegramPresentationTheme
-    init(language: Language, presentation: TelegramPresentationTheme) {
+    init(language: TelegramLocalization, presentation: TelegramPresentationTheme) {
         self.language = language
         self.presentation = presentation
+    }
+    
+    var newAllocation: Appearance {
+        return Appearance(language: language, presentation: presentation)
     }
 }
 
 func ==(lhs:Appearance, rhs:Appearance) -> Bool {
-    return lhs.language === rhs.language && lhs.presentation == rhs.presentation
+    return lhs === rhs //lhs.language === rhs.language && lhs.presentation === rhs.presentation
 }
 
 var theme: TelegramPresentationTheme {
@@ -227,16 +243,52 @@ var appAppearance:Appearance {
     return Appearance(language: appCurrentLanguage, presentation: theme)
 }
 
-var appearanceSignal:Signal<Appearance, Void> {
-    return combineLatest(languageSignal, themeSignal) |> map {
+var appearanceSignal:Signal<Appearance, NoError> {
+    
+    var timestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+    
+    let dateSignal:Signal<Bool, NoError> = Signal { subscriber in
+        
+        let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+
+        
+        var now: time_t = time_t(nowTimestamp)
+        var timeinfoNow: tm = tm()
+        localtime_r(&now, &timeinfoNow)
+        
+        
+        var t: time_t = time_t(timestamp)
+        var timeinfo: tm = tm()
+        localtime_r(&t, &timeinfo)
+        
+      
+        if timeinfo.tm_year != timeinfoNow.tm_year || timeinfo.tm_yday != timeinfoNow.tm_yday {
+            timestamp = nowTimestamp
+            subscriber.putNext(true)
+        } else {
+            subscriber.putNext(false)
+        }
+        subscriber.putCompletion()
+        
+        return EmptyDisposable
+    }
+    
+    let dateUpdateSignal: Signal<Bool, NoError> = .single(true) |> then(dateSignal |> delay(1.0, queue: resourcesQueue) |> restart)
+    
+    let updateSignal = dateUpdateSignal |> filter {$0}
+    
+    return combineLatest(languageSignal, themeSignal, updateSignal |> deliverOnMainQueue) |> map {
         return Appearance(language: $0.0, presentation: $0.1)
     }
 }
 
-struct AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
+final class AppearanceWrapperEntry<E>: Comparable, Identifiable where E: Comparable, E:Identifiable {
     let entry: E
     let appearance: Appearance
-    
+    init(entry: E, appearance: Appearance) {
+        self.entry = entry
+        self.appearance = appearance
+    }
     var stableId: AnyHashable {
         return entry.stableId
     }
