@@ -381,6 +381,9 @@ class ChatPollItem: ChatRowItem {
     fileprivate let poll: TelegramMediaPoll
     
     var actionButtonText: String? {
+        if isBotQuiz {
+            return nil
+        }
         if self.isClosed {
             if poll.results.totalVoters == 0 || poll.results.totalVoters == nil {
                 return nil
@@ -429,6 +432,9 @@ class ChatPollItem: ChatRowItem {
     
     var isClosed: Bool {
        return isPollEffectivelyClosed(message: message!, poll: poll)
+    }
+    var isBotQuiz: Bool {
+        return message?.id.peerId.namespace == Namespaces.Peer.CloudUser
     }
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
@@ -500,7 +506,7 @@ class ChatPollItem: ChatRowItem {
         var totalText = poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(totalCount)) : L10n.chatPollTotalVotes1Countable(Int(totalCount))
         totalText = totalText.replacingOccurrences(of: "\(totalCount)", with: Int(totalCount).separatedNumber)
         
-        if actionButtonText == nil {
+        if actionButtonText == nil && !isBotQuiz {
             let text: String
             if totalCount > 0 {
                 text = totalText
@@ -519,7 +525,10 @@ class ChatPollItem: ChatRowItem {
 
         
         self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
-        self.titleTypeText = TextViewLayout(.initialize(string: poll.title, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        
+        let typeText: String = self.isBotQuiz ? L10n.chatQuizTextType : poll.title
+        
+        self.titleTypeText = TextViewLayout(.initialize(string: typeText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
@@ -647,7 +656,9 @@ class ChatPollItem: ChatRowItem {
             let identifiers = self.entry.additionalData.pollStateData.identifiers
             chatInteraction.vote(message.id, identifiers, true)
         } else {
-            showModal(with: PollResultController(context: context, message: message, scrollToOption: fromOption), for: context.window)
+            if !isBotQuiz {
+                showModal(with: PollResultController(context: context, message: message, scrollToOption: fromOption), for: context.window)
+            }
         }
     }
     
@@ -1239,9 +1250,11 @@ private final class PollView : Control {
         }
         
         var avatarPeers: [Peer] = []
-        for peerId in item.poll.results.recentVoters {
-            if let peer = message.peers[peerId] {
-                avatarPeers.append(peer)
+        if !item.isBotQuiz {
+            for peerId in item.poll.results.recentVoters {
+                if let peer = message.peers[peerId] {
+                    avatarPeers.append(peer)
+                }
             }
         }
         

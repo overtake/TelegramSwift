@@ -1597,6 +1597,8 @@ internal final class L10n {
   internal static var chatProxySponsoredCapTitle: String  { return L10n.tr("Localizable", "Chat.ProxySponsored.CapTitle") }
   /// Stop Quiz
   internal static var chatQuizStop: String  { return L10n.tr("Localizable", "Chat.Quiz.Stop") }
+  /// Quiz
+  internal static var chatQuizTextType: String  { return L10n.tr("Localizable", "Chat.Quiz.TextType") }
   /// %d
   internal static func chatQuizTotalVotesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Quiz.TotalVotes_countable", p1)
@@ -6025,6 +6027,8 @@ internal final class L10n {
   internal static var shortcutsControllerMarkdown: String  { return L10n.tr("Localizable", "ShortcutsController.Markdown") }
   /// MOUSE
   internal static var shortcutsControllerMouse: String  { return L10n.tr("Localizable", "ShortcutsController.Mouse") }
+  /// OTHERS
+  internal static var shortcutsControllerOthers: String  { return L10n.tr("Localizable", "ShortcutsController.Others") }
   /// SEARCH
   internal static var shortcutsControllerSearch: String  { return L10n.tr("Localizable", "ShortcutsController.Search") }
   /// Shortcuts
@@ -6073,6 +6077,8 @@ internal final class L10n {
   internal static var shortcutsControllerMouseFastReplyValue: String  { return L10n.tr("Localizable", "ShortcutsController.Mouse.FastReply.Value") }
   /// Option click on 'Send Message'
   internal static var shortcutsControllerMouseScheduleMessageValue: String  { return L10n.tr("Localizable", "ShortcutsController.Mouse.ScheduleMessage.Value") }
+  /// Lock by Passcode
+  internal static var shortcutsControllerOthersLockByPasscode: String  { return L10n.tr("Localizable", "ShortcutsController.Others.LockByPasscode") }
   /// Global Search
   internal static var shortcutsControllerSearchGlobalSearch: String  { return L10n.tr("Localizable", "ShortcutsController.Search.GlobalSearch") }
   /// Quick Search

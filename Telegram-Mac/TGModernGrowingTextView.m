@@ -1596,7 +1596,6 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 -(void)setSelectedRange:(NSRange)range {
     _notify_next = NO;
-    NSLog(@"after: %@", NSStringFromRange(range));
     if(range.location != NSNotFound)
     [_textView setSelectedRange:range];
 }

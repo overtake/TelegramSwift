@@ -308,6 +308,10 @@ public final class TextViewLayout : Equatable {
         self.lineSpacing = lineSpacing
     }
     
+    public func dropLayoutSize() {
+        self.layoutSize = .zero
+    }
+    
     func calculateLayout(isBigEmoji: Bool = false) -> Void {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
