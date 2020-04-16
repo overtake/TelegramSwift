@@ -31,7 +31,7 @@ class DiceCache {
         self.postbox = postbox
         self.network = network
         
-        let dices = loadedStickerPack(postbox: postbox, network: network, reference: .dice, forceActualized: false)
+        let dices = loadedStickerPack(postbox: postbox, network: network, reference: .dice(diceSymbol), forceActualized: false)
             |> map { result -> [String: StickerPackItem] in
                 switch result {
                 case let .result(_, items, _):

@@ -34,6 +34,7 @@ final class EditImageCanvasArguments {
 }
 
 func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
+    context.saveGState()
     for touch in touches {
         context.beginPath()
         for (i, point) in touch.lines.enumerated() {
@@ -43,6 +44,7 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
                 context.addLine(to: point)
             }
         }
+        
         context.setLineWidth(touch.width)
         context.setLineCap(.round)
         context.setLineJoin(.round)
@@ -56,6 +58,8 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
         }
         context.strokePath()
     }
+    context.restoreGState()
+    context.setBlendMode(.normal)
 }
 
 final class EditImageDrawTouch : Equatable {
