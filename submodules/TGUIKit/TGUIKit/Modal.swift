@@ -747,7 +747,8 @@ public class Modal: NSObject {
                                 view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
-
+                            case .alpha:
+                                view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
                             }
                         }
                     }
@@ -846,6 +847,7 @@ public enum ModalAnimationType {
     case bottomToCenter
     case scaleCenter
     case scaleFrom(NSRect)
+    case alpha
 }
 public enum ModalAnimationCloseBehaviour {
     case common

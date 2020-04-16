@@ -128,8 +128,13 @@ class StatisticRowView: TableRowView {
         chartView.updateMouse()
     }
     
+    private var chartTheme: ChartTheme {
+        let chartTheme = (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme)
+        return ChartTheme(chartTitleColor: theme.colors.text, actionButtonColor: theme.colors.accent, chartBackgroundColor: theme.colors.background, chartLabelsColor: theme.colors.grayText, chartHelperLinesColor: chartTheme.chartHelperLinesColor, chartStrongLinesColor: chartTheme.chartStrongLinesColor, barChartStrongLinesColor: chartTheme.barChartStrongLinesColor, chartDetailsTextColor: theme.colors.grayText, chartDetailsArrowColor: theme.colors.grayText, chartDetailsViewColor: theme.colors.grayBackground, rangeViewFrameColor: chartTheme.rangeViewFrameColor, rangeViewTintColor: theme.colors.grayForeground.withAlphaComponent(0.4), rangeViewMarkerColor: chartTheme.rangeViewTintColor, rangeCropImage: chartTheme.rangeCropImage)
+    }
+    
     override var backdorColor: NSColor {
-        return (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
+        return chartTheme.chartBackgroundColor
     }
     
     override func updateColors() {
@@ -165,7 +170,7 @@ class StatisticRowView: TableRowView {
         
         chartView.setup(controller: item.controller, title: "Test")
 
-        chartView.apply(theme: theme.colors.isDark ? .defaultNightTheme : .defaultDayTheme, strings: ChartStrings(zoomOut: L10n.graphZoomOut, total: L10n.graphTotal), animated: false)
+        chartView.apply(theme: chartTheme, strings: ChartStrings(zoomOut: L10n.graphZoomOut, total: L10n.graphTotal), animated: false)
         
         if first {
             chartView.layer?.animateAlpha(from: 0, to: 1, duration: 0.25)

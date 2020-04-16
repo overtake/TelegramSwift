@@ -236,6 +236,8 @@ class AvatarControl: NSView {
     }
     
     public func setSignal(_ signal: Signal<(CGImage?, Bool), NoError>) {
+        self.state = .Empty
+        
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, animated in
             if let strongSelf = self {
                 strongSelf.layer?.contents = image
