@@ -146,7 +146,7 @@ private final class ChannelOverviewLayoutView : View {
     
     func updateColors() {
         
-        let backgroundColor = (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
+        let backgroundColor = theme.colors.background
         
         self.backgroundColor = backgroundColor
         self.titleView.backgroundColor = backgroundColor
@@ -203,7 +203,7 @@ private final class ChannelOverviewStatsRowView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return (theme.colors.isDark ? ChartTheme.defaultNightTheme : ChartTheme.defaultDayTheme).chartBackgroundColor
+        return theme.colors.background
     }
     
     override func updateColors() {

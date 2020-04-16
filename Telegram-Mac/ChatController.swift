@@ -3590,10 +3590,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, theme.icons.chatActionEdit))
                             
                             
-                            items.append(SPopoverItem(L10n.chatContextSharedMedia,  { [weak self] in
-                                guard let `self` = self else {return}
-                                self.navigationController?.push(PeerMediaController(context: self.context, peerId: self.chatInteraction.peerId))
-                            }, theme.icons.chatAttachPhoto))
+//                            items.append(SPopoverItem(L10n.chatContextSharedMedia,  { [weak self] in
+//                                guard let `self` = self else {return}
+//                                self.navigationController?.push(PeerMediaController(context: self.context, peerId: self.chatInteraction.peerId))
+//                            }, theme.icons.chatAttachPhoto))
                             
                             items.append(SPopoverItem(L10n.chatContextInfo,  { [weak self] in
                                 self?.chatInteraction.openInfo(peerId, false, nil, nil)
