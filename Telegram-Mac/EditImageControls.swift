@@ -197,6 +197,9 @@ final class EditImageControlsView : View {
         flipper.set(image: NSImage(named: "Icon_EditImageFlip")!.precomposed(.white), for: .Hover)
         rotate.set(image: NSImage(named: "Icon_EditImageRotate")!.precomposed(.white), for: .Hover)
         dimensions.set(image: NSImage(named: "Icon_EditImageSizes")!.precomposed(.white), for: .Hover)
+        
+        draw.appTooltip = "⌘D"
+        rotate.appTooltip = "⌘R"
 
         _ = draw.sizeToFit(NSZeroSize, NSMakeSize(50, frame.height), thatFit: true)
         _ = flipper.sizeToFit(NSZeroSize, NSMakeSize(50, frame.height), thatFit: true)
