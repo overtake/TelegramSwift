@@ -137,7 +137,7 @@ private final class EditImageView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
        
-        imageContainer.setFrameSize(frame.width, frame.height - 80)
+        imageContainer.setFrameSize(frame.width, frame.height - 120)
         
         let imageSize = imageView.image!.size.fitted(NSMakeSize(imageContainer.frame.width - 8, imageContainer.frame.height - 8))
         let oldImageSize = imageView.frame.size
@@ -157,8 +157,11 @@ private final class EditImageView : View {
             reset.centerX(y: controls.frame.minY - (80 - reset.frame.height) / 2)
         }
         
-}
+    }
     
+    func hideElements(_ hide: Bool) {
+        imageContainer.isHidden = hide
+    }
     
     func contentSize(maxSize: NSSize) -> NSSize {
         return NSMakeSize(maxSize.width, maxSize.height)
@@ -284,15 +287,26 @@ class EditImageModalController: ModalViewController {
         }
     }
     
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
     private func loadCanvas() {
         guard let window = self.window else {
             return
         }
-        showModal(with: EditImageCanvasController(image: self.image, actions: editState.with { $0.paintings }, updatedImage: { [weak self] image, paintings in
+        genericView.hideElements(true)
+        showModal(with: EditImageCanvasController(image: self.image, actions: editState.with { $0.paintings }, updatedImage: { [weak self] paintings in
             self?.updateValue {
                 $0.withUpdatedPaintings(paintings)
             }
-        }), for: window, animated: false)
+        }, closeHandler: { [weak self] in
+            self?.genericView.hideElements(false)
+        }), for: window, animated: false, animationType: .alpha)
     }
     
     override func viewDidAppear(_ animated: Bool) {

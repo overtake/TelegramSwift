@@ -118,10 +118,12 @@ class ChatDiceContentView: ChatMediaContentView {
     
     
     override func executeInteraction(_ isControl: Bool) {
-        guard let window = self.kitWindow else {
-            return
+        
+        let media = self.media as? TelegramMediaDice
+        
+        if let media = media {
+            tooltip(for: self.playerView, text: L10n.chatDiceResultNew(media.emoji), offset: NSMakePoint(0, -50))
         }
-        tooltip(for: self.playerView, text: L10n.chatDiceResult, offset: NSMakePoint(0, -50))
        // alert(for: window, info: L10n.chatDiceResult)
     }
     
@@ -173,8 +175,21 @@ class ChatDiceContentView: ChatMediaContentView {
             return
         }
         
+        let baseSymbol: String = media.emoji
+        
+        
         let currentValue = media.value
-        let idleSticker: LocalAnimatedSticker = .dice_idle
+        
+        let idleSticker: LocalAnimatedSticker
+        
+        switch baseSymbol {
+        case diceSymbol:
+            idleSticker = .dice_idle
+        case dartSymbol:
+            idleSticker = .dart_idle
+        default:
+            idleSticker = .dice_idle
+        }
        
         let diceState = DiceState(message: parent)
         
@@ -185,7 +200,7 @@ class ChatDiceContentView: ChatMediaContentView {
                 
             let data: Signal<(Data, TelegramMediaFile), NoError>
             if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
-                data = context.diceCache.diceData(currentValue.diceSide, synchronous: approximateSynchronousValue)
+                data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: currentValue.diceSide, synchronous: approximateSynchronousValue)
             } else {
                 data = Signal { subscriber in
                     let resource = idleSticker.file.resource as! LocalBundleResource
@@ -212,25 +227,42 @@ class ChatDiceContentView: ChatMediaContentView {
                     playPolicy = .loop
                 case let .end(animated):
                     if !animated {
-                        playPolicy = .toEnd(from: 179)
+                        playPolicy = .toEnd(from: .max)
                     } else {
-                        let currentFrame = self.playerView.currentFrame ?? 0
-                        playPolicy = .toEnd(from: currentFrame)
+                        playPolicy = .toEnd(from: 0)
                     }
+                    
+                    self.playerView.isHidden = !animated
+                    self.thumbView.isHidden = animated
                 }
                 let animation = LottieAnimation(compressed: data.0, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
+                
                 animation.onFinish = {
                     if case .end = diceState.play {
                         FastSettings.markDiceAsPlayed(parent.id)
                     }
                 }
-                self.playerView.set(animation)
+                switch diceState.play {
+                case .end:
+                    if let previous = self.playerView.animation {
+                        previous.triggerOn = (.last, { [weak self] in
+                            self?.playerView.set(animation)
+                        })
+                    } else {
+                        self.playerView.set(animation)
+                    }
+                default:
+                    self.playerView.set(animation)
+                }
+                
                 if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
+                   
+                    
                     self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
                     if !self.thumbView.isFullyLoaded {
-                        self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, value: currentValue.diceSide, scale: self.backingScaleFactor, size: size), cacheImage: { result in
+                        self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue.diceSide, scale: self.backingScaleFactor, size: size), cacheImage: { result in
                             cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
                         })
                         self.thumbView.set(arguments: arguments)
@@ -238,13 +270,15 @@ class ChatDiceContentView: ChatMediaContentView {
                         self.thumbView.dispose()
                     }
                     
+                  
+                    
                     self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
                         guard let `self` = self else { return }
                         switch state {
-                        case .playing:
+                        case .playing, .initializing, .failed:
                             self.playerView.isHidden = false
                             self.thumbView.isHidden = true
-                        default:
+                        case .stoped:
                             self.playerView.isHidden = false
                             self.thumbView.isHidden = false
                         }

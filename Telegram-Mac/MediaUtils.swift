@@ -929,10 +929,10 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: TelegramMediaFile
 
 
 
-public func chatMessageDiceSticker(postbox: Postbox, file: TelegramMediaFile, value: String, scale: CGFloat, size: NSSize, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+public func chatMessageDiceSticker(postbox: Postbox, file: TelegramMediaFile, emoji: String, value: String, scale: CGFloat, size: NSSize, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
     
     
-    let signal: Signal<ImageRenderData, NoError> = postbox.mediaBox.cachedResourceRepresentation(file.resource, representation: CachedDiceRepresentation(value: value, size: size), complete: false, fetch: true, attemptSynchronously: synchronousLoad) |> map { data in
+    let signal: Signal<ImageRenderData, NoError> = postbox.mediaBox.cachedResourceRepresentation(file.resource, representation: CachedDiceRepresentation(emoji: emoji, value: value, size: size), complete: false, fetch: true, attemptSynchronously: synchronousLoad) |> map { data in
         if data.complete {
             return ImageRenderData(nil, try? Data(contentsOf: URL(fileURLWithPath: data.path)), true)
         } else {

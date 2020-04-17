@@ -1333,8 +1333,10 @@ internal final class L10n {
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// Scheduled until online
   internal static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
-  /// Send a 🎲 emoji to any chat to get a random number from Telegram.
-  internal static var chatDiceResult: String  { return L10n.tr("Localizable", "Chat.Dice.Result") }
+  /// Send a %@ emoji to any chat to get a random number from Telegram.
+  internal static func chatDiceResultNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Dice.ResultNew", p1)
+  }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send

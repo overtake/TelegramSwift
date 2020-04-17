@@ -823,43 +823,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [super drawRect:dirtyRect];
     
 }
-    
--(BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
-    if ((commandSelector == @selector(deleteBackward:) || commandSelector == @selector(deleteForward:)) && _defaultText.length > 0) {
-        if ([textView.string isEqualToString:_defaultText]) {
-            return true;
-        }
-    } else if (commandSelector == @selector(insertNewline:)) {
-        NSString *sendingType = [[NSUserDefaults standardUserDefaults] stringForKey:@"kSendingType"];
-        if (isEnterEvent([NSApp currentEvent]) && isEnterAccessObjc([NSApp currentEvent], [sendingType isEqualToString:@"cmdEnter"])) {
-            return true;
-        }
-    }
-    return false;
-}
-    
--(BOOL)textView:(NSTextView *)textView shouldChangeTextInRanges:(NSArray<NSValue *> *)affectedRanges replacementStrings:(NSArray<NSString *> *)replacementStrings {
-    if (_defaultText.length > 0) {
-        __block BOOL cancel = true;
-        [affectedRanges enumerateObjectsUsingBlock:^(NSValue * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-            NSRange range = obj.rangeValue;
-            if (range.location < _defaultText.length) {
-                cancel = false;
-                *stop = YES;
-            }
-            if (self.isWhitespaceDisabled && range.length == 0 && [replacementStrings[idx] isEqualToString:@" "]) {
-                cancel = false;
-                *stop = YES;
-            }
-        }];
-        if (cancel) {
-            [self setSelectedRange:NSMakeRange(textView.string.length, 0)];
-        }
-        
-        return cancel;
-    }
-    return true;
-}
+
     
     
 -(NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers {
@@ -872,9 +836,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 - (void)textDidChange:(NSNotification *)notification {
     int limit = self.delegate == nil ? INT32_MAX : [self.delegate maxCharactersLimit: self];
     
-    if (self.string != nil && self.string.length > 0 && self.string.length - _defaultText.length > limit) {
+    if (self.string != nil && self.string.length > 0 && self.string.length > limit) {
         
-        NSAttributedString *string = [self.attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit + _defaultText.length, self.attributedString.string.length))];
+        NSAttributedString *string = [self.attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, self.attributedString.string.length))];
         
         NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
         NSRange selectedRange = _textView.selectedRange;
@@ -903,14 +867,6 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     if(notification.object) {
         NSString *text = self.string;
-        if (_defaultText.length > 0) {
-            NSRange range = [text rangeOfString:_defaultText];
-            if (range.location != NSNotFound) {
-                text = [text substringFromIndex:range.location + range.length];
-            } else if ([_defaultText containsString:text]) {
-                text = @"";
-            }
-        }
         [self.delegate textViewTextDidChange:text];
         if (![text isEqualToString:self.string]) {
             return;
@@ -1442,15 +1398,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 }
     
--(NSString *)textWithDefault:(NSString *)string {
-    NSString *text = _defaultText.length > 0 ? [_defaultText stringByAppendingString:string] : string;
-    
-    return text;
-}
     
 -(void)setString:(NSString *)string {
     
-    if (![string isEqualToString:[self textWithDefault:self.string]]) {
+    if (![string isEqualToString:self.string]) {
         [self setString:string animated:self.animates];
     }
 }
@@ -1458,7 +1409,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(void)setString:(NSString *)string animated:(BOOL)animated {
     BOOL o = self.animates;
     self.animates = animated;
-    [_textView setString:[self textWithDefault:string]];
+    [_textView setString:string];
     [self update:animated];
     self.animates = o;
 }

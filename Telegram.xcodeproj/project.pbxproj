@@ -866,6 +866,7 @@
 		D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */; };
 		D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */; };
 		D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */; };
+		D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */; };
 		D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* NewContactController.swift */; };
 		D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */; };
 		D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB98E21628C250055B718 /* EditImageModalController.swift */; };
@@ -2009,6 +2010,7 @@
 		D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasController.swift; sourceTree = "<group>"; };
 		D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasColorPicker.swift; sourceTree = "<group>"; };
 		D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasControls.swift; sourceTree = "<group>"; };
+		D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = dart_idle.tgs; sourceTree = "<group>"; };
 		D0B6D72922AA65D3008E36FE /* NewContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewContactController.swift; sourceTree = "<group>"; };
 		D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannelsController.swift; sourceTree = "<group>"; };
 		D0BEB98E21628C250055B718 /* EditImageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageModalController.swift; sourceTree = "<group>"; };
@@ -4581,6 +4583,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */,
 				A76C8AA124221D2800FDB071 /* graph_loading.tgs */,
 				A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */,
 				D0830FC324127468006198E7 /* folder_new.tgs */,
@@ -4944,6 +4947,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */,
 				A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */,
 				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
 				D0830FC424127473006198E7 /* folder_new.tgs in Resources */,

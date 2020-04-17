@@ -78,7 +78,6 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 @property (nonatomic,strong) NSColor* _Nonnull textColor;
 @property (nonatomic,strong) NSColor* _Nonnull linkColor;
 @property (nonatomic,strong) NSFont* _Nonnull textFont;
-@property (nonatomic,strong) NSString* _Nonnull defaultText;
 @property (nonatomic,strong,readonly) TGGrowingTextView* _Nonnull inputView;
 
 

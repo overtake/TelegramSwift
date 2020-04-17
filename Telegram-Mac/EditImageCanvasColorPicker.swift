@@ -282,6 +282,7 @@ private final class PaintColorPickerKnob: View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        
         backgroundView.color = NSColor(0xffffff)
         
         colorView.color = NSColor.blue
@@ -289,6 +290,7 @@ private final class PaintColorPickerKnob: View {
         addSubview(backgroundView)
         addSubview(colorView)
     }
+
     
     func circleDiameter(forBrushWeight size: CGFloat, zoomed: Bool) -> CGFloat {
         var result = CGFloat(paintColorSmallCircle) + CGFloat((paintColorLargeCircle - paintColorSmallCircle)) * size
@@ -318,7 +320,7 @@ final class EditImageColorPicker: View {
     }
     
     private let knobView = PaintColorPickerKnob(frame: NSMakeRect(0, 0, 24 * paintPreviewScale, 24 * paintPreviewScale))
-    private let backgroundView = EditImageCanvasColorPickerBackground()
+    let backgroundView = EditImageCanvasColorPickerBackground()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
@@ -339,11 +341,15 @@ final class EditImageColorPicker: View {
             self?.updateLocation(animated: true)
         }, for: .Up)
         
-        let colorLocation = CGFloat(arc4random()) / CGFloat(UInt32.max)
+        let colorValue = UserDefaults.standard.value(forKey: "painterColorLocation") as? CGFloat
+        let weightValue = UserDefaults.standard.value(forKey: "painterBrushWeight") as? CGFloat
+
+        
+        let colorLocation = colorValue ?? CGFloat(arc4random()) / CGFloat(UInt32.max)
         self.location = colorLocation
         knobView.color = backgroundView.color(for: colorLocation)
         
-        let weight = paintDefaultBrushWeight
+        let weight = weightValue ?? paintDefaultBrushWeight
         knobView.updateWeight(weight, animated: false)
         
     }
@@ -361,6 +367,7 @@ final class EditImageColorPicker: View {
         let colorLocation = max(0.0, min(1.0, location.x / backgroundView.frame.width))
         self.location = colorLocation
         
+        
         knobView.color = backgroundView.color(for: colorLocation)
         
         let threshold = min(max(frame.height - backgroundView.frame.minY, frame.height - self.convert(window.mouseLocationOutsideOfEventStream, from: nil).y), paintColorWeightGestureRange + paintPreviewOffset)
@@ -372,6 +379,9 @@ final class EditImageColorPicker: View {
         
         arguments?.updateColorAndWidth(knobView.color, knobView.width)
         
+        UserDefaults.standard.set(Double(colorLocation), forKey: "painterColorLocation")
+        UserDefaults.standard.set(Double(weight), forKey: "painterBrushWeight")
+
         
         if animated {
             knobView.layer?.animatePosition(from: NSMakePoint(knobView.frame.minX - knobPosition.x, knobView.frame.minY - knobPosition.y), to: .zero, duration: 0.3, timingFunction: .spring, removeOnCompletion: true, additive: true)
@@ -380,6 +390,24 @@ final class EditImageColorPicker: View {
         needsLayout = true
 
         
+    }
+    
+    override var isEventLess: Bool {
+        get {
+            guard let window = self.window else {
+                return false
+            }
+            let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            
+            if NSPointInRect(point, backgroundView.frame) || NSPointInRect(point, knobView.frame) {
+                return false
+            } else {
+                return true
+            }
+        }
+        set {
+            super.isEventLess = newValue
+        }
     }
     
     required init?(coder: NSCoder) {
