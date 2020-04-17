@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_flow.png",
+      "filename" : "ic_mask.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_flow@2x.png",
+      "filename" : "ic_mask@2x.png",
       "scale" : "2x"
     },
     {

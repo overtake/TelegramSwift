@@ -231,8 +231,6 @@ class ChatDiceContentView: ChatMediaContentView {
                     } else {
                         playPolicy = .toEnd(from: 0)
                     }
-                    
-                    self.playerView.isHidden = !animated
                     self.thumbView.isHidden = animated
                 }
                 let animation = LottieAnimation(compressed: data.0, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
