@@ -161,6 +161,7 @@ private final class EditImageView : View {
     
     func hideElements(_ hide: Bool) {
         imageContainer.isHidden = hide
+        reset.isHidden = hide
     }
     
     func contentSize(maxSize: NSSize) -> NSSize {
