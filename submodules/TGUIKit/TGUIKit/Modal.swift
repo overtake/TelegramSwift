@@ -412,7 +412,7 @@ public class Modal: NSObject {
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
-            self.visualEffectView!.material = presentation.colors.isDark ? .dark : .light
+            self.visualEffectView!.material = .dark
             self.visualEffectView!.blendingMode = .withinWindow
             self.visualEffectView?.wantsLayer = true
         } else {
@@ -732,7 +732,10 @@ public class Modal: NSObject {
                     }
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
-                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        if case .alpha = strongSelf.animationType {
+                        } else {
+                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        }
                         if !controller.isFullScreen {
                             switch strongSelf.animationType {
                             case .bottomToCenter:

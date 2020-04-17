@@ -74,7 +74,7 @@ struct EditedImageData : Equatable {
                 
                 let paints = generateImage(size, contextGenerator: { size, ctx in
                     ctx.clear(rect)
-                    applyPaints(data.paintings, for: ctx)
+                    applyPaints(data.paintings, for: ctx, imageSize: size)
                 }, scale: 1.0)!
                 
                 context.draw(paints, in: rect)

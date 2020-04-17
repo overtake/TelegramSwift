@@ -15,6 +15,7 @@ import AVFoundation
 import QuickLook
 
 let diceSymbol: String = "🎲"
+let dartSymbol: String = "🎯"
 
 
 class MediaSenderContainer : Equatable {
@@ -177,7 +178,10 @@ class Sender: NSObject {
             mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: diceSymbol, value: nil))
             input = ChatTextInputState(inputText: "")
         }
-        
+        if input.inputText == dartSymbol, peerId.namespace != Namespaces.Peer.SecretChat {
+            mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: dartSymbol, value: nil))
+            input = ChatTextInputState(inputText: "")
+        }
         
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))

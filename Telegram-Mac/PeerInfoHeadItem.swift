@@ -124,6 +124,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     while width - actionItemWidth * 2 > actionItemWidth * CGFloat(rowItemsCount) + CGFloat(rowItemsCount + 1) * actionItemInsetWidth {
         rowItemsCount += 1
     }
+    rowItemsCount = min(rowItemsCount, 4)
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {

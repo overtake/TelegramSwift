@@ -33,11 +33,15 @@ final class EditImageCanvasArguments {
     }
 }
 
-func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
+func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext, imageSize: NSSize) {
     context.saveGState()
     for touch in touches {
         context.beginPath()
+        
+        let multiplier = NSMakePoint(imageSize.width / touch.canvasSize.width, imageSize.height / touch.canvasSize.height)
+        
         for (i, point) in touch.lines.enumerated() {
+            let point = NSMakePoint(point.x * multiplier.x, point.y * multiplier.y)
             if i == 0 {
                 context.move(to: point)
             } else {
@@ -45,7 +49,7 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
             }
         }
         
-        context.setLineWidth(touch.width)
+        context.setLineWidth(touch.width * ((multiplier.x + multiplier.y) / 2))
         context.setLineCap(.round)
         context.setLineJoin(.round)
         context.setStrokeColor(touch.color.cgColor)
@@ -65,17 +69,23 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext) {
 final class EditImageDrawTouch : Equatable {
     
     static func == (lhs: EditImageDrawTouch, rhs: EditImageDrawTouch) -> Bool {
-        return lhs.lines == rhs.lines && lhs.color.argb == rhs.color.argb && lhs.width == rhs.width && lhs.action == rhs.action
+        return lhs.lines == rhs.lines &&
+            lhs.color.argb == rhs.color.argb &&
+            lhs.width == rhs.width &&
+            lhs.action == rhs.action &&
+            lhs.canvasSize == rhs.canvasSize
     }
     private(set) var lines:[NSPoint]
     let color: NSColor
     let width: CGFloat
     let action: EditImageCanvasAction
-    init(action: EditImageCanvasAction, point: NSPoint, color: NSColor, width: CGFloat) {
+    let canvasSize: NSSize
+    init(action: EditImageCanvasAction, point: NSPoint, canvasSize: NSSize, color: NSColor, width: CGFloat) {
         self.action = action
         self.lines = [point]
         self.color = color
         self.width = width
+        self.canvasSize = canvasSize
     }
     func addPoint(_ point: NSPoint) {
         self.lines.append(point)
@@ -98,12 +108,14 @@ class EditImageDrawView: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func layout() {
+        super.layout()
+        needsDisplay = true
+    }
     
     override func draw(_ layer: CALayer, in context: CGContext) {
         super.draw(layer, in: context)
-        
-       applyPaints(self.state.actionValues, for: context)
-        
+        applyPaints(self.state.actionValues, for: context, imageSize: self.frame.size)
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -131,17 +143,26 @@ final class EditImageCanvasView : View {
     
     let imageContainer: View = View()
     
+   // let magnifyView: MagnifyView
+    
     let imageView: ImageView = ImageView()
     let drawView: EditImageDrawView = EditImageDrawView(frame: .zero)
     
     let colorPicker: EditImageColorPicker
+    let shadowView: View = View()
     private let controls: EditImageCanvasControlsView = EditImageCanvasControlsView(frame: NSMakeRect(0, 0, 350, 40))
-    required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect, image: CGImage) {
+        self.imageView.image = image
         colorPicker = EditImageColorPicker(frame: NSMakeRect(0, 0, 348, 200))
         super.init(frame: frameRect)
         
+        shadowView.isEventLess = true
+        
+        
         addSubview(imageContainer)
         imageContainer.addSubview(imageView)
+        
+        
         imageContainer.addSubview(drawView)
         addSubview(colorPicker)
         addSubview(controls)
@@ -164,7 +185,7 @@ final class EditImageCanvasView : View {
     
     override func layout() {
         super.layout()
-        imageContainer.setFrameSize(frame.width, frame.height - 80)
+        imageContainer.setFrameSize(frame.width, frame.height - 120)
         
         let imageSize = self.imageView.image!.size.fitted(NSMakeSize(imageContainer.frame.width - 8, imageContainer.frame.height - 8))
         self.imageView.setFrameSize(imageSize)
@@ -183,6 +204,10 @@ final class EditImageCanvasView : View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
 }
 
@@ -254,14 +279,15 @@ final class EditImageCanvasController : ModalViewController {
     private let disposable = MetaDisposable()
     private let image: CGImage
     private let actions: [EditImageDrawTouch]
-    private let updatedImage: (CGImage, [EditImageDrawTouch])->Void
-    init(image: CGImage, actions: [EditImageDrawTouch], updatedImage: @escaping(CGImage, [EditImageDrawTouch])->Void) {
+    private let updatedImage: ([EditImageDrawTouch])->Void
+    private let closeHandler: ()->Void
+    init(image: CGImage, actions: [EditImageDrawTouch], updatedImage: @escaping([EditImageDrawTouch])->Void, closeHandler: @escaping() -> Void) {
         self.stateValue = Atomic(value: EditImageCanvasState.default(actions))
         self.state = ValuePromise(EditImageCanvasState.default(actions), ignoreRepeated: false)
         self.image = image
-        NSLog("\(image.size)")
         self.actions = actions
         self.updatedImage = updatedImage
+        self.closeHandler = closeHandler
         super.init()
         bar = .init(height: 0)
     }
@@ -273,35 +299,23 @@ final class EditImageCanvasController : ModalViewController {
         return .clear
     }
     override var isVisualEffectBackground: Bool {
-        return true
+        return false
     }
+    
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: animationType)
+        self.closeHandler()
+    }
+    
     
     override var background: NSColor {
         return .clear
     }
     
-    private func generatePaintedImage() -> CGImage {
-        let actions = stateValue.with { $0.actionValues }
-        
-        let image = self.image
-        
-        return generateImage(self.image.size, rotatedContext: { size, context in
-            let rect = NSMakeRect(0, 0, size.width, size.height)
-            context.clear(rect)
-            
-            context.saveGState()
-            context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-            context.scaleBy(x: 1, y: -1.0)
-            context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-            context.draw(image, in: rect)
-            context.restoreGState()
-            
-            applyPaints(actions, for: context)
-        })!
-    }
+
     
     override func returnKeyAction() -> KeyHandlerResult {
-        self.updatedImage(self.generatePaintedImage(), stateValue.with { $0.actionValues} )
+        self.updatedImage(stateValue.with { $0.actionValues} )
         close()
         return .invoked
     }
@@ -333,7 +347,6 @@ final class EditImageCanvasController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.imageView.image = image
         
         let updateState:((EditImageCanvasState)->EditImageCanvasState)->Void = { [weak self] f in
             guard let `self` = self else {
@@ -342,11 +355,12 @@ final class EditImageCanvasController : ModalViewController {
             self.state.set(self.stateValue.modify(f))
         }
         
-        let arguments = EditImageCanvasArguments(makeNewActionAt: { point in
+        let arguments = EditImageCanvasArguments(makeNewActionAt: { [weak self] point in
+            let canvasSize = self?.genericView.drawView.frame.size ?? .zero
             updateState { state in
                 return state.withUpdatedCurrentActionValues { touches in
                     var touches = touches
-                    touches.append(EditImageDrawTouch(action: state.action, point: point, color: state.color, width: state.width))
+                    touches.append(EditImageDrawTouch(action: state.action, point: point, canvasSize: canvasSize, color: state.color, width: state.width))
                     return touches
                 }.withClearedRemovedActions()
             }
@@ -401,6 +415,10 @@ final class EditImageCanvasController : ModalViewController {
         
         readyOnce()
     }
+    override func initializer() -> NSView {
+        let vz = viewClass() as! EditImageCanvasView.Type
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), image: image);
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -418,6 +436,19 @@ final class EditImageCanvasController : ModalViewController {
             
             return .invoked
         }, with: self, for: .Z, priority: .modal, modifierFlags: [.command, .shift])
+        
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.arguments?.switchAction(.clear)
+            
+            return .invoked
+        }, with: self, for: .E, priority: .modal)
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.genericView.arguments?.switchAction(.draw)
+            
+            return .invoked
+        }, with: self, for: .L, priority: .modal)
     }
     
     override func viewWillDisappear(_ animated: Bool) {

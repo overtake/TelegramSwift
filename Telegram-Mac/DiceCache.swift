@@ -21,7 +21,7 @@ class DiceCache {
     private let postbox: Postbox
     private let network: Network
     
-    private var dataContexts: [String: DiceSideDataContext] = [:]
+    private var dataContexts: [String : [String: DiceSideDataContext]] = [:]
 
     
     private let fetchDisposable = MetaDisposable()
@@ -32,7 +32,7 @@ class DiceCache {
         self.network = network
         
         let dices = loadedStickerPack(postbox: postbox, network: network, reference: .dice(diceSymbol), forceActualized: false)
-            |> map { result -> [String: StickerPackItem] in
+            |> map { result -> (String, [String: StickerPackItem]) in
                 switch result {
                 case let .result(_, items, _):
                     var dices: [String: StickerPackItem] = [:]
@@ -41,13 +41,29 @@ class DiceCache {
                             dices[side] = item
                         }
                     }
-                    return dices
+                    return (diceSymbol, dices)
                 default:
-                    return [:]
+                    return (diceSymbol, [:])
                 }
         }
         
-        let fetchDices = dices |> mapToSignal { dices -> Signal<Void, NoError> in
+        let darts = loadedStickerPack(postbox: postbox, network: network, reference: .dice(dartSymbol), forceActualized: false)
+            |> map { result -> (String, [String: StickerPackItem]) in
+                switch result {
+                case let .result(_, items, _):
+                    var dices: [String: StickerPackItem] = [:]
+                    for case let item as StickerPackItem in items {
+                        if let side = item.getStringRepresentationsOfIndexKeys().first {
+                            dices[side] = item
+                        }
+                    }
+                    return (dartSymbol, dices)
+                default:
+                    return (dartSymbol, [:])
+                }
+        }
+        
+        let fetchDices = combineLatest(dices, darts) |> map { $0.1 + $1.1 } |> mapToSignal { dices -> Signal<Void, NoError> in
             let signals = dices.map { _, value -> Signal<FetchResourceSourceType, FetchResourceError> in
                 let reference: MediaResourceReference
                 if let stickerReference = value.file.stickerReference {
@@ -62,17 +78,31 @@ class DiceCache {
         
         fetchDisposable.set(fetchDices.start())
         
-        let data = dices |> mapToSignal { dices -> Signal<[(String, Data, TelegramMediaFile)], NoError> in
-            let signal = dices.map { key, value in
-                return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data, NoError> in
-                    if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                        return .single(data)
-                    } else {
-                        return .complete()
-                    }
-                } |> map { (key, $0, value.file) }
+        let data = combineLatest([dices, darts]) |> mapToSignal { values -> Signal<[String : [(String, Data, TelegramMediaFile)]], NoError> in
+            
+            var signals: [Signal<(String, [(String, Data, TelegramMediaFile)]), NoError>] = []
+            
+            for value in values {
+                let dices = value.1.map { key, value in
+                    return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data, NoError> in
+                        if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                            return .single(data)
+                        } else {
+                            return .complete()
+                        }
+                    } |> map { (key.fixed, $0, value.file) }
+                }
+                signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
-            return combineLatest(signal)
+            
+            return combineLatest(signals) |> map { values in
+                var dict: [String : [(String, Data, TelegramMediaFile)]] = [:]
+                
+                for value in values {
+                    dict[value.0] = value.1
+                }
+                return dict
+            }
         } |> deliverOnResourceQueue
         
         loadDataDisposable.set(data.start(next: { [weak self] data in
@@ -80,24 +110,31 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                let context: DiceSideDataContext
-                if let current = self.dataContexts[diceData.0] {
-                    context = current
-                } else {
-                    context = DiceSideDataContext()
-                    self.dataContexts[diceData.0] = context
+                
+                var dict = self.dataContexts[diceData.key] ?? [:]
+                
+                for diceData in diceData.value {
+                    let context: DiceSideDataContext
+                    if let current = dict[diceData.0] {
+                        context = current
+                    } else {
+                        context = DiceSideDataContext()
+                        dict[diceData.0] = context
+                    }
+                    context.data = (diceData.1, diceData.2)
+                    for subscriber in context.subscribers.copyItems() {
+                        subscriber((diceData.1, diceData.2))
+                    }
                 }
-                context.data = (diceData.1, diceData.2)
-                for subscriber in context.subscribers.copyItems() {
-                    subscriber((diceData.1, diceData.2))
-                }
+                self.dataContexts[diceData.key] = dict
+                
             }
             
         }))
         
     }
     
-    func diceData(_ side: String, synchronous: Bool) -> Signal<(Data, TelegramMediaFile), NoError> {
+    func interactiveSymbolData(baseSymbol: String, side: String, synchronous: Bool) -> Signal<(Data, TelegramMediaFile), NoError> {
         return Signal { [weak self] subscriber in
             
             guard let `self` = self else {
@@ -107,12 +144,20 @@ class DiceCache {
             let disposable = MetaDisposable()
             
             let invoke = {
+                var dataContext: [String: DiceSideDataContext]
+                if let dc = self.dataContexts[baseSymbol] {
+                    dataContext = dc
+                } else {
+                    dataContext = [:]
+                    self.dataContexts[baseSymbol] = dataContext
+                }
+                
                 let context: DiceSideDataContext
-                if let current = self.dataContexts[side] {
+                if let current = dataContext[side] {
                     context = current
                 } else {
                     context = DiceSideDataContext()
-                    self.dataContexts[side] = context
+                    dataContext[side] = context
                 }
                 
                 let index = context.subscribers.add({ data in
@@ -124,7 +169,7 @@ class DiceCache {
                 }
                 disposable.set(ActionDisposable { [weak self] in
                     resourcesQueue.async {
-                        if let current = self?.dataContexts[side] {
+                        if let current = self?.dataContexts[baseSymbol]?[side] {
                             current.subscribers.remove(index)
                         }
                     }

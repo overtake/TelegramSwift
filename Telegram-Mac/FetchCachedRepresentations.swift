@@ -42,7 +42,7 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         return fetchCachedScaledVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedDiceRepresentation {
         if let diceCache = account.diceCache {
-            return diceCache.diceData(representation.value, synchronous: false) |> mapToSignal { data in
+            return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, side: representation.value, synchronous: false) |> mapToSignal { data in
                 return fetchCachedDiceRepresentation(account: account, data: data.0, representation: representation)
             }
         } else {
@@ -640,36 +640,40 @@ private func fetchCachedDiceRepresentation(account: Account, data: Data, represe
             dataValue = data
         }
         if let json = String(data: dataValue, encoding: .utf8) {
-            let rlottie = RLottieBridge(json: json, key: representation.value)
-            
-            let unmanaged = rlottie?.renderFrame(180, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-            let colorImage = unmanaged?.takeRetainedValue()
-            
-            let path = NSTemporaryDirectory() + "\(arc4random64())"
-            let url = URL(fileURLWithPath: path)
-            
-            let colorData = NSMutableData()
-            if let colorImage = colorImage, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
-                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
-                let colorQuality: Float
-                colorQuality = 0.4
-                let options = NSMutableDictionary()
-                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
-                if CGImageDestinationFinalize(colorDestination)  {
-                    try? colorData.write(to: url, options: .atomic)
-                    subscriber.putNext(.temporaryPath(path))
+            let rlottie = RLottieBridge(json: json, key: representation.emoji + representation.value)
+            if let rlottie = rlottie {
+                let unmanaged = rlottie.renderFrame(rlottie.endFrame() - 1, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                let colorImage = unmanaged.takeRetainedValue()
+                
+                let path = NSTemporaryDirectory() + "\(arc4random64())"
+                let url = URL(fileURLWithPath: path)
+                
+                let colorData = NSMutableData()
+                if let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
+                    CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                    let colorQuality: Float
+                    colorQuality = 0.4
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                    CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+                    if CGImageDestinationFinalize(colorDestination)  {
+                        try? colorData.write(to: url, options: .atomic)
+                        subscriber.putNext(.temporaryPath(path))
+                        subscriber.putCompletion()
+                    }
+                } else {
                     subscriber.putCompletion()
                 }
             } else {
                 subscriber.putCompletion()
             }
+            
         }
         
         return ActionDisposable {
             
         }
-    }
+    } |> runOn(lottieThreadPool)
 }
 
 func getAnimatedStickerThumb(data: Data) -> Signal<String?, NoError> {

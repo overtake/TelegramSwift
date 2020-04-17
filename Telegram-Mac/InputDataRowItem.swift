@@ -64,16 +64,38 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let filter:(String)->String
     let limit:Int32
     private let updated:(String)->Void
-    fileprivate(set) var currentText: NSAttributedString = NSAttributedString() {
+    private var _currentText: NSAttributedString = NSAttributedString() {
         didSet {
-          //  if currentText != oldValue {
-                updated(currentText.string)
-          //  }
+            updated(currentText.string)
+        }
+    }
+    fileprivate(set) var currentText: NSAttributedString {
+        set {
+            let copy = newValue.mutableCopy() as! NSMutableAttributedString
+            if let defaultText = self.defaultText {
+                copy.replaceCharacters(in: NSMakeRange(0, min(defaultText.length, copy.length)), with: "")
+            }
+             _currentText = copy
+            
+            if copy != newValue {
+                self.redraw()
+            }
+        }
+        get {
+            return _currentText
         }
     }
     
+
+    
     var currentAttributed: NSAttributedString {
-        return currentText
+        let attr = NSMutableAttributedString()
+        
+        if let defaultText = self.defaultText {
+            attr.append(.initialize(string: defaultText, color: theme.colors.text, font: .normal(.text)))
+        }
+        attr.append(currentText)
+        return attr
     }
     
     var value: InputDataValue {
@@ -150,7 +172,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.inputPlaceholder = holder
         placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
-        self.currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
+        _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
         self.mode = mode
     
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error)
@@ -880,11 +902,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             textView.isHidden = false
             textView.animates = false
             textView.setPlaceholderAttributedString(item.inputPlaceholder, update: false)
-            if textView.defaultText != (item.defaultText ?? "") {
-                textView.defaultText = item.defaultText ?? ""
-                textView.setAttributedString(item.currentText, animated: false)
-            } else if item.currentText != textView.attributedString() {
-                textView.setAttributedString(item.currentText, animated: false)
+            if item.currentAttributed != textView.attributedString() {
+                textView.setAttributedString(item.currentAttributed, animated: false)
             }
             textView.update(false)
             textView.needsDisplay = true
