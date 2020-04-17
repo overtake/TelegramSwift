@@ -113,7 +113,7 @@ private final class TooltipView: View {
     func update(text: NSAttributedString, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
         let layout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         layout.measure(width: maxWidth)
-        textView.change(size: NSMakeSize(layout.layoutSize.width + 20, layout.layoutSize.height + 10), animated: animated)
+        textView.change(size: NSMakeSize(max(44, layout.layoutSize.width + 26), layout.layoutSize.height + 10), animated: animated)
         textView.set(layout: layout)
         change(size: NSMakeSize(textView.frame.width, textView.frame.height + 15), animated: animated)
         needsLayout = true
@@ -124,7 +124,7 @@ private final class TooltipView: View {
     override func layout() {
         super.layout()
         textView.centerX(y: 0)
-        if let cornerX = cornerX {
+        if let cornerX = cornerX, frame.width > 44 {
             cornerView.setFrameOrigin(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textView.frame.maxY)
         } else {
             cornerView.centerX(y: textView.frame.maxY)

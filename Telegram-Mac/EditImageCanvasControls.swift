@@ -49,6 +49,10 @@ final class EditImageCanvasControlsView : View {
         draw.set(image: NSImage(named: "Icon_EditImageDraw")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         clear.set(image: NSImage(named: "Icon_EditImageEraser")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         
+        undo.appTooltip = "⌘Z"
+        redo.appTooltip = "⌘⇧Z"
+        draw.appTooltip = "L"
+        clear.appTooltip = "E"
         
         undo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(.white), for: .Hover)
         redo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(NSColor.white, flipHorizontal: true), for: .Hover)

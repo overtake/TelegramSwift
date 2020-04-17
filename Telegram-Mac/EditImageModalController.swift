@@ -320,7 +320,7 @@ class EditImageModalController: ModalViewController {
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.loadCanvas()
             return .invoked
-        }, with: self, for: .Y, priority: .modal, modifierFlags: [.command])
+        }, with: self, for: .D, priority: .modal, modifierFlags: [.command])
         
         
     }
