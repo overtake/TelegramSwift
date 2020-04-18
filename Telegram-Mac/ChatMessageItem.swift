@@ -452,7 +452,7 @@ class ChatMessageItem: ChatRowItem {
                                 pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
+                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange)
                                 let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
                                 if let attribute = attribute as? inAppLink {
                                     pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
