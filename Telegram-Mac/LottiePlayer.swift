@@ -1029,9 +1029,9 @@ class LottiePlayerView : NSView {
                     }, release: {
                         Queue.mainQueue().async {
                             layer.takeRetainedValue().removeFromSuperview()
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
                         }
-                        _ = cachedContext?.takeRetainedValue()
-                        cachedContext = nil
                         
                     }, updateState: { [weak self] state in
                         guard let _ = self?.context else {
