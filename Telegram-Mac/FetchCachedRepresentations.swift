@@ -42,8 +42,8 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         return fetchCachedScaledVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedDiceRepresentation {
         if let diceCache = account.diceCache {
-            return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, side: representation.value, synchronous: false) |> mapToSignal { data in
-                return fetchCachedDiceRepresentation(account: account, data: data.0, representation: representation)
+            return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, side: representation.value, synchronous: false) |> filter { $0.0 != nil } |> mapToSignal { data in
+                return fetchCachedDiceRepresentation(account: account, data: data.0!, representation: representation)
             }
         } else {
             return .complete()

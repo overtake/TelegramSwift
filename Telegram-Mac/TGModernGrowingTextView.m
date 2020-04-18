@@ -606,6 +606,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                 return;
             }
             
+            if (result) {
+                return;
+            }
         } else if(theEvent.keyCode == 53 && [_weakd respondsToSelector:@selector(textViewNeedClose:)]) {
             [_weakd textViewNeedClose:self];
             return;

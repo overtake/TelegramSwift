@@ -88,6 +88,7 @@ public extension String {
         str = str.replacingOccurrences(of: "8⃣", with: "8️⃣")
         str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
         str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
+        str = str.replacingOccurrences(of: "#⃣", with: "#️⃣")
         str = str.replacingOccurrences(of: "❤", with: "❤️")
         str = str.replacingOccurrences(of: "♥", with: "❤️")
         str = str.replacingOccurrences(of: "☁", with: "☁️")

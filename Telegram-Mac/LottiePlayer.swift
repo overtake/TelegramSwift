@@ -1015,16 +1015,36 @@ class LottiePlayerView : NSView {
                     let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)
                     let layer = Unmanaged.passRetained(metal)
+                    
+                    
+                    var cachedContext:Unmanaged<PlayerContext>?
+                    if let context = self.context {
+                        cachedContext = Unmanaged.passRetained(context)
+                    }  else  {
+                        cachedContext = nil
+                    }
+                    
                     self.context = PlayerContext(animation, displayFrame: { frame in
                         layer.takeUnretainedValue().render(bytes: frame.data, size: frame.size, backingScale: frame.backingScale)
                     }, release: {
                         Queue.mainQueue().async {
                             layer.takeRetainedValue().removeFromSuperview()
                         }
+                        _ = cachedContext?.takeRetainedValue()
+                        cachedContext = nil
+                        
                     }, updateState: { [weak self] state in
                         guard let _ = self?.context else {
                             return
                         }
+                        switch state {
+                        case .playing, .failed, .stoped:
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
+                        default:
+                            break
+                        }
+                        
                         self?.stateValue.set(state)
                     })
                 } else {

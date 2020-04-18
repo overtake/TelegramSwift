@@ -270,6 +270,14 @@ final class AccountContext {
         return _limitConfiguration.with { $0 }
     }
     
+    private let _appConfiguration: Atomic<AppConfiguration> = Atomic(value: AppConfiguration.defaultValue)
+    
+    var appConfiguration: AppConfiguration {
+        return _appConfiguration.with { $0 }
+    }
+    
+    
+    
     private let _autoplayMedia: Atomic<AutoplayMediaPreferences> = Atomic(value: AutoplayMediaPreferences.defaultSettings)
     
     var autoplayMedia: AutoplayMediaPreferences {
@@ -309,6 +317,11 @@ final class AccountContext {
         let limitConfiguration = _limitConfiguration
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration ?? LimitsConfiguration.defaultValue)
+        }))
+        
+        let appConfiguration = _appConfiguration
+        prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
+            _ = appConfiguration.swap(view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue)
         }))
         
         let autoplayMedia = _autoplayMedia

@@ -157,6 +157,9 @@ private var shouldRemoveTooltip: Bool = true
 public func tooltip(for view: NSView, text: String, attributedText: NSAttributedString? = nil, interactions: TextViewInteractions = TextViewInteractions(), maxWidth: CGFloat = 350, autoCorner: Bool = true, offset: NSPoint = .zero, timeout: Double = 3.0, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
     guard let window = view.window as? Window else { return }
     
+    if view.visibleRect.height != view.frame.height {
+        return
+    }
     
     let tooltip: TooltipView
     let isExists: Bool
@@ -187,8 +190,9 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     tooltip.update(text: text, maxWidth: maxWidth, interactions: interactions, animated: isExists)
     
     
+    
     var removeTooltip:(Bool) -> Void = { _ in
-        fatalError("not implemented")
+        
     }
    
     let updatePosition:(Bool)->Void = { [weak tooltip, weak view] animated in
@@ -206,7 +210,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     }
     
     updatePosition(isExists)
-    
+
     
     if autoCorner {
         let point = tooltip.convert(NSMakePoint(view.frame.width / 2, 0), from: view)
@@ -255,6 +259,8 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         }
     }
     
+    
+    
     tooltip.didRemoveFromWindow = {
         removeTooltip(true)
     }
@@ -286,6 +292,9 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         removeTooltip(false)
         return .rejected
     }, with: tooltip, for: .All, priority: .supreme)
+    
+    
+
 }
 
 public func removeAllTooltips(_ window: Window) {
