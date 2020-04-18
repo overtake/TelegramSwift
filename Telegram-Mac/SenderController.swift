@@ -174,15 +174,14 @@ class Sender: NSObject {
         
         
         var mediaReference: AnyMediaReference? = nil
-        if input.inputText == diceSymbol, peerId.namespace != Namespaces.Peer.SecretChat {
-            mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: diceSymbol, value: nil))
-            input = ChatTextInputState(inputText: "")
-        }
-        if input.inputText == dartSymbol, peerId.namespace != Namespaces.Peer.SecretChat {
-            mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: dartSymbol, value: nil))
-            input = ChatTextInputState(inputText: "")
-        }
         
+        
+        let dices = InteractiveEmojiConfiguration.with(appConfiguration: context.appConfiguration)
+        if dices.emojis.contains(input.inputText), peerId.namespace != Namespaces.Peer.SecretChat {
+            mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: input.inputText, value: nil))
+            input = ChatTextInputState(inputText: "")
+        }
+
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length

@@ -12,9 +12,29 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
+struct InteractiveEmojiConfiguration : Equatable {
+    static var defaultValue: InteractiveEmojiConfiguration {
+        return InteractiveEmojiConfiguration(emojis: [])
+    }
+    
+    let emojis: [String]
+    
+    fileprivate init(emojis: [String]) {
+        self.emojis = emojis.map { $0.fixed }
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> InteractiveEmojiConfiguration {
+        if let data = appConfiguration.data, let value = data["emojies_send_dice"] as? [String] {
+            return InteractiveEmojiConfiguration(emojis: value)
+        } else {
+            return .defaultValue
+        }
+    }
+}
+
 private final class DiceSideDataContext {
-    var data: (Data, TelegramMediaFile)?
-    let subscribers = Bag<((Data, TelegramMediaFile)) -> Void>()
+    var data: (Data?, TelegramMediaFile)?
+    let subscribers = Bag<((Data?, TelegramMediaFile)) -> Void>()
 }
 
 class DiceCache {
@@ -31,39 +51,43 @@ class DiceCache {
         self.postbox = postbox
         self.network = network
         
-        let dices = loadedStickerPack(postbox: postbox, network: network, reference: .dice(diceSymbol), forceActualized: false)
-            |> map { result -> (String, [String: StickerPackItem]) in
-                switch result {
-                case let .result(_, items, _):
-                    var dices: [String: StickerPackItem] = [:]
-                    for case let item as StickerPackItem in items {
-                        if let side = item.getStringRepresentationsOfIndexKeys().first {
-                            dices[side] = item
+        
+        
+        let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+        } |> map {
+            return InteractiveEmojiConfiguration.with(appConfiguration: $0)
+        } |> distinctUntilChanged
+        
+        
+        let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [String: StickerPackItem])], NoError> in
+            var signals: [Signal<(String, [String: StickerPackItem]), NoError>] = []
+            for emoji in config.emojis {
+                signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: false)
+                    |> map { result -> (String, [String: StickerPackItem]) in
+                        switch result {
+                        case let .result(_, items, _):
+                            var dices: [String: StickerPackItem] = [:]
+                            for case let item as StickerPackItem in items {
+                                if let side = item.getStringRepresentationsOfIndexKeys().first {
+                                    dices[side.fixed] = item
+                                }
+                            }
+                            return (emoji, dices)
+                        default:
+                            return (emoji, [:])
                         }
-                    }
-                    return (diceSymbol, dices)
-                default:
-                    return (diceSymbol, [:])
-                }
+                    })
+            }
+            return combineLatest(signals)
         }
         
-        let darts = loadedStickerPack(postbox: postbox, network: network, reference: .dice(dartSymbol), forceActualized: false)
-            |> map { result -> (String, [String: StickerPackItem]) in
-                switch result {
-                case let .result(_, items, _):
-                    var dices: [String: StickerPackItem] = [:]
-                    for case let item as StickerPackItem in items {
-                        if let side = item.getStringRepresentationsOfIndexKeys().first {
-                            dices[side] = item
-                        }
-                    }
-                    return (dartSymbol, dices)
-                default:
-                    return (dartSymbol, [:])
-                }
-        }
         
-        let fetchDices = combineLatest(dices, darts) |> map { $0.1 + $1.1 } |> mapToSignal { dices -> Signal<Void, NoError> in
+        let fetchDices = packs |> map { value in
+            return value.reduce([], { current, value in
+                return current + value.1
+            })
+        } |> mapToSignal { dices -> Signal<Void, NoError> in
             let signals = dices.map { _, value -> Signal<FetchResourceSourceType, FetchResourceError> in
                 let reference: MediaResourceReference
                 if let stickerReference = value.file.stickerReference {
@@ -78,17 +102,17 @@ class DiceCache {
         
         fetchDisposable.set(fetchDices.start())
         
-        let data = combineLatest([dices, darts]) |> mapToSignal { values -> Signal<[String : [(String, Data, TelegramMediaFile)]], NoError> in
+        let data = packs |> mapToSignal { values -> Signal<[String : [(String, Data?, TelegramMediaFile)]], NoError> in
             
-            var signals: [Signal<(String, [(String, Data, TelegramMediaFile)]), NoError>] = []
+            var signals: [Signal<(String, [(String, Data?, TelegramMediaFile)]), NoError>] = []
             
             for value in values {
                 let dices = value.1.map { key, value in
-                    return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data, NoError> in
+                    return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
                         if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                             return .single(data)
                         } else {
-                            return .complete()
+                            return .single(nil)
                         }
                     } |> map { (key.fixed, $0, value.file) }
                 }
@@ -96,7 +120,7 @@ class DiceCache {
             }
             
             return combineLatest(signals) |> map { values in
-                var dict: [String : [(String, Data, TelegramMediaFile)]] = [:]
+                var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
                     dict[value.0] = value.1
@@ -134,7 +158,7 @@ class DiceCache {
         
     }
     
-    func interactiveSymbolData(baseSymbol: String, side: String, synchronous: Bool) -> Signal<(Data, TelegramMediaFile), NoError> {
+    func interactiveSymbolData(baseSymbol: String, side: String, synchronous: Bool) -> Signal<(Data?, TelegramMediaFile), NoError> {
         return Signal { [weak self] subscriber in
             
             guard let `self` = self else {

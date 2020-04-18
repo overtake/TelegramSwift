@@ -12,12 +12,22 @@ import TelegramCore
 import SyncCore
 import TGUIKit
 import SwiftSignalKit
+
 private let diceSide1: String = "1️⃣"
 private let diceSide2: String = "2️⃣"
 private let diceSide3: String = "3️⃣"
 private let diceSide4: String = "4️⃣"
 private let diceSide5: String = "5️⃣"
 private let diceSide6: String = "6️⃣"
+private let diceSide7: String = "7️⃣"
+private let diceSide8: String = "8️⃣"
+private let diceSide9: String = "9️⃣"
+private let diceIdle: String = "#️⃣"
+
+
+
+
+
 
 private extension Int32 {
     var diceSide: String {
@@ -34,6 +44,12 @@ private extension Int32 {
             return diceSide5
         case 6:
             return diceSide6
+        case 7:
+            return diceSide7
+        case 8:
+            return diceSide8
+        case 9:
+            return diceSide9
         default:
             preconditionFailure()
         }
@@ -176,42 +192,25 @@ class ChatDiceContentView: ChatMediaContentView {
         }
         
         let baseSymbol: String = media.emoji
-        
+        let sideSymbol: String
         
         let currentValue = media.value
         
-        let idleSticker: LocalAnimatedSticker
-        
-        switch baseSymbol {
-        case diceSymbol:
-            idleSticker = .dice_idle
-        case dartSymbol:
-            idleSticker = .dart_idle
-        default:
-            idleSticker = .dice_idle
+        if let currentValue = currentValue, currentValue > 0 && currentValue <= 9 {
+            sideSymbol = currentValue.diceSide
+        } else {
+            sideSymbol = diceIdle
         }
-       
+    
+        
         let diceState = DiceState(message: parent)
         
         if self.diceState != diceState {
             
             self.diceState = diceState
             
-                
-            let data: Signal<(Data, TelegramMediaFile), NoError>
-            if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
-                data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: currentValue.diceSide, synchronous: approximateSynchronousValue)
-            } else {
-                data = Signal { subscriber in
-                    let resource = idleSticker.file.resource as! LocalBundleResource
-                    if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
-                        subscriber.putNext((data, idleSticker.file))
-                        subscriber.putCompletion()
-                    }
-                    return EmptyDisposable
-                } |> runOn(resourcesQueue)
-            }
-            
+            let data: Signal<(Data?, TelegramMediaFile), NoError>
+            data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
             
             
             self.loadResourceDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] data in
@@ -233,30 +232,34 @@ class ChatDiceContentView: ChatMediaContentView {
                     }
                     self.thumbView.isHidden = animated
                 }
-                let animation = LottieAnimation(compressed: data.0, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
-                
-                animation.onFinish = {
-                    if case .end = diceState.play {
-                        FastSettings.markDiceAsPlayed(parent.id)
+                if let bytes = data.0 {
+                    let animation = LottieAnimation(compressed: bytes, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
+                    
+                    animation.onFinish = {
+                        if case .end = diceState.play {
+                            FastSettings.markDiceAsPlayed(parent.id)
+                        }
                     }
-                }
-                switch diceState.play {
-                case .end:
-                    if let previous = self.playerView.animation {
-                        previous.triggerOn = (.last, { [weak self] in
-                            self?.playerView.set(animation)
-                        })
-                    } else {
+                    switch diceState.play {
+                    case .end:
+                        if let previous = self.playerView.animation {
+                            previous.triggerOn = (.last, { [weak self] in
+                                self?.playerView.set(animation)
+                            })
+                        } else {
+                            self.playerView.set(animation)
+                        }
+                    default:
                         self.playerView.set(animation)
                     }
-                default:
-                    self.playerView.set(animation)
+                } else {
+                    self.playerView.set(nil)
                 }
+                
                 
                 if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
-                   
                     
                     self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
                     if !self.thumbView.isFullyLoaded {
