@@ -629,10 +629,6 @@ class ChatListRowItem: TableRowItem {
     }
     
     func togglePinned() {
-        
-        
-
-        
         if let chatLocation = chatLocation {
             let location: TogglePeerChatPinnedLocation
             
@@ -641,7 +637,6 @@ class ChatListRowItem: TableRowItem {
             } else {
                 location = .group(self.associatedGroupId)
             }
-            
             let context = self.context
             
             _ = (toggleItemPinned(postbox: context.account.postbox, location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
@@ -657,6 +652,7 @@ class ChatListRowItem: TableRowItem {
                         }
                         
                     })
+                    //alert(for: mainWindow, info: L10n.chatListContextPinErrorNew2)
                 default:
                     break
                 }

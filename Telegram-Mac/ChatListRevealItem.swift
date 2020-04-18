@@ -191,7 +191,7 @@ final class ChatListRevealView : TableStickView {
         animated = animated && splitViewState == context.sharedContext.layout
         self.splitViewState = context.sharedContext.layout
         
-        let segmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
         var items:[ScrollableSegmentItem] = [.init(title: L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(L10n.chatListFilterAllChats))]
@@ -214,7 +214,7 @@ final class ChatListRevealView : TableStickView {
         segmentView.updateItems(items, animated: animated)
         
         segmentView.resortRange = NSMakeRange(1, items.count - 1)
-        segmentView.resortHandler = { [weak self] from, to in
+        segmentView.resortHandler = { from, to in
             _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { state in
                 var state = state
                 state.move(at: from - 1, to: to - 1)

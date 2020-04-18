@@ -267,6 +267,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     func pasteboard(_ pasteboard: NSPasteboard?, item: NSPasteboardItem, provideDataForType type: NSPasteboard.PasteboardType) {
         if let dragpath = dragpath {
+            pasteboard?.clearContents()
             pasteboard?.declareTypes([.kFilenames, .string], owner: self)
             pasteboard?.setPropertyList([dragpath], forType: .kFilenames)
             pasteboard?.setString(dragpath, forType: .string)

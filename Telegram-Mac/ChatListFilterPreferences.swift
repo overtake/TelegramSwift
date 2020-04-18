@@ -55,8 +55,69 @@ extension ChatListFilter {
 }
 
 
-func chatListFilterPreferences(postbox: Postbox) -> Signal<[ChatListFilter], NoError> {
-    return updatedChatListFilters(postbox: postbox)
+
+
+struct ChatListFoldersSettings: PreferencesEntry, Equatable {
+    
+    let sidebar: Bool
+    
+    static var defaultValue: ChatListFoldersSettings {
+        return ChatListFoldersSettings(sidebar: false)
+    }
+    
+    init(sidebar: Bool) {
+        self.sidebar = sidebar
+    }
+    
+    func isEqual(to: PreferencesEntry) -> Bool {
+        if let other = to as? ChatListFoldersSettings {
+            return other == self
+        } else {
+            return false
+        }
+    }
+    
+    init(decoder: PostboxDecoder) {
+        self.sidebar = decoder.decodeOptionalInt32ForKey("t") == 1
+    }
+    
+    func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt32(sidebar ? 1 : 0, forKey: "t")
+    }
+    
+    func withUpdatedSidebar(_ sidebar: Bool) -> ChatListFoldersSettings {
+        return ChatListFoldersSettings(sidebar: sidebar)
+    }
+}
+
+
+
+func chatListFolderSettings(_ postbox: Postbox) -> Signal<ChatListFoldersSettings, NoError> {
+    return postbox.preferencesView(keys:  [ApplicationSpecificPreferencesKeys.chatListSettings]) |> map { view in
+        return view.values[ApplicationSpecificPreferencesKeys.chatListSettings] as? ChatListFoldersSettings ?? ChatListFoldersSettings.defaultValue
+    }
+}
+
+func updateChatListFolderSettings(_ postbox: Postbox, _ f: @escaping(ChatListFoldersSettings) -> ChatListFoldersSettings) -> Signal<Never, NoError> {
+    return postbox.transaction { transaction in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.chatListSettings, { entry in
+            let current = entry as? ChatListFoldersSettings ?? ChatListFoldersSettings.defaultValue
+            return f(current)
+        })
+    } |> ignoreValues
+}
+
+
+
+struct ChatListFolders : Equatable {
+    let list: [ChatListFilter]
+    let sidebar: Bool
+}
+
+func chatListFilterPreferences(postbox: Postbox) -> Signal<ChatListFolders, NoError> {
+    return combineLatest(updatedChatListFilters(postbox: postbox), chatListFolderSettings(postbox)) |> map {
+        return ChatListFolders(list: $0, sidebar: $1.sidebar)
+    }
 }
 
 struct ChatListFilterBadge : Equatable {
@@ -246,5 +307,9 @@ func chatListFilterItems(account: Account, accountManager: AccountManager) -> Si
             }
         } |> map { value -> ChatListFilterBadges in
             return ChatListFilterBadges(total: value.0, filters: value.1.map { ChatListFilterBadge(filter: $0.0, count: $0.1, hasUnmutedUnread: $0.2) })
+        } |> mapToSignal { badges -> Signal<ChatListFilterBadges, NoError> in
+            return renderedTotalUnreadCount(accountManager: accountManager, postbox: account.postbox) |> map {
+                return ChatListFilterBadges(total: Int($0.0), filters: badges.filters)
+            }
         }
 }

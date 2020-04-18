@@ -531,7 +531,7 @@ class InstalledStickerPacksController: TableViewController {
                                 } else if afterAll {
                                     infos.append((fromPackInfo.id, reorderInfo))
                                 }
-                                addSynchronizeInstalledStickerPacksOperation(transaction: transaction, namespace: Namespaces.ItemCollection.CloudStickerPacks, content: .sync)
+                                addSynchronizeInstalledStickerPacksOperation(transaction: transaction, namespace: Namespaces.ItemCollection.CloudStickerPacks, content: .sync, noDelay: false)
                                 transaction.replaceItemCollectionInfos(namespace: Namespaces.ItemCollection.CloudStickerPacks, itemCollectionInfos: infos)
                             }
                         }).start()

@@ -57,6 +57,10 @@ open class TableRowItem: NSObject {
         return 0
     }
     
+    open func copyAndUpdate(animated: Bool) {
+        
+    }
+    
     open var index:Int {
         if let _index = _index {
             return _index

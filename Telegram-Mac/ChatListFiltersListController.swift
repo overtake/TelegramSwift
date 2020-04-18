@@ -19,11 +19,13 @@ private final class ChatListPresetArguments {
     let openPreset:(ChatListFilter, Bool)->Void
     let removePreset: (ChatListFilter)->Void
     let addFeatured: (ChatListFeaturedFilter)->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void) {
+    let toggleSidebar: (Bool)->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.addFeatured = addFeatured
+        self.toggleSidebar = toggleSidebar
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
@@ -38,7 +40,7 @@ private let _id_badge_tabs = InputDataIdentifier("_id_badge_tabs")
 
 private let _id_header = InputDataIdentifier("_id_header")
 
-private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
+private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], sidebar: Bool, suggested: ChatListFiltersFeaturedState?, arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -72,8 +74,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }
         
         
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
             arguments.openPreset(filter, false)
         }, menuItems: {
             return [ContextMenuItem(L10n.chatListFilterListRemove, handler: {
@@ -127,6 +128,27 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    
+    if !filtersWithCounts.isEmpty {
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterTabBarHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("sidebar"), equatable: InputDataEquatable(sidebar), item: { initialSize, stableId in
+            return ChatListFilterVisibilityItem(initialSize, stableId: stableId, sidebar: sidebar, viewType: .singleItem, toggle: { sidebar in
+                arguments.toggleSidebar(sidebar)
+            })
+        }))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterTabBarDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
+    
+    
     return entries
 }
 
@@ -152,6 +174,10 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
             filters.append(new)
             return filters
         }).start()
+    }, toggleSidebar: { sidebar in
+        _ = updateChatListFolderSettings(context.account.postbox, {
+            $0.withUpdatedSidebar(sidebar)
+        }).start()
     })
     
     
@@ -159,9 +185,9 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     
     let filtersWithCounts = chatListFilterPreferences(postbox: context.account.postbox)
         |> distinctUntilChanged
-        |> mapToSignal { filters -> Signal<[(ChatListFilter, Int)], NoError> in
-            return context.account.postbox.transaction { transaction -> [(ChatListFilter, Int)] in
-                return filters.map { filter -> (ChatListFilter, Int) in
+        |> mapToSignal { filters -> Signal<([(ChatListFilter, Int)], Bool), NoError> in
+            return context.account.postbox.transaction { transaction -> ([(ChatListFilter, Int)], Bool) in
+                return (filters.list.map { filter -> (ChatListFilter, Int) in
                     let count: Int
                     if let cachedValue = chatCountCache.with({ dict -> Int? in
                         return dict[filter.data]
@@ -178,7 +204,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
                         count = 0
                     }
                     return (filter, count)
-                }
+                }, filters.sidebar)
             }
     }
     
@@ -188,7 +214,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
 
     
     let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, filtersWithCounts, suggested) |> map { _, filtersWithCounts, suggested in
-        return chatListPresetEntries(filtersWithCounts: filtersWithCounts, suggested: suggested, arguments: arguments)
+        return chatListPresetEntries(filtersWithCounts: filtersWithCounts.0, sidebar: filtersWithCounts.1, suggested: suggested, arguments: arguments)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }

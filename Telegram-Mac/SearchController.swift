@@ -233,15 +233,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             switch result {
             case .limitExceeded:
                 confirm(for: arguments.context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
-                    
                     switch result {
                     case .thrid:
                         arguments.context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
                     default:
                         break
                     }
-                    
                 })
+            //alert(for: mainWindow, info: L10n.chatListContextPinErrorNew2)
             default:
                 break
             }
@@ -533,6 +532,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if let peer = inLinkPeer {
                             if ids[peer.id] == nil {
+                                ids[peer.id] = peer.id
                                 entries.append(.localPeer(peer, index, nil, .none, true))
                                 index += 1
                             }
@@ -644,7 +644,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             
-                            let peers = localPeers + remotePeers.0
+                            let peers = (localPeers + remotePeers.0)
 
                             
 

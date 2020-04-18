@@ -22,6 +22,8 @@ private final class EditImageView : View {
     private let reset: TitleButton = TitleButton()
     private var currentData: EditedImageData?
     private let fakeCorners: (topLeft: ImageView, topRight: ImageView, bottomLeft: ImageView, bottomRight: ImageView)
+    
+    
     required init(frame frameRect: NSRect, image: CGImage) {
         self.image = image
         fakeCorners = (topLeft: ImageView(), topRight: ImageView(), bottomLeft: ImageView(), bottomRight: ImageView())
@@ -60,6 +62,7 @@ private final class EditImageView : View {
         reset.set(color: .white, for: .Normal)
         reset.set(text: L10n.editImageControlReset, for: .Normal)
         _ = reset.sizeToFit()
+        
     }
     
     var controls: View? {
@@ -83,7 +86,9 @@ private final class EditImageView : View {
     }
     
     func applyEditedData(_ value: EditedImageData, canReset: Bool, reset: @escaping()->Void) {
-        self.imageView.image = value.isNeedToRegenerate(currentData) ? value.makeImage(self.image) : self.imageView.image!
+        if value.isNeedToRegenerate(currentData) {
+            self.imageView.image = value.makeImage(self.image)
+        }
         self.currentData = value
         
         setFrameSize(frame.size)
@@ -132,7 +137,7 @@ private final class EditImageView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
        
-        imageContainer.setFrameSize(frame.width, frame.height - 80)
+        imageContainer.setFrameSize(frame.width, frame.height - 120)
         
         let imageSize = imageView.image!.size.fitted(NSMakeSize(imageContainer.frame.width - 8, imageContainer.frame.height - 8))
         let oldImageSize = imageView.frame.size
@@ -152,8 +157,12 @@ private final class EditImageView : View {
             reset.centerX(y: controls.frame.minY - (80 - reset.frame.height) / 2)
         }
         
-}
+    }
     
+    func hideElements(_ hide: Bool) {
+        imageContainer.isHidden = hide
+        reset.isHidden = hide
+    }
     
     func contentSize(maxSize: NSSize) -> NSSize {
         return NSMakeSize(maxSize.width, maxSize.height)
@@ -192,6 +201,7 @@ class EditImageModalController: ModalViewController {
     init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain) {
         self.canReset = defaultData != nil
         editState = Atomic(value: defaultData ?? EditedImageData(originalUrl: path))
+        
         self.image = NSImage(contentsOf: path)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
         self.path = path
         self.settings = settings
@@ -228,6 +238,10 @@ class EditImageModalController: ModalViewController {
         if let contentSize = self.modal?.window.contentView?.frame.size {
             self.modal?.resize(with:genericView.contentSize(maxSize: NSMakeSize(contentSize.width - 80, contentSize.height - 80)), animated: animated)
         }
+    }
+    
+    override var dynamicSize: Bool {
+        return true
     }
     
     override func initializer() -> NSView {
@@ -274,12 +288,41 @@ class EditImageModalController: ModalViewController {
         }
     }
     
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
+    
+    private func loadCanvas() {
+        guard let window = self.window else {
+            return
+        }
+        genericView.hideElements(true)
+        showModal(with: EditImageCanvasController(image: self.image, actions: editState.with { $0.paintings }, updatedImage: { [weak self] paintings in
+            self?.updateValue {
+                $0.withUpdatedPaintings(paintings)
+            }
+        }, closeHandler: { [weak self] in
+            self?.genericView.hideElements(false)
+        }), for: window, animated: false, animationType: .alpha)
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
             self?.controls.arguments.rotate()
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.loadCanvas()
+            return .invoked
+        }, with: self, for: .D, priority: .modal, modifierFlags: [.command])
+        
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -355,6 +398,8 @@ class EditImageModalController: ModalViewController {
             }
         }, rotate: { [weak self] in
             self?.rotate()
+        }, draw: { [weak self] in
+                self?.loadCanvas()
         }), stateValue: editValue.get())
 
         
@@ -368,7 +413,7 @@ class EditImageModalController: ModalViewController {
             self.updateSize(false)
             self.genericView.applyEditedData(data, canReset: self.canReset, reset: { [weak self] in
                 self?.canReset = false
-                self?.updateValue {$0.withUpdatedSelectedRect(NSZeroRect).withUpdatedFlip(false).withUpdatedDimensions(.none).withUpdatedOrientation(nil)}
+                self?.updateValue {$0.withUpdatedSelectedRect(NSZeroRect).withUpdatedFlip(false).withUpdatedDimensions(.none).withUpdatedOrientation(nil).withUpdatedPaintings([])}
             })
         }))
         
@@ -383,7 +428,4 @@ class EditImageModalController: ModalViewController {
         updatedRectDisposable.dispose()
     }
     
-    override var dynamicSize: Bool {
-        return true
-    }
 }

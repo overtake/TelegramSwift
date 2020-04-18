@@ -412,7 +412,7 @@ public class Modal: NSObject {
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
-            self.visualEffectView!.material = presentation.colors.isDark ? .dark : .light
+            self.visualEffectView!.material = .dark
             self.visualEffectView!.blendingMode = .withinWindow
             self.visualEffectView?.wantsLayer = true
         } else {
@@ -732,7 +732,10 @@ public class Modal: NSObject {
                     }
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
-                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        if case .alpha = strongSelf.animationType {
+                        } else {
+                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        }
                         if !controller.isFullScreen {
                             switch strongSelf.animationType {
                             case .bottomToCenter:
@@ -747,7 +750,8 @@ public class Modal: NSObject {
                                 view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
-
+                            case .alpha:
+                                view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
                             }
                         }
                     }
@@ -846,6 +850,7 @@ public enum ModalAnimationType {
     case bottomToCenter
     case scaleCenter
     case scaleFrom(NSRect)
+    case alpha
 }
 public enum ModalAnimationCloseBehaviour {
     case common
@@ -855,7 +860,7 @@ public enum ModalAnimationCloseBehaviour {
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
-        if weakModal.value?.controller?.className == controller.className {
+        if weakModal.value?.controller?.className == controller.className, weakModal.value?.controller?.shouldCloseAllTheSameModals == true {
             weakModal.value?.close()
         }
     }

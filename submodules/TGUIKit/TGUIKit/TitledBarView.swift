@@ -72,7 +72,7 @@ private class TitledContainerView : View {
                 let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset - additionalInset, frame.height), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
-                tY = (frame.height - t) / 2.0
+                tY = floorToScreenPixels(backingScaleFactor, (frame.height - t) / 2.0)
                 
                 let sY = tY + textLayout.size.height + 2.0
                 if !hiddenStatus {

@@ -83,7 +83,7 @@ class TabBadgeItem: TabItem {
     private let context:AccountContext
     init(_ context: AccountContext, controller:ViewController, image: CGImage, selectedImage: CGImage, longHoverHandler:((Control)->Void)? = nil) {
         self.context = context
-        super.init(image: image, selectedImage: selectedImage, controller: controller, subNode:GlobalBadgeNode(context.account, sharedContext: context.sharedContext, dockTile: true, view: View()), longHoverHandler: longHoverHandler)
+        super.init(image: image, selectedImage: selectedImage, controller: controller, subNode:GlobalBadgeNode(context.account, sharedContext: context.sharedContext, dockTile: true, view: View(), removeWhenSidebar: true), longHoverHandler: longHoverHandler)
     }
     override func withUpdatedImages(_ image: CGImage, _ selectedImage: CGImage) -> TabItem {
         return TabBadgeItem(context, controller: self.controller, image: image, selectedImage: selectedImage, longHoverHandler: self.longHoverHandler)

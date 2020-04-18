@@ -1256,7 +1256,7 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
     fileprivate override func layout() {
         super.layout()
         tableView.frame = NSMakeRect(0, 50, frame.width  , frame.height - 50)
-        tokenView.frame = NSMakeRect(10, 10, frame.width - 20, frame.height - 50)
+        tokenView.frame = NSMakeRect(10, 10, frame.width - 20, 50)
     }
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {

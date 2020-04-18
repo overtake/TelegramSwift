@@ -6257,6 +6257,240 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_add_member: CGImage {
+      if let image = cached.with({ $0["profile_add_member"] }) {
+          return image
+      } else {
+          let image = _profile_add_member()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_add_member"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_call: CGImage {
+      if let image = cached.with({ $0["profile_call"] }) {
+          return image
+      } else {
+          let image = _profile_call()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_call"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_leave: CGImage {
+      if let image = cached.with({ $0["profile_leave"] }) {
+          return image
+      } else {
+          let image = _profile_leave()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_leave"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_message: CGImage {
+      if let image = cached.with({ $0["profile_message"] }) {
+          return image
+      } else {
+          let image = _profile_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_more: CGImage {
+      if let image = cached.with({ $0["profile_more"] }) {
+          return image
+      } else {
+          let image = _profile_more()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_more"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_mute: CGImage {
+      if let image = cached.with({ $0["profile_mute"] }) {
+          return image
+      } else {
+          let image = _profile_mute()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_mute"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_unmute: CGImage {
+      if let image = cached.with({ $0["profile_unmute"] }) {
+          return image
+      } else {
+          let image = _profile_unmute()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_unmute"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_search: CGImage {
+      if let image = cached.with({ $0["profile_search"] }) {
+          return image
+      } else {
+          let image = _profile_search()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_search"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_secret_chat: CGImage {
+      if let image = cached.with({ $0["profile_secret_chat"] }) {
+          return image
+      } else {
+          let image = _profile_secret_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_secret_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_edit_photo: CGImage {
+      if let image = cached.with({ $0["profile_edit_photo"] }) {
+          return image
+      } else {
+          let image = _profile_edit_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_edit_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_block: CGImage {
+      if let image = cached.with({ $0["profile_block"] }) {
+          return image
+      } else {
+          let image = _profile_block()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_block"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_report: CGImage {
+      if let image = cached.with({ $0["profile_report"] }) {
+          return image
+      } else {
+          let image = _profile_report()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_report"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_share: CGImage {
+      if let image = cached.with({ $0["profile_share"] }) {
+          return image
+      } else {
+          let image = _profile_share()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_share"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_stats: CGImage {
+      if let image = cached.with({ $0["profile_stats"] }) {
+          return image
+      } else {
+          let image = _profile_stats()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_stats"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_unblock: CGImage {
+      if let image = cached.with({ $0["profile_unblock"] }) {
+          return image
+      } else {
+          let image = _profile_unblock()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_unblock"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6739,6 +6973,24 @@ final class TelegramIconsTheme {
   private let _tab_chats_active_filters: ()->CGImage
   private let _tab_settings: ()->CGImage
   private let _tab_settings_active: ()->CGImage
+  private let _profile_add_member: ()->CGImage
+  private let _profile_call: ()->CGImage
+  private let _profile_leave: ()->CGImage
+  private let _profile_message: ()->CGImage
+  private let _profile_more: ()->CGImage
+  private let _profile_mute: ()->CGImage
+  private let _profile_unmute: ()->CGImage
+  private let _profile_search: ()->CGImage
+  private let _profile_secret_chat: ()->CGImage
+  private let _profile_edit_photo: ()->CGImage
+  private let _profile_block: ()->CGImage
+  private let _profile_report: ()->CGImage
+  private let _profile_share: ()->CGImage
+  private let _profile_stats: ()->CGImage
+  private let _profile_unblock: ()->CGImage
+  private let _chat_quiz_explanation: ()->CGImage
+  private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
+  private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7221,7 +7473,25 @@ final class TelegramIconsTheme {
       tab_chats_active: @escaping()->CGImage,
       tab_chats_active_filters: @escaping()->CGImage,
       tab_settings: @escaping()->CGImage,
-      tab_settings_active: @escaping()->CGImage
+      tab_settings_active: @escaping()->CGImage,
+      profile_add_member: @escaping()->CGImage,
+      profile_call: @escaping()->CGImage,
+      profile_leave: @escaping()->CGImage,
+      profile_message: @escaping()->CGImage,
+      profile_more: @escaping()->CGImage,
+      profile_mute: @escaping()->CGImage,
+      profile_unmute: @escaping()->CGImage,
+      profile_search: @escaping()->CGImage,
+      profile_secret_chat: @escaping()->CGImage,
+      profile_edit_photo: @escaping()->CGImage,
+      profile_block: @escaping()->CGImage,
+      profile_report: @escaping()->CGImage,
+      profile_share: @escaping()->CGImage,
+      profile_stats: @escaping()->CGImage,
+      profile_unblock: @escaping()->CGImage,
+      chat_quiz_explanation: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7704,5 +7974,23 @@ final class TelegramIconsTheme {
       self._tab_chats_active_filters = tab_chats_active_filters
       self._tab_settings = tab_settings
       self._tab_settings_active = tab_settings_active
+      self._profile_add_member = profile_add_member
+      self._profile_call = profile_call
+      self._profile_leave = profile_leave
+      self._profile_message = profile_message
+      self._profile_more = profile_more
+      self._profile_mute = profile_mute
+      self._profile_unmute = profile_unmute
+      self._profile_search = profile_search
+      self._profile_secret_chat = profile_secret_chat
+      self._profile_edit_photo = profile_edit_photo
+      self._profile_block = profile_block
+      self._profile_report = profile_report
+      self._profile_share = profile_share
+      self._profile_stats = profile_stats
+      self._profile_unblock = profile_unblock
+      self._chat_quiz_explanation = chat_quiz_explanation
+      self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
+      self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
   }
 }

@@ -41,7 +41,7 @@ class PeerMediaRowItem: GeneralRowItem {
             fatalError("entry haven't message")
         }
         
-        super.init(initialSize, stableId: object.stableId, viewType: viewType)
+        super.init(initialSize, stableId: object.stableId, viewType: viewType, inset: NSEdgeInsetsZero)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

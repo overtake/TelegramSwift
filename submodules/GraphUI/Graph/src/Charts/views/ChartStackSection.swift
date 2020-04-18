@@ -78,7 +78,7 @@ public class ChartStackSection: View, ChartThemeContainer {
         fatalError("init(frame:) has not been implemented")
     }
     
-    public func apply(theme: ChartTheme, animated: Bool) {
+    public func apply(theme: ChartTheme, strings: ChartStrings, animated: Bool) {
         View.perform(animated: animated && self.isVisibleInWindow) {
             self.backgroundColor = theme.chartBackgroundColor
             
@@ -98,15 +98,15 @@ public class ChartStackSection: View, ChartThemeContainer {
         
         if rangeView.isVisibleInWindow || chartView.isVisibleInWindow {
             chartView.loadDetailsViewIfNeeded()
-            chartView.apply(theme: theme, animated: animated && chartView.isVisibleInWindow)
-            controller.apply(theme: theme, animated: animated)
-            rangeView.apply(theme: theme, animated: animated && rangeView.isVisibleInWindow)
+            chartView.apply(theme: theme, strings: strings, animated: animated && chartView.isVisibleInWindow)
+            controller.apply(theme: theme, strings: strings, animated: animated)
+            rangeView.apply(theme: theme, strings: strings, animated: animated && rangeView.isVisibleInWindow)
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval.random(in: 0...0.1)) {
                 self.chartView.loadDetailsViewIfNeeded()
-                self.controller.apply(theme: theme, animated: false)
-                self.chartView.apply(theme: theme, animated: false)
-                self.rangeView.apply(theme: theme, animated: false)
+                self.controller.apply(theme: theme, strings: strings, animated: false)
+                self.chartView.apply(theme: theme, strings: strings, animated: false)
+                self.rangeView.apply(theme: theme, strings: strings, animated: false)
             }
           
         }
