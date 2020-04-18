@@ -633,6 +633,10 @@ class MainViewController: TelegramViewController {
         }
     }
     
+    func showChatList() {
+       self.tabController.select(index: self.chatIndex)
+    }
+    
     override var responderPriority: HandlerPriority {
         return context.sharedContext.layout == .single ? .medium : .low
     }

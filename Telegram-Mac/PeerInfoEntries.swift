@@ -52,18 +52,22 @@ struct IntPeerInfoEntryStableId: PeerInfoEntryStableId {
 final class PeerInfoUpdatingPhotoState : Equatable {
     let progress:Float
     let cancel:()->Void
-    
-    init(progress: Float, cancel: @escaping()->Void) {
+    let image: CGImage?
+    init(progress: Float, image: CGImage? = nil, cancel: @escaping()->Void) {
         self.progress = progress
         self.cancel = cancel
+        self.image = image
+    }
+    func withUpdatedImage(_ image: CGImage) -> PeerInfoUpdatingPhotoState {
+        return PeerInfoUpdatingPhotoState(progress: progress, image: image, cancel: self.cancel)
     }
     
     func withUpdatedProgress(_ progress: Float) -> PeerInfoUpdatingPhotoState {
-        return PeerInfoUpdatingPhotoState(progress: progress, cancel: self.cancel)
+        return PeerInfoUpdatingPhotoState(progress: progress, image: self.image, cancel: self.cancel)
     }
     
     static func ==(lhs:PeerInfoUpdatingPhotoState, rhs: PeerInfoUpdatingPhotoState) -> Bool {
-        return lhs.progress == rhs.progress
+        return lhs.progress == rhs.progress && lhs.image == rhs.image
     }
 }
 
@@ -76,18 +80,18 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant]) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
     if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments)
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:
-            return channelInfoEntries(view: view, arguments: arguments)
+            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData)
     }
     return []
 }

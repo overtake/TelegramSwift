@@ -27,6 +27,28 @@ class TextAndLabelItem: GeneralRowItem {
     let isTextSelectable:Bool
     let callback:()->Void
     let canCopy: Bool
+    
+    
+    var hasMore: Bool? = true {
+        didSet {
+            if hasMore == nil {
+                textLayout.maximumNumberOfLines = 0
+                textLayout.cutout = nil
+                _ = makeSize(width, oldWidth: 0)
+                
+                if let table = self.table {
+                    table.enumerateItems { item -> Bool in
+                        item.table?.reloadData(row: item.index, animated: true)
+                        return true
+                    }
+                }
+
+            }
+        }
+    }
+    
+    let moreLayout: TextViewLayout
+    
     init(_ initialSize:NSSize, stableId:AnyHashable, label:String, labelColor: NSColor = theme.colors.accent, text:String, context: AccountContext, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
@@ -41,7 +63,7 @@ class TextAndLabelItem: GeneralRowItem {
         self.canCopy = canCopy
         
         
-        textLayout = TextViewLayout(attr, alwaysStaticItems: !detectLinks)
+        textLayout = TextViewLayout(attr, maximumNumberOfLines: 2, alwaysStaticItems: !detectLinks)
         textLayout.interactions = globalLinkExecutor
         textLayout.selectWholeText = !detectLinks
         if selectFullWord {
@@ -51,7 +73,23 @@ class TextAndLabelItem: GeneralRowItem {
             }
         }
         
+        var showFull:(()->Void)? = nil
+        
+        let moreAttr = parseMarkdownIntoAttributedString(L10n.peerInfoShowMoreText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in
+                showFull?()
+            }))
+        }))
+        self.moreLayout = TextViewLayout(moreAttr)
+        self.moreLayout.interactions = globalLinkExecutor
+        
+        
+        self.moreLayout.measure(width: .greatestFiniteMagnitude)
         super.init(initialSize,stableId: stableId, type: .none, viewType: viewType, action: callback, drawCustomSeparator: true)
+        
+        showFull = { [weak self] in
+            self?.hasMore = nil
+        }
     }
     
     override func viewClass() -> AnyClass {
@@ -112,6 +150,15 @@ class TextAndLabelItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: textWidth)
+        
+        if hasMore != nil {
+            hasMore = !textLayout.isPerfectSized
+        }
+        if hasMore == true {
+            textLayout.cutout = TextViewCutout(bottomRight: NSMakeSize(moreLayout.layoutSize.width + 10, 0))
+            textLayout.measure(width: textWidth)
+        }
+        
         labelLayout = TextNode.layoutText(maybeNode: nil,  label, nil, 1, .end, NSMakeSize(textWidth, .greatestFiniteMagnitude), nil, false, .left)
         return result
     }
@@ -121,7 +168,7 @@ class TextAndLabelItem: GeneralRowItem {
 class TextAndLabelRowView: GeneralRowView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private var labelView:TextView = TextView()
-    
+    private let moreView: TextView = TextView()
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let item = item as? TextAndLabelItem, let label = item.labelLayout, layer == containerView.layer {
@@ -172,6 +219,7 @@ class TextAndLabelRowView: GeneralRowView {
         self.addSubview(self.containerView)
         self.containerView.displayDelegate = self
         self.containerView.userInteractionEnabled = false
+        containerView.addSubview(moreView)
         labelView.set(handler: { [weak self] _ in
             if let item = self?.item as? TextAndLabelItem {
                 item.action()
@@ -191,7 +239,7 @@ class TextAndLabelRowView: GeneralRowView {
                 } else {
                     labelView.centerY(x:item.inset.left)
                 }
-            case let .modern(position, innerInsets):
+            case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
 
                 if let _ = item.labelLayout {
@@ -199,6 +247,8 @@ class TextAndLabelRowView: GeneralRowView {
                 } else {
                     labelView.centerY(x: innerInsets.left)
                 }
+                
+                moreView.setFrameOrigin(NSMakePoint(containerView.frame.width - moreView.frame.width - innerInsets.right, containerView.frame.height - innerInsets.bottom - moreView.frame.height + 2))
             }
             self.containerView.setCorners(item.viewType.corners)
 
@@ -215,6 +265,9 @@ class TextAndLabelRowView: GeneralRowView {
             labelView.userInteractionEnabled = item.canCopy
             labelView.isSelectable = item.isTextSelectable
             labelView.update(item.textLayout)
+            
+            moreView.isHidden = item.hasMore != true
+            moreView.update(item.moreLayout)
         }
         containerView.needsDisplay = true
         needsLayout = true

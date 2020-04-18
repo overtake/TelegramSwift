@@ -264,7 +264,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -829,6 +829,10 @@ open class ModalViewController : ViewController {
     // use this only for modal progress. This is made specially for nsvisualeffect support.
     open var contentBelowBackground: Bool {
         return false
+    }
+    
+    open var shouldCloseAllTheSameModals: Bool {
+        return true
     }
     
     private var temporaryTouchBar: Any?

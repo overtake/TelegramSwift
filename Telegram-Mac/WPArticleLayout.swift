@@ -232,7 +232,7 @@ class WPArticleLayout: WPLayout {
             } else {
                 if let _ = imageSize {
                     contrainedImageSize = NSMakeSize(54, 54)
-                    textLayout?.cutout = TextViewCutout(position: .TopRight, size: NSMakeSize(contrainedImageSize.width + 16, contrainedImageSize.height + 10))
+                    textLayout?.cutout = TextViewCutout(topRight: NSMakeSize(contrainedImageSize.width + 16, contrainedImageSize.height + 10))
                 }
             }
             

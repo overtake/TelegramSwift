@@ -86,9 +86,6 @@ class PeerInfoHeaderItem: GeneralRowItem {
         
     }
     
-    override var isUniqueView: Bool {
-        return false
-    }
     
     fileprivate func calculateHeight() {
         _ = self.makeSize(width, oldWidth: 0)

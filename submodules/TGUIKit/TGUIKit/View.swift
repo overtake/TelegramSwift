@@ -124,7 +124,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var animates:Bool = false
     
-    public var isEventLess: Bool = false
+    open var isEventLess: Bool = false
     
     public weak var displayDelegate:ViewDisplayDelegate?
     

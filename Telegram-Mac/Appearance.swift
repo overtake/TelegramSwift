@@ -78,6 +78,19 @@ private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImag
     })!
 }
 
+private func generateProfileIcon(_ image: CGImage, backgroundColor: NSColor) -> CGImage {
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, rect.width - 4, rect.height - 4))
+        
+        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        
+    })!
+}
+
 private func generateChatTabFiltersIcon(_ image: CGImage) -> CGImage {
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
@@ -125,7 +138,7 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
             ctx.clip(to: rect, mask: image)
             ctx.clear(rect)
         } else {
-            ctx.draw(image, in: rect.focus(image.backingSize))
+            ctx.draw(image, in: rect.focus(NSMakeSize(image.size.width / System.backingScale, image.size.height / System.backingScale)))
         }
     })!
 }
@@ -1484,7 +1497,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if let icon = _chatChannelViewsOverlayServiceBubble {
             return icon
         } else {
-            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor)
+            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor, flipVertical: true)
             _chatChannelViewsOverlayServiceBubble = new
             return new
         }
@@ -1676,8 +1689,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                verifiedImageSelected: { #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true) },
                                                errorImage: { #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true) },
                                                errorImageSelected: { #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true) },
-                                               chatSearch: { #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon) },
-                                               chatSearchActive: { #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon) },
+                                               chatSearch: { generateChatAction(#imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon), background: palette.background) },
+                                               chatSearchActive: { generateChatAction( #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
                                                chatCall: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.accentIcon) },
                                                chatActions: { generateChatAction(#imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.accentIcon), background: palette.background) },
                                                chatFailedCall_incoming: { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redUI) },
@@ -2144,7 +2157,25 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                tab_chats_active: { NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon) },
                                                tab_chats_active_filters: { generateChatTabFiltersIcon(NSImage(named: "Icon_TabChatList")!.precomposed(palette.accentIcon)) },
                                                tab_settings: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.grayIcon) },
-                                               tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) }
+                                               tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) },
+                                               profile_add_member: { generateProfileIcon(NSImage(named: "Icon_Profile_AddMember")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_call: { generateProfileIcon(NSImage(named: "Icon_Profile_Call")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_leave: { generateProfileIcon(NSImage(named: "Icon_Profile_Leave")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_message: { generateProfileIcon(NSImage(named: "Icon_Profile_Message")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_more: { generateProfileIcon(NSImage(named: "Icon_Profile_More")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_mute: { generateProfileIcon(NSImage(named: "Icon_Profile_Mute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_unmute: { generateProfileIcon(NSImage(named: "Icon_Profile_Unmute")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_search: { generateProfileIcon(NSImage(named: "Icon_Profile_Search")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_secret_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_SecretChat")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_edit_photo: { NSImage(named: "Icon_Profile_EditPhoto")!.precomposed(palette.underSelectedColor)},
+                                               profile_block: { generateProfileIcon(NSImage(named: "Icon_Profile_Block")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_report: { generateProfileIcon(NSImage(named: "Icon_Profile_Report")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_share: { generateProfileIcon(NSImage(named: "Icon_Profile_Share")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_stats: { generateProfileIcon(NSImage(named: "Icon_Profile_Stats")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
+                                               chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
+                                               chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) }
     )
 
 }
@@ -2226,7 +2257,7 @@ private func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Win
             contentView.addSubview(imageView)
 
             
-            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.15, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.25, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
                 if let imageView = imageView {
                     imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
                         imageView?.removeFromSuperview()

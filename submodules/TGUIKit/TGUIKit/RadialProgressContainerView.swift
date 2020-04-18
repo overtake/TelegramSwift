@@ -10,7 +10,7 @@ import Cocoa
 
 public class RadialProgressContainerView: View {
     public let progress:RadialProgressView
-    private let proggressBackground:View = View()
+    public let proggressBackground:View = View()
     override public func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
     }

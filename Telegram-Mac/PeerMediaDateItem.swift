@@ -24,7 +24,7 @@ class PeerMediaDateItem: TableStickItem {
         self.messageIndex = index
         self._stableId = stableId
         self.viewType = .modern(position: .single, insets: NSEdgeInsetsMake(3, 0, 3, 0))
-        self.inset = NSEdgeInsets(left: 30, right: 30)
+        self.inset = NSEdgeInsets(left: 0, right: 0)
         let timestamp = index.timestamp
         
         let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)

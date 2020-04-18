@@ -27,8 +27,8 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
                     messageText = ((attachEmoji ? "🖼 " : "") + message.text.fixed).nsstring
                 }
             }
-        case _ as TelegramMediaDice:
-            messageText = "🎲".nsstring
+        case let dice as TelegramMediaDice:
+            messageText = dice.emoji.nsstring
         case let fileMedia as TelegramMediaFile:
             if fileMedia.isStaticSticker || fileMedia.isAnimatedSticker {
                 messageText = L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring

@@ -17,6 +17,7 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
+
 #if !SHARE
 extension Account {
     var diceCache: DiceCache? {
@@ -181,8 +182,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
         
         
+//        let test = View()
+//        test.backgroundColor = NSColor.black.withAlphaComponent(0.87)
+//        test.frame = NSMakeRect(0, 0, leftSidebarWidth, Window.statusBarHeight)
+//        window.titleView?.addSubview(test, positioned: .below, relativeTo: window.titleView?.subviews.first)
         
-
         telegramUIDeclareEncodables()
         
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
@@ -220,6 +224,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchInterface() {
         initializeAccountManagement()
+        
         
         
         let rootPath = containerUrl!
@@ -281,7 +286,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
             
-
             
             updateTheme(with: themeSettings, for: window)
             
@@ -606,6 +610,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         context.context.isCurrent = true
                         context.applyNewTheme()
                         self.window.contentView?.addSubview(context.rootView, positioned: .below, relativeTo: self.window.contentView?.subviews.first)
+                        
                         context.runLaunchAction()
                         if let executeUrlAfterLogin = self.executeUrlAfterLogin {
                             self.executeUrlAfterLogin = nil
@@ -626,7 +631,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 applicationUpdateUrlPrefix = nil
                             }
                             setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
+                            #if STABLE
+                            updater_resetWithUpdaterSource(.internal(context: context.context))
+                            #else
                             updater_resetWithUpdaterSource(.external(context: context.context))
+                            #endif
                             
                         }))
                         #endif
@@ -688,7 +697,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         applicationUpdateUrlPrefix = nil
                                     }
                                     setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
+                                    #if STABLE
+                                    updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+                                    #else
                                     updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+                                    #endif
 
                                 }))
                                 #endif
@@ -782,8 +795,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     @IBAction func checkForUpdates(_ sender: Any) {
         #if !APP_STORE
-        showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
-        updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+            showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
+            #if STABLE
+                updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+            #else
+                updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
+            #endif
         #endif
     }
     

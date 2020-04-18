@@ -646,22 +646,21 @@ open class Window: NSWindow {
                 
                 cleanUndefinedHandlers()
                 
-                if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
+                if let globalHandlers = keyHandlers[.All]?.sorted(by: >), let keyCode = KeyboardKey(rawValue:event.keyCode) {
                     if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
-                        if globalHandler.priority > handle.priority {
-                            if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
-                                switch globalHandler.handler() {
-                                case .invoked:
-                                    return
-                                case .rejected:
-                                    break
-                                case .invokeNext:
-                                    super.sendEvent(event)
-                                    return
-                                }
-                            } else {
-                                // super.sendEvent(event)
-                                // return
+                        for globalHandler in globalHandlers {
+                            if globalHandler.priority > handle.priority {
+                                if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
+                                    switch globalHandler.handler() {
+                                    case .invoked:
+                                        return
+                                    case .rejected:
+                                        break
+                                    case .invokeNext:
+                                        super.sendEvent(event)
+                                        return
+                                    }
+                                } 
                             }
                         }
                     }
@@ -825,5 +824,8 @@ open class Window: NSWindow {
         
     }
     
+    public static var statusBarHeight: CGFloat {
+        return 22
+    }
 
 }
