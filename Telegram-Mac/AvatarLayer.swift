@@ -222,7 +222,7 @@ class AvatarControl: NSView {
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous))
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous), force: false)
                 } else {
                     let content = self.layer?.contents
                     self.displaySuspended = false
@@ -235,9 +235,10 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setSignal(_ signal: Signal<(CGImage?, Bool), NoError>) {
-        self.state = .Empty
-        
+    public func setSignal(_ signal: Signal<(CGImage?, Bool), NoError>, force: Bool = true) {
+        if force {
+            self.state = .Empty
+        }
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, animated in
             if let strongSelf = self {
                 strongSelf.layer?.contents = image

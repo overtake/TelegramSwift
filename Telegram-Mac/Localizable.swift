@@ -6177,6 +6177,8 @@ internal final class L10n {
   internal static var stickersRecent: String  { return L10n.tr("Localizable", "Stickers.Recent") }
   /// Add
   internal static var stickersSearchAdd: String  { return L10n.tr("Localizable", "Stickers.SearchAdd") }
+  /// Added
+  internal static var stickersSearchAdded: String  { return L10n.tr("Localizable", "Stickers.SearchAdded") }
   /// My Sets
   internal static var stickersSuggestAdded: String  { return L10n.tr("Localizable", "Stickers.SuggestAdded") }
   /// All Sets
