@@ -739,19 +739,19 @@ class InputDataController: GenericViewController<InputDataView> {
             
             view?.makeBold()
             return .invoked
-        }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
+        }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeUrl()
             return .invoked
-        }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
+        }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeItalic()
             return .invoked
-        }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
+        }, with: self, for: .I, priority: self.responderPriority, modifierFlags: [.command])
         
         
         
@@ -759,9 +759,11 @@ class InputDataController: GenericViewController<InputDataView> {
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeMonospace()
             return .invoked
-        }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
+        }, with: self, for: .K, priority: responderPriority, modifierFlags: [.command, .shift])
         
     }
+    
+    
     
     var findReponsderView: TableRowView? {
         if let view = self.firstResponder() as? NSView {
