@@ -202,6 +202,7 @@ class ChatDiceContentView: ChatMediaContentView {
             sideSymbol = diceIdle
         }
     
+        let settings = InteractiveEmojiConfiguration.with(appConfiguration: context.appConfiguration)
         
         let diceState = DiceState(message: parent)
         
@@ -230,7 +231,6 @@ class ChatDiceContentView: ChatMediaContentView {
                     } else {
                         playPolicy = .toEnd(from: 0)
                     }
-                    self.thumbView.isHidden = animated
                 }
                 if let bytes = data.0 {
                     let animation = LottieAnimation(compressed: bytes, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
@@ -241,10 +241,17 @@ class ChatDiceContentView: ChatMediaContentView {
                         }
                     }
                     switch diceState.play {
-                    case .end:
+                    case let .end(animated):
                         if let previous = self.playerView.animation {
                             previous.triggerOn = (.last, { [weak self] in
                                 self?.playerView.set(animation)
+                                if animated, let confetti = settings.playConfetti(baseSymbol), confetti.value == currentValue {
+                                    animation.triggerOn = (.custom(confetti.playAt), { [weak self] in
+                                        if self?.visibleRect.height == self?.frame.height {
+                                            PlayConfetti(for: context.window)
+                                        }
+                                    })
+                                }
                             })
                         } else {
                             self.playerView.set(animation)
@@ -276,9 +283,23 @@ class ChatDiceContentView: ChatMediaContentView {
                     self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
                         guard let `self` = self else { return }
                         switch state {
-                        case .playing, .initializing, .failed:
+                        case .playing:
                             self.playerView.isHidden = false
                             self.thumbView.isHidden = true
+                        case .initializing, .failed:
+                            switch diceState.play {
+                            case let .end(animated):
+                                if animated {
+                                    self.playerView.isHidden = false
+                                    self.thumbView.isHidden = true
+                                } else {
+                                    self.playerView.isHidden = true
+                                    self.thumbView.isHidden = false
+                                }
+                            default:
+                                self.playerView.isHidden = false
+                                self.thumbView.isHidden = true
+                            }
                         case .stoped:
                             self.playerView.isHidden = false
                             self.thumbView.isHidden = false
