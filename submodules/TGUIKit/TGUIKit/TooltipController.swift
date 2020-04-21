@@ -62,6 +62,7 @@ private final class TooltipCornerView : View {
 
 private final class TooltipView: View {
     let textView = TextView()
+    private let textContainer = View()
     let cornerView = ImageView()
     var didRemoveFromWindow:(()->Void)?
     weak var view: NSView? {
@@ -92,8 +93,9 @@ private final class TooltipView: View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        textView.backgroundColor = .black
-        addSubview(textView)
+        textContainer.backgroundColor = .black
+        textContainer.addSubview(textView)
+        addSubview(textContainer)
         addSubview(cornerView)
         
         cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
@@ -105,17 +107,17 @@ private final class TooltipView: View {
         })!
 
         cornerView.sizeToFit()
-        
+        textView.disableBackgroundDrawing = true
         textView.isSelectable = false
-        textView.layer?.cornerRadius = .cornerRadius
+        textContainer.layer?.cornerRadius = .cornerRadius
     }
     
     func update(text: NSAttributedString, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
-        let layout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
+        let layout = TextViewLayout(text, alignment: .left, alwaysStaticItems: true)
         layout.measure(width: maxWidth)
-        textView.change(size: NSMakeSize(max(44, layout.layoutSize.width + 26), layout.layoutSize.height + 10), animated: animated)
-        textView.set(layout: layout)
-        change(size: NSMakeSize(textView.frame.width, textView.frame.height + 15), animated: animated)
+        textView.update(layout)
+        textContainer.change(size: NSMakeSize(layout.layoutSize.width + 18, layout.layoutSize.height + 6), animated: animated)
+        change(size: NSMakeSize(textContainer.frame.width, textContainer.frame.height + 14), animated: animated)
         needsLayout = true
         
         layout.interactions = interactions
@@ -123,11 +125,12 @@ private final class TooltipView: View {
     
     override func layout() {
         super.layout()
-        textView.centerX(y: 0)
+        textView.center()
+        textContainer.centerX(y: 0)
         if let cornerX = cornerX, frame.width > 44 {
-            cornerView.setFrameOrigin(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textView.frame.maxY)
+            cornerView.setFrameOrigin(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textContainer.frame.maxY)
         } else {
-            cornerView.centerX(y: textView.frame.maxY)
+            cornerView.centerX(y: textContainer.frame.maxY)
         }
     }
     

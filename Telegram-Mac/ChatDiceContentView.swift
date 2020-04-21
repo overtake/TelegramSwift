@@ -138,7 +138,21 @@ class ChatDiceContentView: ChatMediaContentView {
         let media = self.media as? TelegramMediaDice
         
         if let media = media {
-            tooltip(for: self.playerView, text: L10n.chatDiceResultNew(media.emoji), offset: NSMakePoint(0, -50))
+            
+            let text = L10n.chatDiceResultNew1(media.emoji)
+                
+            let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .bold(.text), textColor: .link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak self] _ in
+                        if let message = self?.parent {
+                            let item = self?.table?.item(stableId: ChatHistoryEntryId.message(message))
+                            if let item = item as? ChatRowItem {
+                                item.chatInteraction.sendPlainText(media.emoji)
+                            }
+                        }
+                    }))
+                })).mutableCopy() as! NSMutableAttributedString
+            
+            tooltip(for: self.thumbView, text: "", attributedText: attributedText, interactions: globalLinkExecutor, offset: NSMakePoint(0, -30))
         }
        // alert(for: window, info: L10n.chatDiceResult)
     }
