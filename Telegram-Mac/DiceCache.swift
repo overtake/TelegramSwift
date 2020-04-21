@@ -12,23 +12,44 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
+struct InteractiveEmojiConfetti : Equatable {
+    let playAt: Int32
+    let value:Int32
+}
+
 struct InteractiveEmojiConfiguration : Equatable {
     static var defaultValue: InteractiveEmojiConfiguration {
-        return InteractiveEmojiConfiguration(emojis: [])
+        return InteractiveEmojiConfiguration(emojis: [], confettiCompitable: [:])
     }
     
     let emojis: [String]
-    
-    fileprivate init(emojis: [String]) {
+    private let confettiCompitable: [String: InteractiveEmojiConfetti]
+        
+    fileprivate init(emojis: [String], confettiCompitable: [String: InteractiveEmojiConfetti]) {
         self.emojis = emojis.map { $0.fixed }
+        self.confettiCompitable = confettiCompitable
     }
     
     static func with(appConfiguration: AppConfiguration) -> InteractiveEmojiConfiguration {
         if let data = appConfiguration.data, let value = data["emojies_send_dice"] as? [String] {
-            return InteractiveEmojiConfiguration(emojis: value)
+            let dict:[String : Any]? = data["emojies_send_dice_success"] as? [String:Any]
+            
+            var confetti:[String: InteractiveEmojiConfetti] = [:]
+            if let dict = dict {
+                for (key, value) in dict {
+                    if let data = value as? [String: Any], let frameStart = data["frame_start"] as? Double, let value = data["value"] as? Double {
+                        confetti[key] = InteractiveEmojiConfetti(playAt: Int32(frameStart), value: Int32(value))
+                    }
+                }
+            }
+            return InteractiveEmojiConfiguration(emojis: value, confettiCompitable: confetti)
         } else {
             return .defaultValue
         }
+    }
+    
+    func playConfetti(_ emoji: String) -> InteractiveEmojiConfetti? {
+        return confettiCompitable[emoji]
     }
 }
 

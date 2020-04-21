@@ -57,6 +57,7 @@ enum PackEntry: Comparable, Identifiable {
     case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
     case recent
     case saved
+    case featured
     case specificPack(data: SpecificPackData)
     
     var stableId: StickerPackCollectionId {
@@ -67,6 +68,8 @@ enum PackEntry: Comparable, Identifiable {
             return .recent
         case .saved:
             return .saved
+        case .featured:
+            return .featured
         case let .specificPack(data):
             return .specificPack(data.info.id)
             
@@ -75,6 +78,8 @@ enum PackEntry: Comparable, Identifiable {
     
     var index: Int {
         switch self {
+        case .featured:
+            return -1
         case .saved:
             return 0
         case .recent:
@@ -106,12 +111,12 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case speficicPack(ItemCollectionId)
     case recent(Int)
     case saved(Int)
-    
+    case featured(Int)
     var packIndex:ItemCollectionViewEntryIndex {
         switch self {
         case let .sticker(index):
             return index
-        case let .saved(index), let .recent(index):
+        case let .saved(index), let .recent(index), let .featured(index):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
@@ -128,6 +133,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .saved
         case let .speficicPack(id):
             return .specificPack(id)
+        case .featured:
+            return .featured
         }
     }
     
@@ -137,6 +144,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
     
     var index: Int {
         switch self {
+        case .featured:
+            return -1
         case .saved:
             return 0
         case .recent:
@@ -243,6 +252,7 @@ enum StickerPackInfo : Equatable {
 enum StickerPackCollectionId : Hashable {
     case pack(ItemCollectionId)
     case recent
+    case featured
     case specificPack(ItemCollectionId)
     case saved
     
@@ -428,6 +438,8 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
     var index: Int = 0
     
     if let view = view {
+        entries.append(.featured)
+        
         if !view.orderedItemListsViews[1].items.isEmpty {
             entries.append(.saved)
         }
@@ -486,6 +498,8 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
         case let .stickerPack(index, stableId, info, topItem):
             return StickerPackRowItem(initialSize, packIndex: index, context: context, stableId: stableId, info: info, topItem: topItem)
         case .recent:
+            return RecentPackRowItem(initialSize, entry.entry.stableId)
+        case .featured:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .saved:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
@@ -676,6 +690,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     if let item = item as? StickerPackRowItem {
                         index = .sticker(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(item.packIndex), collectionId: id))
                     }
+                case .featured:
+                    self.interactions?.toggleSearch()
                 case .saved:
                     index = .saved(0)
                 case .recent:
