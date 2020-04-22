@@ -9,61 +9,14 @@
 import Cocoa
 import SwiftSignalKit
 
-private final class TooltipCornerView : View {
-    
-    
-//    override var isFlipped: Bool {
-//        return false
-//    }
-//
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        ctx.setFillColor(.black)
-        
-        let width = bounds.width
-        let height = bounds.height
-        let radius: CGFloat = 3
-        
-//        ctx.rotate(by: 90 * (.pi / 180))
-
-        
-//        let triangleFrame = bounds
-//
-//        ctx.move(to: CGPoint(x: triangleFrame.minX, y: triangleFrame.midY))
-//        ctx.addArc(tangent1End: CGPoint(x: triangleFrame.minX, y: triangleFrame.midY), tangent2End: CGPoint(x: triangleFrame.minX, y: triangleFrame.minY), radius: radius)
-//        ctx.addArc(tangent1End: CGPoint(x: triangleFrame.minX, y: triangleFrame.minY), tangent2End: CGPoint(x: triangleFrame.maxX, y: triangleFrame.midY), radius: radius)
-//        ctx.addArc(tangent1End: CGPoint(x: triangleFrame.maxX, y: triangleFrame.midY), tangent2End: CGPoint(x: triangleFrame.minX, y: triangleFrame.maxY), radius: radius)
-//        ctx.addArc(tangent1End: CGPoint(x: triangleFrame.minX, y: triangleFrame.maxY), tangent2End: CGPoint(x: triangleFrame.minX, y: triangleFrame.midY), radius: radius)
-//        ctx.closePath()
-       
-
-//
-//        let point1 = CGPoint(x: -width / 2, y: height / 2)
-//        let point2 = CGPoint(x: 0, y: -height / 2)
-//        let point3 = CGPoint(x: width / 2, y: height / 2)
-//
-//     //   let path = CGMutablePath()
-//        ctx.move(to: CGPoint(x: 0, y: height / 2))
-//        ctx.addArc(tangent1End: point1, tangent2End: point2, radius: radius)
-//        ctx.addArc(tangent1End: point2, tangent2End: point3, radius: radius)
-//        ctx.addArc(tangent1End: point3, tangent2End: point1, radius: radius)
-//        ctx.closePath()
-
-      //  ctx.addPath(path)
-        
-        ctx.move(to: NSMakePoint(bounds.midX, bounds.maxY))
-        ctx.addLine(to: NSMakePoint(bounds.minX, bounds.minY))
-        ctx.addLine(to: NSMakePoint(bounds.maxX, bounds.minY))
-        ctx.closePath()
-        ctx.fillPath()
-    }
-    
-}
 
 private final class TooltipView: View {
     let textView = TextView()
     private let textContainer = View()
     let cornerView = ImageView()
+    
+    var button: TitleButton?
+    
     var didRemoveFromWindow:(()->Void)?
     weak var view: NSView? {
         didSet {
@@ -112,7 +65,7 @@ private final class TooltipView: View {
         textContainer.layer?.cornerRadius = .cornerRadius
     }
     
-    func update(text: NSAttributedString, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
+    func update(text: NSAttributedString, button: (String, ()->Void)?, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
         let layout = TextViewLayout(text, alignment: .left, alwaysStaticItems: true)
         layout.measure(width: maxWidth)
         textView.update(layout)
@@ -157,7 +110,7 @@ private var removeShownAnimation:Bool = false
 
 private let delayDisposable = MetaDisposable()
 private var shouldRemoveTooltip: Bool = true
-public func tooltip(for view: NSView, text: String, attributedText: NSAttributedString? = nil, interactions: TextViewInteractions = TextViewInteractions(), maxWidth: CGFloat = 350, autoCorner: Bool = true, offset: NSPoint = .zero, timeout: Double = 3.0, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
+public func tooltip(for view: NSView, text: String, attributedText: NSAttributedString? = nil, interactions: TextViewInteractions = TextViewInteractions(), button: (String, ()->Void)? = nil, maxWidth: CGFloat = 350, autoCorner: Bool = true, offset: NSPoint = .zero, timeout: Double = 3.0, updateText: @escaping(@escaping(String)->Bool)->Void = { _ in }) -> Void {
     guard let window = view.window as? Window else { return }
     
     if view.visibleRect.height != view.frame.height {
@@ -186,11 +139,11 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     let text = attributedText ?? NSAttributedString.initialize(string: text, color: .white, font: .medium(.text))
     
     updateText() { [weak tooltip] text in
-        tooltip?.update(text: .initialize(string: text, color: .white, font: .medium(.text)), maxWidth: maxWidth, interactions: interactions, animated: false)
+        tooltip?.update(text: .initialize(string: text, color: .white, font: .medium(.text)), button: button, maxWidth: maxWidth, interactions: interactions, animated: false)
         return tooltip != nil
     }
     
-    tooltip.update(text: text, maxWidth: maxWidth, interactions: interactions, animated: isExists)
+    tooltip.update(text: text, button: button, maxWidth: maxWidth, interactions: interactions, animated: isExists)
     
     
     
