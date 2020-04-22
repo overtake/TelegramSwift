@@ -366,7 +366,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!)
         if mediaUpdated {
             self.autoplayVideoView = nil
         }
