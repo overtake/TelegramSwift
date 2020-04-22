@@ -879,7 +879,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
-            return (peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)) && Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+            return (peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages))
         } else if case .group = peer.info {
             if !message.flags.contains(.Incoming) {
                 if peer.hasPermission(.pinMessages) {
