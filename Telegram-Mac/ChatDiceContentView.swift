@@ -137,27 +137,25 @@ class ChatDiceContentView: ChatMediaContentView {
         
         let media = self.media as? TelegramMediaDice
         
-        if let media = media {
+        if let media = media, let message = self.parent {
+            let item = self.table?.item(stableId: ChatHistoryEntryId.message(message))
             
-            let text: String
-            
-            switch media.emoji {
-            case diceSymbol:
-                text = L10n.chatEmojiDiceResultNew
-            case dartSymbol:
-                text = L10n.chatEmojiDartResultNew
-            default:
-                text = L10n.chatEmojiDefResultNew(media.emoji)
-            }
-            
-            tooltip(for: self.thumbView, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak self] in
-                if let message = self?.parent {
-                    let item = self?.table?.item(stableId: ChatHistoryEntryId.message(message))
-                    if let item = item as? ChatRowItem {
-                        item.chatInteraction.sendPlainText(media.emoji)
-                    }
+            if let item = item as? ChatRowItem, let peer = item.peer, canSendMessagesToPeer(peer) {
+                let text: String
+                
+                switch media.emoji {
+                case diceSymbol:
+                    text = L10n.chatEmojiDiceResultNew
+                case dartSymbol:
+                    text = L10n.chatEmojiDartResultNew
+                default:
+                    text = L10n.chatEmojiDefResultNew(media.emoji)
                 }
-            }), offset: NSMakePoint(0, -30))
+                
+                tooltip(for: self.thumbView, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
+                    item?.chatInteraction.sendPlainText(media.emoji)
+                }), offset: NSMakePoint(0, -30))
+            }
         }
        // alert(for: window, info: L10n.chatDiceResult)
     }
