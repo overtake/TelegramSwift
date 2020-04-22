@@ -984,6 +984,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let shiftSelectedDisposable = MetaDisposable()
     private let updateUrlDisposable = MetaDisposable()
     private let loadSharedMediaDisposable = MetaDisposable()
+    private let applyMaxReadIndexDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1399,7 +1400,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         case let .peer(peerId):
                             if !hasModals() {
                                 clearNotifies(peerId, maxId: messageIndex.id)
-                                _ = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex).start()
+                                let signal = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex)
+                                self.applyMaxReadIndexDisposable.set(signal.start())
                             }
                         }
                     }
@@ -3863,6 +3865,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
+        applyMaxReadIndexDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
