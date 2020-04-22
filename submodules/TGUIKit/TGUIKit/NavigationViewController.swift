@@ -636,7 +636,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             return;
         }
         
-        controller.view.disableHierarchyDynamicContent()
+        
         
         var contentInset = controller.bar.height
 
@@ -655,10 +655,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         let animatePosBar: Bool = controller.bar.height != previous.bar.height && style != .none
         self.navigationBar.frame = NSMakeRect(0, barInset, containerView.frame.width, animatePosBar && controller.bar.height == 0 ? previous.bar.height : controller.bar.height)
         
-        if !animatePosBar {
-            var bp: Int = 0
-            bp += 1
-        }
         
         
         if let header = header, header.needShown {
@@ -702,6 +698,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         switch style {
         case .push:
             
+            controller.view.disableHierarchyDynamicContent()
+            
             previous.viewWillDisappear(true);
             controller.viewWillAppear(true);
             
@@ -723,6 +721,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
             
         case .pop:
+            
+            controller.view.disableHierarchyDynamicContent()
             
             previous.viewWillDisappear(true);
             controller.viewWillAppear(true);
@@ -773,7 +773,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
             containerView.addSubview(navigationBar)
             
-            controller.view.restoreHierarchyDynamicContent()
 
             
             reloadHeaders()

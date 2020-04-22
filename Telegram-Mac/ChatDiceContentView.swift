@@ -139,20 +139,25 @@ class ChatDiceContentView: ChatMediaContentView {
         
         if let media = media {
             
-            let text = L10n.chatDiceResultNew1(media.emoji)
-                
-            let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .bold(.text), textColor: .link), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak self] _ in
-                        if let message = self?.parent {
-                            let item = self?.table?.item(stableId: ChatHistoryEntryId.message(message))
-                            if let item = item as? ChatRowItem {
-                                item.chatInteraction.sendPlainText(media.emoji)
-                            }
-                        }
-                    }))
-                })).mutableCopy() as! NSMutableAttributedString
+            let text: String
             
-            tooltip(for: self.thumbView, text: "", attributedText: attributedText, interactions: globalLinkExecutor, offset: NSMakePoint(0, -30))
+            switch media.emoji {
+            case diceSymbol:
+                text = L10n.chatEmojiDiceResultNew
+            case dartSymbol:
+                text = L10n.chatEmojiDartResultNew
+            default:
+                text = L10n.chatEmojiDefResultNew(media.emoji)
+            }
+            
+            tooltip(for: self.thumbView, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak self] in
+                if let message = self?.parent {
+                    let item = self?.table?.item(stableId: ChatHistoryEntryId.message(message))
+                    if let item = item as? ChatRowItem {
+                        item.chatInteraction.sendPlainText(media.emoji)
+                    }
+                }
+            }), offset: NSMakePoint(0, -30))
         }
        // alert(for: window, info: L10n.chatDiceResult)
     }

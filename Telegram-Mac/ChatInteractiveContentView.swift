@@ -209,6 +209,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: table?.clipView)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: self)
         } else {
             removeNotificationListeners()
         }
@@ -221,9 +222,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func viewDidMoveToWindow() {
         updateListeners()
-        updatePlayerIfNeeded()
-        
-
+        DispatchQueue.main.async { [weak self] in
+            self?.updatePlayerIfNeeded()
+        }
     }
 
     override func viewDidMoveToSuperview() {
