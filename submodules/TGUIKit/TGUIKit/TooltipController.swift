@@ -41,7 +41,15 @@ private final class TooltipView: View {
     
     func move(corner cornerX: CGFloat, animated: Bool) {
         self.cornerX = cornerX
-        cornerView.change(pos: NSMakePoint(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textView.frame.maxY), animated: animated)
+        
+        let point: NSPoint
+        if frame.width > 44 {
+            point = NSMakePoint(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textContainer.frame.maxY)
+        } else {
+            let center = self.focus(cornerView.frame.size)
+            point = NSMakePoint(center.minX, textContainer.frame.maxY)
+        }
+        cornerView.change(pos: point, animated: animated)
     }
     
     required init(frame frameRect: NSRect) {
@@ -50,7 +58,7 @@ private final class TooltipView: View {
         textContainer.addSubview(textView)
         addSubview(textContainer)
         addSubview(cornerView)
-        
+        cornerView.animates = false
         cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
             context.clear(CGRect(origin: CGPoint(), size: size))
             context.setFillColor(NSColor.black.cgColor)
@@ -66,20 +74,50 @@ private final class TooltipView: View {
     }
     
     func update(text: NSAttributedString, button: (String, ()->Void)?, maxWidth: CGFloat, interactions: TextViewInteractions, animated: Bool) {
+        
+        if let buttonData = button {
+            let button: TitleButton
+            if self.button == nil {
+                button = TitleButton()
+                self.button = button
+                textContainer.addSubview(button)
+            } else {
+                button = self.button!
+            }
+            button.removeAllHandlers()
+            button.set(text: buttonData.0, for: .Normal)
+            button.set(font: .medium(.title), for: .Normal)
+            button.set(color: .accent, for: .Normal)
+            _ = button.sizeToFit()
+            button.set(handler: { _ in
+                buttonData.1()
+            }, for: .Click)
+        } else {
+            self.button?.removeFromSuperview()
+            self.button = nil
+        }
+        
         let layout = TextViewLayout(text, alignment: .left, alwaysStaticItems: true)
-        layout.measure(width: maxWidth)
+        layout.measure(width: maxWidth - (self.button != nil ? self.button!.frame.width : 0))
         textView.update(layout)
-        textContainer.change(size: NSMakeSize(layout.layoutSize.width + 18, layout.layoutSize.height + 6), animated: animated)
+        textContainer.change(size: NSMakeSize(layout.layoutSize.width + 18 + (self.button != nil ? self.button!.frame.width : 0), max(layout.layoutSize.height + 8, button != nil ? 40 : 0)), animated: animated)
         change(size: NSMakeSize(textContainer.frame.width, textContainer.frame.height + 14), animated: animated)
         needsLayout = true
         
         layout.interactions = interactions
+        
+        
     }
     
     override func layout() {
         super.layout()
-        textView.center()
         textContainer.centerX(y: 0)
+        if let button = button {
+            textView.centerY(x: 7)
+            button.centerY(x: textView.frame.maxX + 5)
+        } else {
+            textView.center()
+        }
         if let cornerX = cornerX, frame.width > 44 {
             cornerView.setFrameOrigin(max(min(cornerX - cornerView.frame.width / 2, frame.width - cornerView.frame.width - .cornerRadius), .cornerRadius), textContainer.frame.maxY)
         } else {

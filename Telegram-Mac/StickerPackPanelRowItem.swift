@@ -104,7 +104,7 @@ class StickerPackPanelRowItem: TableRowItem {
 
        
         
-        if !packInfo.installed, let id = collectionId.itemCollectionId {
+        if packInfo.featured, let id = collectionId.itemCollectionId {
             preloadFeaturedDisposable.set(preloadedFeaturedStickerSet(network: context.account.network, postbox: context.account.postbox, id: id).start())
         }
         

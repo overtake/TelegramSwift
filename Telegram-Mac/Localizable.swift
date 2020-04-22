@@ -1333,10 +1333,6 @@ internal final class L10n {
   internal static var chatDateScheduledForToday: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledForToday") }
   /// Scheduled until online
   internal static var chatDateScheduledUntilOnline: String  { return L10n.tr("Localizable", "Chat.Date.ScheduledUntilOnline") }
-  /// [Send]() a %@ emoji to any chat to get a random number from Telegram.
-  internal static func chatDiceResultNew1(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Dice.ResultNew1", p1)
-  }
   /// as archive
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
@@ -1345,6 +1341,16 @@ internal final class L10n {
   internal static var chatEditCancelText: String  { return L10n.tr("Localizable", "Chat.Edit.Cancel.Text") }
   /// Click to edit Media
   internal static var chatEditMessageMedia: String  { return L10n.tr("Localizable", "Chat.EditMessage.Media") }
+  /// Send
+  internal static var chatEmojiSend: String  { return L10n.tr("Localizable", "Chat.Emoji.Send") }
+  /// Send a dart emoji to try your luck.
+  internal static var chatEmojiDartResultNew: String  { return L10n.tr("Localizable", "Chat.Emoji.Dart.ResultNew") }
+  /// Send a %@ emoji to try your luck.
+  internal static func chatEmojiDefResultNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Emoji.Def.ResultNew", p1)
+  }
+  /// Send a dice emoji to roll a die.
+  internal static var chatEmojiDiceResultNew: String  { return L10n.tr("Localizable", "Chat.Emoji.Dice.ResultNew") }
   /// Link Preview
   internal static var chatEmptyLinkPreview: String  { return L10n.tr("Localizable", "Chat.Empty.LinkPreview") }
   /// Sorry, this group is not accessible.
