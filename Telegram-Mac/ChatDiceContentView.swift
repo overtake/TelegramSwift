@@ -316,12 +316,9 @@ class ChatDiceContentView: ChatMediaContentView {
                             cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
                         })
                         self.thumbView.set(arguments: arguments)
-                    } else {
-                        self.thumbView.dispose()
                     }
                 } else {
                     self.thumbView.image = nil
-                    self.stateDisposable.set(nil)
                 }
             }))
             
