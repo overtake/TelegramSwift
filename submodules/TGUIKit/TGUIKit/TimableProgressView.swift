@@ -122,9 +122,9 @@ public class TimableProgressView: View {
 
     }
     
-    public init(_ theme: TimableProgressTheme = TimableProgressTheme()) {
+    public init(theme: TimableProgressTheme = TimableProgressTheme(), size: NSSize = NSMakeSize(40, 40)) {
         self.theme = theme
-        super.init(frame: NSMakeRect(0, 0, 40, 40))
+        super.init(frame: CGRect(origin: .zero, size: size))
     }
     
     required public init(frame frameRect: NSRect) {

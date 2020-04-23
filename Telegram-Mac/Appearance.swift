@@ -143,6 +143,14 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
     })!
 }
 
+private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {
+    return generateImage(NSMakeSize(floor(image.size.width * 0.7), floor(image.size.height * 0.7)), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.draw(image, in: rect)
+    }, scale: 1.0)!
+}
+
 private func generateLoginQrEmptyCap() -> CGImage {
     return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -1846,6 +1854,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFileThumbBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_incoming,  flipVertical:true) },
                                                chatFileThumbBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_outgoing, flipVertical:true) },
                                                chatSecretThumb: { #imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true) },
+                                               chatSecretThumbSmall: { generateSecretThumbSmall(#imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true)) },
                                                chatMapPin: { #imageLiteral(resourceName: "Icon_MapPinned").precomposed() },
                                                chatSecretTitle: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.text, flipVertical:true) },
                                                emptySearch: { #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(palette.grayIcon) },

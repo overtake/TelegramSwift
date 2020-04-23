@@ -2201,6 +2201,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatSecretThumbSmall: CGImage {
+      if let image = cached.with({ $0["chatSecretThumbSmall"] }) {
+          return image
+      } else {
+          let image = _chatSecretThumbSmall()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatSecretThumbSmall"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatMapPin: CGImage {
       if let image = cached.with({ $0["chatMapPin"] }) {
           return image
@@ -6674,6 +6687,7 @@ final class TelegramIconsTheme {
   private let _chatFileThumbBubble_incoming: ()->CGImage
   private let _chatFileThumbBubble_outgoing: ()->CGImage
   private let _chatSecretThumb: ()->CGImage
+  private let _chatSecretThumbSmall: ()->CGImage
   private let _chatMapPin: ()->CGImage
   private let _chatSecretTitle: ()->CGImage
   private let _emptySearch: ()->CGImage
@@ -7176,6 +7190,7 @@ final class TelegramIconsTheme {
       chatFileThumbBubble_incoming: @escaping()->CGImage,
       chatFileThumbBubble_outgoing: @escaping()->CGImage,
       chatSecretThumb: @escaping()->CGImage,
+      chatSecretThumbSmall: @escaping()->CGImage,
       chatMapPin: @escaping()->CGImage,
       chatSecretTitle: @escaping()->CGImage,
       emptySearch: @escaping()->CGImage,
@@ -7677,6 +7692,7 @@ final class TelegramIconsTheme {
       self._chatFileThumbBubble_incoming = chatFileThumbBubble_incoming
       self._chatFileThumbBubble_outgoing = chatFileThumbBubble_outgoing
       self._chatSecretThumb = chatSecretThumb
+      self._chatSecretThumbSmall = chatSecretThumbSmall
       self._chatMapPin = chatMapPin
       self._chatSecretTitle = chatSecretTitle
       self._emptySearch = emptySearch

@@ -56,7 +56,13 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             self.controller.viewDidAppear(false)
         }
         
-        
+        containerView.customHandler.layout = { [weak self] view in
+            guard let `self` = self else {
+                return
+            }
+            self.navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, self.controller.frame.width, self.controller.bar.height)
+            self.navigationRightBorder.frame = NSMakeRect(view.frame.width - .borderSize, 0, .borderSize, self.navigationBar.frame.height)
+        }
     }
     
     public func closeSidebar() {
@@ -68,6 +74,10 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     }
     
   
+    open override func viewDidResized(_ size: NSSize) {
+        _ = atomicSize.swap(size)
+        self.genericView.setFrameSize(size)
+    }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController, _ window: Window) {
         self.majorClass = majorClass
