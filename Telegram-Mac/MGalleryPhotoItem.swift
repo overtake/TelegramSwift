@@ -130,11 +130,11 @@ class MGalleryPhotoItem: MGalleryItem {
                             if let orientation = orientation {
                                 let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
                                 if let transformed = transformed {
-                                    return (NSImage(cgImage: transformed, size: transformed.size), orientation)
+                                    return (NSImage(cgImage: transformed, size: size), orientation)
                                 }
                             }
                             if let image = image {
-                                return (NSImage(cgImage: image, size: image.size), orientation)
+                                return (NSImage(cgImage: image, size: size), orientation)
                             } else {
                                 return (nil, orientation)
                             }
