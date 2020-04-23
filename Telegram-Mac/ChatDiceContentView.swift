@@ -140,7 +140,7 @@ class ChatDiceContentView: ChatMediaContentView {
         if let media = media, let message = self.parent {
             let item = self.table?.item(stableId: ChatHistoryEntryId.message(message))
             
-            if let item = item as? ChatRowItem, let peer = item.peer, canSendMessagesToPeer(peer) {
+            if let item = item as? ChatRowItem, let peer = item.peer, peer.canSendMessage {
                 let text: String
                 
                 switch media.emoji {

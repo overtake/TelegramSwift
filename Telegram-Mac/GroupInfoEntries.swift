@@ -1532,7 +1532,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
         }
         
-        if channelMembers.count >= minumimUsersBlock {
+        if channelMembers.count <= minumimUsersBlock {
             
             let participants = channelMembers
             

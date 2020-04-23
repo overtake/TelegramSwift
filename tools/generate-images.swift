@@ -171,6 +171,7 @@ func initialize() -> [String] {
     array.append("chatFileThumbBubble_incoming")
     array.append("chatFileThumbBubble_outgoing")
     array.append("chatSecretThumb")
+    array.append("chatSecretThumbSmall")
     array.append("chatMapPin")
     array.append("chatSecretTitle")
     array.append("emptySearch")
