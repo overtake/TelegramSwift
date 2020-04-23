@@ -661,7 +661,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         if let item = item as? InputDataRowItem {
-            if item.currentText != textView.attributedString() {
+            if item.currentText != textView.attributedString(), !textView.inputView.hasMarkedText() {
                 item.currentText = textView.attributedString()
             }
         }
