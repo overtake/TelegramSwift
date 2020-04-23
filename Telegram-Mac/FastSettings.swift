@@ -361,11 +361,11 @@ class FastSettings {
         })
     }
     
-    static func diceHasAlreadyPlayed(_ messageId: MessageId) -> Bool {
-        return UserDefaults.standard.bool(forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+    static func diceHasAlreadyPlayed(_ message: Message) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
     }
-    static func markDiceAsPlayed(_ messageId: MessageId) {
-        UserDefaults.standard.set(true, forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+    static func markDiceAsPlayed(_ message: Message) {
+        UserDefaults.standard.set(true, forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
         UserDefaults.standard.synchronize()
     }
     

@@ -65,9 +65,15 @@ private enum DicePlay : Equatable {
 
 private struct DiceState : Equatable {
     let messageId: MessageId
+    let message: Message
     let play: DicePlay
     
+    static func ==(lhs: DiceState, rhs: DiceState) -> Bool {
+        return lhs.play == rhs.play && isEqualMessages(lhs.message, rhs.message)
+    }
+    
     init(message: Message) {
+        self.message = message
         self.messageId = message.id
         if let dice = message.media.first as? TelegramMediaDice, dice.value == 0 {
             play = .idle
@@ -79,7 +85,7 @@ private struct DiceState : Equatable {
             } else if message.flags.isSending {
                 play = .idle
             } else {
-                if !FastSettings.diceHasAlreadyPlayed(message.id) {
+                if !FastSettings.diceHasAlreadyPlayed(message) {
                     play = .end(animated: true)
                 } else {
                     play = .end(animated: false)
@@ -223,7 +229,7 @@ class ChatDiceContentView: ChatMediaContentView {
         
         let diceState = DiceState(message: parent)
         
-        if self.diceState != diceState {
+       // if self.diceState != diceState {
             
             self.diceState = diceState
             
@@ -254,7 +260,7 @@ class ChatDiceContentView: ChatMediaContentView {
                     
                     animation.onFinish = {
                         if case .end = diceState.play {
-                            FastSettings.markDiceAsPlayed(parent.id)
+                            FastSettings.markDiceAsPlayed(parent)
                         }
                     }
                     switch diceState.play {
@@ -321,10 +327,10 @@ class ChatDiceContentView: ChatMediaContentView {
                     self.thumbView.image = nil
                 }
             }))
-            
-           
-            
-        }
+       // } else {
+            var bp:Int = 0
+            bp += 1
+      //  }
         
        
         
