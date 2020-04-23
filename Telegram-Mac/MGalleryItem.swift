@@ -446,15 +446,15 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.backgroundColor = self.backgroundColor.cgColor
 
             if let magnify = view.superview?.superview as? MagnifyView {
-                if let size = value.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150, magnify.magnify == 1.0, first {
-                    self.modifiedSize = size
-                    if magnify.contentSize != self.sizeValue {
-                        magnify.contentSize = self.sizeValue
-                    } else {
-                        let size = magnify.contentSize
-                        magnify.contentSize = size
-                    }
-                } else {
+//                if let size = value.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150, magnify.magnify == 1.0, first {
+//                    self.modifiedSize = size
+//                    if magnify.contentSize != self.sizeValue {
+//                        magnify.contentSize = self.sizeValue
+//                    } else {
+//                        let size = magnify.contentSize
+//                        magnify.contentSize = size
+//                    }
+//                } else {
                     var size = magnify.contentSize
                     if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, !first {
                       //  if magnify.magnify > 1 {
@@ -471,7 +471,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                       //  }
                     }
                     magnify.contentSize = size
-                }
+              //  }
             }
             first = false
         }

@@ -280,10 +280,35 @@ class ChatDiceContentView: ChatMediaContentView {
                     self.playerView.set(nil)
                 }
                 
+                self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
+                    guard let `self` = self else { return }
+                    switch state {
+                    case .playing:
+                        self.playerView.isHidden = false
+                        self.thumbView.isHidden = true
+                    case .initializing, .failed:
+                        switch diceState.play {
+                        case let .end(animated):
+                            if animated {
+                                self.playerView.isHidden = false
+                                self.thumbView.isHidden = true
+                            } else {
+                                self.playerView.isHidden = true
+                                self.thumbView.isHidden = false
+                            }
+                        default:
+                            self.playerView.isHidden = false
+                            self.thumbView.isHidden = true
+                        }
+                    case .stoped:
+                        self.playerView.isHidden = false
+                        self.thumbView.isHidden = false
+                    }
+                }))
+                
                 
                 if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
                     let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-
                     
                     self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
                     if !self.thumbView.isFullyLoaded {
@@ -294,41 +319,10 @@ class ChatDiceContentView: ChatMediaContentView {
                     } else {
                         self.thumbView.dispose()
                     }
-                    
-                  
-                    
-                    self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
-                        guard let `self` = self else { return }
-                        switch state {
-                        case .playing:
-                            self.playerView.isHidden = false
-                            self.thumbView.isHidden = true
-                        case .initializing, .failed:
-                            switch diceState.play {
-                            case let .end(animated):
-                                if animated {
-                                    self.playerView.isHidden = false
-                                    self.thumbView.isHidden = true
-                                } else {
-                                    self.playerView.isHidden = true
-                                    self.thumbView.isHidden = false
-                                }
-                            default:
-                                self.playerView.isHidden = false
-                                self.thumbView.isHidden = true
-                            }
-                        case .stoped:
-                            self.playerView.isHidden = false
-                            self.thumbView.isHidden = false
-                        }
-                    }))
                 } else {
                     self.thumbView.image = nil
                     self.stateDisposable.set(nil)
                 }
-                
-                
-                
             }))
             
            
