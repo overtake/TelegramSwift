@@ -351,7 +351,7 @@ class ChatDiceContentView: ChatMediaContentView {
             
             self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
             //if !self.thumbView.isFullyLoaded {
-            self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue?.diceSide ?? diceIdle, scale: self.backingScaleFactor, size: size), cacheImage: { result in
+            self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: sideSymbol, scale: self.backingScaleFactor, size: size), cacheImage: { result in
                 cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
             })
             self.thumbView.set(arguments: arguments)
