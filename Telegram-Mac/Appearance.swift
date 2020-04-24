@@ -143,6 +143,14 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
     })!
 }
 
+private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {
+    return generateImage(NSMakeSize(floor(image.size.width * 0.7), floor(image.size.height * 0.7)), contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.draw(image, in: rect)
+    }, scale: 1.0)!
+}
+
 private func generateLoginQrEmptyCap() -> CGImage {
     return generateImage(NSMakeSize(60, 60), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -1846,6 +1854,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFileThumbBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_incoming,  flipVertical:true) },
                                                chatFileThumbBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_outgoing, flipVertical:true) },
                                                chatSecretThumb: { #imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true) },
+                                               chatSecretThumbSmall: { generateSecretThumbSmall(#imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true)) },
                                                chatMapPin: { #imageLiteral(resourceName: "Icon_MapPinned").precomposed() },
                                                chatSecretTitle: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.text, flipVertical:true) },
                                                emptySearch: { #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(palette.grayIcon) },
@@ -2092,7 +2101,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
-                                               appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon) },
+                                               appearanceAddPlatformTheme: {
+                                                let image = NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon)
+                                                return generateImage(image.backingSize, contextGenerator: { size, ctx in
+                                                    ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                                                    ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
+                                                }, scale: System.backingScale)! },
                                                wallet_close: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                wallet_qr: { NSImage(named: "Icon_WalletQR")!.precomposed(palette.accentIcon) },
                                                wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(palette.underSelectedColor) },
@@ -2175,7 +2189,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
-                                               chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) }
+                                               chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
+                                               stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon) }
     )
 
 }

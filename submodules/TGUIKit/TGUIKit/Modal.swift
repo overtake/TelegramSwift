@@ -791,12 +791,13 @@ public class Modal: NSObject {
                     } else {
                         view.addSubview(background)
                     }
-                    if let value = strongSelf.controller?.becomeFirstResponder(), value {
-                        _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
-                    } else {
-                        _ = strongSelf.window.makeFirstResponder(nil)
+                    if let value = strongSelf.controller?.becomeFirstResponder() {
+                        if value {
+                            _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                        } else {
+                            _ = strongSelf.window.makeFirstResponder(nil)
+                        }
                     }
-                    
                     let animatedBackground = strongSelf.animated && !hideBelowModalsIfNeeded(except: strongSelf)
                     
                     if animatedBackground {

@@ -744,12 +744,16 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     }
     
     showTooltipForQuiz = { [weak controller] in
-        let firstOption = stateValue.with({ $0.options.first })
-        if let option = firstOption {
+        let options = stateValue.with({ $0.options })
+        for option in options {
             let view = controller?.tableView.item(stableId: InputDataEntryId.input(option.identifier))?.view as? InputDataRowView
-            delay(0.2, closure: { [weak view] in
-                view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
-            })
+            if view?.visibleRect.height == view?.frame.height {
+                delay(0.2, closure: { [weak view] in
+                    view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
+                })
+                break
+            }
+            
         }
         
     }

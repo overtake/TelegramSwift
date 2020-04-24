@@ -101,8 +101,8 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
             if let value = value {
                 switch value {
                 case let .peer(peerId):
-                    return postbox.transaction { transaction -> Bool in
-                        return transaction.getPeer(peerId)?.canSendMessage ?? false
+                    return postbox.peerView(id: peerId) |> map {
+                        return peerViewMainPeer($0)?.canSendMessage ?? false
                     }
                 }
             } else {

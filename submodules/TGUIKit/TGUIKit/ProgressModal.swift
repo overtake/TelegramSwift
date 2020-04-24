@@ -49,6 +49,10 @@ class ProgressModalController: ModalViewController {
         return true
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         super.close(animationType: animationType)
         disposable.dispose()

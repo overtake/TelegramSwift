@@ -180,7 +180,7 @@ class ChatMapRowItem: ChatMediaItem {
 private class LiveLocationRowView : ChatMediaView {
     private let liveText: TextView = TextView()
     private let updatedText: TextView = TextView()
-    private let progress:TimableProgressView = TimableProgressView(TimableProgressTheme(seconds: 20))
+    private let progress:TimableProgressView = TimableProgressView(theme: TimableProgressTheme(seconds: 20))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         rowView.addSubview(updatedText)

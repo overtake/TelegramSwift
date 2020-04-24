@@ -984,6 +984,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let shiftSelectedDisposable = MetaDisposable()
     private let updateUrlDisposable = MetaDisposable()
     private let loadSharedMediaDisposable = MetaDisposable()
+    private let applyMaxReadIndexDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1399,7 +1400,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         case let .peer(peerId):
                             if !hasModals() {
                                 clearNotifies(peerId, maxId: messageIndex.id)
-                                _ = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex).start()
+                                let signal = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex)
+                                self.applyMaxReadIndexDisposable.set(signal.start())
                             }
                         }
                     }
@@ -1582,7 +1584,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
             
             let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
-            
             self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime)
             |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
@@ -3012,7 +3013,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch chatLocation {
         case let .peer(peerId):
-            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId)).start(next: { _ in
+            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
                 
                 if FastSettings.inAppSounds {
                     let afterSentSound:NSSound? = {
@@ -3412,6 +3413,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let oldState = genericView.state
         
         genericView.change(state: isLoading ? .progress : .visible, animated: view != nil)
+        
       
         genericView.tableView.merge(with: transition)
         
@@ -3433,26 +3435,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let view = view, !view.entries.isEmpty {
             
            let tableView = genericView.tableView
-            if !tableView.isEmpty {
-                
-                var earliest:Message?
-                var latest:Message?
-                self.genericView.tableView.enumerateVisibleItems(reversed: true, with: { item -> Bool in
-                    
-                    if let item = item as? ChatRowItem {
-                        earliest = item.message
-                    }
-                    return earliest == nil
-                })
-                
-                self.genericView.tableView.enumerateVisibleItems { item -> Bool in
-                    
-                    if let item = item as? ChatRowItem {
-                        latest = item.message
-                    }
-                    return latest == nil
-                }
-            }
+//            if !tableView.isEmpty {
+//                
+//                var earliest:Message?
+//                var latest:Message?
+//                self.genericView.tableView.enumerateVisibleItems(reversed: true, with: { item -> Bool in
+//                    
+//                    if let item = item as? ChatRowItem {
+//                        earliest = item.message
+//                    }
+//                    return earliest == nil
+//                })
+//                
+//                self.genericView.tableView.enumerateVisibleItems { item -> Bool in
+//                    
+//                    if let item = item as? ChatRowItem {
+//                        latest = item.message
+//                    }
+//                    return latest == nil
+//                }
+//            }
             
         } else if let peer = chatInteraction.peer, peer.isBot {
             if chatInteraction.presentation.initialAction == nil && self.genericView.state == .visible {
@@ -3863,6 +3865,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
+        applyMaxReadIndexDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

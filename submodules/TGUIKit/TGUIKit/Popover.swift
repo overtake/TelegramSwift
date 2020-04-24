@@ -47,10 +47,7 @@ open class Popover: NSObject {
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
         self.background.layer?.isOpaque = false
-//        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 10
-//        self.background.layer?.shadowColor = NSColor.black.cgColor
-//        self.background.toolTip = ""
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 4
@@ -145,7 +142,6 @@ open class Popover: NSObject {
                         }
                     }
                 }
-                //NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
                 
                 if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight || strongSelf.static) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
                     
@@ -196,8 +192,6 @@ open class Popover: NSObject {
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
                     
-                    
-                   // controller.view.layer?.cornerRadius = .cornerRadius
                     controller.view.setFrameOrigin(NSMakePoint(0, 0))
                     
                     
@@ -205,7 +199,6 @@ open class Popover: NSObject {
                     
                     parentView.addSubview(strongSelf.background)
                     
-                    //strongSelf.overlay.center()
                     
                     _ = controller.becomeFirstResponder()
                     
@@ -223,14 +216,6 @@ open class Popover: NSObject {
                                 }
                                 
                             })
-                            
-//                            for sub in strongSelf.background.subviews {
-//
-//
-//                                //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
-//                            }
-//
-                            
                             
                         }
                         

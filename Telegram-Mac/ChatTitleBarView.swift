@@ -384,6 +384,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         badgeNode.view!.setFrameOrigin(6,4)
         
         closeButton.centerY()
+        
     }
     
     
