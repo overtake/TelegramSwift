@@ -185,40 +185,45 @@ class DiceCache {
             guard let `self` = self else {
                 return EmptyDisposable
             }
-            
+            var cancelled = false
             let disposable = MetaDisposable()
             
             let invoke = {
-                var dataContext: [String: DiceSideDataContext]
-                if let dc = self.dataContexts[baseSymbol] {
-                    dataContext = dc
-                } else {
-                    dataContext = [:]
-                    self.dataContexts[baseSymbol] = dataContext
-                }
-                
-                let context: DiceSideDataContext
-                if let current = dataContext[side] {
-                    context = current
-                } else {
-                    context = DiceSideDataContext()
-                    dataContext[side] = context
-                }
-                
-                let index = context.subscribers.add({ data in
-                    subscriber.putNext(data)
-                })
-                
-                if let data = context.data {
-                    subscriber.putNext(data)
-                }
-                disposable.set(ActionDisposable { [weak self] in
-                    resourcesQueue.async {
-                        if let current = self?.dataContexts[baseSymbol]?[side] {
-                            current.subscribers.remove(index)
-                        }
+                if !cancelled {
+                    var dataContext: [String: DiceSideDataContext]
+                    if let dc = self.dataContexts[baseSymbol] {
+                        dataContext = dc
+                    } else {
+                        dataContext = [:]
                     }
-                })
+                    
+                    let context: DiceSideDataContext
+                    if let current = dataContext[side] {
+                        context = current
+                    } else {
+                        context = DiceSideDataContext()
+                        dataContext[side] = context
+                    }
+                    self.dataContexts[baseSymbol] = dataContext
+                    
+                    let index = context.subscribers.add({ data in
+                        if !cancelled {
+                            subscriber.putNext(data)
+                        }
+                    })
+                    
+                    if let data = context.data {
+                        subscriber.putNext(data)
+                    }
+                    disposable.set(ActionDisposable { [weak self] in
+                        resourcesQueue.async {
+                            if let current = self?.dataContexts[baseSymbol]?[side] {
+                                current.subscribers.remove(index)
+                            }
+                        }
+                    })
+                }
+                
             }
             
             if synchronous {
@@ -228,7 +233,10 @@ class DiceCache {
             }
             
             
-            return disposable
+            return ActionDisposable {
+                disposable.dispose()
+                cancelled = true
+            }
         }
     }
     
