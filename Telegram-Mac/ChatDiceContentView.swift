@@ -270,9 +270,11 @@ class ChatDiceContentView: ChatMediaContentView {
                             saveContext = true
                         } else {
                             playPolicy = .toEnd(from: .max)
+                            FastSettings.markDiceAsPlayed(parent)
                         }
                     } else {
                         playPolicy = .toEnd(from: .max)
+                        FastSettings.markDiceAsPlayed(parent)
                     }
                     
                 } else {
