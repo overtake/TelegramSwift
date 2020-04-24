@@ -238,6 +238,9 @@ class ChatDiceContentView: ChatMediaContentView {
         data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
         
         
+        self.playerView.isHidden = true
+        self.thumbView.isHidden = false
+        
         self.playerView.animation?.triggerOn = nil
         self.playerView.animation?.onFinish = nil
         
