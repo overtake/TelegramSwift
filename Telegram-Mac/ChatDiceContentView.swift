@@ -13,16 +13,16 @@ import SyncCore
 import TGUIKit
 import SwiftSignalKit
 
-private let diceSide1: String = "1️⃣"
-private let diceSide2: String = "2️⃣"
-private let diceSide3: String = "3️⃣"
-private let diceSide4: String = "4️⃣"
-private let diceSide5: String = "5️⃣"
-private let diceSide6: String = "6️⃣"
-private let diceSide7: String = "7️⃣"
-private let diceSide8: String = "8️⃣"
-private let diceSide9: String = "9️⃣"
-private let diceIdle: String = "#️⃣"
+let diceSide1: String = "1️⃣"
+let diceSide2: String = "2️⃣"
+let diceSide3: String = "3️⃣"
+let diceSide4: String = "4️⃣"
+let diceSide5: String = "5️⃣"
+let diceSide6: String = "6️⃣"
+let diceSide7: String = "7️⃣"
+let diceSide8: String = "8️⃣"
+let diceSide9: String = "9️⃣"
+let diceIdle: String = "#️⃣"
 
 
 
@@ -229,43 +229,61 @@ class ChatDiceContentView: ChatMediaContentView {
         
         let diceState = DiceState(message: parent)
         
-       // if self.diceState != diceState {
+        
+        self.diceState = diceState
+        
+        
+        
+        let data: Signal<(Data?, TelegramMediaFile), NoError>
+        data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
+        
+        
+        self.playerView.animation?.triggerOn = nil
+        self.playerView.animation?.onFinish = nil
+        
+        self.loadResourceDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] data in
+            guard let `self` = self else {
+                return
+            }
+            let playPolicy: LottiePlayPolicy
             
-            self.diceState = diceState
             
-            let data: Signal<(Data?, TelegramMediaFile), NoError>
-            data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
-            
-            
-            self.loadResourceDisposable.set((data |> deliverOnMainQueue).start(next: { [weak self] data in
-                guard let `self` = self else {
-                    return
-                }
-                let playPolicy: LottiePlayPolicy
-                
-                switch diceState.play {
-                case .failed:
-                    playPolicy = .framesCount(1)
-                case .idle:
-                    playPolicy = .loop
-                case let .end(animated):
-                    if !animated {
-                        playPolicy = .toEnd(from: .max)
-                    } else {
-                        playPolicy = .toEnd(from: 0)
-                    }
-                }
-                if let bytes = data.0 {
-                    let animation = LottieAnimation(compressed: bytes, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
-                    
-                    animation.onFinish = {
-                        if case .end = diceState.play {
-                            FastSettings.markDiceAsPlayed(parent)
+            switch diceState.play {
+            case .failed:
+                playPolicy = .framesCount(1)
+            case .idle:
+                playPolicy = .loop
+            case let .end(toEndWithAnimation):
+                if !toEndWithAnimation || approximateSynchronousValue || self.visibleRect.height == 0 {
+                    if self.visibleRect.height == 0 && toEndWithAnimation && !approximateSynchronousValue {
+                        let item = self.table?.item(stableId: ChatHistoryEntryId.message(parent))
+                        if let item = item, let table = self.table, table.visibleRows().contains(item.index) {
+                            playPolicy = .toEnd(from: 0)
+                        } else {
+                            playPolicy = .toEnd(from: .max)
                         }
+                    } else {
+                        playPolicy = .toEnd(from: .max)
                     }
-                    switch diceState.play {
-                    case let .end(animated):
-                        if let previous = self.playerView.animation {
+                    
+                } else {
+                    playPolicy = .toEnd(from: 0)
+                }
+                
+            }
+            if let bytes = data.0 {
+                let animation = LottieAnimation(compressed: bytes, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
+
+                animation.onFinish = {
+                    if case .end = diceState.play {
+                        FastSettings.markDiceAsPlayed(parent)
+                    }
+                }
+                switch diceState.play {
+                case let .end(animated):
+                    if let previous = self.playerView.animation, animated {
+                        switch self.playerView.currentState {
+                        case .playing:
                             previous.triggerOn = (.last, { [weak self] in
                                 self?.playerView.set(animation)
                                 if animated, let confetti = settings.playConfetti(baseSymbol), confetti.value == currentValue {
@@ -273,60 +291,62 @@ class ChatDiceContentView: ChatMediaContentView {
                                         if self?.visibleRect.height == self?.frame.height {
                                             PlayConfetti(for: context.window)
                                         }
-                                    })
+                                    }, {})
                                 }
+                            }, { [weak self] in
+                                self?.playerView.set(animation)
                             })
-                        } else {
+                        default:
                             self.playerView.set(animation)
                         }
-                    default:
+
+                    } else {
                         self.playerView.set(animation)
                     }
-                } else {
-                    self.playerView.set(nil)
+                default:
+                    self.playerView.set(animation)
                 }
-                
-                self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
-                    guard let `self` = self else { return }
-                    switch state {
-                    case .playing:
-                        self.playerView.isHidden = false
-                        self.thumbView.isHidden = true
-                    case .initializing, .failed:
-                        switch diceState.play {
-                        case let .end(animated):
-                            if animated {
-                                self.playerView.isHidden = false
-                                self.thumbView.isHidden = true
-                            } else {
-                                self.playerView.isHidden = true
-                                self.thumbView.isHidden = false
-                            }
-                        default:
+            } else {
+                self.playerView.set(nil)
+            }
+
+            self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
+                guard let `self` = self else { return }
+                switch state {
+                case .playing:
+                    self.playerView.isHidden = false
+                    self.thumbView.isHidden = true
+                case .initializing, .failed:
+                    switch diceState.play {
+                    case let .end(animated):
+                        if animated {
                             self.playerView.isHidden = false
                             self.thumbView.isHidden = true
+                        } else {
+                            self.playerView.isHidden = true
+                            self.thumbView.isHidden = false
                         }
-                    case .stoped:
+                    default:
                         self.playerView.isHidden = false
-                        self.thumbView.isHidden = false
+                        self.thumbView.isHidden = true
                     }
-                }))
-                
-                
-                if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
-                    let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-                    
-                    self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
-                    if !self.thumbView.isFullyLoaded {
-                        self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue.diceSide, scale: self.backingScaleFactor, size: size), cacheImage: { result in
-                            cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
-                        })
-                        self.thumbView.set(arguments: arguments)
-                    }
-                } else {
-                    self.thumbView.image = nil
+                case .stoped:
+                    self.playerView.isHidden = false
+                    self.thumbView.isHidden = false
                 }
             }))
+            
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            
+            self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
+            if !self.thumbView.isFullyLoaded {
+                self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue?.diceSide ?? diceIdle, scale: self.backingScaleFactor, size: size), cacheImage: { result in
+                    cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
+                })
+                self.thumbView.set(arguments: arguments)
+            }
+        }))
        // } else {
             var bp:Int = 0
             bp += 1
