@@ -512,7 +512,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         if newSize.width > 0 || newSize.height > 0 {
             super.setFrameSize(newSize)
             
-            if oldWidth != frame.width {
+            if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
                 if let table = table {
                     table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
                 }
@@ -2959,7 +2959,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
         
         //updateStickAfterScroll(false)
-        if oldWidth != newSize.width, !inLiveResize {
+        if oldWidth != newSize.width, !inLiveResize && newSize.width > 0 && newSize.height > 0 {
             saveScrollState(visible)
         }
     }
