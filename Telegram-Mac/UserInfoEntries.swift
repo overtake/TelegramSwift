@@ -485,7 +485,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     if !lhsPeer.isEqual(rhsPeer) {
                         return false
                     }
-                } else if (lhsPeer == nil) != (rhsPeer != nil) {
+                } else if (lhsPeer != nil) != (rhsPeer != nil) {
                     return false
                 }
                 

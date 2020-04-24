@@ -363,7 +363,6 @@
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        
         topPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
         topPanelView.setCorners(self.corners)
         topPanelSeparatorView.frame = NSMakeRect(0, topPanelView.frame.height - .borderSize, topPanelView.frame.width, .borderSize)
@@ -375,6 +374,8 @@
             segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
         }
         mainView?.frame = NSMakeRect(0, 50, frame.width, frame.height - inset - 50)
+        
+
     }
     
     required init?(coder: NSCoder) {

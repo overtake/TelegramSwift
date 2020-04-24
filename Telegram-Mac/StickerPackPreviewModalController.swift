@@ -117,7 +117,7 @@ private class StickersModalView : View {
             let attr = NSMutableAttributedString()
             
             _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
-            attr.detectLinks(type: [.Mentions], context: arguments.context, color: .accent, openInfo: { (peerId, _, _, _) in
+            attr.detectLinks(type: [.Mentions], context: arguments.context, color: theme.colors.accent, openInfo: { (peerId, _, _, _) in
                 _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
                     if peer.isUser || peer.isBot {

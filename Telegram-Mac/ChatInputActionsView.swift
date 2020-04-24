@@ -161,14 +161,14 @@ class ChatInputActionsView: View, Notifable {
             if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
                 enabled = sidebarEnabled
             }
-            if !((mainWindow.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize)) || !enabled {
+            if !((chatInteraction.context.window.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize)) || !enabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
     }
     
     private func showEntertainment() {
-        let rect = NSMakeRect(0, 0, 350, max(mainWindow.frame.height - 400, 300))
+        let rect = NSMakeRect(0, 0, 350, max(chatInteraction.context.window.frame.height - 300, 300))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
         showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)

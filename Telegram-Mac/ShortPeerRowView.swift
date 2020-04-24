@@ -417,7 +417,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             if selectControl == nil {
                 selectControl = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
             }
-            selectControl?.set(selected: interaction.presentation.selected.contains(item.peer.id), animated: animated)
+            selectControl?.set(selected: interaction.presentation.selected.contains(item.peerId), animated: animated)
             
             containerView.addSubview(selectControl!)
             
@@ -451,7 +451,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             deleteControl?.removeAllHandlers()
             deleteControl?.set(handler: { [weak item] _ in
                 if let item = item, item.enabled {
-                    interaction.onRemove(item.peer.id)
+                    interaction.onRemove(item.peerId)
                 }
             }, for: .Click)
             
@@ -505,7 +505,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             guard let activities = activities else {return}
             
-            let inputActivites: (PeerId, [(Peer, PeerInputActivity)]) = (item.peer.id, [(item.peer, activity)])
+            let inputActivites: (PeerId, [(Peer, PeerInputActivity)]) = (item.peerId, [(item.peer, activity)])
             
             activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
                 self?.needsLayout = true
@@ -600,7 +600,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     func invokeAction(_ item: ShortPeerRowItem, clickCount: Int) {
         switch item.interactionType {
         case let .selectable(interaction):
-            interaction.update({$0.withToggledSelected(item.peer.id, peer: item.peer)})
+            interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
         default:
             if clickCount <= 1 {
                 item.action()
@@ -617,8 +617,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             switch item.interactionType {
             case .selectable(_):
                 if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
-                    let new = value.selected.contains(item.peer.id)
-                    let old = oldValue.selected.contains(item.peer.id)
+                    let new = value.selected.contains(item.peerId)
+                    let old = oldValue.selected.contains(item.peerId)
                     if new != old {
                         selectControl?.set(selected: new, animated: animated)
                     }

@@ -20,13 +20,21 @@ final class StickerPanelArguments {
     let navigate:(ItemCollectionViewEntryIndex)->Void
     let addPack: (StickerPackReference)->Void
     let clearRecent:()->Void
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void) {
+    let removePack:(StickerPackCollectionId)->Void
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
         self.addPack = addPack
         self.navigate = navigate
         self.clearRecent = clearRecent
+        self.removePack = removePack
+    }
+}
+
+extension FoundStickerSets {
+    func updateInfos(_ f:([(ItemCollectionId, ItemCollectionInfo, ItemCollectionItem?, Bool)])->[(ItemCollectionId, ItemCollectionInfo, ItemCollectionItem?, Bool)]) -> FoundStickerSets {
+        return FoundStickerSets.init(infos: f(self.infos), entries: self.entries)
     }
 }
 
@@ -49,6 +57,7 @@ enum PackEntry: Comparable, Identifiable {
     case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
     case recent
     case saved
+    case featured
     case specificPack(data: SpecificPackData)
     
     var stableId: StickerPackCollectionId {
@@ -59,6 +68,8 @@ enum PackEntry: Comparable, Identifiable {
             return .recent
         case .saved:
             return .saved
+        case .featured:
+            return .featured
         case let .specificPack(data):
             return .specificPack(data.info.id)
             
@@ -67,6 +78,8 @@ enum PackEntry: Comparable, Identifiable {
     
     var index: Int {
         switch self {
+        case .featured:
+            return -1
         case .saved:
             return 0
         case .recent:
@@ -87,7 +100,7 @@ enum PackEntry: Comparable, Identifiable {
 
 
 private enum StickerPacksUpdate {
-    case generic(animated: Bool, scrollToTop: Bool)
+    case generic(animated: Bool, scrollToTop: Bool?)
     case scroll(animated: Bool)
     case navigate(StickerPacksIndex, animated: Bool)
 }
@@ -98,12 +111,12 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case speficicPack(ItemCollectionId)
     case recent(Int)
     case saved(Int)
-    
+    case featured(Int)
     var packIndex:ItemCollectionViewEntryIndex {
         switch self {
         case let .sticker(index):
             return index
-        case let .saved(index), let .recent(index):
+        case let .saved(index), let .recent(index), let .featured(index):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
@@ -120,6 +133,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .saved
         case let .speficicPack(id):
             return .specificPack(id)
+        case .featured:
+            return .featured
         }
     }
     
@@ -129,6 +144,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
     
     var index: Int {
         switch self {
+        case .featured:
+            return -1
         case .saved:
             return 0
         case .recent:
@@ -155,7 +172,37 @@ private enum StickerPacksIndex : Hashable, Comparable {
 }
 
 private enum StickerPacksScrollState: Equatable {
+    static func == (lhs: StickerPacksScrollState, rhs: StickerPacksScrollState) -> Bool {
+        switch lhs {
+        case .initial:
+            if case .initial = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .loadFeaturedMore(lhsFound):
+            if case .loadFeaturedMore(let rhsFound) = rhs {
+                return lhsFound.sets.infos.map { $0.0 } == rhsFound.sets.infos.map { $0.0 }
+            } else {
+                return false
+            }
+        case let .scroll(aroundIndex):
+            if case .scroll(aroundIndex) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .navigate(aroundIndex):
+            if case .navigate(aroundIndex) = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+    
     case initial
+    case loadFeaturedMore(StickerPacksSearchData)
     case scroll(aroundIndex: StickerPacksIndex)
     case navigate(index: StickerPacksIndex)
 }
@@ -163,6 +210,7 @@ private enum StickerPacksScrollState: Equatable {
 private struct StickerPacksSearchData {
     let sets: FoundStickerSets
     let loading: Bool
+    let basicFeaturedCount: Int
 }
 
 private struct StickerPacksUpdateData {
@@ -178,17 +226,25 @@ private struct StickerPacksUpdateData {
     }
 }
 enum StickerPackInfo : Equatable {
-    case pack(StickerPackCollectionInfo?, Bool)
+    case pack(StickerPackCollectionInfo?, installed: Bool, featured: Bool)
     case speficicPack(StickerPackCollectionInfo?)
     case recent
     case saved
     
     var installed: Bool {
         switch self {
-        case let .pack(_, installed):
+        case let .pack(_, installed, _):
             return installed
         default:
             return true
+        }
+    }
+    var featured: Bool {
+        switch self {
+        case let .pack(_, _, featured):
+            return featured
+        default:
+            return false
         }
     }
 }
@@ -196,6 +252,7 @@ enum StickerPackInfo : Equatable {
 enum StickerPackCollectionId : Hashable {
     case pack(ItemCollectionId)
     case recent
+    case featured
     case specificPack(ItemCollectionId)
     case saved
     
@@ -336,7 +393,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                         }
                     }
                     if !files.isEmpty {
-                        entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: id, itemIndex: item.index)), files: files, packInfo: .pack(info, true), collectionId: .pack(id)))
+                        entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: id, itemIndex: item.index)), files: files, packInfo: .pack(info, installed: true, featured: false), collectionId: .pack(id)))
                     }
                 }
             } else {
@@ -361,7 +418,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                             }
                         }
                         if !files.isEmpty {
-                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: files, packInfo: .pack(info, set.3), collectionId: .pack(info.id)))
+                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: Array(files.prefix(5)), packInfo: .pack(info, installed: set.3, featured: true), collectionId: .pack(info.id)))
                         }
                     }
                 } else {
@@ -381,6 +438,8 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
     var index: Int = 0
     
     if let view = view {
+        entries.append(.featured)
+        
         if !view.orderedItemListsViews[1].items.isEmpty {
             entries.append(.saved)
         }
@@ -412,11 +471,16 @@ private func prepareStickersTransition(from:[AppearanceWrapperEntry<StickerPackE
     switch update {
     case let .generic(animated, scrollToTop):
         anim = animated
-        if scrollToTop {
-            state = .up(animated)
+        if let scrollToTop = scrollToTop {
+            if scrollToTop {
+                state = .up(animated)
+            } else {
+                state = .saveVisible(.lower)
+            }
         } else {
-            state = .saveVisible(.lower)
+            state = .none(nil)
         }
+        
     case let .scroll(animated):
         state = .saveVisible(.upper)
         anim = animated
@@ -434,6 +498,8 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
         case let .stickerPack(index, stableId, info, topItem):
             return StickerPackRowItem(initialSize, packIndex: index, context: context, stableId: stableId, info: info, topItem: topItem)
         case .recent:
+            return RecentPackRowItem(initialSize, entry.entry.stableId)
+        case .featured:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .saved:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
@@ -561,15 +627,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         bar = .init(height: 0)
         
         self.searchStateDisposable.set(search.start(next: { [weak self] state in
+            self?.position.set(.initial)
             self?.searchState = state
             if !state.request.isEmpty {
                 self?.makeSearchCommand?(.loading)
-            }
-            switch state.state {
-            case .None:
-                self?.position.set(.initial)
-            default:
-                break
             }
         }))
     }
@@ -629,6 +690,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     if let item = item as? StickerPackRowItem {
                         index = .sticker(ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(item.packIndex), collectionId: id))
                     }
+                case .featured:
+                    self.interactions?.toggleSearch()
                 case .saved:
                     index = .saved(0)
                 case .recent:
@@ -668,6 +731,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         self.genericView.packsView.delegate = self
         
         let previous:Atomic<[AppearanceWrapperEntry<StickerPackEntry>]> = Atomic(value: [])
+        
+        let foundPacks: Atomic<StickerPacksSearchData?> = Atomic(value: nil)
+        
         let previousPacks:Atomic<[AppearanceWrapperEntry<PackEntry>]> = Atomic(value: [])
 
         
@@ -717,6 +783,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     clearRecentlyUsedStickers(transaction: transaction)
                 }).start()
             })
+        }, removePack: { collectionId in
+            if let id = collectionId.itemCollectionId {
+                _ = showModalProgress(signal: removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: .delete), for: context.window).start()
+            }
         })
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer, NoError> in
@@ -778,37 +848,78 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 return StickerPacksUpdateData(view, update, specificPack)
                             }
                     }
+                case .loadFeaturedMore:
+                    fatalError("load featured for basic packs is not possible")
                 }
             } else {
                 let searchText = values.0.request.lowercased()
                 if values.0.request.isEmpty {
-                    return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { value, view in
-                        var found = FoundStickerSets()
-                        
-                        var installedPacks = Set<ItemCollectionId>()
-                        if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
-                            if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
-                                for entry in packsEntries {
-                                    installedPacks.insert(entry.id)
+                    switch values.1 {
+                    case .initial:
+                        return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { value, view in
+                            var found = FoundStickerSets()
+                            
+                            var installedPacks = Set<ItemCollectionId>()
+                            if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
+                                if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
+                                    for entry in packsEntries {
+                                        installedPacks.insert(entry.id)
+                                    }
                                 }
                             }
-                        }
-                        
-                        for (collectionIndex, set) in value.enumerated() {
-                            if !installedPacks.contains(set.info.id) {
+                            
+                            for (collectionIndex, set) in value.enumerated() {
                                 var entries:[ItemCollectionViewEntry] = []
-
+                                
                                 for item in set.topItems {
                                     entries.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex(collectionIndex: Int32(collectionIndex), collectionId: set.info.id, itemIndex: item.index), item: item))
                                 }
                                 if !entries.isEmpty {
-                                    found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, false)], entries: entries))
+                                    found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
                                 }
                             }
+                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count)
+                            return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
                         }
-                        let searchData = StickerPacksSearchData(sets: found, loading: false)
-                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
+                    case let .loadFeaturedMore(current):
+                        return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { values, view in
+                            var found = current.sets
+                            
+                            
+                            var installedPacks = Set<ItemCollectionId>()
+                            if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
+                                if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
+                                    for entry in packsEntries {
+                                        installedPacks.insert(entry.id)
+                                    }
+                                }
+                            }
+                            
+                            found = found.updateInfos( { infos in
+                                var infos = infos
+                                for (i, info) in infos.enumerated() {
+                                    infos[i] = (info.0, info.1, info.2, installedPacks.contains(info.0))
+                                }
+                                return infos
+                            })
+                            
+                            for (collectionIndex, set) in values.enumerated() {
+                                var entries:[ItemCollectionViewEntry] = []
+                                
+                                for item in set.topItems {
+                                    entries.append(ItemCollectionViewEntry(index: ItemCollectionViewEntryIndex(collectionIndex: Int32(collectionIndex), collectionId: set.info.id, itemIndex: item.index), item: item))
+                                }
+                                if !entries.isEmpty {
+                                    found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
+                                }
+                            }
+                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount)
+                            return StickerPacksUpdateData(nil, .generic(animated: false, scrollToTop: nil), nil, searchData: searchData)
+                        }
+                    default:
+                        fatalError()
                     }
+                    
                 } else {
                     let searchLocal = searchStickerSets(postbox: context.account.postbox, query: searchText) |> map(Optional.init)
                     let searchRemote = searchStickerSetsRemotely(network: context.account.network, query: searchText) |> map(Optional.init)
@@ -821,7 +932,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         if let remote = remote {
                             value = value.merge(with: remote)
                         }
-                        let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty)
+                        let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0)
                         return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
                     }
                 }
@@ -832,6 +943,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
         let transition = combineLatest(queue: prepareQueue, appearanceSignal, signal)
              |> map { appearance, data -> (TableUpdateTransition, TableUpdateTransition, [AppearanceWrapperEntry<PackEntry>]) in
+                
+                _ = foundPacks.swap(data.searchData)
                 
                 let entries = stickersEntries(view: data.view, searchData: data.searchData, specificPack: data.specificPack).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let from = previous.swap(entries)
@@ -973,16 +1086,21 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             if let `self` = self {
                 let entries = previous.with ({ $0 })
                 let index:StickerPacksIndex?
-                switch position.direction {
-                case .bottom:
-                    index = entries.last?.entry.index
-                case .top:
-                    index = entries.first?.entry.index
-                case .none:
-                    index = nil
-                }
-                if let index = index, self.searchState.state == .None {
-                    self.position.set(.scroll(aroundIndex: index))
+                
+                if let foundPacks = foundPacks.with ({ $0 }) {
+                    self.position.set(.loadFeaturedMore(foundPacks))
+                } else {
+                    switch position.direction {
+                    case .bottom:
+                        index = entries.last?.entry.index
+                    case .top:
+                        index = entries.first?.entry.index
+                    case .none:
+                        index = nil
+                    }
+                    if let index = index, self.searchState.state == .None {
+                        self.position.set(.scroll(aroundIndex: index))
+                    }
                 }
             }
         }
