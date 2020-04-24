@@ -951,6 +951,12 @@ private final class LottieFallbackView: NSView {
 
 class LottiePlayerView : NSView {
     private var context: PlayerContext?
+    
+    private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
+    var currentState: LottiePlayerState {
+        return _currentState.with { $0 }
+    }
+    
     private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.initializing, ignoreRepeated: true)
     var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
@@ -1004,7 +1010,8 @@ class LottiePlayerView : NSView {
     }
     
     func set(_ animation: LottieAnimation?, reset: Bool = false) {
-        self.stateValue.set(.initializing)
+        
+        self.stateValue.set(self._currentState.modify { _ in .initializing })
         if let animation = animation {
             if self.context?.animation != animation || reset {
                 
@@ -1034,7 +1041,7 @@ class LottiePlayerView : NSView {
                         }
                         
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context else {
+                        guard let _ = self?.context, let `self` = self else {
                             return
                         }
                         switch state {
@@ -1044,8 +1051,7 @@ class LottiePlayerView : NSView {
                         default:
                             break
                         }
-                        
-                        self?.stateValue.set(state)
+                        self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 } else {
                     let fallback = LottieFallbackView()
@@ -1068,14 +1074,12 @@ class LottiePlayerView : NSView {
                             layer.takeRetainedValue().removeFromSuperview()
                         }
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context else {
+                        guard let _ = self?.context, let `self` = self else {
                             return
                         }
-                        self?.stateValue.set(state)
+                        self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 }
-                
-                
             }
             
         } else {
