@@ -3413,6 +3413,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let oldState = genericView.state
         
         genericView.change(state: isLoading ? .progress : .visible, animated: view != nil)
+        
       
         genericView.tableView.merge(with: transition)
         
@@ -3434,26 +3435,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let view = view, !view.entries.isEmpty {
             
            let tableView = genericView.tableView
-            if !tableView.isEmpty {
-                
-                var earliest:Message?
-                var latest:Message?
-                self.genericView.tableView.enumerateVisibleItems(reversed: true, with: { item -> Bool in
-                    
-                    if let item = item as? ChatRowItem {
-                        earliest = item.message
-                    }
-                    return earliest == nil
-                })
-                
-                self.genericView.tableView.enumerateVisibleItems { item -> Bool in
-                    
-                    if let item = item as? ChatRowItem {
-                        latest = item.message
-                    }
-                    return latest == nil
-                }
-            }
+//            if !tableView.isEmpty {
+//                
+//                var earliest:Message?
+//                var latest:Message?
+//                self.genericView.tableView.enumerateVisibleItems(reversed: true, with: { item -> Bool in
+//                    
+//                    if let item = item as? ChatRowItem {
+//                        earliest = item.message
+//                    }
+//                    return earliest == nil
+//                })
+//                
+//                self.genericView.tableView.enumerateVisibleItems { item -> Bool in
+//                    
+//                    if let item = item as? ChatRowItem {
+//                        latest = item.message
+//                    }
+//                    return latest == nil
+//                }
+//            }
             
         } else if let peer = chatInteraction.peer, peer.isBot {
             if chatInteraction.presentation.initialAction == nil && self.genericView.state == .visible {
