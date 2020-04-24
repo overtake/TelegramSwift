@@ -226,11 +226,11 @@ class DiceCache {
                 
             }
             
-            if synchronous {
+          //  if synchronous {
                 resourcesQueue.sync(invoke)
-            } else {
-                resourcesQueue.async(invoke)
-            }
+           // } else {
+            //    resourcesQueue.async(invoke)
+          //  }
             
             
             return ActionDisposable {

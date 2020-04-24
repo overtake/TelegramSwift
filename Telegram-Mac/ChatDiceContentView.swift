@@ -13,16 +13,16 @@ import SyncCore
 import TGUIKit
 import SwiftSignalKit
 
-private let diceSide1: String = "1️⃣"
-private let diceSide2: String = "2️⃣"
-private let diceSide3: String = "3️⃣"
-private let diceSide4: String = "4️⃣"
-private let diceSide5: String = "5️⃣"
-private let diceSide6: String = "6️⃣"
-private let diceSide7: String = "7️⃣"
-private let diceSide8: String = "8️⃣"
-private let diceSide9: String = "9️⃣"
-private let diceIdle: String = "#️⃣"
+let diceSide1: String = "1️⃣"
+let diceSide2: String = "2️⃣"
+let diceSide3: String = "3️⃣"
+let diceSide4: String = "4️⃣"
+let diceSide5: String = "5️⃣"
+let diceSide6: String = "6️⃣"
+let diceSide7: String = "7️⃣"
+let diceSide8: String = "8️⃣"
+let diceSide9: String = "9️⃣"
+let diceIdle: String = "#️⃣"
 
 
 
@@ -232,6 +232,8 @@ class ChatDiceContentView: ChatMediaContentView {
         
         self.diceState = diceState
         
+        
+        
         let data: Signal<(Data?, TelegramMediaFile), NoError>
         data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
         
@@ -251,16 +253,17 @@ class ChatDiceContentView: ChatMediaContentView {
                 playPolicy = .framesCount(1)
             case .idle:
                 playPolicy = .loop
-            case let .end(animated):
-                if !animated {
+            case let .end(toEndWithAnimation):
+                if !toEndWithAnimation || approximateSynchronousValue || self.visibleRect.height == 0 {
                     playPolicy = .toEnd(from: .max)
                 } else {
                     playPolicy = .toEnd(from: 0)
                 }
+                
             }
             if let bytes = data.0 {
                 let animation = LottieAnimation(compressed: bytes, key: LottieAnimationEntryKey(key: .media(data.1.id), size: size), cachePurpose: .none, playPolicy: playPolicy, maximumFps: 60)
-                
+
                 animation.onFinish = {
                     if case .end = diceState.play {
                         FastSettings.markDiceAsPlayed(parent)
@@ -286,7 +289,7 @@ class ChatDiceContentView: ChatMediaContentView {
                         default:
                             self.playerView.set(animation)
                         }
-                        
+
                     } else {
                         self.playerView.set(animation)
                     }
@@ -296,7 +299,7 @@ class ChatDiceContentView: ChatMediaContentView {
             } else {
                 self.playerView.set(nil)
             }
-            
+
             self.stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
                 guard let `self` = self else { return }
                 switch state {
@@ -324,18 +327,14 @@ class ChatDiceContentView: ChatMediaContentView {
             }))
             
             
-            if let currentValue = currentValue, currentValue > 0 && currentValue <= 6 {
-                let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-                
-                self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
-                if !self.thumbView.isFullyLoaded {
-                    self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue.diceSide, scale: self.backingScaleFactor, size: size), cacheImage: { result in
-                        cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
-                    })
-                    self.thumbView.set(arguments: arguments)
-                }
-            } else {
-                self.thumbView.image = nil
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            
+            self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
+            if !self.thumbView.isFullyLoaded {
+                self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue?.diceSide ?? diceIdle, scale: self.backingScaleFactor, size: size), cacheImage: { result in
+                    cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
+                })
+                self.thumbView.set(arguments: arguments)
             }
         }))
        // } else {
