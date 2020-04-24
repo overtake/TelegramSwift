@@ -183,7 +183,7 @@ final class CachedDiceRepresentation: CachedMediaResourceRepresentation {
     let value: String
     let size: NSSize
     var uniqueId: String {
-        return emoji + value + "2"
+        return emoji + value + ":dice2"
     }
     
     init(emoji: String, value: String, size: NSSize) {

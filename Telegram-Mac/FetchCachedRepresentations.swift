@@ -642,7 +642,7 @@ private func fetchCachedDiceRepresentation(account: Account, data: Data, represe
         if let json = String(data: dataValue, encoding: .utf8) {
             let rlottie = RLottieBridge(json: json, key: representation.emoji + representation.value)
             if let rlottie = rlottie {
-                let unmanaged = rlottie.renderFrame(rlottie.endFrame() - 1, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                let unmanaged = rlottie.renderFrame(representation.value == diceIdle ? 0 : rlottie.endFrame() - 1, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                 let colorImage = unmanaged.takeRetainedValue()
                 
                 let path = NSTemporaryDirectory() + "\(arc4random64())"
