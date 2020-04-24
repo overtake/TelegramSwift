@@ -215,6 +215,7 @@ private final class RendererState  {
     
     func cancel() -> RendererState {
         self.cancelled = true
+        
         return self
     }
 }
@@ -344,8 +345,8 @@ private final class PlayerRenderer {
                 currentFrame = firstStart
             }
         case let .toEnd(from):
-            startFrame = max(min(from, endFrame), startFrame)
-            currentFrame = max(min(from, endFrame), startFrame)
+            startFrame = max(min(from, endFrame - 1), startFrame)
+            currentFrame = max(min(from, endFrame - 1), startFrame)
         default:
             break
         }
@@ -444,29 +445,32 @@ private final class PlayerRenderer {
                         case .once:
                             if current.frame + 1 == currentState(stateValue)?.endFrame {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
-                                updateState(.stoped)
                             }
                         case .onceEnd, .toEnd:
                             if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
-                                updateState(.stoped)
                             }
                         case let .framesCount(limit):
                             if limit <= playedCount {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
-                                updateState(.stoped)
                             }
                         }
                         
@@ -628,7 +632,7 @@ struct LottieColor : Equatable {
     let color: NSColor
 }
 
-enum LottiePlayerTriggerFrame {
+enum LottiePlayerTriggerFrame : Equatable {
     case first
     case last
     case custom(Int32)
@@ -636,7 +640,7 @@ enum LottiePlayerTriggerFrame {
 
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
-        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
+        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors && lhs.triggerOn?.0 != rhs.triggerOn?.0
     }
     
     var liveTime: Int {
@@ -659,7 +663,7 @@ final class LottieAnimation : Equatable {
     
     var onFinish:(()->Void)?
 
-    var triggerOn:(LottiePlayerTriggerFrame, ()->Void)?
+    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
     init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
@@ -1014,7 +1018,6 @@ class LottiePlayerView : NSView {
         self.stateValue.set(self._currentState.modify { _ in .initializing })
         if let animation = animation {
             if self.context?.animation != animation || reset {
-                
                 if holder == nil {
                     holder = ContextHolder()
                 }
@@ -1041,7 +1044,7 @@ class LottiePlayerView : NSView {
                         }
                         
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context, let `self` = self else {
+                        guard let `self` = self else {
                             return
                         }
                         switch state {
@@ -1074,12 +1077,15 @@ class LottiePlayerView : NSView {
                             layer.takeRetainedValue().removeFromSuperview()
                         }
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context, let `self` = self else {
+                        guard let `self` = self else {
                             return
                         }
                         self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 }
+            } else {
+                var bp:Int = 0
+                bp += 1
             }
             
         } else {

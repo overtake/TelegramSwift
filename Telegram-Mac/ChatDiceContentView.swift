@@ -86,7 +86,6 @@ private struct DiceState : Equatable {
                 play = .idle
             } else {
                 if !FastSettings.diceHasAlreadyPlayed(message) {
-                    NSLog("messageId: \(message.id)")
                     play = .end(animated: true)
                 } else {
                     play = .end(animated: false)
@@ -279,8 +278,10 @@ class ChatDiceContentView: ChatMediaContentView {
                                         if self?.visibleRect.height == self?.frame.height {
                                             PlayConfetti(for: context.window)
                                         }
-                                    })
+                                    }, {})
                                 }
+                            }, { [weak self] in
+                                self?.playerView.set(animation)
                             })
                         default:
                             self.playerView.set(animation)
