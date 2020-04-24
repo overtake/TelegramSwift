@@ -442,8 +442,8 @@ final class GroupInfoArguments : PeerInfoArguments {
                                     return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
                                         let text: String
                                         switch error {
-                                        case .notMutualContact:
-                                            text = L10n.groupInfoAddUserLeftError
+//                                        case .notMutualContact:
+//                                            text = L10n.groupInfoAddUserLeftError
                                         case .limitExceeded:
                                             text = L10n.channelErrorAddTooMuch
                                         case .botDoesntSupportGroups:
