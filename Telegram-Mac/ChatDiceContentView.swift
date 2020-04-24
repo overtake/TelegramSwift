@@ -255,7 +255,7 @@ class ChatDiceContentView: ChatMediaContentView {
             }
             let playPolicy: LottiePlayPolicy
             
-            
+            var saveContext: Bool = false
             switch diceState.play {
             case .failed:
                 playPolicy = .framesCount(1)
@@ -267,6 +267,7 @@ class ChatDiceContentView: ChatMediaContentView {
                         let item = self.table?.item(stableId: ChatHistoryEntryId.message(parent))
                         if let item = item, let table = self.table, table.visibleRows().contains(item.index) {
                             playPolicy = .toEnd(from: 0)
+                            saveContext = true
                         } else {
                             playPolicy = .toEnd(from: .max)
                         }
@@ -275,6 +276,7 @@ class ChatDiceContentView: ChatMediaContentView {
                     }
                     
                 } else {
+                    saveContext = true
                     playPolicy = .toEnd(from: 0)
                 }
                 
@@ -293,7 +295,7 @@ class ChatDiceContentView: ChatMediaContentView {
                         switch self.playerView.currentState {
                         case .playing:
                             previous.triggerOn = (.last, { [weak self] in
-                                self?.playerView.set(animation)
+                                self?.playerView.set(animation, saveContext: saveContext)
                                 if animated, let confetti = settings.playConfetti(baseSymbol), confetti.value == currentValue {
                                     animation.triggerOn = (.custom(confetti.playAt), { [weak self] in
                                         if self?.visibleRect.height == self?.frame.height {
@@ -348,12 +350,12 @@ class ChatDiceContentView: ChatMediaContentView {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             
             self.thumbView.setSignal(signal: cachedMedia(media: data.1, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
-            if !self.thumbView.isFullyLoaded {
-                self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue?.diceSide ?? diceIdle, scale: self.backingScaleFactor, size: size), cacheImage: { result in
-                    cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
-                })
-                self.thumbView.set(arguments: arguments)
-            }
+            //if !self.thumbView.isFullyLoaded {
+            self.thumbView.setSignal(chatMessageDiceSticker(postbox: context.account.postbox, file: data.1, emoji: baseSymbol, value: currentValue?.diceSide ?? diceIdle, scale: self.backingScaleFactor, size: size), cacheImage: { result in
+                cacheMedia(result, media: data.1, arguments: arguments, scale: System.backingScale)
+            })
+            self.thumbView.set(arguments: arguments)
+           // }
         }))
        // } else {
             var bp:Int = 0

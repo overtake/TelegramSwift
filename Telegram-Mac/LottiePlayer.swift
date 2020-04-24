@@ -1013,7 +1013,7 @@ class LottiePlayerView : NSView {
         }
     }
     
-    func set(_ animation: LottieAnimation?, reset: Bool = false) {
+    func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {
         
         self.stateValue.set(self._currentState.modify { _ in .initializing })
         if let animation = animation {
@@ -1028,7 +1028,7 @@ class LottiePlayerView : NSView {
                     
                     
                     var cachedContext:Unmanaged<PlayerContext>?
-                    if let context = self.context {
+                    if let context = self.context, saveContext {
                         cachedContext = Unmanaged.passRetained(context)
                     }  else  {
                         cachedContext = nil
