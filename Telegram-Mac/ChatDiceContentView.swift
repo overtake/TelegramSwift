@@ -255,7 +255,17 @@ class ChatDiceContentView: ChatMediaContentView {
                 playPolicy = .loop
             case let .end(toEndWithAnimation):
                 if !toEndWithAnimation || approximateSynchronousValue || self.visibleRect.height == 0 {
-                    playPolicy = .toEnd(from: .max)
+                    if self.visibleRect.height == 0 && toEndWithAnimation && !approximateSynchronousValue {
+                        let item = self.table?.item(stableId: ChatHistoryEntryId.message(parent))
+                        if let item = item, let table = self.table, table.visibleRows().contains(item.index) {
+                            playPolicy = .toEnd(from: 0)
+                        } else {
+                            playPolicy = .toEnd(from: .max)
+                        }
+                    } else {
+                        playPolicy = .toEnd(from: .max)
+                    }
+                    
                 } else {
                     playPolicy = .toEnd(from: 0)
                 }
