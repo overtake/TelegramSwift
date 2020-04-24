@@ -2101,7 +2101,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
                                                verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
-                                               appearanceAddPlatformTheme: { NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon) },
+                                               appearanceAddPlatformTheme: {
+                                                let image = NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon)
+                                                return generateImage(image.backingSize, contextGenerator: { size, ctx in
+                                                    ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+                                                    ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
+                                                }, scale: System.backingScale)! },
                                                wallet_close: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                wallet_qr: { NSImage(named: "Icon_WalletQR")!.precomposed(palette.accentIcon) },
                                                wallet_receive: { NSImage(named: "Icon_WalletReceive")!.precomposed(palette.underSelectedColor) },

@@ -1053,6 +1053,8 @@ internal final class L10n {
   internal static var channelEventFilterNewRestrictions: String  { return L10n.tr("Localizable", "ChannelEventFilter.NewRestrictions") }
   /// Pinned Messages
   internal static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
+  /// Sorry, if a person left a channel, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
+  internal static var channelInfoAddUserLeftError: String  { return L10n.tr("Localizable", "ChannelInfo.AddUserLeftError") }
   /// ⚠️ Warning: Many users reported this channel as a scam. Please be careful, especially if it asks you for money.
   internal static var channelInfoScamWarning: String  { return L10n.tr("Localizable", "ChannelInfo.ScamWarning") }
   /// Add Members
@@ -3127,6 +3129,8 @@ internal final class L10n {
   internal static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   internal static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// Sorry, if a person left a group, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
+  internal static var groupInfoAddUserLeftError: String  { return L10n.tr("Localizable", "GroupInfo.AddUserLeftError") }
   /// Administrators
   internal static var groupInfoAdministrators: String  { return L10n.tr("Localizable", "GroupInfo.Administrators") }
   /// ⚠️ Warning: Many users reported this group as a scam. Please be careful, especially if it asks you for money.

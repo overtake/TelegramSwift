@@ -443,7 +443,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                         let text: String
                                         switch error {
                                         case .notMutualContact:
-                                            text = L10n.unknownError
+                                            text = L10n.groupInfoAddUserLeftError
                                         case .limitExceeded:
                                             text = L10n.channelErrorAddTooMuch
                                         case .botDoesntSupportGroups:
