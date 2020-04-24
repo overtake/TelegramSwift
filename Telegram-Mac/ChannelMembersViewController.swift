@@ -316,7 +316,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 let text: String
                 switch error {
                 case .notMutualContact:
-                    text = L10n.unknownError
+                    text = L10n.channelInfoAddUserLeftError
                 case .limitExceeded:
                     text = L10n.channelErrorAddTooMuch
                 case .botDoesntSupportGroups:
