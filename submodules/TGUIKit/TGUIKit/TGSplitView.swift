@@ -409,8 +409,8 @@ public class SplitView : View {
             let proportion:SplitProportion = _proportions[obj.internalId]!;
             let startSize:NSSize = _startSize[obj.internalId]!;
             var size:NSSize = NSMakeSize(x, frame.height);
-            var min:CGFloat  = startSize.width;
-            min = proportion.min;
+            var _min:CGFloat  = startSize.width;
+            _min = proportion.min;
             if(proportion.max == CGFloat.greatestFiniteMagnitude && index != _controllers.count-1) {
                 var m2:CGFloat = 0;
                 for i:Int in index + 1 ..< _controllers.count - index  {
@@ -418,13 +418,16 @@ public class SplitView : View {
                     let proportion:SplitProportion = _proportions[split.internalId]!;
                     m2+=proportion.min;
                 }
-                min = frame.width - x - m2;
+                _min = frame.width - x - m2;
+            }
+            if index < _controllers.count - 1 {
+                _min = min(_min, frame.width - proportion.min)
             }
             if(index == _controllers.count - 1) {
-                min = frame.width - x;
+                _min = frame.width - x;
             }
             
-            size = NSMakeSize(x + min > frame.width ? (frame.width - x) : min, frame.height);
+            size = NSMakeSize(x + _min > frame.width ? (frame.width - x) : _min, frame.height);
             let rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
             
             if(!NSEqualRects(rect, obj.view.frame)) {

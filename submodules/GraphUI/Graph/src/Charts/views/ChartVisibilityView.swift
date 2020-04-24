@@ -124,7 +124,7 @@ class ChartVisibilityView: View {
 }
 
 extension ChartVisibilityView: ChartThemeContainer {
-    func apply(theme: ChartTheme, animated: Bool) {
+    func apply(theme: ChartTheme, strings: ChartStrings, animated: Bool) {
         View.perform(animated: animated) {
             self.backgroundColor = theme.chartBackgroundColor
           //  self.tintColor = theme.descriptionActionColor

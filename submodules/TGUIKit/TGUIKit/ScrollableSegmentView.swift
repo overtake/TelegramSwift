@@ -341,17 +341,19 @@ private final class SelectorView : View {
 }
 
 public struct ScrollableSegmentTheme : Equatable {
+    let background: NSColor
     let border: NSColor
     let selector: NSColor
     let inactiveText: NSColor
     let activeText: NSColor
     let textFont: NSFont
-    public init(border: NSColor, selector: NSColor, inactiveText: NSColor, activeText: NSColor, textFont: NSFont) {
+    public init(background: NSColor, border: NSColor, selector: NSColor, inactiveText: NSColor, activeText: NSColor, textFont: NSFont) {
         self.border = border
         self.selector = selector
         self.inactiveText = inactiveText
         self.activeText = activeText
         self.textFont = textFont
+        self.background = background
     }
 }
 
@@ -380,6 +382,8 @@ private class Scroll : ScrollView {
         if documentView!.frame.width > frame.width {
             scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
             clipView.scroll(to: scrollPoint)
+        } else {
+            superview?.scrollWheel(with: event)
         }
     }
 }
@@ -404,9 +408,11 @@ public class ScrollableSegmentView: View {
     public var menuItems:((ScrollableSegmentItem)->[ContextMenuItem])?
 
     
+    public var fitToWidth: Bool = false
+    
     public var didChangeSelectedItem:((ScrollableSegmentItem)->Void)?
     
-    public var theme: ScrollableSegmentTheme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .medium(.title))
+    public var theme: ScrollableSegmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .medium(.title))
     {
         didSet {
             if theme != oldValue {
@@ -418,7 +424,7 @@ public class ScrollableSegmentView: View {
     public var resortRange: NSRange? = nil
     public var resortHandler: ((Int, Int)->Void)?
     public override func scrollWheel(with event: NSEvent) {
-        scrollView.scrollWheel(with: event)
+        super.scrollWheel(with: event)
     }
     
     public required init(frame frameRect: NSRect) {
@@ -447,8 +453,27 @@ public class ScrollableSegmentView: View {
         NotificationCenter.default.removeObserver(self)
     }
     
+    public override func mouseUp(with event: NSEvent) {
+        if fitToWidth, documentView.frame.width <= frame.width, mouseInside() {
+            let insetBetween: CGFloat = self.insetBetween
+            let point = documentView.convert(event.locationInWindow, from: nil)
+            
+            for item in self.items {
+                if let view = item.view {
+                    
+                    if point.x >= view.frame.minX - (item == self.items.first ? insetBetween : insetBetween / 2) && point.x <= view.frame.maxX + (item == self.items.last ? insetBetween : insetBetween / 2) {
+                        self.didChangeSelectedItem?(item)
+                        return
+                    }
+                    
+                }
+            }
+        }
+        super.mouseUp(with: event)
+    }
+    
     public override func updateLocalizationAndTheme(theme presentation: PresentationTheme) {
-        self.theme = ScrollableSegmentTheme(border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        self.theme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
     }
     
     private var selectorFrame: CGRect {
@@ -456,7 +481,7 @@ public class ScrollableSegmentView: View {
         let selectedItem = self.items.first(where: { $0.selected })
         
         var x: CGFloat = 0
-        var width: CGFloat = 20
+        var width: CGFloat = frame.width
         if let selectedItem = selectedItem, let view = selectedItem.view {
             let point: NSPoint
             if scrollView.clipView.isAnimateScrolling {
@@ -479,6 +504,20 @@ public class ScrollableSegmentView: View {
         self.selectorView.change(size: selectorFrame.size, animated: animated)
     }
     
+    private var insetBetween: CGFloat {
+        var insetBetween: CGFloat = 0
+        
+        if fitToWidth, items.count > 1 {
+            let itemsWidth = items.reduce(CGFloat(0), { current, value in
+                return current + (value.view?.size.width ?? 0)
+            })
+            if itemsWidth < frame.width {
+                insetBetween = floor((frame.width - itemsWidth) / CGFloat(items.count + 1))
+            }
+        }
+        return insetBetween
+    }
+    
     public override func layout() {
         super.layout()
         scrollView.frame = bounds
@@ -488,11 +527,16 @@ public class ScrollableSegmentView: View {
                 view.setFrameSize(NSMakeSize(view.size.width, frame.height))
             }
         }
-        var x: CGFloat = 0
+        
+        let insetBetween: CGFloat = self.insetBetween
+
+        
+        var x: CGFloat = insetBetween
+        
         for item in self.items {
             if let view = item.view {
                 view.setFrameOrigin(NSMakePoint(x, 0))
-                x += view.size.width
+                x += view.size.width + insetBetween
             }
         }
         documentView.frame = CGRect(origin: .zero, size: NSMakeSize(max(x, frame.width), frame.height))
@@ -599,6 +643,10 @@ public class ScrollableSegmentView: View {
         }
     }
     
+    public func contains(_ id: Int32) -> Bool {
+        return self.items.first(where: { $0.uniqueId == id }) != nil
+    }
+    
     private func applyResort() {
         if let data = initialResortData {
             _ = data.view.removeLastHandler()
@@ -667,6 +715,10 @@ public class ScrollableSegmentView: View {
             items.insert(items.remove(at: data.item.index), at: bestIndex)
         }
         
+        let insetBetween: CGFloat = self.insetBetween
+        
+       
+        x += insetBetween
         for (i, item) in items.enumerated() {
             if let view = item.view {
                 view._change(pos: NSMakePoint(x, 0), animated: animated, completion: { [weak self] completed in
@@ -674,7 +726,7 @@ public class ScrollableSegmentView: View {
                         completion?()
                     }
                 })
-                x += view.size.width
+                x += view.size.width + insetBetween
             }
         }
         
@@ -685,8 +737,8 @@ public class ScrollableSegmentView: View {
     private func redraw() {
         selectorView.theme = self.theme
         borderView.backgroundColor = self.theme.border
-        backgroundColor = presentation.colors.background
-        scrollView.background = presentation.colors.background
+        backgroundColor = self.theme.background
+        scrollView.background = self.theme.background
         for item in self.items {
             item.view?.updateItem(item, theme: self.theme, animated: false)
         }

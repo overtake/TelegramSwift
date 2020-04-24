@@ -34,16 +34,30 @@ class PeerPhotosMonthItem: GeneralRowItem {
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let gallerySupplyment: InteractionContentViewProtocol
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, chatInteraction: ChatInteraction, gallerySupplyment: InteractionContentViewProtocol, items: [Message]) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, chatInteraction: ChatInteraction, gallerySupplyment: InteractionContentViewProtocol, items: [Message]) {
         self.items = items
         self.context = context
         self.gallerySupplyment = gallerySupplyment
         self.chatInteraction = chatInteraction
-        super.init(initialSize, stableId: stableId, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(7, 7, 7, 7)))
+        
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        
+        if !items.isEmpty {
+            var t: time_t = time_t(TimeInterval(items[0].timestamp))
+            var timeinfo: tm = tm()
+            localtime_r(&t, &timeinfo)
+            
+            if timeinfo.tm_mon == 2 {
+                var bp:Int = 0
+                bp += 1
+            }
+            
+        }
         
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
@@ -61,7 +75,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
         let itemSize = NSMakeSize(perWidth + 2, perWidth + 2)
         
         layoutItems.removeAll()
-        var point: CGPoint = CGPoint(x: self.viewType.innerInset.top, y: self.viewType.innerInset.left + itemSize.height)
+        var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, message) in self.items.enumerated() {
             let viewType = message.media.first is TelegramMediaFile ? MediaVideoCell.self : MediaPhotoCell.self
             
@@ -72,16 +86,22 @@ class PeerPhotosMonthItem: GeneralRowItem {
             
             if self.items.count < rowCount {
                 if message == self.items.first {
-                    topLeft = .Corner(.cornerRadius)
+                    if self.viewType.position != .last {
+                        topLeft = .Corner(.cornerRadius)
+                    }
                     bottomLeft = .Corner(.cornerRadius)
                 }
             } else if self.items.count == rowCount {
                 if message == self.items.first {
-                    topLeft = .Corner(.cornerRadius)
+                    if self.viewType.position != .last {
+                        topLeft = .Corner(.cornerRadius)
+                    }
                     bottomLeft = .Corner(.cornerRadius)
                 } else if message == self.items.last {
                     if message == self.items.last {
-                        topRight = .Corner(.cornerRadius)
+                        if self.viewType.position != .last {
+                            topRight = .Corner(.cornerRadius)
+                        }
                         bottomRight = .Corner(.cornerRadius)
                     }
                 }
@@ -92,10 +112,12 @@ class PeerPhotosMonthItem: GeneralRowItem {
                 let lastLine = i > (items.count - div)
                 
                 if firstLine {
-                    if i % rowCount == 1 {
-                        topLeft = .Corner(.cornerRadius)
-                    } else if i % rowCount == 0 {
-                        topRight = .Corner(.cornerRadius)
+                    if self.viewType.position != .last {
+                        if i % rowCount == 1 {
+                            topLeft = .Corner(.cornerRadius)
+                        } else if i % rowCount == 0 {
+                            topRight = .Corner(.cornerRadius)
+                        }
                     }
                 } else if lastLine {
                     if i % rowCount == 1 {

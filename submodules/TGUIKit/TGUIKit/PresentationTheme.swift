@@ -110,7 +110,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
         let lhsValue = lhsChildren.value as? NSColor
         let rhsValue = Array(rhsMirror.children)[i].value as? NSColor
         if let lhsValue = lhsValue, let rhsValue = rhsValue {
-            if lhsValue != rhsValue {
+            if lhsValue.argb != rhsValue.argb {
                 return false
             }
         }
@@ -121,7 +121,7 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
 
 public struct PaletteAccentColor : Equatable {
     public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {
-        return lhs.accent == rhs.accent && lhs.messages?.top == rhs.messages?.top && lhs.messages?.bottom == rhs.messages?.bottom
+        return lhs.accent.argb == rhs.accent.argb && lhs.messages?.top.argb == rhs.messages?.top.argb && lhs.messages?.bottom.argb == rhs.messages?.bottom.argb
     }
     
     public let accent: NSColor

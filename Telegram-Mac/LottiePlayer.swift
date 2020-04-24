@@ -344,8 +344,8 @@ private final class PlayerRenderer {
                 currentFrame = firstStart
             }
         case let .toEnd(from):
-            startFrame = from
-            currentFrame = from
+            startFrame = max(min(from, endFrame), startFrame)
+            currentFrame = max(min(from, endFrame), startFrame)
         default:
             break
         }
@@ -419,6 +419,23 @@ private final class PlayerRenderer {
                                     soundEffect.play()
                                 }
                             }
+                        }
+                        if let triggerOn = renderer.animation.triggerOn {
+                            switch triggerOn.0 {
+                            case .first:
+                                if startFrame == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            case .last:
+                                if endFrame - 1 == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            case let .custom(index):
+                                if index == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            }
+                            
                         }
                         
                         switch renderer.animation.playPolicy {
@@ -611,6 +628,12 @@ struct LottieColor : Equatable {
     let color: NSColor
 }
 
+enum LottiePlayerTriggerFrame {
+    case first
+    case last
+    case custom(Int32)
+}
+
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
         return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
@@ -635,6 +658,8 @@ final class LottieAnimation : Equatable {
     let postbox: Postbox?
     
     var onFinish:(()->Void)?
+
+    var triggerOn:(LottiePlayerTriggerFrame, ()->Void)?
 
     
     init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
@@ -926,13 +951,17 @@ private final class LottieFallbackView: NSView {
 
 class LottiePlayerView : NSView {
     private var context: PlayerContext?
-    private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.stoped, ignoreRepeated: true)
+    private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.initializing, ignoreRepeated: true)
     var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
     }
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+    }
+    
+    var animation: LottieAnimation? {
+        return context?.animation
     }
     
     override var isFlipped: Bool {
@@ -975,7 +1004,7 @@ class LottiePlayerView : NSView {
     }
     
     func set(_ animation: LottieAnimation?, reset: Bool = false) {
-        self.stateValue.set(.stoped)
+        self.stateValue.set(.initializing)
         if let animation = animation {
             if self.context?.animation != animation || reset {
                 
@@ -986,16 +1015,36 @@ class LottiePlayerView : NSView {
                     let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)
                     let layer = Unmanaged.passRetained(metal)
+                    
+                    
+                    var cachedContext:Unmanaged<PlayerContext>?
+                    if let context = self.context {
+                        cachedContext = Unmanaged.passRetained(context)
+                    }  else  {
+                        cachedContext = nil
+                    }
+                    
                     self.context = PlayerContext(animation, displayFrame: { frame in
                         layer.takeUnretainedValue().render(bytes: frame.data, size: frame.size, backingScale: frame.backingScale)
                     }, release: {
                         Queue.mainQueue().async {
                             layer.takeRetainedValue().removeFromSuperview()
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
                         }
+                        
                     }, updateState: { [weak self] state in
                         guard let _ = self?.context else {
                             return
                         }
+                        switch state {
+                        case .playing, .failed, .stoped:
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
+                        default:
+                            break
+                        }
+                        
                         self?.stateValue.set(state)
                     })
                 } else {

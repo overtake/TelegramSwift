@@ -274,7 +274,12 @@ class GeneralRowItem: TableRowItem {
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         } else {
-            self.backgroundColor = viewType.rowBackground
+            switch viewType {
+            case .modern:
+                self.backgroundColor = theme.colors.listBackground
+            default:
+                self.backgroundColor = viewType.rowBackground
+            }
         }
         
         self.drawCustomSeparator = drawCustomSeparator
@@ -306,6 +311,7 @@ class GeneralRowItem: TableRowItem {
     override var canBeAnchor: Bool {
         return false
     }
+    
     
     var blockWidth: CGFloat {
         switch self.viewType {

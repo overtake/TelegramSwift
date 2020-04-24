@@ -14,6 +14,14 @@ import SyncCore
 import TGUIKit
 import SyncCore
 
+extension AutoremoveTimeoutMessageAttribute : Equatable {
+    public static func == (lhs: AutoremoveTimeoutMessageAttribute, rhs: AutoremoveTimeoutMessageAttribute) -> Bool {
+        return lhs.timeout == rhs.timeout && lhs.countdownBeginTime == rhs.countdownBeginTime && lhs.associatedMessageIds == rhs.associatedMessageIds
+    }
+    
+    
+}
+
 final class ChatVideoAutoplayView {
     let mediaPlayer: MediaPlayer
     let view: MediaPlayerView
@@ -209,6 +217,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
             NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: table?.clipView)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: self)
         } else {
             removeNotificationListeners()
         }
@@ -221,9 +230,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func viewDidMoveToWindow() {
         updateListeners()
-        updatePlayerIfNeeded()
-        
-
+        DispatchQueue.main.async { [weak self] in
+            self?.updatePlayerIfNeeded()
+        }
     }
 
     override func viewDidMoveToSuperview() {
@@ -365,7 +374,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || versionUpdated
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute)
         if mediaUpdated {
             self.autoplayVideoView = nil
         }
@@ -577,11 +586,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         containsSecretMedia = message.containsSecretMedia
                     }
                     
-                    if let _ = parent?.autoremoveAttribute?.countdownBeginTime {
+                    if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60, autoremoveAttribute.countdownBeginTime != nil {
                         strongSelf.progressView?.removeFromSuperview()
                         strongSelf.progressView = nil
                         if strongSelf.timableProgressView == nil {
-                            strongSelf.timableProgressView = TimableProgressView()
+                            strongSelf.timableProgressView = TimableProgressView(size: NSMakeSize(parent?.groupingKey != nil ? 30 : 40.0, parent?.groupingKey != nil ? 30 : 40.0))
                             strongSelf.addSubview(strongSelf.timableProgressView!)
                         }
                     } else {
@@ -651,7 +660,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     case .Local:
                         var state: RadialProgressState = .None
                         if containsSecretMedia {
-                            state = .Icon(image: theme.icons.chatSecretThumb, mode:.destinationOut)
+                            state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.destinationOut)
                             
                             if let attribute = parent?.autoremoveAttribute, let countdownBeginTime = attribute.countdownBeginTime {
                                 let difference:TimeInterval = TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)

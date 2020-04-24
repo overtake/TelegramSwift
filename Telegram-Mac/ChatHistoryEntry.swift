@@ -274,6 +274,9 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     if MessageIndex(lhsMessage) != MessageIndex(rhsMessage) || lhsMessage.stableVersion != rhsMessage.stableVersion {
         return false
     }
+    if lhsMessage.flags != rhsMessage.flags {
+        return false
+    }
     
     if lhsMessage.media.count != rhsMessage.media.count {
         return false

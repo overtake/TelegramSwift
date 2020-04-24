@@ -3912,9 +3912,9 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             guard let `self` = self else {return}
             if let item = self.genericView.tableView.item(stableId: PassportEntryId.inputEmailCode) as? InputDataRowItem {
                 updateState { state in
-                    return state.withUpdatedEmailCode(item.currentText).withUpdatedEmailCodeError(nil)
+                    return state.withUpdatedEmailCode(item.currentText.string).withUpdatedEmailCodeError(nil)
                 }
-                if item.limit == item.currentText.length {
+                if item.limit == item.currentText.string.length {
                     _ = self.pendingEmailConfirm()
                 }
             }

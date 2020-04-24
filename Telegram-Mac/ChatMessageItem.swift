@@ -449,9 +449,10 @@ class ChatMessageItem: ChatRowItem {
                         items.append(ContextMenuItem(text, handler: {
                             if let strongSelf = self {
                                 let pb = NSPasteboard.general
+                                pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
+                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange)
                                 let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
                                 if let attribute = attribute as? inAppLink {
                                     pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
@@ -468,6 +469,7 @@ class ChatMessageItem: ChatRowItem {
                         if let result = result, let strongSelf = self, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
                                 let pb = NSPasteboard.general
+                                pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
                                 var effectiveRange = strongSelf.textLayout.selectedRange.range
                                 let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
@@ -799,7 +801,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void, hashtag:@escaping (String)->Void, applyProxy:@escaping (ProxyServerSettings)->Void, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -888,7 +890,7 @@ class ChatMessageItem: ChatRowItem {
                 } else {
                     fontAttributes[range] = .monospace
                 }
-                string.addAttribute(.preformattedPre, value: 4.0, range: range)
+               // string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
             case .Hashtag:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)

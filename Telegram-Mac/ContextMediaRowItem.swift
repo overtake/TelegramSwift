@@ -85,9 +85,10 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
    
     
     private let stickerFetchedDisposable:MetaDisposable = MetaDisposable()
-    
+    private let longDisposable = MetaDisposable()
     deinit {
         stickerFetchedDisposable.dispose()
+        longDisposable.dispose()
     }
     
     func previewMediaIfPossible() -> Bool {
@@ -96,6 +97,25 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         }
         return true
     }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        let signal = Signal<NoValue, NoError>.complete() |> delay(0.2, queue: .mainQueue())
+        
+        let downIndex = self.index(at: convert(event.locationInWindow, to: nil))
+        
+        longDisposable.set(signal.start(completed: { [weak self] in
+            guard let `self` = self, let window = self.window else {
+                return
+            }
+            let nextIndex = self.index(at: self.convert(window.mouseLocationOutsideOfEventStream, to: nil))
+            if nextIndex == downIndex {
+                _ = self.previewMediaIfPossible()
+            }
+        }))
+    }
+    
     
     override func forceClick(in location: NSPoint) {
         if mouseInside() == true {
@@ -158,12 +178,6 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         view = GIFContainerView()
                     }
                     let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
-                    view.removeAllHandlers()
-                    view.set(handler: { [weak item] control in
-                        if let item = item {
-                            item.arguments.sendResult(item.result.results[i], control)
-                        }
-                    }, for: .Click)
                     
                     view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
@@ -173,6 +187,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         layer.background = theme.colors.background
                         view.addSubview(layer)
                     }
+                    view.userInteractionEnabled = false
                     container = view
                 case let .sticker(data):
                     if data.file.isAnimatedSticker {
@@ -186,6 +201,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         let size = NSMakeSize(round(item.result.sizes[i].width), round(item.result.sizes[i].height))
                         view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false
+                        
                         container = view
                     } else {
                         let view: TransformImageView
@@ -220,6 +236,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     view.addSubview(imageView)
                     container = view
                 }
+                
                 container.setFrameOrigin(inset, 0)
                 container.background = theme.colors.background
                 addSubview(container)
@@ -230,23 +247,32 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         }
     }
     
-    
-    
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        let point = convert(event.locationInWindow, from: nil)
+    func index(at point: NSPoint) -> Int? {
         if let item = item as? ContextMediaRowItem {
             var inset:CGFloat = 0
             var i:Int = 0
             if !item.result.results.isEmpty {
                 for size in item.result.sizes {
                     if point.x > inset && point.x < inset + size.width {
-                        item.arguments.sendResult(item.result.results[i], self.subviews[i])
-                        break
+                        return i
                     }
                     inset += size.width + dif
                     i += 1
                 }
+            }
+        }
+        return nil
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        
+        longDisposable.set(nil)
+        
+        if let item = item as? ContextMediaRowItem  {
+            let point = convert(event.locationInWindow, from: nil)
+            if let index = self.index(at: point) {
+                item.arguments.sendResult(item.result.results[index], self.subviews[index])
             }
         }
     }

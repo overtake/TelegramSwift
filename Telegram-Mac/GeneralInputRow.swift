@@ -214,7 +214,7 @@ class GeneralInputRowView: TableRowView,TGModernGrowingDelegate, NSTextFieldDele
                 
                 if item.holdText {
                       //if item.text != textView.string().replacingOccurrences(of: item.placeholder.string, with: "") {
-                        textView.defaultText = item.placeholder.string
+                     //   textView.defaultText = item.placeholder.string
                         textView.setString(item.text, animated: false)
                     // }
                 } else {

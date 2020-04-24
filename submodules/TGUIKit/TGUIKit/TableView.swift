@@ -652,6 +652,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var emptyChecker: (([TableRowItem]) -> Bool)? = nil
     
+    public var updatedItems:(([TableRowItem])->Void)? {
+        didSet {
+            updatedItems?(self.list)
+        }
+    }
     
     public var beforeSetupItem:((TableRowView, TableRowItem)->Void)?
     public var afterSetupItem:((TableRowView, TableRowItem)->Void)?
@@ -880,6 +885,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     func layoutIfNeeded(with range:NSRange, oldWidth:CGFloat) {
+        
+        
+        let visibleItems = self.visibleItems()
+        
         for i in range.min ..< range.max {
             let item = self.item(at: i)
             let before = item.heightValue
@@ -889,6 +898,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 reloadData(row: i, animated: false)
                 noteHeightOfRow(i, false)
             }
+        }
+        if !tableView.inLiveResize && oldWidth != 0 {
+            saveScrollState(visibleItems)
         }
     }
     
@@ -1125,7 +1137,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
-        if !visibleItems.isEmpty, clipView.bounds.minY > 0 {
+        //, clipView.bounds.minY > 0
+        if !visibleItems.isEmpty {
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)
@@ -2304,22 +2317,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        
         if isSetTransitionToQueue() || (!self.queuedTransitions.isEmpty && !forceApply) {
             self.queuedTransitions.append(transition)
             return
         }
         
         let oldEmpty = self.isEmpty
-        
-//        for subview in tableView.subviews.reversed() {
-//            if let subview = subview as? NSTableRowView {
-//                if tableView.row(for: subview) == -1 {
-//                    subview.removeFromSuperview()
-//                }
-//            }
-//        }
 
-        
         self.beginUpdates()
         
         let documentOffset = self.documentOffset
@@ -2509,6 +2514,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
      //   self.tableView.endUpdates()
         self.endUpdates()
         
+        
+       self.updatedItems?(self.list)
         
 //        for subview in self.tableView.subviews.reversed() {
 //            if self.tableView.row(for: subview) == -1 {
@@ -2940,6 +2947,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     focus.action?(view.interactableView)
                 }
             }
+            completion(true)
         }
 
     }
@@ -2951,7 +2959,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
         
         //updateStickAfterScroll(false)
-        if oldWidth != newSize.width {
+        if oldWidth != newSize.width, !inLiveResize {
             saveScrollState(visible)
         }
     }

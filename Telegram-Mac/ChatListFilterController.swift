@@ -201,7 +201,8 @@ private final class ChatListPresetArguments {
     let openInfo:(PeerId)->Void
     let showAllInclude: ()->Void
     let showAllExclude: ()->Void
-    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void) {
+    let updateIcon:(FolderIcon)->Void
+    init(context: AccountContext, toggleOption:@escaping(ChatListFilterPeerCategories)->Void, addInclude: @escaping()->Void, addExclude: @escaping()->Void, removeIncluded: @escaping(PeerId)->Void, removeExcluded: @escaping(PeerId)->Void, openInfo: @escaping(PeerId)->Void, toggleExcludeMuted:@escaping(Bool)->Void, toggleExcludeRead: @escaping(Bool)->Void, showAllInclude:@escaping()->Void, showAllExclude:@escaping()->Void, updateIcon: @escaping(FolderIcon)->Void) {
         self.context = context
         self.toggleOption = toggleOption
         self.toggleExcludeMuted = toggleExcludeMuted
@@ -213,6 +214,7 @@ private final class ChatListPresetArguments {
         self.openInfo = openInfo
         self.showAllInclude = showAllInclude
         self.showAllExclude = showAllExclude
+        self.updateIcon = updateIcon
     }
 }
 
@@ -296,7 +298,10 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.filter.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.filter.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
+        showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
+    })), placeholder: nil, inputPlaceholder: L10n.chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
     index += 1
    
     entries.append(.sectionId(sectionId, type: .normal))
@@ -644,6 +649,16 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             state.showAllExclude = !state.showAllExclude
             return state
         }
+    }, updateIcon: { icon in
+        updateState { state in
+            var state = state
+            state.withUpdatedFilter { filter in
+                var filter = filter
+                filter.emoticon = icon.emoticon.emoji
+                return filter
+            }
+            return state
+        }
     })
     
     
@@ -719,6 +734,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 updateState { state in
                     var state = state
                     state.filter.title = L10n.chatListFilterTilteDefaultUnmuted
+                  //  state.filter.emoticon = 
                     return state
                 }
             case .unread:

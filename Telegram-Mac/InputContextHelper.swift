@@ -652,7 +652,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 escapeTextMarked = nil
             }
             switch result {
-            case .mentions, .searchMessages:
+            case .mentions, .searchMessages, .commands, .hashtags:
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
