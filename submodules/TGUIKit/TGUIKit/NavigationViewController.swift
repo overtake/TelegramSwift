@@ -495,10 +495,35 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
     }
     
+    fileprivate var barInset: CGFloat {
+        var barInset:CGFloat = 0
+        if let header = callHeader, header.needShown {
+            barInset += header.height
+        } else if let header = undoHeader, header.needShown {
+            barInset += header.height
+        }
+        return barInset
+    }
+    
+    public func swapNavigationBar(leftView: BarView?, centerView: BarView?, rightView: BarView?, animation: NavigationBarSwapAnimation) {
+        
+        navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+        
+        if let leftView = leftView {
+            navigationBar.switchLeftView(leftView, animation: animation)
+        }
+        if let centerView = centerView {
+            navigationBar.switchCenterView(centerView, animation: animation)
+        }
+        if let rightView = rightView {
+            navigationBar.switchRightView(rightView, animation: animation)
+        }
+    }
+    
     open override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
         containerView.frame = bounds
-        navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, containerView.frame.width, controller.bar.height)
+        navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, controller.frame.width, controller.bar.height)
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
     }
     
@@ -611,7 +636,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             return;
         }
         
-        controller.view.disableHierarchyDynamicContent()
+        
         
         var contentInset = controller.bar.height
 
@@ -630,10 +655,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         let animatePosBar: Bool = controller.bar.height != previous.bar.height && style != .none
         self.navigationBar.frame = NSMakeRect(0, barInset, containerView.frame.width, animatePosBar && controller.bar.height == 0 ? previous.bar.height : controller.bar.height)
         
-        if !animatePosBar {
-            var bp: Int = 0
-            bp += 1
-        }
         
         
         if let header = header, header.needShown {
@@ -677,6 +698,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         switch style {
         case .push:
             
+            controller.view.disableHierarchyDynamicContent()
+            
             previous.viewWillDisappear(true);
             controller.viewWillAppear(true);
             
@@ -698,6 +721,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
             
         case .pop:
+            
+            controller.view.disableHierarchyDynamicContent()
             
             previous.viewWillDisappear(true);
             controller.viewWillAppear(true);
@@ -748,7 +773,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
             containerView.addSubview(navigationBar)
             
-            controller.view.restoreHierarchyDynamicContent()
 
             
             reloadHeaders()

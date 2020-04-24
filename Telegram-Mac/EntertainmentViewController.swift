@@ -486,6 +486,8 @@ public final class EntertainmentInteractions {
     var showEntertainment:(EntertainmentState, Bool)->Void = { _,_  in}
     var close:()->Void = {}
 
+    var toggleSearch:()->Void = { }
+    
     let peerId:PeerId
     
     init(_ defaultState: EntertainmentState, peerId:PeerId) {
@@ -661,7 +663,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 self.genericView.toggleSearch(self.searchState)
             }
         }
-        
+        interactions.toggleSearch = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.genericView.toggleSearch(self.searchState)
+        }
         self.interactions = interactions
         
         emoji.update(with: interactions)

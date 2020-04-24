@@ -147,8 +147,6 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsResetNotificationsText), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-    index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

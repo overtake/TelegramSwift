@@ -783,7 +783,7 @@ class ChatRowItem: TableRowItem {
     var bubbleImage:(CGImage, NSEdgeInsets)? = nil
     var bubbleBorderImage:(CGImage, NSEdgeInsets)? = nil
     
-    private let downloadSettings: AutomaticMediaDownloadSettings
+    let downloadSettings: AutomaticMediaDownloadSettings
     
     let presentation: TelegramPresentationTheme
 
@@ -1363,6 +1363,8 @@ class ChatRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
         
+        captionLayout?.dropLayoutSize()
+        
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
@@ -1402,7 +1404,7 @@ class ChatRowItem: TableRowItem {
             widthForContent = maxContentWidth
         }
         
-        if let captionLayout = captionLayout {
+        if let captionLayout = captionLayout, captionLayout.layoutSize == .zero {
             captionLayout.measure(width: maxContentWidth)
         }
         
@@ -1565,8 +1567,7 @@ class ChatRowItem: TableRowItem {
         }
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
         
-        let replyWidth = hasBubble ? (replyModel?.size.width ?? 0) : 0
-
+        let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return max(max(nameWidth, forwardWidth), replyWidth)
     }
@@ -1750,7 +1751,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
         items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
             showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), peerId: peer.id, scheduleAt: { date in
-                _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start(next: { result in
+                _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start(next: { result in
                     
                 }, error: { error in
                    
@@ -1888,6 +1889,20 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                             saveAs(file, account: account)
                         }))
+                        
+                        #if BETA || ALPHA || DEBUG
+                        if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                            items.append(ContextMenuItem("Copy thumbnail", handler: {
+                                _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                                    if let path = path {
+                                        let pb = NSPasteboard.general
+                                        pb.clearContents()
+                                        pb.writeObjects([NSURL(fileURLWithPath: path)])
+                                    }
+                                })
+                            }))
+                        }
+                        #endif
                         
                         if let downloadPath = downloadPath {
                             if !file.isVoice {

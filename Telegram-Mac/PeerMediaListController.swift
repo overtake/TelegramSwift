@@ -145,16 +145,37 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
         }
     }
     
+    if !current.isEmpty {
+        if !groupItems.isEmpty {
+            let item = groupItems.last!
+            groupItems[groupItems.count - 1] = Item(item.date, item.section, item.items + current)
+        } else {
+            groupItems.append(.init(current.first!, .sectionId(current.first!.index.successor()), current))
+        }
+    }
     
     
-    for group in groupItems.reversed() {
-        converted.append(group.section)
-        converted.append(group.date)
+    for (i, group) in groupItems.reversed().enumerated() {
+        if i != 0 {
+            converted.append(group.section)
+            converted.append(group.date)
+        }
+      
         
         for item in group.items {
             switch item {
             case let .messageEntry(message, settings, _):
-                converted.append(.messageEntry(message, settings, bestGeneralViewType(group.items, for: item)))
+                var viewType = bestGeneralViewType(group.items, for: item)
+                
+                if i == 0, item == group.items.first {
+                    if group.items.count > 1 {
+                        viewType = .modern(position: .inner, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+                    } else {
+                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(7, 7, 7, 12))
+                    }
+                }
+                
+                converted.append(.messageEntry(message, settings, viewType))
             default:
                 fatalError()
             }
@@ -315,9 +336,7 @@ class PeerMediaListController: TableViewController {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        genericView.getBackgroundColor = {
-            theme.colors.listBackground
-        }
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -327,11 +346,17 @@ class PeerMediaListController: TableViewController {
     
     private var isFirst: Bool = true
     
-    public func load(with tagMask:MessageTags) -> Void {
-     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
         genericView.getBackgroundColor = {
             theme.colors.listBackground
         }
+    }
+    
+    public func load(with tagMask:MessageTags) -> Void {
+     
+        
         
         genericView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
 
@@ -346,7 +371,7 @@ class PeerMediaListController: TableViewController {
             
         })
         
-        let historyPromise: Promise<PeerMediaUpdate> = Promise(PeerMediaUpdate())
+        let historyPromise: Promise<PeerMediaUpdate> = Promise()
         
         
         let historyViewUpdate = combineLatest(location.get(), searchState.get()) |> deliverOnMainQueue
@@ -408,6 +433,8 @@ class PeerMediaListController: TableViewController {
         let context = self.context
         let chatInteraction = self.chatInteraction
         let initialSize = self.atomicSize
+        
+        
         let _updateView = self.updateView
         let _entries = self.entires
         
@@ -415,11 +442,17 @@ class PeerMediaListController: TableViewController {
         
         let historyViewTransition = combineLatest(queue: prepareQueue,historyPromise.get(), appearanceSignal) |> map { update, appearance -> (transition: TableUpdateTransition, previousUpdate: PeerMediaUpdate?, currentUpdate: PeerMediaUpdate) in
             let animated = animated.swap(true)
-            let scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            var scroll:TableScrollState = animated ? .none(nil) : .saveVisible(.upper)
+            
+            
             
             let entries = convertEntries(from: update, tags: tagMask, timeDifference: context.timeDifference).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = _entries.swap(entries)
             let previousUpdate = _updateView.swap(update)
+            
+            if previousUpdate?.searchState != update.searchState {
+                scroll = .up(animated)
+            }
             
             let transition = preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: previousUpdate?.searchState.state != update.searchState.state, scroll:scroll, tags:tagMask, searchInteractions: searchInteractions)
             
@@ -434,7 +467,7 @@ class PeerMediaListController: TableViewController {
             let state = MediaSearchState(state: values.currentUpdate.searchState, animated: values.currentUpdate.searchState != values.previousUpdate?.searchState, isLoading: values.currentUpdate.updateType == .loading)
             self.genericView.merge(with: values.transition)
             self.mediaSearchState.set(state)
-            
+            self.readyOnce()
             if let controller = globalAudio {
                 (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: (self.navigationController?.first {$0 is ChatController} as? ChatController)?.genericView.tableView, supportTableView: self.genericView)
             }

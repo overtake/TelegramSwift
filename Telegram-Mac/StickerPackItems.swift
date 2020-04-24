@@ -257,6 +257,8 @@ class RecentPackRowView: HorizontalRowView {
                 imageView.image = theme.icons.stickersTabFave
             case .recent:
                 imageView.image = theme.icons.stickersTabRecent
+            case .featured:
+                imageView.image = theme.icons.stickers_add_featured
             default:
                 break
             }

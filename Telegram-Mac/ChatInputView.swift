@@ -576,7 +576,18 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             current = current.withUpdatedEffectiveInputState(state)
             if let disabledPreview = current.interfaceState.composeDisableUrlPreview {
                 if !current.effectiveInput.inputText.contains(disabledPreview) {
-                    current = current.updatedUrlPreview(nil).updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
+
+                    var detectedUrl: String?
+                    current.effectiveInput.attributedString.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: current.effectiveInput.attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+                        if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
+                            detectedUrl = url
+                        }
+                        let s: ObjCBool = (detectedUrl != nil) ? true : false
+                        stop.pointee = s
+                    })
+                    if detectedUrl == nil {
+                        current = current.updatedUrlPreview(nil).updatedInterfaceState {$0.withUpdatedComposeDisableUrlPreview(nil)}
+                    }
                 }
             }
             return current

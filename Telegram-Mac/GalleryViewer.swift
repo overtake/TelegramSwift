@@ -1122,7 +1122,7 @@ class GalleryViewer: NSResponder {
     func showSharedMedia() {
         close()
         if let message = self.pager.selectedItem?.entry.message {
-            context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId, tagMask: .photoOrVideo))
+            context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId))
         }
     }
     

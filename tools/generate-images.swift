@@ -171,6 +171,7 @@ func initialize() -> [String] {
     array.append("chatFileThumbBubble_incoming")
     array.append("chatFileThumbBubble_outgoing")
     array.append("chatSecretThumb")
+    array.append("chatSecretThumbSmall")
     array.append("chatMapPin")
     array.append("chatSecretTitle")
     array.append("emptySearch")
@@ -501,6 +502,31 @@ func initialize() -> [String] {
     array.append("tab_chats_active_filters")
     array.append("tab_settings")
     array.append("tab_settings_active")
+    
+    
+    array.append("profile_add_member")
+    array.append("profile_call")
+    array.append("profile_leave")
+    array.append("profile_message")
+    array.append("profile_more")
+    array.append("profile_mute")
+    array.append("profile_unmute")
+    array.append("profile_search")
+    array.append("profile_secret_chat")
+    array.append("profile_edit_photo")
+    array.append("profile_block")
+    array.append("profile_report")
+    array.append("profile_share")
+    array.append("profile_stats")
+    array.append("profile_unblock")
+
+    
+    array.append("chat_quiz_explanation")
+    array.append("chat_quiz_explanation_bubble_incoming")
+    array.append("chat_quiz_explanation_bubble_outgoing")
+    
+    
+    array.append("stickers_add_featured")
     
     return array
 }

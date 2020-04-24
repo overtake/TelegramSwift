@@ -251,6 +251,8 @@ final class TelegramChatColors {
         return bubbled ? incoming ? palette.waveformForegroundBubble_incoming : palette.waveformForegroundBubble_outgoing : palette.waveformForeground
     }
     
+    
+    
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? System.supportsTransparentFontDrawing ? .clear : palette.bubbleBackground_incoming : System.supportsTransparentFontDrawing ?  .clear : palette.bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: palette.bubbleBackgroundBottom_outgoing)! : palette.chatBackground
     }
@@ -312,6 +314,10 @@ final class TelegramChatColors {
     }
     func readStateIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatReadMarkServiceOverlayBubble2 : item.presentation.icons.chatReadMarkOverlayBubble2 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble2_incoming : item.presentation.icons.chatReadMarkInBubble2_outgoing : item.presentation.icons.chatReadMarkOutBubble2
+    }
+    
+    func quizSolution(_ item: ChatRowItem) -> CGImage {
+        return item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_quiz_explanation_bubble_incoming : item.presentation.icons.chat_quiz_explanation_bubble_outgoing : item.presentation.icons.chat_quiz_explanation
     }
     
     func instantPageIcon(_ incoming: Bool, _ bubbled: Bool, presentation: TelegramPresentationTheme) -> CGImage {

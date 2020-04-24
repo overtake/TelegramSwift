@@ -283,15 +283,17 @@ final class InputDataRowData : Equatable {
     let defaultText: String?
     let pasteFilter:((String)->(Bool, String))?
     let maxBlockWidth: CGFloat?
-    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil, defaultText: String? = nil, maxBlockWidth: CGFloat? = nil, pasteFilter:((String)->(Bool, String))? = nil) {
+    let canMakeTransformations: Bool
+    init(viewType: GeneralViewType = .legacy, rightItem: InputDataRightItem? = nil, defaultText: String? = nil, maxBlockWidth: CGFloat? = nil, canMakeTransformations: Bool = false, pasteFilter:((String)->(Bool, String))? = nil) {
         self.viewType = viewType
         self.rightItem = rightItem
         self.defaultText = defaultText
         self.pasteFilter = pasteFilter
         self.maxBlockWidth = maxBlockWidth
+        self.canMakeTransformations = canMakeTransformations
     }
     static func ==(lhs: InputDataRowData, rhs: InputDataRowData) -> Bool {
-        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.defaultText == rhs.defaultText && lhs.maxBlockWidth == rhs.maxBlockWidth
+        return lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.defaultText == rhs.defaultText && lhs.maxBlockWidth == rhs.maxBlockWidth && lhs.canMakeTransformations == rhs.canMakeTransformations
     }
 }
 
@@ -436,7 +438,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", placeholder: placeholder, inputPlaceholder: inputPlaceholder, defaultText: data.defaultText, rightItem: data.rightItem, maxBlockWidth: data.maxBlockWidth, filter: filter, updated: { _ in
+            return InputDataRowItem(initialSize, stableId: stableId, mode: mode, error: error, viewType: data.viewType, currentText: value.stringValue ?? "", currentAttributedText: value.attributedString, placeholder: placeholder, inputPlaceholder: inputPlaceholder, defaultText: data.defaultText, rightItem: data.rightItem, canMakeTransformations: data.canMakeTransformations, maxBlockWidth: data.maxBlockWidth, filter: filter, updated: { _ in
                 arguments.dataUpdated()
             }, pasteFilter: data.pasteFilter, limit: limit)
         case .loading:
@@ -538,6 +540,7 @@ func ==(lhs: InputDataIdentifier, rhs: InputDataIdentifier) -> Bool {
 
 enum InputDataValue : Equatable {
     case string(String?)
+    case attributedString(NSAttributedString?)
     case date(Int32?, Int32?, Int32?)
     case gender(SecureIdGender?)
     case secureIdDocument(SecureIdVerificationDocument)
@@ -545,6 +548,15 @@ enum InputDataValue : Equatable {
     var stringValue: String? {
         switch self {
         case let .string(value):
+            return value
+        default:
+            return nil
+        }
+    }
+    
+    var attributedString:NSAttributedString? {
+        switch self {
+        case let .attributedString(value):
             return value
         default:
             return nil
@@ -574,6 +586,12 @@ func ==(lhs: InputDataValue, rhs: InputDataValue) -> Bool {
     switch lhs {
     case let .string(lhsValue):
         if case let .string(rhsValue) = rhs {
+            return lhsValue == rhsValue
+        } else {
+            return false
+        }
+    case let .attributedString(lhsValue):
+        if case let .attributedString(rhsValue) = rhs {
             return lhsValue == rhsValue
         } else {
             return false

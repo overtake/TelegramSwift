@@ -340,7 +340,7 @@ class ShareObject {
 class ShareLinkObject : ShareObject {
     let link:String
     init(_ context: AccountContext, link:String) {
-        self.link = link
+        self.link = link.removingPercentEncoding ?? link
         super.init(context)
     }
     
@@ -650,7 +650,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                selectInteraction.action(peer.id)
             })
         case let .secretChat(peer, peerId, _, _, drawSeparator):
-            return  ShortPeerRowItem(initialSize, peer: peer, account :account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: L10n.composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
+            return  ShortPeerRowItem(initialSize, peer: peer, account :account, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: L10n.composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
                 selectInteraction.action(peerId)
             })
         case let .separator(text, _):

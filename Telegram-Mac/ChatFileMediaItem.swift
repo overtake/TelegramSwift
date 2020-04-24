@@ -80,6 +80,8 @@ class ChatFileMediaItem: ChatMediaItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
+        var width = width
+        
         let parameters = self.parameters as! ChatFileLayoutParameters
         let file = media as! TelegramMediaFile
         parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80))
@@ -88,7 +90,15 @@ class ChatFileMediaItem: ChatMediaItem {
         
         let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
         
-        let width = max(parameters.name?.0.size.width ?? 0, max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth)) + (file.previewRepresentations.isEmpty ? 50 : 80)
+        let optionalWidth = max(parameters.name?.0.size.width ?? 0, max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth)) + (file.previewRepresentations.isEmpty ? 50 : 80)
+
+        
+        if let captionLayout = self.captionLayout {
+            captionLayout.measure(width: width)
+            width = max(optionalWidth, captionLayout.layoutSize.width)
+        } else  {
+            width = optionalWidth
+        }
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }

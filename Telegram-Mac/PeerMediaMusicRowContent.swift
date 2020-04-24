@@ -45,7 +45,7 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
         if isCompactPlayer {
             return NSEdgeInsetsMake(5, 10, 5, 10)
         } else {
-            return NSEdgeInsetsMake(0, 30, 0, 30)
+            return NSEdgeInsetsMake(0, 0, 0, 0)
         }
     }
     

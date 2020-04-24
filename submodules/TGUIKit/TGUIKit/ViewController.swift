@@ -63,6 +63,16 @@ public final class BackgroundGradientView : View {
 
 
 open class BackgroundView: ImageView {
+    
+    public var _customHandler:CustomViewHandlers?
+    
+    public var customHandler:CustomViewHandlers {
+        if _customHandler == nil {
+            _customHandler = CustomViewHandlers()
+        }
+        return _customHandler!
+    }
+    
     private let gradient: BackgroundGradientView
 
     public override init(frame frameRect: NSRect) {
@@ -91,6 +101,7 @@ open class BackgroundView: ImageView {
     open override func layout() {
         super.layout()
         gradient.frame = bounds
+        _customHandler?.layout?(self)
 //        gradient.bounds = NSMakeRect(0, 0, max(frame.width, frame.height) * 2, max(frame.width, frame.height) * 2)
 //        gradient.position = NSMakePoint(frame.width / 2, frame.height / 2)
     }
@@ -264,7 +275,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -829,6 +840,10 @@ open class ModalViewController : ViewController {
     // use this only for modal progress. This is made specially for nsvisualeffect support.
     open var contentBelowBackground: Bool {
         return false
+    }
+    
+    open var shouldCloseAllTheSameModals: Bool {
+        return true
     }
     
     private var temporaryTouchBar: Any?

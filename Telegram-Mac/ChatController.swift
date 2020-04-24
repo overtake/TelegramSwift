@@ -983,6 +983,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let forwardMessagesDisposable = MetaDisposable()
     private let shiftSelectedDisposable = MetaDisposable()
     private let updateUrlDisposable = MetaDisposable()
+    private let loadSharedMediaDisposable = MetaDisposable()
+    private let applyMaxReadIndexDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1398,7 +1400,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         case let .peer(peerId):
                             if !hasModals() {
                                 clearNotifies(peerId, maxId: messageIndex.id)
-                                _ = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex).start()
+                                let signal = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex)
+                                self.applyMaxReadIndexDisposable.set(signal.start())
                             }
                         }
                     }
@@ -1581,7 +1584,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
             
             let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
-            
             self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime)
             |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
@@ -3011,7 +3013,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch chatLocation {
         case let .peer(peerId):
-            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId)).start(next: { _ in
+            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
                 
                 if FastSettings.inAppSounds {
                     let afterSentSound:NSSound? = {
@@ -3398,6 +3400,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
     
+    private var firstLoad: Bool = true
 
     func applyTransition(_ transition:TableUpdateTransition, view: MessageHistoryView?, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
         
@@ -3487,7 +3490,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         })
         
+        
+        if firstLoad {
+            firstLoad = false
+            
+            let peerId = self.chatLocation.peerId
+            
+            let tags: [MessageTags] = [.photoOrVideo, .file, .webPage, .music, .voiceOrInstantVideo]
+            
+            let tabItems: [Signal<Never, NoError>] = tags.map { tags -> Signal<Never, NoError> in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 20, tagMask: tags)
+                    |> ignoreValues
+            }
+//
+            loadSharedMediaDisposable.set(combineLatest(tabItems).start())
+        }
     }
+    
     
     override func getCenterBarViewOnce() -> TitledBarView {
         return ChatTitleBarView(controller: self, chatInteraction)
@@ -3572,10 +3591,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, theme.icons.chatActionEdit))
                             
                             
-                            items.append(SPopoverItem(L10n.chatContextSharedMedia,  { [weak self] in
-                                guard let `self` = self else {return}
-                                self.navigationController?.push(PeerMediaController(context: self.context, peerId: self.chatInteraction.peerId, tagMask: .photoOrVideo))
-                                }, theme.icons.chatAttachPhoto))
+//                            items.append(SPopoverItem(L10n.chatContextSharedMedia,  { [weak self] in
+//                                guard let `self` = self else {return}
+//                                self.navigationController?.push(PeerMediaController(context: self.context, peerId: self.chatInteraction.peerId))
+//                            }, theme.icons.chatAttachPhoto))
                             
                             items.append(SPopoverItem(L10n.chatContextInfo,  { [weak self] in
                                 self?.chatInteraction.openInfo(peerId, false, nil, nil)
@@ -3844,6 +3863,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         failedMessageIdsDisposable.dispose()
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
+        loadSharedMediaDisposable.dispose()
+        applyMaxReadIndexDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -4527,10 +4548,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return other == self
         }
         return false
-    }
-    
-    override var rightSwipeController: ViewController? {
-        return nil//chatInteraction.peerId == account.peerId ? PeerMediaController(account: account, peerId: chatInteraction.peerId, tagMask: .photoOrVideo) : PeerInfoController(account: account, peerId: chatInteraction.peerId)
     }
     
     

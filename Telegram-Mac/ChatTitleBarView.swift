@@ -342,7 +342,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if point.x > 20 {
                 if chatInteraction.mode != .scheduled {
                     if chatInteraction.peerId == chatInteraction.context.peerId {
-                        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+                        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
                     } else {
                         switch chatInteraction.chatLocation {
                         case let .peer(peerId):
@@ -356,7 +356,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
         } else {
             if chatInteraction.peerId == chatInteraction.context.peerId {
-                chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId, tagMask: .photoOrVideo))
+                chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
             } else {
                 switch chatInteraction.chatLocation {
                 case let .peer(peerId):
@@ -384,6 +384,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         badgeNode.view!.setFrameOrigin(6,4)
         
         closeButton.centerY()
+        
     }
     
     
