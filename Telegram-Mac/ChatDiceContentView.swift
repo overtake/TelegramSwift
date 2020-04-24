@@ -208,6 +208,10 @@ class ChatDiceContentView: ChatMediaContentView {
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: LayoutPositionFlags?, approximateSynchronousValue: Bool) {
         
         
+        if parent?.stableId != self.parent?.stableId {
+            self.playerView.set(nil)
+        }
+        
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         
         guard let media = media as? TelegramMediaDice, let parent = parent else {
@@ -232,6 +236,7 @@ class ChatDiceContentView: ChatMediaContentView {
         
         self.diceState = diceState
         
+ 
         
         
         let data: Signal<(Data?, TelegramMediaFile), NoError>
