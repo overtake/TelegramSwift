@@ -198,7 +198,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activity = theme.activity(key: 10 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
                 } else if item.isSelected {
                     activity = theme.activity(key: 11 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
-                } else if item.pinnedType != .none {
+                } else if item.isFixedItem {
                     activity = theme.activity(key: 12 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
                 } else if contextMenu != nil {
                     activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityContextMenuColor, backgroundColor: theme.chatList.contextMenuBackgroundColor)
@@ -288,7 +288,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if !item.isSelected && containerView.activeDragging {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            if item.pinnedType != .none && !item.isSelected {
+            if item.isFixedItem && !item.isSelected {
                 return theme.chatList.pinnedBackgroundColor
             }
             
@@ -321,7 +321,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(item.pinnedType == .last ? 0 : item.leftInset, NSHeight(layer.bounds) - .borderSize, item.pinnedType == .last ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
+                    ctx.fill(NSMakeRect(item.isLastPinned ? 0 : item.leftInset, NSHeight(layer.bounds) - .borderSize, item.isLastPinned ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
                 }
             }
             
@@ -334,7 +334,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
                 
                 
-                if item.ctxBadgeNode == nil && (item.pinnedType == .some || item.pinnedType == .last) {
+                if item.ctxBadgeNode == nil && (item.isPinned || item.isLastPinned) {
                     ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin, frame.height - theme.icons.pinnedImage.backingSize.height - (item.margin + 1), theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
                 }
                 
@@ -673,9 +673,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
             
             
-            let pin: LAnimationButton = LAnimationButton(animation: item.pinnedType == .none ? "anim_pin" : "anim_unpin", size: NSMakeSize(frame.height, frame.height), keysToColor: item.pinnedType == .none ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_constructive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
+            let pin: LAnimationButton = LAnimationButton(animation: !item.isPinned ? "anim_pin" : "anim_unpin", size: NSMakeSize(frame.height, frame.height), keysToColor: !item.isPinned ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_constructive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let pinTitle = TextViewLabel()
-            pinTitle.attributedString = .initialize(string: item.pinnedType == .none ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
+            pinTitle.attributedString = .initialize(string: !item.isPinned ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
             pinTitle.sizeToFit()
             pin.addSubview(pinTitle)
             pin.set(background: theme.colors.revealAction_constructive_background, for: .Normal)

@@ -952,7 +952,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             } else if let passport = passport {
                 passport.window.makeKeyAndOrderFront(nil)
             } else {
-                window.makeKeyAndOrderFront(nil)
+               // window.makeKeyAndOrderFront(nil)
             }
             
             

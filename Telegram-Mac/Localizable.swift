@@ -2037,6 +2037,8 @@ internal final class L10n {
   internal static var chatListContextDeleteAndExit: String  { return L10n.tr("Localizable", "ChatList.Context.DeleteAndExit") }
   /// Delete Chat
   internal static var chatListContextDeleteChat: String  { return L10n.tr("Localizable", "ChatList.Context.DeleteChat") }
+  /// Hide
+  internal static var chatListContextHidePromo: String  { return L10n.tr("Localizable", "ChatList.Context.HidePromo") }
   /// Leave Channel
   internal static var chatListContextLeaveChannel: String  { return L10n.tr("Localizable", "ChatList.Context.LeaveChannel") }
   /// Leave Group
@@ -6985,6 +6987,22 @@ internal final class L10n {
   internal static var peerInfoConfirmClearHistoryUser: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.User") }
   /// Are you sure you want to delete all messages in the chat?
   internal static var peerInfoConfirmClearHistoryUserBothSides: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.UserBothSides") }
+  /// Public Service Announcement
+  internal static var psaChatTitle: String  { return L10n.tr("Localizable", "psa.chat.title") }
+  /// Learn More
+  internal static var psaChatAlertLearnmore: String  { return L10n.tr("Localizable", "psa.chat.alert.learnmore") }
+  /// https://telegram.org/blog/coronavirus
+  internal static var psaChatAlertLearnmoreCovid: String  { return L10n.tr("Localizable", "psa.chat.alert.learnmore.covid") }
+  /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at https://telegram.org/blog/coronavirus
+  internal static var psaChatTextCovid: String  { return L10n.tr("Localizable", "psa.chat.text.covid") }
+  /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at [https://telegram.org/blog/coronavirus](https://telegram.org/blog/coronavirus)
+  internal static var psaTextCovid: String  { return L10n.tr("Localizable", "psa.text.covid") }
+  /// Covid-19 Notification
+  internal static var psaTitleCovid: String  { return L10n.tr("Localizable", "psa.title.covid") }
+  /// Covid-19 Notification\nfrom: [%@]()
+  internal static func psaTitleBubblesCovid(_ p1: String) -> String {
+    return L10n.tr("Localizable", "psa.title.bubbles.covid", p1)
+  }
   /// Check Spelling While Typing
   internal static var rbDRhWINTitle: String  { return L10n.tr("Localizable", "rbD-Rh-wIN.title") }
   /// Smart Dashes

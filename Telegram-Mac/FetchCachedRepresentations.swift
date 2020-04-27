@@ -676,7 +676,7 @@ private func fetchCachedDiceRepresentation(account: Account, data: Data, represe
     } |> runOn(lottieThreadPool)
 }
 
-func getAnimatedStickerThumb(data: Data) -> Signal<String?, NoError> {
+func getAnimatedStickerThumb(data: Data, size: NSSize = NSMakeSize(512, 512)) -> Signal<String?, NoError> {
     
     return .single(data) |> deliverOn(lottieThreadPool) |> map { data -> String? in
         var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
@@ -685,7 +685,7 @@ func getAnimatedStickerThumb(data: Data) -> Signal<String?, NoError> {
         }
         if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: nil), encoding: .utf8), json.length > 0 {
             let rlottie = RLottieBridge(json: json, key: "\(arc4random())")
-            let unmanaged = rlottie?.renderFrame(0, width: Int(512 * 2), height: Int(512 * 2))
+            let unmanaged = rlottie?.renderFrame(0, width: Int(size.width * 2), height: Int(size.height * 2))
             let colorImage = unmanaged?.takeRetainedValue()
             
             if let image = colorImage {

@@ -344,6 +344,13 @@ class FastSettings {
         }
     }
     
+    static func showPromoTitle(for peerId: PeerId) -> Bool {
+        return UserDefaults.standard.value(forKey: "promo_\(peerId)") as? Bool ?? true
+    }
+    static func removePromoTitle(for peerId: PeerId) {
+        UserDefaults.standard.set(false, forKey: "promo_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
     
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)

@@ -6517,6 +6517,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var channel_info_promo: CGImage {
+      if let image = cached.with({ $0["channel_info_promo"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_info_promo_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["channel_info_promo_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_info_promo_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["channel_info_promo_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7019,6 +7058,9 @@ final class TelegramIconsTheme {
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
   private let _stickers_add_featured: ()->CGImage
+  private let _channel_info_promo: ()->CGImage
+  private let _channel_info_promo_bubble_incoming: ()->CGImage
+  private let _channel_info_promo_bubble_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7521,7 +7563,10 @@ final class TelegramIconsTheme {
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
-      stickers_add_featured: @escaping()->CGImage
+      stickers_add_featured: @escaping()->CGImage,
+      channel_info_promo: @escaping()->CGImage,
+      channel_info_promo_bubble_incoming: @escaping()->CGImage,
+      channel_info_promo_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8024,5 +8069,8 @@ final class TelegramIconsTheme {
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
       self._stickers_add_featured = stickers_add_featured
+      self._channel_info_promo = channel_info_promo
+      self._channel_info_promo_bubble_incoming = channel_info_promo_bubble_incoming
+      self._channel_info_promo_bubble_outgoing = channel_info_promo_bubble_outgoing
   }
 }

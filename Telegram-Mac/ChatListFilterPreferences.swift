@@ -306,10 +306,10 @@ func chatListFilterItems(account: Account, accountManager: AccountManager) -> Si
                     return (totalBadge, result)
             }
         } |> map { value -> ChatListFilterBadges in
-            return ChatListFilterBadges(total: value.0, filters: value.1.map { ChatListFilterBadge(filter: $0.0, count: $0.1, hasUnmutedUnread: $0.2) })
+            return ChatListFilterBadges(total: value.0, filters: value.1.map { ChatListFilterBadge(filter: $0.0, count: max(0, $0.1), hasUnmutedUnread: $0.2) })
         } |> mapToSignal { badges -> Signal<ChatListFilterBadges, NoError> in
             return renderedTotalUnreadCount(accountManager: accountManager, postbox: account.postbox) |> map {
-                return ChatListFilterBadges(total: Int($0.0), filters: badges.filters)
+                return ChatListFilterBadges(total: Int(max($0.0, 0)), filters: badges.filters)
             }
         }
 }

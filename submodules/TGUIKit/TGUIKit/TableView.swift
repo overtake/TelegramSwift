@@ -1138,7 +1138,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
         //, clipView.bounds.minY > 0
-        if !visibleItems.isEmpty {
+        if !visibleItems.isEmpty, documentOffset.y > 0 {
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)

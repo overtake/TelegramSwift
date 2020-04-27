@@ -315,8 +315,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             actionsDisposable.add(signal.start(error: { error in
                 let text: String
                 switch error {
-//                case .notMutualContact:
-//                    text = L10n.channelInfoAddUserLeftError
+                case .notMutualContact:
+                    text = L10n.channelInfoAddUserLeftError
                 case .limitExceeded:
                     text = L10n.channelErrorAddTooMuch
                 case .botDoesntSupportGroups:

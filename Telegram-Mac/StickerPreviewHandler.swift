@@ -239,7 +239,7 @@ class PreviewModalController: ModalViewController {
     }
     
     override func becomeFirstResponder() -> Bool? {
-        return false
+        return nil
     }
     
     override var handleEvents:Bool {
