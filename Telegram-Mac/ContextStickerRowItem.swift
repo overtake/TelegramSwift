@@ -90,10 +90,18 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         
-        removeAllSubviews()
         if let item = item as? ContextStickerRowItem {
+            
+            while subviews.count > item.result.entries.count {
+                subviews.last?.removeFromSuperview()
+            }
+            while subviews.count < item.result.entries.count {
+                addSubview(Control())
+            }
+            
+            
             for i in 0 ..< item.result.entries.count {
-                let container:Control = Control()
+               let container:Control = self.subviews[i] as! Control
                 
                 
                 container.set(background: theme.colors.grayBackground, for: .Highlight)
@@ -103,6 +111,11 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     container.set(background: theme.colors.accent, for: .Hover)
                     container.set(background: theme.colors.accent, for: .Highlight)
 
+                    container.apply(state: .Normal)
+                } else {
+                    container.set(background: theme.colors.background, for: .Normal)
+                    container.set(background: theme.colors.background, for: .Hover)
+                    container.set(background: theme.colors.grayBackground, for: .Highlight)
                     container.apply(state: .Normal)
                 }
                 
@@ -127,16 +140,43 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     
                    
                     if data.file.isAnimatedSticker {
-                        let view = MediaAnimatedStickerView(frame: NSZeroRect)
+                        let view: MediaAnimatedStickerView
+                        if container.subviews.isEmpty {
+                            view = MediaAnimatedStickerView(frame: .zero)
+                            container.addSubview(view)
+                        } else {
+                            let temp = container.subviews.first as? MediaAnimatedStickerView
+                            if temp == nil {
+                                view = MediaAnimatedStickerView(frame: .zero)
+                                container.subviews.removeFirst()
+                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
+                            } else {
+                                view = temp!
+                            }
+                        }
                         let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
                         view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false
-                        container.addSubview(view)
                     } else {
                         let file = data.file
                         let imageSize = file.dimensions?.size.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
                         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
-                        let view = TransformImageView()
+                        
+                        let view: TransformImageView
+                        if container.subviews.isEmpty {
+                            view = TransformImageView()
+                            container.addSubview(view)
+                        } else {
+                            let temp = container.subviews.first as? TransformImageView
+                            if temp == nil {
+                                view = TransformImageView()
+                                container.subviews.removeFirst()
+                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
+                            } else {
+                                view = temp!
+                            }
+                        }
+                        
                         view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
                         view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
                             if let file = file {
@@ -147,15 +187,12 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         view.set(arguments: arguments)
                         
                         view.setFrameSize(imageSize)
-                        container.addSubview(view)
                     }
                     
                     container.setFrameSize(NSMakeSize(item.result.sizes[i].width - 4, item.result.sizes[i].height - 4))
                 default:
                     fatalError("ContextStickerRowItem support only stickers")
                 }
-                
-                addSubview(container)
                 
             }
             
