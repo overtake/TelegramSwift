@@ -434,7 +434,12 @@ class ChatPollItem: ChatRowItem {
        return isPollEffectivelyClosed(message: message!, poll: poll)
     }
     var isBotQuiz: Bool {
-        return message?.id.peerId.namespace == Namespaces.Peer.CloudUser
+        if let message = message {
+            if self.poll.isQuiz {
+                return messageMainPeer(message)?.isBot == true
+            }
+        }
+        return false
     }
     
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
@@ -545,6 +550,10 @@ class ChatPollItem: ChatRowItem {
                 return 20
             }
             
+        }
+        
+        if isBotQuiz {
+            return 10
         }
         
         return super.additionalLineForDateInBubbleState
@@ -682,9 +691,7 @@ class ChatPollItem: ChatRowItem {
         }
         let deadlineTimeout = poll.deadlineTimeout
         let displayDeadline = !options.contains(where: { $0.isSelected })
-        if deadlineTimeout != nil, displayDeadline {
-            rightInset += 50
-        }
+
         
         
         titleText.measure(width: width - bubbleContentInset - rightInset)
@@ -1329,7 +1336,7 @@ private final class PollView : Control {
             if let current = self.timerView {
                 timerView = current
             } else {
-                timerView = PollBubbleTimerView(frame: NSMakeRect(frame.width - 70 - 10, 0, 70, 22))
+                timerView = PollBubbleTimerView(frame: NSMakeRect(frame.width - 70 - 8, typeView.frame.minY, 70, 22))
                 self.addSubview(timerView)
                 self.timerView = timerView
                 

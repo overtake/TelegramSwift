@@ -565,6 +565,8 @@ class ChatRowItem: TableRowItem {
                 authorIsChannel = true
             }
         }
+        
+        
         return authorIsChannel
     }
     
@@ -711,6 +713,25 @@ class ChatRowItem: TableRowItem {
         return renderType == .bubble
     }
     
+    var psaButton: NSAttributedString? {
+        if let info = message?.forwardInfo?.psaType {
+            let key = "psa.text.\(info)"
+            let text = localizedString(key)
+            
+            let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: .link), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { url in
+                    execute(inapp: .external(link: url, false))
+                }))
+            }))
+            return attributedText
+        }
+        return nil
+    }
+    
+    var isPsa: Bool {
+        return message?.forwardInfo?.psaType != nil
+    }
+    
     var hasBubble: Bool 
     
     static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType, sharedContext: SharedAccountContext) -> Bool {
@@ -765,14 +786,7 @@ class ChatRowItem: TableRowItem {
                     return true
                 }
             }
-            
-            
-//            if media is TelegramMediaImage {
-//                if case .Full = type {
-//                    return true
-//                }
-//                return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil
-//            }
+        
         } else if let message = message {
             return !bigEmojiMessage(sharedContext, message: message)
         }
@@ -1023,19 +1037,27 @@ class ChatRowItem: TableRowItem {
                             }), for: range)
                         }
                     } else {
+                        
+                        let color: NSColor
+                        if message.forwardInfo?.psaType != nil {
+                            color = presentation.chat.greenUI(isIncoming, object.renderType == .bubble)
+                        } else {
+                            color = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
+                        }
+                        
                         if let source = info.source, source.isChannel {
-                            var range = attr.append(string: source.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                            var range = attr.append(string: source.displayTitle, color: color, font: .medium(.text))
                             if info.author?.id != source.id {
-                                let subrange = attr.append(string: " (\(info.authorTitle))", color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                                let subrange = attr.append(string: " (\(info.authorTitle))", color: color, font: .medium(.text))
                                 range.length += subrange.length
                             }
                             
                             let link = source.addressName == nil ? "https://t.me/c/\(source.id.id)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
                             let appLink = inApp(for: link.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo)
-                            attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
+                            attr.add(link: appLink, for: range, color: color)
                             
                         } else {
-                            let range = attr.append(string: info.authorTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: info.author == nil ? .normal(.text) : .medium(.text))
+                            let range = attr.append(string: info.authorTitle, color: color, font: info.author == nil ? .normal(.text) : .medium(.text))
                             
                             var linkAbility: Bool = true
                             if let channel = info.author as? TelegramChannel {
@@ -1063,8 +1085,10 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     let forwardNameColor: NSColor
-                    if isForwardScam {
-                        forwardNameColor = theme.colors.redUI
+                    if message.forwardInfo?.psaType != nil {
+                        forwardNameColor = theme.chat.greenUI(isIncoming, object.renderType == .bubble)
+                    } else if isForwardScam {
+                        forwardNameColor = theme.chat.redUI(isIncoming, object.renderType == .bubble)
                     } else if !hasBubble {
                         forwardNameColor = presentation.colors.grayText
                     } else if isIncoming {
@@ -1075,7 +1099,14 @@ class ChatRowItem: TableRowItem {
                     
                     if renderType == .bubble {
                         
-                        let newAttr = parseMarkdownIntoAttributedString(L10n.chatBubblesForwardedFrom(attr.string), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor:forwardNameColor), link: MarkdownAttributeSet(font: hasBubble && info.author != nil ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { [weak attr] contents in
+                        let text: String
+                        if let psaType = message.forwardInfo?.psaType {
+                            text = translate(key: "psa.title.bubbles.\(psaType)", [attr.string])
+                        } else {
+                            text = L10n.chatBubblesForwardedFrom(attr.string)
+                        }
+                        
+                        let newAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: forwardNameColor), link: MarkdownAttributeSet(font: hasBubble && info.author != nil ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { [weak attr] contents in
                             if let attr = attr, !attr.string.isEmpty, let link = attr.attribute(NSAttributedString.Key.link, at: 0, effectiveRange: nil) {
                                 return (NSAttributedString.Key.link.rawValue, link)
                             }
@@ -1274,8 +1305,7 @@ class ChatRowItem: TableRowItem {
  */
               
             }
-            
-           
+
             
             self.fullDate = fullDate
         }
@@ -1415,11 +1445,22 @@ class ChatRowItem: TableRowItem {
             if isBubbled && !hasBubble {
                 w = width - _contentSize.width - 85
             }
-            forwardNameLayout.measure(width: w)
+            forwardNameLayout.measure(width: min(w, 250))
         }
         
         if forwardType == .FullHeader || forwardType == .ShortHeader {
-            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: tr(L10n.messagesForwardHeader), color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
+            
+            let color: NSColor
+            let text: String
+            if let psaType = message?.forwardInfo?.psaType {
+                color = presentation.chat.greenUI(isIncoming, isBubbled)
+                text = localizedString("psa.title.\(psaType)")
+            } else {
+                color = !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble)
+                text = L10n.messagesForwardHeader
+            }
+            
+            forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: text, color: color, font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
         } else {
             forwardHeader = nil
         }
@@ -1458,7 +1499,7 @@ class ChatRowItem: TableRowItem {
             
             let channelOffset = (channelViews != nil ? channelViews!.0.size.width + 20 : 0)
             
-            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0))
+            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
             
             
         }
@@ -1565,7 +1606,7 @@ class ChatRowItem: TableRowItem {
         } else {
             nameWidth = 0
         }
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 25 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
@@ -1581,7 +1622,7 @@ class ChatRowItem: TableRowItem {
         }
         //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 25 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
@@ -1892,7 +1933,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         
                         #if BETA || ALPHA || DEBUG
                         if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-                            items.append(ContextMenuItem("Copy thumbnail", handler: {
+                            items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
                                 _ = getAnimatedStickerThumb(data: data).start(next: { path in
                                     if let path = path {
                                         let pb = NSPasteboard.general

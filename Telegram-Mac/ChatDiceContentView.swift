@@ -157,8 +157,13 @@ class ChatDiceContentView: ChatMediaContentView {
                 default:
                     text = L10n.chatEmojiDefResultNew(media.emoji)
                 }
-                
-                tooltip(for: self.thumbView, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
+                let view: NSView
+                if !thumbView.isHidden {
+                    view = thumbView
+                } else {
+                    view = playerView
+                }
+                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
                     item?.chatInteraction.sendPlainText(media.emoji)
                 }), offset: NSMakePoint(0, -30))
             }

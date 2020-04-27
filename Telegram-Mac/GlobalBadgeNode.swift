@@ -93,6 +93,10 @@ class GlobalBadgeNode: Node {
         struct Result : Equatable {
             let dockText: String?
             let total:Int32
+            init(dockText: String?, total: Int32) {
+                self.dockText = dockText
+                self.total = max(total, 0)
+            }
         }
         
         var items:[UnreadMessageCountsItem] = []
@@ -145,7 +149,7 @@ class GlobalBadgeNode: Node {
                     var dockText: String?
                     let totalValue = !inAppSettings.badgeEnabled  ? 0 : (collectAllAccounts && !inAppSettings.notifyAllAccounts ? 0 : max(0, counts.reduce(0, { $0 + $1.0 })))
                     if totalValue > 0 {
-                        dockText = "\(totalValue)"
+                        dockText = "\(max(0, totalValue))"
                     }
                     
                     excludeTotal = totalValue

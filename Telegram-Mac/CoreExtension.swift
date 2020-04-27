@@ -2810,12 +2810,12 @@ extension TelegramMediaWebpageLoadedContent {
                     break
                 }
             }
-            newUrl = newUrl.replacingOccurrences(of: parsed, with: "\(timecode)", options: .caseInsensitive, range: range.lowerBound ..< newUrl.endIndex)
+            newUrl = newUrl.replacingOccurrences(of: parsed, with: "\(Int(timecode))", options: .caseInsensitive, range: range.lowerBound ..< newUrl.endIndex)
         } else {
             if url.contains("?") {
-                newUrl = self.url + "&t=\(timecode)"
+                newUrl = self.url + "&t=\(Int(timecode))"
             } else {
-                newUrl = self.url + "?t=\(timecode)"
+                newUrl = self.url + "?t=\(Int(timecode))"
             }
         }
         return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, attributes: self.attributes, instantPage: self.instantPage)

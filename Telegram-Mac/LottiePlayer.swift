@@ -269,6 +269,7 @@ private final class PlayerRenderer {
         self.onDispose?()
         _ = self.layer.swap(nil)
         self.release()
+        self.updateState(.stoped)
     }
     
     
@@ -373,7 +374,6 @@ private final class PlayerRenderer {
             framesTask?.cancel()
             framesTask = nil
             _ = stateValue.swap(nil)
-            
         }
         
         let currentState:(_ state: RenderAtomic<RendererState?>) -> RendererState? = { state in
@@ -640,7 +640,7 @@ enum LottiePlayerTriggerFrame : Equatable {
 
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
-        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors && lhs.triggerOn?.0 != rhs.triggerOn?.0
+        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
     }
     
     var liveTime: Int {

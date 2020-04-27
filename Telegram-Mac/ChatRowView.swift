@@ -51,6 +51,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     private var scamButton: ImageButton? = nil
     private var scamForwardButton: ImageButton? = nil
+    
+    private var psaButton: ImageButton? = nil
 
     let rowView: View
 
@@ -421,7 +423,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             //draw separator
             if let fwdType = item.forwardType, !item.isBubbled, layer == rowView.layer {
-                ctx.setFillColor(item.presentation.colors.accent.cgColor)
+                
+                let color: NSColor
+                if item.isPsa {
+                    color = item.presentation.colors.greenUI
+                } else {
+                    color = item.presentation.colors.link
+                }
+                ctx.setFillColor(color.cgColor)
                 switch fwdType {
                 case .ShortHeader:
                     let height = frame.height - item.forwardNameInset.y - item.defaultContentTopOffset
@@ -624,6 +633,22 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return point
     }
     
+    var psaPoint: NSPoint {
+        guard let item = item as? ChatRowItem, let forwardName = item.forwardNameLayout else {return NSZeroPoint}
+        var point: NSPoint = .zero
+        if item.hasBubble {
+            point.x = item.bubbleFrame.width - 20
+            point.y = self.forwardNamePoint.y
+        } else {
+            point = self.forwardNamePoint
+            point.x += forwardName.layoutSize.width
+            point.y -= 7
+        }
+       
+       // point.y -= 7
+        return point
+    }
+    
     var scamForwardPoint: NSPoint {
         guard let item = item as? ChatRowItem, let forwardName = item.forwardNameLayout else {return NSZeroPoint}
         
@@ -728,6 +753,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             scamButton?.setFrameOrigin(scamPoint)
             scamForwardButton?.setFrameOrigin(scamForwardPoint)
+            
+            psaButton?.setFrameOrigin(psaPoint)
+            
             avatar?.frame = avatarFrame
             captionView?.frame = captionFrame
             
@@ -805,6 +833,28 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         } else {
             avatar?.removeFromSuperview()
             avatar = nil
+        }
+    }
+    
+    func fillPsaButton(_ item: ChatRowItem) -> Void {
+        if let text = item.psaButton, let _ = item.forwardNameLayout {
+            
+            let icon = item.presentation.chat.channelInfoPromo(item.isIncoming, item.isBubbled, icons: theme.icons)
+            
+            if psaButton == nil {
+                psaButton = ImageButton()
+                psaButton?.autohighlight = false
+                psaButton?.setFrameSize(icon.backingSize)
+                rowView.addSubview(psaButton!)
+                psaButton?.set(handler: { control in
+                    tooltip(for: control, text: "", attributedText: text, interactions: globalLinkExecutor)
+                }, for: .Click)
+            }
+            psaButton?.set(image: icon, for: .Normal)
+            
+        } else {
+            psaButton?.removeFromSuperview()
+            psaButton = nil
         }
     }
     
@@ -1155,6 +1205,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             fillShareControl(item)
             fillScamButton(item)
             fillScamForwardButton(item)
+            fillPsaButton(item)
             item.chatInteraction.add(observer: self)
             
             updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)

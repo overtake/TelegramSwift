@@ -436,8 +436,8 @@ class ChatControllerView : View, ChatInputDelegate {
 
         
         let state:ChatHeaderState
-        if let initialAction = interfaceState.initialAction, case .ad = initialAction {
-            state = .sponsored
+        if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
+            state = .promo(kind)
         } else if interfaceState.isSearchMode.0 {
             state = .search(searchInteractions, interfaceState.isSearchMode.1)
         }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.isEmpty {
@@ -3965,7 +3965,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
             if let strongSelf = self, !hasModals() {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
-                
                 
                 if result == .invoked {
                     let setup = strongSelf.findAndSetEditableMessage()

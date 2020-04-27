@@ -306,6 +306,10 @@ final class TelegramChatColors {
         return bubbled ? incoming ? icons.poll_selected_incorrect_incoming : icons.poll_selected_incorrect_outgoing : icons.poll_selected_incorrect
     }
     
+    func channelInfoPromo(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.channel_info_promo_bubble_incoming : icons.channel_info_promo_bubble_outgoing : icons.channel_info_promo
+    }
+    
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
