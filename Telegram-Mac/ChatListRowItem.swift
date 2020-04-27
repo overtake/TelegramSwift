@@ -464,7 +464,7 @@ class ChatListRowItem: TableRowItem {
             let range: NSRange
             switch promo.kind {
             case let .psa(type, _):
-                range = sponsored.append(string: type, color: theme.colors.grayText, font: .normal(.short))
+                range = sponsored.append(string: localizedString("psa.chatlist.\(type)"), color: theme.colors.grayText, font: .normal(.short))
             case .proxy:
                 range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
             }

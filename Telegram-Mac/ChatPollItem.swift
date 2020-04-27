@@ -211,7 +211,7 @@ extension TelegramMediaPoll {
     }
     var isQuiz: Bool {
         switch kind {
-        case let .poll:
+        case .poll:
             return false
         default:
             return true

@@ -6995,6 +6995,8 @@ internal final class L10n {
   internal static var psaChatAlertLearnmoreCovid: String  { return L10n.tr("Localizable", "psa.chat.alert.learnmore.covid") }
   /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at https://telegram.org/blog/coronavirus
   internal static var psaChatTextCovid: String  { return L10n.tr("Localizable", "psa.chat.text.covid") }
+  /// Covid-19
+  internal static var psaChatlistCovid: String  { return L10n.tr("Localizable", "psa.chatlist.covid") }
   /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at [https://telegram.org/blog/coronavirus](https://telegram.org/blog/coronavirus)
   internal static var psaTextCovid: String  { return L10n.tr("Localizable", "psa.text.covid") }
   /// Covid-19 Notification
