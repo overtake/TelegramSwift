@@ -345,10 +345,10 @@ class FastSettings {
     }
     
     static func showPromoTitle(for peerId: PeerId) -> Bool {
-        return UserDefaults.standard.value(forKey: "promo_\(peerId)") as? Bool ?? true
+        return UserDefaults.standard.value(forKey: "promo_\(peerId)_1") as? Bool ?? true
     }
     static func removePromoTitle(for peerId: PeerId) {
-        UserDefaults.standard.set(false, forKey: "promo_\(peerId)")
+        UserDefaults.standard.set(false, forKey: "promo_\(peerId)_1")
         UserDefaults.standard.synchronize()
     }
     
