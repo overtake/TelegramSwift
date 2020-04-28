@@ -8,7 +8,7 @@
 //
 
 import Cocoa
-
+import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
@@ -448,7 +448,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
     }
     
     
-    var messageTextEntities:[MessageTextEntity] {
+    func messageTextEntities(_ detectLinks: ParsingType = [.Hashtags]) -> [MessageTextEntity] {
         var entities:[MessageTextEntity] = []
         for attribute in attributes {
             switch attribute {
@@ -470,7 +470,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         }
         
         let attr = NSMutableAttributedString(string: inputText)
-        attr.detectLinks(type: .Hashtags)
+        attr.detectLinks(type: detectLinks)
         
         attr.enumerateAttribute(NSAttributedString.Key.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
             if let value = value as? inAppLink {
@@ -478,6 +478,8 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                 case let .external(link, _):
                     if link.hasPrefix("#") {
                         entities.append(MessageTextEntity(range: range.lowerBound ..< range.upperBound, type: .Hashtag))
+                    } else if detectLinks.contains(.Links) {
+                        entities.append(MessageTextEntity(range: range.lowerBound ..< range.upperBound, type: .Url))
                     }
                 default:
                     break
@@ -744,7 +746,7 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
-            return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities, timestamp: self.timestamp)
+            return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp)
         }
     }
     

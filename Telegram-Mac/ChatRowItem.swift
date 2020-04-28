@@ -1002,6 +1002,7 @@ class ChatRowItem: TableRowItem {
                     if media.isAnimatedSticker {
                         accept = false
                     }
+                  
                     for attr in media.attributes {
                         switch attr {
                         case .Sticker:
@@ -1017,7 +1018,9 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                 }
-                
+                if !hasBubble && renderType == .bubble, message.forwardInfo?.psaType != nil {
+                    accept = false
+                }
                 
                 if accept || (ChatRowItem.authorIsChannel(message: message, account: context.account) && info.author?.id != message.chatPeer(context.peerId)?.id) {
                     forwardType = fwdType
@@ -1165,14 +1168,16 @@ class ChatRowItem: TableRowItem {
                     
                     
                     if let bot = message.inlinePeer, message.hasInlineAttribute, let address = bot.username {
-                        if attr.length > 0 {
-                            _ = attr.append(string: " ")
+                        if message.forwardInfo?.psaType == nil {
+                            if attr.length > 0 {
+                                _ = attr.append(string: " ")
+                            }
+                            _ = attr.append(string: "\(L10n.chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                            let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
+                            attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
+                                chatInteraction.updateInput(with: parameter + " ")
+                            }), range: range)
                         }
-                        _ = attr.append(string: "\(L10n.chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                        let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
-                        attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
-                            chatInteraction.updateInput(with: parameter + " ")
-                        }), range: range)
                     }
                     if canFillAuthorName {
                         var badge: NSAttributedString? = nil
@@ -1606,7 +1611,7 @@ class ChatRowItem: TableRowItem {
         } else {
             nameWidth = 0
         }
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 25 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
@@ -1622,7 +1627,7 @@ class ChatRowItem: TableRowItem {
         }
         //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 25 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)

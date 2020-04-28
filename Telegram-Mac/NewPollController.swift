@@ -226,7 +226,7 @@ private struct NewPollState : Equatable {
         let solution: TelegramMediaPollResults.Solution?
         if !self.quizExplanation.string.isEmpty {
             let entities = ChatTextInputState(inputText: self.quizExplanation.string, selectionRange: 0..<0, attributes: chatTextAttributes(from: self.quizExplanation))
-            solution = TelegramMediaPollResults.Solution(text: self.quizExplanation.string, entities: entities.messageTextEntities)
+            solution = TelegramMediaPollResults.Solution(text: self.quizExplanation.string, entities: entities.messageTextEntities())
         } else {
             solution = nil
         }

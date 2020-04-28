@@ -13,6 +13,7 @@ import Postbox
 import SwiftSignalKit
 import AVFoundation
 import QuickLook
+import TGUIKit
 
 let diceSymbol: String = "🎲"
 let dartSymbol: String = "🎯"
@@ -181,13 +182,20 @@ class Sender: NSObject {
             mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: input.inputText, value: nil))
             input = ChatTextInputState(inputText: "")
         }
+        
+        let parsingUrlType: ParsingType
+        if peerId.namespace != Namespaces.Peer.SecretChat {
+            parsingUrlType = [.Hashtags]
+        } else {
+            parsingUrlType = [.Links, .Hashtags]
+        }
 
         let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length
             
 
-            var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
+            var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities(parsingUrlType))]
             if let date = atDate {
                 attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
             }
@@ -460,8 +468,16 @@ class Sender: NSObject {
     }
     
     public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil) ->Signal<[MessageId?],NoError> {
-                
-        var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: caption.messageTextEntities)]
+        
+        
+        let parsingUrlType: ParsingType
+        if peerId.namespace != Namespaces.Peer.SecretChat {
+            parsingUrlType = [.Hashtags]
+        } else {
+            parsingUrlType = [.Links, .Hashtags]
+        }
+        
+        var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: caption.messageTextEntities(parsingUrlType))]
         let caption = Atomic(value: caption)
         if FastSettings.isChannelMessagesMuted(peerId) || silent {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
@@ -486,7 +502,7 @@ class Sender: NSObject {
                 let subState = input.subInputState(from: NSMakeRange(inset, message.length))
                 inset += message.length
                 
-                var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities)]
+                var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: subState.messageTextEntities(parsingUrlType))]
                 
                 if FastSettings.isChannelMessagesMuted(peerId) || silent {
                     attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))

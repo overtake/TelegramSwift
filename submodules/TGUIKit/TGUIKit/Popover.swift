@@ -99,8 +99,6 @@ open class Popover: NSObject {
             }
             
             
-            controller.viewDidAppear(animates)
-            
             var rect = controller.bounds
             if !NSIsEmptyRect(frameValue.contentRect) {
                 rect = frameValue.contentRect
@@ -200,7 +198,7 @@ open class Popover: NSObject {
                     parentView.addSubview(strongSelf.background)
                     
                     
-                    _ = controller.becomeFirstResponder()
+                    let result = controller.becomeFirstResponder()
                     
                     strongSelf.isShown = true
                     
@@ -213,10 +211,17 @@ open class Popover: NSObject {
                                 if let strongSelf = self, !once {
                                     once = true
                                     controller?.viewDidAppear(strongSelf.animates)
+                                    if result == true {
+                                        _ = strongSelf.window?.makeFirstResponder(controller?.firstResponder())
+                                    } else if result == false {
+                                        _ = strongSelf.window?.makeFirstResponder(nil)
+                                    }
                                 }
                                 
                             })
                             
+                        } else {
+                            controller.viewDidAppear(strongSelf.animates)
                         }
                         
                         let nHandler:(Control) -> Void = { [weak strongSelf] control in
@@ -258,6 +263,10 @@ open class Popover: NSObject {
                                 return .rejected
                             }
                         }, with: strongSelf, for: .leftMouseDown, priority: .high)
+                        
+                        control.kitWindow?.set(responder: { [weak controller] () -> NSResponder? in
+                            return controller?.firstResponder()
+                        }, with: self, priority: .high)
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             
