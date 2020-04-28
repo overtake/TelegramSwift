@@ -444,9 +444,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
                 self.addButton!.set(text: L10n.stickersSearchAdd, for: .Normal)
-                _ = self.addButton!.sizeToFit(NSZeroSize, NSMakeSize(50, 25), thatFit: true)
+                _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
-                self.addButton!.setFrameOrigin(frame.width - 50 - 10, 13)
+                self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
                 
                 self.addButton!.set(handler: { [weak item] _ in
                     item?.arguments.addPack(reference)
@@ -458,9 +458,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
                 self.addButton!.set(text: L10n.stickersSearchAdded, for: .Normal)
-                _ = self.addButton!.sizeToFit(NSZeroSize, NSMakeSize(50, 25), thatFit: true)
+                _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
-                self.addButton!.setFrameOrigin(frame.width - 50 - 10, 13)
+                self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
                 
                 self.addButton!.set(handler: { [weak item] _ in
                     if let item = item {
