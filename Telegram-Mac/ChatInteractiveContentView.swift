@@ -371,6 +371,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         partDisposable.set(nil)
         
+        
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
         
@@ -443,6 +444,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             
             } else if let file = media as? TelegramMediaFile {
+                
                 
                 let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                 

@@ -1147,6 +1147,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         }
        
     } else if url.hasPrefix(ton_scheme), let context = context {
+        return .external(link: url as String, false)
 //        let action = url.substring(from: ton_scheme.length)
 //        if action.hasPrefix("transfer/") {
 //            let vars = urlVars(with: url as String)
