@@ -297,7 +297,7 @@ class ChatListController : PeersListController {
         if previous?.filter?.id != current.filter?.id {
             _  = first.swap(true)
             _  = animated.swap(false)
-            self.request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
+            self.request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil)))
         }
         filter.set(current)
         setCenterTitle(self.defaultBarTitle)
@@ -645,7 +645,7 @@ class ChatListController : PeersListController {
         disposable.set(appliedTransition.start())
       
         
-        request.set(.single(.Initial(max(Int(frame.height / 70) + 5, 10), nil)))
+        request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 13), nil)))
         
         var pinnedCount: Int = 0
         self.genericView.tableView.enumerateItems { item -> Bool in
