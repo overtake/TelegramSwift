@@ -1291,7 +1291,11 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
     if let largestRepresentation = photo.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
-        return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+        if largestRepresentation.resource is LocalFileReferenceMediaResource {
+            return .single(.Local)
+        } else {
+            return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+        }
     } else {
         return .never()
     }
