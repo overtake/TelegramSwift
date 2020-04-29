@@ -158,6 +158,7 @@ final class EditImageCanvasView : View {
         
         shadowView.isEventLess = true
         
+        imageView.background = .white
         
         addSubview(imageContainer)
         imageContainer.addSubview(imageView)

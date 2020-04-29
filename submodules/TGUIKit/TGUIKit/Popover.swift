@@ -266,7 +266,7 @@ open class Popover: NSObject {
                         
                         strongSelf.window?.set(responder: { [weak controller] () -> NSResponder? in
                             return controller?.firstResponder()
-                        }, with: self, priority: .high, ignoreKeys: [.Return])
+                        }, with: self, priority: .high, ignoreKeys: [.Return, .Delete])
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             

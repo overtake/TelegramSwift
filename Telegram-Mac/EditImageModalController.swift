@@ -38,6 +38,8 @@ private final class EditImageView : View {
         fakeCorners.bottomLeft.sizeToFit()
         fakeCorners.bottomRight.sizeToFit()
         
+        imageView.background = .white
+        
         super.init(frame: frameRect)
         
         
