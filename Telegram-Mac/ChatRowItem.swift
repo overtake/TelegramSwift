@@ -715,8 +715,7 @@ class ChatRowItem: TableRowItem {
     
     var psaButton: NSAttributedString? {
         if let info = message?.forwardInfo?.psaType {
-            let key = "psa.text.\(info)"
-            let text = localizedString(key)
+            let text = localizedPsa("psa.text", type: info)
             
             let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: .link), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { url in
@@ -1104,7 +1103,7 @@ class ChatRowItem: TableRowItem {
                         
                         let text: String
                         if let psaType = message.forwardInfo?.psaType {
-                            text = translate(key: "psa.title.bubbles.\(psaType)", [attr.string])
+                            text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
                         } else {
                             text = L10n.chatBubblesForwardedFrom(attr.string)
                         }
@@ -1459,7 +1458,7 @@ class ChatRowItem: TableRowItem {
             let text: String
             if let psaType = message?.forwardInfo?.psaType {
                 color = presentation.chat.greenUI(isIncoming, isBubbled)
-                text = localizedString("psa.title.\(psaType)")
+                text = localizedPsa("psa.title", type: psaType)
             } else {
                 color = !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble)
                 text = L10n.messagesForwardHeader

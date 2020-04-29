@@ -192,7 +192,7 @@ private extension PromoChatListItem.Kind {
         case .proxy:
             return L10n.chatProxySponsoredCapDesc
         case let .psa(type, _):
-            return localizedString("psa.chat.text.\(type)")
+            return localizedPsa("psa.chat.text", type: type)
         }
     }
     var learnMore: String? {
@@ -200,7 +200,8 @@ private extension PromoChatListItem.Kind {
         case .proxy:
             return nil
         case let .psa(type, _):
-            return localizedString("psa.chat.alert.learnmore.\(type)")
+            let localized = localizedPsa("psa.chat.alert.learnmore", type: type)
+            return localized != localized ? localized : nil
         }
     }
 }

@@ -729,8 +729,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [_placeholder setDrawsBackground:NO];
         [_placeholder setSelectable:NO];
         [_placeholder setEditable:NO];
-        [[_placeholder cell] setLineBreakMode:NSLineBreakByTruncatingTail];
         [_placeholder setEnabled:NO];
+        [_placeholder setLineBreakMode:NSLineBreakByTruncatingTail];
         
         [self addSubview:_placeholder];
         
@@ -1135,7 +1135,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     
     [_placeholder sizeToFit];
-    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+   // [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
 }
     
@@ -1155,8 +1155,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [_placeholder setAttributedStringValue:placeholderAttributedString];
     
     [_placeholder sizeToFit];
-    
-    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+   // [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;
@@ -1576,6 +1575,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(void)setBackgroundColor:(NSColor * __nonnull)color {
     self.scrollView.backgroundColor = color;
     self.textView.backgroundColor = color;
+    _placeholder.backgroundColor = [NSColor redColor];
 }
 
 @end

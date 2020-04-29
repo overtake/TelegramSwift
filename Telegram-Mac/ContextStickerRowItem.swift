@@ -107,9 +107,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 container.set(background: theme.colors.grayBackground, for: .Highlight)
                 
                 if item.selectedIndex == i {
-                    container.set(background: theme.colors.accent, for: .Normal)
-                    container.set(background: theme.colors.accent, for: .Hover)
-                    container.set(background: theme.colors.accent, for: .Highlight)
+                    container.set(background: theme.colors.grayBackground, for: .Normal)
+                    container.set(background: theme.colors.grayBackground, for: .Hover)
+                    container.set(background: theme.colors.grayBackground, for: .Highlight)
 
                     container.apply(state: .Normal)
                 } else {
@@ -118,6 +118,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     container.set(background: theme.colors.grayBackground, for: .Highlight)
                     container.apply(state: .Normal)
                 }
+                
                 
                 container.layer?.cornerRadius = .cornerRadius
                 switch item.result.entries[i] {

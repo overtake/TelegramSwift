@@ -408,6 +408,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 bottomRightRadius = bottomRightRadius * 3 + 2
             }
         }
+        
+        var dimensions: NSSize = size
+        
+        if let image = media as? TelegramMediaImage {
+            dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+        } else if let file = media as? TelegramMediaFile {
+            dimensions = file.dimensions?.size ?? size
+        }
+        
+        let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+
 
 
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
@@ -415,7 +426,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         if mediaUpdated /*mediaUpdated*/ {
             
-            var dimensions: NSSize = size
             
             if let image = media as? TelegramMediaImage {
                 
@@ -491,7 +501,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
             
             
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
@@ -503,8 +512,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 })
             }
-            
-            self.image.set(arguments: arguments)
+        }
+        
+        
+        
+        
+        self.image.set(arguments: arguments)
+        
+        if let positionFlags = positionFlags {
+            autoplayVideoView?.view.positionFlags = positionFlags
+        } else {
+            autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
         }
         
         var first: Bool = true

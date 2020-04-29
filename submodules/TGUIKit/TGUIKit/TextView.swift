@@ -991,13 +991,16 @@ public final class TextViewLayout : Equatable {
             self.selectedRange = TextSelectedRange(color: selectText)
             return
         }
-        let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || char == "_"
+        let tidyChar = char.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+        let valid:Bool = tidyChar == "" || tidyChar == "_" || tidyChar == "\u{FFFD}"
         let string:NSString = attributedString.string.nsstring
         while valid {
             let prevChar = string.substring(with: NSMakeRange(prev, 1))
             let nextChar = string.substring(with: NSMakeRange(next, 1))
-            var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || prevChar == "_"
-            var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_"
+            let tidyPrev = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+            let tidyNext = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+            var prevValid:Bool = tidyPrev == "" || tidyPrev == "_" || tidyPrev == "\u{FFFD}"
+            var nextValid:Bool = tidyNext == "" || tidyNext == "_" || tidyNext == "\u{FFFD}"
             if (prevValid && prev > 0) {
                 prev -= 1
             }
@@ -1012,7 +1015,8 @@ public final class TextViewLayout : Equatable {
             if(next == string.length - 1) {
                 nextValid = false
                 let nextChar = string.substring(with: NSMakeRange(next, 1))
-                if nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_" {
+                let nextTidy = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+                if nextTidy == "" || nextTidy == "_" || nextTidy == "\u{FFFD}" {
                     range.length += 1
                 }
             }
@@ -1024,7 +1028,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         
-        self.selectedRange = TextSelectedRange(range: range, color: selectText, def: true)
+        self.selectedRange = TextSelectedRange(range: NSMakeRange(max(range.location, 0), min(max(range.length, 0), string.length)), color: selectText, def: true)
     }
     
 

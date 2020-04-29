@@ -1295,7 +1295,7 @@ private final class PollView : Control {
                 solutionButton.set(image: item.presentation.chat.quizSolution(item), for: .Normal)
                 solutionButton.style = ControlStyle(font: nil, foregroundColor: theme.colors.accent, highlightColor: theme.colors.accent.withAlphaComponent(0.7))
                 _ = solutionButton.sizeToFit()
-                solutionButton.setFrameOrigin(NSMakePoint(frame.width - solutionButton.frame.width - 6, 0))
+                solutionButton.setFrameOrigin(NSMakePoint(frame.width - solutionButton.frame.width - 6, typeView.frame.minY - 6))
                 
                 if mayApplyAnimation {
                     solutionButton.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.3)

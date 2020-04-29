@@ -207,11 +207,13 @@ func <(lhs: SwipeHandler, rhs: SwipeHandler) -> Bool {
 
 class ResponderObserver : Comparable {
     let handler:()->NSResponder?
+    let ignoreKeys:[KeyboardKey]
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let date: TimeInterval
-    init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority) {
+    init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority, _ ignoreKeys: [KeyboardKey]) {
         self.handler = handler
+        self.ignoreKeys = ignoreKeys
         self.object = WeakReference(value: object)
         self.priority = priority
         self.date = Date().timeIntervalSince1970
@@ -277,8 +279,8 @@ open class Window: NSWindow {
     public weak var rootViewController: ViewController?
     public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
     
-    public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
-        responsders.append(ResponderObserver(responder, object, priority))
+    public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
+        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
     }
     
     public func removeObserver(for object:NSObject) {
@@ -349,6 +351,9 @@ open class Window: NSWindow {
         
         self.swipeHandlers = self.swipeHandlers.filter { key, value in
             return value.object.value !== object && value.object.value != nil
+        }
+        self.responsders = responsders.filter {
+            $0.object.value !== object
         }
     }
     
@@ -435,10 +440,13 @@ open class Window: NSWindow {
     }
     
     
-    public func applyResponderIfNeeded() ->Void {
+    public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
         let sorted = responsders.sorted(by: >)
         
         for observer in sorted {
+            if let event = event, let code = KeyboardKey(rawValue: event.keyCode), observer.ignoreKeys.contains(code) {
+                continue
+            }
             if let responder = observer.handler() {
                 if self.firstResponder != responder {
                     let _ = self.resignFirstResponder()
@@ -639,10 +647,7 @@ open class Window: NSWindow {
         if sheets.isEmpty {
             if eventType == .keyDown {
                 
-                
-                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Tab {
-                    applyResponderIfNeeded()
-                }
+                applyResponderIfNeeded(event)
                 
                 cleanUndefinedHandlers()
                 
