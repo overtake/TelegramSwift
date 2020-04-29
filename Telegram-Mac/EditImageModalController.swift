@@ -22,7 +22,7 @@ private final class EditImageView : View {
     private let reset: TitleButton = TitleButton()
     private var currentData: EditedImageData?
     private let fakeCorners: (topLeft: ImageView, topRight: ImageView, bottomLeft: ImageView, bottomRight: ImageView)
-    
+    private var canReset: Bool = false
     
     required init(frame frameRect: NSRect, image: CGImage) {
         self.image = image
@@ -101,7 +101,7 @@ private final class EditImageView : View {
         } else {
             selectionRectView.applyRect(imageView.bounds, dimensions: value.dimensions)
         }
-        
+        self.canReset = canReset
         self.reset.isHidden = !canReset
         self.reset.removeAllHandlers()
         self.reset.set(handler: { _ in
@@ -163,7 +163,7 @@ private final class EditImageView : View {
     
     func hideElements(_ hide: Bool) {
         imageContainer.isHidden = hide
-        reset.isHidden = hide
+        reset.isHidden = hide || !canReset
     }
     
     func contentSize(maxSize: NSSize) -> NSSize {
@@ -223,10 +223,21 @@ class EditImageModalController: ModalViewController {
         return resultValue.get()
     }
     
+    private var markAsClosed: Bool = false
+    
     override func returnKeyAction() -> KeyHandlerResult {
+        
+        guard !markAsClosed else { return .invoked }
+        
         let currentData = editState.modify {$0}
         resultValue.set(EditedImageData.generateNewUrl(data: currentData, selectedRect: genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)})
-        close()
+        
+        let signal = resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
+        markAsClosed = true
+        _ = signal.start(next: { [weak self] _ in
+            self?.close()
+        })
+        
         return .invoked
     }
     

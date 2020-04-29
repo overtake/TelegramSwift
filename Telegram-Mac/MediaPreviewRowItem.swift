@@ -64,7 +64,7 @@ class MediaPreviewRowItem: TableRowItem {
     }
     
     override var identifier: String {
-        return super.identifier + "\(stableId)"
+        return "\(ChatLayoutUtils.contentNode(for: media))"
     }
     
     override var height: CGFloat {
