@@ -60,7 +60,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             guard let `self` = self else {
                 return
             }
-            self.navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, self.controller.frame.width, self.controller.bar.height)
+            self.navigationBar.frame = NSMakeRect(0, self.navigationBar.frame.minY, self.controller.frame.width, self.navigationBar.frame.height)
             self.navigationRightBorder.frame = NSMakeRect(view.frame.width - .borderSize, 0, .borderSize, self.navigationBar.frame.height)
         }
     }

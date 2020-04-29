@@ -464,7 +464,7 @@ class ChatListRowItem: TableRowItem {
             let range: NSRange
             switch promo.kind {
             case let .psa(type, _):
-                range = sponsored.append(string: localizedString("psa.chatlist.\(type)"), color: theme.colors.grayText, font: .normal(.short))
+                range = sponsored.append(string: localizedPsa("psa.chatlist", type: type), color: theme.colors.grayText, font: .normal(.short))
             case .proxy:
                 range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
             }
@@ -590,16 +590,31 @@ class ChatListRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
         if self.groupId == .root {
-            var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
-            if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
-                if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
-                    copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
-                    copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
-                    messageText = copy
+            var text: NSAttributedString?
+            if case let .ad(promo) = pinnedType, message == nil {
+                if let promo = promo as? PromoChatListItem {
+                    switch promo.kind {
+                    case let .psa(_, message):
+                        if let message = message {
+                            text = .initialize(string: message, color: theme.colors.grayText, font: .normal(.text))
+                        }
+                    default:
+                        break
+                    }
                 }
-                
             }
-            self.messageText = messageText
+            if text == nil {
+                var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
+                if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
+                    if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
+                        copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
+                        copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
+                        messageText = copy
+                    }
+                }
+                text = messageText
+            }
+            self.messageText = text!
         }
         
        

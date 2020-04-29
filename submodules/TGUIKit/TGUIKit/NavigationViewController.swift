@@ -805,7 +805,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar)
-        
         reloadHeaders()
         
        

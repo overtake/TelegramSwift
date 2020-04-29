@@ -342,7 +342,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     
                     var addition:CGFloat = 0
                     if item.isSecret {
-                        ctx.draw(item.isSelected ? theme.icons.secretImageSelected : theme.icons.secretImage, in: NSMakeRect(item.leftInset, item.margin + 3, theme.icons.secretImage.backingSize.width, theme.icons.secretImage.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.secretImageSelected : theme.icons.secretImage, in: NSMakeRect(item.leftInset, item.margin + 3, theme.icons.secretImage.backingSize.width, theme.icons.secretImage.backingSize.height))
                         addition += theme.icons.secretImage.backingSize.height
                         
                     }
