@@ -922,8 +922,8 @@ private final class PollOptionView : Control {
         progressView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
         borderView.backgroundColor = option.presentation.chat.pollOptionBorder(option.isIncoming, option.isBubbled)
         borderView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5 - .borderSize + progressView.progressHeight, frame.width - nameView.frame.minX, .borderSize)
-        borderView.change(opacity: option.percent != nil ? 0 : 1, animated: animated, duration: duration)
-        progressView.change(opacity: option.percent == nil ? 0 : 1, animated: animated, duration: duration)
+        borderView.change(opacity: option.percent != nil ? 0 : 1, animated: animated, duration: duration, timingFunction: .spring)
+        progressView.change(opacity: option.percent == nil ? 0 : 1, animated: animated, duration: duration, timingFunction: .spring)
         
         let votedColor: NSColor
         

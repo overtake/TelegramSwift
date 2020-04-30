@@ -37,7 +37,7 @@ open class MagnifyView : NSView {
                 
                 let divider = NSMakePoint(magnifiedSize.width / contentView.frame.width, magnifiedSize.height / contentView.frame.height)
                 
-                contentView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, contentView.frame.minX * divider.x), floorToScreenPixels(backingScaleFactor, contentView.frame.minY * divider.y), magnifiedSize.width, magnifiedSize.height)//NSMakeRect(contentView.frame.minX, contentView.frame.minY, magnifiedSize.width, magnifiedSize.height)
+                contentView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, contentView.frame.minX * divider.x), floorToScreenPixels(backingScaleFactor, contentView.frame.minY * divider.y), magnifiedSize.width, magnifiedSize.height)
             }
         }
     }
