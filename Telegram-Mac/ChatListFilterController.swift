@@ -163,6 +163,9 @@ class SelectCallbackObject : ShareObject {
         return true
     }
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        if peer is TelegramSecretChat {
+            return false
+        }
         return true
     }
     

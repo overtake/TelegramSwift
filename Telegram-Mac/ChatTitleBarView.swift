@@ -17,6 +17,14 @@ private class ConnectionStatusView : View {
     private var textViewLayout:TextViewLayout?
     private var disableProxyButton: TitleButton?
     
+    private var backButton: ImageButton?
+    
+    var isSingleLayout: Bool = false {
+        didSet {
+            updateBackButton()
+        }
+    }
+    
     var disableProxy:(()->Void)?
     
     var status:ConnectionStatus = .online(proxyAddress: nil) {
@@ -81,6 +89,26 @@ private class ConnectionStatusView : View {
         let status = self.status
         self.status = status
     }
+    
+    private func updateBackButton() {
+        if isSingleLayout {
+            let button: ImageButton
+            if let b = self.backButton {
+                button = b
+            } else {
+                button = ImageButton()
+                self.backButton = button
+                addSubview(button)
+            }
+            button.autohighlight = false
+            button.set(image: theme.icons.chatNavigationBack, for: .Normal)
+            _ = button.sizeToFit()
+        } else {
+            backButton?.removeFromSuperview()
+            backButton = nil
+        }
+        needsLayout = true
+    }
 
     deinit {
         //indicator.animates = false
@@ -94,9 +122,12 @@ private class ConnectionStatusView : View {
         super.layout()
         
         if let textViewLayout = textViewLayout {
+            
+            let offset: CGFloat = backButton != nil ? 16 : 0
+            
             textViewLayout.measure(width: frame.width)
             let f = focus(textViewLayout.layoutSize, inset:NSEdgeInsets(left: 12, top: 3))
-            indicator.centerY(x:0)
+            indicator.centerY(x: offset)
             
             
             textView.update(textViewLayout)
@@ -107,7 +138,7 @@ private class ConnectionStatusView : View {
             } else {
                 textView.setFrameOrigin(NSMakePoint(indicator.frame.maxX + 4, f.origin.y))
             }
-            
+            backButton?.centerY(x: 0)
         }
         
     }
@@ -119,7 +150,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
    
     
     
-    private var isSingleLayout:Bool = false
+    private var isSingleLayout:Bool = false {
+        didSet {
+            connectionStatusView?.isSingleLayout = isSingleLayout
+        }
+    }
     private var connectionStatusView:ConnectionStatusView? = nil
     private let activities:ChatActivitiesModel
     private let searchButton:ImageButton = ImageButton()
@@ -150,6 +185,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else {
                     if connectionStatusView == nil {
                         connectionStatusView = ConnectionStatusView(frame: NSMakeRect(0, -frame.height, frame.width, frame.height))
+                        connectionStatusView?.isSingleLayout = isSingleLayout
                         connectionStatusView?.disableProxy = chatInteraction.disableProxy
                         addSubview(connectionStatusView!)
                         connectionStatusView?.change(pos: NSMakePoint(0,0), animated: true)

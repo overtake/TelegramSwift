@@ -765,6 +765,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             selectingView?.setFrameOrigin(selectingPoint)
             
+            animatedView?.frame = bounds
+            
 
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
