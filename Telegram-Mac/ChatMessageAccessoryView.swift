@@ -74,6 +74,8 @@ class ChatMessageAccessoryView: Control {
             }
             if backingScaleFactor == 2 {
                 rect.origin.y += 0.5
+            } else {
+                rect.origin.y += 1
             }
             textView.frame = rect
             
