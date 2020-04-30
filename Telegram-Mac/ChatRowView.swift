@@ -634,15 +634,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     var psaPoint: NSPoint {
-        guard let item = item as? ChatRowItem, let forwardName = item.forwardNameLayout else {return NSZeroPoint}
+        guard let item = item as? ChatRowItem else {return NSZeroPoint}
         var point: NSPoint = .zero
-        if item.hasBubble {
+        if item.isBubbled, let _ = item.forwardNameLayout {
             point.x = item.bubbleFrame.width - 20
             point.y = self.forwardNamePoint.y
-        } else {
-            point = self.forwardNamePoint
-            point.x += forwardName.layoutSize.width
-            point.y -= 7
+        } else if item.entry.renderType == .list, let name = item.authorText {
+            point = self.namePoint
+            point.x += name.layoutSize.width
+            point.y -= 6
         }
        
        // point.y -= 7
@@ -839,7 +839,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillPsaButton(_ item: ChatRowItem) -> Void {
-        if let text = item.psaButton, let _ = item.forwardNameLayout {
+        if let text = item.psaButton, item.forwardNameLayout != nil || !item.isBubbled {
             
             let icon = item.presentation.chat.channelInfoPromo(item.isIncoming, item.isBubbled, icons: theme.icons)
             

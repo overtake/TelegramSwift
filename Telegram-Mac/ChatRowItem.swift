@@ -952,9 +952,11 @@ class ChatRowItem: TableRowItem {
             self.itemType = itemType
             self.isRead = isRead
             
-            if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId {
+            if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
                     self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                } else if (object.renderType == .list && info.psaType != nil) {
+                    self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
@@ -1018,6 +1020,8 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if !hasBubble && renderType == .bubble, message.forwardInfo?.psaType != nil {
+                    accept = false
+                } else if (entry.renderType == .list && message.forwardInfo?.psaType != nil) {
                     accept = false
                 }
                 
@@ -1138,7 +1142,9 @@ class ChatRowItem: TableRowItem {
                 var titlePeer:Peer? = self.peer
                 
                 var title:String = peer?.displayTitle ?? ""
-                if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+                if object.renderType == .list, let _ = message.forwardInfo?.psaType {
+                    
+                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     title = peer.displayTitle
                     titlePeer = peer
                 }
@@ -1156,6 +1162,11 @@ class ChatRowItem: TableRowItem {
                             nameColor = presentation.chat.peerName(value)
                         }
                     }
+                    
+                    if message.forwardInfo?.psaType != nil, object.renderType == .list {
+                        nameColor = presentation.colors.greenUI
+                    }
+                    
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
                         if peer.id.id != 0 {
@@ -1452,7 +1463,7 @@ class ChatRowItem: TableRowItem {
             forwardNameLayout.measure(width: min(w, 250))
         }
         
-        if forwardType == .FullHeader || forwardType == .ShortHeader {
+        if (forwardType == .FullHeader || forwardType == .ShortHeader) && (entry.renderType == .bubble || message?.forwardInfo?.psaType == nil) {
             
             let color: NSColor
             let text: String
