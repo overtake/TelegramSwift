@@ -133,9 +133,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
         }
-        if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
-        }
+        
+        let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
+        items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))

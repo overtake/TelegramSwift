@@ -784,6 +784,13 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
         return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
         if context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser {
+            
+            if message.media.first is TelegramMediaDice, message.peers[message.id.peerId] is TelegramUser {
+                if Int(message.timestamp) + 24 * 60 * 60 > context.timestamp {
+                    return false
+                }
+            }
+            
             return true
         }
         if let peer = message.peers[message.id.peerId] as? TelegramGroup {

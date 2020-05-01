@@ -190,6 +190,15 @@ enum GeneralViewType : Equatable {
         }
     }
     
+    func withUpdatedInsets(_ insets: NSEdgeInsets) -> GeneralViewType {
+        switch self {
+        case .legacy:
+            return self
+        case let .modern(position, _):
+            return .modern(position: position, insets: insets)
+        }
+    }
+    
     static var firstItem: GeneralViewType {
         return .modern(position: .first, insets: NSEdgeInsetsMake(12, 16, 12, 16))
     }
