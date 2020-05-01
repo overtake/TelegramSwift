@@ -262,8 +262,6 @@ class PeerInfoHeadItem: GeneralRowItem {
         } else {
             height = photoDimension + insets.top + insets.bottom
         }
-       
-        
         return height
     }
     
@@ -350,7 +348,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 guard let `self` = self else {
                     return
                 }
-                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: count)
+                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
                 _ = self.makeSize(self.width, oldWidth: 0)
                 self.redraw()
             }))
@@ -584,7 +582,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 }
             }
         }
-        return false
+         return false
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {

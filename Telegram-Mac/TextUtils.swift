@@ -389,7 +389,6 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
 
 func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false) -> PeerStatusStringResult {
     if let peer = peerViewMainPeer(peerView) {
-    
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
