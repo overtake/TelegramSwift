@@ -412,8 +412,9 @@ public class Modal: NSObject {
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
-            self.visualEffectView!.material = .dark
+            self.visualEffectView!.material = .ultraDark
             self.visualEffectView!.blendingMode = .withinWindow
+            self.visualEffectView!.state = .active
             self.visualEffectView?.wantsLayer = true
         } else {
             self.visualEffectView = nil

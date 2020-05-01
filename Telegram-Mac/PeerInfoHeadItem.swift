@@ -586,7 +586,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if let item = item as? PeerInfoHeadItem, let peer = item.peer, peer.groupAccess.canEditGroupInfo {
+        if let item = item as? PeerInfoHeadItem, !item.editing, let peer = item.peer, peer.groupAccess.canEditGroupInfo {
             if let tiff = sender.draggingPasteboard.data(forType: .tiff), let _ = NSImage(data: tiff) {
                 activeDragging = true
             } else {
@@ -697,7 +697,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }
 
         
-        if item.canEditPhoto || self.activeDragging {
+        if item.canEditPhoto || self.activeDragging || item.updatingPhotoState != nil {
             if photoEditableView == nil {
                 photoEditableView = .init(frame: NSMakeRect(0, 0, photoDimension, photoDimension))
                 photoEditableView?.layer?.cornerRadius = photoDimension / 2
