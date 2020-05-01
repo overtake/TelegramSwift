@@ -65,16 +65,22 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_disabled, data: InputDataGeneralData(name: L10n.autoNightSettingsDisabled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule == nil && !settings.systemBased), viewType: .firstItem, action: arguments.disable)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .innerItem, action: arguments.scheduled)))
-    index += 1
+  
     
     if #available(OSX 10.14, *) {
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .innerItem, action: arguments.scheduled)))
+        index += 1
+        
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_system_based, data: InputDataGeneralData(name: L10n.autoNightSettingsSystemBased, color: theme.colors.text, icon: nil, type: .selectable(settings.systemBased), viewType: .lastItem, action: arguments.systemBased)))
         index += 1
         if settings.systemBased {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSystemBasedDesc), data: InputDataGeneralTextData(viewType: .textTopItem)))
             index += 1
         }
+    } else {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .lastItem, action: arguments.scheduled)))
+        index += 1
     }
     
 
