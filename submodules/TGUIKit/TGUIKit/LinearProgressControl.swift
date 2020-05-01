@@ -214,7 +214,7 @@ public class LinearProgressControl: Control {
     
     
     private func preparedAnimation(keyPath: String, from: NSValue, to: NSValue, duration: Double, beginTime: Double?, offset: Double, speed: Float, repeatForever: Bool = false) -> CAAnimation {
-        let animation = makeSpringAnimation(keyPath)
+        let animation = CABasicAnimation(keyPath: keyPath)
         animation.fromValue = from
         animation.toValue = to
         animation.duration = duration

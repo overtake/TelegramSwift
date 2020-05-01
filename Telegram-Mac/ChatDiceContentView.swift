@@ -348,8 +348,19 @@ class ChatDiceContentView: ChatMediaContentView {
                         self.thumbView.isHidden = true
                     }
                 case .stoped:
-                    self.playerView.isHidden = false
-                    self.thumbView.isHidden = false
+                    switch diceState.play {
+                    case let .end(animated):
+                        if animated {
+                            self.playerView.isHidden = false
+                            self.thumbView.isHidden = true
+                        } else {
+                            self.playerView.isHidden = true
+                            self.thumbView.isHidden = false
+                        }
+                    default:
+                        self.playerView.isHidden = false
+                        self.thumbView.isHidden = false
+                    }
                 }
             }))
             

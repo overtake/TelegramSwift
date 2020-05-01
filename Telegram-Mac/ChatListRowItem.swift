@@ -596,7 +596,10 @@ class ChatListRowItem: TableRowItem {
                     switch promo.kind {
                     case let .psa(_, message):
                         if let message = message {
-                            text = .initialize(string: message, color: theme.colors.grayText, font: .normal(.text))
+                            let attr = NSMutableAttributedString()
+                            _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
+                            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                            text = attr
                         }
                     default:
                         break

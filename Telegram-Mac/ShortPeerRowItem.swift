@@ -115,7 +115,7 @@ class ShortPeerRowItem: GeneralRowItem {
         case .legacy:
             return inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
         case let .modern(_, insets):
-            return photoSize.width + insets.left + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            return photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
         }
     }
     let badgeNode: GlobalBadgeNode?

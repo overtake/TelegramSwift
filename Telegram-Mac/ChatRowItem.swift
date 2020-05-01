@@ -169,7 +169,7 @@ class ChatRowItem: TableRowItem {
         var widthForContent: CGFloat = 0
         
         if isBubbled {
-            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 36 + 10 + additionBubbleInset), 500)
+            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 36 + 10 + additionBubbleInset), 450)
         } else {
             if case .Full = itemType {
                 let additionWidth:CGFloat = date?.0.size.width ?? 20
@@ -1484,7 +1484,7 @@ class ChatRowItem: TableRowItem {
             replyModel?.measureSize(widthForContent, sizeToFit: true)
         } else if let replyModel = replyModel {
             if let item = self as? ChatMessageItem, item.webpageLayout == nil && !replyModel.isSideAccessory {
-                replyModel.measureSize(widthForContent, sizeToFit: true)
+                replyModel.measureSize(min(320, widthForContent), sizeToFit: true)
             } else {
                 if !hasBubble {
                     replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
@@ -1513,8 +1513,11 @@ class ChatRowItem: TableRowItem {
             }
             
             let channelOffset = (channelViews != nil ? channelViews!.0.size.width + 20 : 0)
-            
-            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
+            if hasBubble {
+                authorText?.measure(width: _contentSize.width - adminWidth)
+            } else {
+                authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
+            }
             
             
         }
@@ -1625,7 +1628,7 @@ class ChatRowItem: TableRowItem {
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
-        return max(max(nameWidth, forwardWidth), replyWidth)
+        return min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
     var bubbleFrame: NSRect {
