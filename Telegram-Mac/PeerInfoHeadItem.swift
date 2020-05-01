@@ -567,17 +567,19 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        activeDragging = false
-        if let item = item as? PeerInfoHeadItem {
-            if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
-                item.updatePhoto(image)
-                return true
-            } else {
-                let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
-                if  let list = list {
-                    if let first = list.first, let image = NSImage(contentsOfFile: first) {
-                        item.updatePhoto(image)
-                        return true
+        if activeDragging {
+            activeDragging = false
+            if let item = item as? PeerInfoHeadItem {
+                if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
+                    item.updatePhoto(image)
+                    return true
+                } else {
+                    let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
+                    if  let list = list {
+                        if let first = list.first, let image = NSImage(contentsOfFile: first) {
+                            item.updatePhoto(image)
+                            return true
+                        }
                     }
                 }
             }
