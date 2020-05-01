@@ -171,7 +171,7 @@ class ChatInputActionsView: View, Notifable {
         let rect = NSMakeRect(0, 0, 350, max(chatInteraction.context.window.frame.height - 300, 300))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
-        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 15, 10), delayBeforeShown: 0.0)
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 38, 10), delayBeforeShown: 0.0)
     }
     
     private func addClickObserver() {
