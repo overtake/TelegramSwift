@@ -1513,11 +1513,8 @@ class ChatRowItem: TableRowItem {
             }
             
             let channelOffset = (channelViews != nil ? channelViews!.0.size.width + 20 : 0)
-            if hasBubble {
-                authorText?.measure(width: _contentSize.width - adminWidth)
-            } else {
-                authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
-            }
+            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
+
             
             
         }

@@ -564,22 +564,28 @@ final class GroupInfoArguments : PeerInfoArguments {
         
     }
     
-    func updateGroupPhoto() {
-        filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
-            if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
-                    let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                    showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
-                    _ = controller.result.start(next: { [weak self] url, _ in
-                        self?.updatePhoto(url.path)
-                    })
-                    
-                    controller.onClose = {
-                        removeFile(at: path)
-                    }
+    func updateGroupPhoto(_ custom: NSImage?) {
+        let invoke:(NSImage) -> Void = { image in
+            _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                _ = controller.result.start(next: { [weak self] url, _ in
+                    self?.updatePhoto(url.path)
                 })
-            }
-        })
+                controller.onClose = {
+                    removeFile(at: path)
+                }
+            })
+        }
+        if let image = custom {
+            invoke(image)
+        } else {
+            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                    invoke(image)
+                }
+            })
+        }
     }
     
     func eventLog() {
