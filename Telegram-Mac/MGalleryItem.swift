@@ -326,7 +326,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let image:Promise<GPreviewValue> = Promise()
     let view:Promise<NSView> = Promise()
     let size:Promise<NSSize> = Promise()
-    let magnify:Promise<CGFloat> = Promise()
+    let magnify:Promise<CGFloat> = Promise(1)
     let rotate: ValuePromise<ImageOrientation?> = ValuePromise(nil, ignoreRepeated: true)
     
     let disposable:MetaDisposable = MetaDisposable()
@@ -458,11 +458,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                     var size = magnify.contentSize
                     if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, !first {
                       //  if magnify.magnify > 1 {
-                        if value.rotation == nil {
-                            size = value.size?.aspectFitted(size) ?? size
-                        } else {
+                        //if value.rotation == nil {
+                       //     size = value.size?.aspectFitted(size) ?? size
+                     //   } else {
                             size = value.size ?? size
-                        }
+                      //  }
                        // } else {
                          //   size = value.size ?? size
                        // }

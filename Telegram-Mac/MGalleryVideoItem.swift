@@ -148,7 +148,7 @@ class MGalleryVideoItem: MGalleryItem {
             
             pagerSize.height -= (caption != nil ? caption!.layoutSize.height + 80 : 0)
             
-            let size = NSMakeSize(max(size.width, 200), max(size.height, 200)).fitted(pagerSize)
+            let size = NSMakeSize(max(size.width, 500), max(size.height, 500)).fitted(pagerSize)
             
             
             return size
@@ -182,7 +182,7 @@ class MGalleryVideoItem: MGalleryItem {
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: media.dimensions?.size.fitted(pagerSize) ?? sizeValue, boundingSize: sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: media.dimensions?.size.fitted(pagerSize) ?? sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
         let result = signal |> mapToThrottled { data -> Signal<CGImage?, NoError> in
             return .single(data.execute(arguments, data.data)?.generateImage())
         }
@@ -198,8 +198,6 @@ class MGalleryVideoItem: MGalleryItem {
         
         fetch()
     }
-    
-    
     
     
     override func fetch() -> Void {

@@ -187,11 +187,11 @@ public enum SwipeHandlerResult {
 }
 
 class SwipeHandler : Comparable {
-    let handler:(SwipeDirection)->SwipeHandlerResult
+    let handler:(SwipeDirection, Bool)->SwipeHandlerResult
     let object:WeakReference<NSView>
     let priority:HandlerPriority
     
-    init(_ handler:@escaping(SwipeDirection)->SwipeHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
+    init(_ handler:@escaping(SwipeDirection, Bool)->SwipeHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -302,11 +302,16 @@ open class Window: NSWindow {
             handlers = []
             keyHandlers[key] = handlers
         }
+       
         keyHandlers[key]?.append(KeyHandler(handler, object, priority, modifierFlags))
+        
+        if key == .Return {
+            set(handler: handler, with: self, for: .KeypadEnter, priority: priority, modifierFlags: modifierFlags)
+        }
         
     }
     
-    public func add(swipe handler:@escaping(SwipeDirection) -> SwipeHandlerResult, with object:NSView, identifier: SwipeIdentifier, priority:HandlerPriority = .low) -> Void {
+    public func add(swipe handler:@escaping(SwipeDirection, Bool) -> SwipeHandlerResult, with object:NSView, identifier: SwipeIdentifier, priority:HandlerPriority = .low) -> Void {
         swipeHandlers[identifier] = SwipeHandler(handler, object, priority)
     }
     
@@ -369,6 +374,9 @@ open class Window: NSWindow {
                     keyHandlers[key]?.remove(at: i)
                 }
             }
+        }
+        if key == .Return {
+            self.remove(object: object, for: .KeypadEnter, modifierFlags: modifierFlags, forceCheckFlags: forceCheckFlags)
         }
     }
     
@@ -560,7 +568,7 @@ open class Window: NSWindow {
             for (key, swipe) in swipeHandlers.sorted(by: { $0.value.priority > $1.value.priority }) {
                 if let view = swipe.object.value, view._mouseInside() {
                     if scrollDeltaXAfterInvertion(event.scrollingDeltaX) > 0 {
-                        let result = swipe.handler(.left(.start(controller: ViewController())))
+                        let result = swipe.handler(.left(.start(controller: ViewController())), true)
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .left(.start(controller: controller))
@@ -569,7 +577,7 @@ open class Window: NSWindow {
                             break
                         }
                     } else {
-                        let result = swipe.handler(.right(.start(controller: ViewController())))
+                        let result = swipe.handler(.right(.start(controller: ViewController())), true)
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .right(.start(controller: controller))
@@ -586,7 +594,7 @@ open class Window: NSWindow {
     private func stopSwiping(_ event: NSEvent) {
         for (key, swipe) in swipeState {
             if let handler = swipeHandlers[key], let view = handler.object.value {
-                _ = handler.handler(swipe.withUpdatedSuccessOrFail(view.frame.width))
+                _ = handler.handler(swipe.withUpdatedSuccessOrFail(view.frame.width), true)
             }
         }
         swipeState.removeAll()
@@ -594,12 +602,13 @@ open class Window: NSWindow {
     
     
     private func proccessSwiping(_ event: NSEvent) -> Void {
-        for (key, swipe) in swipeState {
+        let copy = self.swipeState
+        for (key, swipe) in copy {
             if let handler = swipeHandlers[key], let value = handler.object.value, value._mouseInside() {
                 let deltaX: CGFloat = scrollDeltaXAfterInvertion(event.scrollingDeltaX)
                 
                 let newState = swipe.withAdditionalDelta(deltaX)
-                let result = handler.handler(newState)
+                let result = handler.handler(newState, true)
                 switch result {
                 case let .deltaUpdated(available):
                     swipeState[key] = swipe.withAdditionalDelta(available, true)
@@ -609,6 +618,28 @@ open class Window: NSWindow {
                 break
             }
         }
+    }
+    
+    public func abortSwiping() -> Void {
+        let copy = self.swipeState
+        for (key, swipe) in copy {
+            switch swipe {
+            case let .left(state):
+                let swipe: SwipeDirection = .left(.failed(delta: state.delta, controller: state.controller))
+                if let handler = swipeHandlers[key] {
+                    _ = handler.handler(swipe, false)
+                }
+                self.swipeState.removeValue(forKey: key)
+            case let .right(state):
+                let swipe: SwipeDirection = .right(.failed(delta: state.delta, controller: state.controller))
+                if let handler = swipeHandlers[key] {
+                    _ = handler.handler(swipe, false)
+                }
+            default:
+                break
+            }
+        }
+        self.swipeState.removeAll()
     }
     
     public var inLiveSwiping: Bool {

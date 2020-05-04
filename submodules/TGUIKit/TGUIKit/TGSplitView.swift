@@ -420,7 +420,7 @@ public class SplitView : View {
                 }
                 _min = frame.width - x - m2;
             }
-            if index < _controllers.count - 1 {
+            if index < _controllers.count - 1, state != .minimisize {
                 _min = min(_min, frame.width - 350)
             }
             if(index == _controllers.count - 1) {
