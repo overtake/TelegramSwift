@@ -24,7 +24,7 @@ open class MagnifyView : NSView {
         return smartUpdater.get() |> distinctUntilChanged
     }
     
-    public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(ignoreRepeated: true)
+    public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(1, ignoreRepeated: true)
     private var mov_start:NSPoint = NSZeroPoint
     private var mov_content_start:NSPoint = NSZeroPoint
     
@@ -33,14 +33,39 @@ open class MagnifyView : NSView {
     let containerView:NSView = NSView()
     open var contentSize:NSSize = NSZeroSize {
         didSet {
-            if oldValue != contentSize {
-                
-                let divider = NSMakePoint(magnifiedSize.width / contentView.frame.width, magnifiedSize.height / contentView.frame.height)
-                
-                contentView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, contentView.frame.minX * divider.x), floorToScreenPixels(backingScaleFactor, contentView.frame.minY * divider.y), magnifiedSize.width, magnifiedSize.height)
+            if oldValue != contentSize  {
+                contentView.frame = focus(magnifiedSize)
+//                if contentView.frame.width > 0 && contentView.frame.height > 0 && magnifiedSize != .zero  {
+//                    if oldValue.width == contentSize.height && oldValue.height == contentSize.width {
+//                        contentView.frame = focus(magnifiedSize)
+//                    } else {
+//                        let divider = NSMakePoint(magnifiedSize.width / contentView.frame.width, magnifiedSize.height / contentView.frame.height)
+//
+//                        var point = contentView.frame.origin
+//
+////                        point.x = contentView.frame.minX * divider.x
+////                        point.y = contentView.frame.minY * divider.y
+//
+//                        contentView.frame = NSMakeRect(point.x, point.y, magnifiedSize.width, magnifiedSize.height)
+//                    }
+//                } else {
+//                    contentView.frame = focus(magnifiedSize)
+//                }
             }
         }
     }
+    /*
+     if contentView.frame.width > 0 && contentView.frame.height > 0 && magnifiedSize != .zero  {
+     if oldValue.width == contentSize.height && oldValue.height == contentSize.width {
+     contentView.frame = focus(magnifiedSize)
+     } else {
+     let divider = NSMakePoint(contentView.frame.width / magnifiedSize.width, contentView.frame.height / magnifiedSize.height)
+     contentView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, contentView.frame.minX * divider.x), floorToScreenPixels(backingScaleFactor, contentView.frame.minY * divider.y), magnifiedSize.width, magnifiedSize.height)
+     }
+     } else {
+     contentView.frame = focus(magnifiedSize)
+     }
+ */
     
     public var contentFrame: NSRect {
         return contentView.frame.apply(multiplier: NSMakeSize(1 / magnify, 1 / magnify))
