@@ -97,7 +97,13 @@ class MGalleryPhotoItem: MGalleryItem {
             let media = self.media
             let secureIdAccessContext = self.secureIdAccessContext
             
-            let sizeValue = size.get() |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
+            let magnify = self.magnify.get()
+            
+            let sizeValue: Signal<NSSize, NoError> = size.get() |> mapToSignal { size in
+                return magnify |> take(1) |> map { magnify in
+                    return NSMakeSize(size.width / magnify, size.height / magnify)
+                }
+            } |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
                 return lhs == rhs
             })
             
