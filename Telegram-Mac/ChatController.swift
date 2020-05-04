@@ -4138,7 +4138,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .Y, priority: .medium, modifierFlags: [.command, .shift])
         #endif
         
-        self.context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+        self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
             let swipeState: SwipeState?
             switch direction {

@@ -411,7 +411,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         let wasScheduled = notification.userInfo?["wasScheduled"] as? Bool ?? false
         
-        return !snoofEnabled || !NSApp.isActive || wasScheduled
+        return !snoofEnabled || !window.isKeyWindow || wasScheduled
     }
     
     

@@ -758,8 +758,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     }
 
     override func firstResponder() -> NSResponder? {
-        if genericView.searchView == nil {
-            self.genericView.toggleSearch(self.searchState)
+        if popover == nil {
+            return nil
         }
         return genericView.searchView?.input
     }
