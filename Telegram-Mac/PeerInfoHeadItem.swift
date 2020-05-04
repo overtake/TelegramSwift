@@ -149,8 +149,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         } else if let botInfo = peer.botInfo {
-            var subItems:[SubActionItem] = []
-            
             
             if let address = peer.addressName, !address.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoBotShare, image: theme.icons.profile_share, action: {
@@ -159,27 +157,24 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
             
             if botInfo.flags.contains(.worksWithGroups) {
-                subItems.append(SubActionItem(text: L10n.peerInfoBotAddToGroup, action: arguments.botAddToGroup))
+                items.append(ActionItem(text: L10n.peerInfoBotAddToGroup, image: theme.icons.profile_more, action: arguments.botAddToGroup))
             }
            
             if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                 for command in botInfo.commands {
                     if command.text == "settings" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotSettings, action: arguments.botSettings))
+                        items.append(ActionItem(text: L10n.peerInfoBotSettings, image: theme.icons.profile_more, action: arguments.botSettings))
                     }
                     if command.text == "help" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotHelp, action: arguments.botHelp))
+                        items.append(ActionItem(text: L10n.peerInfoBotHelp, image: theme.icons.profile_more, action: arguments.botHelp))
                     }
                     if command.text == "privacy" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotPrivacy, action: arguments.botPrivacy))
+                        items.append(ActionItem(text: L10n.peerInfoBotPrivacy, image: theme.icons.profile_more, action: arguments.botPrivacy))
                     }
                 }
-                subItems.append(SubActionItem(text: !cachedData.isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot, destruct: true, action: {
+                items.append(ActionItem(text: !cachedData.isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot, image: theme.icons.profile_more, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                 }))
-            }
-            if !subItems.isEmpty {
-                items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
             }
         }
         

@@ -674,6 +674,11 @@ class ChatListController : PeersListController {
             
         })
         
+        
+        genericView.tableView.emptyChecker = { items in
+            let filter = items.filter { !($0 is ChatListEmptyRowItem) }
+            return filter.isEmpty
+        }
 
         genericView.tableView.setScrollHandler({ [weak self] scroll in
             
@@ -1068,7 +1073,7 @@ class ChatListController : PeersListController {
         }, with: self, for: .leftMouseDown, priority: .high)
         
         
-        context.window.add(swipe: { [weak self] direction -> SwipeHandlerResult in
+        context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
             

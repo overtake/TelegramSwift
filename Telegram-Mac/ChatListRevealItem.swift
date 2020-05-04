@@ -153,7 +153,7 @@ final class ChatListRevealView : TableStickView {
         let generateIcon:(ChatListFilter?)->CGImage? = { tab in
             let unreadCount:ChatListFilterBadge? = item.counters.count(for: tab)
             let icon: CGImage?
-            if let unreadCount = unreadCount, unreadCount.count > 0, context.sharedContext.layout != .minimisize {
+            if let unreadCount = unreadCount, unreadCount.count > 0 {
                 let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
@@ -176,12 +176,8 @@ final class ChatListRevealView : TableStickView {
                     textLayout.1.draw(focus.offsetBy(dx: 0, dy: -1), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
                     
                 })!
-            } else if let tab = tab {
-                if context.sharedContext.layout == .minimisize {
-                    icon = tab.icon
-                } else {
-                    icon = nil
-                }
+            } else if let _ = tab {
+                icon = nil
             } else {
                 icon = nil
             }
@@ -199,7 +195,7 @@ final class ChatListRevealView : TableStickView {
         for tab in item.tabs {
             let unreadCount = item.counters.count(for: tab)
             let icon: CGImage? = generateIcon(tab)
-            let title: String = context.sharedContext.layout == .minimisize ? "" : tab.title
+            let title: String = tab.title
            
             items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount)))
             index += 1
