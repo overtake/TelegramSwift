@@ -35,37 +35,10 @@ open class MagnifyView : NSView {
         didSet {
             if oldValue != contentSize  {
                 contentView.frame = focus(magnifiedSize)
-//                if contentView.frame.width > 0 && contentView.frame.height > 0 && magnifiedSize != .zero  {
-//                    if oldValue.width == contentSize.height && oldValue.height == contentSize.width {
-//                        contentView.frame = focus(magnifiedSize)
-//                    } else {
-//                        let divider = NSMakePoint(magnifiedSize.width / contentView.frame.width, magnifiedSize.height / contentView.frame.height)
-//
-//                        var point = contentView.frame.origin
-//
-////                        point.x = contentView.frame.minX * divider.x
-////                        point.y = contentView.frame.minY * divider.y
-//
-//                        contentView.frame = NSMakeRect(point.x, point.y, magnifiedSize.width, magnifiedSize.height)
-//                    }
-//                } else {
-//                    contentView.frame = focus(magnifiedSize)
-//                }
             }
         }
     }
-    /*
-     if contentView.frame.width > 0 && contentView.frame.height > 0 && magnifiedSize != .zero  {
-     if oldValue.width == contentSize.height && oldValue.height == contentSize.width {
-     contentView.frame = focus(magnifiedSize)
-     } else {
-     let divider = NSMakePoint(contentView.frame.width / magnifiedSize.width, contentView.frame.height / magnifiedSize.height)
-     contentView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, contentView.frame.minX * divider.x), floorToScreenPixels(backingScaleFactor, contentView.frame.minY * divider.y), magnifiedSize.width, magnifiedSize.height)
-     }
-     } else {
-     contentView.frame = focus(magnifiedSize)
-     }
- */
+
     
     public var contentFrame: NSRect {
         return contentView.frame.apply(multiplier: NSMakeSize(1 / magnify, 1 / magnify))
@@ -150,7 +123,7 @@ open class MagnifyView : NSView {
     }
     
     func addSmart(for location:NSPoint) {
-        var minFactor:CGFloat = min(max(frame.size.width / magnifiedSize.width,frame.size.height / magnifiedSize.height),2.0)
+        var minFactor:CGFloat = min(max(floor(frame.size.width / magnifiedSize.width), floor(frame.size.height / magnifiedSize.height)),2.0)
         if magnify > 1.0 {
             minFactor = 1 - magnify
         }
