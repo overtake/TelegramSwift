@@ -101,7 +101,7 @@ class MGalleryPhotoItem: MGalleryItem {
             
             let sizeValue: Signal<NSSize, NoError> = size.get() |> mapToSignal { size in
                 return magnify |> take(1) |> map { magnify in
-                    return NSMakeSize(size.width / magnify, size.height / magnify)
+                    return NSMakeSize(floorToScreenPixels(System.backingScale, size.width / magnify), floorToScreenPixels(System.backingScale, size.height / magnify))
                 }
             } |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
                 return lhs == rhs
