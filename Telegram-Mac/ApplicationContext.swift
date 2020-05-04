@@ -741,6 +741,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if leftSidebarController != nil {
             width += leftSidebarWidth
         }
+        if context.sharedContext.layout == .minimisize {
+            width += 70
+        }
         window.minSize = NSMakeSize(width, 500)
         
         if window.frame.width < window.minSize.width {
@@ -832,9 +835,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         default:
             break;
         }
-
         
         context.sharedContext.layoutHandler.set(state)
+        updateMinMaxWindowSize(animated: false)
         self.view.splitView.layout()
 
     }
