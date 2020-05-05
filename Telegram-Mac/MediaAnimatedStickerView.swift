@@ -33,8 +33,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(self.playerView)
         addSubview(self.thumbView)
+        addSubview(self.playerView)
 
     }
     
@@ -255,7 +255,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = true
             default:
-                self.playerView.isHidden = true
+                self.playerView.isHidden = false
                 self.thumbView.isHidden = false
             }
         }))

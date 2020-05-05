@@ -472,6 +472,16 @@ private final class PlayerRenderer {
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
                             }
+                        case let .onceToFrame(frame):
+                            if frame <= current.frame  {
+                                renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
+                                renderer.timer?.invalidate()
+                                framesTask?.cancel()
+                                let onFinish = renderer.animation.onFinish ?? {}
+                                DispatchQueue.main.async(execute: onFinish)
+                            }
                         }
                         
                     }
@@ -625,6 +635,7 @@ enum LottiePlayPolicy : Equatable {
     case onceEnd
     case toEnd(from: Int32)
     case framesCount(Int32)
+    case onceToFrame(Int32)
 }
 
 struct LottieColor : Equatable {

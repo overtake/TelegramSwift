@@ -24,6 +24,7 @@ private final class SaveModalView : NSVisualEffectView {
         self.autoresizesSubviews = false
         self.material = .ultraDark
         self.blendingMode = .withinWindow
+        self.state = .active
     }
     
     override func viewDidMoveToSuperview() {
@@ -99,6 +100,7 @@ class SaveModalController : ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
     }
     
     override func viewWillDisappear(_ animated: Bool) {

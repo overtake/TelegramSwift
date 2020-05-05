@@ -12,8 +12,11 @@ import SwiftSignalKit
 
 private class ModalBackground : Control {
     var isOverlay: Bool = false
+    var canRedirectScroll: Bool = false
     fileprivate override func scrollWheel(with event: NSEvent) {
-      //  super.scrollWheel(with: event)
+        if canRedirectScroll {
+            super.scrollWheel(with: event)
+        }
     }
     override func cursorUpdate(with event: NSEvent) {
         NSCursor.arrow.set()
@@ -407,6 +410,7 @@ public class Modal: NSObject {
         self.isOverlay = isOverlay
         background = ModalBackground()
         background.isOverlay = isOverlay
+        background.canRedirectScroll = controller.redirectMouseAfterClosing
         background.backgroundColor = controller.background
         background.layer?.disableActions()
         self.interactions = controller.modalInteractions
