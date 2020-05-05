@@ -148,7 +148,7 @@ class MGalleryVideoItem: MGalleryItem {
             
             pagerSize.height -= (caption != nil ? caption!.layoutSize.height + 80 : 0)
             
-            let size = NSMakeSize(max(size.width, 500), max(size.height, 500)).fitted(pagerSize)
+            let size = size.aspectFitted(NSMakeSize(500, 500)).fitted(pagerSize)
             
             
             return size
@@ -181,7 +181,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
-        let size = media.dimensions?.size.fitted(pagerSize) ?? sizeValue
+        let size = sizeValue
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
         let result = signal |> mapToThrottled { data -> Signal<CGImage?, NoError> in
