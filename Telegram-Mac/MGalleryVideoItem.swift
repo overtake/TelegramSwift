@@ -148,9 +148,17 @@ class MGalleryVideoItem: MGalleryItem {
             
             pagerSize.height -= (caption != nil ? caption!.layoutSize.height + 80 : 0)
             
-            let size = size.aspectFitted(NSMakeSize(500, 500)).fitted(pagerSize)
+            var size = size
+
             
+            let addition = max(400 - size.width, 400 - size.height)
+            if addition > 0 {
+                size.width += addition
+                size.height += addition
+            }
             
+            size = size.fitted(pagerSize)
+
             return size
         }
         return pagerSize
