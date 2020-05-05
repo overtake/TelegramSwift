@@ -97,6 +97,7 @@ final class MediaTrackFrameBuffer {
     
     private func endOfStreamReached() {
         self.endOfStream = true
+        self.bufferedUntilTime = duration
         self.statusUpdated()
     }
     

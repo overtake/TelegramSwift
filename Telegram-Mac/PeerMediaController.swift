@@ -692,7 +692,7 @@
             if let cachedData = view.cachedData as? CachedUserData {
                 return (exist: cachedData.commonGroupCount > 0, loaded: true)
             } else {
-                return (exist: false, loaded: true)
+                return (exist: false, loaded: false)
             }
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)

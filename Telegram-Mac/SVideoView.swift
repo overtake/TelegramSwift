@@ -595,8 +595,9 @@ class SVideoView: NSView {
         controls.progress.onUserChanged = { [weak self] value in
             guard let `self` = self else {return}
             if let status = self.status {
-                self.status = status.withUpdatedTimestamp(status.duration * Double(value))
-                self.interactions?.rewind(status.duration * Double(value))
+                let result = min(status.duration * Double(value), status.duration)
+                self.status = status.withUpdatedTimestamp(result)
+                self.interactions?.rewind(result)
             }
         }
         
