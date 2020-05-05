@@ -692,7 +692,10 @@
             if let cachedData = view.cachedData as? CachedUserData {
                 return (exist: cachedData.commonGroupCount > 0, loaded: true)
             } else {
-                return (exist: false, loaded: false)
+                if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
+                    return (exist: false, loaded: false)
+                }
+                return (exist: false, loaded: true)
             }
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
