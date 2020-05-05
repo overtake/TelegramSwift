@@ -58,7 +58,7 @@ struct APResource {
 
 class APItem : Equatable {
     
-    private(set) var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, baseRate: 1.0, volume: 1.0, seekId: 0, status: .paused, soundEnabled: true)
+    private(set) var status: MediaPlayerStatus = MediaPlayerStatus(generationTimestamp: CACurrentMediaTime(), duration: 0, dimensions: CGSize(), timestamp: 0, baseRate: 1.0, volume: 1.0, seekId: 0, status: .paused)
     
     func setStatus(_ status: MediaPlayerStatus, rate: Double) {
         
@@ -720,7 +720,7 @@ class APController : NSResponder {
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable ? .earlierStart : .none, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
         
         player.play()
 

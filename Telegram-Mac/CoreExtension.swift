@@ -243,18 +243,18 @@ extension TelegramMediaFile {
         return true
     }
     
-    var streaming: MediaPlayerStreaming {
-        for attr in attributes {
-            if case let .Video(_, _, flags) = attr {
-                if flags.contains(.supportsStreaming) {
-                    return .earlierStart
-                } else {
-                    return .none
-                }
-            }
-        }
-        return .none
-    }
+//    var streaming: MediaPlayerStreaming {
+//        for attr in attributes {
+//            if case let .Video(_, _, flags) = attr {
+//                if flags.contains(.supportsStreaming) {
+//                    return .earlierStart
+//                } else {
+//                    return .none
+//                }
+//            }
+//        }
+//        return .none
+//    }
     
     
     var imageSize:NSSize {
