@@ -650,7 +650,7 @@ final class MediaPlayerAudioRenderer {
     
     let audioTimebase: CMTimebase
     
-    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, timebase: CMTimebase?, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+    init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
@@ -676,7 +676,7 @@ final class MediaPlayerAudioRenderer {
             CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
         }
         
-        let timebase = timebase ?? audioTimebase!
+        let timebase = audioTimebase!
         
         
         self.audioTimebase = timebase

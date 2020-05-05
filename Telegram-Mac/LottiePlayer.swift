@@ -229,7 +229,7 @@ private final class LottieSoundEffect {
     init(data: Data, animation: LottieAnimation, postbox: Postbox, triggerOn: Int32?) {
         
         
-        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true, initialTimebase: nil)
+        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: .none, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
     func play() {

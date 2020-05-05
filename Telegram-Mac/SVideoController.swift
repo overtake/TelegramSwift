@@ -16,13 +16,13 @@ import IOKit.pwr_mgt
 
 extension MediaPlayerStatus {
     func withUpdatedVolume(_ volume: Float) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: volume, seekId: self.seekId, status: self.status)
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: volume, seekId: self.seekId, status: self.status, soundEnabled: self.soundEnabled)
     }
     func withUpdatedTimestamp(_ timestamp: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: self.duration, dimensions: self.dimensions, timestamp: timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status, soundEnabled: self.soundEnabled)
     }
     func withUpdatedDuration(_ duration: Double) -> MediaPlayerStatus {
-        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status)
+        return MediaPlayerStatus(generationTimestamp: self.generationTimestamp, duration: duration, dimensions: self.dimensions, timestamp: self.timestamp, baseRate: self.baseRate, volume: self.volume, seekId: self.seekId, status: self.status, soundEnabled: self.soundEnabled)
     }
 }
 
@@ -59,7 +59,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         self.reference = reference
         self.postbox = postbox
         self.videoFramePreview = MediaPlayerFramePreview(postbox: postbox, fileReference: reference)
-        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
+        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.streaming, video: true, preferSoftwareDecoding: false, enableSound: true, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
     }
