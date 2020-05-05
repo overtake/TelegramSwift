@@ -1151,7 +1151,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         case .channelMigratedFromGroup:
                             return false
                         case .photoUpdated:
-                            return messageMainPeer(message)?.groupAccess.isCreator == false
+                            return true
                         default:
                             return true
                         }

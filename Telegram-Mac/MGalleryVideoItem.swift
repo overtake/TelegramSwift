@@ -181,8 +181,9 @@ class MGalleryVideoItem: MGalleryItem {
         
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         
+        let size = media.dimensions?.size.fitted(pagerSize) ?? sizeValue
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sizeValue, boundingSize: media.dimensions?.size.fitted(pagerSize) ?? sizeValue, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
         let result = signal |> mapToThrottled { data -> Signal<CGImage?, NoError> in
             return .single(data.execute(arguments, data.data)?.generateImage())
         }
