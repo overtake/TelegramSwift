@@ -289,7 +289,12 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
     }
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        return false
+        
+        let text = pasteboard.string(forType: .string)
+        if let text = text, let color = NSColor(hexString: text) {
+            defaultColor = color
+        }
+        return true
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {

@@ -1286,12 +1286,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         stickView.header = abs(dif) <= item.heightValue
 
                         if !firstTime {
-                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, scrollInset - stickView.frame.height)), tableView.row(at: NSMakePoint(0, scrollInset))]
+                            let rows:[Int] = [tableView.row(at: NSMakePoint(0, min(scrollInset - stickView.frame.height, documentSize.height - stickView.frame.height))), tableView.row(at: NSMakePoint(0, scrollInset))]
                             var applied: Bool = false
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
-                                    view.updateIsVisible(yTopOffset < 0 && documentOffset.y > 0, animated: false)
+                                    if !flipped {
+                                        view.updateIsVisible(yTopOffset > -view.frame.height && yTopOffset < 0, animated: false)
+                                    } else {
+                                        view.updateIsVisible(yTopOffset > 0 && documentOffset.y > 0, animated: false)
+                                    }
                                     applied = true
                                 }
                             }
