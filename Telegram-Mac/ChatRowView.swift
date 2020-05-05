@@ -506,7 +506,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     var bubbleFrame: NSRect {
         guard let item = item as? ChatRowItem else {return NSZeroRect}
         let bubbleFrame = item.bubbleFrame
-        return NSMakeRect(item.isIncoming ? item.bubbleFrame.minX : frame.width - bubbleFrame.width - item.leftInset, bubbleFrame.minY, bubbleFrame.width, bubbleFrame.height)
+        return NSMakeRect(item.isIncoming ? bubbleFrame.minX : frame.width - bubbleFrame.width - item.leftInset, bubbleFrame.minY, bubbleFrame.width, bubbleFrame.height)
     }
     
     var rightFrame: NSRect {

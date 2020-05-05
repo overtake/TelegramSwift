@@ -38,6 +38,8 @@ class ChatInputActionsView: View, Notifable {
         self.prevView = self.send
         super.init(frame: frameRect)
         
+        keyboard.autohighlight = false
+        
         addSubview(keyboard)
         addSubview(send)
         addSubview(voice)
