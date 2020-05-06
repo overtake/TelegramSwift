@@ -463,7 +463,7 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     } |> deliverOnMainQueue
     
     _ = name.start(next: { path, ext in
-        savePanel(file: path, ext: ext, for: mainWindow)
+        savePanel(file: path, ext: ext, for: mainWindow, defaultName: file.fileName)
     })
 }
 

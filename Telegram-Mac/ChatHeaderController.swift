@@ -238,7 +238,7 @@ private final class ChatSponsoredView : Control {
                 })
             case .psa:
                 if let learnMore = kind.learnMore {
-                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: L10n.psaChatAlertLearnmore, successHandler: { result in
+                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: learnMore, successHandler: { result in
                         switch result {
                         case .thrid:
                             execute(inapp: .external(link: learnMore, false))

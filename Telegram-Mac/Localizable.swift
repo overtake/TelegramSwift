@@ -4599,6 +4599,12 @@ internal final class L10n {
   internal static var peerInfoDiscussionDesc: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Desc") }
   /// First Name
   internal static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
+  /// Delete
+  internal static var peerInfoGroupMenuDelete: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Delete") }
+  /// Promote
+  internal static var peerInfoGroupMenuPromote: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Promote") }
+  /// Restrict
+  internal static var peerInfoGroupMenuRestrict: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Restrict") }
   /// Group Name
   internal static var peerInfoGroupNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.GroupName.Placeholder") }
   /// Group Name
@@ -6987,23 +6993,19 @@ internal final class L10n {
   internal static var peerInfoConfirmClearHistoryUser: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.User") }
   /// Are you sure you want to delete all messages in the chat?
   internal static var peerInfoConfirmClearHistoryUserBothSides: String  { return L10n.tr("Localizable", "peerInfo.Confirm.ClearHistory.UserBothSides") }
+  /// PSA
+  internal static var psaChatlist: String  { return L10n.tr("Localizable", "psa.chatlist") }
+  /// This message provides you with a public service announcement in your chat list
+  internal static var psaText: String  { return L10n.tr("Localizable", "psa.text") }
+  /// PSA Notification
+  internal static var psaTitle: String  { return L10n.tr("Localizable", "psa.title") }
   /// Public Service Announcement
   internal static var psaChatTitle: String  { return L10n.tr("Localizable", "psa.chat.title") }
-  /// Learn More
-  internal static var psaChatAlertLearnmore: String  { return L10n.tr("Localizable", "psa.chat.alert.learnmore") }
-  /// https://telegram.org/blog/coronavirus
-  internal static var psaChatAlertLearnmoreCovid: String  { return L10n.tr("Localizable", "psa.chat.alert.learnmore.covid") }
-  /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at https://telegram.org/blog/coronavirus
+  /// This message provides you with a public service announcement.
   internal static var psaChatTextCovid: String  { return L10n.tr("Localizable", "psa.chat.text.covid") }
-  /// Covid-19
-  internal static var psaChatlistCovid: String  { return L10n.tr("Localizable", "psa.chatlist.covid") }
-  /// This message provides you with a public service announcement in relation to the undergoing pandemics. Learn more about this initiative at [https://telegram.org/blog/coronavirus](https://telegram.org/blog/coronavirus)
-  internal static var psaTextCovid: String  { return L10n.tr("Localizable", "psa.text.covid") }
-  /// Covid-19 Notification
-  internal static var psaTitleCovid: String  { return L10n.tr("Localizable", "psa.title.covid") }
-  /// Covid-19 Notification\nfrom: [%@]()
-  internal static func psaTitleBubblesCovid(_ p1: String) -> String {
-    return L10n.tr("Localizable", "psa.title.bubbles.covid", p1)
+  /// PSA Notification\nfrom: [%@]()
+  internal static func psaTitleBubbles(_ p1: String) -> String {
+    return L10n.tr("Localizable", "psa.title.bubbles", p1)
   }
   /// Check Spelling While Typing
   internal static var rbDRhWINTitle: String  { return L10n.tr("Localizable", "rbD-Rh-wIN.title") }
