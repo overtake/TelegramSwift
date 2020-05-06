@@ -362,6 +362,9 @@ class ChatSelectText : NSObject {
             if self.started {
                 self.started = !hasPopover(window) && self.beginInnerLocation != NSZeroPoint
             }
+            if event.clickCount > 1 {
+                self.started = false
+            }
             
            // NSLog("\(!NSPointInRect(event.locationInWindow, window.bounds))")
             
