@@ -75,7 +75,8 @@ class ChatDateStickItem : TableStickItem {
             dateFormatter.calendar = Calendar.autoupdatingCurrent
             //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
-            if timeinfoNow.tm_year > timeinfo.tm_year && (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2) {
+            //&& (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2)
+            if timeinfoNow.tm_year > timeinfo.tm_year  {
                 dateFormatter.dateFormat = "dd MMMM yyyy";
             } else if timeinfoNow.tm_year < timeinfo.tm_year {
                 dateFormatter.dateFormat = "dd MMMM yyyy";
@@ -83,7 +84,7 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                if timestamp == 2147457600 {
+                if timestamp == scheduleWhenOnlineTimestamp {
                     text = L10n.chatDateScheduledUntilOnline
                 } else {
                     text = L10n.chatDateScheduledFor(dateString)
