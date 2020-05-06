@@ -693,8 +693,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
                 let recently = recentlySearchedPeers(postbox: context.account.postbox) |> mapToSignal { recently -> Signal<[PeerView], NoError> in
                     return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
-                    
-                    } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
+                } |> map { peerViews -> [PeerView] in
+                    return peerViews.filter { peerView in
+                        if let group = peerViewMainPeer(peerView) as? TelegramGroup, group.migrationReference != nil {
+                            return false
+                        }
+                        return true
+                    }
+                } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
                         return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]

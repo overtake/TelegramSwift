@@ -4507,9 +4507,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 genericView.tableView.emptyItem = ChatEmptyPeerItem(genericView.tableView.frame.size, chatInteraction: chatInteraction)
             }
             
+            var upgradedToPeerId: PeerId?
+            if let previous = oldValue.peer, let group = previous as? TelegramGroup, group.migrationReference == nil, let updatedGroup = value.peer as? TelegramGroup, let migrationReference = updatedGroup.migrationReference {
+                upgradedToPeerId = migrationReference.peerId
+            }
+
+
             self.state = value.selectionState != nil ? .Edit : .Normal
             
-            
+            if let upgradedToPeerId = upgradedToPeerId {
+                let controller = ChatController(context: context, chatLocation: .peer(upgradedToPeerId))
+                navigationController?.removeAll()
+                navigationController?.push(controller, false, style: .none)
+            }
            
         }
     }

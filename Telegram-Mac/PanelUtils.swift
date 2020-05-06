@@ -103,15 +103,18 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
 //    })
     
 //    
-//    
-    if let editor = savePanel.fieldEditor(false, for: nil) {
-        let exportFilename = savePanel.nameFieldStringValue
-        let ext = exportFilename.nsstring.pathExtension
-        if !ext.isEmpty {
-            let extensionLength = exportFilename.length - ext.length - 1
-            editor.selectedRange = NSMakeRange(0, extensionLength)
+//
+    DispatchQueue.main.async {
+        if let editor = savePanel.fieldEditor(false, for: nil) {
+            let exportFilename = savePanel.nameFieldStringValue
+            let ext = exportFilename.nsstring.pathExtension
+            if !ext.isEmpty {
+                let extensionLength = exportFilename.length - ext.length - 1
+                editor.selectedRange = NSMakeRange(0, extensionLength)
+            }
         }
     }
+    
 }
 
 func savePanel(file:String, named:String, for window:Window) {
