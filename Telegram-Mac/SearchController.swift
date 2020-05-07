@@ -869,7 +869,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             if let highlighted = self.genericView.highlightedItem() {
                 _ = self.genericView.select(item: highlighted)
                 self.closeNext = true
-
+                return .invoked
             } else if !self.marked {
                 self.genericView.cancelSelection()
                 self.genericView.selectNext()
