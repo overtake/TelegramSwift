@@ -294,12 +294,12 @@ class ChatListController : PeersListController {
         let current = _filterValue.modify(f)
         scrollup(force: true)
         self.genericView.searchView.change(state: .None,  true)
+        filter.set(current)
         if previous?.filter?.id != current.filter?.id {
             _  = first.swap(true)
             _  = animated.swap(false)
             self.request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil)))
         }
-        filter.set(current)
         setCenterTitle(self.defaultBarTitle)
     }
     
@@ -481,7 +481,9 @@ class ChatListController : PeersListController {
         
         let signal = combineLatest(request.get() |> distinctUntilChanged, foldersSignal)
         
-        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool, FilterData), NoError> = signal |> mapToSignal { location, data -> Signal<(ChatListView, ViewUpdateType, Bool, FilterData), NoError> in
+        let previousfilter = Atomic<FilterData?>(value: self.filterValue)
+        
+        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> = signal |> mapToSignal { location, data -> Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> in
             
             var signal:Signal<(ChatListView,ViewUpdateType), NoError>
             var removeNextAnimation: Bool = false
@@ -494,7 +496,7 @@ class ChatListController : PeersListController {
                 scroll = st
                 removeNextAnimation = st != nil
             }
-            return signal |> map { ($0.0, $0.1, removeNextAnimation, data)}
+            return signal |> map { ($0.0, $0.1, removeNextAnimation, data, previousfilter.swap(data)?.filter?.id != data.filter?.id)}
         }
         
         let setupFilter:(ChatListFilter?)->Void = { [weak self] filter in
@@ -511,11 +513,10 @@ class ChatListController : PeersListController {
             }
         }
         
-        
 
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager), foldersTopBarUpdate) |> mapToQueue { value, appearance, state, undoStatuses, hiddenItems, inAppSettings, filtersCounter, filterData -> Signal<TableUpdateTransition, NoError> in
                     
-            var removeNextAnimation = value.2
+            let removeNextAnimation = value.2
             
             let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))
             
@@ -525,10 +526,7 @@ class ChatListController : PeersListController {
                 scroll = nil
             }
             
-            if removeNextAnimation {
-                removeNextAnimation = false
-            }
-            
+
             _ = previousChatList.swap(value.0)
             
             var prepare:[(ChatListEntry, UIChatAdditionalItem?)] = []
@@ -627,10 +625,14 @@ class ChatListController : PeersListController {
             
             let prev = previousEntries.swap(entries)
             
+            
             var animated = animated.swap(true)
-//            if filterData != previousfilter.data.swap(filterData) {
-//                animated = false
-//            }
+            
+            if value.4 {
+                animated = false
+                scroll = .up(false)
+            }
+            
             return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, setupFilter: setupFilter, openFilterSettings: openFilterSettings, tabsMenuItems: { filter in
                 return filterContextMenuItems(filter, context: context)
             })
