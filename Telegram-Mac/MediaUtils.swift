@@ -298,6 +298,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                         return generateImage(image.size, contextGenerator: { (size, ctx) in
                             ctx.setFillColor(theme.colors.transparentBackground.cgColor)
                             ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.interpolationQuality = .high
                             ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
                         })
                         

@@ -91,12 +91,15 @@ var globalLinkExecutor:TextViewInteractions {
                     execute(inapp:link)
                 }
             }
-        }, isDomainLink: { value in
+        }, isDomainLink: { value, origin in
             if let value = value as? inAppLink {
                 switch value {
                 case .external:
                     return true
                 default:
+                    if origin != value.link {
+                        return true
+                    }
                     return false
                 }
             }

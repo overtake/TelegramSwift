@@ -448,17 +448,20 @@ class SVideoView: NSView {
     
     var status: MediaPlayerStatus? = nil {
         didSet {
-            controls.status = status
-            if let status = status {
-                switch status.status {
-                case .buffering:
-                    bufferingIndicatorValue.set(.single(!isStreamable) |> delay(0.2, queue: Queue.mainQueue()))
-                default:
-                    bufferingIndicatorValue.set(.single(true))
+            if status != oldValue {
+                controls.status = status
+                if let status = status {
+                    switch status.status {
+                    case .buffering:
+                        bufferingIndicatorValue.set(.single(!isStreamable) |> delay(0.2, queue: Queue.mainQueue()))
+                    default:
+                        bufferingIndicatorValue.set(.single(true))
+                    }
+                } else {
+                    bufferingIndicatorValue.set(.single(!isStreamable))
                 }
-            } else {
-                bufferingIndicatorValue.set(.single(!isStreamable))
             }
+            
         }
     }
     var bufferingStatus: (IndexSet, Int)? {

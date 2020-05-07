@@ -601,7 +601,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
             
             BOOL result = [_weakd textViewEnterPressed:theEvent];
             
-            if (!result && (theEvent.modifierFlags & NSEventModifierFlagCommand)) {
+            if ((!result && (theEvent.modifierFlags & NSEventModifierFlagCommand)) || (!result && (theEvent.modifierFlags & NSEventModifierFlagShift))) {
                 [super insertNewline:self];
                 return;
             }

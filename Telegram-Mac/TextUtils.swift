@@ -478,15 +478,15 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
  func autoremoveLocalized(_ ttl: Int) -> String {
     var localized: String = ""
      if ttl <= 59 {
-        localized = tr(L10n.timerSecondsCountable(ttl))
+        localized = L10n.timerSecondsCountable(ttl)
     } else if ttl <= 3599 {
-        localized = tr(L10n.timerMinutesCountable(ttl / 60))
+        localized = L10n.timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
-        localized = tr(L10n.timerHoursCountable(ttl / 60 / 60))
+        localized = L10n.timerHoursCountable(ttl / 60 / 60)
     } else if ttl <= 604799 {
-        localized = tr(L10n.timerDaysCountable(ttl / 60 / 60 / 24))
+        localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
     } else {
-        localized = tr(L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7))
+        localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
     }
     return localized
 }
