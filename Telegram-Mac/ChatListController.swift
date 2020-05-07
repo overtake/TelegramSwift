@@ -630,7 +630,7 @@ class ChatListController : PeersListController {
             
             if value.4 {
                 animated = false
-                scroll = .up(false)
+                scroll = .up(true)
             }
             
             return prepareEntries(from: prev, to: entries, adIndex: nil, context: context, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId, setupFilter: setupFilter, openFilterSettings: openFilterSettings, tabsMenuItems: { filter in
