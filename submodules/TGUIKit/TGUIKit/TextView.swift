@@ -189,13 +189,13 @@ public final class TextViewInteractions {
     public var processURL:(Any)->Void // link, isPresent
     public var copy:(()->Bool)?
     public var menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)?
-    public var isDomainLink:(Any)->Bool
+    public var isDomainLink:(Any, String?)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
     public var resolveLink:(Any)->String?
     public var copyAttributedString:(NSAttributedString)->Bool
     public var copyToClipboard:((String)->Void)?
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -683,7 +683,7 @@ public final class TextViewLayout : Equatable {
         
         attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
             if let value = value {
-                if interactions.isDomainLink(value) && strokeLinks {
+                if interactions.isDomainLink(value, attributedString.attributedSubstring(from: range).string) && strokeLinks {
                     for line in lines {
                         let lineRange = NSIntersectionRange(range, line.range)
                         if lineRange.length != 0 {

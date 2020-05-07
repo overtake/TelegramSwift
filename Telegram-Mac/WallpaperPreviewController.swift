@@ -1505,7 +1505,12 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView.colorPicker.firstView.textView
+        switch genericView.colorPicker.currentResponder {
+        case .first:
+            return genericView.colorPicker.firstView.textView.inputView
+        case .second:
+            return genericView.colorPicker.secondView?.textView.inputView
+        }
     }
     
     private let wallpaper: Wallpaper

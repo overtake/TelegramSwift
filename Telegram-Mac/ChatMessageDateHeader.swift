@@ -148,16 +148,32 @@ class ChatDateStickView : TableStickView {
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)
-        textView.set(handler: { [weak self] _ in
-             if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, strongSelf.header {
+        textView.set(handler: { [weak self] control in
+             if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, let table = item.table {
                 
-                var calendar = NSCalendar.current
+                let row = table.visibleRows()
+                var ignore: Bool = false
+                if row.length > 1 {
+                    if let underItem = table.item(at: row.location + row.length - 1) as? ChatDateStickItem {
+                       ignore = item.timestamp == underItem.timestamp
+                    }
+                }
                 
-                calendar.timeZone = TimeZone(abbreviation: "UTC")!
-                let date = Date(timeIntervalSince1970: TimeInterval(item.timestamp + 86400))
-                let components = calendar.dateComponents([.year, .month, .day], from: date)
-                
-                item.chatInteraction?.jumpToDate(CalendarUtils.monthDay(components.day!, date: date))
+                if strongSelf.header && !ignore {
+                    var calendar = NSCalendar.current
+                    
+                    calendar.timeZone = TimeZone(abbreviation: "UTC")!
+                    let date = Date(timeIntervalSince1970: TimeInterval(item.timestamp + 86400))
+                    let components = calendar.dateComponents([.year, .month, .day], from: date)
+                    
+                    item.chatInteraction?.jumpToDate(CalendarUtils.monthDay(components.day!, date: date))
+                } else if let chatInteraction = item.chatInteraction {
+                    if !hasPopover(chatInteraction.context.window) {
+                        let controller = CalendarController(NSMakeRect(0,0,250,250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
+                        showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-100, -40))
+                    }
+                }
+               
             }
         }, for: .Click)
     }
