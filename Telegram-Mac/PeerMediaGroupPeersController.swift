@@ -17,9 +17,9 @@ private final class GroupPeersArguments {
     let context: AccountContext
     let removePeer: (PeerId)->Void
     let promote:(ChannelParticipant)->Void
-    let restrict:(PeerId)->Void
+    let restrict:(ChannelParticipant)->Void
     let showMore:()->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(PeerId)->Void) {
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void) {
         self.context = context
         self.removePeer = removePeer
         self.promote = promote
@@ -362,7 +362,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 }
                 if canRestrict {
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuRestrict, handler: {
-                        arguments.restrict(sortedParticipants[i].peer.id)
+                        arguments.restrict(sortedParticipants[i].participant)
                     }))
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
@@ -524,19 +524,10 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         }
     }, promote: { participant in
         showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peerId, initialParticipant: participant, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
-    }, restrict: { memberId in
-        _ = showModalProgress(signal: fetchChannelParticipant(account: context.account, peerId: peerId, participantId: memberId), for: context.window).start(next: { participant in
-            if let participant = participant {
-                switch participant {
-                case let .member(memberId, _, _, _, _):
-                    showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: memberId, initialParticipant: participant, updated: { updatedRights in
-                        _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: updatedRights).start()
-                    }), for: context.window)
-                default:
-                    break
-                }
-            }
-        })
+    }, restrict: { participant in
+        showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
+            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
+        }), for: context.window)
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), context.account.postbox.peerView(id: peerId), channelMembersPromise.get(), inputActivity, editing) |> map {
