@@ -550,8 +550,8 @@ final class GroupInfoArguments : PeerInfoArguments {
         })
     }
     
-    func promote(_ memberId: PeerId) -> Void {
-        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: self.upgradeToSupergroup()), for: context.window)
+    func promote(_ participant: ChannelParticipant) -> Void {
+        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peerId, initialParticipant: participant, updated: { _ in }, upgradedToSupergroup: self.upgradeToSupergroup()), for: context.window)
     }
     
     func removePeer(_ memberId:PeerId) -> Void {
@@ -1765,7 +1765,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 if canPromote {
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuPromote, handler: {
-                        arguments.promote(sortedParticipants[i].peer.id)
+                        arguments.promote(sortedParticipants[i].participant)
                     }))
                 }
                 if canRestrict {

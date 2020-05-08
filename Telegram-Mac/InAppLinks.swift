@@ -97,8 +97,10 @@ var globalLinkExecutor:TextViewInteractions {
                 case .external:
                     return true
                 default:
-                    if origin != value.link {
-                        return true
+                    if let origin = origin {
+                        if origin != value.link, !origin.isEmpty && origin != "‌" {
+                            return true
+                        }
                     }
                     return false
                 }

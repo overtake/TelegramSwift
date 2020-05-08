@@ -84,7 +84,7 @@ class ChatDateStickItem : TableStickItem {
             let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp)))
             switch interaction.mode {
             case .scheduled:
-                if timestamp == scheduleWhenOnlineTimestamp {
+                if timestamp == 2147457600 {
                     text = L10n.chatDateScheduledUntilOnline
                 } else {
                     text = L10n.chatDateScheduledFor(dateString)
@@ -167,9 +167,9 @@ class ChatDateStickView : TableStickView {
                     let components = calendar.dateComponents([.year, .month, .day], from: date)
                     
                     item.chatInteraction?.jumpToDate(CalendarUtils.monthDay(components.day!, date: date))
-                } else if let chatInteraction = item.chatInteraction {
+                } else if let chatInteraction = item.chatInteraction, chatInteraction.mode == .history {
                     if !hasPopover(chatInteraction.context.window) {
-                        let controller = CalendarController(NSMakeRect(0,0,250,250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
+                        let controller = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
                         showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-100, -40))
                     }
                 }

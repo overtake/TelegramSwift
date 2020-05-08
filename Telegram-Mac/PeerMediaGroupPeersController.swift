@@ -16,10 +16,10 @@ import TGUIKit
 private final class GroupPeersArguments {
     let context: AccountContext
     let removePeer: (PeerId)->Void
-    let promote:(PeerId)->Void
+    let promote:(ChannelParticipant)->Void
     let restrict:(PeerId)->Void
     let showMore:()->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(PeerId)->Void, restrict:@escaping(PeerId)->Void) {
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(PeerId)->Void) {
         self.context = context
         self.removePeer = removePeer
         self.promote = promote
@@ -225,7 +225,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     
                     let editing:ShortPeerDeleting?
                     
-                    if isEditing, let group = group as? TelegramGroup {
+                    if isEditing {
                         let deletable:Bool = group.canRemoveParticipant(sortedParticipants[i]) || (sortedParticipants[i].invitedBy == arguments.context.peerId && sortedParticipants[i].peerId != arguments.context.peerId)
                         editing = ShortPeerDeleting(editable: deletable)
                     } else {
@@ -357,7 +357,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 
                 if canPromote {
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuPromote, handler: {
-                        arguments.promote(sortedParticipants[i].peer.id)
+                        arguments.promote(sortedParticipants[i].participant)
                     }))
                 }
                 if canRestrict {
@@ -522,8 +522,8 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
             state.hasShowMoreButton = nil
             return state
         }
-    }, promote: { memberId in
-        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
+    }, promote: { participant in
+        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peerId, initialParticipant: participant, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
     }, restrict: { memberId in
         _ = showModalProgress(signal: fetchChannelParticipant(account: context.account, peerId: peerId, participantId: memberId), for: context.window).start(next: { participant in
             if let participant = participant {

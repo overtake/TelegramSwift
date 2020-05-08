@@ -197,8 +197,8 @@ class ChatRowItem: TableRowItem {
         if let peer = peer as? TelegramChannel, case .broadcast = peer.info, (!isUnsent && !isFailed) {
             size.width += 0
         } else {
-            if !isIncoming || (isUnsent || isFailed) {
-                if isBubbled {
+            if (!isIncoming || (isUnsent || isFailed)) && date != nil {
+                if isBubbled  {
                     size.width += 16
                     if isFailed {
                         size.width += 4
@@ -1213,15 +1213,17 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            var time:TimeInterval = TimeInterval(message.timestamp)
-            time -= context.timeDifference
-            
-            let dateFormatter = DateFormatter()
-            dateFormatter.timeStyle = .short
-            dateFormatter.dateStyle = .none
-            dateFormatter.timeZone = NSTimeZone.local
-            
-            date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            if message.timestamp != scheduleWhenOnlineTimestamp {
+                var time:TimeInterval = TimeInterval(message.timestamp)
+                time -= context.timeDifference
+                
+                let dateFormatter = DateFormatter()
+                dateFormatter.timeStyle = .short
+                dateFormatter.dateStyle = .none
+                dateFormatter.timeZone = NSTimeZone.local
+                
+                date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            }
 
         } else {
             self.isIncoming = false
@@ -1243,7 +1245,7 @@ class ChatRowItem: TableRowItem {
             formatter.timeStyle = .medium
             formatter.timeZone = NSTimeZone.local
             //
-            var fullDate: String = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
+            var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId]  {
@@ -1651,7 +1653,7 @@ class ChatRowItem: TableRowItem {
          //   rect.origin.x -= leftContentInset
         //}
         
-        if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
+        if additionalLineForDateInBubbleState == nil && !isFixedRightPosition && rightSize.width > 0 {
             rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
         } else {
             rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
