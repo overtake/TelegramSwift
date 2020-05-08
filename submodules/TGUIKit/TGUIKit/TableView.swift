@@ -1321,8 +1321,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                         
                         if tableView.isFlipped {
-                            
                             stickView.isHidden = documentOffset.y <= 0 && !item.singletonItem// && !stickView.isAlwaysUp
+                        } else {
+                            stickView.isHidden = documentSize.height <= frame.height
                         }
 
                         stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in
@@ -2071,9 +2072,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         self.cancelSelection();
                     }
                     self.selectedhash = item.stableId
-                    if highlightedItem() != nil {
-                        _ = highlight(item: item)
-                    }
+                    self.cancelHighlight()
                     item.prepare(true)
                     self.reloadData(row:item.index)
                     if notify {

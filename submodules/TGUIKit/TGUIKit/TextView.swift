@@ -696,7 +696,6 @@ public final class TextViewLayout : Equatable {
                             let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             strokeRects.append((rect, color))
-                            
                             if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
                                 var leftOffset: CGFloat = 0.0
                                 if lineRange.location != line.range.location {
