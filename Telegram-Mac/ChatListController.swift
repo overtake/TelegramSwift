@@ -294,12 +294,12 @@ class ChatListController : PeersListController {
         let current = _filterValue.modify(f)
         scrollup(force: true)
         self.genericView.searchView.change(state: .None,  true)
-        filter.set(current)
         if previous?.filter?.id != current.filter?.id {
             _  = first.swap(true)
             _  = animated.swap(false)
             self.request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil)))
         }
+        filter.set(current)
         setCenterTitle(self.defaultBarTitle)
     }
     

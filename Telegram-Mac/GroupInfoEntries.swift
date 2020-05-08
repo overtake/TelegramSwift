@@ -530,24 +530,14 @@ final class GroupInfoArguments : PeerInfoArguments {
         
     }
     
-    func restrict(_ memberId: PeerId) -> Void {
+    func restrict(_ participant: ChannelParticipant) -> Void {
         
         let context = self.context
         let peerId = self.peerId
         
-        _ = showModalProgress(signal: fetchChannelParticipant(account: context.account, peerId: peerId, participantId: memberId), for: context.window).start(next: { participant in
-            if let participant = participant {
-                switch participant {
-                case let .member(memberId, _, _, _, _):
-                    showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: memberId, initialParticipant: participant, updated: { updatedRights in
-                        _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: updatedRights).start()
-                    }), for: context.window)
-                default:
-                    break
-                }
-            }
-            
-        })
+        showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
+            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
+        }), for: context.window)
     }
     
     func promote(_ participant: ChannelParticipant) -> Void {
@@ -1770,7 +1760,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
                 if canRestrict {
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuRestrict, handler: {
-                        arguments.restrict(sortedParticipants[i].peer.id)
+                        arguments.restrict(sortedParticipants[i].participant)
                     }))
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
