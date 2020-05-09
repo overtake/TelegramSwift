@@ -55,10 +55,9 @@ def remove_plugin_files(files):
     excluded = set()
     for f in files:
         # if re.match('PlugIns/.*', f):
-        if False:
-            excluded.add(f)
-        else:
-            result.add(f)
+        #    excluded.add(f)
+        # else:
+        result.add(f)
     return (result, excluded)
 
 
