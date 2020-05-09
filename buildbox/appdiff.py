@@ -50,17 +50,6 @@ def remove_codesign_files(files):
     return result
 
 
-def remove_plugin_files(files):
-    result = set()
-    excluded = set()
-    for f in files:
-        # if re.match('PlugIns/.*', f):
-        #    excluded.add(f)
-        # else:
-        result.add(f)
-    return (result, excluded)
-
-
 def remove_asset_files(files):
     result = set()
     excluded = set()
@@ -242,11 +231,8 @@ def appdiff(self_base_path, app1, app2):
     diff_dirs(app1, clean_app1_dirs, app2, clean_app2_dirs)
     diff_files(app1, clean_app1_files, app2, clean_app2_files)
 
-    clean_app1_files, plugin_app1_files = remove_plugin_files(clean_app1_files)
-    clean_app2_files, plugin_app2_files = remove_plugin_files(clean_app2_files)
-
-    clean_app1_files, plugin_app1_files = remove_asset_files(clean_app1_files)
-    clean_app2_files, plugin_app2_files = remove_asset_files(clean_app2_files)
+    clean_app1_files, asset_app1_files = remove_asset_files(clean_app1_files)
+    clean_app2_files, asset_app2_files = remove_asset_files(clean_app2_files)
 
     clean_app1_files, nib_app1_files = remove_nib_files(clean_app1_files)
     clean_app2_files, nib_app2_files = remove_nib_files(clean_app2_files)
@@ -278,9 +264,9 @@ def appdiff(self_base_path, app1, app2):
             )
             for relative_file_path in encrypted_files:
                 print('        ' + relative_file_path)
-        if len(plugin_app1_files) != 0:
+        if len(asset_app1_files) != 0:
             print(
-                '    APPs contain PlugIns directory with app extensions. Extensions can\'t currently be checked.'
+                '    APPs contain .car files.'
             )
         if len(nib_app1_files) != 0:
             print(
