@@ -265,9 +265,7 @@ def appdiff(self_base_path, app1, app2):
             for relative_file_path in encrypted_files:
                 print('        ' + relative_file_path)
         if len(asset_app1_files) != 0:
-            print(
-                '    APPs contain .car files.'
-            )
+            print('    APPs contain .car files.')
         if len(nib_app1_files) != 0:
             print(
                 '    APPs contain .nib (compiled Interface Builder) files that are compiled by the App Store and can\'t currently be checked:'
