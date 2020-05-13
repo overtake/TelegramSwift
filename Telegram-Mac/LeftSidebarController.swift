@@ -164,10 +164,10 @@ private func leftSidebarEntries(_ filterData: FilterData, _ badges: ChatListFilt
     return entries
 }
 
-fileprivate func prepareTransition(left:[LeftSibarBarEntry], right: [LeftSibarBarEntry], initialSize:NSSize, arguments:LeftSidebarArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<LeftSibarBarEntry>], right: [AppearanceWrapperEntry<LeftSibarBarEntry>], initialSize:NSSize, arguments:LeftSidebarArguments) -> TableUpdateTransition {
     
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
-        return entry.item(arguments, initialSize: initialSize)
+        return entry.entry.item(arguments, initialSize: initialSize)
     }
     
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
@@ -215,10 +215,10 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
         })
         let initialSize = self.atomicSize
         
-        let previous: Atomic<[LeftSibarBarEntry]> = Atomic(value: [])
+        let previous: Atomic<[AppearanceWrapperEntry<LeftSibarBarEntry>]> = Atomic(value: [])
                 
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> map { filterData, badges in
-            let entries = leftSidebarEntries(filterData, badges)
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { filterData, badges, appearance in
+            let entries = leftSidebarEntries(filterData, badges).map { AppearanceWrapperEntry.init(entry: $0, appearance: appearance) }
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments)
         } |> deliverOnMainQueue
         

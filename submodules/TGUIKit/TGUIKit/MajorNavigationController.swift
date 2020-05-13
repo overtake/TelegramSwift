@@ -73,9 +73,19 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         viewDidChangedNavigationLayout(.single)
     }
     
+    override var containerSize: NSSize {
+        switch genericView.state {
+        case .dual:
+            return NSMakeSize(frame.width - 350, frame.height)
+        default:
+            return super.containerSize
+        }
+    }
   
     open override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
+        
+        self.genericView.setFrameSize(size)
         //_ = atomicSize.swap(size)
      //   self.genericView.frame = NSMakeRect(0, barInset, <#T##w: CGFloat##CGFloat#>, <#T##h: CGFloat##CGFloat#>)
     }
