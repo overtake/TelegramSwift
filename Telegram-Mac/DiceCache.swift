@@ -84,7 +84,7 @@ class DiceCache {
         let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [String: StickerPackItem])], NoError> in
             var signals: [Signal<(String, [String: StickerPackItem]), NoError>] = []
             for emoji in config.emojis {
-                signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: false)
+                signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: true)
                     |> map { result -> (String, [String: StickerPackItem]) in
                         switch result {
                         case let .result(_, items, _):

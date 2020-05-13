@@ -263,7 +263,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         
         longDisposable.set(nil)
         
-        if let item = item as? ContextMediaRowItem  {
+        if let item = item as? ContextMediaRowItem, event.clickCount == 1  {
             let point = convert(event.locationInWindow, from: nil)
             if let index = self.index(at: point) {
                 item.arguments.sendResult(item.result.results[index], self.subviews[index])

@@ -2873,6 +2873,40 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     switch self.chatInteraction.mode {
                     case .history:
+                        
+                        
+                        var wasGroupChannel: Bool?
+                        if let peer = self.chatInteraction.presentation.mainPeer as? TelegramChannel  {
+                            if case .group = peer.info {
+                                wasGroupChannel = true
+                            } else {
+                                wasGroupChannel = false
+                            }
+                        }
+                        var isGroupChannel: Bool?
+                        if let peerView = peerView, let info = (peerView.peers[peerView.peerId] as? TelegramChannel)?.info {
+                            if case .group = info {
+                                isGroupChannel = true
+                            } else {
+                                isGroupChannel = false
+                            }
+                        }
+ 
+                        if wasGroupChannel != isGroupChannel {
+                            if let isGroupChannel = isGroupChannel, isGroupChannel {
+                                let (recentDisposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: chatInteraction.peerId, updated: { _ in })
+                                let (adminsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: chatInteraction.peerId, updated: { _ in })
+                                let disposable = DisposableSet()
+                                disposable.add(recentDisposable)
+                                disposable.add(adminsDisposable)
+                                
+                                self.updatedChannelParticipants.set(disposable)
+                            } else {
+                                self.updatedChannelParticipants.set(nil)
+                            }
+                           
+                        }
+                        
                         self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
                             if let peerView = peerView {
                                 var present = presentation.updatedPeer { [weak peerView] _ in
@@ -2971,16 +3005,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }).start())
         
         
-        
-        if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {
-            let (recentDisposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: chatInteraction.peerId, updated: { _ in })
-            let (adminsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: chatInteraction.peerId, updated: { _ in })
-            let disposable = DisposableSet()
-            disposable.add(recentDisposable)
-            disposable.add(adminsDisposable)
-            
-            updatedChannelParticipants.set(disposable)
-        }
+    
         
         let updating: Signal<Bool, NoError> = context.account.stateManager.isUpdating |> mapToSignal { isUpdating in
             return isUpdating ? .single(isUpdating) |> delay(1.0, queue: .mainQueue()) : .single(isUpdating)

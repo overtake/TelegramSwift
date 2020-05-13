@@ -242,7 +242,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         longDisposable.set(nil)
-        if isMouseDown, mouseInside() {
+        if isMouseDown, mouseInside(), event.clickCount == 1 {
             let point = convert(event.locationInWindow, from: nil)
             
             if let item = item as? StickerPackPanelRowItem {
