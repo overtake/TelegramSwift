@@ -373,14 +373,14 @@ class MainViewController: TelegramViewController {
     }
     
     func showFastChatSettings() {
-        self.showFastChatSettings(tabController.control(for: self.chatIndex))
+     //   self.showFastChatSettings(tabController.control(for: self.chatIndex))
     }
     
     private func showFastChatSettings(_ control: Control) {
-        
-        filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
-            self?._showFastChatSettings(control, items: items)
-        }))
+//        
+//        filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
+//            self?._showFastChatSettings(control, items: items)
+//        }))
     }
     private let filterMenuDisposable = MetaDisposable()
     private let settingsDisposable = MetaDisposable()
