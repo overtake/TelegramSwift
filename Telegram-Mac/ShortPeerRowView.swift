@@ -145,7 +145,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         
                         if let status = (isRowSelected ? item.statusSelected : item.status) {
                             let t = title.0.size.height + status.0.size.height + 1.0
-                            tY = (NSHeight(self.frame) - t) / 2.0
+                            tY = floorToScreenPixels(backingScaleFactor, (self.frame.height - t) / 2.0)
                             
                             let sY = tY + title.0.size.height + 1.0
                             if hiddenStatus {

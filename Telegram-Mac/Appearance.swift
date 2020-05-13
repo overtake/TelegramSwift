@@ -147,6 +147,22 @@ private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {
     return generateImage(NSMakeSize(floor(image.size.width * 0.7), floor(image.size.height * 0.7)), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
+        ctx.clip(to: rect, mask: image)
+        ctx.setBlendMode(.difference)
+        ctx.setFillColor(.white)
+        ctx.fill(rect)
+        ctx.draw(image, in: rect)
+    }, scale: 1.0)!
+}
+
+private func generateSecretThumb(_ image: CGImage) -> CGImage {
+    return generateImage(image.size, contextGenerator: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.clip(to: rect, mask: image)
+        ctx.setBlendMode(.difference)
+        ctx.setFillColor(.white)
+        ctx.fill(rect)
         ctx.draw(image, in: rect)
     }, scale: 1.0)!
 }
@@ -1853,7 +1869,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFileThumb: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(flipVertical:true) },
                                                chatFileThumbBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_incoming,  flipVertical:true) },
                                                chatFileThumbBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageFile").precomposed(palette.fileActivityForegroundBubble_outgoing, flipVertical:true) },
-                                               chatSecretThumb: { #imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true) },
+                                               chatSecretThumb: { generateSecretThumb(#imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true)) },
                                                chatSecretThumbSmall: { generateSecretThumbSmall(#imageLiteral(resourceName: "Icon_SecretAutoremoveMedia").precomposed(.black, flipVertical:true)) },
                                                chatMapPin: { #imageLiteral(resourceName: "Icon_MapPinned").precomposed() },
                                                chatSecretTitle: { #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.text, flipVertical:true) },

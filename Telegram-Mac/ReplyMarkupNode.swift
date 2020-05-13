@@ -77,12 +77,12 @@ class ReplyMarkupNode: Node {
                 case let .url(url):
                     if !url.isSingleEmoji {
                         urlView = ImageView()
-                        urlView?.image = theme.icons.chatActionUrl
+                        urlView?.image = theme.chat.chatActionUrl(theme: theme)
                         urlView?.sizeToFit()
                     }
                 case .switchInline:
                     urlView = ImageView()
-                    urlView?.image = theme.icons.chatActionUrl
+                    urlView?.image = theme.chat.chatActionUrl(theme: theme)
                     urlView?.sizeToFit()
                 default:
                     break

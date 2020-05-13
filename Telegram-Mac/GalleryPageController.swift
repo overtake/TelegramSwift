@@ -269,6 +269,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
             dragged = nil
             
+            let view = self.window.contentView?.hitTest(event.locationInWindow)
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             
             if NSPointInRect(point, self.captionView.frame), self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
@@ -290,6 +291,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     return .rejected
                 }
                 
+                _ = interactions.dismiss()
+                return .invoked
+            } else if view is GalleryModernControlsView {
                 _ = interactions.dismiss()
                 return .invoked
             }

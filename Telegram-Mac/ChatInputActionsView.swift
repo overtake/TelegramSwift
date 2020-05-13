@@ -126,7 +126,14 @@ class ChatInputActionsView: View, Notifable {
         _ = keyboard.sizeToFit()
         inlineCancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
         _ = inlineCancel.sizeToFit()
-        secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+        
+        
+        if let messageSecretTimeout = chatInteraction.presentation.messageSecretTimeout {
+            secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
+        } else {
+            secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+        }
+        
         
         scheduled?.set(image: theme.icons.scheduledInputAction, for: .Normal)
 
@@ -263,7 +270,7 @@ class ChatInputActionsView: View, Notifable {
     private var first:Bool = true
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled {
+            if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout {
             
                 var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
                 
@@ -273,6 +280,12 @@ class ChatInputActionsView: View, Notifable {
                 send.animates = false
                 send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
                 send.animates = true
+                
+                if let messageSecretTimeout = value.messageSecretTimeout {
+                    secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
+                } else if value.messageSecretTimeout == nil {
+                    secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+                }
               
                 if let peer = value.peer {
                     muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil
@@ -499,9 +512,7 @@ class ChatInputActionsView: View, Notifable {
             }
         }, for: .Click)
         
-        
         chatInteraction.add(observer: self)
-        notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             secretTimer = ImageButton()
@@ -515,6 +526,8 @@ class ChatInputActionsView: View, Notifable {
                 }
             }, for: .Click)
         }
+        
+        notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
     }
     
     func performSendMessage() {

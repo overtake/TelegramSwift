@@ -292,9 +292,9 @@ class ChatListController : PeersListController {
     func updateFilter(_ f:(FilterData)->FilterData) {
         let previous = filterValue
         let current = _filterValue.modify(f)
-        scrollup(force: true)
         self.genericView.searchView.change(state: .None,  true)
         if previous?.filter?.id != current.filter?.id {
+            scrollup(force: true)
             _  = first.swap(true)
             _  = animated.swap(false)
             self.request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil)))
@@ -1060,6 +1060,8 @@ class ChatListController : PeersListController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        
         context.window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if event.modifierFlags.contains(.control) {

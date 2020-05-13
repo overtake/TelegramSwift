@@ -495,7 +495,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
     }
     
-    fileprivate var barInset: CGFloat {
+    var barInset: CGFloat {
         var barInset:CGFloat = 0
         if let header = callHeader, header.needShown {
             barInset += header.height
@@ -525,6 +525,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         containerView.frame = bounds
         navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, controller.frame.width, controller.bar.height)
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+        
+        for controller in stack {
+            if controller.isLoaded() {
+                controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerView.frame.width, containerView.frame.height - barInset - controller.bar.height)
+            }
+        }
     }
     
     public func cancelCurrentController() {

@@ -309,11 +309,11 @@ private final class PollOption : Equatable {
     let isLoading: Bool
     let presentation: TelegramPresentationTheme
     let contentSize: NSSize
-    let vote:()-> Void
+    let vote:(Control)-> Void
     let isCorrect: Bool?
     let isQuiz: Bool
     let isMultipleSelected: Bool
-    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool?, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping()->Void = {}, contentSize: NSSize = NSZeroSize) {
+    init(option:TelegramMediaPollOption, nameText: TextViewLayout, percent: Float?, realPercent: Float, voteCount: Int32, isSelected: Bool, isIncoming: Bool, isBubbled: Bool, voted: Bool, isLoading: Bool, presentation: TelegramPresentationTheme, isCorrect: Bool?, isQuiz: Bool, isMultipleSelected: Bool, vote: @escaping(Control)->Void = { _ in }, contentSize: NSSize = NSZeroSize) {
         self.option = option
         self.nameText = nameText
         self.percent = percent
@@ -362,7 +362,11 @@ private final class PollOption : Equatable {
         return 5
     }
     
-    
+    var tooltip: String {
+        var totalOptionVotes = self.isQuiz ? L10n.chatQuizTooltipVotesCountable(Int(self.voteCount)) : L10n.chatPollTooltipVotesCountable(Int(self.voteCount))
+        totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(self.voteCount)", with: Int(self.voteCount).separatedNumber)
+        return self.voteCount == 0 ? (self.isQuiz ? L10n.chatQuizTooltipNoVotes : L10n.chatPollTooltipNoVotes) : totalOptionVotes
+    }
     
     func measure(width: CGFloat) -> NSSize {
         nameText.measure(width: width - leftOptionInset)
@@ -497,8 +501,8 @@ class ChatPollItem: ChatRowItem {
             let nameLayout = TextViewLayout(.initialize(string: option.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: nameFont), alwaysStaticItems: true)
 
             
-            let wrapper = PollOption(option: option, nameText: nameLayout, percent: percent, realPercent: realPercent, voteCount: votedCount, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, voted: voted, isLoading: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier) && object.additionalData.pollStateData.isLoading, presentation: self.presentation, isCorrect: isCorrect, isQuiz: poll.kind == .quiz, isMultipleSelected: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier), vote: { [weak self] in
-                self?.voteOption(option)
+            let wrapper = PollOption(option: option, nameText: nameLayout, percent: percent, realPercent: realPercent, voteCount: votedCount, isSelected: isSelected, isIncoming: isIncoming, isBubbled: renderType == .bubble, voted: voted, isLoading: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier) && object.additionalData.pollStateData.isLoading, presentation: self.presentation, isCorrect: isCorrect, isQuiz: poll.kind == .quiz, isMultipleSelected: object.additionalData.pollStateData.identifiers.contains(option.opaqueIdentifier), vote: { [weak self] control in
+                self?.voteOption(option, for: control)
             })
             
             options.append(wrapper)
@@ -617,7 +621,7 @@ class ChatPollItem: ChatRowItem {
         
     }
     
-    private func voteOption(_ option: TelegramMediaPollOption) {
+    private func voteOption(_ option: TelegramMediaPollOption, for control: Control) {
         if canInvokeVote, !self.options.contains(where: { $0.isSelected }) {
             guard let message = message else { return }
             var identifiers = self.entry.additionalData.pollStateData.identifiers
@@ -636,9 +640,12 @@ class ChatPollItem: ChatRowItem {
                     return
                 }
                 self.invokeAction(fromOption: option.opaqueIdentifier)
+            }  else if let option = self.options.first(where: { $0.option.opaqueIdentifier == option.opaqueIdentifier }) {
+                tooltip(for: control, text: option.tooltip)
             }
         }
     }
+
     
     private var canInvokeVote: Bool {
         guard let message = message else {
@@ -897,8 +904,8 @@ private final class PollOptionView : Control {
         
         progressView.isEventLess = true
         
-        set(handler: { [weak self] _ in
-            self?.option?.vote()
+        set(handler: { [weak self] control in
+            self?.option?.vote(control)
         }, for: .Click)
     }
     
@@ -1007,10 +1014,7 @@ private final class PollOptionView : Control {
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
         if let progress = option.percent {
-            var totalOptionVotes = option.isQuiz ? L10n.chatQuizTooltipVotesCountable(Int(option.voteCount)) : L10n.chatPollTooltipVotesCountable(Int(option.voteCount))
-            totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(option.voteCount)", with: Int(option.voteCount).separatedNumber)
-            
-            toolTip = option.voteCount == 0 ? (option.isQuiz ? L10n.chatQuizTooltipNoVotes : L10n.chatPollTooltipNoVotes) : totalOptionVotes
+            toolTip = option.tooltip
             
             progressView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5, frame.width - nameView.frame.minX - defaultInset, progressView.frame.height)
             progressView.set(progress: CGFloat(progress), animated: animated, duration: duration / 2)

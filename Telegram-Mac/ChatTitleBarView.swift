@@ -17,7 +17,7 @@ private class ConnectionStatusView : View {
     private var textViewLayout:TextViewLayout?
     private var disableProxyButton: TitleButton?
     
-    private var backButton: ImageButton?
+    private(set) var backButton: ImageButton?
     
     var isSingleLayout: Bool = false {
         didSet {
@@ -153,6 +153,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private var isSingleLayout:Bool = false {
         didSet {
             connectionStatusView?.isSingleLayout = isSingleLayout
+            connectionStatusView?.backButton?.removeAllHandlers()
+            connectionStatusView?.backButton?.set(handler: { [weak self] _ in
+                self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+            }, for: .Click)
         }
     }
     private var connectionStatusView:ConnectionStatusView? = nil

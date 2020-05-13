@@ -2981,7 +2981,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             updatedChannelParticipants.set(disposable)
         }
         
-        let connectionStatus = combineLatest(context.account.network.connectionStatus |> delay(0.5, queue: Queue.mainQueue()), context.account.stateManager.isUpdating |> delay(0.5, queue: Queue.mainQueue())) |> deliverOnMainQueue |> beforeNext { [weak self] status, isUpdating -> Void in
+        let updating: Signal<Bool, NoError> = context.account.stateManager.isUpdating |> mapToSignal { isUpdating in
+            return isUpdating ? .single(isUpdating) |> delay(1.0, queue: .mainQueue()) : .single(isUpdating)
+        }
+        
+        let connecting: Signal<ConnectionStatus, NoError> = context.account.network.connectionStatus |> mapToSignal { status in
+            switch status {
+            case .online:
+                return .single(status)
+            default:
+                return .single(status) |> delay(1.0, queue: .mainQueue())
+            }
+        }
+        
+        
+        let connectionStatus = combineLatest(queue: .mainQueue(), connecting, updating) |> deliverOnMainQueue |> beforeNext { [weak self] status, isUpdating -> Void in
             var status = status
             switch status {
             case let .online(proxyAddress):
@@ -3181,7 +3195,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                         if let message = message, message.flags.contains(.Failed) {
-                            hasFailed = true
+                            hasFailed = !(message.media.first is TelegramMediaAction)
                         }
                         
                         for message in item.messages {
@@ -3189,7 +3203,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             var hasUncosumedContent: Bool = false
                             
                             if !hasFailed, message.flags.contains(.Failed) {
-                                hasFailed = true
+                                hasFailed = !(message.media.first is TelegramMediaAction)
                             }
                             
                             if message.tags.contains(.unseenPersonalMessage) {
@@ -3260,11 +3274,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.genericView.tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
                         if let message = item.message, message.flags.contains(.Failed) {
-                            hasFailed = true
+                            hasFailed = !(message.media.first is TelegramMediaAction)
                         }
                         for message in item.messages {
                             if !hasFailed, message.flags.contains(.Failed) {
-                                hasFailed = true
+                                hasFailed = !(message.media.first is TelegramMediaAction)
                             }
                         }
                     }

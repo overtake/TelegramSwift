@@ -3,186 +3,7 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "ChatListViewSpaceState.add(entry:):ChatListViewState.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self.orderedEntries">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "userInfoEntries(view:arguments:mediaTabsData:):UserInfoEntries.swift">
-      </ContextState>
-      <ContextState
-         contextName = "BufferDecompressor.init(compressor:):BufferCompressor.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #11 in closure #2 in SearchController.viewDidLoad():SearchController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #15 in PreviewSenderController.viewDidLoad():PreviewSenderController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in ThemePreviewView.addTableItems(_:theme:):ThemePreviewModalController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ServiceEventLogItem.init(_:event:result:chatInteraction:):ChannelEventLogItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "Window.sendEvent(_:):Window.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #6 in InputDataController.viewDidLoad():InputDataController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "groupInfoEntries(view:arguments:inputActivities:channelMembers:):GroupInfoEntries.swift">
-      </ContextState>
-      <ContextState
-         contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "i">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ChatMediaAnimatedStickerView.update(with:size:context:parent:table:parameters:animated:positionFlags:approximateSynchronousValue:):ChatMediaAnimatedStickerView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "applyPaints(_:for:imageSize:):EditImageCanvasController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "importPalette(_:):ParseAppearanceColors.swift">
-      </ContextState>
-      <ContextState
-         contextName = "Wallpaper.withUpdatedSettings(_:):Appearance.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ThemeListRowView.set(item:animated:):ThemeListRowItem.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "item.cloudThemes">
-            </PersistentString>
-            <PersistentString
-               value = "previous?.cloudThemes">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "Message.chatPeer.getter:CoreExtension.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "messageMainPeer(self)">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "MutableChatListView.replay(postbox:operations:updatedPeerNotificationSettings:updatedPeers:updatedPeerPresences:transaction:context:):ChatListView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in DiceCache.interactiveSymbolData(baseSymbol:side:synchronous:):DiceCache.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatListViewSample.init(entries:lower:upper:anchorIndex:hole:):ChatListViewState.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in SqliteValueBox.filteredRange(_:start:end:values:limit:):SqliteValueBox.swift">
-      </ContextState>
-      <ContextState
-         contextName = "static ChatLayoutUtils.contentSize(for:with:hasText:):ChatLayoutUtils.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #4 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatListView.init(_:):ChatListView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatListRowItem.menuItems(in:):ChatListRowItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "EditImageColorPicker.location.didset:EditImageCanvasColorPicker.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in closure #5 in DiceCache.init(postbox:network:):DiceCache.swift">
-      </ContextState>
-      <ContextState
-         contextName = "TelegramPresentationTheme.controllerBackgroundMode.getter:Appearance.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #7 in PeerMediaListController.load(with:):PeerMediaListController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #6 in DiceCache.init(postbox:network:):DiceCache.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #4 in SharedNotificationManager.init(activeAccounts:accountManager:window:bindings:):SharedNotificationManager.swift">
-      </ContextState>
-      <ContextState
-         contextName = "TableView.merge(with:):TableView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in TableView.scrollDidEndLiveScrolling():TableView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "self">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TableView.merge(with:forceApply:):TableView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatRowItem.isSharable.getter:ChatRowItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in closure #5 in DiceCache.init(postbox:network:):DiceCache.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "ThemePaletteSettings.init(decoder:):ThemeSettings.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatListViewSpaceState.fillSpace(postbox:):ChatListViewState.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #5 in MGalleryPhotoItem.request(immediately:):MGalleryPhotoItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "ChatRowItem.init(_:_:_:_:_:):ChatRowItem.swift">
-      </ContextState>
-      <ContextState
-         contextName = "specialized DefaultStringInterpolation.appendInterpolation&lt;A&gt;(_:) [inlined]:(null)">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #1 in closure #3 in loadCloudPaletteAndWallpaper(context:file:):ThemePreviewModalController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #5 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "newTheme.colors">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #9 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in ChatListTable.entries(groupId:from:to:peerChatInterfaceStateTable:count:predicate:):ChatListTable.swift">
       </ContextState>
       <ContextState
          contextName = "BufferDecompressor.readPixelBuffer(frame:width:height:):BufferCompressor.swift">
@@ -196,7 +17,197 @@
          contextName = "closure #7 in PeerInfoController.viewDidLoad():PeerInfoController.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #1 in ThemePreviewView.addTableItems(_:theme:):ThemePreviewModalController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #6 in InputDataController.viewDidLoad():InputDataController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TelegramPresentationTheme.controllerBackgroundMode.getter:Appearance.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in DiceCache.interactiveSymbolData(baseSymbol:side:synchronous:):DiceCache.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.isSharable.getter:ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.merge(with:forceApply:):TableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Wallpaper.withUpdatedSettings(_:):Appearance.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in closure #3 in loadCloudPaletteAndWallpaper(context:file:):ThemePreviewModalController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #6 in DiceCache.init(postbox:network:):DiceCache.swift">
+      </ContextState>
+      <ContextState
+         contextName = "TableView.merge(with:):TableView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListViewSample.init(entries:lower:upper:anchorIndex:hole:):ChatListViewState.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ThemePaletteSettings.init(decoder:):ThemeSettings.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in closure #5 in DiceCache.init(postbox:network:):DiceCache.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #15 in PreviewSenderController.viewDidLoad():PreviewSenderController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "groupInfoEntries(view:arguments:inputActivities:channelMembers:):GroupInfoEntries.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatRowItem.init(_:_:_:_:_:):ChatRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "EditImageColorPicker.location.didset:EditImageCanvasColorPicker.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MutableChatListView.replay(postbox:operations:updatedPeerNotificationSettings:updatedPeers:updatedPeerPresences:transaction:context:):ChatListView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListView.init(_:):ChatListView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatMediaAnimatedStickerView.update(with:size:context:parent:table:parameters:animated:positionFlags:approximateSynchronousValue:):ChatMediaAnimatedStickerView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "BaseChartRenderer.setup(horizontalRange:animated:):BaseChartRenderer.swift">
+      </ContextState>
+      <ContextState
+         contextName = "VerticalLinesRenderer.values.didset:VerticalLinesRenderer.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "values">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TelegramMediaFile.isAnimatedSticker.getter:CoreExtension.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in SqliteValueBox.filteredRange(_:start:end:values:limit:):SqliteValueBox.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ServiceEventLogItem.init(_:event:result:chatInteraction:):ChannelEventLogItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListViewSpaceState.add(entry:):ChatListViewState.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.orderedEntries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Message.chatPeer.getter:CoreExtension.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "messageMainPeer(self)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ChatListViewSpaceState.fillSpace(postbox:):ChatListViewState.swift">
+      </ContextState>
+      <ContextState
+         contextName = "BufferDecompressor.init(compressor:):BufferCompressor.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ThemeListRowView.set(item:animated:):ThemeListRowItem.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "item.cloudThemes">
+            </PersistentString>
+            <PersistentString
+               value = "previous?.cloudThemes">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatListRowItem.menuItems(in:):ChatListRowItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "static ChatLayoutUtils.contentSize(for:with:hasText:):ChatLayoutUtils.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #5 in MGalleryPhotoItem.request(immediately:):MGalleryPhotoItem.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #9 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #4 in SharedNotificationManager.init(activeAccounts:accountManager:window:bindings:):SharedNotificationManager.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TableView.scrollDidEndLiveScrolling():TableView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in ChatListTable.entries(groupId:from:to:peerChatInterfaceStateTable:count:predicate:):ChatListTable.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #11 in closure #2 in SearchController.viewDidLoad():SearchController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "i">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #7 in PeerMediaListController.load(with:):PeerMediaListController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "importPalette(_:):ParseAppearanceColors.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Window.sendEvent(_:):Window.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in closure #5 in DiceCache.init(postbox:network:):DiceCache.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "specialized DefaultStringInterpolation.appendInterpolation&lt;A&gt;(_:) [inlined]:(null)">
+      </ContextState>
+      <ContextState
+         contextName = "applyPaints(_:for:imageSize:):EditImageCanvasController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #4 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #5 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "newTheme.colors">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
    </ContextStates>
 </VariablesViewState>

@@ -14,9 +14,9 @@ import Postbox
 import TelegramCore
 import SyncCore
 
-let mediaExts:[String] = ["png","jpg","jpeg","tiff","mp4","mov","avi", "gif"]
+let mediaExts:[String] = ["png","jpg","jpeg","tiff","mp4","mov","avi", "gif", "m4v"]
 let photoExts:[String] = ["png","jpg","jpeg","tiff"]
-let videoExts:[String] = ["mp4","mov","avi"]
+let videoExts:[String] = ["mp4","mov","avi", "m4v"]
 
 
 func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, completion:@escaping ([String]?)->Void) {

@@ -291,7 +291,10 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
+            
+            
             if let fullSizeData = fullSizeData {
                 if data.fullSizeComplete {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {

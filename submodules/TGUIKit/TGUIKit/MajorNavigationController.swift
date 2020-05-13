@@ -75,8 +75,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
     
   
     open override func viewDidResized(_ size: NSSize) {
-        _ = atomicSize.swap(size)
-        self.genericView.setFrameSize(size)
+        super.viewDidResized(size)
+        //_ = atomicSize.swap(size)
+     //   self.genericView.frame = NSMakeRect(0, barInset, <#T##w: CGFloat##CGFloat#>, <#T##h: CGFloat##CGFloat#>)
     }
     
     public init(_ majorClass:AnyClass, _ empty:ViewController, _ window: Window) {
