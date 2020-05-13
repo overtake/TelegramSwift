@@ -125,7 +125,7 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
                     return (true, String(value[index.upperBound...]))
                 }
                 return (false, value)
-            }, limit: 30)
+            }, limit: 25 + 30)
             
         case let .description(_, _, text, viewType):
             let attr = NSMutableAttributedString()

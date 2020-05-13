@@ -2065,6 +2065,8 @@ internal final class L10n {
   internal static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
   /// Add Chats
   internal static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }
+  /// Add to folder...
+  internal static var chatListFilterAddToFolder: String  { return L10n.tr("Localizable", "ChatList.Filter.AddToFolder") }
   /// All
   internal static var chatListFilterAll: String  { return L10n.tr("Localizable", "ChatList.Filter.All") }
   /// All Chats
@@ -2135,6 +2137,8 @@ internal final class L10n {
   internal static var chatListFilterNonContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.NonContacts") }
   /// Read
   internal static var chatListFilterReadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.ReadChats") }
+  /// Remove From Folder
+  internal static var chatListFilterRemoveFromFolder: String  { return L10n.tr("Localizable", "ChatList.Filter.RemoveFromFolder") }
   /// Secret Chats
   internal static var chatListFilterSecretChat: String  { return L10n.tr("Localizable", "ChatList.Filter.SecretChat") }
   /// Edit Folders
@@ -3691,6 +3695,26 @@ internal final class L10n {
   internal static var messageStatusArchiveFailedSizeLimit: String  { return L10n.tr("Localizable", "Message.Status.Archive.FailedSizeLimit") }
   /// Copy Message Link
   internal static var messageContextCopyMessageLink1: String  { return L10n.tr("Localizable", "MessageContext.CopyMessageLink1") }
+  /// %@d
+  internal static func messageTimerShortDays(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortDays", p1)
+  }
+  /// %@h
+  internal static func messageTimerShortHours(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortHours", p1)
+  }
+  /// %@m
+  internal static func messageTimerShortMinutes(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortMinutes", p1)
+  }
+  /// %@s
+  internal static func messageTimerShortSeconds(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortSeconds", p1)
+  }
+  /// %@w
+  internal static func messageTimerShortWeeks(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortWeeks", p1)
+  }
   /// Deleted message
   internal static var messagesDeletedMessage: String  { return L10n.tr("Localizable", "Messages.DeletedMessage") }
   /// Forwarded messages

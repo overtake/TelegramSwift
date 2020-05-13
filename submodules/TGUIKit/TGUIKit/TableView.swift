@@ -534,8 +534,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func viewDidEndLiveResize() {
         super.viewDidEndLiveResize()
-        if liveWidth  != frame.width {
-            liveWidth = 0
+        if liveWidth != frame.width {
+            liveWidth = frame.width
             table?.layoutItems()
         }
     }
@@ -1115,17 +1115,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func layouItemsOnNextTransition() {
         needsLayouItemsOnNextTransition = true
     }
-    
     public func layoutItems() {
 
         let visibleItems = self.visibleItems()
         
         beginTableUpdates()
         enumerateItems { item in
-            _ = item.makeSize(frame.width, oldWidth: item.width)
-            reloadData(row: item.index, animated: false)
-            NSAnimationContext.current.duration = 0.0
-            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
+            if item.width != frame.width {
+                _ = item.makeSize(frame.width, oldWidth: item.width)
+                reloadData(row: item.index, animated: false)
+                NSAnimationContext.current.duration = 0.0
+                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
+            }
             return true
         }
         

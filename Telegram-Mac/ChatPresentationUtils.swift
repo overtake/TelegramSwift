@@ -208,6 +208,36 @@ final class TelegramChatColors {
         self.palette = palette
     }
     
+    private var timerDict: [String: CGImage] = [:]
+    
+    func messageSecretTimer(_ value: String) -> CGImage {
+        if let value = timerDict[value] {
+            return value
+        } else {
+            let node = TextNode.layoutText(.initialize(string: value, color: theme.colors.grayIcon, font: .normal(15)), nil, 1, .end, NSMakeSize(30, 30), nil, false, .left)
+            
+            let image = generateImage(NSMakeSize(30, 30), rotatedContext: { size, ctx in
+                let rect = NSMakeRect(0, 0, size.width, size.height)
+                ctx.clear(rect)
+                node.1.draw(rect.focus(node.0.size), in: ctx, backingScaleFactor: 1.0, backgroundColor: .clear)
+            })!
+            timerDict[value] = image
+            
+            return image
+        }
+        
+    }
+    private var _chatActionUrl: CGImage?
+    func chatActionUrl(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionUrl = _chatActionUrl {
+            return chatActionUrl
+        } else {
+            let image = #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(theme.chatServiceItemTextColor)
+            _chatActionUrl = image
+            return image
+        }
+    }
+    
     func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
         let minimumFrameDuration = 1.0 / 60
         let numberOfFrames = max(1, Int(duration / minimumFrameDuration))

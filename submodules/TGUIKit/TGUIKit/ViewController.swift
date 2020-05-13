@@ -79,6 +79,7 @@ open class BackgroundView: ImageView {
         gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(gradient)
+        autoresizesSubviews = false
 //        gradient.actions = [:]
 //
 //        gradient.bounds = NSMakeRect(0, 0, max(bounds.width, bounds.height), max(bounds.width, bounds.height))
@@ -607,6 +608,20 @@ open class ViewController : NSObject {
         if let window = window {
             isKeyWindow.set(.single(window.isKeyWindow))
         }
+        
+        func findTableView(in view: NSView) -> Void {
+            for subview in view.subviews {
+                if subview is NSTableView {
+                    if !subview.inLiveResize {
+                        subview.viewDidEndLiveResize()
+                    }
+                } else if !subview.subviews.isEmpty {
+                    findTableView(in: subview)
+                }
+            }
+        }
+        
+        findTableView(in: view)
     }
     
     

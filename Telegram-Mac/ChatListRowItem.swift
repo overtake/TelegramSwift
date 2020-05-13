@@ -761,7 +761,7 @@ class ChatListRowItem: TableRowItem {
         var items:[ContextMenuItem] = []
 
         let context = self.context
-
+        let peerId = self.peerId
         
         if let peer = peer {
             
@@ -923,8 +923,72 @@ class ChatListRowItem: TableRowItem {
             }
             
         }
+        
+        let filter = self.filter
 
-        return .single(items)
+        return .single(items) |> mapToSignal { items in
+            return chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+                
+                var items = items
+                
+                var submenu: [ContextMenuItem] = []
+                
+                
+                
+                if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat {
+                    for item in filters.list {
+                        if !item.data.includePeers.peers.contains(peerId) {
+                            submenu.append(ContextMenuItem(item.title, handler: {
+                                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { list in
+                                    var list = list
+                                    for (i, folder) in list.enumerated() {
+                                        var folder = folder
+                                        if folder.id == item.id {
+                                            folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
+                                            list[i] = folder
+                                        }
+                                    }
+                                    return list
+                                }).start()
+                            }))
+                        }
+                    }
+                }
+                
+                if !submenu.isEmpty {
+                    items.append(ContextSeparatorItem())
+                    let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
+                    let menu = NSMenu()
+                    menu.items = submenu
+                    item.submenu = menu
+                    items.append(item)
+                }
+                if let filter = filter, let peerId = peerId {
+                    if filter.data.includePeers.peers.contains(peerId) {
+                        if submenu.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
+                        items.append(ContextMenuItem(L10n.chatListFilterRemoveFromFolder, handler: {
+                            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { list in
+                                var list = list
+                                for (i, folder) in list.enumerated() {
+                                    var folder = folder
+                                    if folder.id == filter.id {
+                                        var peers = folder.data.includePeers.peers
+                                        peers.removeAll(where: { $0 == peerId })
+                                        folder.data.includePeers.setPeers(peers)
+                                        list[i] = folder
+                                    }
+                                }
+                                return list
+                            }).start()
+                        }))
+                    }
+                }
+                
+                return items
+            }
+        }
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {

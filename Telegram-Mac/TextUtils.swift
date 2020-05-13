@@ -491,6 +491,21 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
     return localized
 }
 
+public func shortTimeIntervalString(value: Int32) -> String {
+    if value < 60 {
+        return L10n.messageTimerShortSeconds("\(max(1, value))")
+    } else if value < 60 * 60 {
+        return L10n.messageTimerShortMinutes("\(max(1, value / 60))")
+    } else if value < 60 * 60 * 24 {
+        return L10n.messageTimerShortHours("\(max(1, value / (60 * 60)))")
+    } else if value < 60 * 60 * 24 * 7 {
+        return L10n.messageTimerShortDays("\(max(1, value / (60 * 60 * 24)))")
+    } else {
+        return L10n.messageTimerShortWeeks("\(max(1, value / (60 * 60 * 24 * 7)))")
+    }
+}
+
+
 func slowModeTooltipText(_ timeout: Int32) -> String {
     let minutes = timeout / 60
     let seconds = timeout % 60

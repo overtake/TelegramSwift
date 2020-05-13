@@ -493,6 +493,14 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Stri
             
             try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
             
+//            let quarantineData = "doesn't matter".data(using: .utf8)!
+//
+//
+//            URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
+//                _ = quarantineData.withUnsafeBytes {
+//                    setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
+//                }
+//            }
             
             let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
             
@@ -606,7 +614,18 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 }
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-
+                
+//                let quarantineData = "doesn't matter".data(using: .utf8)!
+//                
+//                URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
+//                    _ = quarantineData.withUnsafeBytes {
+//                        setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
+//                    }
+//                }
+                
+                //setxattr(<#T##path: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##name: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##value: UnsafeRawPointer!##UnsafeRawPointer!#>, <#T##size: Int##Int#>, <#T##position: UInt32##UInt32#>, <#T##options: Int32##Int32#>)
+                
+            //    setxattr(ordinaryFileURL.path, SUAppleQuarantineIdentifier, quarantineData, quarantineDataLength, 0, XATTR_CREATE)
                 
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 

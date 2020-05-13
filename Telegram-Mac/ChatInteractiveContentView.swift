@@ -680,7 +680,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     case .Local:
                         var state: RadialProgressState = .None
                         if containsSecretMedia {
-                            state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.destinationOut)
+                            state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.normal)
                             
                             if let attribute = parent?.autoremoveAttribute, let countdownBeginTime = attribute.countdownBeginTime {
                                 let difference:TimeInterval = TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)

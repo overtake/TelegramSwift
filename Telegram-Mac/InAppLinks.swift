@@ -911,8 +911,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 }
                 
                 if let openInfo = openInfo {
-                    if username == "iv" {
-                        return .external(link: url as String, false)
+                    if username == "iv" || username.isEmpty {
+                        return .external(link: url as String, username.isEmpty)
                     } else if let context = context {
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }
