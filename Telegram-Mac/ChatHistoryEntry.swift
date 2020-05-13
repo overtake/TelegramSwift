@@ -635,7 +635,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             } else {
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
-                        entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
+                        if groupedPhotos.count > 1 {
+                            entries.append(.groupedPhotos(groupedPhotos, groupInfo: groupInfo))
+                        } else {
+                            entries.append(groupedPhotos[0])
+                        }
                     }
                     groupedPhotos.removeAll()
                 }
@@ -688,7 +692,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     if !groupedPhotos.isEmpty, let key = groupInfo {
-        entries.append(.groupedPhotos(groupedPhotos, groupInfo: key))
+        if groupedPhotos.count == 1 {
+            entries.append(groupedPhotos[0])
+        } else {
+            entries.append(.groupedPhotos(groupedPhotos, groupInfo: key))
+        }
     }
     var sorted = entries.sorted()
 
