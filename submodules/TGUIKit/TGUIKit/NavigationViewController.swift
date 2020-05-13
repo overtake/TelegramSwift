@@ -520,15 +520,29 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
+    var containerSize: NSSize {
+        return frame.size
+    }
+    
     open override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        containerView.frame = bounds
-        navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, controller.frame.width, controller.bar.height)
+        containerView.frame = NSMakeRect(0, 0, containerSize.width, containerSize.height)
+        navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, containerSize.width, controller.bar.height)
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+        
+        if let header = callHeader {
+            header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
+        }
+        if let header = header {
+            header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
+        }
+        if let header = undoHeader {
+            header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
+        }
         
         for controller in stack {
             if controller.isLoaded() {
-                controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerView.frame.width, containerView.frame.height - barInset - controller.bar.height)
+                controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerSize.width, containerSize.height - barInset - controller.bar.height)
             }
         }
     }

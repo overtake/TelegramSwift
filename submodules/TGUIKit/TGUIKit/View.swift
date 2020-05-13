@@ -253,7 +253,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         acceptsTouchEvents = true
         self.wantsLayer = true
-       // self.autoresizesSubviews = false
+        self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
      //   self.layer?.delegate = self

@@ -2488,6 +2488,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage {
                 _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: strongSelf.chatInteraction.peerId, timeout:seconds).start()
             }
+            scrollAfterSend()
         }
         
         chatInteraction.toggleNotifications = { [weak self] isMuted in
