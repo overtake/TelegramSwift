@@ -959,7 +959,9 @@ class ChatListRowItem: TableRowItem {
                     items.append(ContextSeparatorItem())
                     let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
                     let menu = NSMenu()
-                    menu.items = submenu
+                    for item in submenu {
+                        menu.addItem(item)
+                    }
                     item.submenu = menu
                     items.append(item)
                 }

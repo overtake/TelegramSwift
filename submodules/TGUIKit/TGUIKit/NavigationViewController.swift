@@ -540,10 +540,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
         }
         
-        for controller in stack {
-            if controller.isLoaded() {
-                controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerSize.width, containerSize.height - barInset - controller.bar.height)
-            }
+        if controller.isLoaded() {
+            controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerSize.width, containerSize.height - barInset - controller.bar.height)
         }
     }
     
