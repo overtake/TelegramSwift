@@ -515,10 +515,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         longDisposable.set(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        if range.length > 0 {
+        if range.length > 0, let table = table {
             if let controller = self.table?.resortController {
                 if !controller.resortRange.indexIn(range.location) {
-                    if controller.resortRow == nil {
+                    if controller.resortRow == nil, beforeRange.location == range.location && table.alwaysOpenRowsOnMouseUp {
                         sdelegate?.selectRow(index: range.location)
                     }
                     return
@@ -526,7 +526,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 if range.length > 0, beforeRange.location == range.location {
                     sdelegate?.selectRow(index: range.location)
                 }
-            } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
+            } else if table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
                 sdelegate?.selectRow(index: range.location)
             }
         }
