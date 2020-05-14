@@ -496,10 +496,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         if event.clickCount == 1 {
             let point = self.convert(event.locationInWindow, from: nil)
             let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+            self.beforeRange = beforeRange
             if beforeRange.length > 0 {
                 if let resortController = table?.resortController{
                     if resortController.resortRange.indexIn(beforeRange.location) {
-                        self.beforeRange = beforeRange
                         self.offsetOfStartItem = point
                     } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                         sdelegate?.selectRow(index: beforeRange.location)
@@ -523,10 +523,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                     }
                     return
                 }
-                if range.length > 0 {
+                if range.length > 0, beforeRange.location == range.location {
                     sdelegate?.selectRow(index: range.location)
                 }
-            } else if let table = table, table.alwaysOpenRowsOnMouseUp {
+            } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
                 sdelegate?.selectRow(index: range.location)
             }
         }
