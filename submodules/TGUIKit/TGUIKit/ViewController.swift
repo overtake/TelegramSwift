@@ -284,8 +284,9 @@ open class ViewController : NSObject {
     public var rightBarView:BarView!
     
     public var popover:Popover?
-    open  var modal:Modal?
+    open var modal:Modal?
     
+    private var widthOnDisappear: CGFloat? = nil
     
     public var ableToNextController:(ViewController, @escaping(ViewController, Bool)->Void)->Void = { controller, f in
         f(controller, true)
@@ -554,10 +555,12 @@ open class ViewController : NSObject {
         assertOnMainThread()
     }
     
+    
     open func viewWillDisappear(_ animated:Bool) -> Void {
         if #available(OSX 10.12.2, *) {
             window?.touchBar = nil
         }
+        widthOnDisappear = frame.width
         //assert(self.window != nil)
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
@@ -620,8 +623,9 @@ open class ViewController : NSObject {
                 }
             }
         }
-        
-        findTableView(in: view)
+        if let widthOnDisappear = widthOnDisappear, frame.width != widthOnDisappear {
+            findTableView(in: view)
+        }
     }
     
     
