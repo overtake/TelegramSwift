@@ -523,10 +523,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                     }
                     return
                 }
-                if range.length > 0, beforeRange.location == range.location {
+                if range.length > 0 {
                     sdelegate?.selectRow(index: range.location)
                 }
-            } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
+            } else if let table = table, table.alwaysOpenRowsOnMouseUp {
                 sdelegate?.selectRow(index: range.location)
             }
         }

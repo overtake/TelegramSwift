@@ -104,6 +104,12 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
         
         containerView.set(handler: { control in
             if let event = NSApp.currentEvent {
+                control.superview?.mouseDragged(with: event)
+            }
+        }, for: .MouseDragging)
+        
+        containerView.set(handler: { control in
+            if let event = NSApp.currentEvent {
                 control.superview?.mouseUp(with: event)
             }
         }, for: .Up)
