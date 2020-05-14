@@ -802,7 +802,7 @@
             let newMode = PeerMediaCollectionMode(rawValue: item.uniqueId)!
             
             if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
-                self?.currentMainTableView?(mainTable, true, false)
+                self?.currentMainTableView?(mainTable, true, true)
             }
             self?.modeValue.set(newMode)
         }
@@ -1114,7 +1114,7 @@
     }
     
     private func searchGroupUsers() {
-        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior.init(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }
