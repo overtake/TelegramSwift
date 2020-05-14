@@ -208,10 +208,10 @@ final class TelegramChatColors {
         self.palette = palette
     }
     
-    private var timerDict: [String: CGImage] = [:]
+    private var cacheDict: [String: CGImage] = [:]
     
     func messageSecretTimer(_ value: String) -> CGImage {
-        if let value = timerDict[value] {
+        if let value = cacheDict[value] {
             return value
         } else {
             let node = TextNode.layoutText(.initialize(string: value, color: theme.colors.grayIcon, font: .normal(15)), nil, 1, .end, NSMakeSize(30, 30), nil, false, .left)
@@ -221,12 +221,43 @@ final class TelegramChatColors {
                 ctx.clear(rect)
                 node.1.draw(rect.focus(node.0.size), in: ctx, backingScaleFactor: 1.0, backgroundColor: .clear)
             })!
-            timerDict[value] = image
+            cacheDict[value] = image
             
             return image
         }
         
     }
+    
+    //chatGotoMessageWallpaper / chatShareWallpaper / chatSwipeReplyWallpaper
+    
+    func chat_goto_message_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_goto_message_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_GotoBubbleMessage")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_goto_message_bubble"] = image
+            return image
+        }
+    }
+    func chat_share_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_share_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_ChannelShare")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_share_bubble"] = image
+            return image
+        }
+    }
+    func chat_reply_swipe_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_reply_swipe_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_ChannelShare")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_reply_swipe_bubble"] = image
+            return image
+        }
+    }
+    
     private var _chatActionUrl: CGImage?
     func chatActionUrl(theme: TelegramPresentationTheme) -> CGImage {
         if let chatActionUrl = _chatActionUrl {

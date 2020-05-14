@@ -1731,7 +1731,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                
                                                chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
                                                chatToggleUnselected:  { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
-                                               chatShare:  { #imageLiteral(resourceName: "Icon_ChannelShare").precomposed(palette.accentIcon) },
                                                chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed() },
                                                chatMusicPlayBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPlayBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_outgoing) },
@@ -1979,13 +1978,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                previewSenderDelete: { NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(.white) },
                                                previewSenderDeleteFile: { NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.accentIcon) },
                                                previewSenderArchive: { NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon) },
-                                               chatGoMessage: { #imageLiteral(resourceName: "Icon_ChatGoMessage").precomposed(palette.accentIcon) },
                                                chatGroupToggleSelected: { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
                                                chatGroupToggleUnselected: { #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed() },
                                                successModalProgress: { #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon) },
                                                accentColorSelect: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white) },
-                                               chatShareWallpaper: { #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.accentIcon) },
-                                               chatGotoMessageWallpaper: { #imageLiteral(resourceName: "Icon_GotoBubbleMessage").precomposed(palette.accentIcon) },
                                                transparentBackground: { generateTransparentBackground() },
                                                lottieTransparentBackground: { generateLottieTransparentBackground() },
                                                passcodeTouchId: { #imageLiteral(resourceName: "Icon_TouchId").precomposed() },
@@ -2056,8 +2052,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                galleryZoomIn: {NSImage(named: "Icon_GalleryZoomIn")!.precomposed(.white) },
                                                galleryZoomOut: { NSImage(named: "Icon_GalleryZoomOut")!.precomposed(.white) },
                                                editMessageCurrentPhoto: { NSImage(named: "Icon_EditMessageCurrentPhoto")!.precomposed(palette.accentIcon) },
-                                               chatSwipeReply: { #imageLiteral(resourceName: "Icon_MessageActionPanelForward").precomposed(palette.accentIcon, flipHorizontal: true) },
-                                               chatSwipeReplyWallpaper: { #imageLiteral(resourceName: "Icon_ShareInBubble").precomposed(palette.accentIcon, flipHorizontal: true) },
                                                videoPlayerPlay: { NSImage(named: "Icon_VideoPlayer_Play")!.precomposed(.white) },
                                                videoPlayerPause: { NSImage(named: "Icon_VideoPlayer_Pause")!.precomposed(.white) },
                                                videoPlayerEnterFullScreen: { NSImage(named: "Icon_VideoPlayer_EnterFullScreen")!.precomposed(.white) },
@@ -2209,7 +2203,17 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon) },
                                                channel_info_promo: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayIcon) },
                                                channel_info_promo_bubble_incoming: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_incoming) },
-                                               channel_info_promo_bubble_outgoing: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_outgoing) }
+                                               channel_info_promo_bubble_outgoing: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_outgoing) },
+                                               chat_share_message: {  NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accent) },
+                                               chat_goto_message: { NSImage(named: "Icon_ChatGoMessage")!.precomposed(palette.accentIcon) },
+                                               chat_swipe_reply: { NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accentIcon, flipHorizontal: true) },
+                                               chat_like_inside: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redUI) },
+                                               chat_like_inside_bubble_incoming: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_incoming) },
+                                               chat_like_inside_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_outgoing) },
+                                               chat_like_inside_empty: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIcon) },
+                                               chat_like_inside_empty_bubble_incoming: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_incoming) },
+                                               chat_like_inside_empty_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_outgoing) }
+
     )
 
 }
