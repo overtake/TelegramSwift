@@ -483,12 +483,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 if afterRange != beforeRange {
                     self.table?.startResorting(beforeRange, point.offsetBy(dx: -offsetOfStartItem.x, dy: -offsetOfStartItem.y))
                 }
-            } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
-                sdelegate?.selectRow(index: beforeRange.location)
             }
-            
-        } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
-            sdelegate?.selectRow(index: beforeRange.location)
         }
     }
     

@@ -875,19 +875,24 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     let updates:[(Int, TableRowItem)] = []
                     
                     for i in 0 ..< entries.count {
-                        let item:TableRowItem
-                        
-                        if firstInsertedRange.indexIn(i) {
-                            //item = firstInsertion[i - initialIndex].1
-                            //updates.append((i, item))
+                        if !cancelled {
+                            let item:TableRowItem
+                            
+                            if firstInsertedRange.indexIn(i) {
+                                //item = firstInsertion[i - initialIndex].1
+                                //updates.append((i, item))
+                            } else {
+                                item = makeItem(entries[i])
+                                insertions.append((i, item))
+                            }
                         } else {
-                            item = makeItem(entries[i])
-                            insertions.append((i, item))
+                            break
                         }
+                        
                     }
-                    
-                    
-                    subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
+                    if !cancelled {
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
+                    } 
                     subscriber.putCompletion()
                 }
             }
