@@ -1486,7 +1486,7 @@ class ChatRowItem: TableRowItem {
             replyModel?.measureSize(widthForContent, sizeToFit: true)
         } else if let replyModel = replyModel {
             if let item = self as? ChatMessageItem, item.webpageLayout == nil && !replyModel.isSideAccessory {
-                replyModel.measureSize(min(320, widthForContent), sizeToFit: true)
+                replyModel.measureSize(max(contentSize.width, 200), sizeToFit: true)
             } else {
                 if !hasBubble {
                     replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
