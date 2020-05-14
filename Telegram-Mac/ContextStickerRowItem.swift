@@ -101,8 +101,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             
             for i in 0 ..< item.result.entries.count {
-               let container:Control = self.subviews[i] as! Control
-                
+                let container:Control = self.subviews[i] as! Control
+                container.removeAllHandlers()
+
                 
                 container.set(background: theme.colors.grayBackground, for: .Highlight)
                 
