@@ -240,7 +240,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     
     override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
+        //super.mouseUp(with: event)
         longDisposable.set(nil)
         if isMouseDown, mouseInside(), event.clickCount == 1 {
             let point = convert(event.locationInWindow, from: nil)
@@ -260,7 +260,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                     item.arguments.sendMedia(media, contentView, false)
                                 }
                             }
-                            return
+                            break
                         }
                     }
                 }

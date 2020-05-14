@@ -32,6 +32,9 @@ class ChatVoiceContentView: ChatAudioContentView {
     let waveformView:AudioWaveformView
     private var acceptDragging: Bool = false
     private var playAfterDragging: Bool = false
+    
+    private var downloadingView: RadialProgressView?
+    
     required init(frame frameRect: NSRect) {
         waveformView = AudioWaveformView(frame: NSMakeRect(0, 20, 100, 20))
         super.init(frame: frameRect)
@@ -169,6 +172,8 @@ class ChatVoiceContentView: ChatAudioContentView {
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
+        
+        self.progressView.state = .None
  
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
@@ -187,13 +192,36 @@ class ChatVoiceContentView: ChatAudioContentView {
             if let strongSelf = self {
                 strongSelf.fetchStatus = status
                 
+                var state: RadialProgressState? = nil
                 switch status {
                 case let .Fetching(_, progress):
-                    strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                    state = .Fetching(progress: progress, force: false)
                 case .Remote:
-                    strongSelf.progressView.state = .Remote
+                    state = .Remote
                 case .Local:
                     strongSelf.progressView.state = .Play
+                }
+                if let state = state {
+                    let current: RadialProgressView
+                    if let value = strongSelf.downloadingView {
+                        current = value
+                    } else {
+                        current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
+                        strongSelf.downloadingView = current
+                        strongSelf.addSubview(current)
+                        current.frame = strongSelf.progressView.frame
+                        
+                        if !approximateSynchronousValue && animated {
+                            current.layer?.animateAlpha(from: 0.2, to: 1, duration: 0.3)
+                        }
+                    }
+                    current.state = state
+                } else if let download = strongSelf.downloadingView {
+                    download.state = .Fetching(progress: 1.0, force: false)
+                    strongSelf.downloadingView = nil
+                    download.layer?.animateAlpha(from: 1, to: 0.2, duration: 0.25, removeOnCompletion: false, completion: { [weak download] _ in
+                        download?.removeFromSuperview()
+                    })
                 }
             }
         }))

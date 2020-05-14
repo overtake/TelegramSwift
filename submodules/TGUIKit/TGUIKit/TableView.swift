@@ -471,31 +471,63 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
 
     private var beforeRange: NSRange = NSMakeRange(NSNotFound, 0)
+    private var offsetOfStartItem: NSPoint = .zero
+
+    override func mouseDragged(with event: NSEvent) {
+        super.mouseDragged(with: event)
+        
+        if let resortController = table?.resortController, beforeRange.length > 0 {
+            if resortController.resortRange.indexIn(beforeRange.location) {
+                let point = self.convert(event.locationInWindow, from: nil)
+                let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+                if afterRange != beforeRange {
+                    self.table?.startResorting(beforeRange, point.offsetBy(dx: -offsetOfStartItem.x, dy: -offsetOfStartItem.y))
+                }
+            } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
+                sdelegate?.selectRow(index: beforeRange.location)
+            }
+            
+        } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
+            sdelegate?.selectRow(index: beforeRange.location)
+        }
+    }
     
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 1 {
             let point = self.convert(event.locationInWindow, from: nil)
             let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
             if beforeRange.length > 0 {
-                self.beforeRange = beforeRange
-                if let resortController = table?.resortController, beforeRange.length > 0 {
+                if let resortController = table?.resortController{
                     if resortController.resortRange.indexIn(beforeRange.location) {
-                        longDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(resortController.startTimeout, queue: Queue.mainQueue())).start(next: { [weak self] in
-                            let currentEvent = NSApp.currentEvent
-                            guard let `self` = self, let ev = currentEvent, ev.type == .leftMouseDown || ev.type == .leftMouseDragged || ev.type == .pressure else {return}
-                            let point = self.convert(ev.locationInWindow, from: nil)
-                            let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
-                            if afterRange == beforeRange {
-                                self.table?.startResorting()
-                            }
-                        }))
+                        self.beforeRange = beforeRange
+                        self.offsetOfStartItem = point
                     } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                         sdelegate?.selectRow(index: beforeRange.location)
                     }
-                    
                 } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                     sdelegate?.selectRow(index: beforeRange.location)
                 }
+            }
+        }
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        longDisposable.set(nil)
+        let point = self.convert(event.locationInWindow, from: nil)
+        let range = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
+        if range.length > 0 {
+            if let controller = self.table?.resortController {
+                if !controller.resortRange.indexIn(range.location) {
+                    if controller.resortRow == nil {
+                        sdelegate?.selectRow(index: range.location)
+                    }
+                    return
+                }
+                if range.length > 0, beforeRange.location == range.location {
+                    sdelegate?.selectRow(index: range.location)
+                }
+            } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
+                sdelegate?.selectRow(index: range.location)
             }
         }
     }
@@ -545,26 +577,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     }
     
     
-    override func mouseUp(with event: NSEvent) {
-        longDisposable.set(nil)
-        let point = self.convert(event.locationInWindow, from: nil)
-        let range  = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        if range.length > 0 {
-            if let controller = self.table?.resortController {
-                if !controller.resortRange.indexIn(range.location) {
-                    if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
-                        sdelegate?.selectRow(index: range.location)
-                    }
-                    return
-                }
-                if range.length > 0, beforeRange.location == range.location {
-                    sdelegate?.selectRow(index: range.location)
-                }
-            } else if let table = table, table.alwaysOpenRowsOnMouseUp, beforeRange.location == range.location {
-                sdelegate?.selectRow(index: range.location)
-            }
-        }
-    }
+   
 
 }
 
@@ -1443,7 +1456,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func index(of:TableRowItem) -> Int? {
         if let it = self.listhash[of.stableId] {
-            return self.list.index(of: it)
+            return self.list.firstIndex(of: it)
         }
         return nil
     }
@@ -1457,20 +1470,22 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return nil
     }
     
-    fileprivate func startResorting() {
+    fileprivate func startResorting(_ range: NSRange, _ offset: CGPoint) {
         guard let window = _window else {return}
         
         let point = tableView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-        let range = tableView.rows(in: NSMakeRect(point.x, point.y, 1, 1));
         if range.length > 0, let controller = resortController, controller.canResort(range.location), let view = viewNecessary(at: range.location) {
             controller.resortRow = range.location
             controller.currentHoleIndex = range.location
             controller.resortView = view
-            controller.startLocation = point
-            controller.startRowLocation = view.frame.origin
+            controller.startLocation = NSMakePoint(round(point.y), round(point.y))
+            controller.startRowLocation = view.frame.origin.offsetBy(dx: 0, dy: round(offset.y))
             controller.start(range.location)
    
             view.frame = convert(view.frame, from: view.superview)
+            
+            
+            
             addSubview(view)
             view.isHidden = false
             window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
@@ -1478,6 +1493,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self?.stopResorting()
                 return .invoked
             }, with: self, for: .leftMouseUp, priority: .modal)
+            
+            var first: Bool = true
             
             window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
                 if let controller = self?.resortController, let view = controller.resortView, let `self` = self {
@@ -1498,7 +1515,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     
                     var newPoint = NSMakePoint(view.frame.minX, max(controller.startRowLocation.y - difference, 0))
                     newPoint.y -= self.documentOffset.y //self.convert(newPoint, from: self.tableView)
+                    newPoint = NSMakePoint(round(newPoint.x), round(newPoint.y))
+                    if first {
+                        view.layer?.animatePosition(from: NSMakePoint(0, view.frame.minY - newPoint.y), to: .zero, duration: 0.2, timingFunction: .spring, removeOnCompletion: true, additive: true)
+                    }
                     view.setFrameOrigin(newPoint)
+                    first = false
                     self.updateMovableItem(point)
                     return .invoked
                 } else {
