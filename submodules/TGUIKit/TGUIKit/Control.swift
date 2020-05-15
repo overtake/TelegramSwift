@@ -32,6 +32,35 @@ public enum ControlEvent {
 private let longHandleDisposable = MetaDisposable()
 private let longOverHandleDisposable = MetaDisposable()
 
+
+internal struct ControlEventHandler : Hashable {
+    static func == (lhs: ControlEventHandler, rhs: ControlEventHandler) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+    
+    let identifier: UInt32
+    let handler:(Control)->Void
+    let event:ControlEvent
+    let `internal`: Bool
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(identifier)
+    }
+}
+internal struct ControlStateHandler : Hashable {
+    static func == (lhs: ControlStateHandler, rhs: ControlStateHandler) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+    let identifier: UInt32
+    let handler:(Control)->Void
+    let state:ControlState
+    let `internal`: Bool
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(identifier)
+    }
+}
+
 open class Control: View {
     
     public internal(set) weak var popover: Popover?
@@ -63,8 +92,8 @@ open class Control: View {
     
     
     
-    private var handlers:[(ControlEvent,(Control) -> Void)] = []
-    private var stateHandlers:[(ControlState,(Control) -> Void)] = []
+    private var handlers:[ControlEventHandler] = []
+    private var stateHandlers:[ControlStateHandler] = []
     
     private(set) internal var backgroundState:[ControlState:NSColor] = [:]
     private var mouseMovedInside: Bool = true
@@ -101,9 +130,9 @@ open class Control: View {
             if oldValue != controlState {
                 apply(state: isSelected ? .Highlight : controlState)
                 
-                for (state,handler) in stateHandlers {
-                    if state == controlState {
-                        handler(self)
+                for value in stateHandlers {
+                    if value.state == controlState {
+                        value.handler(self)
                     }
                 }
 
@@ -212,12 +241,24 @@ open class Control: View {
     
     public var canHighlight: Bool = true
     
-    public func set(handler:@escaping (Control) -> Void, for event:ControlEvent) -> Void {
-        handlers.append((event,handler))
+    @discardableResult public func set(handler:@escaping (Control) -> Void, for event:ControlEvent) -> UInt32 {
+        return set(handler: handler, for: event, internal: false)
     }
     
-    public func set(handler:@escaping (Control) -> Void, for event:ControlState) -> Void {
-        stateHandlers.append((event,handler))
+    @discardableResult public func set(handler:@escaping (Control) -> Void, for state:ControlState) -> UInt32 {
+        return set(handler: handler, for: state, internal: false)
+    }
+    
+    @discardableResult internal func set(handler:@escaping (Control) -> Void, for event:ControlEvent, internal: Bool) -> UInt32 {
+        let new = ControlEventHandler(identifier: arc4random(), handler: handler, event: event, internal: `internal`)
+        handlers.append(new)
+        return new.identifier
+    }
+    
+    @discardableResult internal func set(handler:@escaping (Control) -> Void, for state:ControlState, internal: Bool) -> UInt32 {
+        let new = ControlStateHandler(identifier: arc4random(), handler: handler, state: state, internal: `internal`)
+        stateHandlers.append(new)
+        return new.identifier
     }
     
     public func set(background:NSColor, for state:ControlState) -> Void {
@@ -227,25 +268,49 @@ open class Control: View {
     }
     
     public func removeLastHandler() -> ((Control)->Void)? {
-        if !handlers.isEmpty {
-            return handlers.removeLast().1
-        } else {
-            return nil
+        var last: ControlEventHandler?
+        for handler in handlers.reversed() {
+            if !handler.internal {
+                last = handler
+                break
+            }
         }
+        if let last = last {
+            self.handlers.removeAll(where: { last.identifier == $0.identifier })
+            return last.handler
+        }
+        return nil
     }
     
     public func removeLastStateHandler() -> Void {
-        if !stateHandlers.isEmpty {
-            stateHandlers.removeLast()
+        
+        var last: ControlStateHandler?
+        for handler in stateHandlers.reversed() {
+            if !handler.internal {
+                last = handler
+                break
+            }
+        }
+        if let last = last {
+            self.stateHandlers.removeAll(where: { last.identifier == $0.identifier })
         }
     }
     
+    public func removeStateHandler(_ identifier: UInt32) -> Void {
+        self.stateHandlers.removeAll(where: { identifier == $0.identifier })
+    }
+    
+    public func removeHandler(_ identifier: UInt32) -> Void {
+        self.handlers.removeAll(where: { identifier == $0.identifier })
+    }
+    
     public func removeAllStateHandler() -> Void {
-        stateHandlers.removeAll()
+        self.stateHandlers.removeAll(where: { !$0.internal })
+
     }
     
     public func removeAllHandlers() ->Void {
-        handlers.removeAll()
+        self.handlers.removeAll(where: { !$0.internal })
     }
     
     
@@ -256,8 +321,8 @@ open class Control: View {
         
         if event.modifierFlags.contains(.control) {
             for handler in handlers {
-                if handler.0 == .RightDown {
-                    handler.1(self)
+                if handler.event == .RightDown {
+                    handler.handler(self)
                 }
             }
             super.mouseDown(with: event)
@@ -324,9 +389,9 @@ open class Control: View {
     
     
     public func send(event:ControlEvent) -> Void {
-        for (e,handler) in handlers {
-            if e == event {
-                handler(self)
+        for value in handlers {
+            if value.event == event {
+                value.handler(self)
             }
         }
        

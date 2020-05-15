@@ -392,6 +392,14 @@ final class TelegramChatColors {
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
+    func likedIcon(_ item: ChatRowItem) -> CGImage {
+        if item.isLiked {
+            return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_like_inside_bubble_service : item.presentation.icons.chat_like_inside_bubble_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_like_inside_bubble_incoming : item.presentation.icons.chat_like_inside_bubble_outgoing : item.presentation.icons.chat_like_inside
+        } else {
+            return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_like_inside_empty_bubble_service : item.presentation.icons.chat_like_inside_empty_bubble_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_like_inside_empty_bubble_incoming : item.presentation.icons.chat_like_inside_empty_bubble_outgoing : item.presentation.icons.chat_like_inside_empty
+        }
+    }
+
     func stateStateIcon(_ item: ChatRowItem) -> CGImage {
         return item.isFailed ? item.presentation.icons.sentFailed : (item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatReadMarkServiceOverlayBubble1 :  theme.icons.chatReadMarkOverlayBubble1 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble1_incoming : item.presentation.icons.chatReadMarkInBubble1_outgoing : item.presentation.icons.chatReadMarkOutBubble1)
     }

@@ -85,7 +85,7 @@ class ChatRightView: View {
             sendingView?.removeFromSuperview()
             sendingView = nil
         }
-        readImageView?.image = theme.chat.readStateIcon(item)
+        readImageView?.image = item.presentation.chat.readStateIcon(item)
         readImageView?.sizeToFit()
         sendingView?.set(item: item)
         self.needsLayout = true
@@ -152,15 +152,28 @@ class ChatRightView: View {
                     editLabel.1.draw(NSMakeRect(frame.width - date.0.size.width - editLabel.0.size.width - item.stateOverlayAdditionCorner - (isReversed || (stateView != nil) ? 23 : 5), item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, editLabel.0.size.width, editLabel.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
-            if let channelViews = item.channelViews {
-                let icon = theme.chat.channelViewsIcon(item)
-                ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
+            
+            var viewsOffset: CGFloat = 0
+            
+            if let likes = item.likes {
+                viewsOffset += likes.0.size.width + 18
+                let icon = item.presentation.chat.likedIcon(item)
                 
-                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                ctx.draw(icon, in: NSMakeRect(likes.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
+                
+                likes.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, likes.0.size.width, likes.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+
+            }
+            
+            if let channelViews = item.channelViews {
+                let icon = item.presentation.chat.channelViewsIcon(item)
+                ctx.draw(icon, in: NSMakeRect(channelViews.0.size.width + 2 + item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
+                
+                channelViews.1.draw(NSMakeRect(item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, channelViews.0.size.width, channelViews.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
                 
                 if let postAuthor = item.postAuthor {
-                    postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
                 
             }

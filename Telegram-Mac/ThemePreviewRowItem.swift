@@ -17,7 +17,7 @@ import SwiftSignalKit
 class ThemePreviewRowItem: GeneralRowItem {
 
     fileprivate let theme: TelegramPresentationTheme
-    fileprivate let items:[ChatRowItem]
+    fileprivate let items:[TableRowItem]
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, theme: TelegramPresentationTheme, viewType: GeneralViewType) {
         self.theme = theme.withUpdatedBackgroundSize(WallpaperDimensions.aspectFilled(NSMakeSize(200, 200)))
         
