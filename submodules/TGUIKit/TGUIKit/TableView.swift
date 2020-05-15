@@ -472,11 +472,11 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 
     private var beforeRange: NSRange = NSMakeRange(NSNotFound, 0)
     private var offsetOfStartItem: NSPoint = .zero
-
+    private var mouseDown: Bool = false
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         
-        if let resortController = table?.resortController, beforeRange.length > 0 {
+        if let resortController = table?.resortController, beforeRange.length > 0, mouseDown {
             if resortController.resortRange.indexIn(beforeRange.location) {
                 let point = self.convert(event.locationInWindow, from: nil)
                 let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
@@ -489,6 +489,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override func mouseDown(with event: NSEvent) {
         if event.clickCount == 1 {
+            mouseDown = true
             let point = self.convert(event.locationInWindow, from: nil)
             let beforeRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
             self.beforeRange = beforeRange
@@ -510,7 +511,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         longDisposable.set(nil)
         let point = self.convert(event.locationInWindow, from: nil)
         let range = self.rows(in: NSMakeRect(point.x, point.y, 1, 1));
-        if range.length > 0, let table = table {
+        if range.length > 0, let table = table, mouseDown {
+            mouseDown = false
             if let controller = self.table?.resortController {
                 if !controller.resortRange.indexIn(range.location) {
                     if controller.resortRow == nil, beforeRange.location == range.location && table.alwaysOpenRowsOnMouseUp {
@@ -525,6 +527,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 sdelegate?.selectRow(index: range.location)
             }
         }
+        mouseDown = false
     }
     
     
