@@ -23,7 +23,7 @@ extension Message {
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
-        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
+        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentions: type.contains(.Mentions), highlightTags: type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
         

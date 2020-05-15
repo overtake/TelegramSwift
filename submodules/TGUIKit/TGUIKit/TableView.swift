@@ -1185,7 +1185,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func updateStickAfterScroll(_ animated: Bool) -> Void {
         let range = self.visibleRows()
         
-        if let stickClass = stickClass {
+        if let stickClass = stickClass, !updating {
          //   if documentSize.height > frame.height {
                 
                 let flipped = tableView.isFlipped
