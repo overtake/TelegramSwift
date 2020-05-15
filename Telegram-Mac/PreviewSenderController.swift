@@ -1505,6 +1505,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let defaultUrl = defaultTag?.attachment as? String
         
+        if defaultUrl == nil {
+            effectiveRange = range
+        }
         if effectiveRange.location == NSNotFound {
             effectiveRange = range
         }

@@ -49,7 +49,7 @@
     return data;
 }
 
-+ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentionsAndTags:(bool)highlightMentionsAndTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention
++ (NSArray *)textCheckingResultsForText:(NSString *)text highlightMentions:(bool)highlightMentions highlightTags:(bool)highlightTags highlightCommands:(bool)highlightCommands dotInMention:(bool)dotInMention
 {
     bool containsSomething = false;
     
@@ -68,7 +68,12 @@
     {
         unichar c = characterAtIndexImp(text, sel, i);
         
-        if (highlightMentionsAndTags && (c == '@' || c == '#'))
+        if (highlightMentions && (c == '@'))
+        {
+            containsSomething = true;
+            break;
+        }
+        if (highlightTags && (c == '#'))
         {
             containsSomething = true;
             break;
@@ -170,7 +175,7 @@
                           characterSet = [NSCharacterSet alphanumericCharacterSet];
                       });
         
-        if (containsSomething && (highlightMentionsAndTags || highlightCommands))
+        if (containsSomething && (highlightMentions || highlightTags || highlightCommands))
         {
             int mentionStart = -1;
             int hashtagStart = -1;
@@ -180,7 +185,7 @@
             for (int i = 0; i < length; i++)
             {
                 unichar c = characterAtIndexImp(text, sel, i);
-                if (highlightMentionsAndTags && commandStart == -1)
+                if ((highlightMentions || highlightTags) && commandStart == -1)
                 {
                     if (mentionStart != -1)
                     {
