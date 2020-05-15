@@ -207,6 +207,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                         current = value
                     } else {
                         current = RadialProgressView(theme: strongSelf.progressView.theme, twist: true, size: NSMakeSize(40, 40))
+                        current.fetchControls = strongSelf.fetchControls
                         strongSelf.downloadingView = current
                         strongSelf.addSubview(current)
                         current.frame = strongSelf.progressView.frame
