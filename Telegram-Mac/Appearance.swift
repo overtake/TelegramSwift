@@ -2207,6 +2207,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_share_message: {  NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accent) },
                                                chat_goto_message: { NSImage(named: "Icon_ChatGoMessage")!.precomposed(palette.accentIcon) },
                                                chat_swipe_reply: { NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accentIcon, flipHorizontal: true) },
+                                               chat_like_message: { NSImage(named: "Icon_Like_MessageButton")!.precomposed(palette.accentIcon) },
+                                               chat_like_message_unlike: { NSImage(named: "Icon_Like_MessageButtonUnlike")!.precomposed(palette.accentIcon) },
                                                chat_like_inside: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redUI) },
                                                chat_like_inside_bubble_incoming: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_incoming) },
                                                chat_like_inside_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_outgoing) },
