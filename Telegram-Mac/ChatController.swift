@@ -684,21 +684,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         
         
         func makeItem(_ entry: ChatWrapperEntry) -> TableRowItem {
-            
-            
-            var item:TableRowItem;
-            switch entry.appearance.entry {
-            case .UnreadEntry:
-                item = ChatUnreadRowItem(initialSize, interaction, interaction.context, entry.appearance.entry, entry.automaticDownload, theme: theme)
-            case .MessageEntry:
-                item = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.automaticDownload, theme: theme)
-            case .groupedPhotos:
-                item = ChatGroupedItem(initialSize, interaction, interaction.context, entry.appearance.entry, entry.automaticDownload, theme: theme)
-            case .DateEntry:
-                item = ChatDateStickItem(initialSize, entry.appearance.entry, interaction: interaction, theme: theme)
-            case .bottom:
-                item = GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
-            }
+            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.automaticDownload, theme: theme)
             _ = item.makeSize(initialSize.width)
             return item;
         }
