@@ -169,7 +169,15 @@ class ChatRowItem: TableRowItem {
         var widthForContent: CGFloat = 0
         
         if isBubbled {
-            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 36 + 10 + additionBubbleInset), 450)
+            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset), 450)
+            
+            if isSharable {
+                widthForContent -= 25
+            }
+            if isLikable {
+                widthForContent -= 25
+            }
+            
         } else {
             if case .Full = itemType {
                 let additionWidth:CGFloat = date?.0.size.width ?? 20
@@ -568,6 +576,10 @@ class ChatRowItem: TableRowItem {
         
         
         return authorIsChannel
+    }
+    
+    var isLikable: Bool {
+        return isSharable
     }
     
     var isSharable: Bool {

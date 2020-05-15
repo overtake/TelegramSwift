@@ -257,6 +257,24 @@ final class TelegramChatColors {
             return image
         }
     }
+    func chat_like_message_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_like_message_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_Like_MessageButton")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_like_message_bubble"] = image
+            return image
+        }
+    }
+    func chat_like_message_unlike_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_like_message_unlike_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_Like_MessageButtonUnlike")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_like_message_unlike_bubble"] = image
+            return image
+        }
+    }
     
     private var _chatActionUrl: CGImage?
     func chatActionUrl(theme: TelegramPresentationTheme) -> CGImage {

@@ -37,6 +37,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private(set) var forwardName:TextView?
     private(set) var captionView:TextView?
     private var shareControl:ImageButton?
+    private var likeButton:ImageButton?
+
     private var nameView:TextView?
     private var adminBadge: TextView?
     let rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
@@ -443,6 +445,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let shareControl = self.shareControl, let item = item as? ChatRowItem {
             shareControl.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
         }
+        if let likeControl = self.likeButton, let item = item as? ChatRowItem {
+            likeControl.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
+        }
     }
     
     
@@ -752,11 +757,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
             
+            var controlOffset: CGFloat = 0
             if let shareControl = shareControl {
                 if item.isBubbled {
                     shareControl.setFrameOrigin(item.isIncoming ? max(bubbleFrame.maxX + 15, item.isStateOverlayLayout ? rightFrame.width + 15 : 0) : bubbleFrame.minX - shareControl.frame.width - 15, bubbleFrame.maxY - shareControl.frame.height - (item.isVideoOrBigEmoji ? rightFrame.height + 14 : 0))
                 } else {
                     shareControl.setFrameOrigin(frame.width - 20.0 - shareControl.frame.width, rightView.frame.maxY )
+                }
+                controlOffset += shareControl.frame.width + 10
+            }
+            
+            if let likeButton = likeButton {
+                if item.isBubbled {
+                    likeButton.setFrameOrigin(item.isIncoming ? max(bubbleFrame.maxX + 15 + controlOffset, item.isStateOverlayLayout ? rightFrame.width + 15 + controlOffset : 0) : bubbleFrame.minX - likeButton.frame.width - 15, bubbleFrame.maxY - likeButton.frame.height - (item.isVideoOrBigEmoji ? rightFrame.height + 14 : 0))
+                } else {
+                    likeButton.setFrameOrigin(frame.width - 20.0 - likeButton.frame.width, rightView.frame.maxY )
                 }
             }
         }
@@ -952,6 +967,42 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    func fillLikeButton(_ item: ChatRowItem) {
+        if item.isSharable  {
+            if likeButton == nil {
+                likeButton = ImageButton()
+                likeButton?.autohighlight = false
+                likeButton?.disableActions()
+                likeButton?.change(opacity: 0, animated: false)
+                rowView.addSubview(likeButton!)
+            }
+            
+            guard let control = likeButton else {return}
+            
+            if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer  {
+                control.set(image: item.presentation.chat.chat_like_message_bubble(theme: item.presentation), for: .Normal)
+                _ = control.sizeToFit()
+                control.setFrameSize(NSMakeSize(control.frame.width + 4, control.frame.height + 4))
+                control.set(background: item.presentation.chatServiceItemColor, for: .Normal)
+                control.set(background: item.presentation.chatServiceItemColor.withAlphaComponent(0.8), for: .Highlight)
+                control.layer?.cornerRadius = control.frame.height / 2
+            } else {
+                control.set(image: item.presentation.icons.chat_like_message, for: .Normal)
+                _ = control.sizeToFit()
+                control.background = .clear
+            }
+            
+            control.removeAllHandlers()
+            control.set(handler: { [weak item] _ in
+                if let item = item {
+                   
+                }
+            }, for: .Click)
+        } else {
+            likeButton?.removeFromSuperview()
+            likeButton = nil
+        }
+    }
     
     func fillName(_ item:ChatRowItem) -> Void {
         if let author = item.authorText {
@@ -1177,6 +1228,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             fillScamButton(item)
             fillScamForwardButton(item)
             fillPsaButton(item)
+            fillLikeButton(item)
             item.chatInteraction.add(observer: self)
             
             updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
