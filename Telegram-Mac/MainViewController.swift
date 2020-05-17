@@ -192,10 +192,12 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     func updateLayout(_ layout: SplitViewState, parentSize: NSSize, isChatList: Bool) {
         genericView.layoutState = layout
         
+        let bottom = parentSize.height - genericView.frame.height
+        
         if isChatList && layout != .minimisize {
             genericView.setFrameSize(NSMakeSize(genericView.textView.frame.width + 40, 40))
             genericView.layer?.cornerRadius = genericView.frame.height / 2
-            genericView.centerX(y: layout == .minimisize ? 10 : 60)
+            genericView.centerX(y: layout == .minimisize ? bottom - 10 : bottom - 60)
             
             var shakeDelay: Double = 60 * 60
            
@@ -206,7 +208,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
             }))
         } else {
             genericView.setFrameSize(NSMakeSize(parentSize.width, 50))
-            genericView.setFrameOrigin(NSMakePoint(0, layout == .minimisize ? 0 : 50))
+            genericView.setFrameOrigin(NSMakePoint(0, layout == .minimisize ? bottom : bottom - 50))
             genericView.layer?.cornerRadius = 0
             shakeDisposable.set(nil)
         }
@@ -373,14 +375,14 @@ class MainViewController: TelegramViewController {
     }
     
     func showFastChatSettings() {
-        self.showFastChatSettings(tabController.control(for: self.chatIndex))
+     //   self.showFastChatSettings(tabController.control(for: self.chatIndex))
     }
     
     private func showFastChatSettings(_ control: Control) {
-        
-        filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
-            self?._showFastChatSettings(control, items: items)
-        }))
+//        
+//        filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
+//            self?._showFastChatSettings(control, items: items)
+//        }))
     }
     private let filterMenuDisposable = MetaDisposable()
     private let settingsDisposable = MetaDisposable()

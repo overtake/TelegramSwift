@@ -183,6 +183,8 @@ class EmojiControllerView : View {
     override func layout() {
         super.layout()
         tabsContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        
+        tabs.setFrameSize(NSMakeSize(frame.width - 8, 40))        
         tabs.center()
         borderView.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, frame.width, .borderSize)
         tableView.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width , frame.height - tabs.frame.maxY)
@@ -351,8 +353,6 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             
             let w = floorToScreenPixels(System.backingScale, frame.width / CGFloat(seg.count))
             
-            genericView.tabs.setFrameSize(NSMakeSize(w * CGFloat(seg.count), 40))
-            genericView.tabs.center()
             var tabIcons:[CGImage] = []
             tabIcons.append(theme.icons.emojiRecentTab)
             tabIcons.append(theme.icons.emojiSmileTab)

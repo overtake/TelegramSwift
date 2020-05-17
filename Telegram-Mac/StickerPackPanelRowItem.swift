@@ -21,7 +21,7 @@ class StickerPackPanelRowItem: TableRowItem {
     let arguments: StickerPanelArguments
     let namePoint: NSPoint
     let packInfo: StickerPackInfo
-    private let collectionId: StickerPackCollectionId
+    let collectionId: StickerPackCollectionId
     
     private let _height: CGFloat
     override var stableId: AnyHashable {
@@ -41,7 +41,7 @@ class StickerPackPanelRowItem: TableRowItem {
         let title: String?
         var count: Int32 = 0
         switch packInfo {
-        case let .pack(info, _):
+        case let .pack(info, _, _):
             title = info?.title ?? info?.shortName ?? ""
             count = info?.count ?? 0
             if let info = info {
@@ -66,7 +66,7 @@ class StickerPackPanelRowItem: TableRowItem {
         
         if let title = title {
             let attributed = NSMutableAttributedString()
-            if !packInfo.installed {
+            if packInfo.featured {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
                 _ = attributed.append(string: "\n")
                 _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
@@ -77,7 +77,7 @@ class StickerPackPanelRowItem: TableRowItem {
             layout.measure(width: 300)
             self.packNameLayout = layout
             
-            self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((!packInfo.installed ? 50 : 30) - layout.layoutSize.height) / 2))
+            self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((packInfo.featured ? 50 : 30) - layout.layoutSize.height) / 2))
         } else {
             namePoint = NSZeroPoint
             self.packNameLayout = nil
@@ -85,7 +85,7 @@ class StickerPackPanelRowItem: TableRowItem {
         
 
 
-        var point: NSPoint = NSMakePoint(5, title == nil ? 5 : packInfo.installed ? 35 : 55)
+        var point: NSPoint = NSMakePoint(5, title == nil ? 5 : !packInfo.featured ? 35 : 55)
         for (i, file) in files.enumerated() {
             filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file), point))
             point.x += size.width + 10
@@ -100,11 +100,11 @@ class StickerPackPanelRowItem: TableRowItem {
         self.collectionId = collectionId
         
         let rows = ceil((CGFloat(files.count) / 5.0))
-        _height = (title == nil ? 0 : packInfo.installed ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+        _height = (title == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
 
        
         
-        if !packInfo.installed, let id = collectionId.itemCollectionId {
+        if packInfo.featured, let id = collectionId.itemCollectionId {
             preloadFeaturedDisposable.set(preloadedFeaturedStickerSet(network: context.account.network, postbox: context.account.postbox, id: id).start())
         }
         
@@ -240,9 +240,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     
     override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
+        //super.mouseUp(with: event)
         longDisposable.set(nil)
-        if isMouseDown, mouseInside() {
+        if isMouseDown, mouseInside(), event.clickCount == 1 {
             let point = convert(event.locationInWindow, from: nil)
             
             if let item = item as? StickerPackPanelRowItem {
@@ -260,7 +260,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                     item.arguments.sendMedia(media, contentView, false)
                                 }
                             }
-                            return
+                            break
                         }
                     }
                 }
@@ -436,20 +436,38 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         self.addButton?.removeFromSuperview()
         self.addButton = nil
         
-        if let reference = item.packReference, !item.packInfo.installed {
-            self.addButton = TitleButton()
-            self.addButton!.set(background: theme.colors.accentSelect, for: .Normal)
-            self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
-            self.addButton!.set(font: .medium(.text), for: .Normal)
-            self.addButton!.set(color: .white, for: .Normal)
-            self.addButton!.set(text: L10n.navigationAdd, for: .Normal)
-            _ = self.addButton!.sizeToFit(NSZeroSize, NSMakeSize(50, 25), thatFit: true)
-            self.addButton!.layer?.cornerRadius = .cornerRadius
-            self.addButton!.setFrameOrigin(frame.width - 50 - 10, 13)
-            
-            self.addButton!.set(handler: { [weak item] _ in
-                item?.arguments.addPack(reference)
-            }, for: .Click)
+        if let reference = item.packReference, item.packInfo.featured {
+            if !item.packInfo.installed {
+                self.addButton = TitleButton()
+                self.addButton!.set(background: theme.colors.accentSelect, for: .Normal)
+                self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
+                self.addButton!.set(font: .medium(.text), for: .Normal)
+                self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
+                self.addButton!.set(text: L10n.stickersSearchAdd, for: .Normal)
+                _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
+                self.addButton!.layer?.cornerRadius = .cornerRadius
+                self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
+                
+                self.addButton!.set(handler: { [weak item] _ in
+                    item?.arguments.addPack(reference)
+                }, for: .Click)
+            } else {
+                self.addButton = TitleButton()
+                self.addButton!.set(background: theme.colors.grayForeground, for: .Normal)
+                self.addButton!.set(background: theme.colors.grayForeground.withAlphaComponent(0.8), for: .Highlight)
+                self.addButton!.set(font: .medium(.text), for: .Normal)
+                self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
+                self.addButton!.set(text: L10n.stickersSearchAdded, for: .Normal)
+                _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
+                self.addButton!.layer?.cornerRadius = .cornerRadius
+                self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
+                
+                self.addButton!.set(handler: { [weak item] _ in
+                    if let item = item {
+                        item.arguments.removePack(item.collectionId)
+                    }
+                },  for: .Click)
+            }
         }
         
         updateVisibleItems()

@@ -2235,7 +2235,7 @@ private final class MojavePalette : ColorPalette {
         return NSColor(0x323232)
     }
     private var controlAccentColor: NSColor {
-        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.controlAccentColor.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     private var selectedTextBackgroundColor: NSColor {
         return controlAccentColor.darker()
@@ -2335,19 +2335,19 @@ private final class MojavePalette : ColorPalette {
         return disabledControlTextColor
     }
     override var chatReplyTextDisabledBubble_outgoing: NSColor {
-        return NSColor.white.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var groupPeerNameRed: NSColor {
-        return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.systemRed.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var groupPeerNameBlue: NSColor {
-        return NSColor.systemBlue.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.systemBlue.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var groupPeerNameGreen: NSColor {
-        return NSColor.systemGreen.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.systemGreen.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var groupPeerNameOrange: NSColor {
-        return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var bubbleBackgroundTop_outgoing: NSColor {
         return controlAccentColor.darker(amount: 0.2)
@@ -2368,7 +2368,7 @@ private final class MojavePalette : ColorPalette {
         return controlAccentColor
     }
     override var linkBubble_outgoing: NSColor {
-        return NSColor.white.usingColorSpaceName(NSColorSpaceName.calibratedRGB)!
+        return NSColor.white.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
     override var selectTextBubble_incoming: NSColor {
         return selectedTextBackgroundColor

@@ -8,7 +8,7 @@ import SwiftSignalKit
 
 private let alphaWhenStopped: CGFloat = 0.15
 private let fadeMultiplier: CGFloat = 0.85
-private let numberOfFins: Int = 12
+private var numberOfFins: Int = 12
 private let fadeOutTime: TimeInterval = 0.7
 
 public class SpinningProgressView: View {

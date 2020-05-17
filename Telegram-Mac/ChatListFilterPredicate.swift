@@ -27,7 +27,7 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
         includeAdditionalPeerGroupIds.append(Namespaces.PeerGroup.archive)
     }
     var messageTagSummary: ChatListMessageTagSummaryResultCalculation?
-    if filter.excludeRead {
+    if filter.excludeRead || filter.excludeMuted {
         messageTagSummary = ChatListMessageTagSummaryResultCalculation(addCount: ChatListMessageTagSummaryResultComponent(tag: .unseenPersonalMessage, namespace: Namespaces.Message.Cloud), subtractCount: ChatListMessageTagActionsSummaryResultComponent(type: PendingMessageActionType.consumeUnseenPersonalMessage, namespace: Namespaces.Message.Cloud))
     }
 
@@ -43,8 +43,12 @@ func chatListFilterPredicate(for filter: ChatListFilter?) -> ChatListFilterPredi
         }
         if filter.excludeMuted {
             if isMuted {
-                return false
+                if let messageTagSummaryResult = messageTagSummaryResult, messageTagSummaryResult {
+                } else {
+                    return false
+                }
             }
+
         }
         if !filter.categories.contains(.contacts) && isContact {
             if let user = peer as? TelegramUser {

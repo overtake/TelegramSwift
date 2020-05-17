@@ -23,7 +23,7 @@ extension Message {
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
-        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentionsAndTags: type.contains(.Mentions) || type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
+        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentions: type.contains(.Mentions), highlightTags: type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
         
@@ -88,6 +88,7 @@ public extension String {
         str = str.replacingOccurrences(of: "8⃣", with: "8️⃣")
         str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
         str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
+        str = str.replacingOccurrences(of: "#⃣", with: "#️⃣")
         str = str.replacingOccurrences(of: "❤", with: "❤️")
         str = str.replacingOccurrences(of: "♥", with: "❤️")
         str = str.replacingOccurrences(of: "☁", with: "☁️")
@@ -1699,6 +1700,7 @@ extension Array {
 }
 
 func copyToClipboard(_ string:String) {
+    NSPasteboard.general.clearContents()
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
 }
@@ -1794,14 +1796,30 @@ extension CGImage {
         
         let thumbnailImage: CGImage = self
         
-        let thumbnailContextSize = thumbnailImage.size
-        let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0)
+        let thumbnailContextSize = thumbnailImage.size.multipliedByScreenScale()
+        
+        let thumbnailContextSmallSize = thumbnailContextSize.aspectFitted(NSMakeSize(50, 50))
+        
+        let thumbnailContext = DrawingContext(size: thumbnailContextSmallSize, scale: 1.0)
+        
+        
+        
         thumbnailContext.withContext { ctx in
             ctx.interpolationQuality = .none
-            
             ctx.draw(thumbnailImage, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
         }
-        telegramFastBlur(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+        
+        telegramFastBlurMore(Int32(thumbnailContextSmallSize.width), Int32(thumbnailContextSmallSize.height), Int32(thumbnailContext.bytesPerRow), thumbnailContext.bytes)
+        
+        let thumb = DrawingContext(size: thumbnailContextSize, scale: 1.0)
+
+        
+        thumb.withContext { ctx in
+            ctx.interpolationQuality = .none
+            ctx.draw(thumbnailContext.generateImage()!, in: CGRect(origin: CGPoint(), size: thumbnailContextSize))
+        }
+      //  telegramFastBlurMore(Int32(thumbnailContextSize.width), Int32(thumbnailContextSize.height), Int32(thumb.bytesPerRow), thumb.bytes)
+
         
         return thumbnailContext.generateImage()!
     }
@@ -2323,5 +2341,15 @@ extension CGImage {
         CGImageDestinationAddImage(destination, self, nil)
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
+    }
+}
+
+func localizedPsa(_ key: String, type: String, args: [CVarArg] = []) -> String {
+    let fullKey = key + "." + type
+    let cloud = translate(key: fullKey, args)
+    if cloud == fullKey {
+        return translate(key: key, args)
+    } else {
+        return cloud
     }
 }

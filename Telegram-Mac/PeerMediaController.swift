@@ -363,7 +363,6 @@
     override func layout() {
         
         let inset:CGFloat = isSelectionState ? 50 : 0
-        
         topPanelView.frame = NSMakeRect(0, 0, frame.width, 50)
         topPanelView.setCorners(self.corners)
         topPanelSeparatorView.frame = NSMakeRect(0, topPanelView.frame.height - .borderSize, topPanelView.frame.width, .borderSize)
@@ -375,6 +374,8 @@
             segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
         }
         mainView?.frame = NSMakeRect(0, 50, frame.width, frame.height - inset - 50)
+        
+
     }
     
     required init?(coder: NSCoder) {
@@ -691,6 +692,9 @@
             if let cachedData = view.cachedData as? CachedUserData {
                 return (exist: cachedData.commonGroupCount > 0, loaded: true)
             } else {
+                if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
+                    return (exist: false, loaded: false)
+                }
                 return (exist: false, loaded: true)
             }
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -798,7 +802,7 @@
             let newMode = PeerMediaCollectionMode(rawValue: item.uniqueId)!
             
             if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
-                self?.currentMainTableView?(mainTable, true, false)
+                self?.currentMainTableView?(mainTable, true, true)
             }
             self?.modeValue.set(newMode)
         }
@@ -1110,7 +1114,7 @@
     }
     
     private func searchGroupUsers() {
-        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior.init(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }

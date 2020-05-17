@@ -163,10 +163,14 @@ enum FolderEmoticon {
                 return "Icon_Sidebar_Student"
             case "🛫":
                 return "Icon_Sidebar_Telegram"
-            case "🦠":
+            case "👑":
                 return "Icon_Sidebar_Virus"
             case "👨‍💼":
                 return "Icon_Sidebar_Work"
+            case "🍷":
+                return "Icon_Sidebar_Wine"
+            case "🎭":
+                return "Icon_Sidebar_Mask"
             default:
                 return "Icon_Sidebar_Folder"
             }

@@ -215,6 +215,7 @@ private final class RendererState  {
     
     func cancel() -> RendererState {
         self.cancelled = true
+        
         return self
     }
 }
@@ -228,7 +229,7 @@ private final class LottieSoundEffect {
     init(data: Data, animation: LottieAnimation, postbox: Postbox, triggerOn: Int32?) {
         
         
-        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true, initialTimebase: nil)
+        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
     func play() {
@@ -268,6 +269,7 @@ private final class PlayerRenderer {
         self.onDispose?()
         _ = self.layer.swap(nil)
         self.release()
+        self.updateState(.stoped)
     }
     
     
@@ -344,8 +346,8 @@ private final class PlayerRenderer {
                 currentFrame = firstStart
             }
         case let .toEnd(from):
-            startFrame = from
-            currentFrame = from
+            startFrame = max(min(from, endFrame - 1), startFrame)
+            currentFrame = max(min(from, endFrame - 1), startFrame)
         default:
             break
         }
@@ -372,7 +374,6 @@ private final class PlayerRenderer {
             framesTask?.cancel()
             framesTask = nil
             _ = stateValue.swap(nil)
-            
         }
         
         let currentState:(_ state: RenderAtomic<RendererState?>) -> RendererState? = { state in
@@ -420,6 +421,23 @@ private final class PlayerRenderer {
                                 }
                             }
                         }
+                        if let triggerOn = renderer.animation.triggerOn {
+                            switch triggerOn.0 {
+                            case .first:
+                                if startFrame == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            case .last:
+                                if endFrame - 1 == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            case let .custom(index):
+                                if index == current.frame {
+                                    DispatchQueue.main.async(execute: triggerOn.1)
+                                }
+                            }
+                            
+                        }
                         
                         switch renderer.animation.playPolicy {
                         case .loop, .loopAt:
@@ -427,29 +445,42 @@ private final class PlayerRenderer {
                         case .once:
                             if current.frame + 1 == currentState(stateValue)?.endFrame {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
-                                updateState(.stoped)
                             }
                         case .onceEnd, .toEnd:
                             if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
-                                updateState(.stoped)
                             }
                         case let .framesCount(limit):
                             if limit <= playedCount {
                                 renderer.finished = true
+                                cancelled = true
+                                updateState(.stoped)
                                 renderer.timer?.invalidate()
                                 framesTask?.cancel()
                                 let onFinish = renderer.animation.onFinish ?? {}
                                 DispatchQueue.main.async(execute: onFinish)
+                            }
+                        case let .onceToFrame(frame):
+                            if frame <= current.frame  {
+                                renderer.finished = true
+                                cancelled = true
                                 updateState(.stoped)
+                                renderer.timer?.invalidate()
+                                framesTask?.cancel()
+                                let onFinish = renderer.animation.onFinish ?? {}
+                                DispatchQueue.main.async(execute: onFinish)
                             }
                         }
                         
@@ -604,11 +635,18 @@ enum LottiePlayPolicy : Equatable {
     case onceEnd
     case toEnd(from: Int32)
     case framesCount(Int32)
+    case onceToFrame(Int32)
 }
 
 struct LottieColor : Equatable {
     let keyPath: String
     let color: NSColor
+}
+
+enum LottiePlayerTriggerFrame : Equatable {
+    case first
+    case last
+    case custom(Int32)
 }
 
 final class LottieAnimation : Equatable {
@@ -635,6 +673,8 @@ final class LottieAnimation : Equatable {
     let postbox: Postbox?
     
     var onFinish:(()->Void)?
+
+    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
     init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
@@ -926,13 +966,23 @@ private final class LottieFallbackView: NSView {
 
 class LottiePlayerView : NSView {
     private var context: PlayerContext?
-    private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.stoped, ignoreRepeated: true)
+    
+    private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
+    var currentState: LottiePlayerState {
+        return _currentState.with { $0 }
+    }
+    
+    private let stateValue: ValuePromise<LottiePlayerState> = ValuePromise(.initializing, ignoreRepeated: true)
     var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
     }
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+    }
+    
+    var animation: LottieAnimation? {
+        return context?.animation
     }
     
     override var isFlipped: Bool {
@@ -974,11 +1024,11 @@ class LottiePlayerView : NSView {
         }
     }
     
-    func set(_ animation: LottieAnimation?, reset: Bool = false) {
-        self.stateValue.set(.stoped)
+    func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {
+        
+        self.stateValue.set(self._currentState.modify { _ in .initializing })
         if let animation = animation {
             if self.context?.animation != animation || reset {
-                
                 if holder == nil {
                     holder = ContextHolder()
                 }
@@ -986,17 +1036,36 @@ class LottiePlayerView : NSView {
                     let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)
                     let layer = Unmanaged.passRetained(metal)
+                    
+                    
+                    var cachedContext:Unmanaged<PlayerContext>?
+                    if let context = self.context, saveContext {
+                        cachedContext = Unmanaged.passRetained(context)
+                    }  else  {
+                        cachedContext = nil
+                    }
+                    
                     self.context = PlayerContext(animation, displayFrame: { frame in
                         layer.takeUnretainedValue().render(bytes: frame.data, size: frame.size, backingScale: frame.backingScale)
                     }, release: {
                         Queue.mainQueue().async {
                             layer.takeRetainedValue().removeFromSuperview()
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
                         }
+                        
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context else {
+                        guard let `self` = self else {
                             return
                         }
-                        self?.stateValue.set(state)
+                        switch state {
+                        case .playing, .failed, .stoped:
+                            _ = cachedContext?.takeRetainedValue()
+                            cachedContext = nil
+                        default:
+                            break
+                        }
+                        self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 } else {
                     let fallback = LottieFallbackView()
@@ -1019,14 +1088,15 @@ class LottiePlayerView : NSView {
                             layer.takeRetainedValue().removeFromSuperview()
                         }
                     }, updateState: { [weak self] state in
-                        guard let _ = self?.context else {
+                        guard let `self` = self else {
                             return
                         }
-                        self?.stateValue.set(state)
+                        self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 }
-                
-                
+            } else {
+                var bp:Int = 0
+                bp += 1
             }
             
         } else {

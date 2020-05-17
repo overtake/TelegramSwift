@@ -43,6 +43,9 @@ public class InputDataModalController : ModalViewController {
             self?.closeModal()
         })
     }
+    public override var shouldCloseAllTheSameModals: Bool {
+        return false
+    }
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -307,6 +310,10 @@ final class InputDataView : BackgroundView, AppearanceViewProtocol {
     
     func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
     required init?(coder: NSCoder) {
@@ -727,6 +734,49 @@ class InputDataController: GenericViewController<InputDataView> {
             
         }, with: self, for: .F, priority: self.responderPriority, modifierFlags: nil)
         
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            
+            view?.makeBold()
+            return .invoked
+        }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeUrl()
+            return .invoked
+        }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeItalic()
+            return .invoked
+        }, with: self, for: .I, priority: self.responderPriority, modifierFlags: [.command])
+        
+        
+        
+        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            let view = self?.findReponsderView as? InputDataRowView
+            view?.makeMonospace()
+            return .invoked
+        }, with: self, for: .K, priority: responderPriority, modifierFlags: [.command, .shift])
+        
+    }
+    
+    
+    
+    var findReponsderView: TableRowView? {
+        if let view = self.firstResponder() as? NSView {
+            var superview: NSView? = view
+            while superview != nil {
+                if let current = superview as? TableRowView {
+                    return current
+                } else {
+                    superview = superview?.superview
+                }
+            }
+        }
+        return nil
     }
     
     override func viewWillDisappear(_ animated: Bool) {

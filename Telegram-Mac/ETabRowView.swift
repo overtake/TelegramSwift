@@ -51,7 +51,7 @@ class ETabRowView: HorizontalRowView {
             overlay.style = ControlStyle(highlightColor: theme.colors.accentIcon)
             overlay.set(image: item.icon, for: .Normal)
             overlay.disableActions()
-            _ = overlay.sizeToFit()
+            _ = overlay.frame = bounds
             overlay.isSelected = item.isSelected
             overlay.set(background: theme.colors.background, for: .Normal)
         }

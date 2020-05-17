@@ -115,7 +115,7 @@ class ShortPeerRowItem: GeneralRowItem {
         case .legacy:
             return inset.left + photoSize.width + 10.0 + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
         case let .modern(_, insets):
-            return photoSize.width + insets.left + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
+            return photoSize.width + min(10, insets.left) + (leftImage != nil ? leftImage!.backingSize.width + 5 : 0)
         }
     }
     let badgeNode: GlobalBadgeNode?
@@ -149,10 +149,12 @@ class ShortPeerRowItem: GeneralRowItem {
     let highlightOnHover: Bool
     let alwaysHighlight: Bool
     private let contextMenuItems:()->[ContextMenuItem]
-    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false) {
+    fileprivate let _peerId: PeerId?
+    init(_ initialSize:NSSize, peer: Peer, account:Account, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->[ContextMenuItem] = {[]}, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false) {
         self.peer = peer
         self.contextMenuItems = contextMenuItems
         self.account = account
+        self._peerId = peerId
         self.photoSize = photoSize
         self.leftImage = leftImage
         self.inputActivity = inputActivity
@@ -209,8 +211,12 @@ class ShortPeerRowItem: GeneralRowItem {
             statusAttr = sAttr.copy() as? NSAttributedString
         }
         
-        super.init(initialSize, height: height, stableId: stableId ?? AnyHashable(peer.id), type:generalType, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:borderType,inset:inset, enabled: enabled)
+        super.init(initialSize, height: height, stableId: stableId ?? AnyHashable(peerId ?? peer.id), type:generalType, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:borderType,inset:inset, enabled: enabled)
         
+    }
+    
+    var peerId: PeerId {
+        return _peerId ?? peer.id
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

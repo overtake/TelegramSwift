@@ -150,6 +150,10 @@ class GalleryPageView : NSView {
         self.wantsLayer = true
         self.canDrawSubviewsIntoLayer = true
     }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
 
     
     required init?(coder: NSCoder) {
@@ -265,6 +269,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
             dragged = nil
             
+            let view = self.window.contentView?.hitTest(event.locationInWindow)
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             
             if NSPointInRect(point, self.captionView.frame), self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
@@ -286,6 +291,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     return .rejected
                 }
                 
+                _ = interactions.dismiss()
+                return .invoked
+            } else if view is GalleryModernControlsView {
                 _ = interactions.dismiss()
                 return .invoked
             }
@@ -585,7 +593,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             view.contentSize = item.sizeValue
             view.minMagnify = item.minMagnify
             view.maxMagnify = item.maxMagnify
-            
+        
+
             
             item.view.set(.single(view.contentView))
             smartUpdaterDisposable.set(view.smartUpdaterValue.start(next: { size in
@@ -600,6 +609,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         lockedTransition = true
         captionView.change(opacity: 0)
         startIndex = pageController.selectedIndex
+        
         if items.count > 1 {
             items[min(max(pageController.selectedIndex - 1, 0), items.count - 1)].request()
             items[min(max(pageController.selectedIndex + 1, 0), items.count - 1)].request()
@@ -721,6 +731,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }, dismiss: { [weak self] in
                 _ = self?.interactions.dismiss()
             })
+            item.magnify.set(magnify.magnifyUpdater.get())
             controller.view = magnify
             if hasInited {
                 item.request()

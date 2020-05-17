@@ -291,11 +291,20 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
+            
+            
             if let fullSizeData = fullSizeData {
                 if data.fullSizeComplete {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
-                        return image
+                        return generateImage(image.size, contextGenerator: { (size, ctx) in
+                            ctx.setFillColor(theme.colors.transparentBackground.cgColor)
+                            ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+                            ctx.interpolationQuality = .high
+                            ctx.draw(image, in: NSMakeRect(0, 0, size.width, size.height))
+                        })
+                        
                     }
                     
                 }
@@ -322,7 +331,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                 
             }
             return generateImage(fittedSize, contextGenerator: { (size, ctx) in
-                ctx.setFillColor(theme.colors.background.cgColor)
+                ctx.setFillColor(theme.colors.transparentBackground.cgColor)
                 ctx.fill(NSMakeRect(0, 0, size.width, size.height))
             })
             
@@ -924,10 +933,10 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: TelegramMediaFile
 
 
 
-public func chatMessageDiceSticker(postbox: Postbox, file: TelegramMediaFile, value: String, scale: CGFloat, size: NSSize, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+public func chatMessageDiceSticker(postbox: Postbox, file: TelegramMediaFile, emoji: String, value: String, scale: CGFloat, size: NSSize, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
     
     
-    let signal: Signal<ImageRenderData, NoError> = postbox.mediaBox.cachedResourceRepresentation(file.resource, representation: CachedDiceRepresentation(value: value, size: size), complete: false, fetch: true, attemptSynchronously: synchronousLoad) |> map { data in
+    let signal: Signal<ImageRenderData, NoError> = postbox.mediaBox.cachedResourceRepresentation(file.resource, representation: CachedDiceRepresentation(emoji: emoji, value: value, size: size), complete: true, fetch: true, attemptSynchronously: synchronousLoad) |> map { data in
         if data.complete {
             return ImageRenderData(nil, try? Data(contentsOf: URL(fileURLWithPath: data.path)), true)
         } else {
@@ -1286,7 +1295,11 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
     if let largestRepresentation = photo.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
-        return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+        if largestRepresentation.resource is LocalFileReferenceMediaResource {
+            return .single(.Local)
+        } else {
+            return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+        }
     } else {
         return .never()
     }

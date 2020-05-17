@@ -60,7 +60,8 @@ private final class NotificationArguments {
     let snoof: ()-> Void
     let updateJoinedNotifications: (Bool) -> Void
     let toggleBadge: (Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void) {
+    let toggleRequestUserAttention: ()->Void
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -73,6 +74,7 @@ private final class NotificationArguments {
         self.snoof = snoof
         self.updateJoinedNotifications = updateJoinedNotifications
         self.toggleBadge = toggleBadge
+        self.toggleRequestUserAttention = toggleRequestUserAttention
     }
 }
 
@@ -89,6 +91,7 @@ private let _id_count_unred_messages = InputDataIdentifier("_id_count_unred_mess
 private let _id_new_contacts = InputDataIdentifier("_id_new_contacts")
 private let _id_snoof = InputDataIdentifier("_id_snoof")
 private let _id_tone = InputDataIdentifier("_id_tone")
+private let _id_bounce = InputDataIdentifier("_id_bounce")
 
 private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], arguments: NotificationArguments) -> [InputDataEntry] {
     
@@ -142,13 +145,16 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(settings.tone.isEmpty ? L10n.notificationSettingsToneDefault : localizedString(settings.tone), tonesItems), viewType: .innerItem)))
     index += 1
     
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: L10n.notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
+        arguments.toggleRequestUserAttention()
+    })))
+    index += 1
+    
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset, data: InputDataGeneralData(name: L10n.notificationSettingsResetNotifications, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
         arguments.resetAllNotifications()
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsResetNotificationsText), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-    index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -274,6 +280,10 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }, toggleBadge: { enabled in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             return value.withUpdatedBadgeEnabled(enabled)
+        }).start()
+    }, toggleRequestUserAttention: {
+        _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
+            return value.withUpdatedRequestUserAttention(!value.requestUserAttention)
         }).start()
     })
     

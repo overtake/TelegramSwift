@@ -55,7 +55,7 @@ class ChatVoiceRowItem: ChatMediaItem {
             return rightSize.height
         }
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if parameters.durationLayout.layoutSize.width + 20 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
+            if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
                 return rightSize.height
             }
         }

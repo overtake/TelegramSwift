@@ -63,12 +63,23 @@ public final class BackgroundGradientView : View {
 
 
 open class BackgroundView: ImageView {
+    
+    public var _customHandler:CustomViewHandlers?
+    
+    public var customHandler:CustomViewHandlers {
+        if _customHandler == nil {
+            _customHandler = CustomViewHandlers()
+        }
+        return _customHandler!
+    }
+    
     private let gradient: BackgroundGradientView
 
     public override init(frame frameRect: NSRect) {
         gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(gradient)
+        autoresizesSubviews = false
 //        gradient.actions = [:]
 //
 //        gradient.bounds = NSMakeRect(0, 0, max(bounds.width, bounds.height), max(bounds.width, bounds.height))
@@ -91,6 +102,7 @@ open class BackgroundView: ImageView {
     open override func layout() {
         super.layout()
         gradient.frame = bounds
+        _customHandler?.layout?(self)
 //        gradient.bounds = NSMakeRect(0, 0, max(frame.width, frame.height) * 2, max(frame.width, frame.height) * 2)
 //        gradient.position = NSMakePoint(frame.width / 2, frame.height / 2)
     }
@@ -272,8 +284,9 @@ open class ViewController : NSObject {
     public var rightBarView:BarView!
     
     public var popover:Popover?
-    open  var modal:Modal?
+    open var modal:Modal?
     
+    private var widthOnDisappear: CGFloat? = nil
     
     public var ableToNextController:(ViewController, @escaping(ViewController, Bool)->Void)->Void = { controller, f in
         f(controller, true)
@@ -542,10 +555,12 @@ open class ViewController : NSObject {
         assertOnMainThread()
     }
     
+    
     open func viewWillDisappear(_ animated:Bool) -> Void {
         if #available(OSX 10.12.2, *) {
             window?.touchBar = nil
         }
+        widthOnDisappear = frame.width
         //assert(self.window != nil)
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
@@ -595,6 +610,21 @@ open class ViewController : NSObject {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         if let window = window {
             isKeyWindow.set(.single(window.isKeyWindow))
+        }
+        
+        func findTableView(in view: NSView) -> Void {
+            for subview in view.subviews {
+                if subview is NSTableView {
+                    if !subview.inLiveResize {
+                        subview.viewDidEndLiveResize()
+                    }
+                } else if !subview.subviews.isEmpty {
+                    findTableView(in: subview)
+                }
+            }
+        }
+        if let widthOnDisappear = widthOnDisappear, frame.width != widthOnDisappear {
+            findTableView(in: view)
         }
     }
     
@@ -829,6 +859,10 @@ open class ModalViewController : ViewController {
     // use this only for modal progress. This is made specially for nsvisualeffect support.
     open var contentBelowBackground: Bool {
         return false
+    }
+    
+    open var shouldCloseAllTheSameModals: Bool {
+        return true
     }
     
     private var temporaryTouchBar: Any?

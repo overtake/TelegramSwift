@@ -123,7 +123,9 @@ extension TelegramGroup {
 extension TelegramChannel {
     func canRemoveParticipant(_ participant: ChannelParticipant, accountId:PeerId) -> Bool {
         let hasRight = hasPermission(.banMembers)
-        
+        if accountId == participant.peerId {
+            return false
+        }
         switch participant {
         case let .member(_, _,  adminInfo, _, _):
             if let adminInfo = adminInfo {

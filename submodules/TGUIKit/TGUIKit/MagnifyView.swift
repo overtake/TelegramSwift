@@ -24,7 +24,7 @@ open class MagnifyView : NSView {
         return smartUpdater.get() |> distinctUntilChanged
     }
     
-    public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(ignoreRepeated: true)
+    public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(1, ignoreRepeated: true)
     private var mov_start:NSPoint = NSZeroPoint
     private var mov_content_start:NSPoint = NSZeroPoint
     
@@ -33,11 +33,12 @@ open class MagnifyView : NSView {
     let containerView:NSView = NSView()
     open var contentSize:NSSize = NSZeroSize {
         didSet {
-            if oldValue != contentSize {
-                contentView.frame = focus(magnifiedSize)//NSMakeRect(contentView.frame.minX, contentView.frame.minY, magnifiedSize.width, magnifiedSize.height)
+            if oldValue != contentSize  {
+                contentView.frame = focus(magnifiedSize)
             }
         }
     }
+
     
     public var contentFrame: NSRect {
         return contentView.frame.apply(multiplier: NSMakeSize(1 / magnify, 1 / magnify))
@@ -122,7 +123,7 @@ open class MagnifyView : NSView {
     }
     
     func addSmart(for location:NSPoint) {
-        var minFactor:CGFloat = min(max(frame.size.width / magnifiedSize.width,frame.size.height / magnifiedSize.height),2.0)
+        var minFactor:CGFloat = min(max(floor(frame.size.width / magnifiedSize.width), floor(frame.size.height / magnifiedSize.height)),2.0)
         if magnify > 1.0 {
             minFactor = 1 - magnify
         }

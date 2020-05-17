@@ -570,6 +570,10 @@ struct ChatPresentationInterfaceState: Equatable {
         }
     }
     
+    var messageSecretTimeout: Int32? {
+        return (peer as? TelegramSecretChat)?.messageAutoremoveTimeout
+    }
+    
     var isKeyboardShown:Bool {
         if let keyboard = keyboardButtonsMessage, let attribute = keyboard.replyMarkup {
             return interfaceState.messageActionsState.closedButtonKeyboardMessageId != keyboard.id && attribute.hasButtons && state == .normal

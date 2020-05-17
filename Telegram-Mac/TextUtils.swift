@@ -27,8 +27,8 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
                     messageText = ((attachEmoji ? "🖼 " : "") + message.text.fixed).nsstring
                 }
             }
-        case _ as TelegramMediaDice:
-            messageText = "🎲".nsstring
+        case let dice as TelegramMediaDice:
+            messageText = dice.emoji.nsstring
         case let fileMedia as TelegramMediaFile:
             if fileMedia.isStaticSticker || fileMedia.isAnimatedSticker {
                 messageText = L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring
@@ -389,7 +389,6 @@ func ==(lhs: PeerStatusStringResult, rhs: PeerStatusStringResult) -> Bool {
 
 func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStatusStringTheme = PeerStatusStringTheme(), onlineMemberCount: Int32? = nil, expanded: Bool = false) -> PeerStatusStringResult {
     if let peer = peerViewMainPeer(peerView) {
-    
         let title:NSAttributedString = .initialize(string: peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
         if let user = peer as? TelegramUser {
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
@@ -479,18 +478,33 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
  func autoremoveLocalized(_ ttl: Int) -> String {
     var localized: String = ""
      if ttl <= 59 {
-        localized = tr(L10n.timerSecondsCountable(ttl))
+        localized = L10n.timerSecondsCountable(ttl)
     } else if ttl <= 3599 {
-        localized = tr(L10n.timerMinutesCountable(ttl / 60))
+        localized = L10n.timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
-        localized = tr(L10n.timerHoursCountable(ttl / 60 / 60))
+        localized = L10n.timerHoursCountable(ttl / 60 / 60)
     } else if ttl <= 604799 {
-        localized = tr(L10n.timerDaysCountable(ttl / 60 / 60 / 24))
+        localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
     } else {
-        localized = tr(L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7))
+        localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
     }
     return localized
 }
+
+public func shortTimeIntervalString(value: Int32) -> String {
+    if value < 60 {
+        return L10n.messageTimerShortSeconds("\(max(1, value))")
+    } else if value < 60 * 60 {
+        return L10n.messageTimerShortMinutes("\(max(1, value / 60))")
+    } else if value < 60 * 60 * 24 {
+        return L10n.messageTimerShortHours("\(max(1, value / (60 * 60)))")
+    } else if value < 60 * 60 * 24 * 7 {
+        return L10n.messageTimerShortDays("\(max(1, value / (60 * 60 * 24)))")
+    } else {
+        return L10n.messageTimerShortWeeks("\(max(1, value / (60 * 60 * 24 * 7)))")
+    }
+}
+
 
 func slowModeTooltipText(_ timeout: Int32) -> String {
     let minutes = timeout / 60

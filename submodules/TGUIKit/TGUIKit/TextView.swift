@@ -189,13 +189,13 @@ public final class TextViewInteractions {
     public var processURL:(Any)->Void // link, isPresent
     public var copy:(()->Bool)?
     public var menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)?
-    public var isDomainLink:(Any)->Bool
+    public var isDomainLink:(Any, String?)->Bool
     public var makeLinkType:((Any, String))->LinkType
     public var localizeLinkCopy:(LinkType)-> String
     public var resolveLink:(Any)->String?
     public var copyAttributedString:(NSAttributedString)->Bool
     public var copyToClipboard:((String)->Void)?
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any)->Bool = {_ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -306,6 +306,10 @@ public final class TextViewLayout : Equatable {
             penFlush = 0.0
         }
         self.lineSpacing = lineSpacing
+    }
+    
+    public func dropLayoutSize() {
+        self.layoutSize = .zero
     }
     
     func calculateLayout(isBigEmoji: Bool = false) -> Void {
@@ -679,7 +683,7 @@ public final class TextViewLayout : Equatable {
         
         attributedString.enumerateAttribute(NSAttributedString.Key.link, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
             if let value = value {
-                if interactions.isDomainLink(value) && strokeLinks {
+                if interactions.isDomainLink(value, attributedString.attributedSubstring(from: range).string) && strokeLinks {
                     for line in lines {
                         let lineRange = NSIntersectionRange(range, line.range)
                         if lineRange.length != 0 {
@@ -692,7 +696,6 @@ public final class TextViewLayout : Equatable {
                             let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.link
                             let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
                             strokeRects.append((rect, color))
-                            
                             if !disableTooltips, interactions.resolveLink(value) != attributedString.string.nsstring.substring(with: range) {
                                 var leftOffset: CGFloat = 0.0
                                 if lineRange.location != line.range.location {
@@ -987,13 +990,16 @@ public final class TextViewLayout : Equatable {
             self.selectedRange = TextSelectedRange(color: selectText)
             return
         }
-        let valid:Bool = char.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || char == "_"
+        let tidyChar = char.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+        let valid:Bool = tidyChar == "" || tidyChar == "_" || tidyChar == "\u{FFFD}"
         let string:NSString = attributedString.string.nsstring
         while valid {
             let prevChar = string.substring(with: NSMakeRange(prev, 1))
             let nextChar = string.substring(with: NSMakeRange(next, 1))
-            var prevValid:Bool = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || prevChar == "_"
-            var nextValid:Bool = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_"
+            let tidyPrev = prevChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+            let tidyNext = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+            var prevValid:Bool = tidyPrev == "" || tidyPrev == "_" || tidyPrev == "\u{FFFD}"
+            var nextValid:Bool = tidyNext == "" || tidyNext == "_" || tidyNext == "\u{FFFD}"
             if (prevValid && prev > 0) {
                 prev -= 1
             }
@@ -1008,7 +1014,8 @@ public final class TextViewLayout : Equatable {
             if(next == string.length - 1) {
                 nextValid = false
                 let nextChar = string.substring(with: NSMakeRange(next, 1))
-                if nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics) == "" || nextChar == "_" {
+                let nextTidy = nextChar.trimmingCharacters(in: NSCharacterSet.alphanumerics)
+                if nextTidy == "" || nextTidy == "_" || nextTidy == "\u{FFFD}" {
                     range.length += 1
                 }
             }
@@ -1020,7 +1027,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         
-        self.selectedRange = TextSelectedRange(range: range, color: selectText, def: true)
+        self.selectedRange = TextSelectedRange(range: NSMakeRange(max(range.location, 0), min(max(range.length, 0), string.length)), color: selectText, def: true)
     }
     
 
@@ -1334,6 +1341,7 @@ public class TextView: Control, NSViewToolTipOwner {
                         guard let `self` = self else {return}
                         if let resolved = resolved {
                             let pb = NSPasteboard.general
+                            pb.clearContents()
                             pb.declareTypes([.string], owner: self)
                             pb.setString(resolved, forType: .string)
                         } else {
@@ -1673,6 +1681,7 @@ public class TextView: Control, NSViewToolTipOwner {
                 if !copy() && layout.selectedRange.range.location != NSNotFound {
                     if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
                         let pb = NSPasteboard.general
+                        pb.clearContents()
                         pb.declareTypes([.string], owner: self)
                         pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                     }
@@ -1680,6 +1689,7 @@ public class TextView: Control, NSViewToolTipOwner {
             } else if layout.selectedRange.range.location != NSNotFound {
                 if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
                     let pb = NSPasteboard.general
+                    pb.clearContents()
                     pb.declareTypes([.string], owner: self)
                     pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
