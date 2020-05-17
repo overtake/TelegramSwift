@@ -187,11 +187,11 @@ public enum SwipeHandlerResult {
 }
 
 class SwipeHandler : Comparable {
-    let handler:(SwipeDirection)->SwipeHandlerResult
+    let handler:(SwipeDirection, Bool)->SwipeHandlerResult
     let object:WeakReference<NSView>
     let priority:HandlerPriority
     
-    init(_ handler:@escaping(SwipeDirection)->SwipeHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
+    init(_ handler:@escaping(SwipeDirection, Bool)->SwipeHandlerResult, _ object:NSView, _ priority:HandlerPriority) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -207,11 +207,13 @@ func <(lhs: SwipeHandler, rhs: SwipeHandler) -> Bool {
 
 class ResponderObserver : Comparable {
     let handler:()->NSResponder?
+    let ignoreKeys:[KeyboardKey]
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let date: TimeInterval
-    init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority) {
+    init(_ handler:@escaping()->NSResponder?, _ object:NSObject?, _ priority:HandlerPriority, _ ignoreKeys: [KeyboardKey]) {
         self.handler = handler
+        self.ignoreKeys = ignoreKeys
         self.object = WeakReference(value: object)
         self.priority = priority
         self.date = Date().timeIntervalSince1970
@@ -277,8 +279,8 @@ open class Window: NSWindow {
     public weak var rootViewController: ViewController?
     public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
     
-    public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority) {
-        responsders.append(ResponderObserver(responder, object, priority))
+    public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
+        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
     }
     
     public func removeObserver(for object:NSObject) {
@@ -300,11 +302,16 @@ open class Window: NSWindow {
             handlers = []
             keyHandlers[key] = handlers
         }
+       
         keyHandlers[key]?.append(KeyHandler(handler, object, priority, modifierFlags))
+        
+        if key == .Return {
+            set(handler: handler, with: self, for: .KeypadEnter, priority: priority, modifierFlags: modifierFlags)
+        }
         
     }
     
-    public func add(swipe handler:@escaping(SwipeDirection) -> SwipeHandlerResult, with object:NSView, identifier: SwipeIdentifier, priority:HandlerPriority = .low) -> Void {
+    public func add(swipe handler:@escaping(SwipeDirection, Bool) -> SwipeHandlerResult, with object:NSView, identifier: SwipeIdentifier, priority:HandlerPriority = .low) -> Void {
         swipeHandlers[identifier] = SwipeHandler(handler, object, priority)
     }
     
@@ -350,6 +357,9 @@ open class Window: NSWindow {
         self.swipeHandlers = self.swipeHandlers.filter { key, value in
             return value.object.value !== object && value.object.value != nil
         }
+        self.responsders = responsders.filter {
+            $0.object.value !== object
+        }
     }
     
     public func remove(object:NSObject, for key:KeyboardKey, modifierFlags: NSEvent.ModifierFlags? = nil, forceCheckFlags: Bool = false) {
@@ -364,6 +374,9 @@ open class Window: NSWindow {
                     keyHandlers[key]?.remove(at: i)
                 }
             }
+        }
+        if key == .Return {
+            self.remove(object: object, for: .KeypadEnter, modifierFlags: modifierFlags, forceCheckFlags: forceCheckFlags)
         }
     }
     
@@ -435,10 +448,17 @@ open class Window: NSWindow {
     }
     
     
-    public func applyResponderIfNeeded() ->Void {
+    public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
         let sorted = responsders.sorted(by: >)
-        
+        if let event = event, event.modifierFlags.contains(.command)
+         || event.modifierFlags.contains(.option)
+         || event.modifierFlags.contains(.control) {
+            return
+        }
         for observer in sorted {
+            if let event = event, let code = KeyboardKey(rawValue: event.keyCode), observer.ignoreKeys.contains(code) {
+                continue
+            }
             if let responder = observer.handler() {
                 if self.firstResponder != responder {
                     let _ = self.resignFirstResponder()
@@ -548,7 +568,7 @@ open class Window: NSWindow {
             for (key, swipe) in swipeHandlers.sorted(by: { $0.value.priority > $1.value.priority }) {
                 if let view = swipe.object.value, view._mouseInside() {
                     if scrollDeltaXAfterInvertion(event.scrollingDeltaX) > 0 {
-                        let result = swipe.handler(.left(.start(controller: ViewController())))
+                        let result = swipe.handler(.left(.start(controller: ViewController())), true)
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .left(.start(controller: controller))
@@ -557,7 +577,7 @@ open class Window: NSWindow {
                             break
                         }
                     } else {
-                        let result = swipe.handler(.right(.start(controller: ViewController())))
+                        let result = swipe.handler(.right(.start(controller: ViewController())), true)
                         switch result {
                         case let .success(controller):
                             swipeState[key] = .right(.start(controller: controller))
@@ -574,7 +594,7 @@ open class Window: NSWindow {
     private func stopSwiping(_ event: NSEvent) {
         for (key, swipe) in swipeState {
             if let handler = swipeHandlers[key], let view = handler.object.value {
-                _ = handler.handler(swipe.withUpdatedSuccessOrFail(view.frame.width))
+                _ = handler.handler(swipe.withUpdatedSuccessOrFail(view.frame.width), true)
             }
         }
         swipeState.removeAll()
@@ -582,12 +602,13 @@ open class Window: NSWindow {
     
     
     private func proccessSwiping(_ event: NSEvent) -> Void {
-        for (key, swipe) in swipeState {
+        let copy = self.swipeState
+        for (key, swipe) in copy {
             if let handler = swipeHandlers[key], let value = handler.object.value, value._mouseInside() {
                 let deltaX: CGFloat = scrollDeltaXAfterInvertion(event.scrollingDeltaX)
                 
                 let newState = swipe.withAdditionalDelta(deltaX)
-                let result = handler.handler(newState)
+                let result = handler.handler(newState, true)
                 switch result {
                 case let .deltaUpdated(available):
                     swipeState[key] = swipe.withAdditionalDelta(available, true)
@@ -597,6 +618,28 @@ open class Window: NSWindow {
                 break
             }
         }
+    }
+    
+    public func abortSwiping() -> Void {
+        let copy = self.swipeState
+        for (key, swipe) in copy {
+            switch swipe {
+            case let .left(state):
+                let swipe: SwipeDirection = .left(.failed(delta: state.delta, controller: state.controller))
+                if let handler = swipeHandlers[key] {
+                    _ = handler.handler(swipe, false)
+                }
+                self.swipeState.removeValue(forKey: key)
+            case let .right(state):
+                let swipe: SwipeDirection = .right(.failed(delta: state.delta, controller: state.controller))
+                if let handler = swipeHandlers[key] {
+                    _ = handler.handler(swipe, false)
+                }
+            default:
+                break
+            }
+        }
+        self.swipeState.removeAll()
     }
     
     public var inLiveSwiping: Bool {
@@ -639,29 +682,25 @@ open class Window: NSWindow {
         if sheets.isEmpty {
             if eventType == .keyDown {
                 
-                
-                if KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Escape && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.LeftArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.RightArrow && KeyboardKey(rawValue:event.keyCode) != KeyboardKey.Tab {
-                    applyResponderIfNeeded()
-                }
+                applyResponderIfNeeded(event)
                 
                 cleanUndefinedHandlers()
                 
-                if let globalHandler = keyHandlers[.All]?.sorted(by: >).first, let keyCode = KeyboardKey(rawValue:event.keyCode) {
+                if let globalHandlers = keyHandlers[.All]?.sorted(by: >), let keyCode = KeyboardKey(rawValue:event.keyCode) {
                     if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
-                        if globalHandler.priority > handle.priority {
-                            if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
-                                switch globalHandler.handler() {
-                                case .invoked:
-                                    return
-                                case .rejected:
-                                    break
-                                case .invokeNext:
-                                    super.sendEvent(event)
-                                    return
-                                }
-                            } else {
-                                // super.sendEvent(event)
-                                // return
+                        for globalHandler in globalHandlers {
+                            if globalHandler.priority > handle.priority {
+                                if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
+                                    switch globalHandler.handler() {
+                                    case .invoked:
+                                        return
+                                    case .rejected:
+                                        break
+                                    case .invokeNext:
+                                        super.sendEvent(event)
+                                        return
+                                    }
+                                } 
                             }
                         }
                     }

@@ -47,10 +47,7 @@ open class Popover: NSObject {
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
         self.background.layer?.isOpaque = false
-//        self.background.layer?.shadowOffset = NSMakeSize(0, 0)
         self.background.layer?.cornerRadius = 10
-//        self.background.layer?.shadowColor = NSColor.black.cgColor
-//        self.background.toolTip = ""
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 4
@@ -102,8 +99,6 @@ open class Popover: NSObject {
             }
             
             
-            controller.viewDidAppear(animates)
-            
             var rect = controller.bounds
             if !NSIsEmptyRect(frameValue.contentRect) {
                 rect = frameValue.contentRect
@@ -145,7 +140,6 @@ open class Popover: NSObject {
                         }
                     }
                 }
-                //NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
                 
                 if let strongSelf = self, let controller = controller, let parentView = parentView, (strongSelf.inside() || (control.controlState == .Hover || control.controlState == .Highlight || strongSelf.static) || !control.userInteractionEnabled), control.window != nil, control.visibleRect != NSZeroRect {
                     
@@ -196,8 +190,6 @@ open class Popover: NSObject {
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
                     
-                    
-                   // controller.view.layer?.cornerRadius = .cornerRadius
                     controller.view.setFrameOrigin(NSMakePoint(0, 0))
                     
                     
@@ -205,9 +197,8 @@ open class Popover: NSObject {
                     
                     parentView.addSubview(strongSelf.background)
                     
-                    //strongSelf.overlay.center()
                     
-                    _ = controller.becomeFirstResponder()
+                    let result = controller.becomeFirstResponder()
                     
                     strongSelf.isShown = true
                     
@@ -220,18 +211,17 @@ open class Popover: NSObject {
                                 if let strongSelf = self, !once {
                                     once = true
                                     controller?.viewDidAppear(strongSelf.animates)
+                                    if result == true {
+                                        _ = strongSelf.window?.makeFirstResponder(controller?.firstResponder())
+                                    } else if result == false {
+                                        _ = strongSelf.window?.makeFirstResponder(nil)
+                                    }
                                 }
                                 
                             })
                             
-//                            for sub in strongSelf.background.subviews {
-//
-//
-//                                //   sub.layer?.animate(from: 0.0 as NSNumber, to: 1.0 as NSNumber, keyPath: "opacity", timingFunction: strongSelf.animationStyle.function, duration: strongSelf.animationStyle.duration)
-//                            }
-//
-                            
-                            
+                        } else {
+                            controller.viewDidAppear(strongSelf.animates)
                         }
                         
                         let nHandler:(Control) -> Void = { [weak strongSelf] control in
@@ -255,7 +245,7 @@ open class Popover: NSObject {
                         
                         var first: Bool = true
                         
-                        control.kitWindow?.set(mouseHandler: { [weak strongSelf, weak control] _ -> KeyHandlerResult in
+                        strongSelf.window?.set(mouseHandler: { [weak strongSelf, weak control] _ -> KeyHandlerResult in
                             if let strongSelf = strongSelf, first, let control = control, !strongSelf.static {
                                 if !strongSelf.inside() && !control.mouseInside() {
                                     first = false
@@ -265,7 +255,7 @@ open class Popover: NSObject {
                             return .invokeNext
                         },  with: strongSelf, for: .mouseMoved, priority: .high)
                         
-                        control.kitWindow?.set(mouseHandler: { [weak strongSelf] event -> KeyHandlerResult in
+                        strongSelf.window?.set(mouseHandler: { [weak strongSelf] event -> KeyHandlerResult in
                             if let strongSelf = strongSelf, !strongSelf.inside() && (!control.mouseInside() || control.continuesAction) {
                                 strongSelf.hide()
                                 return .invokeNext
@@ -273,6 +263,10 @@ open class Popover: NSObject {
                                 return .rejected
                             }
                         }, with: strongSelf, for: .leftMouseDown, priority: .high)
+                        
+                        strongSelf.window?.set(responder: { [weak controller] () -> NSResponder? in
+                            return controller?.firstResponder()
+                        }, with: self, priority: .high, ignoreKeys: [.Return, .Delete])
                         
                         let hHandler:(Control) -> Void = { [weak strongSelf] _ in
                             

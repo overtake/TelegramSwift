@@ -70,7 +70,13 @@ class ChatMusicContentView: ChatAudioContentView {
         let arguments = TransformImageArguments(corners: imageCorners, imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
         
         let file = media as! TelegramMediaFile
-        let resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+        
+        let resource: TelegramMediaResource
+        if file.previewRepresentations.isEmpty {
+            resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+        } else {
+            resource = file.previewRepresentations.first!.resource
+        }
         imageView.layer?.contents = theme.icons.chatMusicPlaceholder
 
         

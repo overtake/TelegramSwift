@@ -59,11 +59,11 @@ class LeftSidebarFolderItem: TableRowItem {
         self.selected = selected
         self.callback = callback
         self.menuItems = menuItems
-        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: .white, font: .medium(10)), alignment: .center)
+        var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
+        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
         nameLayout.measure(width: initialSize.width - 10)
         
         
-        var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
         
         let generateIcon:()->CGImage? = {
             let icon: CGImage?
@@ -101,13 +101,13 @@ class LeftSidebarFolderItem: TableRowItem {
                     
                 })!
                 
-                folderIcon = generateImage(folderIcon.size, contextGenerator: { size, ctx in
+                folderIcon = generateImage(folderIcon.systemSize, contextGenerator: { size, ctx in
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
                     
-                    ctx.draw(folderIcon, in: rect.focus(folderIcon.size))
+                    ctx.draw(folderIcon, in: rect.focus(folderIcon.systemSize))
                     
-                    ctx.clip(to: NSMakeRect(rect.width - badge.size.width / 2 - 11 / System.backingScale, rect.height - badge.size.height + 5 / System.backingScale, badge.size.width + 4, badge.size.height + 4), mask: badge)
+                    ctx.clip(to: NSMakeRect(rect.width - badge.systemSize.width / 2 - 11 / System.backingScale, rect.height - badge.systemSize.height + 5 / System.backingScale, badge.systemSize.width + 4, badge.systemSize.height + 4), mask: badge)
                     
                     ctx.clear(rect)
                     
@@ -157,6 +157,8 @@ private final class LeftSidebarFolderView : TableRowView {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         textView.isEventLess = true
+        badgeView.isEventLess = true
+        imageView.isEventLess = true
     }
  
     override func updateIsResorting() {

@@ -207,6 +207,7 @@ private class PictureInpictureView : Control {
     init(frame: NSRect, window: Window) {
         _window = window
         super.init(frame: frame)
+        autoresizesSubviews = true
     }
     
     override func mouseEntered(with event: NSEvent) {

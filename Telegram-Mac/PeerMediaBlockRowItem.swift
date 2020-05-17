@@ -87,13 +87,22 @@ private final class PeerMediaBlockRowView : TableRowView {
         return theme.colors.listBackground
     }
     
-    override func layout() {
-        super.layout()
-        
+    private func updateOrigin() {
         guard let item = item as? PeerMediaBlockRowItem, let table = item.table else {
             return
         }
         item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        self.updateOrigin()
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        self.updateOrigin()
     }
     
     override func removeFromSuperview() {

@@ -344,6 +344,13 @@ class FastSettings {
         }
     }
     
+    static func showPromoTitle(for peerId: PeerId) -> Bool {
+        return UserDefaults.standard.value(forKey: "promo_\(peerId)_1") as? Bool ?? true
+    }
+    static func removePromoTitle(for peerId: PeerId) {
+        UserDefaults.standard.set(false, forKey: "promo_\(peerId)_1")
+        UserDefaults.standard.synchronize()
+    }
     
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)
@@ -361,11 +368,11 @@ class FastSettings {
         })
     }
     
-    static func diceHasAlreadyPlayed(_ messageId: MessageId) -> Bool {
-        return UserDefaults.standard.bool(forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+    static func diceHasAlreadyPlayed(_ message: Message) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
     }
-    static func markDiceAsPlayed(_ messageId: MessageId) {
-        UserDefaults.standard.set(true, forKey: "dice_\(messageId.id)_\(messageId.namespace)")
+    static func markDiceAsPlayed(_ message: Message) {
+        UserDefaults.standard.set(true, forKey: "dice_\(message.id.id)_\(message.id.namespace)_\(message.stableId)")
         UserDefaults.standard.synchronize()
     }
     
@@ -456,7 +463,7 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     } |> deliverOnMainQueue
     
     _ = name.start(next: { path, ext in
-        savePanel(file: path, ext: ext, for: mainWindow)
+        savePanel(file: path, ext: ext, for: mainWindow, defaultName: file.fileName)
     })
 }
 
@@ -486,6 +493,14 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<Stri
             
             try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
             
+//            let quarantineData = "doesn't matter".data(using: .utf8)!
+//
+//
+//            URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
+//                _ = quarantineData.withUnsafeBytes {
+//                    setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
+//                }
+//            }
             
             let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
             
@@ -599,7 +614,18 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 }
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-
+                
+//                let quarantineData = "doesn't matter".data(using: .utf8)!
+//                
+//                URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
+//                    _ = quarantineData.withUnsafeBytes {
+//                        setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
+//                    }
+//                }
+                
+                //setxattr(<#T##path: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##name: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##value: UnsafeRawPointer!##UnsafeRawPointer!#>, <#T##size: Int##Int#>, <#T##position: UInt32##UInt32#>, <#T##options: Int32##Int32#>)
+                
+            //    setxattr(ordinaryFileURL.path, SUAppleQuarantineIdentifier, quarantineData, quarantineDataLength, 0, XATTR_CREATE)
                 
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 

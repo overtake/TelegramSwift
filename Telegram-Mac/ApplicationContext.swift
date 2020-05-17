@@ -353,47 +353,47 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(0)
+            self?.openChat(0, false)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(1)
+            self?.openChat(1, false)
             return .invoked
             }, with: self, for: .Two, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(2)
+            self?.openChat(2, false)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(3)
+            self?.openChat(3, false)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(4)
+            self?.openChat(4, false)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(5)
+            self?.openChat(5, false)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(6)
+            self?.openChat(6, false)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(7)
+            self?.openChat(7, false)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.command])
         
         window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.openChat(8)
+            self?.openChat(8, false)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
@@ -452,18 +452,95 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
     
         
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(0, true)
+            return .invoked
+        }, with: self, for: .One, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(1, true)
+            return .invoked
+        }, with: self, for: .Two, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(2, true)
+            return .invoked
+        }, with: self, for: .Three, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(3, true)
+            return .invoked
+        }, with: self, for: .Four, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(4, true)
+            return .invoked
+        }, with: self, for: .Five, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(5, true)
+            return .invoked
+        }, with: self, for: .Six, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(6, true)
+            return .invoked
+        }, with: self, for: .Seven, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(7, true)
+            return .invoked
+        }, with: self, for: .Eight, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(8, true)
+            return .invoked
+        }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            self?.openChat(9, true)
+            return .invoked
+        }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
+        
+        
+        window.set(handler: { () -> KeyHandlerResult in
+            
+            let beginPendingTime:CFAbsoluteTime = CACurrentMediaTime()
+            
+            let afterSentSound:NSSound? = {
+                
+                let p = Bundle.main.path(forResource: "sent", ofType: "caf")
+                var sound:NSSound?
+                if let p = p {
+                    sound = NSSound(contentsOfFile: p, byReference: true)
+                    sound?.volume = 1.0
+                }
+                
+                return sound
+            }()
+            
+            afterSentSound?.play()
+            
+            alert(for: context.window, info: "Play sound took: \(CACurrentMediaTime() - beginPendingTime)")
+            
+            return .invoked
+        }, with: self, for: .E, priority: .supreme, modifierFlags: [.control, .command])
+        
+        
 //        window.set(handler: { [weak self] () -> KeyHandlerResult in
 //            self?.leftController.focusSearch(animated: true)
 //            return .invoked
 //        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .shift])
         
-        
+        window.set(handler: { () -> KeyHandlerResult in
+            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            return .invoked
+        }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in
-            _ = updateChatListFolderSettings(context.account.postbox, {
-                $0.withUpdatedSidebar(!$0.sidebar)
-            }).start()
+            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
@@ -544,34 +621,37 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 leftController.tabController.select(index: leftController.settingsIndex)
             case let .chat(peerId, necessary):
                 
-                let peerSemaphore = DispatchSemaphore(value: 0)
-                var peer: Peer?
-                _ = context.account.postbox.transaction { transaction in
-                    peer = transaction.getPeer(peerId)
-                    peerSemaphore.signal()
-                }.start()
-                peerSemaphore.wait()
+//                let peerSemaphore = DispatchSemaphore(value: 0)
+//                var peer: Peer?
+//                _ = context.account.postbox.transaction { transaction in
+//                    peer = transaction.getPeer(peerId)
+//                    peerSemaphore.signal()
+//                }.start()
+//                peerSemaphore.wait()
                 
-                if (necessary || context.sharedContext.layout != .single) && launchSettings.openAtLaunch {
-                    if let peer = peer {
-                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
-                        controller.navigationController = self.rightController
-                        controller.loadViewIfNeeded(self.rightController.bounds)
-                        
-                        self.launchAction = .navigate(controller)
-                        
-                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                    } else {
-                       // self._ready.set(self.leftController.chatList.ready.get())
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                        self._ready.set(.single(true))
-                    }
-                } else {
-                   // self._ready.set(.single(true))
-                    _ready.set(leftController.chatList.ready.get())
-                    self.leftController.tabController.select(index: self.leftController.chatIndex)
-                }
+                _ready.set(leftController.chatList.ready.get())
+                self.leftController.tabController.select(index: self.leftController.chatIndex)
+                
+//                if (necessary || context.sharedContext.layout != .single) && launchSettings.openAtLaunch {
+//                    if let peer = peer {
+//                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
+//                        controller.navigationController = self.rightController
+//                        controller.loadViewIfNeeded(self.rightController.bounds)
+//
+//                        self.launchAction = .navigate(controller)
+//
+//                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+//                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+//                    } else {
+//                       // self._ready.set(self.leftController.chatList.ready.get())
+//                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+//                        self._ready.set(.single(true))
+//                    }
+//                } else {
+//                   // self._ready.set(.single(true))
+//                    _ready.set(leftController.chatList.ready.get())
+//                    self.leftController.tabController.select(index: self.leftController.chatIndex)
+//                }
             }
         } else {
            // self._ready.set(.single(true))
@@ -642,8 +722,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 guard let `self` = self else {
                     return
                 }
-                self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
                 self.view.updateLeftSideView(self.leftSidebarController?.genericView, animated: animated)
+                if !self.window.isFullScreen {
+                    self.window.setFrame(NSMakeRect(max(0, self.window.frame.minX - enlarge), self.window.frame.minY, self.window.frame.width + enlarge, self.window.frame.height), display: true, animate: false)
+                }
                 self.updateMinMaxWindowSize(animated: animated)
             }))
                         
@@ -658,6 +740,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         var width: CGFloat = 380
         if leftSidebarController != nil {
             width += leftSidebarWidth
+        }
+        if context.sharedContext.layout == .minimisize {
+            width += 70
         }
         window.minSize = NSMakeSize(width, 500)
         
@@ -750,9 +835,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         default:
             break;
         }
-
         
         context.sharedContext.layoutHandler.set(state)
+        updateMinMaxWindowSize(animated: false)
         self.view.splitView.layout()
 
     }

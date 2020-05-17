@@ -433,19 +433,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var chatShare: CGImage {
-      if let image = cached.with({ $0["chatShare"] }) {
-          return image
-      } else {
-          let image = _chatShare()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatShare"] = image
-              return current
-          }
-          return image
-      }
-  }
   var chatMusicPlay: CGImage {
       if let image = cached.with({ $0["chatMusicPlay"] }) {
           return image
@@ -2201,6 +2188,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatSecretThumbSmall: CGImage {
+      if let image = cached.with({ $0["chatSecretThumbSmall"] }) {
+          return image
+      } else {
+          let image = _chatSecretThumbSmall()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatSecretThumbSmall"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatMapPin: CGImage {
       if let image = cached.with({ $0["chatMapPin"] }) {
           return image
@@ -3605,19 +3605,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var chatGoMessage: CGImage {
-      if let image = cached.with({ $0["chatGoMessage"] }) {
-          return image
-      } else {
-          let image = _chatGoMessage()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatGoMessage"] = image
-              return current
-          }
-          return image
-      }
-  }
   var chatGroupToggleSelected: CGImage {
       if let image = cached.with({ $0["chatGroupToggleSelected"] }) {
           return image
@@ -3665,32 +3652,6 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["accentColorSelect"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatShareWallpaper: CGImage {
-      if let image = cached.with({ $0["chatShareWallpaper"] }) {
-          return image
-      } else {
-          let image = _chatShareWallpaper()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatShareWallpaper"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatGotoMessageWallpaper: CGImage {
-      if let image = cached.with({ $0["chatGotoMessageWallpaper"] }) {
-          return image
-      } else {
-          let image = _chatGotoMessageWallpaper()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatGotoMessageWallpaper"] = image
               return current
           }
           return image
@@ -4601,32 +4562,6 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["editMessageCurrentPhoto"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatSwipeReply: CGImage {
-      if let image = cached.with({ $0["chatSwipeReply"] }) {
-          return image
-      } else {
-          let image = _chatSwipeReply()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatSwipeReply"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var chatSwipeReplyWallpaper: CGImage {
-      if let image = cached.with({ $0["chatSwipeReplyWallpaper"] }) {
-          return image
-      } else {
-          let image = _chatSwipeReplyWallpaper()
-          _ = cached.modify { current in 
-              var current = current
-              current["chatSwipeReplyWallpaper"] = image
               return current
           }
           return image
@@ -6452,6 +6387,214 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_quiz_explanation: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_quiz_explanation_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_quiz_explanation_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_quiz_explanation_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_quiz_explanation_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var stickers_add_featured: CGImage {
+      if let image = cached.with({ $0["stickers_add_featured"] }) {
+          return image
+      } else {
+          let image = _stickers_add_featured()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_add_featured"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_info_promo: CGImage {
+      if let image = cached.with({ $0["channel_info_promo"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_info_promo_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["channel_info_promo_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_info_promo_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["channel_info_promo_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _channel_info_promo_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_info_promo_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_share_message: CGImage {
+      if let image = cached.with({ $0["chat_share_message"] }) {
+          return image
+      } else {
+          let image = _chat_share_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_share_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_goto_message: CGImage {
+      if let image = cached.with({ $0["chat_goto_message"] }) {
+          return image
+      } else {
+          let image = _chat_goto_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_goto_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_swipe_reply: CGImage {
+      if let image = cached.with({ $0["chat_swipe_reply"] }) {
+          return image
+      } else {
+          let image = _chat_swipe_reply()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_swipe_reply"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside: CGImage {
+      if let image = cached.with({ $0["chat_like_inside"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_empty: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_empty"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_empty()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_empty"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_empty_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_empty_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_empty_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_empty_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_empty_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_empty_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_empty_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_empty_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6486,7 +6629,6 @@ final class TelegramIconsTheme {
   private let _chatFallbackCallBubble_outgoing: ()->CGImage
   private let _chatToggleSelected: ()->CGImage
   private let _chatToggleUnselected: ()->CGImage
-  private let _chatShare: ()->CGImage
   private let _chatMusicPlay: ()->CGImage
   private let _chatMusicPlayBubble_incoming: ()->CGImage
   private let _chatMusicPlayBubble_outgoing: ()->CGImage
@@ -6622,6 +6764,7 @@ final class TelegramIconsTheme {
   private let _chatFileThumbBubble_incoming: ()->CGImage
   private let _chatFileThumbBubble_outgoing: ()->CGImage
   private let _chatSecretThumb: ()->CGImage
+  private let _chatSecretThumbSmall: ()->CGImage
   private let _chatMapPin: ()->CGImage
   private let _chatSecretTitle: ()->CGImage
   private let _emptySearch: ()->CGImage
@@ -6730,13 +6873,10 @@ final class TelegramIconsTheme {
   private let _previewSenderDelete: ()->CGImage
   private let _previewSenderDeleteFile: ()->CGImage
   private let _previewSenderArchive: ()->CGImage
-  private let _chatGoMessage: ()->CGImage
   private let _chatGroupToggleSelected: ()->CGImage
   private let _chatGroupToggleUnselected: ()->CGImage
   private let _successModalProgress: ()->CGImage
   private let _accentColorSelect: ()->CGImage
-  private let _chatShareWallpaper: ()->CGImage
-  private let _chatGotoMessageWallpaper: ()->CGImage
   private let _transparentBackground: ()->CGImage
   private let _lottieTransparentBackground: ()->CGImage
   private let _passcodeTouchId: ()->CGImage
@@ -6807,8 +6947,6 @@ final class TelegramIconsTheme {
   private let _galleryZoomIn: ()->CGImage
   private let _galleryZoomOut: ()->CGImage
   private let _editMessageCurrentPhoto: ()->CGImage
-  private let _chatSwipeReply: ()->CGImage
-  private let _chatSwipeReplyWallpaper: ()->CGImage
   private let _videoPlayerPlay: ()->CGImage
   private let _videoPlayerPause: ()->CGImage
   private let _videoPlayerEnterFullScreen: ()->CGImage
@@ -6949,6 +7087,22 @@ final class TelegramIconsTheme {
   private let _profile_share: ()->CGImage
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
+  private let _chat_quiz_explanation: ()->CGImage
+  private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
+  private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
+  private let _stickers_add_featured: ()->CGImage
+  private let _channel_info_promo: ()->CGImage
+  private let _channel_info_promo_bubble_incoming: ()->CGImage
+  private let _channel_info_promo_bubble_outgoing: ()->CGImage
+  private let _chat_share_message: ()->CGImage
+  private let _chat_goto_message: ()->CGImage
+  private let _chat_swipe_reply: ()->CGImage
+  private let _chat_like_inside: ()->CGImage
+  private let _chat_like_inside_bubble_incoming: ()->CGImage
+  private let _chat_like_inside_bubble_outgoing: ()->CGImage
+  private let _chat_like_inside_empty: ()->CGImage
+  private let _chat_like_inside_empty_bubble_incoming: ()->CGImage
+  private let _chat_like_inside_empty_bubble_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -6984,7 +7138,6 @@ final class TelegramIconsTheme {
       chatFallbackCallBubble_outgoing: @escaping()->CGImage,
       chatToggleSelected: @escaping()->CGImage,
       chatToggleUnselected: @escaping()->CGImage,
-      chatShare: @escaping()->CGImage,
       chatMusicPlay: @escaping()->CGImage,
       chatMusicPlayBubble_incoming: @escaping()->CGImage,
       chatMusicPlayBubble_outgoing: @escaping()->CGImage,
@@ -7120,6 +7273,7 @@ final class TelegramIconsTheme {
       chatFileThumbBubble_incoming: @escaping()->CGImage,
       chatFileThumbBubble_outgoing: @escaping()->CGImage,
       chatSecretThumb: @escaping()->CGImage,
+      chatSecretThumbSmall: @escaping()->CGImage,
       chatMapPin: @escaping()->CGImage,
       chatSecretTitle: @escaping()->CGImage,
       emptySearch: @escaping()->CGImage,
@@ -7228,13 +7382,10 @@ final class TelegramIconsTheme {
       previewSenderDelete: @escaping()->CGImage,
       previewSenderDeleteFile: @escaping()->CGImage,
       previewSenderArchive: @escaping()->CGImage,
-      chatGoMessage: @escaping()->CGImage,
       chatGroupToggleSelected: @escaping()->CGImage,
       chatGroupToggleUnselected: @escaping()->CGImage,
       successModalProgress: @escaping()->CGImage,
       accentColorSelect: @escaping()->CGImage,
-      chatShareWallpaper: @escaping()->CGImage,
-      chatGotoMessageWallpaper: @escaping()->CGImage,
       transparentBackground: @escaping()->CGImage,
       lottieTransparentBackground: @escaping()->CGImage,
       passcodeTouchId: @escaping()->CGImage,
@@ -7305,8 +7456,6 @@ final class TelegramIconsTheme {
       galleryZoomIn: @escaping()->CGImage,
       galleryZoomOut: @escaping()->CGImage,
       editMessageCurrentPhoto: @escaping()->CGImage,
-      chatSwipeReply: @escaping()->CGImage,
-      chatSwipeReplyWallpaper: @escaping()->CGImage,
       videoPlayerPlay: @escaping()->CGImage,
       videoPlayerPause: @escaping()->CGImage,
       videoPlayerEnterFullScreen: @escaping()->CGImage,
@@ -7446,7 +7595,23 @@ final class TelegramIconsTheme {
       profile_report: @escaping()->CGImage,
       profile_share: @escaping()->CGImage,
       profile_stats: @escaping()->CGImage,
-      profile_unblock: @escaping()->CGImage
+      profile_unblock: @escaping()->CGImage,
+      chat_quiz_explanation: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
+      chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
+      stickers_add_featured: @escaping()->CGImage,
+      channel_info_promo: @escaping()->CGImage,
+      channel_info_promo_bubble_incoming: @escaping()->CGImage,
+      channel_info_promo_bubble_outgoing: @escaping()->CGImage,
+      chat_share_message: @escaping()->CGImage,
+      chat_goto_message: @escaping()->CGImage,
+      chat_swipe_reply: @escaping()->CGImage,
+      chat_like_inside: @escaping()->CGImage,
+      chat_like_inside_bubble_incoming: @escaping()->CGImage,
+      chat_like_inside_bubble_outgoing: @escaping()->CGImage,
+      chat_like_inside_empty: @escaping()->CGImage,
+      chat_like_inside_empty_bubble_incoming: @escaping()->CGImage,
+      chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7481,7 +7646,6 @@ final class TelegramIconsTheme {
       self._chatFallbackCallBubble_outgoing = chatFallbackCallBubble_outgoing
       self._chatToggleSelected = chatToggleSelected
       self._chatToggleUnselected = chatToggleUnselected
-      self._chatShare = chatShare
       self._chatMusicPlay = chatMusicPlay
       self._chatMusicPlayBubble_incoming = chatMusicPlayBubble_incoming
       self._chatMusicPlayBubble_outgoing = chatMusicPlayBubble_outgoing
@@ -7617,6 +7781,7 @@ final class TelegramIconsTheme {
       self._chatFileThumbBubble_incoming = chatFileThumbBubble_incoming
       self._chatFileThumbBubble_outgoing = chatFileThumbBubble_outgoing
       self._chatSecretThumb = chatSecretThumb
+      self._chatSecretThumbSmall = chatSecretThumbSmall
       self._chatMapPin = chatMapPin
       self._chatSecretTitle = chatSecretTitle
       self._emptySearch = emptySearch
@@ -7725,13 +7890,10 @@ final class TelegramIconsTheme {
       self._previewSenderDelete = previewSenderDelete
       self._previewSenderDeleteFile = previewSenderDeleteFile
       self._previewSenderArchive = previewSenderArchive
-      self._chatGoMessage = chatGoMessage
       self._chatGroupToggleSelected = chatGroupToggleSelected
       self._chatGroupToggleUnselected = chatGroupToggleUnselected
       self._successModalProgress = successModalProgress
       self._accentColorSelect = accentColorSelect
-      self._chatShareWallpaper = chatShareWallpaper
-      self._chatGotoMessageWallpaper = chatGotoMessageWallpaper
       self._transparentBackground = transparentBackground
       self._lottieTransparentBackground = lottieTransparentBackground
       self._passcodeTouchId = passcodeTouchId
@@ -7802,8 +7964,6 @@ final class TelegramIconsTheme {
       self._galleryZoomIn = galleryZoomIn
       self._galleryZoomOut = galleryZoomOut
       self._editMessageCurrentPhoto = editMessageCurrentPhoto
-      self._chatSwipeReply = chatSwipeReply
-      self._chatSwipeReplyWallpaper = chatSwipeReplyWallpaper
       self._videoPlayerPlay = videoPlayerPlay
       self._videoPlayerPause = videoPlayerPause
       self._videoPlayerEnterFullScreen = videoPlayerEnterFullScreen
@@ -7944,5 +8104,21 @@ final class TelegramIconsTheme {
       self._profile_share = profile_share
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
+      self._chat_quiz_explanation = chat_quiz_explanation
+      self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
+      self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
+      self._stickers_add_featured = stickers_add_featured
+      self._channel_info_promo = channel_info_promo
+      self._channel_info_promo_bubble_incoming = channel_info_promo_bubble_incoming
+      self._channel_info_promo_bubble_outgoing = channel_info_promo_bubble_outgoing
+      self._chat_share_message = chat_share_message
+      self._chat_goto_message = chat_goto_message
+      self._chat_swipe_reply = chat_swipe_reply
+      self._chat_like_inside = chat_like_inside
+      self._chat_like_inside_bubble_incoming = chat_like_inside_bubble_incoming
+      self._chat_like_inside_bubble_outgoing = chat_like_inside_bubble_outgoing
+      self._chat_like_inside_empty = chat_like_inside_empty
+      self._chat_like_inside_empty_bubble_incoming = chat_like_inside_empty_bubble_incoming
+      self._chat_like_inside_empty_bubble_outgoing = chat_like_inside_empty_bubble_outgoing
   }
 }

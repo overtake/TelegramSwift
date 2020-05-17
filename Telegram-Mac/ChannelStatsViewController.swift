@@ -235,10 +235,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
         }
         
         let messages = messageView?.entries.map { $0.message }.filter { interactions?[$0.id] != nil }.sorted(by: { (lhsMessage, rhsMessage) -> Bool in
-            let lhsViews = max(lhsMessage.channelViewsCount ?? 0, interactions?[lhsMessage.id]?.views ?? 0)
-            let rhsViews = max(rhsMessage.channelViewsCount ?? 0, interactions?[rhsMessage.id]?.views ?? 0)
-            return lhsViews > rhsViews
-                //return lhsMessage.timestamp > rhsMessage.timestamp
+            return lhsMessage.timestamp > rhsMessage.timestamp
         })
         
 

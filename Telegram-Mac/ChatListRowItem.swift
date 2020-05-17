@@ -18,7 +18,7 @@ enum ChatListPinnedType {
     case some
     case last
     case none
-    case ad
+    case ad(AdditionalChatListItem)
 }
 
 
@@ -199,7 +199,7 @@ class ChatListRowItem: TableRowItem {
         if context.peerId == peerId {
             return false
         }
-        if pinnedType == .ad {
+        if case .ad = pinnedType {
             return false
         }
         let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
@@ -459,14 +459,19 @@ class ChatListRowItem: TableRowItem {
         self.titleText = titleText
     
         
-        if case .ad = pinnedType {
+        if case let .ad(item) = pinnedType, let promo = item as? PromoChatListItem {
             let sponsored:NSMutableAttributedString = NSMutableAttributedString()
-            let range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
+            let range: NSRange
+            switch promo.kind {
+            case let .psa(type, _):
+                range = sponsored.append(string: localizedPsa("psa.chatlist", type: type), color: theme.colors.grayText, font: .normal(.short))
+            case .proxy:
+                range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
+            }
             sponsored.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = sponsored
             dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
-            
         } else if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
@@ -523,20 +528,60 @@ class ChatListRowItem: TableRowItem {
     
     let margin:CGFloat = 9
     
+    
+    var isPinned: Bool {
+        switch pinnedType {
+        case .some:
+            return true
+        case .last:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var isLastPinned: Bool {
+        switch pinnedType {
+        case .last:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    
+    var isFixedItem: Bool {
+        switch pinnedType {
+        case .some, .ad, .last:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var isAd: Bool {
+        switch pinnedType {
+        case .ad:
+            return true
+        default:
+            return false
+        }
+    }
+    
     var titleWidth:CGFloat {
         var dateSize:CGFloat = 0
         if let dateLayout = dateLayout {
             dateSize = dateLayout.0.size.width
         }
         
-        return max(300, size.width) - 50 - margin * 4 - dateSize - (isMuted ? theme.icons.dialogMuteImage.backingSize.width + 4 : 0) - (isOutMessage ? isRead ? 14 : 8 : 0) - (isVerified ? 10 : 0) - (isSecret ? 10 : 0) - (isScam ? theme.icons.scam.backingSize.width : 0)
+        return max(300, size.width) - 50 - margin * 4 - dateSize - (isMuted ? theme.icons.dialogMuteImage.backingSize.width + 4 : 0) - (isOutMessage ? isRead ? 14 : 8 : 0) - (isVerified ? 20 : 0) - (isSecret ? 10 : 0) - (isScam ? theme.icons.scam.backingSize.width : 0)
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
             return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (pinnedType != .none ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
+        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);
@@ -545,16 +590,34 @@ class ChatListRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
         if self.groupId == .root {
-            var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
-            if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
-                if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
-                    copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
-                    copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
-                    messageText = copy
+            var text: NSAttributedString?
+            if case let .ad(promo) = pinnedType, message == nil {
+                if let promo = promo as? PromoChatListItem {
+                    switch promo.kind {
+                    case let .psa(_, message):
+                        if let message = message {
+                            let attr = NSMutableAttributedString()
+                            _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
+                            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                            text = attr
+                        }
+                    default:
+                        break
+                    }
                 }
-                
             }
-            self.messageText = messageText
+            if text == nil {
+                var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
+                if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
+                    if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
+                        copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
+                        copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
+                        messageText = copy
+                    }
+                }
+                text = messageText
+            }
+            self.messageText = text!
         }
         
        
@@ -581,6 +644,9 @@ class ChatListRowItem: TableRowItem {
     
     func collapseOrExpandArchive() {
         context.sharedContext.bindings.mainController().chatList.collapseOrExpandArchive()
+    }
+    func hidePromoItem(_ peerId: PeerId) {
+        context.sharedContext.bindings.mainController().chatList.hidePromoItem(peerId)
     }
     
     func toggleHideArchive() {
@@ -695,7 +761,7 @@ class ChatListRowItem: TableRowItem {
         var items:[ContextMenuItem] = []
 
         let context = self.context
-
+        let peerId = self.peerId
         
         if let peer = peer {
             
@@ -769,15 +835,15 @@ class ChatListRowItem: TableRowItem {
                 _ = returnGroup(account: context.account, peerId: peerId).start()
             }
             
-            if pinnedType != .ad && groupId == .root {
-                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+            if !isAd && groupId == .root {
+                items.append(ContextMenuItem(!isPinned ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
             }
             
             if groupId == .root, (canArchive || associatedGroupId != .root), filter == nil {
                 items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
             }
             
-            if context.peerId != peer.id, pinnedType != .ad {
+            if context.peerId != peer.id, !isAd {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
@@ -805,9 +871,15 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
+            if isAd {
+                items.append(ContextMenuItem(tr(L10n.chatListContextHidePromo), handler: { [weak self] in
+                    guard let `self` = self, let peerId = self.peerId else {return}
+                    self.hidePromoItem(peerId)
+                }))
+            }
            
 
-            if let peer = peer as? TelegramGroup, pinnedType != .ad {
+            if let peer = peer as? TelegramGroup, !isAd {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
                 switch peer.membership {
                 case .Member:
@@ -818,11 +890,11 @@ class ChatListRowItem: TableRowItem {
                     break
                 }
                 items.append(ContextMenuItem(L10n.chatListContextDeleteAndExit, handler: deleteChat))
-            } else if let peer = peer as? TelegramChannel, pinnedType != .ad, !peer.flags.contains(.hasGeo) {
+            } else if let peer = peer as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
                 
                 if case .broadcast = peer.info {
                      items.append(ContextMenuItem(L10n.chatListContextLeaveChannel, handler: deleteChat))
-                } else if pinnedType != .ad {
+                } else if !isAd {
                     if peer.addressName == nil {
                         items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
                     }
@@ -831,8 +903,8 @@ class ChatListRowItem: TableRowItem {
             }
             
         } else {
-            if pinnedType != .ad, groupId == .root {
-                items.append(ContextMenuItem(pinnedType == .none ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: { [weak self] in
+            if !isAd, groupId == .root {
+                items.append(ContextMenuItem(!isPinned ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: { [weak self] in
                     self?.togglePinned()
                 }))
             }
@@ -851,8 +923,74 @@ class ChatListRowItem: TableRowItem {
             }
             
         }
+        
+        let filter = self.filter
 
-        return .single(items)
+        return .single(items) |> mapToSignal { items in
+            return chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+                
+                var items = items
+                
+                var submenu: [ContextMenuItem] = []
+                
+                
+                
+                if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat {
+                    for item in filters.list {
+                        if !item.data.includePeers.peers.contains(peerId) {
+                            submenu.append(ContextMenuItem(item.title, handler: {
+                                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { list in
+                                    var list = list
+                                    for (i, folder) in list.enumerated() {
+                                        var folder = folder
+                                        if folder.id == item.id {
+                                            folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
+                                            list[i] = folder
+                                        }
+                                    }
+                                    return list
+                                }).start()
+                            }))
+                        }
+                    }
+                }
+                
+                if !submenu.isEmpty {
+                    items.append(ContextSeparatorItem())
+                    let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
+                    let menu = NSMenu()
+                    for item in submenu {
+                        menu.addItem(item)
+                    }
+                    item.submenu = menu
+                    items.append(item)
+                }
+                if let filter = filter, let peerId = peerId {
+                    if filter.data.includePeers.peers.contains(peerId) {
+                        if submenu.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
+                        items.append(ContextMenuItem(L10n.chatListFilterRemoveFromFolder, handler: {
+                            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { list in
+                                var list = list
+                                for (i, folder) in list.enumerated() {
+                                    var folder = folder
+                                    if folder.id == filter.id {
+                                        var peers = folder.data.includePeers.peers
+                                        peers.removeAll(where: { $0 == peerId })
+                                        folder.data.includePeers.setPeers(peers)
+                                        list[i] = folder
+                                    }
+                                }
+                                return list
+                            }).start()
+                        }))
+                    }
+                }
+                
+                return items
+            }
+        }
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {

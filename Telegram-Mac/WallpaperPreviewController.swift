@@ -289,7 +289,12 @@ private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
     }
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        return false
+        
+        let text = pasteboard.string(forType: .string)
+        if let text = text, let color = NSColor(hexString: text) {
+            defaultColor = color
+        }
+        return true
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
@@ -1500,7 +1505,12 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView.colorPicker.firstView.textView
+        switch genericView.colorPicker.currentResponder {
+        case .first:
+            return genericView.colorPicker.firstView.textView.inputView
+        case .second:
+            return genericView.colorPicker.secondView?.textView.inputView
+        }
     }
     
     private let wallpaper: Wallpaper

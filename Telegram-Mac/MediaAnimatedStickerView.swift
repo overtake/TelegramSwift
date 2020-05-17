@@ -33,8 +33,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(self.playerView)
         addSubview(self.thumbView)
+        addSubview(self.playerView)
 
     }
     
@@ -115,7 +115,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
         return true
     }
-    
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
@@ -250,12 +249,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
+            
             switch state {
             case .playing:
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = true
             default:
-                self.playerView.isHidden = true
+                self.playerView.isHidden = false
                 self.thumbView.isHidden = false
             }
         }))

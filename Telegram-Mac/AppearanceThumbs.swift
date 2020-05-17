@@ -157,7 +157,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                         let rect = NSMakeRect(0, 0, size.width, size.height)
                         ctx.clear(rect)
                         ctx.round(size, 2)
-                        ctx.setFillColor(palette.grayText.cgColor)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
                     ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
@@ -180,7 +180,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                         let rect = NSMakeRect(0, 0, size.width, size.height)
                         ctx.clear(rect)
                         ctx.round(size, 2)
-                        ctx.setFillColor(palette.grayText.cgColor)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
                     ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))

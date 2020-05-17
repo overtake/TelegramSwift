@@ -58,7 +58,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         dismiss.disableActions()
         repeatControl.disableActions()
-        
+        repeatControl.autohighlight = false
         textView.isSelectable = false
         
         containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))

@@ -248,16 +248,10 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
     }
     
     func index(at point: NSPoint) -> Int? {
-        if let item = item as? ContextMediaRowItem {
-            var inset:CGFloat = 0
-            var i:Int = 0
-            if !item.result.results.isEmpty {
-                for size in item.result.sizes {
-                    if point.x > inset && point.x < inset + size.width {
-                        return i
-                    }
-                    inset += size.width + dif
-                    i += 1
+        if let _ = item as? ContextMediaRowItem {
+            for (i, subview) in self.subviews.enumerated() {
+                if NSPointInRect(point, subview.frame) {
+                    return i
                 }
             }
         }
@@ -269,7 +263,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         
         longDisposable.set(nil)
         
-        if let item = item as? ContextMediaRowItem  {
+        if let item = item as? ContextMediaRowItem, event.clickCount == 1  {
             let point = convert(event.locationInWindow, from: nil)
             if let index = self.index(at: point) {
                 item.arguments.sendResult(item.result.results[index], self.subviews[index])

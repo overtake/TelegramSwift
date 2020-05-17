@@ -208,6 +208,67 @@ final class TelegramChatColors {
         self.palette = palette
     }
     
+    private var cacheDict: [String: CGImage] = [:]
+    
+    func messageSecretTimer(_ value: String) -> CGImage {
+        if let value = cacheDict[value] {
+            return value
+        } else {
+            let node = TextNode.layoutText(.initialize(string: value, color: theme.colors.grayIcon, font: .normal(15)), nil, 1, .end, NSMakeSize(30, 30), nil, false, .left)
+            
+            let image = generateImage(NSMakeSize(30, 30), rotatedContext: { size, ctx in
+                let rect = NSMakeRect(0, 0, size.width, size.height)
+                ctx.clear(rect)
+                node.1.draw(rect.focus(node.0.size), in: ctx, backingScaleFactor: 1.0, backgroundColor: .clear)
+            })!
+            cacheDict[value] = image
+            
+            return image
+        }
+        
+    }
+    
+    //chatGotoMessageWallpaper / chatShareWallpaper / chatSwipeReplyWallpaper
+    
+    func chat_goto_message_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_goto_message_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_GotoBubbleMessage")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_goto_message_bubble"] = image
+            return image
+        }
+    }
+    func chat_share_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_share_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_ChannelShare")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_share_bubble"] = image
+            return image
+        }
+    }
+    func chat_reply_swipe_bubble(theme: TelegramPresentationTheme) -> CGImage {
+        if let value = cacheDict["chat_reply_swipe_bubble"] {
+            return value
+        } else {
+            let image = NSImage(named: "Icon_ChannelShare")!.precomposed(theme.chatServiceItemTextColor)
+            cacheDict["chat_reply_swipe_bubble"] = image
+            return image
+        }
+    }
+    
+    private var _chatActionUrl: CGImage?
+    func chatActionUrl(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionUrl = _chatActionUrl {
+            return chatActionUrl
+        } else {
+            let image = #imageLiteral(resourceName: "Icon_InlineBotUrl").precomposed(theme.chatServiceItemTextColor)
+            _chatActionUrl = image
+            return image
+        }
+    }
+    
     func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
         let minimumFrameDuration = 1.0 / 60
         let numberOfFrames = max(1, Int(duration / minimumFrameDuration))
@@ -250,6 +311,8 @@ final class TelegramChatColors {
     func waveformForeground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.waveformForegroundBubble_incoming : palette.waveformForegroundBubble_outgoing : palette.waveformForeground
     }
+    
+    
     
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? System.supportsTransparentFontDrawing ? .clear : palette.bubbleBackground_incoming : System.supportsTransparentFontDrawing ?  .clear : palette.bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: palette.bubbleBackgroundBottom_outgoing)! : palette.chatBackground
@@ -304,6 +367,10 @@ final class TelegramChatColors {
         return bubbled ? incoming ? icons.poll_selected_incorrect_incoming : icons.poll_selected_incorrect_outgoing : icons.poll_selected_incorrect
     }
     
+    func channelInfoPromo(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.channel_info_promo_bubble_incoming : icons.channel_info_promo_bubble_outgoing : icons.channel_info_promo
+    }
+    
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
@@ -312,6 +379,10 @@ final class TelegramChatColors {
     }
     func readStateIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatReadMarkServiceOverlayBubble2 : item.presentation.icons.chatReadMarkOverlayBubble2 : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatReadMarkInBubble2_incoming : item.presentation.icons.chatReadMarkInBubble2_outgoing : item.presentation.icons.chatReadMarkOutBubble2
+    }
+    
+    func quizSolution(_ item: ChatRowItem) -> CGImage {
+        return item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_quiz_explanation_bubble_incoming : item.presentation.icons.chat_quiz_explanation_bubble_outgoing : item.presentation.icons.chat_quiz_explanation
     }
     
     func instantPageIcon(_ incoming: Bool, _ bubbled: Bool, presentation: TelegramPresentationTheme) -> CGImage {

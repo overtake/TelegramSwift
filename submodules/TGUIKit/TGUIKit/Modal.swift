@@ -12,8 +12,11 @@ import SwiftSignalKit
 
 private class ModalBackground : Control {
     var isOverlay: Bool = false
+    var canRedirectScroll: Bool = false
     fileprivate override func scrollWheel(with event: NSEvent) {
-      //  super.scrollWheel(with: event)
+        if canRedirectScroll {
+            super.scrollWheel(with: event)
+        }
     }
     override func cursorUpdate(with event: NSEvent) {
         NSCursor.arrow.set()
@@ -407,13 +410,15 @@ public class Modal: NSObject {
         self.isOverlay = isOverlay
         background = ModalBackground()
         background.isOverlay = isOverlay
+        background.canRedirectScroll = controller.redirectMouseAfterClosing
         background.backgroundColor = controller.background
         background.layer?.disableActions()
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
-            self.visualEffectView!.material = presentation.colors.isDark ? .dark : .light
+            self.visualEffectView!.material = .ultraDark
             self.visualEffectView!.blendingMode = .withinWindow
+            self.visualEffectView!.state = .active
             self.visualEffectView?.wantsLayer = true
         } else {
             self.visualEffectView = nil
@@ -732,7 +737,10 @@ public class Modal: NSObject {
                     }
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
-                        strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        if case .alpha = strongSelf.animationType {
+                        } else {
+                            strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
+                        }
                         if !controller.isFullScreen {
                             switch strongSelf.animationType {
                             case .bottomToCenter:
@@ -747,7 +755,8 @@ public class Modal: NSObject {
                                 view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.3, timingFunction: .spring)
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
-
+                            case .alpha:
+                                view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
                             }
                         }
                     }
@@ -787,12 +796,13 @@ public class Modal: NSObject {
                     } else {
                         view.addSubview(background)
                     }
-                    if let value = strongSelf.controller?.becomeFirstResponder(), value {
-                        _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
-                    } else {
-                        _ = strongSelf.window.makeFirstResponder(nil)
+                    if let value = strongSelf.controller?.becomeFirstResponder() {
+                        if value {
+                            _ = strongSelf.window.makeFirstResponder(strongSelf.controller?.firstResponder())
+                        } else {
+                            _ = strongSelf.window.makeFirstResponder(nil)
+                        }
                     }
-                    
                     let animatedBackground = strongSelf.animated && !hideBelowModalsIfNeeded(except: strongSelf)
                     
                     if animatedBackground {
@@ -846,6 +856,7 @@ public enum ModalAnimationType {
     case bottomToCenter
     case scaleCenter
     case scaleFrom(NSRect)
+    case alpha
 }
 public enum ModalAnimationCloseBehaviour {
     case common
@@ -855,7 +866,7 @@ public enum ModalAnimationCloseBehaviour {
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {
     assert(controller.modal == nil)
     for weakModal in activeModals {
-        if weakModal.value?.controller?.className == controller.className {
+        if weakModal.value?.controller?.className == controller.className, weakModal.value?.controller?.shouldCloseAllTheSameModals == true {
             weakModal.value?.close()
         }
     }

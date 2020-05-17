@@ -16,10 +16,14 @@ import TGUIKit
 private final class GroupPeersArguments {
     let context: AccountContext
     let removePeer: (PeerId)->Void
+    let promote:(ChannelParticipant)->Void
+    let restrict:(ChannelParticipant)->Void
     let showMore:()->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void) {
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void) {
         self.context = context
         self.removePeer = removePeer
+        self.promote = promote
+        self.restrict = restrict
         self.showMore = showMore
     }
     
@@ -65,13 +69,13 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     viewType = .lastItem
                 }
             }
-            
+            viewType = viewType.withUpdatedInsets(NSEdgeInsetsMake(16, 18, 16, 18))
             block[i] = item.withUpdatedViewType(viewType)
             
         }
         for item in block {
             switch item {
-            case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, enabled, viewType):
+            case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, menuItems, enabled, viewType):
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer!.id), equatable: InputDataEquatable(item), item: { initialSize, stableId in
                     let label: String
                     switch memberStatus {
@@ -101,8 +105,10 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                         interactionType = .plain
                     }
                     
-                    return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:0,right:0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
+                    return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 36 + 16, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 0, right: 0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                         arguments.peerInfo(peer!.id)
+                    }, contextMenuItems: {
+                        return menuItems
                     }, inputActivity: inputActivity)
                 }))
                 index += 1
@@ -125,7 +131,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
     if let group = peerViewMainPeer(view) {
         let access = group.groupAccess
         
-        if let cachedGroupData = view.cachedData as? CachedGroupData, let participants = cachedGroupData.participants {
+        if let cachedGroupData = view.cachedData as? CachedGroupData, let participants = cachedGroupData.participants, let group = group as? TelegramGroup {
             
             var updatedParticipants = participants.participants
             let existingParticipantIds = Set(updatedParticipants.map { $0.peerId })
@@ -189,21 +195,57 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                         memberStatus = .member
                     }
                     
+                    var canRestrict: Bool
+                    if sortedParticipants[i].peerId == arguments.context.peerId {
+                        canRestrict = false
+                    } else {
+                        switch group.role {
+                        case .creator:
+                            canRestrict = true
+                        case .member:
+                            switch sortedParticipants[i] {
+                            case .creator, .admin:
+                                canRestrict = false
+                            case let .member(member):
+                                if member.invitedBy == arguments.context.peerId {
+                                    canRestrict = true
+                                } else {
+                                    canRestrict = false
+                                }
+                            }
+                        case .admin:
+                            switch sortedParticipants[i] {
+                            case .creator, .admin:
+                                canRestrict = false
+                            case .member:
+                                canRestrict = true
+                            }
+                        }
+                    }
+                    
                     let editing:ShortPeerDeleting?
                     
-                    if isEditing, let group = group as? TelegramGroup {
+                    if isEditing {
                         let deletable:Bool = group.canRemoveParticipant(sortedParticipants[i]) || (sortedParticipants[i].invitedBy == arguments.context.peerId && sortedParticipants[i].peerId != arguments.context.peerId)
                         editing = ShortPeerDeleting(editable: deletable)
                     } else {
                         editing = nil
                     }
                     
-                    usersBlock.append(.member(section: Int(sectionId), index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(peer.id), viewType: .singleItem))
+                    var menuItems: [ContextMenuItem] = []
+                    
+                    if canRestrict {
+                        menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
+                            arguments.removePeer(sortedParticipants[i].peerId)
+                        }))
+                    }
+                    
+                    usersBlock.append(.member(section: Int(sectionId), index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: !disabledPeerIds.contains(peer.id), viewType: .singleItem))
                 }
             }
         }
         
-        if let cachedGroupData = view.cachedData as? CachedChannelData {
+        if let cachedGroupData = view.cachedData as? CachedChannelData, let channel = group as? TelegramChannel {
             let participants = channelMembers
             var updatedParticipants = participants
             let existingParticipantIds = Set(updatedParticipants.map { $0.peer.id })
@@ -272,6 +314,61 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     memberStatus = .member
                 }
                 
+                var canPromote: Bool
+                var canRestrict: Bool
+                if sortedParticipants[i].peer.id == arguments.context.peerId {
+                    canPromote = false
+                    canRestrict = false
+                } else {
+                    switch sortedParticipants[i].participant {
+                    case .creator:
+                        canPromote = false
+                        canRestrict = false
+                    case let .member(_, _, adminRights, bannedRights, _):
+                        if channel.hasPermission(.addAdmins) {
+                            canPromote = true
+                        } else {
+                            canPromote = false
+                        }
+                        if channel.hasPermission(.banMembers) {
+                            canRestrict = true
+                        } else {
+                            canRestrict = false
+                        }
+                        if canPromote {
+                            if let bannedRights = bannedRights {
+                                if bannedRights.restrictedBy != arguments.context.peerId && !channel.flags.contains(.isCreator) {
+                                    canPromote = false
+                                }
+                            }
+                        }
+                        if canRestrict {
+                            if let adminRights = adminRights {
+                                if adminRights.promotedBy != arguments.context.peerId && !channel.flags.contains(.isCreator) {
+                                    canRestrict = false
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                var menuItems:[ContextMenuItem] = []
+                
+                
+                if canPromote {
+                    menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuPromote, handler: {
+                        arguments.promote(sortedParticipants[i].participant)
+                    }))
+                }
+                if canRestrict {
+                    menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuRestrict, handler: {
+                        arguments.restrict(sortedParticipants[i].participant)
+                    }))
+                    menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
+                        arguments.removePeer(sortedParticipants[i].peer.id)
+                    }))
+                }
+                
                 let editing:ShortPeerDeleting?
                 
                 if isEditing, let group = group as? TelegramChannel {
@@ -281,7 +378,8 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     editing = nil
                 }
                 
-                usersBlock.append(GroupInfoEntry.member(section: Int(sectionId), index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
+                
+                usersBlock.append(GroupInfoEntry.member(section: Int(sectionId), index: i, peerId: sortedParticipants[i].peer.id, peer: sortedParticipants[i].peer, presence: sortedParticipants[i].presences[sortedParticipants[i].peer.id], activity: inputActivities[sortedParticipants[i].peer.id], memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: !disabledPeerIds.contains(sortedParticipants[i].peer.id), viewType: .singleItem))
             }
             
             if let hasShowMoreButton = state.hasShowMoreButton, hasShowMoreButton, let memberCount = cachedGroupData.participantsSummary.memberCount, memberCount > 100 {
@@ -337,6 +435,34 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         channelMembersPromise.set(.single([]))
     }
     
+    let upgradeToSupergroup: (PeerId, @escaping () -> Void) -> Void = { upgradedPeerId, f in
+        let navigationController = context.sharedContext.bindings.rootNavigation()
+        
+        var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
+        
+        chatController!.navigationController = navigationController
+        chatController!.loadViewIfNeeded(navigationController.bounds)
+        
+        var signal = chatController!.ready.get() |> filter {$0} |> take(1) |> ignoreValues
+        
+        var controller: PeerInfoController? = PeerInfoController(context: context, peerId: upgradedPeerId)
+        
+        controller!.navigationController = navigationController
+        controller!.loadViewIfNeeded(navigationController.bounds)
+        
+        let mainSignal = combineLatest(controller!.ready.get(), controller!.ready.get()) |> map { $0 && $1 } |> filter {$0} |> take(1) |> ignoreValues
+        
+        signal = combineLatest(queue: .mainQueue(), signal, mainSignal) |> ignoreValues
+        
+        _ = signal.start(completed: { [weak navigationController] in
+            navigationController?.removeAll()
+            navigationController?.push(chatController!, false, style: .none)
+            navigationController?.push(controller!, false, style: .none)
+            
+            chatController = nil
+            controller = nil
+        })
+    }
     
     
     
@@ -396,6 +522,12 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
             state.hasShowMoreButton = nil
             return state
         }
+    }, promote: { participant in
+        showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peerId, initialParticipant: participant, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
+    }, restrict: { participant in
+        showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
+            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
+        }), for: context.window)
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), context.account.postbox.peerView(id: peerId), channelMembersPromise.get(), inputActivity, editing) |> map {

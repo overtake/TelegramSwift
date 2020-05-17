@@ -172,7 +172,7 @@ private class PhoneCallWindowView : View {
         switch state {
         case .accepting:
             statusTextView.stringValue = L10n.callStatusConnecting
-        case .active(_, _, let visual, _, _, _):
+        case .active(_, _, let visual, _, _, _, _):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
             secureTextView.update(layout)

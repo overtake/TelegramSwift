@@ -41,15 +41,12 @@ class VideoRecorderModalController: ModalViewController {
     
     
     private func saveThumbnail(_ thumb: CGImage) {
-        var blurred: CGImage = thumb
-        for _ in 0 ..< 10 {
-            blurred = blurred.blurred
-        }
+        let blurred: CGImage = thumb.blurred
         _ = blurred.saveToFile(pathForThumbnail)
     }
     
     override func initializer() -> NSView {
-        return VideoRecorderModalView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), thumbnail: .loadFromFile(pathForThumbnail))
+        return VideoRecorderModalView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), thumbnail: .loadFromFile(""))
     }
     
     

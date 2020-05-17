@@ -76,7 +76,7 @@ enum ChatInitialAction : Equatable {
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
     case forward(messageIds: [MessageId], text: String?, behavior: ChatInitialActionBehavior)
-    case ad
+    case ad(PromoChatListItem.Kind)
 }
 
 
@@ -91,12 +91,17 @@ var globalLinkExecutor:TextViewInteractions {
                     execute(inapp:link)
                 }
             }
-        }, isDomainLink: { value in
+        }, isDomainLink: { value, origin in
             if let value = value as? inAppLink {
                 switch value {
                 case .external:
                     return true
                 default:
+                    if let origin = origin {
+                        if origin != value.link, !origin.isEmpty && origin != "‌" {
+                            return true
+                        }
+                    }
                     return false
                 }
             }
@@ -906,8 +911,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 }
                 
                 if let openInfo = openInfo {
-                    if username == "iv" {
-                        return .external(link: url as String, false)
+                    if username == "iv" || username.isEmpty {
+                        return .external(link: url as String, username.isEmpty)
                     } else if let context = context {
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }
@@ -1147,6 +1152,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         }
        
     } else if url.hasPrefix(ton_scheme), let context = context {
+        return .external(link: url as String, false)
 //        let action = url.substring(from: ton_scheme.length)
 //        if action.hasPrefix("transfer/") {
 //            let vars = urlVars(with: url as String)

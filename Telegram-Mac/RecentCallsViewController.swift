@@ -53,7 +53,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                     return false
                 }
                 
-                if lhsMessage.stableVersion != rhsMessage.stableVersion {
+                if lhsMessage.id != rhsMessage.id {
                     return false
                 }
                 
@@ -61,7 +61,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                     return false
                 } else {
                     for i in 0 ..< lhsMessages.count {
-                        if lhsMessages[i].stableVersion != rhsMessages[i].stableVersion {
+                        if lhsMessages[i].id != rhsMessages[i].id {
                             return false
                         }
                     }

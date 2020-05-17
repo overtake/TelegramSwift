@@ -22,7 +22,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case shareInfo
     case pinned(MessageId)
     case report
-    case sponsored
+    case promo(PromoChatListItem.Kind)
     var stableId:Int {
         switch self {
         case .none:
@@ -35,7 +35,7 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 3
         case .pinned:
             return 4
-        case .sponsored:
+        case .promo:
             return 5
         case .shareInfo:
             return 6
@@ -56,7 +56,7 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 44
         case .pinned:
             return 44
-        case .sponsored:
+        case .promo:
             return 44
         }
     }
@@ -137,8 +137,8 @@ class ChatHeaderController {
             view = ChatSearchHeader(interactions, chatInteraction: chatInteraction, initialPeer: initialPeer)
         case .report:
             view = ChatReportView(chatInteraction)
-        case .sponsored:
-            view = ChatSponsoredView(chatInteraction: chatInteraction)
+        case let .promo(kind):
+            view = ChatSponsoredView(chatInteraction: chatInteraction, kind: kind)
         case .none:
             view = nil
         
@@ -164,16 +164,45 @@ struct ChatSearchInteractions {
 private class ChatSponsoredModel: ChatAccessoryModel {
     
 
-    init() {
+    init(title: String, text: String) {
         super.init()
-        update()
+        update(title: title, text: text)
     }
     
-    func update() {
-        self.headerAttr = .initialize(string: L10n.chatProxySponsoredCapTitle, color: theme.colors.link, font: .medium(.text))
-        self.messageAttr = .initialize(string: L10n.chatProxySponsoredCapDesc, color: theme.colors.text, font: .normal(.text))
+    func update(title: String, text: String) {
+        //L10n.chatProxySponsoredCapTitle
+        self.headerAttr = .initialize(string: title, color: theme.colors.link, font: .medium(.text))
+        self.messageAttr = .initialize(string: text, color: theme.colors.text, font: .normal(.text))
         nodeReady.set(.single(true))
         self.setNeedDisplay()
+    }
+}
+
+private extension PromoChatListItem.Kind {
+    var title: String {
+        switch self {
+        case .proxy:
+            return L10n.chatProxySponsoredCapTitle
+        case .psa:
+            return L10n.psaChatTitle
+        }
+    }
+    var text: String {
+        switch self {
+        case .proxy:
+            return L10n.chatProxySponsoredCapDesc
+        case let .psa(type, _):
+            return localizedPsa("psa.chat.text", type: type)
+        }
+    }
+    var learnMore: String? {
+        switch self {
+        case .proxy:
+            return nil
+        case let .psa(type, _):
+            let localized = localizedPsa("psa.chat.alert.learnmore", type: type)
+            return localized != localized ? localized : nil
+        }
     }
 }
 
@@ -181,9 +210,14 @@ private final class ChatSponsoredView : Control {
     private let chatInteraction:ChatInteraction
     private let container:ChatAccessoryView = ChatAccessoryView()
     private let dismiss:ImageButton = ImageButton()
-    private let node: ChatSponsoredModel = ChatSponsoredModel()
-    init(chatInteraction:ChatInteraction) {
+    private let node: ChatSponsoredModel
+    private let kind: PromoChatListItem.Kind
+    init(chatInteraction:ChatInteraction, kind: PromoChatListItem.Kind) {
         self.chatInteraction = chatInteraction
+        
+        self.kind = kind
+        
+        node = ChatSponsoredModel(title: kind.title, text: kind.text)
         super.init()
         
         dismiss.disableActions()
@@ -191,18 +225,36 @@ private final class ChatSponsoredView : Control {
         _ = self.dismiss.sizeToFit()
         
         self.set(handler: { _ in
-            confirm(for: mainWindow, header: L10n.chatProxySponsoredAlertHeader, information: L10n.chatProxySponsoredAlertText, cancelTitle: "", thridTitle: L10n.chatProxySponsoredAlertSettings, successHandler: { result in
-                switch result {
-                case .thrid:
-                    chatInteraction.openProxySettings()
-                default:
-                    break
+            
+            switch kind {
+            case .proxy:
+                confirm(for: chatInteraction.context.window, header: L10n.chatProxySponsoredAlertHeader, information: L10n.chatProxySponsoredAlertText, cancelTitle: "", thridTitle: L10n.chatProxySponsoredAlertSettings, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        chatInteraction.openProxySettings()
+                    default:
+                        break
+                    }
+                })
+            case .psa:
+                if let learnMore = kind.learnMore {
+                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: learnMore, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            execute(inapp: .external(link: learnMore, false))
+                        default:
+                            break
+                        }
+                    })
                 }
-            })
+                
+            }
+            
+            
         }, for: .Click)
         
         dismiss.set(handler: { _ in
-            FastSettings.adAlertViewed()
+            FastSettings.removePromoTitle(for: chatInteraction.peerId)
             chatInteraction.update({$0.withoutInitialAction()})
         }, for: .SingleClick)
         
@@ -221,10 +273,11 @@ private final class ChatSponsoredView : Control {
         self.backgroundColor = theme.colors.background
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         container.backgroundColor = theme.colors.background
+        node.update(title: self.kind.title, text: self.kind.text)
     }
     
     override func layout() {
-        node.update()
+        node.update(title: self.kind.title, text: self.kind.text)
         node.measureSize(frame.width - 70)
         container.setFrameSize(frame.width - 70, node.size.height)
         container.centerY(x: 20)

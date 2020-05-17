@@ -266,28 +266,28 @@ extension Peer {
         switch self {
         case let user as TelegramUser:
             if let firstName = user.firstName, let lastName = user.lastName, !firstName.isEmpty && !lastName.isEmpty {
-                return [firstName.substring(to: firstName.index(after: firstName.startIndex)).uppercased(), lastName.substring(to: lastName.index(after: lastName.startIndex)).uppercased()]
+                return [firstName[firstName.startIndex ..< firstName.index(after: firstName.startIndex)].uppercased(), lastName[lastName.startIndex ..< lastName.index(after: lastName.startIndex)].uppercased()]
             } else if let firstName = user.firstName, !firstName.isEmpty {
-                return [firstName.substring(to: firstName.index(after: firstName.startIndex)).uppercased()]
+                return [firstName[firstName.startIndex ..< firstName.index(after: firstName.startIndex)].uppercased()]
             } else if let lastName = user.lastName, !lastName.isEmpty {
-                return [lastName.substring(to: lastName.index(after: lastName.startIndex)).uppercased()]
+                return [lastName[lastName.startIndex ..< lastName.index(after: lastName.startIndex)].uppercased()]
             } else {
-                let name = tr(L10n.peerDeletedUser)
+                let name = L10n.peerDeletedUser
                 if !name.isEmpty {
-                    return [name.substring(to: name.index(after: name.startIndex)).uppercased()]
+                    return [name[name.startIndex ..< name.index(after: name.startIndex)].uppercased()]
                 }
             }
             
             return []
         case let group as TelegramGroup:
-            if group.title.startIndex != group.title.endIndex {
-                return [group.title.substring(to: group.title.index(after: group.title.startIndex)).uppercased()]
+            if !group.title.isEmpty {
+                return [group.title[group.title.startIndex ..< group.title.index(after: group.title.startIndex)].uppercased()]
             } else {
                 return []
             }
         case let channel as TelegramChannel:
-            if channel.title.startIndex != channel.title.endIndex {
-                return [channel.title.substring(to: channel.title.index(after: channel.title.startIndex)).uppercased()]
+            if !channel.title.isEmpty {
+                return [channel.title[channel.title.startIndex ..< channel.title.index(after: channel.title.startIndex)].uppercased()]
             } else {
                 return []
             }

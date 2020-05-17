@@ -306,7 +306,7 @@ class ChatSelectText : NSObject {
                 guard let documentView = table.documentView else {return}
                 
                 var cleanStartId: Bool = false
-                let documentPoint = documentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                let documentPoint = documentView.convert(event.locationInWindow, from: nil)
                 let row = table.row(at: documentPoint)
                  if chatInteraction.presentation.state != .selecting {
                     if let view = table.viewNecessary(at: row) as? ChatRowView, !view.canStartTextSelecting(event) {
@@ -314,11 +314,16 @@ class ChatSelectText : NSObject {
                     }
                     cleanStartId = true
                 }
+               
                 
-                let point = self?.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
+                let point = self?.table.documentView?.convert(event.locationInWindow, from: nil) ?? NSZeroPoint
                 if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index), let view = item.view as? ChatRowView {
                     
-                    if view.canDropSelection(in: window.mouseLocationOutsideOfEventStream) {
+                    if event.clickCount > 1, selectManager.isEmpty {
+                        _ = window.makeFirstResponder(view.selectableTextViews.first)
+                    }
+                    
+                    if view.canDropSelection(in: event.locationInWindow) {
                         if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
                             self?.startMessageId = nil
                             chatInteraction.update({$0.withoutSelectionState()})
@@ -356,6 +361,9 @@ class ChatSelectText : NSObject {
 //            }
             if self.started {
                 self.started = !hasPopover(window) && self.beginInnerLocation != NSZeroPoint
+            }
+            if event.clickCount > 1 {
+                self.started = false
             }
             
            // NSLog("\(!NSPointInRect(event.locationInWindow, window.bounds))")

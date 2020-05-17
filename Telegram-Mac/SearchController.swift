@@ -532,6 +532,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         if let peer = inLinkPeer {
                             if ids[peer.id] == nil {
+                                ids[peer.id] = peer.id
                                 entries.append(.localPeer(peer, index, nil, .none, true))
                                 index += 1
                             }
@@ -643,7 +644,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries:[ChatListSearchEntry] = []
                         if !localPeers.isEmpty || !remotePeers.0.isEmpty {
                             
-                            let peers = localPeers + remotePeers.0
+                            let peers = (localPeers + remotePeers.0)
 
                             
 
@@ -692,8 +693,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
 
                 let recently = recentlySearchedPeers(postbox: context.account.postbox) |> mapToSignal { recently -> Signal<[PeerView], NoError> in
                     return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
-                    
-                    } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
+                } |> map { peerViews -> [PeerView] in
+                    return peerViews.filter { peerView in
+                        if let group = peerViewMainPeer(peerView) as? TelegramGroup, group.migrationReference != nil {
+                            return false
+                        }
+                        return true
+                    }
+                } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
                         return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]
@@ -862,7 +869,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             if let highlighted = self.genericView.highlightedItem() {
                 _ = self.genericView.select(item: highlighted)
                 self.closeNext = true
-
+                return .invoked
             } else if !self.marked {
                 self.genericView.cancelSelection()
                 self.genericView.selectNext()

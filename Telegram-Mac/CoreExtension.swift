@@ -243,7 +243,19 @@ extension TelegramMediaFile {
         return true
     }
     
-
+//    var streaming: MediaPlayerStreaming {
+//        for attr in attributes {
+//            if case let .Video(_, _, flags) = attr {
+//                if flags.contains(.supportsStreaming) {
+//                    return .earlierStart
+//                } else {
+//                    return .none
+//                }
+//            }
+//        }
+//        return .none
+//    }
+    
     
     var imageSize:NSSize {
         for attr in attributes {
@@ -784,6 +796,13 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
         return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
         if context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser {
+            
+            if message.media.first is TelegramMediaDice, message.peers[message.id.peerId] is TelegramUser {
+                if Int(message.timestamp) + 24 * 60 * 60 > context.timestamp {
+                    return false
+                }
+            }
+            
             return true
         }
         if let peer = message.peers[message.id.peerId] as? TelegramGroup {
@@ -879,7 +898,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     
     if let peer = messageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
-            return (peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)) && Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+            return (peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages))
         } else if case .group = peer.info {
             if !message.flags.contains(.Incoming) {
                 if peer.hasPermission(.pinMessages) {
@@ -2810,12 +2829,12 @@ extension TelegramMediaWebpageLoadedContent {
                     break
                 }
             }
-            newUrl = newUrl.replacingOccurrences(of: parsed, with: "\(timecode)", options: .caseInsensitive, range: range.lowerBound ..< newUrl.endIndex)
+            newUrl = newUrl.replacingOccurrences(of: parsed, with: "\(Int(timecode))", options: .caseInsensitive, range: range.lowerBound ..< newUrl.endIndex)
         } else {
             if url.contains("?") {
-                newUrl = self.url + "&t=\(timecode)"
+                newUrl = self.url + "&t=\(Int(timecode))"
             } else {
-                newUrl = self.url + "?t=\(timecode)"
+                newUrl = self.url + "?t=\(Int(timecode))"
             }
         }
         return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, attributes: self.attributes, instantPage: self.instantPage)

@@ -75,7 +75,7 @@ fileprivate final class ActionButton : Control {
 }
 
 fileprivate let photoDimension:CGFloat = 100
-fileprivate let actionItemWidth: CGFloat = 60
+fileprivate let actionItemWidth: CGFloat = 70
 fileprivate let actionItemInsetWidth: CGFloat = 20
 
 private struct SubActionItem {
@@ -119,24 +119,29 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     var items:[ActionItem] = []
     
-    let fitOnlyThreeItems = width - actionItemWidth < actionItemWidth * CGFloat(4) + CGFloat(4 + 1) * actionItemInsetWidth
+    var rowItemsCount: Int = 1
+    
+    while width - actionItemWidth * 2 > actionItemWidth * CGFloat(rowItemsCount) + CGFloat(rowItemsCount + 1) * actionItemInsetWidth {
+        rowItemsCount += 1
+    }
+    rowItemsCount = min(rowItemsCount, 4)
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
             items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
         }
-        if peer.canCall && peer.id != item.context.peerId {
+        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
         }
-        if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
-        }
+        
+        let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
+        items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         if !peer.isBot {
-            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
+            if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact {
-                items.append(ActionItem(text: L10n.peerInfoShareContact, image: theme.icons.profile_share, action: arguments.shareContact))
+                items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.shareContact))
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
                 items.append(ActionItem(text: (!cachedData.isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, destruct: true, action: {
@@ -144,8 +149,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         } else if let botInfo = peer.botInfo {
-            var subItems:[SubActionItem] = []
-            
             
             if let address = peer.addressName, !address.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoBotShare, image: theme.icons.profile_share, action: {
@@ -154,27 +157,24 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
             
             if botInfo.flags.contains(.worksWithGroups) {
-                subItems.append(SubActionItem(text: L10n.peerInfoBotAddToGroup, action: arguments.botAddToGroup))
+                items.append(ActionItem(text: L10n.peerInfoBotAddToGroup, image: theme.icons.profile_more, action: arguments.botAddToGroup))
             }
            
             if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                 for command in botInfo.commands {
                     if command.text == "settings" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotSettings, action: arguments.botSettings))
+                        items.append(ActionItem(text: L10n.peerInfoBotSettings, image: theme.icons.profile_more, action: arguments.botSettings))
                     }
                     if command.text == "help" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotHelp, action: arguments.botHelp))
+                        items.append(ActionItem(text: L10n.peerInfoBotHelp, image: theme.icons.profile_more, action: arguments.botHelp))
                     }
                     if command.text == "privacy" {
-                        subItems.append(SubActionItem(text: L10n.peerInfoBotPrivacy, action: arguments.botPrivacy))
+                        items.append(ActionItem(text: L10n.peerInfoBotPrivacy, image: theme.icons.profile_more, action: arguments.botPrivacy))
                     }
                 }
-                subItems.append(SubActionItem(text: !cachedData.isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot, destruct: true, action: {
+                items.append(ActionItem(text: !cachedData.isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot, image: theme.icons.profile_more, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                 }))
-            }
-            if !subItems.isEmpty {
-                items.append(ActionItem(text: L10n.peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
             }
         }
         
@@ -190,7 +190,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
-        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        if let group = peer as? TelegramGroup {
+            if case .Member = group.membership {
+                items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+            }
+        } else if let group = peer as? TelegramChannel {
+            if case .member = group.participationStatus {
+                items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+            }
+        }
+        
         
         if access.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))
@@ -211,14 +220,18 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
         }
-        items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        switch peer.participationStatus {
+        case .member:
+            items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+        default:
+            break
+        }
     }
     
-    let maxItemsCount: Int = fitOnlyThreeItems ? 3 : 4
     
-    if items.count > maxItemsCount {
+    if items.count > rowItemsCount {
         var subItems:[SubActionItem] = []
-        while items.count > maxItemsCount - 1 {
+        while items.count > rowItemsCount - 1 {
             let item = items.removeLast()
             subItems.insert(SubActionItem(text: item.text, destruct: item.destruct, action: item.action), at: 0)
         }
@@ -244,8 +257,6 @@ class PeerInfoHeadItem: GeneralRowItem {
         } else {
             height = photoDimension + insets.top + insets.bottom
         }
-       
-        
         return height
     }
     
@@ -272,13 +283,13 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     fileprivate let editing: Bool
     fileprivate let updatingPhotoState:PeerInfoUpdatingPhotoState?
-    fileprivate let updatePhoto:()->Void
+    fileprivate let updatePhoto:(NSImage?)->Void
     fileprivate let arguments: PeerInfoArguments
     
     let canEditPhoto: Bool
     
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping()->Void = {}) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?)->Void = { _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.peerView = peerView
@@ -332,7 +343,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 guard let `self` = self else {
                     return
                 }
-                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: count)
+                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
                 _ = self.makeSize(self.width, oldWidth: 0)
                 self.redraw()
             }))
@@ -376,7 +387,7 @@ private final class PeerInfoPhotoEditableView : Control {
     private var progressView:RadialProgressContainerView?
     private var updatingPhotoState: PeerInfoUpdatingPhotoState?
     private var tempImageView: ImageView?
-    var setup: (()->Void)?
+    var setup: ((NSImage?)->Void)?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -412,7 +423,7 @@ private final class PeerInfoPhotoEditableView : Control {
         
         set(handler: { [weak self] _ in
             if self?.updatingPhotoState == nil {
-                self?.setup?()
+                self?.setup?(nil)
             }
         }, for: .Click)
     }
@@ -514,13 +525,19 @@ private final class NameContainer : View {
     }
 }
 
+
 private final class PeerInfoHeadView : GeneralContainableRowView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
     private let nameView = NameContainer(frame: .zero)
     private let statusView = TextView()
     private let actionsView = View()
-    
     private var photoEditableView: PeerInfoPhotoEditableView?
+    
+    private var activeDragging: Bool = false {
+        didSet {
+            self.item?.redraw(animated: true)
+        }
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -537,7 +554,63 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
             }
         }, for: .Click)
+        
+         registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
     }
+    
+    
+    override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if activeDragging {
+            activeDragging = false
+            if let item = item as? PeerInfoHeadItem {
+                if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
+                    item.updatePhoto(image)
+                    return true
+                } else {
+                    let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
+                    if  let list = list {
+                        if let first = list.first, let image = NSImage(contentsOfFile: first) {
+                            item.updatePhoto(image)
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+         return false
+    }
+    
+    override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if let item = item as? PeerInfoHeadItem, !item.editing, let peer = item.peer, peer.groupAccess.canEditGroupInfo {
+            if let tiff = sender.draggingPasteboard.data(forType: .tiff), let _ = NSImage(data: tiff) {
+                activeDragging = true
+            } else {
+                let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
+                if let list = list {
+                    let list = list.filter { path -> Bool in
+                        if let size = fs(path) {
+                            return size <= 1500 * 1024 * 1024
+                        }
+                        return false
+                    }
+                    activeDragging = list.count == 1 && NSImage(contentsOfFile: list[0]) != nil
+                } else {
+                    activeDragging = false
+                }
+            }
+            
+        } else {
+            activeDragging = false
+        }
+        return .generic
+    }
+    override public func draggingExited(_ sender: NSDraggingInfo?) {
+        activeDragging = false
+    }
+    public override func draggingEnded(_ sender: NSDraggingInfo) {
+        activeDragging = false
+    }
+
     
     
     override func layout() {
@@ -581,7 +654,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 let view = actionsView.subviews[i] as! ActionButton
                 view.updateAndLayout(item: item, theme: theme)
                 view.setFrameSize(NSMakeSize(item.size.width, maxActionSize.height))
-                view.change(pos: NSMakePoint(x, 0), animated: animated)
+                view.change(pos: NSMakePoint(x, 0), animated: false)
                 x += maxActionSize.width + inset
             }
             
@@ -619,7 +692,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }
 
         
-        if item.canEditPhoto {
+        if item.canEditPhoto || self.activeDragging || item.updatingPhotoState != nil {
             if photoEditableView == nil {
                 photoEditableView = .init(frame: NSMakeRect(0, 0, photoDimension, photoDimension))
                 photoEditableView?.layer?.cornerRadius = photoDimension / 2
@@ -657,5 +730,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     override func copy() -> Any {
         return photoView.copy()
+    }
+    
+    deinit {
     }
 }

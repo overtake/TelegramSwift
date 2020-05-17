@@ -829,7 +829,12 @@ class ChannelAdminController: TableModalViewController {
             |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView) in
                 let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
                 let adminView = combinedView.views[.peer(peerId: adminId, components: .all)] as! PeerView
-                let canEdit = canEditAdminRights(accountPeerId: context.account.peerId, channelView: channelView, initialParticipant: initialParticipant)
+                var canEdit = canEditAdminRights(accountPeerId: context.account.peerId, channelView: channelView, initialParticipant: initialParticipant)
+                
+                if canEdit, let flags = state.updatedFlags, flags.isEmpty  {
+                    canEdit = false
+                }
+                
                 var canDismiss = false
 
                 if let channel = peerViewMainPeer(channelView) as? TelegramChannel {
@@ -920,7 +925,7 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(flags: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { error in
                                 
                             }, completed: {
                                 updated(TelegramChatAdminRights(flags: updateFlags))
@@ -994,7 +999,17 @@ class ChannelAdminController: TableModalViewController {
                         } else if updateFlags != defaultFlags || stateValue.with ({ $0.rank != $0.initialRank }) {
                             let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
                                 |> map(Optional.init)
-                                |> `catch` { _ -> Signal<PeerId?, NoError> in
+                                |> deliverOnMainQueue
+                                |> `catch` { error -> Signal<PeerId?, NoError> in
+                                    switch error {
+                                    case .tooManyChannels:
+                                        showInactiveChannels(context: context, source: .upgrade)
+                                    case .generic:
+                                        alert(for: context.window, info: L10n.unknownError)
+                                    }
+                                    updateState { current in
+                                        return current.withUpdatedUpdating(false)
+                                    }
                                     return .single(nil)
                                 }
                                 |> mapToSignal { upgradedPeerId -> Signal<PeerId?, NoError> in

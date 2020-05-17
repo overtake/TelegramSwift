@@ -299,7 +299,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             _ = combineLatest(queue: .mainQueue(), themeSettingsView(accountManager: accountManager), backingProperties.get()).start(next: { settings, backingScale in
                 let previous = basicTheme.swap(settings)
                 if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize || previousBackingScale != backingScale  {
-                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id))
+                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
                     self.contextValue?.applyNewTheme()
                 }
                 previousBackingScale = backingScale
@@ -364,7 +364,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
                     var settings = settings
                     if isEnabled {
-                        settings = settings.withUpdatedToDefault(dark: isEnabled)
+                        if let theme = preference.theme.cloud {
+                            settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
+                                return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
+                            }
+                        } else {
+                            settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
+                        }
                     } else {
                         settings = settings.withUpdatedToDefault(dark: settings.defaultIsDark)
                     }
@@ -692,7 +698,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     }
                                     setAppUpdaterBaseDomain(applicationUpdateUrlPrefix)
                                     #if STABLE
-                                    updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+                                    if let context = self.contextValue?.context {
+                                        updater_resetWithUpdaterSource(.internal(context: context))
+                                    } else {
+                                        updater_resetWithUpdaterSource(.external(context: nil))
+                                    }
                                     #else
                                     updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
                                     #endif
@@ -791,7 +801,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #if !APP_STORE
             showModal(with: InputDataModalController(AppUpdateViewController()), for: window)
             #if STABLE
-                updater_resetWithUpdaterSource(.internal(context: self.contextValue?.context))
+                if let context = self.contextValue?.context {
+                    updater_resetWithUpdaterSource(.internal(context: context))
+                } else {
+                    updater_resetWithUpdaterSource(.external(context: nil))
+                }
             #else
                 updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
             #endif
@@ -938,7 +952,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             } else if let passport = passport {
                 passport.window.makeKeyAndOrderFront(nil)
             } else {
-                window.makeKeyAndOrderFront(nil)
+               // window.makeKeyAndOrderFront(nil)
             }
             
             

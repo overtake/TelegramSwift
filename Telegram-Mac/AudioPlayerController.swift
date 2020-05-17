@@ -534,12 +534,11 @@ class APController : NSResponder {
             mediaPlayer?.setBaseRate(baseRate)
         }
     }
-    init(account:Account, streamable: Bool, baseRate: Double, initialTimebase: CMTimebase?) {
+    init(account:Account, streamable: Bool, baseRate: Double) {
         self.account = account
         self.streamable = streamable
         self.baseRate = baseRate
         super.init()
-        _ = self.initialTimebase.swap(initialTimebase)
 
 //        readyDisposable.set((ready.get() |> filter {$0} |> take(1) |> deliverOnMainQueue).start(next: { [weak self] _ in
 //
@@ -715,14 +714,13 @@ class APController : NSResponder {
         }
     }
 
-    private let initialTimebase: Atomic<CMTimebase?> = Atomic(value: nil)
 
     fileprivate func play(with item:APSongItem) {
         
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false, initialTimebase: self.initialTimebase.swap(nil))
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
         
         player.play()
 
@@ -935,10 +933,10 @@ class APChatController : APController {
     private let peerId:PeerId
     private let index:MessageIndex?
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
+    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0) {
         self.peerId = peerId
         self.index = index
-        super.init(account: account, streamable: streamable, baseRate: baseRate, initialTimebase: initialTimebase)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1009,8 +1007,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
-        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate, initialTimebase: initialTimebase)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1024,8 +1022,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
-        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate, initialTimebase: initialTimebase)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1061,9 +1059,9 @@ class APChatVoiceController : APChatController {
 
 class APSingleResourceController : APController {
     let wrapper:APSingleWrapper
-    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0, initialTimebase: CMTimebase? = nil) {
+    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
         self.wrapper = wrapper
-        super.init(account: account, streamable: streamable, baseRate: baseRate, initialTimebase: initialTimebase)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
     }
 

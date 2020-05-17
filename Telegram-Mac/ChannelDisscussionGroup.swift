@@ -257,6 +257,9 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             
             index += 1
             
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
             let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: {

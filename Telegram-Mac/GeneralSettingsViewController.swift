@@ -19,6 +19,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case header(sectionId: Int, uniqueId:Int, text:String)
     case sidebar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case inAppSounds(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case shortcuts(sectionId: Int, viewType: GeneralViewType)
     case enterBehavior(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case cmdEnterBehavior(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case emojiReplacements(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
@@ -51,24 +52,26 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 6
         case .inAppSounds:
             return 7
-        case .enableRFTCopy:
+        case .shortcuts:
             return 8
-        case .openChatAtLaunch:
+        case .enableRFTCopy:
             return 9
-        case .acceptSecretChats:
+        case .openChatAtLaunch:
             return 10
-        case .forceTouchReply:
+        case .acceptSecretChats:
             return 11
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 12
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 13
-        case .forceTouchPreviewMedia:
+        case .forceTouchForward:
             return 14
-        case .enterBehavior:
+        case .forceTouchPreviewMedia:
             return 15
-        case .cmdEnterBehavior:
+        case .enterBehavior:
             return 16
+        case .cmdEnterBehavior:
+            return 17
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -89,6 +92,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .sidebar(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .inAppSounds(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .shortcuts(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .emojiReplacements(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -144,6 +149,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .inAppSounds(sectionId: _, enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsInAppSounds, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleInAppSounds(!enabled)
+            })
+        case let .shortcuts(_, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
+                arguments.openShortcuts()
             })
         case let .emojiReplacements(sectionId: _, enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiReplacements, type: .switchable(enabled), viewType: viewType, action: {
@@ -210,7 +219,8 @@ private final class GeneralSettingsArguments {
     let openChatAtLaunch:(Bool)->Void
     let acceptSecretChats:(Bool)->Void
     let toggleWorkMode:(Bool)->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void) {
+    let openShortcuts: ()->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -228,6 +238,7 @@ private final class GeneralSettingsArguments {
         self.openChatAtLaunch = openChatAtLaunch
         self.acceptSecretChats = acceptSecretChats
         self.toggleWorkMode = toggleWorkMode
+        self.openShortcuts = openShortcuts
     }
    
 }
@@ -260,9 +271,16 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab, viewType: .firstItem))
     entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .innerItem))
     entries.append(.inAppSounds(sectionId: sectionId, enabled: FastSettings.inAppSounds, viewType: .lastItem))
+    
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsShortcutsHeader))
+    headerUnique -= 1
+    entries.append(.shortcuts(sectionId: sectionId, viewType: .singleItem))
 
 
-   
 	
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -270,7 +288,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsAdvancedHeader))
     headerUnique -= 1
     entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
-    entries.append(.openChatAtLaunch(sectionId: sectionId, enabled: launchSettings.openAtLaunch, viewType: .innerItem))
+   // entries.append(.openChatAtLaunch(sectionId: sectionId, enabled: launchSettings.openAtLaunch, viewType: .innerItem))
     entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
     
     entries.append(.section(sectionId: sectionId))
@@ -372,6 +390,8 @@ class GeneralSettingsViewController: TableViewController {
             }).start()
         }, toggleWorkMode: { value in
             
+        }, openShortcuts: {
+            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
         })
         
         let initialSize = atomicSize

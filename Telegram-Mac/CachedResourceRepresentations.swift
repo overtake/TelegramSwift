@@ -179,21 +179,22 @@ final class CachedPatternWallpaperMaskRepresentation: CachedMediaResourceReprese
 
 final class CachedDiceRepresentation: CachedMediaResourceRepresentation {
     let keepDuration: CachedMediaRepresentationKeepDuration = .general
-    
+    let emoji: String
     let value: String
     let size: NSSize
     var uniqueId: String {
-        return value
+        return emoji + value + ":dice2"
     }
     
-    init(value: String, size: NSSize) {
+    init(emoji: String, value: String, size: NSSize) {
         self.value = value
         self.size = size
+        self.emoji = emoji
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedDiceRepresentation {
-            return self.value == to.value && self.size == to.size
+            return self.value == to.value && self.size == to.size && self.emoji == to.emoji
         } else {
             return false
         }
