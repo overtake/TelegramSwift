@@ -53,6 +53,20 @@
          contextName = "ThemePaletteSettings.init(decoder:):ThemeSettings.swift">
       </ContextState>
       <ContextState
+         contextName = "ImageButton.apply(state:):ImageButton.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in closure #1 in MediaBox.resourceData(_:size:in:mode:):MediaBox.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "result.offset">
+            </PersistentString>
+            <PersistentString
+               value = "result.size">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #3 in closure #5 in DiceCache.init(postbox:network:):DiceCache.swift">
       </ContextState>
       <ContextState
@@ -116,6 +130,9 @@
          contextName = "closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
       </ContextState>
       <ContextState
+         contextName = "UserInfoArguments.updateEditable(_:peerView:controller:):UserInfoEntries.swift">
+      </ContextState>
+      <ContextState
          contextName = "ChatListViewSpaceState.fillSpace(postbox:):ChatListViewState.swift">
       </ContextState>
       <ContextState
@@ -159,10 +176,10 @@
          contextName = "closure #2 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in ChatListTable.entries(groupId:from:to:peerChatInterfaceStateTable:count:predicate:):ChatListTable.swift">
+         contextName = "closure #11 in closure #2 in SearchController.viewDidLoad():SearchController.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #11 in closure #2 in SearchController.viewDidLoad():SearchController.swift">
+         contextName = "closure #1 in ChatListTable.entries(groupId:from:to:peerChatInterfaceStateTable:count:predicate:):ChatListTable.swift">
       </ContextState>
       <ContextState
          contextName = "specialized installedStickerPacksControllerEntries(state:stickerSettings:view:featured:):InstalledStickerPacksController.swift">
@@ -196,18 +213,18 @@
          contextName = "applyPaints(_:for:imageSize:):EditImageCanvasController.swift">
       </ContextState>
       <ContextState
-         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in closure #4 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
-      </ContextState>
-      <ContextState
          contextName = "closure #1 in closure #5 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
          <PersistentStrings>
             <PersistentString
                value = "newTheme.colors">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ViewTracker.updateViews(postbox:transaction:):ViewTracker.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #4 in closure #2 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
       </ContextState>
    </ContextStates>
 </VariablesViewState>

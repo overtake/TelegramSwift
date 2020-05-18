@@ -47,7 +47,17 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var pictureInPicture: Bool = false
     private var hideControls: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
-    private let videoFramePreview: MediaPlayerFramePreview
+    
+    
+    private var _videoFramePreview: MediaPlayerFramePreview?
+    private var videoFramePreview: MediaPlayerFramePreview {
+        if let videoFramePreview = _videoFramePreview {
+            return videoFramePreview
+        } else {
+            self._videoFramePreview = MediaPlayerFramePreview(postbox: postbox, fileReference: reference)
+        }
+        return _videoFramePreview!
+    }
     
     
     private var scrubbingFrame = Promise<MediaPlayerFramePreviewResult?>(nil)
@@ -58,7 +68,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false) {
         self.reference = reference
         self.postbox = postbox
-        self.videoFramePreview = MediaPlayerFramePreview(postbox: postbox, fileReference: reference)
         mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)

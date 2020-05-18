@@ -75,7 +75,7 @@ extension Peer {
                 canCreateInviteLink = true
             }
         } else if let channel = self as? TelegramChannel {
-            if channel.hasPermission(.inviteMembers) {
+            if channel.hasPermission(.inviteMembers) && channel.adminRights != nil {
                 canCreateInviteLink = true
             }
         }
