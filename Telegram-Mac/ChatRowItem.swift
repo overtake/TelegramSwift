@@ -586,22 +586,15 @@ class ChatRowItem: TableRowItem {
     }
     
     var isLikable: Bool {
-        return isSharable
+        return false
     }
     
     var isLiked: Bool {
-        if let message = message {
-            return FastSettings.isTestLiked(message.id)
-        } else {
-            return false
-        }
+        return false
     }
     
     func toggleLike() {
-        if let message = message {
-            FastSettings.toggleTestLike(message.id)
-            self.copyAndUpdate(animated: true)
-        }
+        
     }
     
     override func copyAndUpdate(animated: Bool) {
