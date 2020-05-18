@@ -1308,7 +1308,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
            
             
-            if animated {
+            if animated && item.isBubbled {
                 
                 let bubbleFrame = self.bubbleFrame
                 let contentFrameModifier = self.contentFrameModifier
@@ -1323,6 +1323,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rightView.change(pos: rightFrame.origin, animated: animated)
                 replyView?._change(pos: replyFrame.origin, animated: animated)
                 replyMarkupView?.change(pos: replyMarkupFrame.origin, animated: animated)
+                captionView?._change(pos: captionFrame.origin, animated: animated)
             }
           
             //rightView.change(size: rightFrame.size, animated: animated)
