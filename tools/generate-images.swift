@@ -529,15 +529,19 @@ func initialize() -> [String] {
     array.append("chat_share_message")
     array.append("chat_goto_message")
     array.append("chat_swipe_reply")
-    
+    array.append("chat_like_message")
+    array.append("chat_like_message_unlike")
     
     array.append("chat_like_inside")
     array.append("chat_like_inside_bubble_incoming")
     array.append("chat_like_inside_bubble_outgoing")
+    array.append("chat_like_inside_bubble_overlay")
     
     array.append("chat_like_inside_empty")
     array.append("chat_like_inside_empty_bubble_incoming")
     array.append("chat_like_inside_empty_bubble_outgoing")
+    array.append("chat_like_inside_empty_bubble_overlay")
+
     return array
 }
 

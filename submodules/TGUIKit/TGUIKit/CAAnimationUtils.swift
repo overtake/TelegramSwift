@@ -342,7 +342,7 @@ public extension CALayer {
         self.animate(from: NSValue(point: from), to: NSValue(point: to), keyPath: "position", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
     }
     
-    func animateBounds(from: NSRect, to: NSRect, duration: Double, timingFunction: CAMediaTimingFunctionName, removeOnCompletion: Bool = true, additive: Bool = false, forKey: String? = nil, completion: ((Bool) -> Void)? = nil) {
+    func animateBounds(from: NSRect, to: NSRect, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, removeOnCompletion: Bool = true, additive: Bool = false, forKey: String? = nil, completion: ((Bool) -> Void)? = nil) {
         if from == to {
             if let completion = completion {
                 completion(true)
