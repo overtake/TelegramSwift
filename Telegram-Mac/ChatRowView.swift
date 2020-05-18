@@ -1305,9 +1305,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             fillPsaButton(item)
             fillShareView(item, animated: animated)
             fillLikeView(item, animated: animated)
-            
-           
-            
+                        
             if animated && item.isBubbled {
                 
                 let bubbleFrame = self.bubbleFrame
@@ -1325,8 +1323,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 replyMarkupView?.change(pos: replyMarkupFrame.origin, animated: animated)
                 captionView?._change(pos: captionFrame.origin, animated: animated)
             }
-          
-            //rightView.change(size: rightFrame.size, animated: animated)
         }
         
         rowView.needsDisplay = true
