@@ -12,6 +12,7 @@ import TelegramCore
 import SyncCore
 
 
+
 class ChatRightView: View {
     
     private var stateView:ImageView?

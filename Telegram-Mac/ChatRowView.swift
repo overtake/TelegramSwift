@@ -104,7 +104,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame.maxY) - 30
         if visibleRect.height > 0 {
-            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: false, rotated: rotated)
+            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
         }
     }
     
@@ -994,7 +994,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillLikeView(_ item: ChatRowItem, animated: Bool) {
-        if item.isSharable  {
+        if item.isLikable  {
             var isPresented: Bool = true
             if likeView == nil {
                 likeView = ImageButton()
@@ -1305,6 +1305,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             fillPsaButton(item)
             fillShareView(item, animated: animated)
             fillLikeView(item, animated: animated)
+            
+           
+            
+            if animated {
+                
+                let bubbleFrame = self.bubbleFrame
+                let contentFrameModifier = self.contentFrameModifier
+                
+                bubbleView.change(pos: bubbleFrame.origin, animated: animated)
+                bubbleView.change(size: bubbleFrame.size, animated: animated)
+                contentView.change(pos: contentFrameModifier.origin, animated: animated)
+                contentView.change(size: contentFrameModifier.size, animated: animated)
+                updateBackground(animated: animated)
+                
+                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
+                rightView.change(pos: rightFrame.origin, animated: animated)
+                replyView?._change(pos: replyFrame.origin, animated: animated)
+                replyMarkupView?.change(pos: replyMarkupFrame.origin, animated: animated)
+            }
+          
+            //rightView.change(size: rightFrame.size, animated: animated)
         }
         
         rowView.needsDisplay = true
