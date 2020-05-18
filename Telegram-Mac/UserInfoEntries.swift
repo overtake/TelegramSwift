@@ -201,10 +201,10 @@ class UserInfoArguments : PeerInfoArguments {
             
             
             
-            let updateNames: Signal<Void, NoError>
+            let updateNames: Signal<Void, UpdateContactNameError>
             
-            if let firstName = updateValues.firstName, let lastName = updateValues.lastName {
-                updateNames = showModalProgress(signal: updateContactName(account: context.account, peerId: peerId, firstName: firstName, lastName: lastName) |> `catch` {_ in .complete()} |> deliverOnMainQueue, for: mainWindow)
+            if let firstName = updateValues.firstName {
+                updateNames = showModalProgress(signal: updateContactName(account: context.account, peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: mainWindow)
             } else {
                 updateNames = .complete()
             }
