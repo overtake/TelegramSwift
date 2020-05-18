@@ -1527,6 +1527,28 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    private var _chat_like_inside_bubble_service: CGImage?
+    var chat_like_inside_bubble_service: CGImage {
+        if let icon = _chat_like_inside_bubble_service {
+            return icon
+        } else {
+            
+            let new = NSImage(named: "Icon_Like_MessageInside")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            _chat_like_inside_bubble_service = new
+            return new
+        }
+    }
+    private var _chat_like_inside_empty_bubble_service: CGImage?
+    var chat_like_inside_empty_bubble_service: CGImage {
+        if let icon = _chat_like_inside_empty_bubble_service {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            _chat_like_inside_empty_bubble_service = new
+            return new
+        }
+    }
+    
     private var _chatServiceItemColor: NSColor?
     var chatServiceItemColor: NSColor {
         if let value = _chatServiceItemColor {
@@ -2207,12 +2229,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_share_message: {  NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accent) },
                                                chat_goto_message: { NSImage(named: "Icon_ChatGoMessage")!.precomposed(palette.accentIcon) },
                                                chat_swipe_reply: { NSImage(named: "Icon_ChannelShare")!.precomposed(palette.accentIcon, flipHorizontal: true) },
-                                               chat_like_inside: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redUI) },
-                                               chat_like_inside_bubble_incoming: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_incoming) },
-                                               chat_like_inside_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_outgoing) },
-                                               chat_like_inside_empty: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIcon) },
-                                               chat_like_inside_empty_bubble_incoming: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_incoming) },
-                                               chat_like_inside_empty_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_outgoing) }
+                                               chat_like_message: { NSImage(named: "Icon_Like_MessageButton")!.precomposed(palette.accentIcon) },
+                                               chat_like_message_unlike: { NSImage(named: "Icon_Like_MessageButtonUnlike")!.precomposed(palette.accentIcon) },
+                                               chat_like_inside: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redUI, flipVertical: true) },
+                                               chat_like_inside_bubble_incoming: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_incoming, flipVertical: true) },
+                                               chat_like_inside_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(palette.redBubble_outgoing, flipVertical: true) },
+                                               chat_like_inside_bubble_overlay: { NSImage(named: "Icon_Like_MessageInside")!.precomposed(.white, flipVertical: true) },
+                                               chat_like_inside_empty: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIcon, flipVertical: true) },
+                                               chat_like_inside_empty_bubble_incoming: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
+                                               chat_like_inside_empty_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
+                                               chat_like_inside_empty_bubble_overlay: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(.white, flipVertical: true) }
 
     )
 

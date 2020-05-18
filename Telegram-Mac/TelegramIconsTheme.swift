@@ -6517,6 +6517,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_like_message: CGImage {
+      if let image = cached.with({ $0["chat_like_message"] }) {
+          return image
+      } else {
+          let image = _chat_like_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_message_unlike: CGImage {
+      if let image = cached.with({ $0["chat_like_message_unlike"] }) {
+          return image
+      } else {
+          let image = _chat_like_message_unlike()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_message_unlike"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chat_like_inside: CGImage {
       if let image = cached.with({ $0["chat_like_inside"] }) {
           return image
@@ -6556,6 +6582,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_like_inside_bubble_overlay: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_bubble_overlay"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_bubble_overlay()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_bubble_overlay"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chat_like_inside_empty: CGImage {
       if let image = cached.with({ $0["chat_like_inside_empty"] }) {
           return image
@@ -6590,6 +6629,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chat_like_inside_empty_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_like_inside_empty_bubble_overlay: CGImage {
+      if let image = cached.with({ $0["chat_like_inside_empty_bubble_overlay"] }) {
+          return image
+      } else {
+          let image = _chat_like_inside_empty_bubble_overlay()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_like_inside_empty_bubble_overlay"] = image
               return current
           }
           return image
@@ -7097,12 +7149,16 @@ final class TelegramIconsTheme {
   private let _chat_share_message: ()->CGImage
   private let _chat_goto_message: ()->CGImage
   private let _chat_swipe_reply: ()->CGImage
+  private let _chat_like_message: ()->CGImage
+  private let _chat_like_message_unlike: ()->CGImage
   private let _chat_like_inside: ()->CGImage
   private let _chat_like_inside_bubble_incoming: ()->CGImage
   private let _chat_like_inside_bubble_outgoing: ()->CGImage
+  private let _chat_like_inside_bubble_overlay: ()->CGImage
   private let _chat_like_inside_empty: ()->CGImage
   private let _chat_like_inside_empty_bubble_incoming: ()->CGImage
   private let _chat_like_inside_empty_bubble_outgoing: ()->CGImage
+  private let _chat_like_inside_empty_bubble_overlay: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7606,12 +7662,16 @@ final class TelegramIconsTheme {
       chat_share_message: @escaping()->CGImage,
       chat_goto_message: @escaping()->CGImage,
       chat_swipe_reply: @escaping()->CGImage,
+      chat_like_message: @escaping()->CGImage,
+      chat_like_message_unlike: @escaping()->CGImage,
       chat_like_inside: @escaping()->CGImage,
       chat_like_inside_bubble_incoming: @escaping()->CGImage,
       chat_like_inside_bubble_outgoing: @escaping()->CGImage,
+      chat_like_inside_bubble_overlay: @escaping()->CGImage,
       chat_like_inside_empty: @escaping()->CGImage,
       chat_like_inside_empty_bubble_incoming: @escaping()->CGImage,
-      chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage
+      chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage,
+      chat_like_inside_empty_bubble_overlay: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8114,11 +8174,15 @@ final class TelegramIconsTheme {
       self._chat_share_message = chat_share_message
       self._chat_goto_message = chat_goto_message
       self._chat_swipe_reply = chat_swipe_reply
+      self._chat_like_message = chat_like_message
+      self._chat_like_message_unlike = chat_like_message_unlike
       self._chat_like_inside = chat_like_inside
       self._chat_like_inside_bubble_incoming = chat_like_inside_bubble_incoming
       self._chat_like_inside_bubble_outgoing = chat_like_inside_bubble_outgoing
+      self._chat_like_inside_bubble_overlay = chat_like_inside_bubble_overlay
       self._chat_like_inside_empty = chat_like_inside_empty
       self._chat_like_inside_empty_bubble_incoming = chat_like_inside_empty_bubble_incoming
       self._chat_like_inside_empty_bubble_outgoing = chat_like_inside_empty_bubble_outgoing
+      self._chat_like_inside_empty_bubble_overlay = chat_like_inside_empty_bubble_overlay
   }
 }

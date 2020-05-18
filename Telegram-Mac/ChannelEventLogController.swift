@@ -293,9 +293,11 @@ private func eventLogItems(_ result:AdminLogEventsResult, initialSize: NSSize, c
     for event in result.events {
         switch event.action {
         case let .editMessage(prev, new):
-            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme)
-            items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
-            items.append(item)
+            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme) as? ChatRowItem
+            if let item = item {
+                items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
+                items.append(item)
+            }
         case let .deleteMessage(message):
             items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()), MessageIndex(message), true, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
         case let .updatePinned(message):

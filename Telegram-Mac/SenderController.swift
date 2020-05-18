@@ -383,7 +383,11 @@ class Sender: NSObject {
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
 
         } else if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
-            attrs.append(TelegramMediaFileAttribute.ImageSize(size: image.size.pixel))
+            var size = image.size
+            if size.width == .infinity || size.height == .infinity {
+                size = image.cgImage(forProposedRect: nil, context: nil, hints: nil)!.size
+            }
+            attrs.append(TelegramMediaFileAttribute.ImageSize(size: size.pixel))
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent))
         } else {
             let getname:(String)->String = { path in

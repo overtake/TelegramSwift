@@ -84,6 +84,10 @@ class ChatRowItem: TableRowItem {
     //right view
     private(set) var date:(TextNodeLayout,TextNode)?
     
+    private(set) var likesNode:TextNode?
+    private(set) var likes:(TextNodeLayout,TextNode)?
+    private(set) var likesAttributed:NSAttributedString?
+    
     private(set) var channelViewsNode:TextNode?
     private(set) var channelViews:(TextNodeLayout,TextNode)?
     private(set) var channelViewsAttributed:NSAttributedString?
@@ -169,7 +173,14 @@ class ChatRowItem: TableRowItem {
         var widthForContent: CGFloat = 0
         
         if isBubbled {
-            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 36 + 10 + additionBubbleInset), 450)
+            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset), 450)
+            
+            if isSharable || isStorage {
+                widthForContent -= 35
+            }
+            if isLikable {
+                widthForContent -= 35
+            }
         } else {
             if case .Full = itemType {
                 let additionWidth:CGFloat = date?.0.size.width ?? 20
@@ -214,6 +225,10 @@ class ChatRowItem: TableRowItem {
         if let channelViews = channelViews {
             size.width += channelViews.0.size.width + 8 + 16
         }
+        if let likes = likes {
+            size.width += likes.0.size.width + 18
+        }
+        
         if let postAuthor = postAuthor {
             size.width += postAuthor.0.size.width + 8
         }
@@ -568,6 +583,34 @@ class ChatRowItem: TableRowItem {
         
         
         return authorIsChannel
+    }
+    
+    var isLikable: Bool {
+        return isSharable
+    }
+    
+    var isLiked: Bool {
+        if let message = message {
+            return FastSettings.isTestLiked(message.id)
+        } else {
+            return false
+        }
+    }
+    
+    func toggleLike() {
+        if let message = message {
+            FastSettings.toggleTestLike(message.id)
+            self.copyAndUpdate(animated: true)
+        }
+    }
+    
+    override func copyAndUpdate(animated: Bool) {
+        if let table = self.table {
+            let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
+            _ = item.makeSize(table.frame.width, oldWidth: 0)
+            let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
+            table.merge(with: transaction)
+        }
     }
     
     var isSharable: Bool {
@@ -1267,6 +1310,11 @@ class ChatRowItem: TableRowItem {
                         fullDate = "\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
                     }
                 }
+                
+                if FastSettings.isTestLiked(message.id) {
+                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                }
+                
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {
                         editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
@@ -1343,7 +1391,20 @@ class ChatRowItem: TableRowItem {
         super.init(initialSize)
     }
     
-    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings, theme: TelegramPresentationTheme) -> ChatRowItem {
+    public static func item(_ initialSize:NSSize, from entry:ChatHistoryEntry, interaction:ChatInteraction, downloadSettings: AutomaticMediaDownloadSettings = AutomaticMediaDownloadSettings.defaultSettings, theme: TelegramPresentationTheme) -> TableRowItem {
+        
+        switch entry {
+        case .UnreadEntry:
+            return ChatUnreadRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+        case .groupedPhotos:
+            return ChatGroupedItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+        case .DateEntry:
+            return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
+        case .bottom:
+            return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
+        default:
+            break
+        }
         
         if let message = entry.message {
             if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
@@ -1414,6 +1475,10 @@ class ChatRowItem: TableRowItem {
         
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
+        }
+        
+        if let likesAttributed = likesAttributed {
+            likes = TextNode.layoutText(maybeNode: likesNode, likesAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
        
         var widthForContent: CGFloat = blockWidth

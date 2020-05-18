@@ -52,6 +52,11 @@ open class ImageView: NSView {
         self.wantsLayer = true
         layerContentsRedrawPolicy = .never
     }
+    init() {
+        super.init(frame: .zero)
+        self.wantsLayer = true
+        layerContentsRedrawPolicy = .never
+    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

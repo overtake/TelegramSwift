@@ -352,6 +352,14 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static func isTestLiked(_ messageId: MessageId) -> Bool {
+        return UserDefaults.standard.value(forKey: "isTestLiked_\(messageId)") as? Bool ?? false
+    }
+    static func toggleTestLike(_ messageId: MessageId) {
+        UserDefaults.standard.set(!isTestLiked(messageId), forKey: "isTestLiked_\(messageId)")
+        UserDefaults.standard.synchronize()
+    }
+    
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)
         let path = paths.first

@@ -355,6 +355,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         } else {
             return false
         }
+        
+        if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60 {
+           return false
+        }
 
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
             return (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
@@ -549,8 +553,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             strongSelf.fetchStatus = status
                         }
                     }
-                    
-                    
                     
                     
                     if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {

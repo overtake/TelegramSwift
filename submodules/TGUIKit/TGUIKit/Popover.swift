@@ -34,6 +34,8 @@ open class Popover: NSObject {
     
     public var isShown:Bool = false
     
+    private var controlStateIdentifiers: [UInt32] = []
+    
     public var overlay:OverlayControl!
     private var background:PopoverBackground = PopoverBackground(frame: NSZeroRect)
     
@@ -277,10 +279,8 @@ open class Popover: NSObject {
                         strongSelf.background.set(handler: nHandler, for: .Normal)
                         strongSelf.background.set(handler: hHandler, for: .Hover)
                         
-                        
-                        control.set(handler: nHandler, for: .Normal)
-                        control.set(handler: hHandler, for: .Hover)
-                        
+            
+                        strongSelf.controlStateIdentifiers = [control.set(handler: nHandler, for: .Normal), control.set(handler: hHandler, for: .Hover)]
                         
                     }
                 } else if let strongSelf = self {
@@ -345,8 +345,9 @@ open class Popover: NSObject {
         overlay?.removeLastStateHandler()
         
         if removeHandlers {
-            control?.removeLastStateHandler()
-            control?.removeLastStateHandler()
+            for id in controlStateIdentifiers {
+                control?.removeStateHandler(id)
+            }
         }
         
         controller?.viewWillDisappear(true)

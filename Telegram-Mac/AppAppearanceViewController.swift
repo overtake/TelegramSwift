@@ -102,7 +102,8 @@ private let _id_theme_preview = InputDataIdentifier("_id_theme_preview")
 private let _id_theme_list = InputDataIdentifier("_id_theme_list")
 private let _id_theme_accent_list = InputDataIdentifier("_id_theme_accent_list")
 private let _id_theme_chat_mode = InputDataIdentifier("_id_theme_chat_mode")
-private let _id_theme_wallpaper = InputDataIdentifier("_id_theme_wallpaper")
+private let _id_theme_wallpaper1 = InputDataIdentifier("_id_theme_wallpaper")
+private let _id_theme_wallpaper2 = InputDataIdentifier("_id_theme_wallpaper")
 private let _id_theme_text_size = InputDataIdentifier("_id_theme_text_size")
 private let _id_theme_auto_night = InputDataIdentifier("_id_theme_auto_night")
 
@@ -238,7 +239,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     index += 1
     
     if appearance.presentation.bubbled {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper, data: InputDataGeneralData(name: L10n.generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: appearance.presentation.bubbled ? _id_theme_wallpaper2 : _id_theme_wallpaper1, data: InputDataGeneralData(name: L10n.generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
         index += 1
     }
     

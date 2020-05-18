@@ -95,7 +95,7 @@ open class BackgroundView: ImageView {
         gradient.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
     }
     
-    init() {
+    override init() {
         fatalError("not supported")
     }
     
