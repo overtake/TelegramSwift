@@ -295,6 +295,14 @@ class ChatMediaItem: ChatRowItem {
         return super.isFixedRightPosition
     }
     
+    override var instantlyResize: Bool {
+        if captionLayout != nil && media.isInteractiveMedia {
+            return true
+        } else {
+            return super.instantlyResize
+        }
+    }
+    
 
     override var isBubbleFullFilled: Bool {
         return (media.isInteractiveMedia || isSticker) && isBubbled 
