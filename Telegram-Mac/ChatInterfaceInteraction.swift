@@ -340,6 +340,8 @@ final class ChatInteraction : InterfaceObserver  {
                 })
             case .ad:
                 break
+            case .source:
+                break
             }
            
         }

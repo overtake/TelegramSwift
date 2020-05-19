@@ -63,7 +63,7 @@ class TextAndLabelItem: GeneralRowItem {
         self.canCopy = canCopy
         
         
-        textLayout = TextViewLayout(attr, maximumNumberOfLines: 2, alwaysStaticItems: !detectLinks)
+        textLayout = TextViewLayout(attr, maximumNumberOfLines: 3, alwaysStaticItems: !detectLinks)
         textLayout.interactions = globalLinkExecutor
         textLayout.selectWholeText = !detectLinks
         if selectFullWord {

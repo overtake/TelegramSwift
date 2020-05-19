@@ -1930,7 +1930,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if toChat {
                     if peerId == strongSelf.chatInteraction.peerId {
                         if let postId = postId {
-                            strongSelf.chatInteraction.focusMessageId(nil, postId, TableScrollState.center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                            
+                            var fromId: MessageId? = nil
+                            if let action = action {
+                                switch action {
+                                case let .source(id):
+                                    fromId = id
+                                default:
+                                    break
+                                }
+                            }
+                            
+                            strongSelf.chatInteraction.focusMessageId(fromId, postId, TableScrollState.center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
                         }
                         if let action = action {
                             strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })

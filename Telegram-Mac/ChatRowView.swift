@@ -905,18 +905,26 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    func fillCaption(_ item:ChatRowItem) -> Void {
+    func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         if let layout = item.captionLayout {
             if captionView == nil {
                 captionView = TextView()
                 rowView.addSubview(captionView!)
                 rowView.addSubview(rightView)
+                captionView?.frame = captionFrame
             }
             //addSubview(captionView!, positioned: .below, relativeTo: rightView)
             captionView?.update(layout)
         } else {
-            captionView?.removeFromSuperview()
-            captionView = nil
+            if animated, let captionView = self.captionView {
+                self.captionView = nil
+                captionView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak captionView] _ in
+                    captionView?.removeFromSuperview()
+                })
+            } else {
+                captionView?.removeFromSuperview()
+                captionView = nil
+            }
         }
     }
     
@@ -1054,19 +1062,28 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    func fillReplyMarkup(_ item:ChatRowItem) -> Void {
+    func fillReplyMarkup(_ item:ChatRowItem, animated: Bool) -> Void {
         if let replyMarkup = item.replyMarkupModel {
             if replyMarkupView == nil {
                 replyMarkupView = View()
                 rowView.addSubview(replyMarkupView!)
+                replyMarkupView?.frame = replyMarkupFrame
             }
             
             replyMarkupView?.setFrameSize(replyMarkup.size.width, replyMarkup.size.height)
             replyMarkup.view = replyMarkupView
             replyMarkup.redraw()
         } else {
-            replyMarkupView?.removeFromSuperview()
-            replyMarkupView = nil
+            if let replyMarkupView = self.replyMarkupView, animated {
+                self.replyMarkupView = nil
+                replyMarkupView.layer?.animateScaleCenter(from: 1, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                replyMarkupView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak replyMarkupView] _ in
+                    replyMarkupView?.removeFromSuperview()
+                })
+            } else {
+                replyMarkupView?.removeFromSuperview()
+                replyMarkupView = nil
+            }
         }
     }
     
@@ -1281,32 +1298,36 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = nil
         }
         
+        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false)
+        
         if let item = item as? ChatRowItem {
             
             renderLayoutType(item, animated: animated)
             
+
+            item.chatInteraction.add(observer: self)
+            
+            updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
+        }
+        
+        super.set(item: item, animated: animated)
+        
+        if let item = item as? ChatRowItem {
             rightView.set(item:item, animated:animated)
             fillReplyIfNeeded(item.replyModel, item)
             fillName(item)
             fillForward(item)
             fillPhoto(item)
-            fillCaption(item)
-            fillReplyMarkup(item)
-            item.chatInteraction.add(observer: self)
-            
-            updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
-        }
-        super.set(item: item, animated: animated)
-        
-        if let item = item as? ChatRowItem {
             fillForward(item)
             fillScamButton(item)
             fillScamForwardButton(item)
             fillPsaButton(item)
             fillShareView(item, animated: animated)
             fillLikeView(item, animated: animated)
-                        
-            if animated && item.isBubbled {
+            fillReplyMarkup(item, animated: animated)
+            fillCaption(item, animated: animated)
+
+            if animated {
                 
                 let bubbleFrame = self.bubbleFrame
                 let contentFrameModifier = self.contentFrameModifier
@@ -1317,7 +1338,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 contentView.change(size: contentFrameModifier.size, animated: animated)
                 updateBackground(animated: animated)
                 
-                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
+                if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
+                    rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
+                }
                 rightView.change(pos: rightFrame.origin, animated: animated)
                 replyView?._change(pos: replyFrame.origin, animated: animated)
                 replyMarkupView?.change(pos: replyMarkupFrame.origin, animated: animated)

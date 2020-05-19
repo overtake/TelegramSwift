@@ -87,7 +87,9 @@ open class TableAnimationInterface: NSObject {
                         // inset = presentLayer.position.y
                         // }
                         //NSMakePoint(0, layer.position.y)
-                        layer.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2, timingFunction: .easeOut, additive: true)
+                        if layer.presentation()?.animation(forKey: "position") == nil {
+                            layer.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2, timingFunction: .easeOut, additive: true)
+                        }
                         
                         for item in added {
                             if item.index == idx {

@@ -19,6 +19,7 @@ enum ESearchCommand {
     case normal
     case close
     case clearText
+    case apply(String)
 }
 
 open class EntertainmentSearchView: OverlayControl, NSTextViewDelegate {
@@ -781,6 +782,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 self?.genericView.searchView?.isLoading = false
             case .close:
                 self?.genericView.searchView?.cancel(true)
+            case let .apply(value):
+                self?.genericView.searchView?.setString(value)
             }
         }
         

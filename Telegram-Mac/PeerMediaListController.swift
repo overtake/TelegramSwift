@@ -488,10 +488,10 @@ class PeerMediaListController: TableViewController {
         
         location.set(.Initial(count: requestCount))
      
-        genericView.setScrollHandler { [weak self] scroll in
+        genericView.setScrollHandler { scroll in
             switch scroll.direction {
             case .bottom:
-                animated.swap(false)
+                _ = animated.swap(false)
                 requestCount += perPageCount() * 3
                 location.set(.Initial(count: requestCount))
             default:

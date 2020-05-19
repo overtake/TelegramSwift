@@ -1069,9 +1069,9 @@ class GalleryViewer: NSResponder {
                                     } else if let item = item as? MGalleryGIFItem {
                                         file = item.media
                                     } else if let photo = item as? MGalleryPhotoItem {
-                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = photo.entry.file ?? TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else if let photo = item as? MGalleryPeerPhotoItem {
-                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
+                                        file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: photo.media.representations.last!.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "photo_\(dateFormatter.string(from: Date())).jpeg")])
                                     } else {
                                         file = nil
                                     }

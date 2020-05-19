@@ -148,8 +148,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var textPlaceholder: String {
         if let peer = chatInteraction.presentation.peer {
             if peer.isChannel {
+                if textView.frame.width < 150 {
+                    return L10n.messagesPlaceholderBroadcastSmall
+                }
                 return FastSettings.isChannelMessagesMuted(peer.id) ? L10n.messagesPlaceholderSilentBroadcast : L10n.messagesPlaceholderBroadcast
             }
+        }
+        if textView.frame.width < 150 {
+            return L10n.messagesPlaceholderSentMessageSmall
         }
         return L10n.messagesPlaceholderSentMessage
     }
@@ -421,6 +427,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         guard let superview = superview else {return}
         textView.max_height = Int32(superview.frame.height / 2 + 50)
         
+        if textView.placeholderAttributedString?.string != self.textPlaceholder {
+            textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
+        }
+
+
     }
     
     override func layout() {

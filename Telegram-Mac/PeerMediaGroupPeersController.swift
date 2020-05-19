@@ -108,7 +108,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 36 + 16, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 0, right: 0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                         arguments.peerInfo(peer!.id)
                     }, contextMenuItems: {
-                        return menuItems
+                        return .single(menuItems)
                     }, inputActivity: inputActivity)
                 }))
                 index += 1

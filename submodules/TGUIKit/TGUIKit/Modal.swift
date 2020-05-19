@@ -496,8 +496,15 @@ public class Modal: NSObject {
             }, with: self, for: .Return, priority: controller.responderPriority)
         }
         
+        var isDown: Bool = false
+        
         background.set(handler: { [weak self] control in
-            guard let controller = self?.controller else { return }
+            guard let controller = self?.controller, let `self` = self else { return }
+            
+            if control.mouseInside() && !controller.view._mouseInside() && !self.container.mouseInside() {
+                isDown = true
+            }
+            
             if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
                 control.performSuperMouseDown(event)
             }
@@ -505,12 +512,15 @@ public class Modal: NSObject {
         
         background.set(handler: { [weak self] control in
             guard let controller = self?.controller, let `self` = self else { return }
-            if controller.closable, !controller.view._mouseInside() && !self.container.mouseInside() {
+            if controller.closable, !controller.view._mouseInside() && !self.container.mouseInside(), isDown {
                 controller.close()
             }
             if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
                 control.performSuperMouseUp(event)
             }
+            
+            isDown = false
+
         }, for: .Click)
         
         if controller.dynamicSize {

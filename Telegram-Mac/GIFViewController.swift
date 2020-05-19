@@ -13,18 +13,40 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
-private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry], context: AccountContext,  initialSize:NSSize, chatInteraction: RecentGifsArguments?) -> TableUpdateTransition {
+
+struct GIFKeyboardConfiguration : Equatable {
+    static var defaultValue: GIFKeyboardConfiguration {
+        return GIFKeyboardConfiguration(emojis: [])
+    }
+    
+    let emojis: [String]
+    
+    fileprivate init(emojis: [String]) {
+        self.emojis = emojis.map { $0.fixed }
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> GIFKeyboardConfiguration {
+        if let data = appConfiguration.data, let value = data["gif_search_emojies"] as? [String] {
+            return GIFKeyboardConfiguration(emojis: value.map { $0.fixed })
+        } else {
+            return .defaultValue
+        }
+    }
+    
+}
+
+private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry], context: AccountContext,  initialSize:NSSize, arguments: RecentGifsArguments?) -> TableUpdateTransition {
    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
         case let .contextMediaResult(collection, row, index):
             return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result, view in
                 if let collection = collection {
-                    chatInteraction?.sendInlineResult(collection, result, view)
+                    arguments?.sendInlineResult(collection, result, view)
                 } else {
                     switch result {
                     case let .internalReference(_, _, _, _, _, _, file, _):
                         if let file = file {
-                            chatInteraction?.sendAppFile(file, view, false)
+                            arguments?.sendAppFile(file, view, false)
                         }
                     default:
                         break
@@ -45,12 +67,18 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                             }))
                         }
                         items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: {
-                            chatInteraction?.sendAppFile(file, view, true)
+                            arguments?.sendAppFile(file, view, true)
                         }))
                     }
                     return items
                 }
             }))
+        case let .separator(string, _, _):
+            return SeparatorRowItem(initialSize, entry.stableId, string: string)
+        case let .emoji(clues, _, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, canDisablePrediction: false, callback: { emoji in
+                arguments?.searchBySuggestion(emoji)
+            })
         default:
             fatalError()
         }
@@ -72,16 +100,25 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) ->
     return []
 }
 
-private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize) -> [InputContextEntry] {
+private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool) -> [InputContextEntry] {
+    var result: [InputContextEntry] = []
     if let collection = collection {
-        return makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
+        result = makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
     }
-    return []
+    
+//    if suggest {
+//        result.insert(.separator("TRENDING GIFS", 2, arc4random64()), at: 0)
+//        result.insert(.emoji(["🐶","🐱","🐭","🐹","🐰","🐻","🐼","🐨","🐯"], true, 1), at: 0)
+//        result.insert(.separator("REACTIONS", 0, arc4random64()), at: 0)
+//    }
+    
+    return result
 }
 
 final class RecentGifsArguments {
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult, NSView) -> Void = { _,_,_  in}
     var sendAppFile:(TelegramMediaFile, NSView, Bool) -> Void = { _,_,_ in}
+    var searchBySuggestion:(String)->Void = { _ in }
 }
 
 final class TableContainer : View {
@@ -221,6 +258,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         }
     }
     
+    
+    
     func isEqual(to other: Notifable) -> Bool {
         return other === self
     }
@@ -259,8 +298,11 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         super.viewWillAppear(animated)
         
         
+        let value = GIFKeyboardConfiguration.with(appConfiguration: context.appConfiguration)
+        
         genericView.reinstall()
         genericView.updateRestricion(chatInteraction?.presentation.peer)
+        
         
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments()
@@ -285,24 +327,33 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
             }
         }
         
+        arguments.searchBySuggestion = { [weak self] value in
+            self?.makeSearchCommand?(.apply(value))
+        }
+        
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let context = self.context
         
         
-        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get() |> distinctUntilChanged(isEqual: { prev, new in
-            return prev.request == new.request
-        })) |> mapToSignal { view, search -> Signal<TableUpdateTransition, NoError> in
+        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get()) |> mapToSignal { view, search -> Signal<TableUpdateTransition, NoError> in
             
-            if search.request.isEmpty {
+            switch search.state {
+            case .Focus:
+                let searchSignal: Signal<ChatContextResultCollection?, NoError>
+                if search.request.isEmpty {
+                    searchSignal = .single(nil) |> then(searchGifs(account: context.account, query: search.request.lowercased()))
+                } else {
+                    searchSignal = searchGifs(account: context.account, query: search.request.lowercased())
+                }
+                return searchSignal |> map { result in
+                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: search.request.isEmpty)
+                    return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments)
+                }
+            default:
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
                 let entries = recentEntries(for: postboxView, initialSize: initialSize.with { $0 }).sorted(by: <)
-                return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, chatInteraction: arguments))
-            } else {
-                return searchGifs(account: context.account, query: search.request.lowercased()) |> map { result in
-                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 })
-                    return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, chatInteraction: arguments)
-                } |> delay(0.2, queue: Queue.concurrentDefaultQueue())
+                return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments))
             }
             
         } |> deliverOnMainQueue

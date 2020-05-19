@@ -280,7 +280,7 @@ extension TelegramMediaFile {
     }
     
     func withUpdatedResource(_ resource: TelegramMediaResource) -> TelegramMediaFile {
-        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+        return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
     }
 }
 
@@ -2466,16 +2466,16 @@ func proxySettings(accountManager: AccountManager) -> Signal<ProxySettings, NoEr
     }
 }
 
-public extension ProxySettings {
-    public func withUpdatedActiveServer(_ activeServer: ProxyServerSettings?) -> ProxySettings {
+extension ProxySettings {
+    func withUpdatedActiveServer(_ activeServer: ProxyServerSettings?) -> ProxySettings {
         return ProxySettings(enabled: self.enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
     }
     
-    public func withUpdatedEnabled(_ enabled: Bool) -> ProxySettings {
+    func withUpdatedEnabled(_ enabled: Bool) -> ProxySettings {
         return ProxySettings(enabled: enabled, servers: self.servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
     }
     
-    public func withAddedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+    func withAddedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
         var servers = self.servers
         if servers.first(where: {$0 == proxy}) == nil {
             servers.append(proxy)
@@ -2483,7 +2483,7 @@ public extension ProxySettings {
         return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: self.useForCalls)
     }
     
-    public func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
+    func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
         var servers = self.servers
         if let index = servers.index(where: {$0 == current}) {
             servers[index] = updated
@@ -2497,15 +2497,15 @@ public extension ProxySettings {
         return ProxySettings(enabled: self.enabled, servers: servers, activeServer: activeServer, useForCalls: self.useForCalls)
     }
     
-    public func withUpdatedUseForCalls(_ enable: Bool) -> ProxySettings {
+    func withUpdatedUseForCalls(_ enable: Bool) -> ProxySettings {
         return ProxySettings(enabled: self.enabled, servers: servers, activeServer: self.activeServer, useForCalls: enable)
     }
     
-    public func withRemovedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
+    func withRemovedServer(_ proxy: ProxyServerSettings) -> ProxySettings {
         var servers = self.servers
         var activeServer = self.activeServer
         var enabled: Bool = self.enabled
-        if let index = servers.index(where: {$0 == proxy}) {
+        if let index = servers.firstIndex(where: {$0 == proxy}) {
             _ = servers.remove(at: index)
         }
         if proxy == activeServer {
@@ -2593,7 +2593,7 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url + language) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
+    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
         if let webpage = webpage {
             showInstantPage(InstantPageViewController(context, webPage: webpage, message: nil))
         } else {

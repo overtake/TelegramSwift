@@ -177,9 +177,23 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     } else {
                         view = GIFContainerView()
                     }
+                    
+                   
+                    
+                    let resource: MediaResourceReference
+                    let isPreview: Bool
+                    if let preview = data.file.media.videoThumbnails.first {
+                        resource = data.file.resourceReference(preview.resource)
+                        isPreview = true
+                    } else {
+                        resource = data.file.resourceReference(data.file.media.resource)
+                        isPreview = false
+                    }
+                    
+                    
                     let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     
-                    view.update(with: data.file.resourceReference(data.file.media.resource) , size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, iconSignal: signal)
+                    view.update(with: resource, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, isPreview: isPreview, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
                         let layer = View()
                         layer.identifier = NSUserInterfaceItemIdentifier("gif-separator")
