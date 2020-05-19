@@ -1136,6 +1136,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 _ = item.makeSize(frame.width, oldWidth: item.width)
                 reloadData(row: item.index, animated: false)
                 NSAnimationContext.current.duration = 0.0
+                NSAnimationContext.current.timingFunction = nil
                 tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             }
             return true
@@ -1659,7 +1660,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item._index = at
         let animation = animation != .none ? item.animatable ? animation : .none : .none
         NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
-        
+        NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
             self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: at))
@@ -1705,6 +1706,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func noteHeightOfRow(_ row:Int, _ animated:Bool = true) {
         if !animated {
             NSAnimationContext.current.duration = 0
+            NSAnimationContext.current.timingFunction = nil
         }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
     }
@@ -1717,6 +1719,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if view.isKind(of: item.viewClass()) && !presentAsNew {
                 if view.frame.height != item.heightValue {
                     NSAnimationContext.current.duration = animated ? 0.2 : 0.0
+                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 view.change(size: NSMakeSize(frame.width, item.heightValue), animated: animated)
@@ -1727,6 +1730,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         } else {
             NSAnimationContext.current.duration = 0.0
+            NSAnimationContext.current.timingFunction = nil
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
         //self.moveItem(from: row, to: row)
@@ -1747,7 +1751,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var item:TableRowItem = self.item(at:from);
         let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
         NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
-       
+        NSAnimationContext.current.timingFunction = animation != .none ? CAMediaTimingFunction(name: .easeOut) : nil
+
         if let change = changeItem {
             assert(change.stableId == item.stableId)
             change.table = self
@@ -1809,6 +1814,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
             let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
             NSAnimationContext.current.duration = animation == .none ? 0.0 : 0.2
+            NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
 
             if(redraw) {
                 self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation != .none ? .effectFade : .none)

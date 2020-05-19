@@ -358,9 +358,9 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
                 }, contextMenuItems: {
-                    return [ContextMenuItem(L10n.chatListFilterIncludeRemoveChat, handler: {
+                    return .single([ContextMenuItem(L10n.chatListFilterIncludeRemoveChat, handler: {
                         arguments.removeIncluded(peer.id)
-                    })]
+                    })])
                 })
             }))
             index += 1
@@ -434,9 +434,9 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openInfo(peer.id)
                 }, contextMenuItems: {
-                    return [ContextMenuItem.init(L10n.chatListFilterExcludeRemoveChat, handler: {
+                    return .single([ContextMenuItem.init(L10n.chatListFilterExcludeRemoveChat, handler: {
                         arguments.removeExcluded(peer.id)
-                    })]
+                    })])
                 })
             }))
             index += 1

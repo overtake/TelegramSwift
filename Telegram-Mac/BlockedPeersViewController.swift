@@ -125,11 +125,11 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
-                    return [ContextMenuItem(tr(L10n.chatInputUnblock), handler: {
+                    return .single([ContextMenuItem(tr(L10n.chatInputUnblock), handler: {
                         arguments.removePeer(peer.id)
-                    })]
+                    })])
                 } else {
-                    return []
+                    return .single([])
                 }
                 
             })

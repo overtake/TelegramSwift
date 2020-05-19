@@ -20,10 +20,12 @@ class ContextClueRowItem: TableRowItem {
     }
     fileprivate let context: AccountContext
     fileprivate let canDisablePrediction: Bool
-    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], canDisablePrediction: Bool) {
+    fileprivate let callback:((String)->Void)?
+    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], canDisablePrediction: Bool, callback:((String)->Void)? = nil) {
         self._stableId = stableId
         self.clues = clues
         self.context = context
+        self.callback = callback
         self.canDisablePrediction = canDisablePrediction
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -110,7 +112,11 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         if let clues = self.item as? ContextClueRowItem {
             clues.selectedIndex = row
             if byClick, let window = window as? Window {
-                window.sendKeyEvent(.Return, modifierFlags: [])
+                if let callback = clues.callback {
+                    callback(clues.clues[row])
+                } else {
+                    window.sendKeyEvent(.Return, modifierFlags: [])
+                }
             }
         }
     }
@@ -166,7 +172,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
     
     override func layout() {
         super.layout()
-        tableView.frame = NSMakeRect(0, 0, frame.width - (button.isHidden ? 0 : button.frame.width), bounds.height)
+        tableView.frame = NSMakeRect(0, 0, frame.width - (button.isHidden ? 0 : button.frame.width), frame.height)
         button.centerY(x: frame.width - button.frame.width)
     }
     

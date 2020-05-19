@@ -28,6 +28,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case emoji([String], Bool, Int32)
     case hashtag(String, Int64)
     case inlineRestricted(String)
+    case separator(String, Int64, Int64)
     var stableId: Int64 {
         switch self {
         case .switchPeer:
@@ -52,6 +53,8 @@ enum InputContextEntry : Comparable, Identifiable {
             return Int64(clue.joined().hashValue)
         case .inlineRestricted:
             return -1000
+        case let .separator(_, _, stableId):
+            return stableId
         }
     }
     
@@ -78,6 +81,8 @@ enum InputContextEntry : Comparable, Identifiable {
         case .inlineRestricted:
             return 0
         case let .message(index, _, _):
+            return index
+        case let .separator(_, index, _):
             return index
         }
     }
@@ -147,6 +152,11 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
         } else {
             return false
         }
+    case let .separator(value1, value2, value3):
+        if case .separator(value1, value2, value3) = rhs {
+            return true
+        }
+        return false
     }
 }
 
@@ -199,6 +209,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ContextSearchMessageItem(initialSize, context: context, message: message, searchText: searchText, action: {
                 
             })
+        case let .separator(string, _, _):
+            return SeparatorRowItem(initialSize, entry.stableId, string: string)
         }
         
     })

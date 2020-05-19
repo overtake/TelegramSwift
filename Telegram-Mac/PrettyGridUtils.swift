@@ -223,7 +223,7 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                         let tmp = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                         image = isSavedGifs ? ImageMediaReference.savedGif(media: tmp) : ImageMediaReference.standalone(media: tmp)
                     }
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated])
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/gif", size: content.resource.size, attributes: [TelegramMediaFileAttribute.Animated])
                     entries.append(.gif(thumb: image, file: isSavedGifs ? FileMediaReference.savedGif(media: file) : FileMediaReference.standalone(media: file)))
                 } else {
                     removeResultIndexes.append(i)
@@ -250,7 +250,7 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
                     if let thumbnail = data.thumbnail, let dimensions = thumbnail.dimensions {
                         image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: dimensions, resource: thumbnail.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                     }
-                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: content.attributes)))
+                    entries.append(.sticker(thumb: image, file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: content.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: content.attributes)))
                 } else {
                     removeResultIndexes.append(i)
                 }

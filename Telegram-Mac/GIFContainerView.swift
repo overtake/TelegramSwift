@@ -166,7 +166,7 @@ class GIFContainerView: Control {
         updatePlayerIfNeeded()
     }
     
-    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, context: AccountContext, table: TableView?, ignoreWindowKey: Bool = false, iconSignal:Signal<ImageDataTransformation, NoError>) {
+    func update(with reference: MediaResourceReference, size: NSSize, viewSize:NSSize, file: TelegramMediaFile?, context: AccountContext, table: TableView?, ignoreWindowKey: Bool = false, isPreview: Bool = false, iconSignal:Signal<ImageDataTransformation, NoError>) {
         let updated = self.reference == nil || !self.reference!.resource.id.isEqual(to: reference.resource.id)
         self.tableView = table
         self.context = context
@@ -229,6 +229,7 @@ class GIFContainerView: Control {
                         strongSelf.addSubview(progressView)
                         strongSelf.progressView?.center()
                     }
+                    strongSelf.data = nil
                 }
                 
                 strongSelf.progressView?.fetchControls = FetchControls(fetch: { [weak strongSelf] in

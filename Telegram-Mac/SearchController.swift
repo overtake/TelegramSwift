@@ -218,16 +218,17 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
 }
 
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, pinnedItems:[PinnedItemId], initialSize:NSSize, animated: Bool) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
+private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], arguments: SearchControllerArguments) -> Signal<[ContextMenuItem], NoError> {
+    var items:[ContextMenuItem] = []
     
     let togglePin:(Peer) -> Void = { peer in
         let updatePeer = arguments.context.account.postbox.transaction { transaction -> Void in
             updatePeers(transaction: transaction, peers: [peer], update: { (_, updated) -> Peer? in
                 return updated
             })
-        } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
-            return toggleItemPinned(postbox: arguments.context.account.postbox, location: .group(.root), itemId: .peer(peer.id))
-        } |> deliverOnMainQueue
+            } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
+                return toggleItemPinned(postbox: arguments.context.account.postbox, location: .group(.root), itemId: .peer(peer.id))
+            } |> deliverOnMainQueue
         
         _ = updatePeer.start(next: { result in
             switch result {
@@ -240,12 +241,70 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                         break
                     }
                 })
-            //alert(for: mainWindow, info: L10n.chatListContextPinErrorNew2)
             default:
                 break
             }
         })
     }
+    
+    var isPinned: Bool = false
+    for item in pinnedItems {
+        switch item {
+        case let .peer(peerId):
+            if peerId == peer.id {
+                isPinned = true
+                break
+            }
+        }
+    }
+    
+    items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
+        togglePin(peer)
+    }))
+    
+    let peerId = peer.id
+    
+    return .single(items) |> mapToSignal { items in
+        return chatListFilterPreferences(postbox: arguments.context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+            var items = items
+            var submenu: [ContextMenuItem] = []
+            if peerId.namespace != Namespaces.Peer.SecretChat {
+                for item in filters.list {
+                    if !item.data.includePeers.peers.contains(peerId) {
+                        submenu.append(ContextMenuItem(item.title, handler: {
+                            _ = updateChatListFiltersInteractively(postbox: arguments.context.account.postbox, { list in
+                                var list = list
+                                for (i, folder) in list.enumerated() {
+                                    var folder = folder
+                                    if folder.id == item.id {
+                                        folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
+                                        list[i] = folder
+                                    }
+                                }
+                                return list
+                            }).start()
+                        }))
+                    }
+                }
+            }
+            
+            if !submenu.isEmpty {
+                items.append(ContextSeparatorItem())
+                let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
+                let menu = NSMenu()
+                for item in submenu {
+                    menu.addItem(item)
+                }
+                item.submenu = menu
+                items.append(item)
+            }
+            return items
+        }
+    }
+}
+
+
+fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry>]?, to:[AppearanceWrapperEntry<ChatListSearchEntry>], arguments:SearchControllerArguments, pinnedItems:[PinnedItemId], initialSize:NSSize, animated: Bool) -> TableEntriesTransition<[AppearanceWrapperEntry<ChatListSearchEntry>]> {
     
     let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
         switch entry.entry {
@@ -274,45 +333,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             
             
             return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.context.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right], contextMenuItems: {
-                var items:[ContextMenuItem] = []
-                
-                var isPinned: Bool = false
-                for item in pinnedItems {
-                    switch item {
-                    case let .peer(peerId):
-                        if peerId == foundPeer.peer.id {
-                            isPinned = true
-                            break
-                        }
-                    }
-                }
-                
-                items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
-                    togglePin(foundPeer.peer)
-                }))
-                
-                return items
+                return peerContextMenuItems(peer: foundPeer.peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge)
         case let .localPeer(peer, _, secretChat, badge, drawBorder):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: false, contextMenuItems: {
-                var items:[ContextMenuItem] = []
-                
-                var isPinned: Bool = false
-                for item in pinnedItems {
-                    switch item {
-                    case let .peer(peerId):
-                        if peerId == peer.id {
-                            isPinned = true
-                            break
-                        }
-                    }
-                }
-                
-                items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
-                    togglePin(peer)
-                }))
-                
-                return items
+                return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge)
         case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: true, removeAction: {
@@ -322,45 +347,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                     arguments.removeRecentPeerId(peer.id)
                 }
             }, contextMenuItems: {
-                var items:[ContextMenuItem] = []
-                
-                var isPinned: Bool = false
-                for item in pinnedItems {
-                    switch item {
-                    case let .peer(peerId):
-                        if peerId == peer.id {
-                            isPinned = true
-                            break
-                        }
-                    }
-                }
-                
-                items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
-                    togglePin(peer)
-                }))
-                
-                return items
+                return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge)
         case let .savedMessages(peer):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: false, isLookSavedMessage: true, contextMenuItems: {
-                var items:[ContextMenuItem] = []
-                
-                var isPinned: Bool = false
-                for item in pinnedItems {
-                    switch item {
-                    case let .peer(peerId):
-                        if peerId == peer.id {
-                            isPinned = true
-                            break
-                        }
-                    }
-                }
-                
-                items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
-                    togglePin(peer)
-                }))
-                
-                return items
+                return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             })
         case let .separator(text, index, state):
             let right:String?

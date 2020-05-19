@@ -147,7 +147,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                     }))
                 }
                 
-                return items
+                return .single(items)
             })
         case let .empty(progress):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: L10n.channelBlacklistEmptyDescrpition)

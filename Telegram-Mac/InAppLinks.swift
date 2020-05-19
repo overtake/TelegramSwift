@@ -77,6 +77,7 @@ enum ChatInitialAction : Equatable {
     case files(list: [String], behavior: ChatInitialActionBehavior)
     case forward(messageIds: [MessageId], text: String?, behavior: ChatInitialActionBehavior)
     case ad(PromoChatListItem.Kind)
+    case source(MessageId)
 }
 
 
