@@ -1693,6 +1693,14 @@ internal final class L10n {
   internal static var chatSecretChat4Feature: String  { return L10n.tr("Localizable", "Chat.SecretChat.4Feature") }
   /// Secret chats:
   internal static var chatSecretChatEmptyHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.EmptyHeader") }
+  /// Secret Chat
+  internal static var chatSecretChatPreviewHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.Header") }
+  /// NO
+  internal static var chatSecretChatPreviewNO: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.NO") }
+  /// OK
+  internal static var chatSecretChatPreviewOK: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.OK") }
+  /// Would you like to enable extended link previews in Secret Chat? Note that link previews are generated on Telegram Servers.
+  internal static var chatSecretChatPreviewText: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.Text") }
   /// Schedule a Message
   internal static var chatSendScheduledMessage: String  { return L10n.tr("Localizable", "Chat.Send.ScheduledMessage") }
   /// Set a Reminder
@@ -4941,6 +4949,12 @@ internal final class L10n {
   internal static var privacyAndSecurityItemOff: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.Item.Off") }
   /// On
   internal static var privacyAndSecurityItemOn: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.Item.On") }
+  /// Link previews will be generated on Telegram servers. We do not store data about the links you send.
+  internal static var privacyAndSecuritySecretChatWebPreviewDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SecretChatWebPreview.Desc") }
+  /// SECRET CHAT
+  internal static var privacyAndSecuritySecretChatWebPreviewHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SecretChatWebPreview.Header") }
+  /// Link Previews
+  internal static var privacyAndSecuritySecretChatWebPreviewText: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.SecretChatWebPreview.Text") }
   /// Users who add your number to their contacts will see it on Telegram only if they are your contacts.
   internal static var privacyPhoneNumberSettingsCustomDisabledHelp: String  { return L10n.tr("Localizable", "PrivacyPhoneNumberSettings.CustomDisabledHelp") }
   /// WHO CAN FIND ME BY MY NUMBER

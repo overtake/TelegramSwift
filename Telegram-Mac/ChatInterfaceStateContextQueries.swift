@@ -506,20 +506,25 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
     
     return Signal { subscriber in
         
+        var detector = dataDetector
+
+        
         if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.media.first {
             if media is TelegramMediaFile || media is TelegramMediaImage {
                 subscriber.putNext((nil, .single({ _ in return nil })))
                 subscriber.putCompletion()
+                detector = nil
             }
         }
-        
+    
         
         if let peer = chatPresentationInterfaceState.peer, peer.webUrlRestricted {
             subscriber.putNext((nil, .single({ _ in return nil })))
             subscriber.putCompletion()
+            detector = nil
         }
         
-        if let dataDetector = dataDetector {
+        if let dataDetector = detector {
             
             var detectedUrl: String?
 
@@ -551,24 +556,71 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
             if detectedUrl != currentQuery {
                 if let detectedUrl = detectedUrl {
                     let link = inApp(for: detectedUrl.nsstring, context: context, peerId: nil, openInfo: { _, _, _, _ in }, hashtag: { _ in }, command: { _ in }, applyProxy: { _ in }, confirm: false)
-                    switch link {
-                    case let .external(detectedUrl, _):
-                        subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
-                            return { _ in return value }
-                        }))
-                    case let .followResolvedName(_, username, _, _, _, _):
-                        if username.hasPrefix("_private_") {
-                            subscriber.putNext((nil, .single({ _ in return nil })))
-                            subscriber.putCompletion()
-                        } else {
+                    
+                    
+                    let invoke:(inAppLink)->Void = { link in
+                        switch link {
+                        case let .external(detectedUrl, _):
                             subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                                 return { _ in return value }
-                            }))
+                                }))
+                        case let .followResolvedName(_, username, _, _, _, _):
+                            if username.hasPrefix("_private_") {
+                                subscriber.putNext((nil, .single({ _ in return nil })))
+                                subscriber.putCompletion()
+                            } else {
+                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
+                                    return { _ in return value }
+                                    }))
+                            }
+                        default:
+                            subscriber.putNext((nil, .single({ _ in return nil })))
+                            subscriber.putCompletion()
                         }
-                    default:
-                        subscriber.putNext((nil, .single({ _ in return nil })))
-                        subscriber.putCompletion()
                     }
+                    
+                    if chatPresentationInterfaceState.chatLocation.peerId.namespace == Namespaces.Peer.SecretChat {
+                        let value = FastSettings.isSecretChatWebPreviewAvailable(for: context.account.id.int64)
+                        
+                        if let value = value {
+                            if !value {
+                                subscriber.putNext((nil, .single({ _ in return nil })))
+                                subscriber.putCompletion()
+                                return EmptyDisposable
+                            } else {
+                                invoke(link)
+                            }
+                        } else {
+                            
+                            var canLoad: Bool = false
+                            switch link {
+                            case .external:
+                                canLoad = true
+                            case let .followResolvedName(_, username, _, _, _, _):
+                                if !username.hasPrefix("_private_") {
+                                    canLoad = true
+                                }
+                            default:
+                                canLoad = false
+                            }
+                            
+                            if canLoad {
+                               confirm(for: context.window, header: L10n.chatSecretChatPreviewHeader, information: L10n.chatSecretChatPreviewText, okTitle: L10n.chatSecretChatPreviewOK, cancelTitle: L10n.chatSecretChatPreviewNO, successHandler: { result in
+                                    FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: true)
+                                    invoke(link)
+                               }, cancelHandler: {
+                                    FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: false)
+                                    subscriber.putNext((nil, .single({ _ in return nil })))
+                                    subscriber.putCompletion()
+                               })
+                            }
+                            
+                        }
+                    } else {
+                        invoke(link)
+                    }
+                    
+                    
                 } else {
                     subscriber.putNext((nil, .single({ _ in return nil })))
                     subscriber.putCompletion()

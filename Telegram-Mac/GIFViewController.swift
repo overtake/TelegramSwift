@@ -44,8 +44,8 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     arguments?.sendInlineResult(collection, result, view)
                 } else {
                     switch result {
-                    case let .internalReference(_, _, _, _, _, _, file, _):
-                        if let file = file {
+                    case let .internalReference(values):
+                        if let file = values.file {
                             arguments?.sendAppFile(file, view, false)
                         }
                     default:
@@ -89,7 +89,13 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
 
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
-        let result = view.items.compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map({ChatContextResult.internalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: $0, message: .auto(caption: "", entities: nil, replyMarkup: nil))})
+        
+        
+        
+        let result: [ChatContextResult] = view.items.compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map { file in
+            let reference = ChatContextResult.InternalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: file, message: .auto(caption: "", entities: nil, replyMarkup: nil))
+            return .internalReference(reference)
+        }
         let values = makeMediaEnties(result, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100))
         var wrapped:[InputContextEntry] = []
         for value in values {

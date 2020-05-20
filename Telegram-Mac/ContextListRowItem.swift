@@ -44,20 +44,20 @@ class ContextListRowItem: TableRowItem {
         var representation: TelegramMediaImageRepresentation?
         var iconText:NSAttributedString? = nil
         switch result {
-        case let .externalReference(_, _, _, title, description, url, content, thumbnail, _):
-            if let thumbnail = thumbnail {
+        case let .externalReference(values):
+            if let thumbnail = values.thumbnail {
                 representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource)
             }
-            if let content = content {
+            if let content = values.content {
                 if content.mimeType.hasPrefix("audio") {
                     vClass = ContextListAudioView.self
-                    audioWrapper = APSingleWrapper(resource: content.resource, name: title, performer: description, id: result.maybeId)
+                    audioWrapper = APSingleWrapper(resource: content.resource, name: values.title, performer: values.description, id: result.maybeId)
                 } else if content.mimeType == "video/mp4" {
                     vClass = ContextListGIFView.self
                 }
             }
             var selectedUrl: String?
-            if let url = url {
+            if let url = values.url {
                 selectedUrl = url
             }
             if let selectedUrl = selectedUrl, let parsedUrl = URL(string: selectedUrl) {
@@ -65,18 +65,18 @@ class ContextListRowItem: TableRowItem {
                     iconText = NSAttributedString.initialize(string: host.substring(to: host.index(after: host.startIndex)).uppercased(), color: .white, font: .medium(25.0))
                 }
             }
-        case let .internalReference(_, _, _, title, description, image, file, _):
+        case let .internalReference(values):
             if let file = file {
                 self.file = file
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
                     vClass = ContextListAudioView.self
-                    audioWrapper = APSingleWrapper(resource: fileResource!, name: title, performer: description, id:result.maybeId)
+                    audioWrapper = APSingleWrapper(resource: fileResource!, name: values.title, performer: values.description, id: result.maybeId)
                 } else if file.isVideo && file.isAnimated {
                     vClass = ContextListGIFView.self
                 }
             }
-            if let image = image {
+            if let image = values.image {
                 representation = smallestImageRepresentation(image.representations)
             } else if let file = file {
                 representation = smallestImageRepresentation(file.previewRepresentations)

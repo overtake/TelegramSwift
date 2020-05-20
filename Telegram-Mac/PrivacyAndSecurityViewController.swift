@@ -56,7 +56,8 @@ private final class PrivacyAndSecurityControllerArguments {
     let togglePeerSuggestions:(Bool)->Void
     let clearCloudDrafts: () -> Void
     let toggleSensitiveContent:(Bool)->Void
-    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void) {
+    let toggleSecretChatWebPreview: (Bool)->Void
+    init(context: AccountContext, openBlockedUsers: @escaping () -> Void, openLastSeenPrivacy: @escaping () -> Void, openGroupsPrivacy: @escaping () -> Void, openVoiceCallPrivacy: @escaping () -> Void, openProfilePhotoPrivacy: @escaping () -> Void, openForwardPrivacy: @escaping () -> Void, openPhoneNumberPrivacy: @escaping() -> Void, openPasscode: @escaping () -> Void, openTwoStepVerification: @escaping (TwoStepVeriticationAccessConfiguration?) -> Void, openActiveSessions: @escaping ([RecentAccountSession]?) -> Void, openWebAuthorizations: @escaping() -> Void, setupAccountAutoremove: @escaping () -> Void, openProxySettings:@escaping() ->Void, togglePeerSuggestions:@escaping(Bool)->Void, clearCloudDrafts: @escaping() -> Void, toggleSensitiveContent: @escaping(Bool)->Void, toggleSecretChatWebPreview: @escaping(Bool)->Void) {
         self.context = context
         self.openBlockedUsers = openBlockedUsers
         self.openLastSeenPrivacy = openLastSeenPrivacy
@@ -74,6 +75,7 @@ private final class PrivacyAndSecurityControllerArguments {
         self.openForwardPrivacy = openForwardPrivacy
         self.openPhoneNumberPrivacy = openPhoneNumberPrivacy
         self.toggleSensitiveContent = toggleSensitiveContent
+        self.toggleSecretChatWebPreview = toggleSecretChatWebPreview
     }
 }
 
@@ -106,6 +108,10 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case clearCloudDraftsHeader(sectionId: Int)
     case clearCloudDrafts(sectionId: Int, viewType: GeneralViewType)
 
+    case secretChatWebPreviewHeader(sectionId: Int)
+    case secretChatWebPreviewToggle(sectionId: Int, value: Bool?, viewType: GeneralViewType)
+    case secretChatWebPreviewDesc(sectionId: Int)
+    
     case section(sectionId:Int)
 
     var sectionId: Int {
@@ -162,10 +168,17 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return sectionId
         case let .sensitiveContentDesc(sectionId):
             return sectionId
+        case let .secretChatWebPreviewHeader(sectionId):
+            return sectionId
+        case let .secretChatWebPreviewToggle(sectionId, _, _):
+            return sectionId
+        case let .secretChatWebPreviewDesc(sectionId):
+            return sectionId
         case let .section(sectionId):
             return sectionId
         }
     }
+    
 
     var stableId:Int {
         switch self {
@@ -221,6 +234,12 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             return 24
         case .sensitiveContentDesc:
             return 25
+        case .secretChatWebPreviewHeader:
+            return 26
+        case .secretChatWebPreviewToggle:
+            return 27
+        case .secretChatWebPreviewDesc:
+            return 28
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -352,6 +371,16 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             }, autoswitch: true)
         case .sensitiveContentDesc:
             return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
+        case .secretChatWebPreviewHeader:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewHeader, viewType: .textTopItem)
+        case let .secretChatWebPreviewToggle(_, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySecretChatWebPreviewText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+                if let enabled = enabled {
+                    arguments.toggleSecretChatWebPreview(!enabled)
+                }
+            }, autoswitch: true)
+        case .secretChatWebPreviewDesc:
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewDesc, viewType: .textBottomItem)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -427,7 +456,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData, context: AccountContext) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
 
     var sectionId:Int = 1
@@ -528,8 +557,18 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     if let webSessions = webSessions, !webSessions.0.isEmpty {
         entries.append(.webAuthorizationsHeader(sectionId: sectionId))
         entries.append(.webAuthorizations(sectionId: sectionId, viewType: .singleItem))
+        
+        if FastSettings.isSecretChatWebPreviewAvailable(for: context.account.id.int64) != nil {
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
+        }
     }
-
+    
+    if let value = FastSettings.isSecretChatWebPreviewAvailable(for: context.account.id.int64) {
+        entries.append(.secretChatWebPreviewHeader(sectionId: sectionId))
+        entries.append(.secretChatWebPreviewToggle(sectionId: sectionId, value: value, viewType: .singleItem))
+        entries.append(.secretChatWebPreviewDesc(sectionId: sectionId))
+    }
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -858,6 +897,8 @@ class PrivacyAndSecurityViewController: TableViewController {
             })
         }, toggleSensitiveContent: { value in
             _ = updateRemoteContentSettingsConfiguration(postbox: context.account.postbox, network: context.account.network, sensitiveContentEnabled: value).start()
+        }, toggleSecretChatWebPreview: { value in
+            FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: value)
         })
 
 
@@ -869,7 +910,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         
         let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), combineLatest(queue: .mainQueue(), recentPeers(account: context.account), twoStepAccessConfiguration.get(), activeSessions.get(), context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
         |> map { state, contentConfiguration, appearance, proxy, values, additional, blockedState -> TableUpdateTransition in
-            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data, context: context).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()

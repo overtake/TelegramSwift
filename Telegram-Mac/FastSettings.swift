@@ -360,6 +360,15 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static func isSecretChatWebPreviewAvailable(for accountId: Int64) -> Bool? {
+        return UserDefaults.standard.value(forKey: "IsSecretChatWebPreviewAvailable_\(accountId)") as? Bool
+    }
+    
+    static func setSecretChatWebPreviewAvailable(for accountId: Int64, value: Bool) -> Void {
+        UserDefaults.standard.set(value, forKey: "IsSecretChatWebPreviewAvailable_\(accountId)")
+        UserDefaults.standard.synchronize()
+    }
+    
     static var downloadsFolder:String? {
         let paths = NSSearchPathForDirectoriesInDomains(.downloadsDirectory, .userDomainMask, true)
         let path = paths.first

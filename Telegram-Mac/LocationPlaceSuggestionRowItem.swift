@@ -67,9 +67,9 @@ class LocationPlaceSuggestionRowItem: GeneralRowItem {
         let attr = NSMutableAttributedString()
         var image: TelegramMediaImage? = nil
         switch result {
-        case let .externalReference(_, _, _, _, _, _, _, _, message):
+        case let .externalReference(values):
            
-            switch message {
+            switch values.message {
             case let .mapLocation(media, _):
                 if let venue = media.venue {
                     _ = attr.append(string: venue.title, color: theme.colors.text, font: .medium(.text))

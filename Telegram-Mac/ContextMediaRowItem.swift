@@ -61,8 +61,8 @@ class ContextMediaRowItem: TableRowItem {
         for size in result.sizes {
             if location.x > inset && location.x < inset + size.width {
                 switch result.results[i] {
-                case let .internalReference(_, _, _, _, _, _, file, _):
-                    if let file = file, let view = self.view {
+                case let .internalReference(values):
+                    if let file = values.file, let view = self.view {
                         let items = arguments.menuItems(file, view.subviews[i])
                         return items
                     }

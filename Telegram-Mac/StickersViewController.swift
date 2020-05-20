@@ -992,7 +992,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 
                 for entry in entries {
                     switch entry {
-                    case .saved, .recent, .specificPack:
+                    case .saved, .recent, .specificPack, .featured:
                         resortRange.location += 1
                     default:
                         break
