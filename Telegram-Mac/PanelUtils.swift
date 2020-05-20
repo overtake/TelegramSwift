@@ -184,7 +184,7 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil) {
 
     
     let alert:NSAlert = NSAlert()
@@ -217,6 +217,8 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
                 successHandler(.thrid)
             } else if response.rawValue == 1001, cancelTitle == "" {
                 successHandler(.thrid)
+            } else if response.rawValue == 1001 {
+                cancelHandler?()
             }
         }
     })

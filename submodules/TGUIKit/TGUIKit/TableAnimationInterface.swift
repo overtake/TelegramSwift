@@ -83,13 +83,19 @@ open class TableAnimationInterface: NSObject {
                     if let view = table.viewNecessary(at: idx), let layer = view.layer {
                         
                         var inset = (layer.frame.minY - height);
-                        //   if let presentLayer = layer.presentation(), presentLayer.animation(forKey: "position") != nil {
-                        // inset = presentLayer.position.y
-                        // }
-                        //NSMakePoint(0, layer.position.y)
-                        if layer.presentation()?.animation(forKey: "position") == nil {
-                            layer.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2, timingFunction: .easeOut, additive: true)
-                        }
+                        if let presentLayer = layer.presentation(), presentLayer.animation(forKey: "position") != nil {
+                            inset = presentLayer.position.y
+                         }
+                        
+                      //  if layer.presentation()?.animation(forKey: "position") == nil {
+                            layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: .easeOut)
+                      //  }
+                        
+                        /*
+                         if layer.presentation()?.animation(forKey: "position") == nil {
+                         layer.animatePosition(from: NSMakePoint(0, -height), to: NSZeroPoint, duration: 0.2, timingFunction: .easeOut, additive: true)
+                         }
+ */
                         
                         for item in added {
                             if item.index == idx {

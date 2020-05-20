@@ -162,7 +162,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, secretMediaPreview: TelegramMediaWebpage? = nil) ->Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         
@@ -181,6 +181,10 @@ class Sender: NSObject {
         if dices.emojis.contains(input.inputText), peerId.namespace != Namespaces.Peer.SecretChat {
             mediaReference = AnyMediaReference.standalone(media: TelegramMediaDice(emoji: input.inputText, value: nil))
             input = ChatTextInputState(inputText: "")
+        }
+        
+        if peerId.namespace == Namespaces.Peer.SecretChat, let media = secretMediaPreview {
+            mediaReference = AnyMediaReference.standalone(media: media)
         }
         
         let parsingUrlType: ParsingType

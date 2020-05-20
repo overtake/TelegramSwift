@@ -189,7 +189,8 @@ class ChatGIFContentView: ChatMediaContentView {
 
         
         updateListeners()
-        
+        self.player.positionFlags = positionFlags
+
         if let media = media as? TelegramMediaFile {
             
             let dimensions = media.dimensions?.size ?? size
