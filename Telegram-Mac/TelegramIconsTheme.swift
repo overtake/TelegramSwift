@@ -3072,6 +3072,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var settingsSessions: CGImage {
+      if let image = cached.with({ $0["settingsSessions"] }) {
+          return image
+      } else {
+          let image = _settingsSessions()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsSessions"] = image
+              return current
+          }
+          return image
+      }
+  }
   var settingsProxy: CGImage {
       if let image = cached.with({ $0["settingsProxy"] }) {
           return image
@@ -3249,6 +3262,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsStorageActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var settingsSessionsActive: CGImage {
+      if let image = cached.with({ $0["settingsSessionsActive"] }) {
+          return image
+      } else {
+          let image = _settingsSessionsActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsSessionsActive"] = image
               return current
           }
           return image
@@ -6884,6 +6910,7 @@ final class TelegramIconsTheme {
   private let _settingsSecurity: ()->CGImage
   private let _settingsStickers: ()->CGImage
   private let _settingsStorage: ()->CGImage
+  private let _settingsSessions: ()->CGImage
   private let _settingsProxy: ()->CGImage
   private let _settingsAppearance: ()->CGImage
   private let _settingsPassport: ()->CGImage
@@ -6898,6 +6925,7 @@ final class TelegramIconsTheme {
   private let _settingsSecurityActive: ()->CGImage
   private let _settingsStickersActive: ()->CGImage
   private let _settingsStorageActive: ()->CGImage
+  private let _settingsSessionsActive: ()->CGImage
   private let _settingsProxyActive: ()->CGImage
   private let _settingsAppearanceActive: ()->CGImage
   private let _settingsPassportActive: ()->CGImage
@@ -7397,6 +7425,7 @@ final class TelegramIconsTheme {
       settingsSecurity: @escaping()->CGImage,
       settingsStickers: @escaping()->CGImage,
       settingsStorage: @escaping()->CGImage,
+      settingsSessions: @escaping()->CGImage,
       settingsProxy: @escaping()->CGImage,
       settingsAppearance: @escaping()->CGImage,
       settingsPassport: @escaping()->CGImage,
@@ -7411,6 +7440,7 @@ final class TelegramIconsTheme {
       settingsSecurityActive: @escaping()->CGImage,
       settingsStickersActive: @escaping()->CGImage,
       settingsStorageActive: @escaping()->CGImage,
+      settingsSessionsActive: @escaping()->CGImage,
       settingsProxyActive: @escaping()->CGImage,
       settingsAppearanceActive: @escaping()->CGImage,
       settingsPassportActive: @escaping()->CGImage,
@@ -7909,6 +7939,7 @@ final class TelegramIconsTheme {
       self._settingsSecurity = settingsSecurity
       self._settingsStickers = settingsStickers
       self._settingsStorage = settingsStorage
+      self._settingsSessions = settingsSessions
       self._settingsProxy = settingsProxy
       self._settingsAppearance = settingsAppearance
       self._settingsPassport = settingsPassport
@@ -7923,6 +7954,7 @@ final class TelegramIconsTheme {
       self._settingsSecurityActive = settingsSecurityActive
       self._settingsStickersActive = settingsStickersActive
       self._settingsStorageActive = settingsStorageActive
+      self._settingsSessionsActive = settingsSessionsActive
       self._settingsProxyActive = settingsProxyActive
       self._settingsAppearanceActive = settingsAppearanceActive
       self._settingsPassportActive = settingsPassportActive

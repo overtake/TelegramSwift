@@ -1697,7 +1697,7 @@ internal final class L10n {
   internal static var chatSecretChatPreviewHeader: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.Header") }
   /// NO
   internal static var chatSecretChatPreviewNO: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.NO") }
-  /// OK
+  /// YES
   internal static var chatSecretChatPreviewOK: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.OK") }
   /// Would you like to enable extended link previews in Secret Chat? Note that link previews are generated on Telegram Servers.
   internal static var chatSecretChatPreviewText: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.Text") }
@@ -3073,6 +3073,10 @@ internal final class L10n {
   internal static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
   /// More Info
   internal static var genericErrorMoreInfo: String  { return L10n.tr("Localizable", "Generic.ErrorMoreInfo") }
+  /// REACTIONS
+  internal static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
+  /// TRENDING GIFS
+  internal static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
   /// Total
   internal static var graphTotal: String  { return L10n.tr("Localizable", "Graph.Total") }
   /// Zoom Out

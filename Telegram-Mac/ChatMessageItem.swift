@@ -749,16 +749,16 @@ class ChatMessageItem: ChatRowItem {
                     }
                 }
             }
-            if let index = index {
-                let index = min(index, items.count)
-                items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
-                    if let string = self?.textLayout.attributedString {
-                        if !globalLinkExecutor.copyAttributedString(string) {
-                            copyToClipboard(string.string)
-                        }
+            
+            let insert = min(index ?? 0, items.count)
+            items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
+                if let string = self?.textLayout.attributedString {
+                    if !globalLinkExecutor.copyAttributedString(string) {
+                        copyToClipboard(string.string)
                     }
-                }), at: index)
-            }
+                }
+            }), at: insert)
+
             
             
             if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, index == nil {

@@ -74,7 +74,7 @@ private func readPacketCallback(userData: UnsafeMutableRawPointer?, buffer: Unsa
      #endif*/
     
     let resourceSize: Int = resourceReference.resource.size ?? Int(Int32.max - 1)
-    let readCount = min(resourceSize - context.readingOffset, Int(bufferSize))
+    let readCount = max(0, min(resourceSize - context.readingOffset, Int(bufferSize)))
     let requestRange: Range<Int> = context.readingOffset ..< (context.readingOffset + readCount)
     
     if let maximumFetchSize = context.maximumFetchSize {

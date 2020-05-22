@@ -229,16 +229,16 @@ class GIFPlayerView: TransformImageView {
                     
                     if let controlTimebase = layer.controlTimebase, let current = timer.swap(nil) {
                         CMTimebaseRemoveTimer(controlTimebase, timer: current)
-
                         _ = timebase.swap(nil)
                     }
                     
                     
                     layer.stopRequestingMediaData()
                     layer.flush()
-                    let reader = reader.swap(nil)
+                    var reader = reader.swap(nil)
                     Queue.concurrentBackgroundQueue().async {
-                       reader?.cancelReading()
+                        reader?.cancelReading()
+                        reader = nil
                     }
                     
                     return
@@ -246,9 +246,10 @@ class GIFPlayerView: TransformImageView {
                 
                 if swapNext.swap(false) {
                     _ = output.swap(nil)
-                    let reader = reader.swap(nil)
+                    var reader = reader.swap(nil)
                     Queue.concurrentBackgroundQueue().async {
                         reader?.cancelReading()
+                        reader = nil
                     }
                 }
                 
@@ -257,7 +258,6 @@ class GIFPlayerView: TransformImageView {
                         if !stopRequesting.modify({$0}) {
                             
                             if readerValue.status == .reading, let sampleBuffer = outputValue.copyNextSampleBuffer() {
-                                var sampleBuffer = sampleBuffer
                                 layer.enqueue(sampleBuffer)
                                 
                                 continue
@@ -372,8 +372,8 @@ fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AV
                         
                     }
                     
-                    
                     reader.startReading()
+
                     
                     return true
                 }

@@ -84,10 +84,10 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
         }
     })
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
+private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize, emojis: [String]) -> [InputContextEntry] {
     if let view = view {
         
         
@@ -101,21 +101,29 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) ->
         for value in values {
             wrapped.append(InputContextEntry.contextMediaResult(nil, value, Int64(arc4random()) | ((Int64(wrapped.count) << 40))))
         }
+        
+//        if !emojis.isEmpty {
+//            wrapped.insert(.separator(L10n.gifsPaneTrending, 2, arc4random64()), at: 0)
+//            wrapped.insert(.emoji(emojis, true, 1), at: 0)
+//            wrapped.insert(.separator(L10n.gifsPaneReactions, 0, arc4random64()), at: 0)
+//        }
+        
+        
         return wrapped
     }
     return []
 }
 
-private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool) -> [InputContextEntry] {
+private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool, emojis: [String]) -> [InputContextEntry] {
     var result: [InputContextEntry] = []
     if let collection = collection {
         result = makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
     }
     
-//    if suggest {
-//        result.insert(.separator("TRENDING GIFS", 2, arc4random64()), at: 0)
-//        result.insert(.emoji(["🐶","🐱","🐭","🐹","🐰","🐻","🐼","🐨","🐯"], true, 1), at: 0)
-//        result.insert(.separator("REACTIONS", 0, arc4random64()), at: 0)
+//    if suggest, !emojis.isEmpty {
+//        result.insert(.separator(L10n.gifsPaneTrending, 2, arc4random64()), at: 0)
+//        result.insert(.emoji(emojis, true, 1), at: 0)
+//        result.insert(.separator(L10n.gifsPaneReactions, 0, arc4random64()), at: 0)
 //    }
     
     return result
@@ -222,9 +230,24 @@ final class TableContainer : View {
 class GIFViewController: TelegramGenericViewController<TableContainer>, Notifable {
     
     private let searchValue = ValuePromise<SearchState>()
+    private let forceSuggeset = ValuePromise<Bool>(false)
     private var searchState: SearchState = .init(state: .None, request: nil) {
         didSet {
-            self.searchValue.set(searchState)
+            let value = searchState
+            switch value.state {
+            case .Focus:
+                forceSuggeset.set(true)
+            case .None:
+                self.forceSuggeset.set(false)
+            }
+            if value.request.isEmpty {
+               // delay(0.2, closure: { [weak self] in
+                    self.searchValue.set(value)
+              //  })
+            } else {
+                self.searchValue.set(value)
+            }
+            
         }
     }
     
@@ -342,23 +365,19 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         let context = self.context
         
         
-        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get()) |> mapToSignal { view, search -> Signal<TableUpdateTransition, NoError> in
+        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), forceSuggeset.get()) |> mapToSignal { view, search, forceSuggeset -> Signal<TableUpdateTransition, NoError> in
             
             switch search.state {
             case .Focus:
                 let searchSignal: Signal<ChatContextResultCollection?, NoError>
-                if search.request.isEmpty {
-                    searchSignal = .single(nil) |> then(searchGifs(account: context.account, query: search.request.lowercased()))
-                } else {
-                    searchSignal = searchGifs(account: context.account, query: search.request.lowercased())
-                }
+                searchSignal = searchGifs(account: context.account, query: search.request.lowercased())
                 return searchSignal |> map { result in
-                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: search.request.isEmpty)
+                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: true, emojis: forceSuggeset ? value.emojis : [])
                     return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments)
                 }
             default:
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
-                let entries = recentEntries(for: postboxView, initialSize: initialSize.with { $0 }).sorted(by: <)
+                let entries = recentEntries(for: postboxView, initialSize: initialSize.with { $0 }, emojis: forceSuggeset ? value.emojis : []).sorted(by: <)
                 return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments))
             }
             

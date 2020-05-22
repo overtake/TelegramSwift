@@ -830,7 +830,10 @@ enum UserInfoEntry: PeerInfoEntry {
     func item( initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         
         let arguments = arguments as! UserInfoArguments
-        let state = arguments.state as! UserInfoState
+        var state:UserInfoState {
+            return arguments.state as! UserInfoState
+        }
+        
         switch self {
         case let .info(_, peerView, editable, viewType):
             return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable)

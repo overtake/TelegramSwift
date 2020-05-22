@@ -182,16 +182,24 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     
                     let resource: MediaResourceReference
                     let isPreview: Bool
+                    let signal:Signal<ImageDataTransformation, NoError>
                     if let preview = data.file.media.videoThumbnails.first {
                         resource = data.file.resourceReference(preview.resource)
                         isPreview = true
+                        
+                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
+                        
+                        signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
+
                     } else {
                         resource = data.file.resourceReference(data.file.media.resource)
                         isPreview = false
+                        signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     }
                     
                     
-                    let signal:Signal<ImageDataTransformation, NoError> =  chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
+                    
+                    
                     
                     view.update(with: resource, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, isPreview: isPreview, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
