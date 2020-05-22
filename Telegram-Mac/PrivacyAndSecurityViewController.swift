@@ -464,7 +464,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     sectionId += 1
 
     entries.append(.blockedPeers(sectionId: sectionId, blockedState.totalCount, viewType: .firstItem))
-    entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
+   // entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
     
     let hasPasscode: Bool
     switch passcodeData {

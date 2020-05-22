@@ -804,8 +804,9 @@ enum ChannelInfoSection : Int {
 func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
-    let state = arguments.state as! ChannelInfoState
-    
+    var state:ChannelInfoState {
+        return arguments.state as! ChannelInfoState
+    }
     var entries: [ChannelInfoEntry] = []
     
     

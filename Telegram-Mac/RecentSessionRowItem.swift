@@ -27,7 +27,14 @@ class RecentSessionRowItem: GeneralRowItem {
         
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: session.deviceModel + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
+        
+        var trimmed = session.deviceModel.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890,"))
+        
+        if trimmed.hasSuffix("Pro") || trimmed.hasSuffix("Air") {
+            trimmed = trimmed.nsstring.substring(to: trimmed.length - 3) + " " + trimmed.nsstring.substring(from: trimmed.length - 3)
+        }
+        
+        _ = attr.append(string:trimmed + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
         
         _ = attr.append(string: "\n")
         

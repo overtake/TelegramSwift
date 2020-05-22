@@ -206,7 +206,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
        
         if peer.hasPermission(.banMembers), !inSearch {
             entries.append(.addMember(sectionId, 0, .singleItem))
-            entries.append(.header(sectionId, 1, peer.isGroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
+            entries.append(.header(sectionId, 1, peer.isGroup || peer.isSupergroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
         }
         if let participants = participants {
             if !participants.isEmpty, peer.hasPermission(.banMembers) || inSearch {
@@ -483,6 +483,10 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
+    }
+    
+    override var defaultBarTitle: String {
+        return L10n.peerInfoRemovedUsers
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {

@@ -410,7 +410,7 @@ class PeerInfoController: EditableViewController<TableView> {
                     case .admin, .creator:
                         editable = true
                     default:
-                        editable = false
+                        editable = group.groupAccess.canEditGroupInfo || group.groupAccess.canEditMembers
                     }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
                     editable = context.account.peerId != peer.id

@@ -730,14 +730,13 @@ private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) ->
 
 private func generateStickersEmptySearch(color: NSColor) -> CGImage {
     return generateImage(NSMakeSize(100, 100), contextGenerator: { size, ctx in
-        ctx.clear(CGRect(origin: CGPoint(), size: size))
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
         
         let icon = #imageLiteral(resourceName: "Icon_EmptySearchResults").precomposed(color)
         let imageSize = icon.backingSize.fitted(size)
-        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - imageSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - imageSize.height) / 2), imageSize.width, imageSize.height)
-        
-        ctx.draw(icon, in: imageRect)
-    })!
+        ctx.draw(icon, in: rect.focus(imageSize))
+    }, scale: 1.0)!
 }
 
 private func generateAlertCheckBoxSelected(backgroundColor: NSColor) -> CGImage {
@@ -1959,6 +1958,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsSecurity: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
                                                settingsStickers: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(flipVertical: true)) },
                                                settingsStorage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(flipVertical: true)) },
+                                               settingsSessions: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_PrivacySettings_ActiveSessions").precomposed(flipVertical: true)) },
                                                settingsProxy: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(flipVertical: true)) },
                                                settingsAppearance: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(flipVertical: true)) },
                                                settingsPassport: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(flipVertical: true)) },
@@ -1973,6 +1973,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsSecurityActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsStickersActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStickers").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsStorageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStorage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsSessionsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_PrivacySettings_ActiveSessions").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsProxyActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsProxy").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsAppearanceActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_AppearanceSettings").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsPassportActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsSecurity").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },

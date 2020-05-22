@@ -91,10 +91,10 @@ class Sender: NSObject {
 //            return preview
 //        }
         
-        
+        let mimeType = MIMEType(path)
        
         
-        if MIMEType(path).hasPrefix("video") {
+        if mimeType.hasPrefix("video") {
             
            
             
@@ -128,7 +128,7 @@ class Sender: NSObject {
             }
             
            
-        } else if MIMEType(path).hasPrefix("image"), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+        } else if mimeType.hasPrefix("image") || mimeType.hasSuffix("pdf"), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             let options = NSMutableDictionary()
             options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)

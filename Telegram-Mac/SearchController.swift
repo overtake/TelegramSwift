@@ -270,21 +270,26 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
             var submenu: [ContextMenuItem] = []
             if peerId.namespace != Namespaces.Peer.SecretChat {
                 for item in filters.list {
-                    if !item.data.includePeers.peers.contains(peerId) {
-                        submenu.append(ContextMenuItem(item.title, handler: {
-                            _ = updateChatListFiltersInteractively(postbox: arguments.context.account.postbox, { list in
-                                var list = list
-                                for (i, folder) in list.enumerated() {
-                                    var folder = folder
-                                    if folder.id == item.id {
+                    submenu.append(ContextMenuItem(item.title, handler: {
+                        _ = updateChatListFiltersInteractively(postbox: arguments.context.account.postbox, { list in
+                            var list = list
+                            for (i, folder) in list.enumerated() {
+                                var folder = folder
+                                if folder.id == item.id {
+                                    if item.data.includePeers.peers.contains(peerId) {
+                                        var peers = folder.data.includePeers.peers
+                                        peers.removeAll(where: { $0 == peerId })
+                                        folder.data.includePeers.setPeers(peers)
+                                    } else {
                                         folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
-                                        list[i] = folder
                                     }
+                                    list[i] = folder
+                                    
                                 }
-                                return list
-                            }).start()
-                        }))
-                    }
+                            }
+                            return list
+                        }).start()
+                    }, state: item.data.includePeers.peers.contains(peerId) ? NSControl.StateValue.on : nil))
                 }
             }
             

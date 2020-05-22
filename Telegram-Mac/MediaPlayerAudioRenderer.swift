@@ -644,6 +644,33 @@ enum MediaPlayerAudioSessionControl {
     case custom((MediaPlayerAudioSessionCustomControl) -> Disposable)
 }
 
+struct AudioAddress {
+    static var outputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+                                                         mScope: kAudioObjectPropertyScopeGlobal,
+                                                         mElement: kAudioObjectPropertyElementMaster)
+}
+
+enum AudioNotification: String {
+    case audioDevicesDidChange
+    case audioInputDeviceDidChange
+    case audioOutputDeviceDidChange
+    
+    var stringValue: String {
+        return "Audio" + rawValue
+    }
+    
+    var notificationName: NSNotification.Name {
+        return NSNotification.Name(stringValue)
+    }
+}
+
+struct AudioListener {
+    static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
+        NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+        return 0
+    }
+}
+
 
 final class MediaPlayerAudioRenderer {
     private var contextRef: Unmanaged<AudioPlayerRendererContext>?
@@ -686,9 +713,28 @@ final class MediaPlayerAudioRenderer {
             self.contextRef = Unmanaged.passRetained(context)
             context.setVolume(volume)
         }
+        
+        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
+        
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+    }
+    
+    @objc private func handleNotification(_ notification: Notification) {
+    
+        audioPlayerRendererQueue.async {
+            
+            let context = self.contextRef!.takeRetainedValue()
+            
+            let newContext = AudioPlayerRendererContext(controlTimebase: context.controlTimebase, playAndRecord: false, forceAudioToSpeaker: false, baseRate: context.baseRate, volume: context.volume, updatedRate: context.updatedRate, audioPaused: context.audioPaused)
+            
+            self.contextRef = Unmanaged.passRetained(newContext)
+        }
     }
     
     deinit {
+        NotificationCenter.default.removeObserver(self)
+        AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
         let contextRef = self.contextRef
         audioPlayerRendererQueue.async {
             contextRef?.release()
