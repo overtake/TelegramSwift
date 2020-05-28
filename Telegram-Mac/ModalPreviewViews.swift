@@ -100,7 +100,16 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             addSubview(self.player)
             let size = reference.media.dimensions?.size.aspectFitted(NSMakeSize(frame.size.width, frame.size.height - 40)) ?? frame.size
             
-            player.update(with: reference.resourceReference(reference.media.resource), size: size, viewSize: size, file: reference.media, context: context, table: nil, iconSignal: chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor))
+            
+            let iconSignal: Signal<ImageDataTransformation, NoError>
+            if let value = reference.media.videoThumbnails.first {
+                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: value.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
+                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
+            } else {
+                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
+            }
+            
+            player.update(with: reference, size: size, viewSize: size, context: context, table: nil, iconSignal: iconSignal)
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
             if animated {
                 player.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

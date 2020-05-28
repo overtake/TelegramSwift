@@ -84,7 +84,15 @@ func ==(lhs:InputMediaContextEntry, rhs:InputMediaContextEntry) -> Bool {
 struct InputMediaContextRow :Equatable {
     let entries:[InputMediaContextEntry]
     let results:[ChatContextResult]
+    let messages:[Message]
     let sizes:[NSSize]
+    
+    init(entries:[InputMediaContextEntry], results: [ChatContextResult], sizes: [NSSize], messages: [Message] = []) {
+        self.entries = entries
+        self.results = results
+        self.sizes = sizes
+        self.messages = messages
+    }
     
     func isFilled(for width:CGFloat) -> Bool {
         let sum:CGFloat = sizes.reduce(0, { (acc, size) -> CGFloat in
@@ -122,7 +130,7 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
         var row:[NSSize] = []
         var idx:Int = 0
         for dimension in dimensions {
-            var fitted = dimension.aspectFitted(NSMakeSize(80, maxHeight))
+            var fitted = dimension.aspectFitted(NSMakeSize(floor(perSize.width / 3), maxHeight))
             
             if fitted.width < maxHeight || fitted.height < maxHeight {
                 let more: CGFloat = max(maxHeight - fitted.width, maxHeight - fitted.height)
@@ -151,21 +159,26 @@ func fitPrettyDimensions(_ dimensions:[NSSize], isLastRow:Bool, fitToHeight:Bool
     var plus: Int = 0
     while true {
         let about = Array(dimensions.prefix(Int(ceil(perSize.width / perSize.height)) + plus))
-        rows = sizeup(about)
-
-        let width:CGFloat = rows.reduce(0, { (acc, size) -> CGFloat in
-            return acc + size.width
-        })
-
-        if perSize.width < width {
-            plus -= 1
-            continue
-        }
-        if (width < perSize.width && !isLastRow) && !fitToHeight {
-            maxHeight += CGFloat(6 * dimensions.count)
+        if !about.isEmpty {
+            rows = sizeup(about)
+            
+            let width:CGFloat = rows.reduce(0, { (acc, size) -> CGFloat in
+                return acc + size.width
+            })
+            
+            if perSize.width < width {
+                plus -= 1
+                continue
+            }
+            if (width < perSize.width && !isLastRow) && !fitToHeight {
+                maxHeight += CGFloat(6 * dimensions.count)
+            } else {
+                break
+            }
         } else {
             break
         }
+        
     }
     return rows
 }
@@ -302,10 +315,19 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
     }
     var fitted:[[NSSize]] = []
     let f:Int = Int(round(initialSize.width / initialSize.height))
+    
+    let rowCount = Int(floor(initialSize.width / 100))
+    
     while !dimensions.isEmpty {
-        let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
+        //let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
+        var row:[NSSize] = []
+        
+        while !dimensions.isEmpty && row.count < rowCount {
+            dimensions.removeFirst()
+            row.append(NSMakeSize(floor(initialSize.width / CGFloat(rowCount)), initialSize.height))
+        }
+        
         fitted.append(row)
-        dimensions.removeSubrange(0 ..< row.count)
     }
     
     
@@ -333,4 +355,66 @@ func makeMediaEnties(_ results:[ChatContextResult], isSavedGifs: Bool, initialSi
 }
 
 
+
+func makeChatGridMediaEnties(_ results:[Message], initialSize:NSSize) -> [InputMediaContextRow] {
+    var entries:[InputMediaContextEntry] = []
+    var rows:[InputMediaContextRow] = []
+    
+    var dimensions:[NSSize] = []
+    var removeResultIndexes:[Int] = []
+    var results = results
+    for i in 0 ..< results.count {
+        
+        let result = results[i]
+        
+        if let file = result.media.first as? TelegramMediaFile {
+            let dimension:NSSize = file.videoSize
+            
+            let imageReference: ImageMediaReference?
+            if !file.previewRepresentations.isEmpty {
+                let img = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                imageReference = ImageMediaReference.message(message: MessageReference(result), media: img)
+            } else {
+                imageReference = nil
+            }
+            entries.append(.gif(thumb: imageReference, file: FileMediaReference.message(message: MessageReference(result), media: file)))
+            
+            dimensions.append(dimension)
+        } else {
+            removeResultIndexes.append(i)
+        }
+    }
+    
+    for i in removeResultIndexes.reversed() {
+        results.remove(at: i)
+    }
+    var fitted:[[NSSize]] = []
+    let f:Int = Int(round(initialSize.width / initialSize.height))
+    while !dimensions.isEmpty {
+        let row = fitPrettyDimensions(dimensions, isLastRow: f > dimensions.count, fitToHeight: false, perSize:initialSize)
+        fitted.append(row)
+        dimensions.removeSubrange(0 ..< row.count)
+    }
+    
+    if fitted.count >= 2, fitted[fitted.count - 1].count == 1 && fitted[fitted.count - 2].reduce(0, { $0 + $1.width}) < (initialSize.width - 50) {
+        let width = fitted[fitted.count - 2].reduce(0, { $0 + $1.width})
+        let last = fitted.removeLast()
+        fitted[fitted.count - 1] = fitted[fitted.count - 1] + [NSMakeSize(initialSize.width - width, last[0].height)]
+    }
+    
+    for row in fitted {
+        let subentries = Array(entries.prefix(row.count))
+        let subresult = Array(results.prefix(row.count))
+        rows.append(InputMediaContextRow(entries: subentries, results: [], sizes: row, messages: subresult))
+        
+        if entries.count >= row.count {
+            entries.removeSubrange(0 ..< row.count)
+        }
+        if results.count >= row.count {
+            results.removeSubrange(0 ..< row.count)
+        }
+    }
+    
+    return rows
+}
 

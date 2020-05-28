@@ -176,6 +176,8 @@
             return tableView
         } else if let view = self.view.mainView as? InputDataView {
             return view.tableView
+        } else if let view = self.view.mainView as? PeerMediaGifsView {
+            return view.tableView
         }
         return nil
     }
@@ -190,8 +192,8 @@
         self.view.updateMainView(with: view, animated: animated)
     }
     
-    func updateSearchState(_ state: MediaSearchState, updateSearchState:@escaping(SearchState)->Void) {
-        self.view.updateSearchState(state, updateSearchState: updateSearchState)
+    func updateSearchState(_ state: MediaSearchState, updateSearchState:@escaping(SearchState)->Void, toggle:@escaping()->Void) {
+        self.view.updateSearchState(state, updateSearchState: updateSearchState, toggle: toggle)
     }
     
     func changeState(selectState:Bool, animated:Bool) {
@@ -283,13 +285,17 @@
             if let mainView = mainView {
                 switch animated {
                 case .leftToRight:
-                    mainView._change(pos: NSMakePoint(-mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] _ in
-                        mainView?.removeFromSuperview()
+                    mainView._change(pos: NSMakePoint(-mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] completed in
+                        if completed {
+                            mainView?.removeFromSuperview()
+                        }
                     })
                     view.layer?.animatePosition(from: NSMakePoint(view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY), duration: duration, timingFunction: timingFunction)
                 case .rightToLeft:
-                    mainView._change(pos: NSMakePoint(mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] _ in
-                        mainView?.removeFromSuperview()
+                    mainView._change(pos: NSMakePoint(mainView.frame.width, mainView.frame.minY), animated: true, duration: duration, timingFunction: timingFunction, completion: { [weak mainView] completed in
+                        if completed {
+                            mainView?.removeFromSuperview()
+                        }
                     })
                     view.layer?.animatePosition(from: NSMakePoint(-view.frame.width, mainView.frame.minY), to: NSMakePoint(0, mainView.frame.minY), duration: duration, timingFunction: timingFunction)
                 }
@@ -302,7 +308,7 @@
         needsLayout = true
     }
     
-    func updateSearchState(_ state: MediaSearchState, updateSearchState:@escaping(SearchState)->Void) {
+    func updateSearchState(_ state: MediaSearchState, updateSearchState:@escaping(SearchState)->Void, toggle:@escaping()->Void) {
         self.searchState = state.state
         switch state.state.state {
         case .Focus:
@@ -319,7 +325,7 @@
                 }, updateSearchState)
                 
                 searchPanelView.close.set(handler: { _ in
-                    updateSearchState(.init(state: .None, request: nil))
+                    toggle()
                 }, for: .Click)
             }
             
@@ -406,6 +412,9 @@
         if self == .commonGroups {
             return L10n.peerMediaCommonGroups
         }
+        if self == .gifs {
+            return L10n.peerMediaGifs
+        }
         return ""
     }
  }
@@ -457,12 +466,13 @@
     private var mode:PeerMediaCollectionMode?
     
     private let mediaGrid:PeerMediaPhotosController
+    private let gifs: PeerMediaPhotosController
     private let listControllers:[PeerMediaListController]
     private let members: ViewController
     private let commonGroups: ViewController
     
     
-    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .commonGroups]
+    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
     
     
     private var currentTagListIndex: Int {
@@ -511,7 +521,7 @@
         self.peerId = peerId
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
-        self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId)
+        self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .photoOrVideo)
         
         var listControllers: [PeerMediaListController] = []
         for _ in tagsList.filter ({ !$0.tagsValue.isEmpty }) {
@@ -521,6 +531,7 @@
         
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
+        self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .gif)
         super.init(context)
     }
 //
@@ -667,6 +678,7 @@
         let tagsList = self.tagsList
         
         let context = self.context
+        let peerId = self.peerId
         
         
         let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
@@ -703,8 +715,7 @@
         
         
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(self.peerId), count: 3, tagMask: tags.tagsValue)
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
@@ -768,6 +779,13 @@
                         self.mediaGrid.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.mediaGrid.ready.get() |> map { _ in
+                        return data
+                    }
+                case .gifs:
+                    if !self.gifs.isLoaded() {
+                        self.gifs.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.gifs.ready.get() |> map { ready in
                         return data
                     }
                 default:
@@ -1028,6 +1046,8 @@
             searchValueDisposable.set(self.listControllers[currentTagListIndex].mediaSearchValue.start(next: { [weak self, weak controller] state in
                 self?.genericView.updateSearchState(state, updateSearchState: { searchState in
                     controller?.searchState.set(searchState)
+                }, toggle: {
+                    controller?.toggleSearch()
                 })
             }))
         }
@@ -1035,7 +1055,7 @@
         var firstUpdate: Bool = true
         genericView.mainTable?.updatedItems = { [weak self] items in
             let filter = items.filter {
-                !($0 is PeerMediaEmptyRowItem) && !($0.className != "Telegram.GeneralRowItem")
+                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem")
             }
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false
@@ -1051,6 +1071,8 @@
             return self.members
         case .commonGroups:
             return self.commonGroups
+        case .gifs:
+            return self.gifs
         default:
             return self.listControllers[Int(mode.rawValue)]
         }

@@ -450,8 +450,7 @@ open class Window: NSWindow {
     
     public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
         let sorted = responsders.sorted(by: >)
-        if let event = event, event.modifierFlags.contains(.command)
-         || event.modifierFlags.contains(.option)
+        if let event = event, event.modifierFlags.contains(.option)
          || event.modifierFlags.contains(.control) {
             return
         }

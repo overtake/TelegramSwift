@@ -273,8 +273,8 @@ class ContextListGIFView : ContextListRowView {
         let updated = self.item != item
         super.set(item: item, animated: animated)
         
-        if let item = item as? ContextListRowItem, updated, let resource = item.fileResource {
-            player.update(with: MediaResourceReference.standalone(resource: resource), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), file: item.file, context: item.context, table: item.table, iconSignal: item.iconSignal)
+        if let item = item as? ContextListRowItem, updated, let file = item.file {
+            player.update(with: FileMediaReference.standalone(media: file), size: NSMakeSize(50,50), viewSize: NSMakeSize(50,50), context: item.context, table: item.table, iconSignal: item.iconSignal)
             player.needsLayout = true
         }
     }

@@ -231,9 +231,11 @@ class PeerMediaPhotosController: TableViewController {
     private let historyDisposable = MetaDisposable()
     private let chatInteraction: ChatInteraction
     private let previous: Atomic<[AppearanceWrapperEntry<PeerMediaMonthEntry>]> = Atomic(value: [])
-    init(_ context: AccountContext, chatInteraction: ChatInteraction, peerId: PeerId) {
+    private let tags: MessageTags
+    init(_ context: AccountContext, chatInteraction: ChatInteraction, peerId: PeerId, tags: MessageTags) {
         self.peerId = peerId
         self.chatInteraction = chatInteraction
+        self.tags = tags
         super.init(context)
     }
     
@@ -243,13 +245,14 @@ class PeerMediaPhotosController: TableViewController {
         let context = self.context
         let peerId = self.peerId
         let initialSize = self.atomicSize
+        let tags = self.tags
         
 
         self.genericView.set(stickClass: PeerMediaDateItem.self, handler: { item in
             
         })
         
-        self.genericView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: .photoOrVideo)
+        self.genericView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: self.tags)
         
         let perPageCount:()->Int = {
             var rowCount:Int = 4
@@ -288,7 +291,7 @@ class PeerMediaPhotosController: TableViewController {
         }
         
         let history = location.get() |> mapToSignal { location in
-            return chatHistoryViewForLocation(location, account: context.account, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: [.photoOrVideo])
+            return chatHistoryViewForLocation(location, account: context.account, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags)
         }
         
         historyDisposable.set(history.start(next: { update in

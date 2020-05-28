@@ -28,6 +28,7 @@ class DisplayLink
         
         if let timer = timerRef
         {
+            
             successLink = CVDisplayLinkSetOutputCallback(timer,
                                                          {
                                                             (timer : CVDisplayLink, currentTime : UnsafePointer<CVTimeStamp>, outputTime : UnsafePointer<CVTimeStamp>, _ : CVOptionFlags, _ : UnsafeMutablePointer<CVOptionFlags>, sourceUnsafeRaw : UnsafeMutableRawPointer?) -> CVReturn in

@@ -164,6 +164,10 @@ class MGalleryVideoItem: MGalleryItem {
         return pagerSize
     }
     
+    func hideControls() -> Bool {
+        return controller.hideControlsIfNeeded()
+    }
+    
     override func toggleFullScreen() {
         controller.toggleFullScreen()
     }

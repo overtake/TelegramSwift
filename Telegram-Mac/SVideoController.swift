@@ -46,6 +46,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private let postbox: Postbox
     private var pictureInPicture: Bool = false
     private var hideControls: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    private var controlsIsHidden: Bool = false
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
     
     
@@ -185,7 +186,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             if let window = self?.genericView.window, let contentView = window.contentView {
                 let point = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 if contentView.hitTest(point) != nil {
-                    self?.updateControlVisibility()
+                    self?.updateControlVisibility(true)
                 }
             }
             return .rejected
@@ -196,7 +197,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             if let window = self.genericView.window, let contentView = window.contentView {
                 let point = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                 if contentView.hitTest(point) != nil {
-                    self.updateControlVisibility()
+                    self.updateControlVisibility(true)
                 }
             }
             self.genericView.subviews.last?.mouseUp(with: event)
@@ -248,6 +249,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     }
     
     
+    func hideControlsIfNeeded() -> Bool {
+        if !controlsIsHidden {
+            hideControls.set(true)
+            return true
+        }
+        return false
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -258,6 +267,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         genericView.isStreamable = reference.media.isStreamable
         hideControlsDisposable.set(hideControls.get().start(next: { [weak self] hide in
             self?.genericView.hideControls(hide, animated: true)
+            self?.controlsIsHidden = hide
         }))
         
         

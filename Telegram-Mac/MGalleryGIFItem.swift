@@ -18,17 +18,24 @@ class MGalleryGIFItem: MGalleryItem {
         super.init(context, entry, pagerSize)
         
         let view = self.view
-        let pathSignal = path.get() |> map { path in
-           return AVGifData.dataFrom(path)
-        } |> distinctUntilChanged |> deliverOnMainQueue |> mapToSignal { data -> Signal<Tuple2<AVGifData?,GIFPlayerView>, NoError> in
-            return view.get() |> distinctUntilChanged |> map { view in
-                return Tuple(data, view as! GIFPlayerView)
-            }
-        }
-        disposable.set(pathSignal.start(next: { tuple in
-            tuple._1.set(data: tuple._0)
+        
+        let fileReference = entry.fileReference(media)
+       
+        disposable.set(view.get().start(next: { view in
+            (view as? GifPlayerBufferView)?.update(fileReference, context: context)
         }))
         
+    }
+    
+    override func appear(for view: NSView?) {
+        super.appear(for: view)
+        (view as? GifPlayerBufferView)?.ticking = true
+    }
+    
+    override func disappear(for view: NSView?) {
+        super.disappear(for: view)
+        
+        (view as? GifPlayerBufferView)?.ticking = false
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
@@ -62,8 +69,8 @@ class MGalleryGIFItem: MGalleryItem {
 //    }
 
     override func singleView() -> NSView {
-        let player = GIFPlayerView()
-        player.layerContentsRedrawPolicy = .duringViewResize
+        let player = GifPlayerBufferView()
+        //player.layerContentsRedrawPolicy = .duringViewResize
         return player
     }
     
