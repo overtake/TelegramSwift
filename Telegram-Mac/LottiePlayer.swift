@@ -329,7 +329,7 @@ private final class PlayerRenderer {
         let fileSupplyment: TRLotFileSupplyment?
         switch self.animation.cache {
         case .temporaryLZ4:
-            fileSupplyment = TRLotFileSupplyment(self.animation, bufferSize: bufferSize, frames: Int(player.endFrame()))
+            fileSupplyment = TRLotFileSupplyment(self.animation, bufferSize: bufferSize, frames: Int(player.endFrame()), queue: Queue())
         case .none:
             fileSupplyment = nil
         }

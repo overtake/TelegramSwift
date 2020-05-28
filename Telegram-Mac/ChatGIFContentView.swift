@@ -124,14 +124,7 @@ class ChatGIFContentView: ChatMediaContentView {
          let accept = parameters?.autoplay == true && window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
     
         player.ticking = accept
-        if let parameters = parameters, let status = fetchStatus {
-            switch status {
-            case .Local:
-                progressView?.isHidden = parameters.autoplay == true
-            default:
-                progressView?.isHidden = false
-            }
-        }
+
     }
     
     

@@ -47,17 +47,17 @@ final class TRLotData {
     private var readHandle: FileHandle?
     private var writeHandle: FileHandle?
     private let key: LottieAnimationEntryKey
-    
+    private let queue: Queue
     
     fileprivate func hasAlreadyFrame(_ frame: Int) -> Bool {
-        assert(lzfseQueue.isCurrent())
+        assert(queue.isCurrent())
         return self.map[frame] != nil
     }
     fileprivate func readFrame(frame: Int) -> ReadResult {
         
         self.writeHandle?.closeFile()
         self.writeHandle = nil
-        assert(lzfseQueue.isCurrent())
+        assert(queue.isCurrent())
         
         if let dest = map[frame] {
             let readHande: FileHandle?
@@ -87,7 +87,7 @@ final class TRLotData {
     }
     
     deinit {
-        lzfseQueue.sync {
+        queue.sync {
             self.readHandle?.closeFile()
             self.writeHandle?.closeFile()
             let data = try? PropertyListEncoder().encode(self.map)
@@ -105,7 +105,7 @@ final class TRLotData {
     fileprivate func writeFrame(frame: Int, data:Data, endFrame: Int) -> WriteResult {
         self.readHandle?.closeFile()
         self.readHandle = nil
-        assert(lzfseQueue.isCurrent())
+        assert(queue.isCurrent())
         if map[frame] == nil {
             let writeHandle: FileHandle?
             if let handle = self.writeHandle {
@@ -141,17 +141,17 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v2-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v4-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v2-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v4-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
-    init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int) {
-        
+    init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int, queue: Queue) {
+        self.queue = queue
         self.mapPath = TRLotData.mapPath(animation, bufferSize: bufferSize)
         self.dataPath = TRLotData.dataPath(animation, bufferSize: bufferSize)
         self.key = animation.key
@@ -210,12 +210,12 @@ private let lzfseQueue = Queue(name: "LZFSE BUFFER Queue", qos: DispatchQoS.defa
 final class TRLotFileSupplyment {
     fileprivate let bufferSize: Int
     fileprivate let data:TRLotData
-    
+    fileprivate let queue: Queue
     fileprivate var shouldWaitToRead: [Int:Int] = [:]
     
-    init(_ animation:LottieAnimation, bufferSize: Int, frames: Int) {
-        self.data = sharedData.with { $0[animation.key]?.value } ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize)
-        
+    init(_ animation:LottieAnimation, bufferSize: Int, frames: Int, queue: Queue) {
+        self.data = sharedData.with { $0[animation.key]?.value } ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize, queue: queue)
+        self.queue = queue
         for value in self.data.map {
             shouldWaitToRead[value.key] = value.key
         }
@@ -224,7 +224,7 @@ final class TRLotFileSupplyment {
     func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame, endFrame: Int) {
         if shouldWaitToRead[Int(current.frame)] == nil {
             shouldWaitToRead[Int(current.frame)] = Int(current.frame)
-            lzfseQueue.async {
+            queue.async {
                 if !self.data.hasAlreadyFrame(Int(current.frame)) {
                     let address = current.data.assumingMemoryBound(to: UInt8.self)
                     
@@ -270,26 +270,25 @@ final class TRLotFileSupplyment {
     func readFrame(previous: RenderedFrame?, frame: Int) -> UnsafeRawPointer? {
         var rendered: UnsafeRawPointer? = nil
         if shouldWaitToRead[frame] != nil {
-            lzfseQueue.sync {
+            queue.sync {
                 switch self.data.readFrame(frame: frame) {
                 case let .success(data):
-                    
                     let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
                     
                     
                     rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
-                        
+
                         let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
                         let unsafePointer = unsafeBufferPointer.baseAddress!
-                        
+
                         let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
-                        
+
                         if let previous = previous {
-                            
+
                             let previousBytes = previous.data.assumingMemoryBound(to: UInt64.self)
-                            
+
                             let uint64Bs = self.bufferSize / 8
-                            
+
                             address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
                                 var i = 0
                                 while i < uint64Bs {
@@ -297,7 +296,7 @@ final class TRLotFileSupplyment {
                                     i &+= 1
                                 }
                             })
-                            
+
                         }
                         return UnsafeRawPointer(address)
                     }
