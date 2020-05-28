@@ -1304,9 +1304,9 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 
-                if FastSettings.isTestLiked(message.id) {
-                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
-                }
+//                if FastSettings.isTestLiked(message.id) {
+//                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+//                }
                 
                 if let attribute = attribute as? EditedMessageAttribute {
                     if isEditMarkVisible {

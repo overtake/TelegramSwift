@@ -72,12 +72,21 @@ class PeerPhotosMonthItem: GeneralRowItem {
         }
         assert(rowCount >= 1)
                 
-        let itemSize = NSMakeSize(perWidth + 2, perWidth + 2)
+        let itemSize = NSMakeSize(ceil(perWidth) + 2, ceil(perWidth) + 2)
         
         layoutItems.removeAll()
         var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, message) in self.items.enumerated() {
-            let viewType = message.media.first is TelegramMediaFile ? MediaVideoCell.self : MediaPhotoCell.self
+            let viewType: MediaCell.Type
+            if let file = message.media.first as? TelegramMediaFile {
+                if file.isAnimated && file.isVideo {
+                    viewType = MediaGifCell.self
+                } else {
+                    viewType = MediaVideoCell.self
+                }
+            } else {
+                viewType = MediaPhotoCell.self
+            }
             
             var topLeft: ImageCorner = .Corner(0)
             var topRight: ImageCorner = .Corner(0)
@@ -155,8 +164,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+
     }
     
     override func viewClass() -> AnyClass {
@@ -198,11 +206,11 @@ private class MediaCell : Control {
         userInteractionEnabled = false
     }
     
-    func update(layout: LayoutItem, context: AccountContext) {
+    func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
         let previousLayout = self.layoutItem
         self.layoutItem = layout
         self.context = context
-        if previousLayout != layout {
+        if previousLayout != layout, !(self is MediaGifCell) {
             let media: Media
             let imageSize: NSSize
             let arguments: TransformImageArguments
@@ -382,8 +390,8 @@ private final class MediaVideoCell : MediaCell {
         needsLayout = true
     }
     
-    override func update(layout: LayoutItem, context: AccountContext) {
-        super.update(layout: layout, context: context)
+    override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
+        super.update(layout: layout, context: context, table: table)
         
         let file = layout.message.media.first as! TelegramMediaFile
         
@@ -452,6 +460,79 @@ private final class MediaVideoCell : MediaCell {
     }
 }
 
+
+
+private final class MediaGifCell : MediaCell {
+    private let gifView: GIFContainerView = GIFContainerView(frame: .zero)
+    private var status:MediaResourceStatus?
+    private let statusDisposable = MetaDisposable()
+    private let fetchingDisposable = MetaDisposable()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.addSubview(self.gifView)
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func fetch() {
+        
+    }
+    
+    private func cancelFetching() {
+
+    }
+    
+    override func innerAction() -> InvokeActionResult {
+        return .gallery
+    }
+    
+
+    override func copy() -> Any {
+        return gifView.copy()
+    }
+    
+    override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
+        let previousLayout = self.layoutItem
+        super.update(layout: layout, context: context, table: table)
+        if layout != previousLayout {
+            let file = layout.message.media.first as! TelegramMediaFile
+            
+            let messageRefence = MessageReference(layout.message)
+            
+            let reference = FileMediaReference.message(message: messageRefence, media: file)
+
+            let signal:Signal<ImageDataTransformation, NoError>
+            if let preview = file.videoThumbnails.first {
+                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
+                
+                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: messageRefence, media: file), scale: backingScaleFactor)
+            } else {
+                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: messageRefence, media: file), scale: backingScaleFactor)
+            }
+            
+            gifView.update(with: reference, size: frame.size, viewSize: frame.size, context: context, table: nil, iconSignal: signal)
+            gifView.userInteractionEnabled = false
+            
+        }
+        
+    
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        gifView.frame = NSMakeRect(1, 1, frame.width - 2, frame.height - 2)
+        
+    }
+    
+    deinit {
+        statusDisposable.dispose()
+        fetchingDisposable.dispose()
+    }
+}
 
 
 private final class PeerPhotosMonthView : TableRowView, Notifable {
@@ -622,7 +703,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                 } else {
                     view = self.contentViews[i]!
                 }
-                view.update(layout: layout, context: item.context)
+                view.update(layout: layout, context: item.context, table: item.table)
 
                 view.frame = layout.frame
             } else {

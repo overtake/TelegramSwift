@@ -16,10 +16,14 @@ import Postbox
 final class ContextMediaArguments {
     let sendResult: (ChatContextResult, NSView) -> Void
     let menuItems: (TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError>
-    
-    init(sendResult: @escaping(ChatContextResult, NSView) -> Void, menuItems: @escaping(TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }) {
+    let openMessage: (Message) -> Void
+    let messageMenuItems: (Message, NSView) -> Signal<[ContextMenuItem], NoError>
+
+    init(sendResult: @escaping(ChatContextResult, NSView) -> Void = { _, _ in }, menuItems: @escaping(TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }, openMessage: @escaping(Message) -> Void = { _ in }, messageMenuItems:@escaping (Message, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }) {
         self.sendResult = sendResult
         self.menuItems = menuItems
+        self.openMessage = openMessage
+        self.messageMenuItems = messageMenuItems
     }
 }
 
@@ -51,6 +55,13 @@ class ContextMediaRowItem: TableRowItem {
         return height
     }
     
+    func contains(_ messageId: MessageId) -> Bool {
+        if self.result.messages.contains(where: { $0.id == messageId }) {
+            return true
+        }
+        return false
+    }
+    
     override func viewClass() -> AnyClass {
         return ContextMediaRowView.self
     }
@@ -60,14 +71,21 @@ class ContextMediaRowItem: TableRowItem {
         var i:Int = 0
         for size in result.sizes {
             if location.x > inset && location.x < inset + size.width {
-                switch result.results[i] {
-                case let .internalReference(values):
-                    if let file = values.file, let view = self.view {
-                        let items = arguments.menuItems(file, view.subviews[i])
+                if !result.messages.isEmpty {
+                    if let view = self.view {
+                        let items = arguments.messageMenuItems(result.messages[i], view.subviews[i])
                         return items
                     }
-                default:
-                    break
+                } else {
+                    switch result.results[i] {
+                    case let .internalReference(values):
+                        if let file = values.file, let view = self.view {
+                            let items = arguments.menuItems(file, view.subviews[i])
+                            return items
+                        }
+                    default:
+                        break
+                    }
                 }
                 break
             }
@@ -151,6 +169,18 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         return nil
     }
     
+    override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
+        if let innerId = innerId.base as? MessageId {
+            let view = self.subviews.first(where: {
+                ($0 as? GIFContainerView)?.associatedMessageId == innerId
+            })
+            return view ?? self
+        }
+        return self
+    }
+    
+
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
 
@@ -165,7 +195,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 switch item.result.entries[i] {
                 case let .gif(data):
                     let view: GIFContainerView
-                    let index = subviews.firstIndex(where: { $0 is GIFContainerView})
+                    let index = subviews.firstIndex(where: { $0 is GIFContainerView })
                     if let index = index {
                         view = subviews.remove(at: index) as! GIFContainerView
                         inner: for view in view.subviews {
@@ -178,30 +208,19 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         view = GIFContainerView()
                     }
                     
-                   
                     
-                    let resource: MediaResourceReference
-                    let isPreview: Bool
                     let signal:Signal<ImageDataTransformation, NoError>
-                    if let preview = data.file.media.videoThumbnails.first {
-                        resource = data.file.resourceReference(preview.resource)
-                        isPreview = true
-                        
+                    if let preview = data.file.media.videoThumbnails.first {                        
                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
-                        
                         signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
-
                     } else {
-                        resource = data.file.resourceReference(data.file.media.resource)
-                        isPreview = false
                         signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
                     }
+                    if !item.result.messages.isEmpty {
+                        view.associatedMessageId = item.result.messages[i].id
+                    }
                     
-                    
-                    
-                    
-                    
-                    view.update(with: resource, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], file: data.file.media, context: item.context, table: item.table, isPreview: isPreview, iconSignal: signal)
+                    view.update(with: data.file, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
                         let layer = View()
                         layer.identifier = NSUserInterfaceItemIdentifier("gif-separator")
@@ -288,7 +307,11 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         if let item = item as? ContextMediaRowItem, event.clickCount == 1  {
             let point = convert(event.locationInWindow, from: nil)
             if let index = self.index(at: point) {
-                item.arguments.sendResult(item.result.results[index], self.subviews[index])
+                if !item.result.messages.isEmpty {
+                    item.arguments.openMessage(item.result.messages[index])
+                } else {
+                    item.arguments.sendResult(item.result.results[index], self.subviews[index])
+                }
             }
         }
     }

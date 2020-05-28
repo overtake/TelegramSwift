@@ -811,6 +811,10 @@
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
 		D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
 		D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
+		D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */; };
+		D06C7BB7247D6FA900E67C3C /* SampleBufferPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */; };
+		D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */; };
+		D06C7BBB247FAE3E00E67C3C /* GifPlayerBufferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BBA247FAE3E00E67C3C /* GifPlayerBufferView.swift */; };
 		D06CD4F022F22F1100E444DF /* PhotoCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C210742B1E780CC1006EE5EF /* PhotoCache.swift */; };
 		D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D070DB8022D3638F008A0BBE /* StickersViewController.swift */; };
 		D071E8A421496F38001B6024 /* ChatListTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D071E8A321496F38001B6024 /* ChatListTouchBar.swift */; };
@@ -1954,6 +1958,10 @@
 		D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessageModalController.swift; sourceTree = "<group>"; };
 		D0675D6A217E20B9004900A7 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0675D83217F1F27004900A7 /* ArchiverContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiverContext.swift; sourceTree = "<group>"; };
+		D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoLayerFrameManager.swift; sourceTree = "<group>"; };
+		D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferPool.swift; sourceTree = "<group>"; };
+		D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoThumbnailLayer.swift; sourceTree = "<group>"; };
+		D06C7BBA247FAE3E00E67C3C /* GifPlayerBufferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifPlayerBufferView.swift; sourceTree = "<group>"; };
 		D070DB8022D3638F008A0BBE /* StickersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersViewController.swift; sourceTree = "<group>"; };
 		D071E8A321496F38001B6024 /* ChatListTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListTouchBar.swift; sourceTree = "<group>"; };
 		D071E8A5214A805C001B6024 /* ChatTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTouchBar.swift; sourceTree = "<group>"; };
@@ -3187,6 +3195,10 @@
 				D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */,
 				D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */,
 				A7C7215A23FD4BAA00CE3F75 /* LottieLocalAnimations.swift */,
+				D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */,
+				D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */,
+				D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */,
+				D06C7BBA247FAE3E00E67C3C /* GifPlayerBufferView.swift */,
 			);
 			name = video;
 			sourceTree = "<group>";
@@ -5409,6 +5421,7 @@
 				C2B648891EB0C48600BA574B /* PIPVideoWindow.swift in Sources */,
 				9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
+				D06C7BB7247D6FA900E67C3C /* SampleBufferPool.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
 				9F0AE6872191D29D00A8B53A /* ContextSearchMessageItem.swift in Sources */,
 				A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */,
@@ -5588,6 +5601,7 @@
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				A7029EF8240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift in Sources */,
 				C2A16E3E1E11674F00585A85 /* CreateGroupSignals.swift in Sources */,
+				D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */,
 				C2C9B9371E8016D400380D79 /* SPMediaKeyTap.m in Sources */,
 				C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */,
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
@@ -5794,8 +5808,10 @@
 				D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
+				D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */,
 				D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */,
 				C241026F1FD58EA900DB8625 /* SImageView.swift in Sources */,
+				D06C7BBB247FAE3E00E67C3C /* GifPlayerBufferView.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */,
 				9F6314E121CAA0AB009FD379 /* NewPollController.swift in Sources */,

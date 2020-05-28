@@ -45,7 +45,9 @@ private func tagsForMessage(_ message: Message) -> MessageTags? {
         case _ as TelegramMediaImage:
             return .photoOrVideo
         case let file as TelegramMediaFile:
-            if file.isVideo && !file.isAnimated {
+            if file.isVideo && file.isAnimated {
+                return nil
+            } else if file.isVideo && !file.isAnimated {
                 return .photoOrVideo
             } else if file.isVoice {
                 return .voiceOrInstantVideo
@@ -262,6 +264,7 @@ class GalleryViewer: NSResponder {
         
         interactions.dismiss = { [weak self] () -> KeyHandlerResult in
             if let pager = self?.pager {
+               
                 if pager.isFullScreen {
                     pager.exitFullScreen()
                     return .invoked
@@ -1195,6 +1198,7 @@ class GalleryViewer: NSResponder {
     fileprivate func show(_ animated: Bool = true, _ ignoreStableId:AnyHashable? = nil) -> Void {
         viewer = self
         mainWindow.resignFirstResponder()
+        self.window.makeKeyAndOrderFront(nil)
         //window.makeFirstResponder(self)
         //closePipVideo()
        // backgroundView.alphaValue = 0
@@ -1232,7 +1236,6 @@ class GalleryViewer: NSResponder {
                 }, addVideoTimebase: { stableId, view  in
                    
                 })
-                strongSelf.window.makeKeyAndOrderFront(nil)
             }
         });
         

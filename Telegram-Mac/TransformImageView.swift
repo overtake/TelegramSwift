@@ -150,10 +150,6 @@ open class TransformImageView: NSView {
     override open func copy() -> Any {
         let view = NSView()
         view.wantsLayer = true
-        
-        
-        
-        
         view.background = .clear
         view.layer?.contents = self.image
         view.frame = self.visibleRect

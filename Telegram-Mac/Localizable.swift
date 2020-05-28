@@ -4671,6 +4671,8 @@ internal final class L10n {
   internal static var peerMediaCommonGroups: String  { return L10n.tr("Localizable", "PeerMedia.CommonGroups") }
   /// Docs
   internal static var peerMediaFiles: String  { return L10n.tr("Localizable", "PeerMedia.Files") }
+  /// GIFs
+  internal static var peerMediaGifs: String  { return L10n.tr("Localizable", "PeerMedia.Gifs") }
   /// Links
   internal static var peerMediaLinks: String  { return L10n.tr("Localizable", "PeerMedia.Links") }
   /// Media

@@ -783,6 +783,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return nil
     }
     
+    func hideVideoControls() -> Bool {
+        if let item = self.selectedItem as? MGalleryVideoItem {
+            return item.hideControls()
+        }
+        return false
+    }
+    
     func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil) ->Void {
         
         window.contentView?.addSubview(_prev)

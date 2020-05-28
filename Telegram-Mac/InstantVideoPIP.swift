@@ -20,7 +20,7 @@ enum InstantVideoPIPCornerAlignment {
     case bottomRight
 }
 
-class InstantVideoPIPView : GIFContainerView {
+class InstantVideoPIPView : GIFPlayerView {
     let playingProgressView: RadialProgressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .clear, foregroundColor: NSColor.white.withAlphaComponent(0.8), lineWidth: 3), twist: false)
 
     override init() {
@@ -29,6 +29,7 @@ class InstantVideoPIPView : GIFContainerView {
     
     required init(frame frameRect: NSRect) {
         super.init()
+        setFrameSize(NSMakeSize(200, 200))
         playingProgressView.userInteractionEnabled = false
     }
     
@@ -57,10 +58,20 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     private weak var tableView:TableView?
     private var listener:TableScrollListener!
     
+    private let dataDisposable = MetaDisposable()
+    private let fetchDisposable = MetaDisposable()
+    
     private var currentMessage:Message? = nil
     private var scrollTime: TimeInterval = CFAbsoluteTimeGetCurrent()
     private var alignment:InstantVideoPIPCornerAlignment = .topRight
     private var isShown:Bool = false
+    
+    private var timebase: CMTimebase? = nil {
+        didSet {
+            genericView.reset(with: timebase)
+        }
+    }
+    
     init(_ controller:APController, context: AccountContext, window:Window) {
         self.controller = controller
         self.context = context
@@ -130,16 +141,35 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         if isShown {
             hide()
         }
+        dataDisposable.dispose()
+        fetchDisposable.dispose()
     }
     
     func showIfNeeded(animated: Bool = true) {
         loadViewIfNeeded()
         isShown = true
-        genericView.player.animatesAlphaOnFirstTransition = false
+        genericView.animatesAlphaOnFirstTransition = false
         if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
             let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
-            genericView.update(with: FileMediaReference.message(message: MessageReference(message), media: media).resourceReference(media.resource), size: NSMakeSize(200, 200), viewSize: NSMakeSize(200, 200), file: media, context: context, table: nil, ignoreWindowKey: true, iconSignal: .complete())
+            let resource = FileMediaReference.message(message: MessageReference(message), media: media)
+            
+            let data: Signal<AVGifData?, NoError> = context.account.postbox.mediaBox.resourceData(resource.media.resource) |> map { resource in
+                if resource.complete {
+                    return AVGifData.dataFrom(resource.path)
+                } else if let resource = media.resource as? LocalFileReferenceMediaResource {
+                    return AVGifData.dataFrom(resource.localFilePath)
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            genericView.setSignal(signal)
+            
+            dataDisposable.set(data.start(next: { [weak self] data in
+                self?.genericView.set(data: data, timebase: self?.timebase)
+            }))
+            
         }
 
         if let contentView = window?.contentView, genericView.superview == nil {
@@ -233,7 +263,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
                 point = NSMakePoint(-view.frame.width, 100)
             }
             
-            genericView.change(pos: point, animated: animated, completion: { [weak view] completed in
+            genericView._change(pos: point, animated: animated, completion: { [weak view] completed in
                 view?.removeFromSuperview()
             })
         }
@@ -245,13 +275,13 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         if let contentView = window?.contentView {
             switch corner {
             case .topRight:
-                genericView.change(pos: NSMakePoint(contentView.frame.width - view.frame.width - 20, contentView.frame.height - view.frame.height - 130), animated: animated)
+                genericView._change(pos: NSMakePoint(contentView.frame.width - view.frame.width - 20, contentView.frame.height - view.frame.height - 130), animated: animated)
             case .topLeft:
-                genericView.change(pos: NSMakePoint(20, contentView.frame.height - view.frame.height - 130), animated: animated)
+                genericView._change(pos: NSMakePoint(20, contentView.frame.height - view.frame.height - 130), animated: animated)
             case .bottomRight:
-                genericView.change(pos: NSMakePoint(contentView.frame.width - view.frame.width - 20, 100), animated: animated)
+                genericView._change(pos: NSMakePoint(contentView.frame.width - view.frame.width - 20, 100), animated: animated)
             case .bottomLeft:
-                genericView.change(pos: NSMakePoint(20, 100), animated: animated)
+                genericView._change(pos: NSMakePoint(20, 100), animated: animated)
             }
         }
         
@@ -312,11 +342,11 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
             }
             
             currentMessage = msg
-           // genericView.timebase = controller.timebase
+//            genericView.reset(with: controller.timebase, false)
             
         } else {
             currentMessage = nil
-            genericView.player.reset(with: nil)
+            self.timebase = nil
         }
         updateScrolled()
     }
@@ -335,12 +365,12 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController) {
         if song.stableId == currentMessage?.chatStableId {
-            genericView.timebase = nil
+            self.timebase = nil
         }
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
         if song.stableId == currentMessage?.chatStableId {
-            genericView.timebase = controller.timebase
+            self.timebase = controller.timebase
         }
     }
 
