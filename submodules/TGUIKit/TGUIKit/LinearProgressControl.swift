@@ -257,14 +257,14 @@ public class LinearProgressControl: Control {
             layout()
         }
     }
-    public func set(progress:CGFloat, animated:Bool = false, duration: Double = 0.2) {
+    public func set(progress:CGFloat, animated:Bool = false, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .linear, bounce: Bool = false) {
         let progress:CGFloat = progress.isNaN ? 1 : progress
         self.progress = progress
         let size = NSMakeSize(floorToScreenPixels(backingScaleFactor, max(containerView.frame.width * self.progress, hasMinumimVisibility ? progressHeight : 0)), progressHeight)
 
-        progressView.change(size: size, animated: animated, duration: duration, timingFunction: .linear)
+        progressView.change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)
         if let scrubber = scrubber {
-            scrubber.change(pos: NSMakePoint(containerView.frame.minX + size.width - scrubber.frame.width / 2, scrubber.frame.minY), animated: animated)
+            scrubber.change(pos: NSMakePoint(containerView.frame.minX + size.width - scrubber.frame.width / 2, scrubber.frame.minY), animated: animated, timingFunction: timingFunction)
         }
         progressView.centerY(x: 0)
         

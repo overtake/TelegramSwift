@@ -883,7 +883,7 @@ private final class PollOptionView : Control {
     private var percentView: ImageView?
     private let nameView: TextView = TextView()
     private var selectingView:ImageView?
-    private var progressView: LinearProgressControl = LinearProgressControl(progressHeight: 5)
+    private let progressView: LinearProgressControl = LinearProgressControl(progressHeight: 5)
     private var progressIndicator: ProgressIndicator?
     private let borderView: View = View(frame: NSZeroRect)
     
@@ -929,8 +929,8 @@ private final class PollOptionView : Control {
         progressView.setFrameOrigin(NSMakePoint(nameView.frame.minX, nameView.frame.maxY + 5))
         borderView.backgroundColor = option.presentation.chat.pollOptionBorder(option.isIncoming, option.isBubbled)
         borderView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5 - .borderSize + progressView.progressHeight, frame.width - nameView.frame.minX, .borderSize)
-        borderView.change(opacity: option.percent != nil ? 0 : 1, animated: animated, duration: duration, timingFunction: .spring)
-        progressView.change(opacity: option.percent == nil ? 0 : 1, animated: animated, duration: duration, timingFunction: .spring)
+        borderView.change(opacity: option.percent != nil ? 0 : 1, animated: animated, duration: duration, timingFunction: timingFunction)
+        progressView.change(opacity: option.percent == nil ? 0 : 1, animated: animated, duration: duration, timingFunction: timingFunction)
         
         let votedColor: NSColor
         
@@ -1014,10 +1014,10 @@ private final class PollOptionView : Control {
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
         if let progress = option.percent {
-            toolTip = option.tooltip
+            //toolTip = option.tooltip
             
             progressView.frame = NSMakeRect(nameView.frame.minX, nameView.frame.maxY + 5, frame.width - nameView.frame.minX - defaultInset, progressView.frame.height)
-            progressView.set(progress: CGFloat(progress), animated: animated, duration: duration / 2)
+            progressView.set(progress: CGFloat(progress), animated: animated, duration: duration / 2, timingFunction: .spring, bounce: true)
             if percentView == nil {
                 percentView = ImageView()
                 addSubview(percentView!)

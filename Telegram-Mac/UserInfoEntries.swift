@@ -1044,6 +1044,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             
             if mediaTabsData.loaded && !mediaTabsData.collections.isEmpty, let controller = arguments.mediaController() {
                 entries.append(UserInfoEntry.media(sectionId: sectionId, controller: controller, isVisible: state.editingState == nil, viewType: .singleItem))
+            } else {
+                entries.append(UserInfoEntry.section(sectionId: sectionId))
+                sectionId += 1
             }
         }
     }

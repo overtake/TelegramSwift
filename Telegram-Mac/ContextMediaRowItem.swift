@@ -208,19 +208,36 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         view = GIFContainerView()
                     }
                     
+                    var effectiveFile = data.file
                     
-                    let signal:Signal<ImageDataTransformation, NoError>
-                    if let preview = data.file.media.videoThumbnails.first {                        
-                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
-                        signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
-                    } else {
-                        signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
-                    }
+//                    let signal:Signal<ImageDataTransformation, NoError>
+//                    if let preview = data.file.media.videoThumbnails.first {
+//                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
+//
+//                        switch data.file {
+//                        case let .message(message, _):
+//                            effectiveFile = FileMediaReference.message(message: message, media: file)
+//                        case .standalone:
+//                            effectiveFile = FileMediaReference.standalone(media: file)
+//                        case .savedGif:
+//                            effectiveFile = FileMediaReference.savedGif(media: file)
+//                        case let .stickerPack(stickerPack, _):
+//                            effectiveFile = FileMediaReference.stickerPack(stickerPack: stickerPack, media: file)
+//                        case let .webPage(webPage, _):
+//                            effectiveFile = FileMediaReference.webPage(webPage: webPage, media: file)
+//                        }
+//                    }
+                    let signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)
+
+                    
+//                    signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: data.file, scale: backingScaleFactor)
+
+                    
                     if !item.result.messages.isEmpty {
                         view.associatedMessageId = item.result.messages[i].id
                     }
                     
-                    view.update(with: data.file, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
+                    view.update(with: effectiveFile, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
                         let layer = View()
                         layer.identifier = NSUserInterfaceItemIdentifier("gif-separator")
