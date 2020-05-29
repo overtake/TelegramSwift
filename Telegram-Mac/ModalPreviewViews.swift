@@ -102,12 +102,14 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             
             
             let iconSignal: Signal<ImageDataTransformation, NoError>
-            if let value = reference.media.videoThumbnails.first {
-                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: value.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
-                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
-            } else {
-                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
-            }
+            iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
+
+//            if let value = reference.media.videoThumbnails.first {
+//                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: value.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
+//                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
+//            } else {
+//                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
+//            }
             
             player.update(with: reference, size: size, viewSize: size, context: context, table: nil, iconSignal: iconSignal)
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)

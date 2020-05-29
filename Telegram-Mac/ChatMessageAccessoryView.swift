@@ -92,14 +92,20 @@ class ChatMessageAccessoryView: Control {
     private var fetch:(()->Void)?
     private var cancelFetch:(()->Void)?
     private var click:(()->Void)?
-    func updateText(_ text: String, maxWidth: CGFloat, status: MediaResourceStatus?, isStreamable: Bool, isCompact: Bool = false, soundOffOnImage: CGImage? = nil, isBuffering: Bool = false, isUnread: Bool = false, animated: Bool = false, fetch: @escaping()-> Void = { }, cancelFetch: @escaping()-> Void = { }, click: @escaping()-> Void = { }) -> Void {
+    
+    private var isVideoMessage: Bool = false
+    
+    func updateText(_ text: String, maxWidth: CGFloat, status: MediaResourceStatus?, isStreamable: Bool, isCompact: Bool = false, soundOffOnImage: CGImage? = nil, isBuffering: Bool = false, isUnread: Bool = false, animated: Bool = false, isVideoMessage: Bool = false, fetch: @escaping()-> Void = { }, cancelFetch: @escaping()-> Void = { }, click: @escaping()-> Void = { }) -> Void {
         
         
         let animated = animated && self.isCompact != isCompact
         
-        let updatedText = TextViewLayout(.initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
+        let updatedText = TextViewLayout(.initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
         updatedText.measure(width: maxWidth)
         textView.update(updatedText)
+        
+        backgroundView.backgroundColor = isVideoMessage ? theme.chatServiceItemColor : .blackTransparent
+
         
         self.isStreamable = isStreamable
         self.status = status
@@ -186,11 +192,10 @@ class ChatMessageAccessoryView: Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        backgroundView.backgroundColor = .blackTransparent
         
         unread.setFrameSize(NSMakeSize(6, 6))
         unread.layer?.cornerRadius = 3
-        unread.backgroundColor = .white
+        unread.backgroundColor = isVideoMessage ? theme.chatServiceItemTextColor : .white
         textView.isSelectable = false
         textView.userInteractionEnabled = false
         textView.disableBackgroundDrawing = true
@@ -201,7 +206,7 @@ class ChatMessageAccessoryView: Control {
         addSubview(download)
         addSubview(unread)
         bufferingIndicator.background = .clear
-        bufferingIndicator.progressColor = .white
+        bufferingIndicator.progressColor = isVideoMessage ? theme.chatServiceItemTextColor : .white
         bufferingIndicator.layer?.cornerRadius = bufferingIndicator.frame.height / 2
 //        bufferingIndicator.lineWidth = 1.0
         bufferingIndicator.isHidden = true

@@ -224,6 +224,9 @@ class ChatListRowItem: TableRowItem {
     
     var isOutMessage:Bool {
         if let message = message {
+            if message.text.isEmpty, let _ = message.media.first as? TelegramMediaAction {
+                return false
+            }
             return !message.flags.contains(.Incoming) && message.id.peerId != context.peerId
         }
         return false

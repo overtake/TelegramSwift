@@ -476,7 +476,7 @@ class InputDataController: GenericViewController<InputDataView> {
                             var invoked: Bool = false
                             scrollFirstItem = item
                             if let item = item, !invoked {
-                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
                                 invoked = true
                             }
                         }

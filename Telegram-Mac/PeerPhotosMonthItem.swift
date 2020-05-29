@@ -502,16 +502,16 @@ private final class MediaGifCell : MediaCell {
             
             let messageRefence = MessageReference(layout.message)
             
-            let reference = FileMediaReference.message(message: messageRefence, media: file)
-
-            let signal:Signal<ImageDataTransformation, NoError>
+            let reference = FileMediaReference.message(message: messageRefence, media: file)            
+            
+            var effectiveFile = reference
             if let preview = file.videoThumbnails.first {
-                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: preview.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
-                
-                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: messageRefence, media: file), scale: backingScaleFactor)
-            } else {
-                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: messageRefence, media: file), scale: backingScaleFactor)
+                let updated = file
+                    .withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: preview.dimensions, resource: preview.resource)])
+                effectiveFile = FileMediaReference.message(message: messageRefence, media: updated)
             }
+            let signal = chatMessageVideo(postbox: context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)
+
             
             gifView.update(with: reference, size: frame.size, viewSize: frame.size, context: context, table: nil, iconSignal: signal)
             gifView.userInteractionEnabled = false
