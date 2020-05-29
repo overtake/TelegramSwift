@@ -594,7 +594,7 @@ private final class PlayerContext {
 
 enum ASLiveTime : Int {
     case chat = 3_600
-    case thumb = 86_400
+    case thumb = 259200
 }
 
 enum ASCachePurpose {

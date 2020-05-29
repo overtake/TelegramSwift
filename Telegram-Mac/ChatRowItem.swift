@@ -1821,7 +1821,7 @@ class ChatRowItem: TableRowItem {
         }
         if media is TelegramMediaImage {
             return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
-        } else if let media = media as? TelegramMediaFile, media.isVideo {
+        } else if let media = media as? TelegramMediaFile, media.isVideo && !media.isInstantVideo {
             return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
         } else {
             return self.presentation.chatServiceItemColor
@@ -1832,6 +1832,9 @@ class ChatRowItem: TableRowItem {
        guard let media = self.message?.media.first else {
            return self.presentation.chatServiceItemTextColor
        }
+        if let file = media as? TelegramMediaFile, file.isInstantVideo {
+            return self.presentation.chatServiceItemTextColor
+        }
        if media.isInteractiveMedia {
             return NSColor(0xffffff)
        } else {

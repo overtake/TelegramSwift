@@ -140,7 +140,7 @@ private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
         } else {
             ctx.draw(image, in: rect.focus(NSMakeSize(image.size.width / System.backingScale, image.size.height / System.backingScale)))
         }
-    })!
+    }, scale: System.backingScale)!
 }
 
 private func generateSecretThumbSmall(_ image: CGImage) -> CGImage {

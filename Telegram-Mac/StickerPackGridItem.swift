@@ -135,7 +135,7 @@ final class AnimatedStickerGridItemView: GridItemNode, ModalPreviewRowViewProtoc
     func setup(context: AccountContext, file: TelegramMediaFile) {
         let size = NSMakeSize(60, 60)
         self.currentState = (context, file, size)
-        view.update(with: file, size: size, context: context, parent: nil, table: nil, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+        view.update(with: file, size: size, context: context, parent: nil, table: nil, parameters: ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, alwaysAccept: nil, cache: .none, media: file), animated: false, positionFlags: nil, approximateSynchronousValue: false)
     }
     
     

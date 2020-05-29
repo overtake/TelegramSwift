@@ -47,7 +47,7 @@ final class TRLotData {
     private var readHandle: FileHandle?
     private var writeHandle: FileHandle?
     private let key: LottieAnimationEntryKey
-    private let queue: Queue
+    fileprivate let queue: Queue
     
     fileprivate func hasAlreadyFrame(_ frame: Int) -> Bool {
         assert(queue.isCurrent())
@@ -214,7 +214,9 @@ final class TRLotFileSupplyment {
     fileprivate var shouldWaitToRead: [Int:Int] = [:]
     
     init(_ animation:LottieAnimation, bufferSize: Int, frames: Int, queue: Queue) {
-        self.data = sharedData.with { $0[animation.key]?.value } ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize, queue: queue)
+        let cached = sharedData.with { $0[animation.key]?.value }
+        let queue = cached?.queue ?? queue
+        self.data = cached ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize, queue: queue)
         self.queue = queue
         for value in self.data.map {
             shouldWaitToRead[value.key] = value.key
