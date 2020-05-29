@@ -46,7 +46,7 @@ private func tagsForMessage(_ message: Message) -> MessageTags? {
             return .photoOrVideo
         case let file as TelegramMediaFile:
             if file.isVideo && file.isAnimated {
-                return nil
+                return .gif
             } else if file.isVideo && !file.isAnimated {
                 return .photoOrVideo
             } else if file.isVoice {
