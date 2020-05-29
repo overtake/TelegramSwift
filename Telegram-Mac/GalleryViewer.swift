@@ -811,6 +811,12 @@ class GalleryViewer: NSResponder {
 
     
     func showControlsPopover(_ control:Control) {
+        
+        if let popover = control.popover {
+            popover.hide()
+            return
+        }
+        
         var items:[SPopoverItem] = []
         
         if pager.selectedItem?.entry.message?.containsSecretMedia == true {

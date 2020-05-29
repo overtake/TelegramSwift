@@ -133,6 +133,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 hide = true
                 NSCursor.hide()
             }
+            if self.fullScreenWindow == nil && isMouseUpOrDown {
+                hide = true
+            }
             hideControls.set(hide)
         } else {
             hideControls.set(false)
