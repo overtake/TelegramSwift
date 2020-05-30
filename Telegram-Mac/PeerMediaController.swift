@@ -1039,7 +1039,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .photoOrVideo && mode != .commonGroups)
+        centerBar.updateSearchVisibility(mode != .photoOrVideo && mode != .commonGroups && mode != .gifs && mode != .voice)
         
         
         if let controller = controller as? PeerMediaListController {

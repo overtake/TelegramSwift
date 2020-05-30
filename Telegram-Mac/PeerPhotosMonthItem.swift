@@ -506,8 +506,7 @@ private final class MediaGifCell : MediaCell {
             
             var effectiveFile = reference
             if let preview = file.videoThumbnails.first {
-                let updated = file
-                    .withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: preview.dimensions, resource: preview.resource)])
+                let updated = file.withUpdatedResource(preview.resource)
                 effectiveFile = FileMediaReference.message(message: messageRefence, media: updated)
             }
             let signal = chatMessageVideo(postbox: context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)

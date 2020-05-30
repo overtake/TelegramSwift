@@ -1419,7 +1419,7 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                         thumbnailDisposable = postbox.mediaBox.resourceData(smallestRepresentation.resource, attemptSynchronously: synchronousLoad).start(next: { next in
                             subscriber.putNext(ImageRenderData(!next.complete ? decodedThumbnailData : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []), nil, !next.complete))
                         }, error: subscriber.putError, completed: subscriber.putCompletion)
-                    } else {
+                    } else if decodedThumbnailData == nil {
                         subscriber.putNext(ImageRenderData(nil, nil, true))
                     }
                    

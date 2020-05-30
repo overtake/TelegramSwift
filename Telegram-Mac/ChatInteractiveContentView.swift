@@ -494,14 +494,19 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             }
                     } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue |> map { [weak parent, weak file] status in
-                        if let parent = parent, let file = file {
-                            if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
-                                return (.Local, status)
+                    if file.resource is LocalFileVideoMediaResource {
+                        updatedStatusSignal = .single((.Local, .Local))
+                    } else {
+                        updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue |> map { [weak parent, weak file] status in
+                            if let parent = parent, let file = file {
+                                if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
+                                    return (.Local, status)
+                                }
                             }
+                            return (status, status)
                         }
-                        return (status, status)
                     }
+                    
                 }
             }
             

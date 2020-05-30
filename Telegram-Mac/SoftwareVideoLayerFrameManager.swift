@@ -94,7 +94,7 @@ final class SoftwareVideoLayerFrameManager {
                     return .complete()
                 }
             }
-            //|> take(1)
+            |> take(1)
         
         self.dataDisposable.set((firstReady |> deliverOn(applyQueue)).start(next: { [weak self] path in
             if let strongSelf = self {

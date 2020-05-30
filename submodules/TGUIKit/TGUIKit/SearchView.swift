@@ -528,6 +528,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.centerY(addition: -1)
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
+        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2), inputContainer.frame.height))
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
         search.centerY(addition: -1)
     }

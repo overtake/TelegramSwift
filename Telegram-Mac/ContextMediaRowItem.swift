@@ -210,11 +210,9 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     
                     var effectiveFile = data.file
                     
-                    //let signal:Signal<ImageDataTransformation, NoError>
                     if let preview = data.file.media.videoThumbnails.first {
                         
-                        let file = effectiveFile.media
-                            .withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: preview.dimensions, resource: preview.resource)])
+                        let file = effectiveFile.media.withUpdatedResource(preview.resource)
 
                         switch data.file {
                         case let .message(message, _):
@@ -231,13 +229,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         
                     }
                     let signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)
+                    
 
-                    
-                    
-                    if !item.result.messages.isEmpty {
-                        view.associatedMessageId = item.result.messages[i].id
-                    }
-                    
                     view.update(with: effectiveFile, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
                     if i != (item.result.entries.count - 1) {
                         let layer = View()
