@@ -40,6 +40,7 @@ final class GifPlayerBufferView : TransformImageView {
             
             let layerHolder = takeSampleBufferLayer()
             layerHolder.layer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            layerHolder.layer.backgroundColor = NSColor.clear.cgColor
             self.layer?.addSublayer(layerHolder.layer)
             let manager = SoftwareVideoLayerFrameManager(account: context.account, fileReference: fileReference, layerHolder: layerHolder)
             self.videoLayer = (manager, layerHolder)

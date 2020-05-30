@@ -222,6 +222,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     NSMutableArray *removeItems = [[NSMutableArray alloc] init];
     
+    __block BOOL addedTransformations = false;
+
+    
     [menu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull s) {
         
         if (item.action == @selector(submenuAction:)) {
@@ -230,6 +233,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                     [removeItems addObject:item];
                     *stop = YES;
                 } else if (subItem.action == @selector(capitalizeWord:)) {
+                    addedTransformations = true;
                     if ([_weakd respondsToSelector:@selector(canTransformInputText)]) {
                         if (self.selectedRange.length > 0) {
                             if ([_weakd canTransformInputText]) {
@@ -247,6 +251,26 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
             }];
         }
     }];
+    
+    if (!addedTransformations) {
+        if ([_weakd respondsToSelector:@selector(canTransformInputText)]) {
+            if (self.selectedRange.length > 0) {
+                if ([_weakd canTransformInputText]) {
+                    NSMenuItem *sep = [NSMenuItem separatorItem];
+                    [menu addItem: sep];
+                    
+                    NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"Text.View.Transformations", nil) action:nil keyEquivalent:@""];
+                    
+                    item.submenu = [[NSMenu alloc] init];
+                    
+                    [self.transformItems enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+                        [item.submenu insertItem:obj atIndex:0];
+                    }];
+                    [menu addItem:item];
+                }
+            }
+        }
+    }
     
     [removeItems enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         [menu removeItem:obj];

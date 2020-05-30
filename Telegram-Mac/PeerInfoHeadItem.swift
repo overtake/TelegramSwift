@@ -216,7 +216,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
+        if let address = peer.addressName, !address.isEmpty {
+            items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
+        }
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
         }

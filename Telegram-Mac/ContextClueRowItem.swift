@@ -21,11 +21,18 @@ class ContextClueRowItem: TableRowItem {
     fileprivate let context: AccountContext
     fileprivate let canDisablePrediction: Bool
     fileprivate let callback:((String)->Void)?
-    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], canDisablePrediction: Bool, callback:((String)->Void)? = nil) {
+    fileprivate let selected: String?
+    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], selected: String?, canDisablePrediction: Bool, callback:((String)->Void)? = nil) {
         self._stableId = stableId
         self.clues = clues
         self.context = context
         self.callback = callback
+        self.selected = selected
+        
+        if let selected = selected, let index = clues.firstIndex(of: selected) {
+            self.selectedIndex = index
+        }
+        
         self.canDisablePrediction = canDisablePrediction
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)

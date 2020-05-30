@@ -77,7 +77,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept {
-            signal = signal |> delay(accept ? 0.25 : 0, queue: .mainQueue())
+            signal = signal |> delay(accept ? 0.1 : 0, queue: .mainQueue())
         }
         if accept && self.sticker != nil {
             nextForceAccept = false
@@ -254,6 +254,9 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             case .playing:
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = true
+            case .stoped:
+                self.playerView.isHidden = true
+                self.thumbView.isHidden = false
             default:
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = false

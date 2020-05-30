@@ -189,8 +189,8 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
             }))
         case let .separator(string, _, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: string)
-        case let .emoji(clues, _, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, canDisablePrediction: false, callback: { emoji in
+        case let .emoji(clues, selected, _, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, selected: selected, canDisablePrediction: false, callback: { emoji in
                 arguments?.searchBySuggestion(emoji)
             })
         default:
@@ -220,7 +220,7 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize, em
         
         if !emojis.isEmpty {
             wrapped.insert(.separator(L10n.gifsPaneTrending, 2, arc4random64()), at: 0)
-            wrapped.insert(.emoji(emojis, true, 1), at: 0)
+            wrapped.insert(.emoji(emojis, nil, true, 1), at: 0)
             wrapped.insert(.separator(L10n.gifsPaneReactions, 0, arc4random64()), at: 0)
         }
         
@@ -230,7 +230,7 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize, em
     return []
 }
 
-private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool, emojis: [String]) -> [InputContextEntry] {
+private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool, emojis: [String], search: String) -> [InputContextEntry] {
     var result: [InputContextEntry] = []
     if let collection = collection {
         result = makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
@@ -238,7 +238,7 @@ private func gifEntries(for collection: ChatContextResultCollection?, initialSiz
     
     if suggest, !emojis.isEmpty {
         result.insert(.separator(L10n.gifsPaneTrending, 2, arc4random64()), at: 0)
-        result.insert(.emoji(emojis, true, 1), at: 0)
+        result.insert(.emoji(emojis, search, true, 1), at: 0)
         result.insert(.separator(L10n.gifsPaneReactions, 0, arc4random64()), at: 0)
     }
     
@@ -490,7 +490,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
                 let searchSignal: Signal<ChatContextResultCollection?, NoError>
                 searchSignal = searchGifs(account: context.account, query: search.request)
                 return searchSignal |> map { result in
-                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: suggest, emojis: forceSuggeset ? value.emojis : [])
+                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: suggest, emojis: forceSuggeset ? value.emojis : [], search: search.request)
                     return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments)
                 }
             default:
