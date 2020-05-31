@@ -105,8 +105,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 container.removeAllHandlers()
 
                 
-                container.set(background: theme.colors.grayBackground, for: .Highlight)
-                
+
                 if item.selectedIndex == i {
                     container.set(background: theme.colors.grayBackground, for: .Normal)
                     container.set(background: theme.colors.grayBackground, for: .Hover)
@@ -116,7 +115,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 } else {
                     container.set(background: theme.colors.background, for: .Normal)
                     container.set(background: theme.colors.background, for: .Hover)
-                    container.set(background: theme.colors.grayBackground, for: .Highlight)
+                    container.set(background: theme.colors.background, for: .Highlight)
                     container.apply(state: .Normal)
                 }
                 

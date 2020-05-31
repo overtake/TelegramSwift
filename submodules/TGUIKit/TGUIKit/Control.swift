@@ -329,7 +329,7 @@ open class Control: View {
             return
         }
         
-        if userInteractionEnabled {
+        if userInteractionEnabled, mouseInside() {
             updateState()
             send(event: .Down)
             let point = event.locationInWindow

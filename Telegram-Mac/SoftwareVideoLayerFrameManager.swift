@@ -86,10 +86,10 @@ final class SoftwareVideoLayerFrameManager {
             secondarySignal
             )
             |> mapToSignal { first, second -> Signal<String, NoError> in
-                if first.complete {
-                    return .single(first.path)
-                } else if let second = second {
+                if let second = second {
                     return .single(second)
+                } else if first.complete {
+                    return .single(first.path)
                 } else {
                     return .complete()
                 }

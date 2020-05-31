@@ -68,6 +68,16 @@ class ChatGIFContentView: ChatMediaContentView {
         if let parent = parent, let parameters = parameters {
             if !parameters.autoplay {
                 parameters.autoplay = true
+                
+                if let status = fetchStatus {
+                    switch status {
+                    case .Local:
+                        progressView?.change(opacity: 0)
+                    default:
+                        progressView?.change(opacity: 1)
+                    }
+                }
+                
                 updatePlayerIfNeeded()
             } else if !(parent.media.first is TelegramMediaGame) {
                 parameters.showMedia(parent)

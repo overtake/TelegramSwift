@@ -45,7 +45,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private let hideControlsDisposable = MetaDisposable()
     private let postbox: Postbox
     private var pictureInPicture: Bool = false
-    private var hideControls: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
+    private var hideControls: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     private var controlsIsHidden: Bool = false
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
     
@@ -133,9 +133,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 hide = true
                 NSCursor.hide()
             }
-            if self.fullScreenWindow == nil && isMouseUpOrDown {
-                hide = true
-            }
             hideControls.set(hide)
         } else {
             hideControls.set(false)
@@ -147,7 +144,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func setHandlersOn(window: Window) {
         
         updateIdleTimer()
-//        hideControls.set(false)
+        hideControls.set(false)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
             if let window = self?.genericView.window, let contentView = window.contentView {
@@ -237,6 +234,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let window = window {
             setHandlersOn(window: window)
         }
+        
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -367,9 +365,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 self?.hideControls.set(false)
             }
         }
-
-        readyOnce()
         
+        readyOnce()
     }
     
     func togglePictureInPicture() {
