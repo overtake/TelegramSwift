@@ -901,7 +901,12 @@ class ChatRowItem: TableRowItem {
             message = _message
             isRead = _isRead
             itemType = _itemType
-            fwdType = _fwdType
+            switch _itemType {
+            case .Full:
+                fwdType = .FullHeader
+            default:
+                fwdType = _fwdType
+            }
             renderType = _renderType
         }
         
