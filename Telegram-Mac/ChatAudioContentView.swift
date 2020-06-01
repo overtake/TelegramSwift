@@ -139,10 +139,10 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: parent), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0))
-                progressView.state = .Icon(image: presentation.pauseThumb, mode: .normal)
+                progressView.state = .Icon(image: presentation.pauseThumb, mode: .destinationOut)
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
-                progressView.state = .Play
+                progressView.state = .Icon(image: presentation.playThumb, mode: .destinationOut)
             }
         } else {
             progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))

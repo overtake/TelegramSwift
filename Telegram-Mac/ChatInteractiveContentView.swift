@@ -367,7 +367,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var blurBackground: Bool {
-        return (parent != nil && parent?.groupingKey == nil)
+        return (parent != nil && parent?.groupingKey == nil) || parent == nil
     }
 
 
@@ -490,6 +490,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             if let pendingStatus = pendingStatus.0 {
                                 return (.Fetching(isActive: true, progress: pendingStatus.progress), .Fetching(isActive: true, progress: pendingStatus.progress))
                             } else {
+                                if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
+                                    return (.Local, resourceStatus)
+                                }
                                 return (resourceStatus, resourceStatus)
                             }
                     } |> deliverOnMainQueue

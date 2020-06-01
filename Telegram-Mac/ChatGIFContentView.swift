@@ -164,6 +164,10 @@ class ChatGIFContentView: ChatMediaContentView {
         //player.set(data: nil)
     }
     
+    var blurBackground: Bool {
+        return (parent != nil && parent?.groupingKey == nil) || parent == nil
+    }
+    
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         let mediaUpdated = self.media == nil || !self.media!.isSemanticallyEqual(to: media)
         
@@ -208,7 +212,7 @@ class ChatGIFContentView: ChatMediaContentView {
             
             let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: fitted, boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground)
 
-            player.update(reference, context: context)
+            player.update(reference, context: context, resizeInChat: blurBackground)
             
             player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: mediaUpdated)
             

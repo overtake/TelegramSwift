@@ -929,7 +929,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {
-        if item.isSharable || item.isStorage {
+        if item.shareVisible || item.isStorage {
             var isPresented: Bool = true
             if shareView == nil {
                 shareView = ImageButton()
