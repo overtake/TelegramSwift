@@ -276,7 +276,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         
         searchButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
+            self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})
         }, for: .Click)
         
         addSubview(searchButton)

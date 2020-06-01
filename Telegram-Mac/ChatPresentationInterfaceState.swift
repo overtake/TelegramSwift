@@ -414,7 +414,7 @@ struct ChatPresentationInterfaceState: Equatable {
     let peer: Peer?
     let mainPeer: Peer?
     let chatLocation: ChatLocation
-    let isSearchMode:(Bool, Peer?)
+    let isSearchMode:(Bool, Peer?, String?)
     let notificationSettings: TelegramPeerNotificationSettings?
     let inputQueryResult: ChatPresentationInputQueryResult?
     let keyboardButtonsMessage: Message?
@@ -690,7 +690,7 @@ struct ChatPresentationInterfaceState: Equatable {
         self.keyboardButtonsMessage = nil
         self.initialAction = nil
         self.historyCount = 0
-        self.isSearchMode = (false, nil)
+        self.isSearchMode = (false, nil, nil)
         self.recordingState = nil
         self.isBlocked = nil
         self.peerStatus = nil
@@ -715,7 +715,7 @@ struct ChatPresentationInterfaceState: Equatable {
         self.failedMessageIds = Set()
     }
     
-    init(interfaceState: ChatInterfaceState, peer: Peer?, notificationSettings:TelegramPeerNotificationSettings?, inputQueryResult: ChatPresentationInputQueryResult?, keyboardButtonsMessage:Message?, initialAction:ChatInitialAction?, historyCount:Int?, isSearchMode:(Bool, Peer?), recordingState: ChatRecordingState?, isBlocked:Bool?, peerStatus: ChatPeerStatus?, pinnedMessageId:MessageId?, urlPreview: (String, TelegramMediaWebpage)?, selectionState: ChatInterfaceSelectionState?, sidebarEnabled: Bool?, sidebarShown: Bool?, layout:SplitViewState?, canAddContact:Bool?, isEmojiSection: Bool, chatLocation: ChatLocation, canInvokeBasicActions: (delete: Bool, forward: Bool), isNotAccessible: Bool, restrictionInfo: PeerAccessRestrictionInfo?, cachedPinnedMessage: Message?, mainPeer: Peer?, limitConfiguration: LimitsConfiguration, discussionGroupId: PeerId?, slowMode: SlowMode?, hasScheduled: Bool, failedMessageIds: Set<MessageId>) {
+    init(interfaceState: ChatInterfaceState, peer: Peer?, notificationSettings:TelegramPeerNotificationSettings?, inputQueryResult: ChatPresentationInputQueryResult?, keyboardButtonsMessage:Message?, initialAction:ChatInitialAction?, historyCount:Int?, isSearchMode:(Bool, Peer?, String?), recordingState: ChatRecordingState?, isBlocked:Bool?, peerStatus: ChatPeerStatus?, pinnedMessageId:MessageId?, urlPreview: (String, TelegramMediaWebpage)?, selectionState: ChatInterfaceSelectionState?, sidebarEnabled: Bool?, sidebarShown: Bool?, layout:SplitViewState?, canAddContact:Bool?, isEmojiSection: Bool, chatLocation: ChatLocation, canInvokeBasicActions: (delete: Bool, forward: Bool), isNotAccessible: Bool, restrictionInfo: PeerAccessRestrictionInfo?, cachedPinnedMessage: Message?, mainPeer: Peer?, limitConfiguration: LimitsConfiguration, discussionGroupId: PeerId?, slowMode: SlowMode?, hasScheduled: Bool, failedMessageIds: Set<MessageId>) {
         self.interfaceState = interfaceState
         self.peer = peer
         self.notificationSettings = notificationSettings
@@ -930,7 +930,7 @@ struct ChatPresentationInterfaceState: Equatable {
         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: self.isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     
-    func updatedSearchMode(_ isSearchMode: (Bool, Peer?)) -> ChatPresentationInterfaceState {
+    func updatedSearchMode(_ isSearchMode: (Bool, Peer?, String?)) -> ChatPresentationInterfaceState {
         return ChatPresentationInterfaceState(interfaceState: self.interfaceState, peer:self.peer, notificationSettings: notificationSettings, inputQueryResult: self.inputQueryResult, keyboardButtonsMessage:self.keyboardButtonsMessage, initialAction:self.initialAction, historyCount: historyCount, isSearchMode: isSearchMode, recordingState: self.recordingState, isBlocked: self.isBlocked, peerStatus: self.peerStatus, pinnedMessageId: self.pinnedMessageId, urlPreview: self.urlPreview, selectionState: self.selectionState, sidebarEnabled: self.sidebarEnabled, sidebarShown: self.sidebarShown, layout: self.layout, canAddContact: self.canAddContact, isEmojiSection: self.isEmojiSection, chatLocation: self.chatLocation, canInvokeBasicActions: self.canInvokeBasicActions, isNotAccessible: self.isNotAccessible, restrictionInfo: self.restrictionInfo, cachedPinnedMessage: self.cachedPinnedMessage, mainPeer: self.mainPeer, limitConfiguration: self.limitConfiguration, discussionGroupId: self.discussionGroupId, slowMode: self.slowMode, hasScheduled: self.hasScheduled, failedMessageIds: self.failedMessageIds)
     }
     

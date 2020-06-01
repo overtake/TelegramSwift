@@ -285,7 +285,6 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             if let new = layout.moveItemIfNeeded(at: index, point: point) {
                 
-                
                 for i in 0 ..< layout.count {
                     let current = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y).origin
 
@@ -350,7 +349,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
         
         for i in 0 ..< item.layout.count {
             contents[i].setFrameOrigin(item.layout.frame(at: i).origin.offsetBy(dx: offset.x, dy: offset.y))
-            if let control = contents[i].subviews.last {
+            if let control = contents[i].subviews.first(where: { $0 is MediaPreviewEditControl }) {
                 control.setFrameOrigin(NSMakePoint(contents[i].frame.width - control.frame.width - 10, contents[i].frame.height - control.frame.height - 10))
             }
         }

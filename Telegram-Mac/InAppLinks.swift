@@ -241,8 +241,11 @@ func execute(inapp:inAppLink) {
                 url = "http://" + url
             }
         }
+        var urlValue = url
         let escaped = escape(with:url)
         if let urlQueryAllowed = Optional(escaped), let url = URL(string: urlQueryAllowed) {
+            let needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
+            let removePecentEncoding = url.host == URL(string: urlValue)?.host
             let success:()->Void = {
                 
                 var path = url.absoluteString
@@ -267,7 +270,7 @@ func execute(inapp:inAppLink) {
                 NSWorkspace.shared.open(url)
             }
             if needConfirm {
-                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(url.absoluteString.removingPercentEncoding ?? url.absoluteString), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()})
+                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()})
             } else {
                 success()
             }

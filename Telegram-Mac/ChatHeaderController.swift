@@ -17,7 +17,7 @@ import Postbox
 
 enum ChatHeaderState : Identifiable, Equatable {
     case none
-    case search(ChatSearchInteractions, Peer?)
+    case search(ChatSearchInteractions, Peer?, String?)
     case addContact(block: Bool)
     case shareInfo
     case pinned(MessageId)
@@ -133,8 +133,8 @@ class ChatHeaderController {
             view = ShareInfoView(chatInteraction)
         case let .pinned(messageId):
             view = ChatPinnedView(messageId, chatInteraction: chatInteraction)
-        case let .search(interactions, initialPeer):
-            view = ChatSearchHeader(interactions, chatInteraction: chatInteraction, initialPeer: initialPeer)
+        case let .search(interactions, initialPeer, initialString):
+            view = ChatSearchHeader(interactions, chatInteraction: chatInteraction, initialPeer: initialPeer, initialString: initialString)
         case .report:
             view = ChatReportView(chatInteraction)
         case let .promo(kind):
@@ -732,13 +732,19 @@ class ChatSearchHeader : View, Notifable {
     private let loadingDisposable = MetaDisposable()
    
     private let calendarController: CalendarController
-    init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction, initialPeer: Peer?) {
+    init(_ interactions:ChatSearchInteractions, chatInteraction: ChatInteraction, initialPeer: Peer?, initialString: String?) {
         self.interactions = interactions
         self.parentInteractions = chatInteraction
         self.calendarController = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, selectHandler: interactions.calendarAction)
         self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
+        
+        if let initialString = initialString {
+            searchView.setString(initialString)
+            self.query.set(SearchStateQuery(initialString, nil))
+        }
+
         
         super.init()
         

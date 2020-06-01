@@ -11,7 +11,7 @@ import SwiftSignalKit
 
 
 private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
-    return generateImage(CGSize(width: 42.0, height: 42.0), rotatedContext: { size, context in
+    return generateImage(CGSize(width: 42.0, height: 42.0), scale: System.backingScale, rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
 
@@ -273,7 +273,7 @@ final class AccentColorRowView : TableRowView {
             
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
-            button.layer?.cornerRadius = button.frame.height / 2
+           // button.layer?.cornerRadius = button.frame.height / 2
             let icon = generateAccentColor(accent.accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]
             button.setImageContentGravity(.resize)
