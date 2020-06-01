@@ -192,7 +192,7 @@ class ChatControllerView : View, ChatInputDelegate {
         }, calendarAction: { date in
             chatInteraction.jumpToDate(date)
         }, cancel: {
-            chatInteraction.update({$0.updatedSearchMode((false, nil))})
+            chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})
         }, searchRequest: { query, fromId, state in
             let location: SearchMessagesLocation
             switch chatInteraction.chatLocation {
@@ -439,7 +439,7 @@ class ChatControllerView : View, ChatInputDelegate {
         if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(kind)
         } else if interfaceState.isSearchMode.0 {
-            state = .search(searchInteractions, interfaceState.isSearchMode.1)
+            state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock))
@@ -1993,8 +1993,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         chatInteraction.searchPeerMessages = { [weak self] peer in
             guard let `self` = self else { return }
-            self.chatInteraction.update({$0.updatedSearchMode((false, nil))})
-            self.chatInteraction.update({$0.updatedSearchMode((true, peer))})
+            self.chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})
+            self.chatInteraction.update({$0.updatedSearchMode((true, peer, nil))})
         }
         chatInteraction.movePeerToInput = { [weak self] (peer) in
             if let strongSelf = self {
@@ -2426,8 +2426,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.modalSearch = { [weak self] query in
             if let strongSelf = self {
-                let apply = showModalProgress(signal: searchMessages(account: context.account, location: .peer(peerId: strongSelf.chatInteraction.peerId, fromId: nil, tags: nil), query: query, state: nil), for: context.window)
-                showModal(with: SearchResultModalController(context, request: apply |> map {$0.0.messages}, query: query, chatInteraction:strongSelf.chatInteraction), for: context.window)
+                strongSelf.chatInteraction.update({$0.updatedSearchMode((true, nil, query))})
+
+//                let apply = showModalProgress(signal: searchMessages(account: context.account, location: .peer(peerId: strongSelf.chatInteraction.peerId, fromId: nil, tags: nil), query: query, state: nil), for: context.window)
+//                showModal(with: SearchResultModalController(context, request: apply |> map {$0.0.messages}, query: query, chatInteraction:strongSelf.chatInteraction), for: context.window)
             }
         }
         
@@ -3793,7 +3795,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             result = .invoked
         } else if chatInteraction.presentation.isSearchMode.0 {
-            chatInteraction.update({$0.updatedSearchMode((false, nil))})
+            chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})
             result = .invoked
         } else if chatInteraction.presentation.recordingState != nil {
             chatInteraction.update({$0.withoutRecordingState()})
@@ -4118,7 +4120,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if !self.chatInteraction.presentation.isSearchMode.0 {
-                self.chatInteraction.update({$0.updatedSearchMode((true, nil))})
+                self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
             } else {
                 self.genericView.applySearchResponder()
             }

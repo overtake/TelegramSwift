@@ -244,7 +244,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         item.showPopover(item)
     }
     @objc private func searchAction() {
-        chatInteraction?.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil))})
+        chatInteraction?.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})
     }
     
     @objc private func attachPhotoOrVideo() {
