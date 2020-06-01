@@ -454,7 +454,8 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        return ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false)
+        let size = ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false)
+        return size
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

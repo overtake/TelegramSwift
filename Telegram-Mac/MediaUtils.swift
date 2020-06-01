@@ -1620,7 +1620,7 @@ func chatSecretMessageVideo(account: Account, fileReference: FileMediaReference,
                 }
             }
             
-            context.withContext { c in
+            context.withContext({ c in
                 c.setBlendMode(.copy)
                 if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
                     //c.setFillColor(NSColor(white: 0.0, alpha: 0.4).cgColor)
@@ -1639,7 +1639,7 @@ func chatSecretMessageVideo(account: Account, fileReference: FileMediaReference,
                 if !arguments.insets.right.isEqual(to: 0.0) {
                     c.clear(CGRect(origin: CGPoint(x: context.size.width - arguments.insets.right, y: 0.0), size: CGSize(width: arguments.insets.right, height: context.size.height)))
                 }
-            }
+            })
             
             addCorners(context, arguments: arguments, scale: scale)
             

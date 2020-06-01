@@ -14,7 +14,7 @@ extension PixelDimensions {
         return CGSize(width: CGFloat(self.width), height: CGFloat(self.height))
     }
     init(_ size: CGSize) {
-        self.init(width: Int32(size.width), height: Int32(size.height))
+        self.init(width: Int32(abs(size.width)), height: Int32(abs(size.height)))
     }
     init(_ width: Int32, _ height: Int32) {
         self.init(width: width, height: height)

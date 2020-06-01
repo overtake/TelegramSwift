@@ -606,6 +606,22 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    var shareVisible: Bool {
+        
+        guard let message = message else {
+            return false
+        }
+        
+        if isSharable {
+            if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
+                return false
+            } else {
+                return true
+            }
+        }
+        return false
+    }
+    
     var isSharable: Bool {
         var peers:[Peer] = []
         if let peer = peer {
@@ -619,9 +635,7 @@ class ChatRowItem: TableRowItem {
         if authorIsChannel {
             return false
         }
-        if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
-            return false
-        }
+        
         
         if let info = message.forwardInfo {
             if let author = info.author {
@@ -1304,8 +1318,19 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     channelViewsAttributed = .initialize(string: attribute.count.prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
+                    var author: String = ""
+                    loop: for attr in message.attributes {
+                        if let attr = attr as? AuthorSignatureMessageAttribute {
+                            author = "\(attr.signature), "
+                            break loop
+                        }
+                    }
+                    
+                    
                     if attribute.count >= 1000 {
-                        fullDate = "\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
+                        fullDate = "\(author)\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
+                    } else {
+                        fullDate = "\(author)\(fullDate)"
                     }
                 }
                 

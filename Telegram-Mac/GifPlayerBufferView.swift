@@ -29,17 +29,21 @@ final class GifPlayerBufferView : TransformImageView {
     }
     
     private var fileReference: FileMediaReference?
-    
-    func update(_ fileReference: FileMediaReference, context: AccountContext) -> Void {
+    private var resizeInChat: Bool = false
+    func update(_ fileReference: FileMediaReference, context: AccountContext, resizeInChat: Bool = false) -> Void {
         
         let updated = self.fileReference == nil || !fileReference.media.isEqual(to: self.fileReference!.media)
         self.fileReference = fileReference
-        
+        self.resizeInChat = resizeInChat
         if updated {
             self.videoLayer?.1.layer.removeFromSuperlayer()
             
             let layerHolder = takeSampleBufferLayer()
-            layerHolder.layer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            if let gravity = gravity {
+                layerHolder.layer.videoGravity = gravity
+            } else {
+                layerHolder.layer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            }
             layerHolder.layer.backgroundColor = NSColor.clear.cgColor
             self.layer?.addSublayer(layerHolder.layer)
             let manager = SoftwareVideoLayerFrameManager(account: context.account, fileReference: fileReference, layerHolder: layerHolder)
@@ -53,10 +57,22 @@ final class GifPlayerBufferView : TransformImageView {
     
     override func layout() {
         super.layout()
-        videoLayer?.1.layer.frame = bounds
+        
+        if let file = fileReference?.media, resizeInChat {
+            let dimensions = file.dimensions?.size ?? frame.size
+            let size = dimensions.aspectFitted(frame.size)
+            let rect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - size.width) / 2), floorToScreenPixels(backingScaleFactor, (frame.height - size.height) / 2), size.width, size.height)
+            videoLayer?.1.layer.frame = rect
+        } else {
+            videoLayer?.1.layer.frame = bounds
+        }
+        
     }
     
+    private var gravity: AVLayerVideoGravity?
+    
     func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
+        self.gravity = gravity
         videoLayer?.1.layer.videoGravity = gravity
     }
     required public init?(coder aDecoder: NSCoder) {

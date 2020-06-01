@@ -117,6 +117,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }, for: .Click)
         
+        playingSpeed.autohighlight = false
+        
         containerView.addSubview(previous)
         containerView.addSubview(next)
         containerView.addSubview(playOrPause)

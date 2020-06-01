@@ -372,10 +372,14 @@ class Sender: NSObject {
             let video = asset.tracks(withMediaType: AVMediaType.video).first
             let audio = asset.tracks(withMediaType: AVMediaType.audio).first
             if let video = video {
-                attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(video.naturalSize), flags: []))
+                let size = video.naturalSize.applying(video.preferredTransform)
+                attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(size), flags: []))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
-                if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024) {
+                if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024), mime.hasSuffix("mp4") {
                     attrs.append(TelegramMediaFileAttribute.Animated)
+                }
+                if !mime.hasSuffix("mp4") {
+                    attrs.append(.hintFileIsLarge)
                 }
                 return attrs
             }
