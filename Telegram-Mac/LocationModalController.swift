@@ -585,11 +585,11 @@ class LocationModalController: ModalViewController {
                         return first |> then(requestChatContextResults(account: context.account, botId: botId, peerId: peerId, query: query, location: .single((location.coordinate.latitude, location.coordinate.longitude)), offset: "")
                             |> `catch` { _ in return .complete() }
                             |> deliverOnPrepareQueue |> map { result in
-                                var value = result
+                                var value = result?.results
                                 if let result = result {
-                                    cachedData[query] = result
+                                    cachedData[query] = result.results
                                 }
-                                value = previousResult.modify {_ in result}
+                                value = previousResult.modify { _ in result?.results }
                                 
                                 return (value, location.location, false, !query.isEmpty)
                             })

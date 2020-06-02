@@ -276,7 +276,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     let contextResults = requestChatContextResults(account: context.account, botId: user.id, peerId: chatPeer.id, query: query, offset: "")
                         |> map { results -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                             return { _ in
-                                return .contextRequestResult(user, results)
+                                return .contextRequestResult(user, results?.results)
                             }
                     }
                     

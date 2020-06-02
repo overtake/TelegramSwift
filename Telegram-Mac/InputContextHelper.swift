@@ -778,7 +778,7 @@ class InputContextHelper: NSObject {
                             guard let `self` = self else {return}
                             
                             if let collection = collection {
-                                let newResult = ChatPresentationInputQueryResult.contextRequestResult(peer, oldCollection.withAdditionalCollection(collection))
+                                let newResult = ChatPresentationInputQueryResult.contextRequestResult(peer, oldCollection.withAdditionalCollection(collection.results))
                                 currentResult = newResult
                                 entriesValue.set(self.entries(for: newResult, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
                             }
