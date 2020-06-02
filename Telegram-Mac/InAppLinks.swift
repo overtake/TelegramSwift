@@ -241,7 +241,7 @@ func execute(inapp:inAppLink) {
                 url = "http://" + url
             }
         }
-        var urlValue = url
+        let urlValue = url
         let escaped = escape(with:url)
         if let urlQueryAllowed = Optional(escaped), let url = URL(string: urlQueryAllowed) {
             let needConfirm = needConfirm || url.host != URL(string: urlValue)?.host

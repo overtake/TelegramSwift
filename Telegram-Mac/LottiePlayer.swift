@@ -1026,8 +1026,8 @@ class LottiePlayerView : NSView {
     
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {
         
-        self.stateValue.set(self._currentState.modify { _ in .initializing })
         if let animation = animation {
+            self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
                 if holder == nil {
                     holder = ContextHolder()
@@ -1094,13 +1094,10 @@ class LottiePlayerView : NSView {
                         self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 }
-            } else {
-                var bp:Int = 0
-                bp += 1
             }
-            
         } else {
             self.context = nil
+            self.stateValue.set(self._currentState.modify { _ in .stoped })
         }
     }
 }

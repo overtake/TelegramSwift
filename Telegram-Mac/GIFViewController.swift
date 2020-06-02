@@ -230,10 +230,10 @@ private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize, em
     return []
 }
 
-private func gifEntries(for collection: ChatContextResultCollection?, initialSize: NSSize, suggest: Bool, emojis: [String], search: String) -> [InputContextEntry] {
+private func gifEntries(for collection: ChatContextResultCollection?, results: [ChatContextResult], initialSize: NSSize, suggest: Bool, emojis: [String], search: String) -> [InputContextEntry] {
     var result: [InputContextEntry] = []
     if let collection = collection {
-        result = makeMediaEnties(collection.results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
+        result = makeMediaEnties(results, isSavedGifs: true, initialSize: NSMakeSize(initialSize.width, 100)).map({InputContextEntry.contextMediaResult(collection, $0, arc4random64())})
     }
     
     if suggest, !emojis.isEmpty {
@@ -480,20 +480,48 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         let initialSize = self.atomicSize
         let context = self.context
         
+        struct SearchGifsState {
+            var request: String
+            var values:[ChatContextResult]
+            var nextOffset: String
+        }
         
-        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), forceSuggeset.get()) |> mapToSignal { view, search, forceSuggeset -> Signal<TableUpdateTransition, NoError> in
+        let loadNext: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: false)
+        
+        let searchState:Atomic<SearchGifsState> = Atomic(value: SearchGifsState(request: "", values: [], nextOffset: ""))
+        
+        let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), forceSuggeset.get(), loadNext.get()) |> mapToSignal { view, search, forceSuggeset, _ -> Signal<TableUpdateTransition, NoError> in
             
             let suggest = value.emojis.contains(search.request) || search.request.isEmpty
             
             switch search.state {
             case .Focus:
                 let searchSignal: Signal<ChatContextResultCollection?, NoError>
-                searchSignal = searchGifs(account: context.account, query: search.request)
+                
+                _ = searchState.modify { current -> SearchGifsState in
+                    var current = current
+                    if current.request != search.request {
+                        current.values = []
+                    }
+                    current.nextOffset = ""
+                    return current
+                }
+
+                
+                searchSignal = searchGifs(account: context.account, query: search.request, nextOffset: searchState.with { $0.nextOffset })
                 return searchSignal |> map { result in
-                    let entries = gifEntries(for: result, initialSize: initialSize.with { $0 }, suggest: suggest, emojis: forceSuggeset ? value.emojis : [], search: search.request)
+                    _ = searchState.modify { current -> SearchGifsState in
+                        var current = current
+                        current.values += (result?.results ?? [])
+                        current.request = search.request
+                        current.nextOffset = result?.nextOffset ?? ""
+                        return current
+                    }
+                    let entries = gifEntries(for: result, results: searchState.with { $0.values }, initialSize: initialSize.with { $0 }, suggest: suggest, emojis: forceSuggeset ? value.emojis : [], search: search.request)
                     return prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments)
                 }
             default:
+                _ = searchState.swap(SearchGifsState(request: "", values: [], nextOffset: ""))
                 let postboxView = view.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView
                 let entries = recentEntries(for: postboxView, initialSize: initialSize.with { $0 }, emojis: forceSuggeset ? value.emojis : []).sorted(by: <)
                 return .single(prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments))
@@ -507,9 +535,19 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
             self?.genericView.merge(with: transition, animated: !firstTime)
             self?.makeSearchCommand?(.normal)
             firstTime = false
-            self?.genericView.tableView?.clipView.scroll(to: NSZeroPoint)
             self?.ready.set(.single(true))
         }))
+        
+        genericView.tableView?.setScrollHandler { [weak self] position in
+            if !searchState.with({ $0.values.isEmpty && !$0.nextOffset.isEmpty }) {
+                switch position.direction {
+                case .bottom:
+                    loadNext.set(true)
+                default:
+                    break
+                }
+            }
+        }
     }
     
     
