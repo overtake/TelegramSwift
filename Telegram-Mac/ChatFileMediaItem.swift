@@ -21,7 +21,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
     let downloadLayout: TextViewLayout
     fileprivate let uploadingLayout: TextViewLayout
     fileprivate let downloadingLayout: TextViewLayout
-    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences) {
+    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false) {
         self.fileName = fileName
         self.hasThumb = hasThumb
         
@@ -34,7 +34,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         
         var attr:NSMutableAttributedString = NSMutableAttributedString()
         let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
-        if !(file.resource is LocalFileReferenceMediaResource) {
+        if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
             
             let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
@@ -45,7 +45,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         
         attr = NSMutableAttributedString()
         let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
-        if !(file.resource is LocalFileReferenceMediaResource) {
+        if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
             let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/download", range: range)
@@ -75,7 +75,7 @@ class ChatFileMediaItem: ChatMediaItem {
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia)
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia, isChatRelated: true)
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {

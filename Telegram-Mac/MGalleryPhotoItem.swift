@@ -91,6 +91,8 @@ class MGalleryPhotoItem: MGalleryItem {
     private var hasRequested: Bool = false
     
     override func request(immediately: Bool) {
+        super.request(immediately: immediately)
+        
         if !hasRequested {
             let context = self.context
             let entry = self.entry

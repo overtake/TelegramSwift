@@ -173,14 +173,18 @@ class ChatRowItem: TableRowItem {
         var widthForContent: CGFloat = 0
         
         if isBubbled {
-            widthForContent = min(width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset), 450)
+            
+            var tempWidth: CGFloat = width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset)
             
             if isSharable || isStorage {
-                widthForContent -= 35
+                tempWidth -= 35
             }
             if isLikable {
-                widthForContent -= 35
+                tempWidth -= 35
             }
+            widthForContent = min(tempWidth, 450)
+
+            
         } else {
             if case .Full = itemType {
                 let additionWidth:CGFloat = date?.0.size.width ?? 20
@@ -1574,7 +1578,11 @@ class ChatRowItem: TableRowItem {
             replyModel?.measureSize(widthForContent, sizeToFit: true)
         } else if let replyModel = replyModel {
             if let item = self as? ChatMessageItem, item.webpageLayout == nil && !replyModel.isSideAccessory {
-                replyModel.measureSize(max(contentSize.width, 200), sizeToFit: true)
+                if isBubbled {
+                    replyModel.measureSize(max(blockWidth, 200), sizeToFit: true)
+                } else {
+                    replyModel.measureSize(max(contentSize.width, 200), sizeToFit: true)
+                }
             } else {
                 if !hasBubble {
                     replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)

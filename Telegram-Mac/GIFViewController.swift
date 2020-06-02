@@ -502,8 +502,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
                     var current = current
                     if current.request != search.request {
                         current.values = []
+                        current.nextOffset = ""
                     }
-                    current.nextOffset = ""
                     return current
                 }
 

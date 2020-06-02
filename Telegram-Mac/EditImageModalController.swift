@@ -232,6 +232,8 @@ class EditImageModalController: ModalViewController {
         let currentData = editState.modify {$0}
         resultValue.set(EditedImageData.generateNewUrl(data: currentData, selectedRect: genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)})
         
+        
+        
         let signal = resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
         markAsClosed = true
         _ = signal.start(next: { [weak self] _ in
