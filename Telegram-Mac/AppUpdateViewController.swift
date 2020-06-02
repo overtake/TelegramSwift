@@ -86,6 +86,8 @@ private var driver:SUBasicUpdateDriver?
 private let host = SUHost(bundle: Bundle.main)
 
 func updateApplication(sharedContext: SharedAccountContext) {
+
+    
     let state = stateValue.with {$0.loadingState}
     switch state {
     case let .readyToInstall(item):

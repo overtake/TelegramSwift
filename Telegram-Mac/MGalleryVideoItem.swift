@@ -146,7 +146,6 @@ class MGalleryVideoItem: MGalleryItem {
             
             var pagerSize = self.pagerSize
             
-            pagerSize.height -= (caption != nil ? caption!.layoutSize.height + 80 : 0)
             
             var size = size
 
@@ -190,6 +189,7 @@ class MGalleryVideoItem: MGalleryItem {
     
     override func request(immediately: Bool) {
 
+        super.request(immediately: immediately)
         
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale, synchronousLoad: true)
         

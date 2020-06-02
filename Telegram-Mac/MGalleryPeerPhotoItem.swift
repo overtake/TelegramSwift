@@ -44,7 +44,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func request(immediately: Bool) {
-        
+        super.request(immediately: immediately)
         
         let context = self.context
         let media = self.media

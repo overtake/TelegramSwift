@@ -338,7 +338,9 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let context: AccountContext
     private var _pagerSize: NSSize
     var pagerSize:NSSize {
-        return _pagerSize
+        var pagerSize = _pagerSize
+        pagerSize.height -= (caption != nil ? 140 : 0)
+        return pagerSize
     }
     let caption: TextViewLayout?
     
@@ -398,7 +400,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self._pagerSize = pagerSize
         if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: caption.prefixWithDots(255), color: .white, font: .normal(.text))
+            _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
             
             attr.detectLinks(type: [.Links, .Mentions], context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
                 let navigation = context.sharedContext.bindings.rootNavigation()
@@ -417,16 +419,13 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 viewer?.close()
             }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
             
-            self.caption = TextViewLayout(attr, alignment: .center)
+            self.caption = TextViewLayout(attr, alignment: .left)
             self.caption?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     execute(inapp: link)
                     viewer?.close()
                 }
             })
-
-            
-            self.caption?.measure(width: pagerSize.width - 200)
         } else {
             self.caption = nil
         }
@@ -499,7 +498,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     func request(immediately:Bool = true) {
-        
+     //   self.caption?.measure(width: sizeValue.width)
     }
     
     func fetch() {

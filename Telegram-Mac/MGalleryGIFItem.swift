@@ -82,7 +82,7 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override func request(immediately: Bool) {
-        
+        super.request(immediately: immediately)
         let size = media.dimensions?.size.fitted(pagerSize) ?? sizeValue
         
         let signal:Signal<ImageDataTransformation,NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: entry.fileReference(media), scale: System.backingScale)

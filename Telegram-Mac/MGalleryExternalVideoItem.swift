@@ -373,7 +373,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
     }
     
     override func request(immediately: Bool) {
-        
+        super.request(immediately: immediately)
         let webpage = entry.webpage!
 
         

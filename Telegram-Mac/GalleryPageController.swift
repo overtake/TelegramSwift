@@ -181,6 +181,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
     private let captionView: TextView = TextView()
+    private let captionContainer = View()
+    private let captionScrollView = ScrollView()
     private let window:Window
     private let autohideCaptionDisposable = MetaDisposable()
     private let magnifyDisposable = MetaDisposable()
@@ -235,6 +237,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         _next.userInteractionEnabled = false
         _prev.userInteractionEnabled = false
 
+        captionContainer.addSubview(captionView)
+        captionScrollView.documentView = captionContainer
         
         indexDisposable.set((selectedIndex.get()).start(next: { [weak self] index in
             guard let `self` = self else {return}
@@ -272,7 +276,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let view = self.window.contentView?.hitTest(event.locationInWindow)
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             
-            if NSPointInRect(point, self.captionView.frame), self.captionView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
+            if NSPointInRect(point, self.captionScrollView.frame), self.captionScrollView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {
@@ -326,7 +330,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             guard let `self` = self else {return .rejected}
             self.autohideCaptionDisposable.set(nil)
             if self.lockedTransition == false {
-                self.captionView.change(opacity: 1.0)
+                self.captionScrollView.change(opacity: 1.0)
                 self.configureCaptionAutohide()
             }
             (self.controller.selectedViewController?.view as? GMagnifyView)?.hideOrShowControls(hasPrev: self.hasPrev, hasNext: self.hasNext, animated: true)
@@ -359,10 +363,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     private func configureCaptionAutohide() {
         let view = controller.selectedViewController?.view as? MagnifyView
-        captionView.removeFromSuperview()
-        controller.view.addSubview(captionView)
+        captionScrollView.removeFromSuperview()
+        controller.view.addSubview(captionScrollView)
         autohideCaptionDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
-            self?.captionView.change(opacity: 0)
+            guard let `self` = self else {
+                return
+            }
+            self.captionScrollView.change(opacity: self.captionScrollView._mouseInside() ? 1 : 0)
         }))
     }
     
@@ -607,7 +614,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func pageControllerWillStartLiveTransition(_ pageController: NSPageController) {
         lockedTransition = true
-        captionView.change(opacity: 0)
+        captionScrollView.change(opacity: 0)
         startIndex = pageController.selectedIndex
         
         if items.count > 1 {
@@ -619,9 +626,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func pageControllerDidEndLiveTransition(_ pageController: NSPageController, force:Bool) {
         let previousView = currentController?.view as? MagnifyView
         
-        captionView.change(opacity: 0, animated: captionView.superview != nil, completion: { [weak captionView] completed in
+        captionScrollView.change(opacity: 0, animated: captionScrollView.superview != nil, completion: { [weak captionScrollView] completed in
             if completed {
-                captionView?.removeFromSuperview()
+                captionScrollView?.removeFromSuperview()
             }
         })
         
@@ -644,7 +651,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
                 magnifyDisposable.set(controllerView.magnifyUpdater.get().start(next: { [weak self] value in
-                    self?.captionView.isHidden = value > 1.0
+                    self?.captionScrollView.isHidden = value > 1.0
                 }))
                 
             }
@@ -652,17 +659,25 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
+            caption.measure(width: min(item.sizeValue.width + 240, item.pagerSize.width - 200))
             captionView.update(caption)
-            captionView.backgroundColor = NSColor.black.withAlphaComponent(0.5)
+            captionView.backgroundColor = .clear
             captionView.disableBackgroundDrawing = true
-            captionView.setFrameSize(captionView.frame.size.width + 10, captionView.frame.size.height + 8)
-            captionView.layer?.cornerRadius = .cornerRadius
             
-            view.addSubview(captionView)
-            captionView.change(opacity: 1.0)
-            captionView.centerX(y: 90)
+            
+            view.addSubview(captionScrollView)
+            captionScrollView.change(opacity: 1.0)
+            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(90, captionView.frame.height))
+            captionScrollView.centerX(y: 90)
+            captionScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
+            captionScrollView.layer?.cornerRadius = .cornerRadius
+            
+            captionContainer.frame = NSMakeRect(0, 0, captionScrollView.frame.width, captionView.frame.height)
+            captionView.center()
+
         } else {
             captionView.update(nil)
+            captionScrollView.removeFromSuperview()
         }
         
         configureCaptionAutohide()
@@ -794,7 +809,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         window.contentView?.addSubview(_prev)
         window.contentView?.addSubview(_next)
-        captionView.change(opacity: 0, animated: false)
+        captionScrollView.change(opacity: 0, animated: false)
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             item.request()
             lockedTransition = true
@@ -812,7 +827,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
                                 strongSelf?.lockedTransition = false
-                                strongSelf?.captionView.change(opacity: 1.0)
+                                strongSelf?.captionScrollView.change(opacity: 1.0)
                                 strongSelf?.hasInited = true
                                 strongSelf?.selectedItem?.appear(for: selectedView?.contentView)
                             }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
@@ -919,7 +934,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         lockedTransition = true
         
         
-        captionView.change(opacity: 0, animated: true)
+        captionScrollView.change(opacity: 0, animated: true)
         
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true

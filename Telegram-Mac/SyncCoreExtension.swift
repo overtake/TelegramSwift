@@ -25,3 +25,7 @@ extension CGSize {
         return PixelDimensions(self)
     }
 }
+
+enum AppLogEvents : String {
+    case imageEditor = "image_editor_used"
+}

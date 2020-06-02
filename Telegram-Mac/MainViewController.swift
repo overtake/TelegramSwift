@@ -179,6 +179,11 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         }))
         
         genericView.set(handler: { _ in
+            
+            if let controller = context.bindings.rootNavigation().controller as? ChatController {
+                controller.chatInteraction.saveState(true)
+            }
+            
             updateApplication(sharedContext: context)
         }, for: .Click)
     }

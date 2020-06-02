@@ -681,6 +681,7 @@ final class ChatEditState : Equatable {
         return !message.media.isEmpty && (message.media[0] is TelegramMediaImage || message.media[0] is TelegramMediaFile)
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
+
         return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.media.first, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
     }
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {

@@ -1764,10 +1764,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                
                                                chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
                                                chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
-                                               chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityBackground) },
+                                               chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForeground) },
                                                chatMusicPlayBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPlayBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_outgoing) },
-                                               chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityBackground) },
+                                               chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForeground) },
                                                chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
                                                chatGradientBubble_incoming: { generateGradientBubble(palette.bubbleBackground_incoming, palette.bubbleBackground_incoming) },

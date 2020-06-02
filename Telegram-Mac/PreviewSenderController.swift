@@ -1129,6 +1129,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         return data
                     }}
                     self.urls[index] = new
+                    addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: AppLogEvents.imageEditor.rawValue, peerId: context.peerId, data: [:])
                 }
             }))
         }
