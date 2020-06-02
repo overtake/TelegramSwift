@@ -1763,7 +1763,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatFallbackCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.fileActivityBackgroundBubble_outgoing) },
                                                
                                                chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
-                                               chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.underSelectedColor, backgroundColor: NSColor.black.withAlphaComponent(0.05)) },
+                                               chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
                                                chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityBackground) },
                                                chatMusicPlayBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPlayBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForegroundBubble_outgoing) },
@@ -2014,7 +2014,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                previewSenderDeleteFile: { NSImage(named: "Icon_PreviewSenderDelete")!.precomposed(palette.accentIcon) },
                                                previewSenderArchive: { NSImage(named: "Icon_PreviewSenderArchive")!.precomposed(palette.grayIcon) },
                                                chatGroupToggleSelected: { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
-                                               chatGroupToggleUnselected: { generateChatGroupToggleUnselected(foregroundColor: palette.underSelectedColor, backgroundColor: NSColor.black.withAlphaComponent(0.05)) },
+                                               chatGroupToggleUnselected: { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
                                                successModalProgress: { #imageLiteral(resourceName: "Icon_ProgressWindowCheck").precomposed(palette.grayIcon) },
                                                accentColorSelect: { #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(.white) },
                                                transparentBackground: { generateTransparentBackground() },
