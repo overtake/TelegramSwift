@@ -53,7 +53,7 @@ final class UpdateTabView : Control {
         progressView.progressColor = .white
         isInstalling = false
         
-        let layout = TextViewLayout(.initialize(string: L10n.updateUpdateTelegram, color: .white, font: .medium(.title)))
+        let layout = TextViewLayout(.initialize(string: L10n.updateUpdateTelegram, color: theme.colors.underSelectedColor, font: .medium(.title)))
         layout.measure(width: max(280, frame.width))
         textView.update(layout)
         
@@ -179,8 +179,8 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         }))
         
         genericView.set(handler: { _ in
-            
-            if let controller = context.bindings.rootNavigation().controller as? ChatController {
+            let authrorized = (NSApp.delegate as? AppDelegate)?.hasAuthorized ?? false
+            if authrorized, let controller = context.bindings.rootNavigation().controller as? ChatController {
                 controller.chatInteraction.saveState(true)
             }
             

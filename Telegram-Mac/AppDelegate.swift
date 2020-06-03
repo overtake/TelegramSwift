@@ -996,6 +996,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     
+    var hasAuthorized: Bool {
+        return contextValue?.context != nil
+    }
+    
     @IBAction func unhide(_ sender: Any) {
          window.makeKeyAndOrderFront(sender)
     }
