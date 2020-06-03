@@ -82,7 +82,7 @@ final class SoftwareVideoLayerFrameManager {
         }
         
         let firstReady: Signal<String, NoError> = combineLatest(
-            self.account.postbox.mediaBox.resourceData(self.resource, option: .complete(waitUntilFetchStatus: false)),
+            self.account.postbox.mediaBox.resourceData(self.resource, option: .complete(waitUntilFetchStatus: false)) |> filter { $0.complete },
             secondarySignal
             )
             |> mapToSignal { first, second -> Signal<String, NoError> in
@@ -94,7 +94,6 @@ final class SoftwareVideoLayerFrameManager {
                     return .complete()
                 }
             }
-            |> take(1)
         
         self.dataDisposable.set((firstReady |> deliverOn(applyQueue)).start(next: { [weak self] path in
             if let strongSelf = self {
