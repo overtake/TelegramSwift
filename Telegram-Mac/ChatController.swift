@@ -1078,8 +1078,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     func updateSidebar() {
         if FastSettings.sidebarShown && FastSettings.sidebarEnabled {
-            (navigationController as? MajorNavigationController)?.genericView.setProportion(proportion: SplitProportion(min:380, max:800), state: .single)
-            (navigationController as? MajorNavigationController)?.genericView.setProportion(proportion: SplitProportion(min:380+350, max:700), state: .dual)
+            (navigationController as? MajorNavigationController)?.genericView.setProportion(proportion: SplitProportion(min:380, max:730), state: .single)
+            (navigationController as? MajorNavigationController)?.genericView.setProportion(proportion: SplitProportion(min:380+350, max:.greatestFiniteMagnitude), state: .dual)
         } else {
             (navigationController as? MajorNavigationController)?.genericView.removeProportion(state: .dual)
             (navigationController as? MajorNavigationController)?.genericView.setProportion(proportion: SplitProportion(min:380, max: .greatestFiniteMagnitude), state: .single)

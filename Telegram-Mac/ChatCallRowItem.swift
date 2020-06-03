@@ -126,7 +126,7 @@ private class ChatCallRowView : ChatRowView {
         if let item = item as? ChatCallRowItem {
             
             fallbackControl.set(image: theme.chat.chatCallFallbackIcon(item), for: .Normal)
-            fallbackControl.sizeToFit()
+            _ = fallbackControl.sizeToFit()
             
             imageView.image = theme.chat.chatCallIcon(item)
             imageView.sizeToFit()

@@ -16,10 +16,12 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     let playPolicy: LottiePlayPolicy?
     let alwaysAccept: Bool?
     let cache: ASCachePurpose?
-    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, media: TelegramMediaFile) {
+    let hidePlayer: Bool
+    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile) {
         self.playPolicy = playPolicy
         self.alwaysAccept = alwaysAccept
         self.cache = cache
+        self.hidePlayer = hidePlayer
         super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
 }

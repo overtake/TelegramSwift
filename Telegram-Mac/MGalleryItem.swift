@@ -422,8 +422,12 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             self.caption = TextViewLayout(attr, alignment: .left)
             self.caption?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
-                    execute(inapp: link)
-                    viewer?.close()
+                    execute(inapp: link, afterComplete: { value in
+                        if value {
+                            viewer?.close()
+                        }
+                    })
+                    
                 }
             })
         } else {

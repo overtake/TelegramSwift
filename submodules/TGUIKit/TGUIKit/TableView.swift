@@ -1304,7 +1304,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
-                                    view.updateIsVisible(yTopOffset < 0 && documentOffset.y > 0, animated: false)
+//                                    NSLog("\(yTopOffset < 0 && documentOffset.y > 0), \(yTopOffset)")
+                                    view.updateIsVisible(yTopOffset < 0 , animated: false)
                                     applied = true
                                 }
                             }
