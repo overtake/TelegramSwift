@@ -36,8 +36,8 @@ class ContextCommandRowItem: TableRowItem {
         title = TextViewLayout(.initialize(string: "/" + command.command.text, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
         desc = TextViewLayout(.initialize(string: command.command.description, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
         
-        titleSelected = TextViewLayout(.initialize(string: "/" + command.command.text, color: .white, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
-        descSelected = TextViewLayout(.initialize(string: command.command.description, color: .white, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        titleSelected = TextViewLayout(.initialize(string: "/" + command.command.text, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        descSelected = TextViewLayout(.initialize(string: command.command.description, color: theme.colors.underSelectedColor, font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end)
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: initialSize.width)
     }

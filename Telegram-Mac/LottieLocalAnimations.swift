@@ -88,6 +88,7 @@ enum LocalAnimatedSticker {
     var parameters: ChatAnimatedStickerMediaLayoutParameters {
         let playPolicy: LottiePlayPolicy?
         var alwaysAccept: Bool? = nil
+        var hidePlayer: Bool = true
         switch self {
         case .brilliant_static:
             playPolicy = .loop
@@ -121,7 +122,8 @@ enum LocalAnimatedSticker {
         case .think_spectacular:
             playPolicy = .once
         case .success_saved:
-            playPolicy = .onceToFrame(25)
+            playPolicy = .onceEnd
+            hidePlayer = false
         case .dice_idle:
             playPolicy = .once
         case .folder:
@@ -135,6 +137,6 @@ enum LocalAnimatedSticker {
         case .dart_idle:
             playPolicy = .once
         }
-        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, media: self.file)
+        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, hidePlayer: hidePlayer, media: self.file)
     }
 }

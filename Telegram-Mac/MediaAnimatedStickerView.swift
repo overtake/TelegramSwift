@@ -250,6 +250,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             
+            if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
+                if !parameters.hidePlayer {
+                    self.playerView.isHidden = false
+                    self.thumbView.isHidden = true
+                    return
+                }
+            }
             switch state {
             case .playing:
                 self.playerView.isHidden = false
