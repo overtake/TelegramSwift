@@ -26,6 +26,7 @@ final class GifPlayerBufferView : TransformImageView {
         self.timebase = timebase!
         
         super.init()
+        self.layerContentsRedrawPolicy = .duringViewResize
     }
     
     private var fileReference: FileMediaReference?
