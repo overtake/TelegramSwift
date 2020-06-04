@@ -13,7 +13,13 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 
-func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
+enum MessageTextMediaViewType {
+    case emoji
+    case text
+    case none
+}
+
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji) -> NSString {
     var messageText: NSString = message.text.fixed.nsstring
     for media in message.media {
         switch media {
@@ -22,9 +28,16 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
                 messageText = tr(L10n.chatListServiceDestructingPhoto).nsstring
             } else {
-                messageText = tr(L10n.chatListPhoto).nsstring
+                messageText = L10n.chatListPhoto.nsstring
                 if !message.text.isEmpty {
-                    messageText = ((attachEmoji ? "🖼 " : "") + message.text.fixed).nsstring
+                    switch mediaViewType {
+                    case .emoji:
+                        messageText = ("🖼 " + message.text.fixed).nsstring
+                    case .text:
+                        messageText = ("\(messageText), " + message.text.fixed).nsstring
+                    case .none:
+                        break
+                    }
                 }
             }
         case let dice as TelegramMediaDice:
@@ -33,7 +46,7 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             if fileMedia.isStaticSticker || fileMedia.isAnimatedSticker {
                 messageText = L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring
             } else if fileMedia.isVoice {
-                messageText = tr(L10n.chatListVoice).nsstring
+                messageText = L10n.chatListVoice.nsstring
             } else if fileMedia.isMusic  {
                 messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
             } else if fileMedia.isInstantVideo {
@@ -51,7 +64,14 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
                     } else {
                         messageText = L10n.chatListVideo.nsstring
                         if !message.text.fixed.isEmpty {
-                            messageText = ("📹 " + message.text.fixed).nsstring
+                            switch mediaViewType {
+                            case .emoji:
+                                messageText = ("📹 " + message.text.fixed).nsstring
+                            case .text:
+                                messageText = ("\(messageText), " + message.text.fixed).nsstring
+                            case .none:
+                                break
+                            }
                         }
                     }
                 }
@@ -60,7 +80,14 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             } else {
                 messageText = fileMedia.fileName?.fixed.nsstring ?? "File"
                 if !message.text.isEmpty {
-                    messageText = ("📎 " + message.text.fixed).nsstring
+                    switch mediaViewType {
+                    case .emoji:
+                        messageText = ("📎 " + message.text.fixed).nsstring
+                    case .text:
+                        messageText = ("\(messageText), " + message.text.fixed).nsstring
+                    case .none:
+                        break
+                    }
                 }
             }
         case _ as TelegramMediaMap:
@@ -73,6 +100,39 @@ func pullText(from message:Message, attachEmoji: Bool = true) -> NSString {
             messageText = invoice.title.nsstring
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)".nsstring
+        case let webpage as TelegramMediaWebpage:
+            if case let .Loaded(content) = webpage.content {
+                if let _ = content.image {
+                    switch mediaViewType {
+                    case .emoji:
+                        messageText = ("🖼 " + message.text.fixed).nsstring
+                    case .text:
+                        messageText = ("\(L10n.chatListPhoto), " + message.text.fixed).nsstring
+                    case .none:
+                        break
+                    }
+                } else if let file = content.file {
+                    if (file.isVideo && !file.isInstantVideo)  {
+                        switch mediaViewType {
+                        case .emoji:
+                            messageText = ("🖼 " + message.text.fixed).nsstring
+                        case .text:
+                            messageText = ("\(L10n.chatListVideo), " + message.text.fixed).nsstring
+                        case .none:
+                            break
+                        }
+                    } else if file.isGraphicFile {
+                        switch mediaViewType {
+                        case .emoji:
+                            messageText = ("📹 " + message.text.fixed).nsstring
+                        case .text:
+                            messageText = ("\(L10n.chatListPhoto), " + message.text.fixed).nsstring
+                        case .none:
+                            break
+                        }
+                    }
+                }
+            }
         default:
             break
         }
@@ -129,7 +189,28 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
         
         let peer = messageMainPeer(message)
         
-        let messageText: NSString = pullText(from: message)
+        var mediaViewType: MessageTextMediaViewType = .emoji
+        if !message.containsSecretMedia {
+            for media in message.media {
+                if let _ = media as? TelegramMediaImage {
+                    mediaViewType = .text
+                } else if let file = media as? TelegramMediaFile {
+                    if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
+                        mediaViewType = .text
+                    }
+                } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
+                    if let _ = content.image {
+                        mediaViewType = .text
+                    } else if let file = content.file {
+                        if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
+                            mediaViewType = .text
+                        }
+                    }
+                }
+            }
+        }
+        
+        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         if messageText.length > 0 {
@@ -138,24 +219,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
                 _ = attributedText.append(string: peer.displayTitle + "\n", color: theme.chatList.peerTextColor, font: .normal(.text))
             }
             
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
-                var peerText: String = (author.id == account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
-                
-                let layout = TextViewLayout(.initialize(string: peerText, color: nil, font: .normal(.text)))
-                layout.measure(width: maxWidth ?? .greatestFiniteMagnitude)
-                if let line = layout.lines.first, layout.lines.count > 1 {
-                    peerText = peerText.nsstring.substring(with: line.range) + "..."
-                }
-                
-                peerText += (folder ? ": " : "\n")
-                
-                
-                    
-                _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
-            } else {
-                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
-            }
+            _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if message.media.first is TelegramMediaAction {
             _ = attributedText.append(string: serviceMessageText(message, account:account), color: theme.chatList.grayTextColor, font: .normal(.text))

@@ -238,7 +238,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            var text = pullText(from:message, attachEmoji: false) as String
+            var text = pullText(from:message, mediaViewType: .none) as String
             if text.isEmpty {
                 text = serviceMessageText(message, account: account, isReplied: true)
             }
