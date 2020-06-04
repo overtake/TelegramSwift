@@ -794,7 +794,8 @@ class InputContextHelper: NSObject {
         
         entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
         
-        let makeSignal = combineLatest(entriesValue.get(), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
+        let makeSignal = combineLatest(queue: prepareQueue, entriesValue.get(), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
+                            
             let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             let previous = previosEntries.swap(entries)
             let previousIsEmpty:Bool = previous?.isEmpty ?? true
