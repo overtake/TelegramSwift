@@ -150,7 +150,9 @@ class ChatListRowItem: TableRowItem {
     private var messageNode:TextNode = TextNode()
     private var displaySelectedNode:TextNode = TextNode()
     private var messageSelectedNode:TextNode = TextNode()
-    
+    private var chatNameSelectedNode:TextNode = TextNode()
+    private var chatNameNode:TextNode = TextNode()
+
     private var messageText:NSAttributedString?
     private let titleText:NSAttributedString?
     private var chatTitleAttributed: NSAttributedString?
@@ -693,6 +695,14 @@ class ChatListRowItem: TableRowItem {
             displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
         
+        if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
+            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, false, .left)
+        }
+        
+        if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
+            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, true, .left)
+        }
+        
         var textCutout: TextNodeCutout?
         if !textLeftCutout.isZero {
             textCutout = TextNodeCutout(position: .TopLeft, size: CGSize(width: textLeftCutout, height: 14))
@@ -700,10 +710,10 @@ class ChatListRowItem: TableRowItem {
 
         
         if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), textCutout, false, .left, 1)
+            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, false, .left, 1)
         }
         if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), textCutout, true, .left, 1)
+            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, true, .left, 1)
         }
         return result
     }
@@ -1054,6 +1064,14 @@ class ChatListRowItem: TableRowItem {
         }
         return displayLayout
     }
+    
+    var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
+        if isSelected && context.sharedContext.layout != .single {
+            return chatNameLayout
+        }
+        return chatNameSelectedLayout
+    }
+    
     var ctxMessageLayout:(TextNodeLayout, TextNode)? {
         if isSelected && context.sharedContext.layout != .single {
             if let typingSelectedLayout = typingSelectedLayout {
