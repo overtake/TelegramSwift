@@ -362,9 +362,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         ctx.draw(highlighted ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
                         mutedInset += theme.icons.scam.backingSize.width + 3
                     }
-                    
+                    var messageOffset: CGFloat = 0
+                    if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
+                        chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        messageOffset += chatNameLayout.0.size.height + 2
+                    }
                     if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
-                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1, messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset, messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     }
                     
                     if item.isMuted {
