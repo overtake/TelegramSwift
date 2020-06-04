@@ -659,7 +659,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
-            caption.measure(width: min(item.sizeValue.width + 240, item.pagerSize.width - 200))
+            caption.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
             captionView.update(caption)
             captionView.backgroundColor = .clear
             captionView.disableBackgroundDrawing = true

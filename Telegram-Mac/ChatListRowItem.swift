@@ -137,12 +137,15 @@ class ChatListRowItem: TableRowItem {
     private var date:NSAttributedString?
 
     private var displayLayout:(TextNodeLayout, TextNode)?
+    private var chatNameLayout:(TextNodeLayout, TextNode)?
+
     private var messageLayout:(TextNodeLayout, TextNode)?
     private var displaySelectedLayout:(TextNodeLayout, TextNode)?
     private var messageSelectedLayout:(TextNodeLayout, TextNode)?
     private var dateLayout:(TextNodeLayout, TextNode)?
     private var dateSelectedLayout:(TextNodeLayout, TextNode)?
-    
+    private var chatNameSelectedLayout:(TextNodeLayout, TextNode)?
+
     private var displayNode:TextNode = TextNode()
     private var messageNode:TextNode = TextNode()
     private var displaySelectedNode:TextNode = TextNode()
@@ -150,7 +153,7 @@ class ChatListRowItem: TableRowItem {
     
     private var messageText:NSAttributedString?
     private let titleText:NSAttributedString?
-    
+    private var chatTitleAttributed: NSAttributedString?
     
     private(set) var peerNotificationSettings:PeerNotificationSettings?
     private(set) var readState:CombinedPeerReadState?
@@ -304,6 +307,11 @@ class ChatListRowItem: TableRowItem {
     
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
+    private var textLeftCutout: CGFloat = 0.0
+    private(set) var contentImageMedia: Media?
+    
+
+    
     init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
         self.groupId = groupId
         self.peer = nil
@@ -350,6 +358,8 @@ class ChatListRowItem: TableRowItem {
         }
         hasDraft = false
         
+    
+
         
         if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
@@ -485,6 +495,46 @@ class ChatListRowItem: TableRowItem {
             
             dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
+            
+            
+            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
+                let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
+                
+                let attr = NSMutableAttributedString()
+                _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                
+                self.chatTitleAttributed = attr
+            }
+            
+            
+            if !message.containsSecretMedia {
+                for media in message.media {
+                    if let image = media as? TelegramMediaImage {
+                        textLeftCutout += 22.0
+                        contentImageMedia = image
+                        break
+                    } else if let file = media as? TelegramMediaFile {
+                        if file.isVideo && !file.isInstantVideo {
+                            textLeftCutout += 22.0
+                            contentImageMedia = file
+                            break
+                        }
+                    } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
+                        if let image = content.image {
+                            textLeftCutout += 22.0
+                            contentImageMedia = image
+                            break
+                        } else if let file = content.file {
+                            if file.isVideo && !file.isInstantVideo {
+                                textLeftCutout += 22.0
+                                contentImageMedia = file
+                                break
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         
@@ -562,6 +612,16 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    var contentDimensions: NSSize? {
+        var dimensions: CGSize?
+        if let contentImageMedia = contentImageMedia as? TelegramMediaImage {
+            dimensions = largestRepresentationForPhoto(contentImageMedia)?.dimensions.size
+        } else if let contentImageMedia = contentImageMedia as? TelegramMediaFile {
+            dimensions = contentImageMedia.dimensions?.size
+        }
+        return dimensions
+    }
+    
     var isAd: Bool {
         switch pinnedType {
         case .ad:
@@ -628,14 +688,22 @@ class ChatListRowItem: TableRowItem {
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
             displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
-        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, false, .left, 1)
-        }
+        
         if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
             displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
+        
+        var textCutout: TextNodeCutout?
+        if !textLeftCutout.isZero {
+            textCutout = TextNodeCutout(position: .TopLeft, size: CGSize(width: textLeftCutout, height: 14))
+        }
+
+        
+        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
+            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), textCutout, false, .left, 1)
+        }
         if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, true, .left, 1)
+            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), textCutout, true, .left, 1)
         }
         return result
     }

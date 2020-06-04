@@ -28,6 +28,10 @@ public enum TextNodeCutoutPosition {
 public struct TextNodeCutout: Equatable {
     public let position: TextNodeCutoutPosition
     public let size: NSSize
+    public init(position: TextNodeCutoutPosition, size: NSSize) {
+        self.position = position
+        self.size = size
+    }
 }
 
 public func ==(lhs: TextNodeCutout, rhs: TextNodeCutout) -> Bool {
@@ -303,8 +307,7 @@ public class TextNode: NSObject {
                 
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, penFlush, Double(dirtyRect.width)))
 
-                
-                context.textPosition = CGPoint(x: penOffset + NSMinX(dirtyRect), y: line.frame.origin.y + NSMinY(dirtyRect))
+                context.textPosition = CGPoint(x: penOffset + dirtyRect.minX + line.frame.minX, y: line.frame.minY + dirtyRect.minY)
                 
                
                 
