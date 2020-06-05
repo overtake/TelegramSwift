@@ -517,7 +517,7 @@ class ChatListRowItem: TableRowItem {
                         contentImageMedia = image
                         break
                     } else if let file = media as? TelegramMediaFile {
-                        if file.isVideo && !file.isInstantVideo {
+                        if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
                             textLeftCutout += 22.0
                             contentImageMedia = file
                             break
@@ -528,7 +528,7 @@ class ChatListRowItem: TableRowItem {
                             contentImageMedia = image
                             break
                         } else if let file = content.file {
-                            if file.isVideo && !file.isInstantVideo {
+                            if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
                                 textLeftCutout += 22.0
                                 contentImageMedia = file
                                 break
@@ -643,10 +643,10 @@ class ChatListRowItem: TableRowItem {
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
+            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
+        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);
