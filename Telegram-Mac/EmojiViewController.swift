@@ -151,11 +151,17 @@ class EmojiControllerView : View {
     fileprivate let tabs:HorizontalTableView = HorizontalTableView(frame:NSZeroRect)
     private let borderView:View = View()
     private let emptyResults: ImageView = ImageView()
-    
+    let searchView = SearchView(frame: .zero)
+    private let searchContainer = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
+        
+        searchContainer.addSubview(searchView)
+        addSubview(searchContainer)
+        
         addSubview(emptyResults)
+        
         tabsContainer.addSubview(tabs)
         tabsContainer.addSubview(borderView)
         addSubview(tabsContainer)
@@ -169,6 +175,23 @@ class EmojiControllerView : View {
         self.borderView.backgroundColor = theme.colors.border
         emptyResults.image = theme.icons.stickersEmptySearch
         emptyResults.sizeToFit()
+        searchView.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    private var searchState: SearchState? = nil
+    
+    func updateSearchState(_ searchState: SearchState, animated: Bool) {
+        self.searchState = searchState
+        switch searchState.state {
+        case .Focus:
+            tabsContainer.change(pos: NSMakePoint(0, -tabsContainer.frame.height), animated: animated)
+            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
+        case .None:
+            tabsContainer.change(pos: NSMakePoint(0, 0), animated: animated)
+            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
+        }
+        tableView.change(size: NSMakeSize(frame.width, frame.height - searchContainer.frame.maxY), animated: animated)
+        tableView.change(pos: NSMakePoint(0, searchContainer.frame.maxY), animated: animated)
     }
     
     
@@ -182,12 +205,19 @@ class EmojiControllerView : View {
     
     override func layout() {
         super.layout()
-        tabsContainer.frame = NSMakeRect(0, 0, frame.width, 50)
         
-        tabs.setFrameSize(NSMakeSize(frame.width - 8, 40))        
+        let initial: CGFloat = searchState?.state == .Focus ? -50 : 0
+        
+        tabsContainer.frame = NSMakeRect(0, initial, frame.width, 50)
+        tabs.setFrameSize(NSMakeSize(frame.width - 8, 40))
         tabs.center()
+        
+        searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 50)
+        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
+        searchView.center()
+        
         borderView.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, frame.width, .borderSize)
-        tableView.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width , frame.height - tabs.frame.maxY)
+        tableView.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width , frame.height - searchContainer.frame.maxY)
         emptyResults.center()
     }
     
@@ -212,6 +242,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
 
     private var interactions:EntertainmentInteractions?
     var makeSearchCommand:((ESearchCommand)->Void)?
+    var updateSearchState: ((SearchState)->Void)?
 
     init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
         super.init(context)
@@ -223,6 +254,9 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             self?.searchState = state
             if !state.request.isEmpty {
                 self?.makeSearchCommand?(.loading)
+            }
+            if self?.isLoaded() == true {
+                self?.genericView.updateSearchState(state, animated: true)
             }
         }))
     }
@@ -277,6 +311,13 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         super.viewDidLoad()
         
 
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
+            self?.updateSearchState?(state)
+        }, { [weak self] state in
+            self?.updateSearchState?(state)
+        })
+        
+        genericView.searchView.searchInteractions = searchInteractions
         
         
         // DO NOT WRITE CODE OUTSIZE READY BLOCK

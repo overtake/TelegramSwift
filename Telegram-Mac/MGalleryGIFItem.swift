@@ -76,6 +76,15 @@ class MGalleryGIFItem: MGalleryItem {
     
     override var sizeValue: NSSize {
         if let size = media.dimensions?.size {
+            
+            var size = size
+            
+            let addition = max(400 - size.width, 400 - size.height)
+            if addition > 0 {
+                size.width += addition
+                size.height += addition
+            }
+            
             return size.fitted(pagerSize)
         }
         return pagerSize
