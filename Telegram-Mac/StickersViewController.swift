@@ -418,7 +418,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                             }
                         }
                         if !files.isEmpty {
-                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: Array(files.prefix(5)), packInfo: .pack(info, installed: set.3, featured: true), collectionId: .pack(info.id)))
+                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: Array(files), packInfo: .pack(info, installed: set.3, featured: true), collectionId: .pack(info.id)))
                         }
                     }
                 } else {
@@ -514,16 +514,24 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
 
 class NStickersView : View {
     fileprivate let tableView:TableView = TableView(frame: NSZeroRect)
-    fileprivate let packsView:HorizontalTableView = HorizontalTableView(frame: NSZeroRect)
-    private let separator:View = View()
-    fileprivate let tabsContainer: View = View()
     fileprivate var restrictedView:RestrictionWrappedView?
     private let emptySearchView = ImageView()
     private let emptySearchContainer: View = View()
+    
+    let searchView = SearchView(frame: .zero)
+    private let searchContainer = View()
+    fileprivate let packsView:HorizontalTableView = HorizontalTableView(frame: NSZeroRect)
+    private let separator:View = View()
+    fileprivate let tabsContainer: View = View()
+
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         addSubview(tableView)
+        
+        searchContainer.addSubview(searchView)
+        addSubview(searchContainer)
         
         emptySearchContainer.addSubview(emptySearchView)
         tabsContainer.addSubview(packsView)
@@ -567,6 +575,23 @@ class NStickersView : View {
         needsLayout = true
     }
     
+    private var searchState: SearchState? = nil
+    
+    func updateSearchState(_ searchState: SearchState, animated: Bool) {
+        self.searchState = searchState
+        switch searchState.state {
+        case .Focus:
+            tabsContainer.change(pos: NSMakePoint(0, -tabsContainer.frame.height), animated: animated)
+            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
+        case .None:
+            tabsContainer.change(pos: NSMakePoint(0, 0), animated: animated)
+            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
+        }
+        tableView.change(size: NSMakeSize(frame.width, frame.height - searchContainer.frame.maxY), animated: animated)
+        tableView.change(pos: NSMakePoint(0, searchContainer.frame.maxY), animated: animated)
+
+    }
+    
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.restrictedView?.updateLocalizationAndTheme(theme: theme)
@@ -578,6 +603,7 @@ class NStickersView : View {
         self.emptySearchView.image = theme.icons.stickersEmptySearch
         self.emptySearchView.sizeToFit()
         self.emptySearchContainer.backgroundColor = theme.colors.background
+        self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -587,14 +613,22 @@ class NStickersView : View {
     override func layout() {
         super.layout()
 
-        tabsContainer.frame = NSMakeRect(0, 0, frame.width, 50)
+        let initial: CGFloat = searchState?.state == .Focus ? -50 : 0
+        
+        tabsContainer.frame = NSMakeRect(0, initial, frame.width, 50)
         separator.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, tabsContainer.frame.width, .borderSize)
         packsView.frame = tabsContainer.focus(NSMakeSize(frame.width, 40))
         
-        tableView.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, frame.height - tabsContainer.frame.height)
+        
+        searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 50)
+        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
+        searchView.center()
+        
+        
+        tableView.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.maxY)
         restrictedView?.setFrameSize(frame.size)
         
-        emptySearchContainer.frame = self.bounds
+        emptySearchContainer.frame = tableView.frame
         emptySearchView.center()
     }
     
@@ -622,6 +656,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     var makeSearchCommand:((ESearchCommand)->Void)?
+    var updateSearchState: ((SearchState)->Void)?
     init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
         super.init(context)
         bar = .init(height: 0)
@@ -631,6 +666,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             self?.searchState = state
             if !state.request.isEmpty {
                 self?.makeSearchCommand?(.loading)
+            }
+            if self?.isLoaded() == true {
+                self?.genericView.updateSearchState(state, animated: true)
             }
         }))
     }
@@ -718,6 +756,13 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         let initialSize = self.atomicSize
         
        
+        let searchInteractions = SearchInteractions({ [weak self] state, _ in
+            self?.updateSearchState?(state)
+        }, { [weak self] state in
+            self?.updateSearchState?(state)
+        })
+        
+        genericView.searchView.searchInteractions = searchInteractions
         
         listener = TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             guard let `self` = self, position.visibleRows.length > 0 else {
