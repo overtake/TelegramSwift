@@ -1281,7 +1281,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             if let displayLayout = item.ctxDisplayLayout, let previewView = previewView {
-                previewView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1))
+                var offset: CGFloat = 0
+                if let chatName = item.ctxChatNameLayout {
+                    offset += chatName.0.size.height + 1
+                }
+                previewView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + offset))
             }
         }
     }
