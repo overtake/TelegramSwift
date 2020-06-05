@@ -840,6 +840,7 @@
 		D07450F12340DC8200769D7F /* WalletConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07450F02340DC8200769D7F /* WalletConfiguration.swift */; };
 		D07450F32340E89100769D7F /* sad_man.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07450F22340E89000769D7F /* sad_man.tgs */; };
 		D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07450F42340F28D00769D7F /* wallet_success_created.tgs */; };
+		D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */; };
 		D076F86D22959958004F895A /* InlineLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86C22959958004F895A /* InlineLoginController.swift */; };
 		D076F8702295B24D004F895A /* InlineAuthOptionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */; };
 		D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F8862296CAB2004F895A /* ChannelDisscussionGroup.swift */; };
@@ -1986,6 +1987,7 @@
 		D07450F02340DC8200769D7F /* WalletConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletConfiguration.swift; sourceTree = "<group>"; };
 		D07450F22340E89000769D7F /* sad_man.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = sad_man.tgs; sourceTree = "<group>"; };
 		D07450F42340F28D00769D7F /* wallet_success_created.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = wallet_success_created.tgs; sourceTree = "<group>"; };
+		D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifPanelTabRowItem.swift; sourceTree = "<group>"; };
 		D076F86C22959958004F895A /* InlineLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineLoginController.swift; sourceTree = "<group>"; };
 		D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAuthOptionRowItem.swift; sourceTree = "<group>"; };
 		D076F8862296CAB2004F895A /* ChannelDisscussionGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDisscussionGroup.swift; sourceTree = "<group>"; };
@@ -3840,6 +3842,7 @@
 			children = (
 				C2271F3B1DB4D0630045E719 /* GIFViewController.swift */,
 				C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */,
+				D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */,
 			);
 			name = gifs;
 			sourceTree = "<group>";
@@ -5615,6 +5618,7 @@
 				9F17E5B9212F173900C25A65 /* AutoNightViewController.swift in Sources */,
 				C2167E531DC220F600F98E03 /* PeerMediaFileRowContent.swift in Sources */,
 				C22674451DC20664000BA9ED /* PeerMediaListController.swift in Sources */,
+				D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */,
 				9FB7CB6D221EB22700888EA9 /* CallSettingsModalController.swift in Sources */,
 				9FFAE4F8205A8C89000C028E /* FFMpegMediaFrameSource.swift in Sources */,
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
