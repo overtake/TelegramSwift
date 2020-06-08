@@ -1407,7 +1407,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     init(_ share:ShareObject) {
         self.share = share
-        emoji = EmojiViewController(share.context, search: .single(SearchState(state: .None, request: nil)))
+        emoji = EmojiViewController(share.context)
         super.init(frame: NSMakeRect(0, 0, 360, 400))
         bar = .init(height: 0)
     }

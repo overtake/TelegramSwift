@@ -1298,7 +1298,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EmojiViewController(context, search: .single(SearchState(state: .None, request: nil)))
+        self.emoji = EmojiViewController(context)
         
        
 

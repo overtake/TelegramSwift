@@ -130,7 +130,10 @@ func delay(_ delay:Double, closure:@escaping ()->()) {
     let when = DispatchTime.now() + delay
     DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
 }
-
+func delay(_ delay:Double, onQueue queue: DispatchQueue, closure:@escaping ()->()) {
+    let when = DispatchTime.now() + delay
+    queue.asyncAfter(deadline: when, execute: closure)
+}
 
 func fs(_ path:String) -> Int32? {
     

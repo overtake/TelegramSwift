@@ -25,7 +25,7 @@ private final class GifTabsArguments {
 
 enum GifTabEntryId : Hashable {
     case recent
-    case tranding
+    case trending
     case recommended(String)
 }
 
@@ -33,7 +33,7 @@ private enum GifTabEntry : TableItemListNodeEntry {
     typealias ItemGenerationArguments = GifTabsArguments
     
     case recent(selected: Bool)
-    case tranding(selected: Bool)
+    case trending(selected: Bool)
     case recommended(selected: Bool, index: Int, value: String)
     
     
@@ -41,7 +41,7 @@ private enum GifTabEntry : TableItemListNodeEntry {
         switch self {
         case .recent:
             return -2
-        case .tranding:
+        case .trending:
             return -1
         case let .recommended(_, index, _):
             return index
@@ -52,8 +52,8 @@ private enum GifTabEntry : TableItemListNodeEntry {
         switch self {
         case .recent:
             return .recent
-        case .tranding:
-            return .tranding
+        case .trending:
+            return .trending
         case let .recommended(_, _, value):
             return .recommended(value)
         }
@@ -67,7 +67,7 @@ private enum GifTabEntry : TableItemListNodeEntry {
         switch self {
         case let .recent(selected):
             return selected
-        case let .tranding(selected):
+        case let .trending(selected):
             return selected
         case let .recommended(selected, _, _):
             return selected
@@ -185,7 +185,7 @@ private func tabsEntries(_ emojis: [String], selected: GifTabEntryId) -> [GifTab
     var entries:[GifTabEntry] = []
     
     entries.append(.recent(selected: selected == .recent))
-    entries.append(.tranding(selected: selected == .tranding))
+    entries.append(.trending(selected: selected == .trending))
 
     for (i, emoji) in emojis.enumerated() {
         entries.append(.recommended(selected: selected == .recommended(emoji), index: i, value: emoji))
@@ -335,9 +335,10 @@ final class TableContainer : View {
 
         if let tableView = tableView {
             tableView.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.maxY)
+            emptyResults.sizeToFit()
+            emptyResults.center()
         }
         progressView.center()
-        emptyResults.frame = bounds
     }
     
     required init?(coder: NSCoder) {
@@ -350,7 +351,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     
     private var tabsState: ValuePromise<GifTabEntryId> = ValuePromise(.recent, ignoreRepeated: true)
     
-    private let searchValue = ValuePromise<SearchState>()
+    private let searchValue = ValuePromise<SearchState>(.init(state: .None, request: nil))
     private var searchState: SearchState = .init(state: .None, request: nil) {
         didSet {
             let value = searchState
@@ -367,22 +368,22 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     private weak var chatInteraction: ChatInteraction?
     private let disposable = MetaDisposable()
     private let searchStateDisposable = MetaDisposable()
+    private let preloadDisposable = MetaDisposable()
     var makeSearchCommand:((ESearchCommand)->Void)?
-    var updateSearchState: ((SearchState)->Void)?
 
-    init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
+    override init(_ context: AccountContext) {
         super.init(context)
         bar = .init(height: 0)
-        
-        self.searchStateDisposable.set(search.start(next: { [weak self] state in
-            self?.searchState = state
-            if !state.request.isEmpty {
-                self?.makeSearchCommand?(.loading)
-            }
-            if self?.isLoaded() == true {
-                self?.genericView.updateSearchState(state, animated: true)
-            }
-        }))
+    }
+    
+    private func updateSearchState(_ state: SearchState) {
+        self.searchState = state
+        if !state.request.isEmpty {
+            self.makeSearchCommand?(.loading)
+        }
+        if self.isLoaded() == true {
+            self.genericView.updateSearchState(state, animated: true)
+        }
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
@@ -447,11 +448,17 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         genericView.reinstall()
         genericView.updateRestricion(chatInteraction?.presentation.peer)
         
+        var signals = value.emojis.map {
+            searchGifs(account: self.context.account, query: $0)
+        }
+        signals.insert(searchGifs(account: self.context.account, query: ""), at: 0)
+        
+        preloadDisposable.set(combineLatest(signals).start())
         
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         }, { [weak self] state in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         })
         genericView.searchView.searchInteractions = searchInteractions
         
@@ -493,6 +500,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         struct SearchGifsState {
             var request: String
+            var state: SearchFieldState
             var values:[ChatContextResult]
             var nextOffset: String
             var tab: GifTabEntryId
@@ -500,16 +508,19 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         let loadNext: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: false)
         
-        let searchState:Atomic<SearchGifsState> = Atomic(value: SearchGifsState(request: "", values: [], nextOffset: "", tab: .recent))
+        let searchState:Atomic<SearchGifsState> = Atomic(value: SearchGifsState(request: "", state: .None, values: [], nextOffset: "", tab: .recent))
         
         let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), tabsState.get(), loadNext.get()) |> mapToSignal { view, search, selectedTab, _ -> Signal<(TableUpdateTransition, GifTabEntryId), NoError> in
             
             _ = searchState.modify { current -> SearchGifsState in
                 var current = current
-                if current.request != search.request || current.tab != selectedTab {
+                if current.request != search.request || current.state != search.state || current.tab != selectedTab {
                     current.values = []
                     current.nextOffset = ""
                 }
+                current.request = search.request
+                current.state = search.state
+                current.tab = selectedTab
                 return current
             }
             
@@ -520,36 +531,30 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
                     _ = searchState.modify { current -> SearchGifsState in
                         var current = current
                         current.values += (result?.results ?? [])
-                        current.request = search.request
                         current.nextOffset = result?.nextOffset ?? ""
-                        current.tab = selectedTab
                         return current
                     }
                     let entries = gifEntries(for: result, results: searchState.with { $0.values }, initialSize: initialSize.with { $0 })
                     return (prepareEntries(left: previous.swap(entries), right: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments), selectedTab)
                 }
             default:
-                _ = searchState.swap(SearchGifsState(request: "", values: [], nextOffset: "", tab: selectedTab))
                 var request: String? = nil
                 
                 switch selectedTab {
                 case .recent:
                     break
-                case .tranding:
+                case .trending:
                     request = ""
                 case let .recommended(value):
                     request = value
                 }
-                
                 if let request = request {
                     let searchSignal = searchGifs(account: context.account, query: request, nextOffset: searchState.with { $0.nextOffset })
                     return searchSignal |> map { result in
                         _ = searchState.modify { current -> SearchGifsState in
                             var current = current
                             current.values += (result?.results ?? [])
-                            current.request = search.request
                             current.nextOffset = result?.nextOffset ?? ""
-                            current.tab = selectedTab
                             return current
                         }
                         let entries = gifEntries(for: result, results: searchState.with { $0.values }, initialSize: initialSize.with { $0 })
@@ -602,6 +607,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         disposable.dispose()
         searchStateDisposable.dispose()
         chatInteraction?.remove(observer: self)
+        preloadDisposable.dispose()
     }
     
 }

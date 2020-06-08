@@ -210,7 +210,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
         
         self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
-            
+
             if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                 return data
             }
@@ -219,7 +219,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             if let data = data, let file = file, let `self` = self {
                 let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
                 let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
-                                
+
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 24 : 30 : 60
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
@@ -250,13 +250,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             
-            if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
-                if !parameters.hidePlayer {
-                    self.playerView.isHidden = false
-                    self.thumbView.isHidden = true
-                    return
-                }
-            }
+            
             switch state {
             case .playing:
                 self.playerView.isHidden = false
@@ -264,6 +258,12 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             case .stoped:
                 self.playerView.isHidden = true
                 self.thumbView.isHidden = false
+                if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
+                    if !parameters.hidePlayer {
+                        self.playerView.isHidden = false
+                        self.thumbView.isHidden = true
+                    }
+                }
             default:
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = false

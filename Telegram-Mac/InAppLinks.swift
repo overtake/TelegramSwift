@@ -78,6 +78,7 @@ enum ChatInitialAction : Equatable {
     case forward(messageIds: [MessageId], text: String?, behavior: ChatInitialActionBehavior)
     case ad(PromoChatListItem.Kind)
     case source(MessageId)
+    case closeAfter(Int32)
 }
 
 
@@ -415,6 +416,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         interaction(peerId, true, nil, nil)
                     }
                 }), for: context.window)
+            case let .peek(peerId, peek):
+                 interaction(peerId, true, nil, .closeAfter(peek))
             case .invalidHash:
                 alert(for: context.window, info: tr(L10n.groupUnavailable))
             }

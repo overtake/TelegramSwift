@@ -1723,7 +1723,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
-                view.change(size: NSMakeSize(frame.width, item.heightValue), animated: animated)
+                
+                let height:CGFloat = item.heightValue
+                let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
+
+                
+                view.change(size: NSMakeSize(width, height), animated: animated)
                 view.set(item: item, animated: animated)
             } else {
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
