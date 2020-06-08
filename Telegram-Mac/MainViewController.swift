@@ -31,6 +31,7 @@ final class UpdateTabView : Control {
             textView.isHidden = isInstalling || layoutState == .minimisize
             progressView.isHidden = !isInstalling
             imageView.isHidden = isInstalling || layoutState != .minimisize
+            
         }
     }
     

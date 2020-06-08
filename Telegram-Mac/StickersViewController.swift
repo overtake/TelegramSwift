@@ -642,7 +642,7 @@ class NStickersView : View {
 
 class NStickersViewController: TelegramGenericViewController<NStickersView>, TableViewDelegate, Notifable {
 
-    private let searchValue = ValuePromise<SearchState>()
+    private let searchValue = ValuePromise<SearchState>(.init(state: .None, request: nil))
     private var searchState: SearchState = .init(state: .None, request: nil) {
         didSet {
             self.searchValue.set(searchState)
@@ -657,20 +657,20 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     private weak var chatInteraction: ChatInteraction?
     var makeSearchCommand:((ESearchCommand)->Void)?
     var updateSearchState: ((SearchState)->Void)?
-    init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
+    override init(_ context: AccountContext) {
         super.init(context)
         bar = .init(height: 0)
-        
-        self.searchStateDisposable.set(search.start(next: { [weak self] state in
-            self?.position.set(.initial)
-            self?.searchState = state
-            if !state.request.isEmpty {
-                self?.makeSearchCommand?(.loading)
-            }
-            if self?.isLoaded() == true {
-                self?.genericView.updateSearchState(state, animated: true)
-            }
-        }))
+    }
+    
+    private func updateSearchState(_ state: SearchState) {
+        self.position.set(.initial)
+        self.searchState = state
+        if !state.request.isEmpty {
+            self.makeSearchCommand?(.loading)
+        }
+        if self.isLoaded() == true {
+            self.genericView.updateSearchState(state, animated: true)
+        }
     }
     
     deinit {
