@@ -448,12 +448,6 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         genericView.reinstall()
         genericView.updateRestricion(chatInteraction?.presentation.peer)
         
-        var signals = value.emojis.map {
-            searchGifs(account: self.context.account, query: $0)
-        }
-        signals.insert(searchGifs(account: self.context.account, query: ""), at: 0)
-        
-        preloadDisposable.set(combineLatest(signals).start())
         
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
             self?.updateSearchState(state)

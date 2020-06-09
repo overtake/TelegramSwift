@@ -630,6 +630,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
+    
+    public var view: NSTableView {
+        return tableView
+    }
+    
     weak public var delegate:TableViewDelegate?
     private var trackingArea:NSTrackingArea?
     private var listhash:[AnyHashable:TableRowItem] = [AnyHashable:TableRowItem]();

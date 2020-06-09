@@ -327,7 +327,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, rewind: { [weak self] timestamp in
             guard let `self` = self else { return }
             self.mediaPlayer.seek(timestamp: timestamp)
-            
         }, scrobbling: { [weak self] timecode in
             guard let `self` = self else { return }
 

@@ -297,6 +297,8 @@ final class AccountContext {
     
     public var closeFolderFirst: Bool = false
     
+    private let preloadGifsDisposable = MetaDisposable()
+    
     //, tonContext: StoredTonContext?
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext
@@ -318,10 +320,21 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration ?? LimitsConfiguration.defaultValue)
         }))
-        
+        let preloadGifsDisposable = self.preloadGifsDisposable
         let appConfiguration = _appConfiguration
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
-            _ = appConfiguration.swap(view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue)
+            let configuration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+            _ = appConfiguration.swap(configuration)
+            
+            #if !SHARE
+            let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
+            var signals = value.emojis.map {
+                searchGifs(account: account, query: $0)
+            }
+            signals.insert(searchGifs(account: account, query: ""), at: 0)
+            preloadGifsDisposable.set(combineLatest(signals).start())
+            #endif
+            
         }))
         
         let autoplayMedia = _autoplayMedia
@@ -426,7 +439,7 @@ final class AccountContext {
         actualizeCloudTheme.dispose()
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
-        
+        preloadGifsDisposable.dispose()
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
         self.diceCache.cleanup()
