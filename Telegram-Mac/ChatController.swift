@@ -2778,8 +2778,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
             }
             
-            let timeout = TimeInterval(peek) - Date().timeIntervalSince1970
-            
+            var timeout = TimeInterval(peek) - Date().timeIntervalSince1970
+            timeout = 5
             if timeout > 0 {
                 let signal = Signal<NoValue, NoError>.complete() |> delay(timeout, queue: .mainQueue())
                 self?.peekDisposable.set(signal.start(completed: showConfirm))

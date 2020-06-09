@@ -668,7 +668,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             view.addSubview(captionScrollView)
             captionScrollView.change(opacity: 1.0)
             captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(90, captionView.frame.height))
-            captionScrollView.centerX(y: 90)
+            captionScrollView.centerX(y: 100)
             captionScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             captionScrollView.layer?.cornerRadius = .cornerRadius
             
