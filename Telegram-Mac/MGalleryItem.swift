@@ -337,9 +337,15 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let entry:GalleryEntry
     let context: AccountContext
     private var _pagerSize: NSSize
+    private var captionSeized: Bool = false
     var pagerSize:NSSize {
         var pagerSize = _pagerSize
-        pagerSize.height -= (caption != nil ? 140 : 0)
+        if let caption = caption, !captionSeized  {
+            caption.measure(width: pagerSize.width - 300)
+            captionSeized = true
+        } else if let caption = caption {
+            pagerSize.height -= min(140, caption.layoutSize.height + 20)
+        }
         return pagerSize
     }
     let caption: TextViewLayout?

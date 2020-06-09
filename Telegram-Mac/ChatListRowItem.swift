@@ -91,7 +91,11 @@ enum ChatListRowState : Equatable {
 
 class ChatListRowItem: TableRowItem {
 
-    public private(set) var message:Message?
+    public private(set) var messages:[Message]
+    
+    var message: Message? {
+        return messages.first
+    }
     
     let context: AccountContext
     let peer:Peer?
@@ -137,25 +141,20 @@ class ChatListRowItem: TableRowItem {
     private var date:NSAttributedString?
 
     private var displayLayout:(TextNodeLayout, TextNode)?
-    private var chatNameLayout:(TextNodeLayout, TextNode)?
-
     private var messageLayout:(TextNodeLayout, TextNode)?
     private var displaySelectedLayout:(TextNodeLayout, TextNode)?
     private var messageSelectedLayout:(TextNodeLayout, TextNode)?
     private var dateLayout:(TextNodeLayout, TextNode)?
     private var dateSelectedLayout:(TextNodeLayout, TextNode)?
-    private var chatNameSelectedLayout:(TextNodeLayout, TextNode)?
-
+    
     private var displayNode:TextNode = TextNode()
     private var messageNode:TextNode = TextNode()
     private var displaySelectedNode:TextNode = TextNode()
     private var messageSelectedNode:TextNode = TextNode()
-    private var chatNameSelectedNode:TextNode = TextNode()
-    private var chatNameNode:TextNode = TextNode()
-
+    
     private var messageText:NSAttributedString?
     private let titleText:NSAttributedString?
-    private var chatTitleAttributed: NSAttributedString?
+    
     
     private(set) var peerNotificationSettings:PeerNotificationSettings?
     private(set) var readState:CombinedPeerReadState?
@@ -309,15 +308,10 @@ class ChatListRowItem: TableRowItem {
     
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
-    private var textLeftCutout: CGFloat = 0.0
-    private(set) var contentImageMedia: Media?
-    
-
-    
-    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], messages: [Message], unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
         self.groupId = groupId
         self.peer = nil
-        self.message = message
+        self.messages = messages
         self.chatListIndex = nil
         self.activities = activities
         self.context = context
@@ -336,6 +330,9 @@ class ChatListRowItem: TableRowItem {
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
+        
+        
+        let message = messages.first
         
         self.titleText = titleText
         if peers.count == 1 {
@@ -360,8 +357,6 @@ class ChatListRowItem: TableRowItem {
         }
         hasDraft = false
         
-    
-
         
         if let message = message {
             let date:NSMutableAttributedString = NSMutableAttributedString()
@@ -408,7 +403,7 @@ class ChatListRowItem: TableRowItem {
     private let highlightText: String?
     private let embeddedState:PeerChatListEmbeddedInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -438,11 +433,12 @@ class ChatListRowItem: TableRowItem {
         }
         
       
+        let message = messages.first
         
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
-        self.message = message
+        self.messages = messages
         self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil
@@ -497,46 +493,6 @@ class ChatListRowItem: TableRowItem {
             
             dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
-            
-            
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
-                let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
-                
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                
-                self.chatTitleAttributed = attr
-            }
-            
-            
-            if !message.containsSecretMedia {
-                for media in message.media {
-                    if let image = media as? TelegramMediaImage {
-                        textLeftCutout += 22.0
-                        contentImageMedia = image
-                        break
-                    } else if let file = media as? TelegramMediaFile {
-                        if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
-                            textLeftCutout += 22.0
-                            contentImageMedia = file
-                            break
-                        }
-                    } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
-                        if let image = content.image {
-                            textLeftCutout += 22.0
-                            contentImageMedia = image
-                            break
-                        } else if let file = content.file {
-                            if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
-                                textLeftCutout += 22.0
-                                contentImageMedia = file
-                                break
-                            }
-                        }
-                    }
-                }
-            }
         }
         
         
@@ -614,16 +570,6 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    var contentDimensions: NSSize? {
-        var dimensions: CGSize?
-        if let contentImageMedia = contentImageMedia as? TelegramMediaImage {
-            dimensions = largestRepresentationForPhoto(contentImageMedia)?.dimensions.size
-        } else if let contentImageMedia = contentImageMedia as? TelegramMediaFile {
-            dimensions = contentImageMedia.dimensions?.size
-        }
-        return dimensions
-    }
-    
     var isAd: Bool {
         switch pinnedType {
         case .ad:
@@ -643,10 +589,10 @@ class ChatListRowItem: TableRowItem {
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
+            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
+        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);
@@ -690,30 +636,14 @@ class ChatListRowItem: TableRowItem {
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
             displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
-        
+        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
+            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, false, .left, 1)
+        }
         if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
             displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
-        
-        if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, false, .left)
-        }
-        
-        if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, true, .left)
-        }
-        
-        var textCutout: TextNodeCutout?
-        if !textLeftCutout.isZero {
-            textCutout = TextNodeCutout(position: .TopLeft, size: CGSize(width: textLeftCutout, height: 14))
-        }
-
-        
-        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, false, .left, 1)
-        }
         if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, true, .left, 1)
+            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, 2, .end, NSMakeSize(messageWidth, size.height), nil, true, .left, 1)
         }
         return result
     }
@@ -1064,14 +994,6 @@ class ChatListRowItem: TableRowItem {
         }
         return displayLayout
     }
-    
-    var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.sharedContext.layout != .single {
-            return chatNameLayout
-        }
-        return chatNameSelectedLayout
-    }
-    
     var ctxMessageLayout:(TextNodeLayout, TextNode)? {
         if isSelected && context.sharedContext.layout != .single {
             if let typingSelectedLayout = typingSelectedLayout {
