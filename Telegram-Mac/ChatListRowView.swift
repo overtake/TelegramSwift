@@ -573,7 +573,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             var validMediaIds: [MediaId] = []
             for (message, media, mediaSize) in item.contentImageSpecs {
-                guard let mediaId = media.id else {
+                guard let mediaId = media.id, item.context.sharedContext.layout != .minimisize else {
                     continue
                 }
                 validMediaIds.append(mediaId)
