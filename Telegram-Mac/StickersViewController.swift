@@ -656,7 +656,6 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
     var makeSearchCommand:((ESearchCommand)->Void)?
-    var updateSearchState: ((SearchState)->Void)?
     override init(_ context: AccountContext) {
         super.init(context)
         bar = .init(height: 0)
@@ -757,9 +756,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
        
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         }, { [weak self] state in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         })
         
         genericView.searchView.searchInteractions = searchInteractions
