@@ -34,7 +34,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     case .emoji:
                         messageText = ("🖼 " + message.text.fixed).nsstring
                     case .text:
-                        messageText = ("\(messageText), " + message.text.fixed).nsstring
+                        messageText = message.text.fixed.nsstring
                     case .none:
                         break
                     }
@@ -68,7 +68,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                             case .emoji:
                                 messageText = ("📹 " + message.text.fixed).nsstring
                             case .text:
-                                messageText = ("\(messageText), " + message.text.fixed).nsstring
+                                messageText = message.text.fixed.nsstring
                             case .none:
                                 break
                             }
@@ -84,7 +84,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     case .emoji:
                         messageText = ("📎 " + message.text.fixed).nsstring
                     case .text:
-                        messageText = ("\(messageText), " + message.text.fixed).nsstring
+                        messageText = message.text.fixed.nsstring
                     case .none:
                         break
                     }
@@ -107,7 +107,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     case .emoji:
                         messageText = ("🖼 " + message.text.fixed).nsstring
                     case .text:
-                        messageText = ("\(L10n.chatListPhoto), " + message.text.fixed).nsstring
+                        messageText = message.text.fixed.nsstring
                     case .none:
                         break
                     }
@@ -117,7 +117,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                         case .emoji:
                             messageText = ("🖼 " + message.text.fixed).nsstring
                         case .text:
-                            messageText = ("\(L10n.chatListVideo), " + message.text.fixed).nsstring
+                            messageText = message.text.fixed.nsstring
                         case .none:
                             break
                         }
@@ -126,7 +126,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                         case .emoji:
                             messageText = ("📹 " + message.text.fixed).nsstring
                         case .text:
-                            messageText = ("\(L10n.chatListPhoto), " + message.text.fixed).nsstring
+                            messageText = message.text.fixed.nsstring
                         case .none:
                             break
                         }
