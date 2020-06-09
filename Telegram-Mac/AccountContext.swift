@@ -326,16 +326,36 @@ final class AccountContext {
             let configuration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
             _ = appConfiguration.swap(configuration)
             
-            #if !SHARE
-            let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-            var signals = value.emojis.map {
-                searchGifs(account: account, query: $0)
-            }
-            signals.insert(searchGifs(account: account, query: ""), at: 0)
-            preloadGifsDisposable.set(combineLatest(signals).start())
-            #endif
             
         }))
+        
+        #if !SHARE
+        let signal:Signal<Void, NoError> = Signal { subscriber in
+            
+            let signal: Signal<Never, NoError> = account.postbox.transaction {
+                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
+            } |> mapToSignal { configuration in
+                let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
+                var signals = value.emojis.map {
+                    searchGifs(account: account, query: $0)
+                }
+                signals.insert(searchGifs(account: account, query: ""), at: 0)
+                return combineLatest(signals) |> ignoreValues
+            }
+            
+            let disposable = signal.start(completed: {
+                subscriber.putCompletion()
+            })
+            
+            return ActionDisposable {
+                disposable.dispose()
+            }
+        }
+        
+        let updated = (signal |> then(.complete() |> suspendAwareDelay(60.0 * 60.0, queue: Queue.concurrentDefaultQueue()))) |> restart
+        preloadGifsDisposable.set(updated.start())
+        
+        #endif
         
         let autoplayMedia = _autoplayMedia
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
