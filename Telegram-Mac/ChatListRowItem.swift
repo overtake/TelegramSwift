@@ -91,7 +91,11 @@ enum ChatListRowState : Equatable {
 
 class ChatListRowItem: TableRowItem {
 
-    public private(set) var message:Message?
+    public private(set) var messages:[Message]
+    
+    var message: Message? {
+        return messages.first
+    }
     
     let context: AccountContext
     let peer:Peer?
@@ -317,7 +321,7 @@ class ChatListRowItem: TableRowItem {
     init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], message: Message?, unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
         self.groupId = groupId
         self.peer = nil
-        self.message = message
+        self.messages = messages
         self.chatListIndex = nil
         self.activities = activities
         self.context = context
@@ -336,6 +340,9 @@ class ChatListRowItem: TableRowItem {
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
+        
+        
+        let message = messages.first
         
         self.titleText = titleText
         if peers.count == 1 {
@@ -408,7 +415,7 @@ class ChatListRowItem: TableRowItem {
     private let highlightText: String?
     private let embeddedState:PeerChatListEmbeddedInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  message: Message?, index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -438,11 +445,12 @@ class ChatListRowItem: TableRowItem {
         }
         
       
+        let message = messages.first
         
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
-        self.message = message
+        self.messages = messages
         self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil

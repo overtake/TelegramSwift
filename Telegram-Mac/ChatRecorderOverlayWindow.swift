@@ -239,8 +239,8 @@ class ChatRecorderOverlayWindowController : NSObject {
             guard let `self` = self else {return .rejected}
             return self.proccessMouseUp()
         }
-        parent.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)
-        window.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)
+        parent.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseUp, priority: .modal)
+        window.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseUp, priority: .modal)
         
         parent.removeChildWindow(lockWindow)
         

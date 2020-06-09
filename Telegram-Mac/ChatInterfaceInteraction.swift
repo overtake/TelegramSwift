@@ -342,6 +342,8 @@ final class ChatInteraction : InterfaceObserver  {
                 break
             case .source:
                 break
+            case let .closeAfter(timeout):
+                break
             }
            
         }
