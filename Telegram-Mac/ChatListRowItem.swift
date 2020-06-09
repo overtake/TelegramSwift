@@ -94,7 +94,17 @@ class ChatListRowItem: TableRowItem {
     public private(set) var messages:[Message]
     
     var message: Message? {
-        return messages.first
+        var effective: Message?
+        
+        let filtered = messages.filter { !$0.text.isEmpty }
+        if filtered.count == 1 {
+            effective = filtered[0]
+        }
+
+        if effective == nil {
+            effective = messages.first
+        }
+        return effective
     }
     
     let context: AccountContext
@@ -314,8 +324,11 @@ class ChatListRowItem: TableRowItem {
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
     private var textLeftCutout: CGFloat = 0.0
-    private(set) var contentImageMedia: Media?
-    
+    let contentImageSize = CGSize(width: 18.0, height: 18.0)
+    let contentImageSpacing: CGFloat = 2.0
+    let contentImageTrailingSpace: CGFloat = 5.0
+    private(set) var contentImageSpecs: [(message: Message, media: Media, size: CGSize)] = []
+
 
     
     init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], messages: [Message], unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
@@ -342,7 +355,15 @@ class ChatListRowItem: TableRowItem {
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         
-        let message = messages.first
+        var message: Message?
+        
+        let filtered = messages.filter { !$0.text.isEmpty }
+        if filtered.count == 1 {
+            message = filtered[0]
+        }
+        if message == nil {
+            message = messages.first
+        }
         
         self.titleText = titleText
         if peers.count == 1 {
@@ -445,7 +466,15 @@ class ChatListRowItem: TableRowItem {
         }
         
       
-        let message = messages.first
+        var message: Message?
+        
+        let filtered = messages.filter { !$0.text.isEmpty }
+        if filtered.count == 1 {
+            message = filtered[0]
+        }
+        if message == nil {
+            message = messages.first
+        }
         
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
@@ -507,7 +536,7 @@ class ChatListRowItem: TableRowItem {
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
             
             
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel {
+            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
                 let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
                 
                 let attr = NSMutableAttributedString()
@@ -517,35 +546,63 @@ class ChatListRowItem: TableRowItem {
                 self.chatTitleAttributed = attr
             }
             
-            
-            if !message.containsSecretMedia {
-                for media in message.media {
-                    if let image = media as? TelegramMediaImage {
-                        textLeftCutout += 22.0
-                        contentImageMedia = image
-                        break
-                    } else if let file = media as? TelegramMediaFile {
-                        if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
-                            textLeftCutout += 22.0
-                            contentImageMedia = file
-                            break
-                        }
-                    } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
-                        if let image = content.image {
-                            textLeftCutout += 22.0
-                            contentImageMedia = image
-                            break
-                        } else if let file = content.file {
-                            if (file.isVideo && !file.isInstantVideo) || file.isGraphicFile {
-                                textLeftCutout += 22.0
-                                contentImageMedia = file
-                                break
+            let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
+            _ = contentImageFillSize
+            if embeddedState == nil {
+                for message in messages {
+                    inner: for media in message.media {
+                        if !message.containsSecretMedia {
+                            if let image = media as? TelegramMediaImage {
+                                if let _ = largestImageRepresentation(image.representations) {
+                                    //let imageSize = largest.dimensions.cgSize
+                                    //let fitSize = imageSize.aspectFilled(contentImageFillSize)
+                                    let fitSize = contentImageSize
+                                    contentImageSpecs.append((message, image, fitSize))
+                                }
+                                break inner
+                            } else if let file = media as? TelegramMediaFile {
+                                if file.isVideo, !file.isInstantVideo, let _ = file.dimensions {
+                                    //let imageSize = dimensions.cgSize
+                                    //let fitSize = imageSize.aspectFilled(contentImageFillSize)
+                                    let fitSize = contentImageSize
+                                    contentImageSpecs.append((message, file, fitSize))
+                                }
+                                break inner
+                            } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
+                                let imageTypes = ["photo", "video", "embed", "gif", "document", "telegram_album"]
+                                if let image = content.image, let type = content.type, imageTypes.contains(type) {
+                                    if let _ = largestImageRepresentation(image.representations) {
+                                        //let imageSize = largest.dimensions.cgSize
+                                        let fitSize = contentImageSize
+                                        contentImageSpecs.append((message, image, fitSize))
+                                    }
+                                    break inner
+                                } else if let file = content.file {
+                                    if file.isVideo, !file.isInstantVideo, let _ = file.dimensions {
+                                        //let imageSize = dimensions.cgSize
+                                        let fitSize = contentImageSize
+                                        contentImageSpecs.append((message, file, fitSize))
+                                    }
+                                    break inner
+                                }
                             }
                         }
                     }
                 }
             }
+            }
+            
+        
+        for i in 0 ..< contentImageSpecs.count {
+            if i != 0 {
+                textLeftCutout += contentImageSpacing
+            }
+            textLeftCutout += contentImageSpecs[i].size.width
+            if i == contentImageSpecs.count - 1 {
+                textLeftCutout += contentImageTrailingSpace
+            }
         }
+
         
         
         let tagSummaryCount = summaryInfo.tagSummaryCount ?? 0
@@ -622,15 +679,15 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    var contentDimensions: NSSize? {
-        var dimensions: CGSize?
-        if let contentImageMedia = contentImageMedia as? TelegramMediaImage {
-            dimensions = largestRepresentationForPhoto(contentImageMedia)?.dimensions.size
-        } else if let contentImageMedia = contentImageMedia as? TelegramMediaFile {
-            dimensions = contentImageMedia.dimensions?.size
-        }
-        return dimensions
-    }
+//    var contentDimensions: NSSize? {
+//        var dimensions: CGSize?
+//        if let contentImageMedia = contentImageMedia as? TelegramMediaImage {
+//            dimensions = largestRepresentationForPhoto(contentImageMedia)?.dimensions.size
+//        } else if let contentImageMedia = contentImageMedia as? TelegramMediaFile {
+//            dimensions = contentImageMedia.dimensions?.size
+//        }
+//        return dimensions
+//    }
     
     var isAd: Bool {
         switch pinnedType {
@@ -651,10 +708,10 @@ class ChatListRowItem: TableRowItem {
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
+            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? 20 : 0)
+        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);
@@ -680,7 +737,7 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             if text == nil {
-                var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState, maxWidth: messageWidth - 15)
+                var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState)
                 if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
                     if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
                         copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)

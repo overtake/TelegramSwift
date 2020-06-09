@@ -114,6 +114,71 @@ private final class ChatListExpandView: View {
     }
 }
 
+
+private final class ChatListMediaPreviewView: View {
+    private let context: AccountContext
+    private let message: Message
+    private let media: Media
+    
+    private let imageView: TransformImageView
+    
+    private var requestedImage: Bool = false
+    private var disposable: Disposable?
+    
+    init(context: AccountContext, message: Message, media: Media) {
+        self.context = context
+        self.message = message
+        self.media = media
+        
+        self.imageView = TransformImageView()
+        
+        super.init()
+        
+        self.addSubview(self.imageView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    deinit {
+        self.disposable?.dispose()
+    }
+    
+    func updateLayout(size: CGSize) {
+        var dimensions = CGSize(width: 100.0, height: 100.0)
+        if let image = self.media as? TelegramMediaImage {
+            if let largest = largestImageRepresentation(image.representations) {
+                dimensions = largest.dimensions.size
+                if !self.requestedImage {
+                    self.requestedImage = true
+                    let signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
+                    self.imageView.setSignal(signal)
+                }
+            }
+        } else if let file = self.media as? TelegramMediaFile {
+            if let mediaDimensions = file.dimensions {
+                dimensions = mediaDimensions.size
+                if !self.requestedImage {
+                    self.requestedImage = true
+                    let signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
+                    self.imageView.setSignal(signal)
+                }
+            }
+        }
+        
+        self.imageView.frame = CGRect(origin: CGPoint(), size: size)
+        
+        self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+        
+    }
+}
+
+
 class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private let revealLeftView: View = View()
@@ -128,8 +193,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var activeImage: ImageView?
     
-    private var previewView: TransformImageView?
-
     private var activitiesModel:ChatActivitiesModel?
     private var photo:AvatarControl = AvatarControl(font: .avatar(22))
     private var hiddemMessage:Bool = false
@@ -139,6 +202,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var archivedPhoto: LAnimationButton?
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
     private var expandView: ChatListExpandView?
+    
+    
+    private var currentTextLeftCutout: CGFloat = 0.0
+    private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
+    private var mediaPreviewViews: [MediaId: ChatListMediaPreviewView] = [:]
+
+    
     private var revealActionInvoked: Bool = false {
         didSet {
             animateOnceAfterDelta = true
@@ -178,6 +248,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
+            
+            for (_, media, _) in self.currentMediaPreviewSpecs {
+                guard let mediaId = media.id else {
+                    continue
+                }
+                if let previewView = self.mediaPreviewViews[mediaId] {
+                    previewView.isHidden = inputActivities != nil && !inputActivities!.1.isEmpty
+                }
+            }
+            
             if let inputActivities = inputActivities, let item = item as? ChatListRowItem {
                 let oldValue = oldValue?.1.map {
                     ChatListInputActivity($0, $1)
@@ -489,46 +569,75 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
          if let item = item as? ChatListRowItem {
             
+            self.currentMediaPreviewSpecs = item.contentImageSpecs
             
-            var updateImageSignal: Signal<ImageDataTransformation, NoError>?
-            if let contentImageMedia = item.contentImageMedia {
-                if let oldContentImageMedia = oldItem?.contentImageMedia, contentImageMedia.isSemanticallyEqual(to: oldContentImageMedia) {
-                } else {
-                    if let message = item.message {
-                        if let image = contentImageMedia as? TelegramMediaImage {
-                            updateImageSignal = mediaGridMessagePhoto(account: item.context.account, imageReference: .message(message: MessageReference(message), media: image), scale: backingScaleFactor)
-                        } else if let file = contentImageMedia as? TelegramMediaFile {
-                            updateImageSignal = mediaGridMessageVideo(postbox: item.context.account.postbox, fileReference: .message(message: MessageReference(message), media: file), scale: backingScaleFactor)
-                        }
-                    }
+            var validMediaIds: [MediaId] = []
+            for (message, media, mediaSize) in item.contentImageSpecs {
+                guard let mediaId = media.id else {
+                    continue
                 }
-            }
-
-            if  let dimensions = item.contentDimensions {
-                let previewView: TransformImageView
-                if let current = self.previewView {
+                validMediaIds.append(mediaId)
+                let previewView: ChatListMediaPreviewView
+                if let current = self.mediaPreviewViews[mediaId] {
                     previewView = current
                 } else {
-                    previewView = TransformImageView()
-                    previewView.setFrameSize(NSMakeSize(18, 18))
-                    self.previewView = previewView
+                    previewView = ChatListMediaPreviewView(context: item.context, message: message, media: media)
+                    self.mediaPreviewViews[mediaId] = previewView
                     self.containerView.addSubview(previewView)
                 }
-                if let updateImageSignal = updateImageSignal {
-                    previewView.setSignal(updateImageSignal)
-                }
-                
-                let contentImageSize = CGSize(width: 18.0, height: 18.0)
-                                
-                let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(contentImageSize), boundingSize: contentImageSize, intrinsicInsets: NSEdgeInsets())
-                
-                previewView.set(arguments: arguments)
-                
-            } else {
-                previewView?.removeFromSuperview()
-                previewView = nil
+                previewView.updateLayout(size: mediaSize)
             }
+            var removeMediaIds: [MediaId] = []
+            for (mediaId, itemView) in self.mediaPreviewViews {
+                if !validMediaIds.contains(mediaId) {
+                    removeMediaIds.append(mediaId)
+                    itemView.removeFromSuperview()
+                }
+            }
+            for mediaId in removeMediaIds {
+                self.mediaPreviewViews.removeValue(forKey: mediaId)
+            }
+
             
+//            var updateImageSignal: Signal<ImageDataTransformation, NoError>?
+//            if let contentImageMedia = item.contentImageMedia {
+//                if let oldContentImageMedia = oldItem?.contentImageMedia, contentImageMedia.isSemanticallyEqual(to: oldContentImageMedia) {
+//                } else {
+//                    if let message = item.message {
+//                        if let image = contentImageMedia as? TelegramMediaImage {
+//                            updateImageSignal = mediaGridMessagePhoto(account: item.context.account, imageReference: .message(message: MessageReference(message), media: image), scale: backingScaleFactor)
+//                        } else if let file = contentImageMedia as? TelegramMediaFile {
+//                            updateImageSignal = mediaGridMessageVideo(postbox: item.context.account.postbox, fileReference: .message(message: MessageReference(message), media: file), scale: backingScaleFactor)
+//                        }
+//                    }
+//                }
+//            }
+//
+//            if  let dimensions = item.contentDimensions {
+//                let previewView: TransformImageView
+//                if let current = self.previewView {
+//                    previewView = current
+//                } else {
+//                    previewView = TransformImageView()
+//                    previewView.setFrameSize(NSMakeSize(18, 18))
+//                    self.previewView = previewView
+//                    self.containerView.addSubview(previewView)
+//                }
+//                if let updateImageSignal = updateImageSignal {
+//                    previewView.setSignal(updateImageSignal)
+//                }
+//
+//                let contentImageSize = CGSize(width: 18.0, height: 18.0)
+//
+//                let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(contentImageSize), boundingSize: contentImageSize, intrinsicInsets: NSEdgeInsets())
+//
+//                previewView.set(arguments: arguments)
+//
+//            } else {
+//                previewView?.removeFromSuperview()
+//                previewView = nil
+//            }
+//
             
             if item.isCollapsed != wasHidden {
                 expandView?.change(pos: NSMakePoint(0, item.isCollapsed ? 0 : item.height), animated: animated)
@@ -1280,12 +1389,25 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
             
             
-            if let displayLayout = item.ctxDisplayLayout, let previewView = previewView {
+            if let displayLayout = item.ctxDisplayLayout {
                 var offset: CGFloat = 0
                 if let chatName = item.ctxChatNameLayout {
                     offset += chatName.0.size.height + 1
                 }
-                previewView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + offset))
+                
+                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + offset)
+                let contentImageSpacing: CGFloat = 2.0
+                
+                for (_, media, mediaSize) in self.currentMediaPreviewSpecs {
+                    guard let mediaId = media.id else {
+                        continue
+                    }
+                    if let previewView = self.mediaPreviewViews[mediaId] {
+                        previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
+                    }
+                    mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
+                }
+
             }
         }
     }
