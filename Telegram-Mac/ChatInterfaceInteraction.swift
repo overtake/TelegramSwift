@@ -146,6 +146,8 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
 
+    var closeAfterPeek:(Int32)->Void = { _ in }
+    
     var updateReactions: (MessageId, String, @escaping(Bool)->Void)->Void = { _, _, _ in }
     
     let loadingMessage: Promise<Bool> = Promise()
@@ -342,8 +344,8 @@ final class ChatInteraction : InterfaceObserver  {
                 break
             case .source:
                 break
-            case let .closeAfter(timeout):
-                break
+            case let .closeAfter(peek):
+               break
             }
            
         }

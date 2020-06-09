@@ -970,6 +970,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let updateUrlDisposable = MetaDisposable()
     private let loadSharedMediaDisposable = MetaDisposable()
     private let applyMaxReadIndexDisposable = MetaDisposable()
+    private let peekDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -2765,6 +2766,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let point = self.genericView.tableView.scrollPosition().current.rect.origin
             return CGRect(origin: point, size: self.frame.size)
         }
+        
+        chatInteraction.closeAfterPeek = { [weak self] peek in
+            
+            
+            let showConfirm:()->Void = {
+                confirm(for: context.window, header: L10n.privateChannelPeekHeader, information: L10n.privateChannelPeekText, okTitle: L10n.privateChannelPeekOK, cancelTitle: L10n.privateChannelPeekCancel, successHandler: { _ in
+                    self?.chatInteraction.joinChannel()
+                }, cancelHandler: {
+                    self?.navigationController?.back()
+                })
+            }
+            
+            let timeout = TimeInterval(peek) - Date().timeIntervalSince1970
+            
+            if timeout > 0 {
+                let signal = Signal<NoValue, NoError>.complete() |> delay(timeout, queue: .mainQueue())
+                self?.peekDisposable.set(signal.start(completed: showConfirm))
+            } else {
+                showConfirm()
+            }
+            
+            
+        }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
             
@@ -3904,6 +3928,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
         applyMaxReadIndexDisposable.dispose()
+        peekDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -3912,6 +3937,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        
+        peekDisposable.set(nil)
+        
         genericView.inputContextHelper.viewWillRemove()
         self.chatInteraction.remove(observer: self)
         chatInteraction.saveState(scrollState: immediateScrollState())
@@ -3945,6 +3974,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        if let initialAction = self.chatInteraction.presentation.initialAction {
+            switch initialAction {
+            case let .closeAfter(peek):
+                 self.chatInteraction.closeAfterPeek(peek)
+            default:
+                break
+            }
+        }
 
         let context = self.context
         context.closeFolderFirst = false

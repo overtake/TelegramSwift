@@ -846,7 +846,7 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 
-                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: true), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range) != url), range: range)
             case .Bold:
                 if let fontAttribute = fontAttributes[range] {
                     fontAttributes[range] = fontAttribute.union(.bold)

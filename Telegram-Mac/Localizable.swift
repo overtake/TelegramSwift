@@ -5149,6 +5149,14 @@ internal final class L10n {
   internal static var privacySettingsControllerProfilePhotoAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.ProfilePhoto.AlwaysShareWith.Title") }
   /// Never Share With
   internal static var privacySettingsControllerProfilePhotoNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.ProfilePhoto.NeverShareWith.Title") }
+  /// Cancel
+  internal static var privateChannelPeekCancel: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.Cancel") }
+  /// Join Channel
+  internal static var privateChannelPeekHeader: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.Header") }
+  /// Join Channel
+  internal static var privateChannelPeekOK: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.OK") }
+  /// This channel is private. Please join it to continue viewing its content.
+  internal static var privateChannelPeekText: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.Text") }
   /// Are you sure you want to disable proxy server %@?
   internal static func proxyForceDisable(_ p1: String) -> String {
     return L10n.tr("Localizable", "Proxy.ForceDisable", p1)
@@ -6479,6 +6487,8 @@ internal final class L10n {
   internal static var textContextCopyStickerPack: String  { return L10n.tr("Localizable", "Text.Context.Copy.StickerPack") }
   /// Copy Username
   internal static var textContextCopyUsername: String  { return L10n.tr("Localizable", "Text.Context.Copy.Username") }
+  /// Transformations
+  internal static var textViewTransformations: String  { return L10n.tr("Localizable", "Text.View.Transformations") }
   /// Bold
   internal static var textViewTransformBold: String  { return L10n.tr("Localizable", "TextView.Transform.Bold") }
   /// Monospace
