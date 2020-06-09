@@ -152,8 +152,8 @@ private final class MediaPlayerContext {
                 switch strongSelf.state {
                 case .empty:
                     return .noFrames
-                case .paused:
-                    return .noFrames
+                case let .paused(state):
+                    maybeLoadedState = state
                 case let .playing(state):
                     maybeLoadedState = state
                 case .seeking:
@@ -170,10 +170,10 @@ private final class MediaPlayerContext {
                 } else {
                     return .noFrames
                 }
-                
             } else {
                 return .noFrames
             }
+
         })
     }
     
@@ -710,7 +710,7 @@ private final class MediaPlayerContext {
                     
                     let tickTimer = SwiftSignalKit.Timer(timeout: nextTickDelay, repeat: false, completion: { [weak self] in
                         self?.tick()
-                        }, queue: self.queue)
+                    }, queue: self.queue)
                     self.tickTimer = tickTimer
                     tickTimer.start()
                 } else {

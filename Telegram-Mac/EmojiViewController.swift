@@ -231,7 +231,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
         return nil
     }
-    private let searchValue = ValuePromise<SearchState>()
+    private let searchValue = ValuePromise<SearchState>(.init(state: .None, request: nil))
     private var searchState: SearchState = .init(state: .None, request: nil) {
         didSet {
             self.searchValue.set(searchState)
@@ -242,24 +242,23 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
 
     private var interactions:EntertainmentInteractions?
     var makeSearchCommand:((ESearchCommand)->Void)?
-    var updateSearchState: ((SearchState)->Void)?
+    private func updateSearchState(_ state: SearchState) {
+        self.searchState = state
+        if !state.request.isEmpty {
+            self.makeSearchCommand?(.loading)
+        }
+        if self.isLoaded() == true {
+            self.genericView.updateSearchState(state, animated: true)
+        }
+    }
 
-    init(_ context: AccountContext, search: Signal<SearchState, NoError>) {
+    override init(_ context: AccountContext) {
         super.init(context)
         
         _frameRect = NSMakeRect(0, 0, 350, 300)
         self.bar = .init(height: 0)
-        
-        self.searchStateDisposable.set(search.start(next: { [weak self] state in
-            self?.searchState = state
-            if !state.request.isEmpty {
-                self?.makeSearchCommand?(.loading)
-            }
-            if self?.isLoaded() == true {
-                self?.genericView.updateSearchState(state, animated: true)
-            }
-        }))
     }
+    
     
     
     override func loadView() {
@@ -312,9 +311,9 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
 
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         }, { [weak self] state in
-            self?.updateSearchState?(state)
+            self?.updateSearchState(state)
         })
         
         genericView.searchView.searchInteractions = searchInteractions

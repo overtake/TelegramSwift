@@ -544,6 +544,10 @@ func initialize() -> [String] {
     array.append("chat_like_inside_empty_bubble_outgoing")
     array.append("chat_like_inside_empty_bubble_overlay")
 
+    
+    array.append("gif_trending")
+
+    
     return array
 }
 

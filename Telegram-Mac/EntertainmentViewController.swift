@@ -672,7 +672,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             guard let `self` = self else {
                 return
             }
-            self.genericView.toggleSearch(self.searchState)
+            self.toggleSearch()
         }
         self.interactions = interactions
         
@@ -689,9 +689,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     init(size:NSSize, context:AccountContext) {
         
         self.cap = SidebarCapViewController(context)
-        self.emoji = EmojiViewController(context, search: self.searchState.get())
-        self.stickers = NStickersViewController(context, search: self.searchState.get())
-        self.gifs = GIFViewController(context, search: self.searchState.get())
+        self.emoji = EmojiViewController(context)
+        self.stickers = NStickersViewController(context)
+        self.gifs = GIFViewController(context)
         
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
@@ -735,6 +735,17 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         window?.removeAllHandlers(for: self)
     }
     
+    private func toggleSearch() {
+        if let searchView = self.effectiveSearchView {
+            if searchView.state == .Focus {
+                searchView.setString("")
+                searchView.cancel(true)
+            } else {
+                searchView.change(state: .Focus, true)
+            }
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         section.viewDidAppear(animated)
@@ -746,7 +757,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.context.sharedContext.bindings.rootNavigation().genericView.state != .single {
                 return .rejected
             }
-            self.genericView.toggleSearch(self.searchState)
+            self.toggleSearch()
             return .invoked
         }, with: self, for: .F, priority: .modal, modifierFlags: .command)
 
@@ -807,15 +818,6 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        self.emoji.updateSearchState = { [weak self] state in
-            self?.searchState.set(state)
-        }
-        self.gifs.updateSearchState = { [weak self] state in
-            self?.searchState.set(state)
-        }
-        self.stickers.updateSearchState = { [weak self] state in
-            self?.searchState.set(state)
-        }
         
         
         self.genericView.emoji.set(handler: { [weak self] _ in
