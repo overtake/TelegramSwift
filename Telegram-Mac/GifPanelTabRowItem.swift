@@ -29,8 +29,8 @@ class GifPanelTabRowItem: TableRowItem {
         switch entry {
         case .recent:
             icon = theme.icons.stickersTabRecent
-        case .tranding:
-            icon = theme.icons.stickersTabRecent
+        case .trending:
+            icon = theme.icons.gif_trending
         case let .recommended(value):
             icon = generateTextIcon(.initialize(string: value, color: .white, font: .normal(18)))
         }
@@ -67,10 +67,8 @@ class GifPanelTabRowItem: TableRowItem {
 private final class GifPanelTabRowView: HorizontalRowView {
     
     private let control: ImageButton = ImageButton()
-    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(control)
         
         control.set(handler: { [weak self] control in
             if let item = self?.item as? GifPanelTabRowItem {
@@ -82,6 +80,14 @@ private final class GifPanelTabRowView: HorizontalRowView {
         control.autohighlight = false
         control.animates = false
         control.frame = NSMakeRect(0, 0, 40, 40)
+        
+        addSubview(control)
+        
+    }
+    
+
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -93,7 +99,8 @@ private final class GifPanelTabRowView: HorizontalRowView {
             control.set(image: item.icon, for: .Hover)
 
         }
-        
+        control.frame = bounds
+        control.center()
     }
     
     required init?(coder: NSCoder) {

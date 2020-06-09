@@ -6673,6 +6673,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var gif_trending: CGImage {
+      if let image = cached.with({ $0["gif_trending"] }) {
+          return image
+      } else {
+          let image = _gif_trending()
+          _ = cached.modify { current in 
+              var current = current
+              current["gif_trending"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7187,6 +7200,7 @@ final class TelegramIconsTheme {
   private let _chat_like_inside_empty_bubble_incoming: ()->CGImage
   private let _chat_like_inside_empty_bubble_outgoing: ()->CGImage
   private let _chat_like_inside_empty_bubble_overlay: ()->CGImage
+  private let _gif_trending: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7701,7 +7715,8 @@ final class TelegramIconsTheme {
       chat_like_inside_empty: @escaping()->CGImage,
       chat_like_inside_empty_bubble_incoming: @escaping()->CGImage,
       chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage,
-      chat_like_inside_empty_bubble_overlay: @escaping()->CGImage
+      chat_like_inside_empty_bubble_overlay: @escaping()->CGImage,
+      gif_trending: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8216,5 +8231,6 @@ final class TelegramIconsTheme {
       self._chat_like_inside_empty_bubble_incoming = chat_like_inside_empty_bubble_incoming
       self._chat_like_inside_empty_bubble_outgoing = chat_like_inside_empty_bubble_outgoing
       self._chat_like_inside_empty_bubble_overlay = chat_like_inside_empty_bubble_overlay
+      self._gif_trending = gif_trending
   }
 }

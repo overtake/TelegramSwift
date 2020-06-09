@@ -82,7 +82,7 @@ final class SoftwareVideoLayerFrameManager {
         }
         
         let firstReady: Signal<String, NoError> = combineLatest(
-            self.account.postbox.mediaBox.resourceData(self.resource, option: .complete(waitUntilFetchStatus: false)) |> filter { $0.complete },
+            self.account.postbox.mediaBox.resourceData(self.resource, option: .complete(waitUntilFetchStatus: false)),
             secondarySignal
             )
             |> mapToSignal { first, second -> Signal<String, NoError> in
@@ -150,7 +150,7 @@ final class SoftwareVideoLayerFrameManager {
     private var polling = false
     
     private func poll() {
-        if self.frames.count < 2 && !self.polling {
+        if self.frames.count < 2 && !self.polling, self.source.with ({ $0 != nil }) {
             self.polling = true
             let minPts = self.minPts
             let maxPts = self.maxPts
@@ -215,7 +215,13 @@ final class SoftwareVideoLayerFrameManager {
                                 strongSelf.minPts = nil
                                 //print("loop at \(strongSelf.minPts)")
                             }
-                            strongSelf.poll()
+                            if strongSelf.source.with ({ $0 == nil }) {
+                                delay(0.2, onQueue: applyQueue.queue, closure: { [weak strongSelf] in
+                                    strongSelf?.poll()
+                                })
+                            } else {
+                                strongSelf.poll()
+                            }
                         }
                     }
                 }
