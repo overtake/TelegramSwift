@@ -112,11 +112,12 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case recent(Int)
     case saved(Int)
     case featured(Int)
+    case emojiRelated(Int)
     var packIndex:ItemCollectionViewEntryIndex {
         switch self {
         case let .sticker(index):
             return index
-        case let .saved(index), let .recent(index), let .featured(index):
+        case let .saved(index), let .recent(index), let .featured(index), let .emojiRelated(index):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
@@ -135,6 +136,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .specificPack(id)
         case .featured:
             return .featured
+        case .emojiRelated:
+            return .emojiRelated
         }
     }
     
@@ -144,6 +147,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
     
     var index: Int {
         switch self {
+        case .emojiRelated:
+            return -2
         case .featured:
             return -1
         case .saved:
@@ -211,6 +216,7 @@ private struct StickerPacksSearchData {
     let sets: FoundStickerSets
     let loading: Bool
     let basicFeaturedCount: Int
+    let emojiRelated: [FoundStickerItem]
 }
 
 private struct StickerPacksUpdateData {
@@ -230,6 +236,7 @@ enum StickerPackInfo : Equatable {
     case speficicPack(StickerPackCollectionInfo?)
     case recent
     case saved
+    case emojiRelated
     
     var installed: Bool {
         switch self {
@@ -255,7 +262,7 @@ enum StickerPackCollectionId : Hashable {
     case featured
     case specificPack(ItemCollectionId)
     case saved
-    
+    case emojiRelated
     var itemCollectionId:ItemCollectionId? {
         switch self {
         case let .pack(collectionId):
@@ -272,6 +279,7 @@ enum StickerPackCollectionId : Hashable {
 
 private enum StickerPackEntry : TableItemListNodeEntry {
     case pack(index: StickerPacksIndex, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId)
+    
     
     static func < (lhs: StickerPackEntry, rhs: StickerPackEntry) -> Bool {
         return lhs.index < rhs.index
@@ -405,6 +413,34 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
         if !searchData.loading {
             var available = searchData.sets.entries
             var index: Int32 = 0
+            
+            if !searchData.emojiRelated.isEmpty {
+                
+                var validIds:Set<MediaId> = Set()
+                
+                let files:[TelegramMediaFile] = searchData.emojiRelated.map { $0.file }.reduce([], { current, value in
+                    var current = current
+                    guard let id = value.id else {
+                        return current
+                    }
+                    if !validIds.contains(id) {
+                        validIds.insert(id)
+                        current.append(value)
+                    }
+                    return current
+                }).sorted(by: { lhs, rhs in
+                    if lhs.isAnimatedSticker && !rhs.isAnimatedSticker {
+                        return true
+                    } else {
+                        return false
+                    }
+                })
+                entries.append(.pack(index: .emojiRelated(0), files: files, packInfo: .emojiRelated, collectionId: .emojiRelated))
+                
+              //  entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: 0, itemIndex: .init(index: 0, id: 0))), files: Array(files), packInfo: .emojiRelated, collectionId: nil))
+                index += 1
+            }
+            
             for set in searchData.sets.infos {
                 if !available.isEmpty {
                     var files: [TelegramMediaFile] = []
@@ -418,7 +454,7 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
                             }
                         }
                         if !files.isEmpty {
-                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: Array(files), packInfo: .pack(info, installed: set.3, featured: true), collectionId: .pack(info.id)))
+                            entries.append(.pack(index: .sticker(ItemCollectionViewEntryIndex(collectionIndex: index, collectionId: info.id, itemIndex: .init(index: 0, id: 0))), files: Array(files.prefix(5)), packInfo: .pack(info, installed: set.3, featured: true), collectionId: .pack(info.id)))
                         }
                     }
                 } else {
@@ -735,7 +771,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     index = .recent(1)
                 case let .specificPack(id):
                     index = .speficicPack(id)
-                    
+                case .emojiRelated:
+                    break
                 }
                 if let index = index {
                     self.genericView.tableView.removeScroll(listener: self.listener)
@@ -922,7 +959,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                     found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
                                 }
                             }
-                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count)
+                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count, emojiRelated: [])
                             return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
                         }
                     case let .loadFeaturedMore(current):
@@ -957,7 +994,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                     found = found.merge(with: FoundStickerSets(infos: [(set.info.id, set.info, nil, installedPacks.contains(set.info.id))], entries: entries))
                                 }
                             }
-                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount)
+                            let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount, emojiRelated: [])
                             return StickerPacksUpdateData(nil, .generic(animated: false, scrollToTop: nil), nil, searchData: searchData)
                         }
                     default:
@@ -965,10 +1002,24 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                     
                 } else {
-                    let searchLocal = searchStickerSets(postbox: context.account.postbox, query: searchText) |> map(Optional.init)
-                    let searchRemote = searchStickerSetsRemotely(network: context.account.network, query: searchText) |> map(Optional.init)
+                    let searchLocal = searchStickerSets(postbox: context.account.postbox, query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                    let searchRemote = searchStickerSetsRemotely(network: context.account.network, query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                     
-                    return combineLatest(searchLocal, searchRemote) |> delay(0.2, queue: prepareQueue) |> map { local, remote in
+                    let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
+                        
+                        let signals = emojis.map {
+                            searchStickers(account: context.account, query: $0, scope: [.installed])
+                        }
+                        return combineLatest(signals) |> map {
+                            $0.reduce([], { current, value in
+                                return current + value.filter { $0.file.stickerText != nil && emojis.contains($0.file.stickerText!) }
+                            })
+                        }
+                    } |> delay(0.2, queue: prepareQueue)
+
+                    let first = Atomic<Bool>(value: true)
+                    
+                    return combineLatest(searchLocal, searchRemote, emojiRelated) |> map { local, remote, emojiRelated in
                         var value = FoundStickerSets()
                         if let local = local {
                             value = value.merge(with: local)
@@ -976,8 +1027,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         if let remote = remote {
                             value = value.merge(with: remote)
                         }
-                        let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0)
-                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
+                        
+                        let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated)
+                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: first.swap(false)), nil, searchData: searchData)
                     }
                 }
                 
@@ -1008,12 +1060,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             guard let `self` = self else { return }
             
             self.genericView.tableView.removeScroll(listener: self.listener)
-            CATransaction.begin()
             self.genericView.tableView.merge(with: transition)
             self.genericView.packsView.merge(with: packTransition)
             self.genericView.updateEmpties(isEmpty: self.genericView.tableView.isEmpty, animated: !first)
             
-            CATransaction.commit()
             self.genericView.tableView.addScroll(listener: self.listener)
             first = false
             
