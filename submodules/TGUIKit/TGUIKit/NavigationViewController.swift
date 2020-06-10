@@ -86,13 +86,16 @@ open class NavigationHeader {
                     }
                     CATransaction.begin()
                     let completion = navigation.controller.navigationHeaderDidNoticeAnimation(height, 0, animated)
-                    view.change(pos: NSMakePoint(0, inset), animated: animated, completion: { [weak navigation] completed in
-                        if let navigation = navigation, completed {
-                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
-                            navigation.controller.view.needsLayout = true
-                            completion()
-                        }
-                    })
+                    
+                    let animator = animated ? view.animator() : view
+                    animator.setFrameOrigin(NSMakePoint(0, inset))
+                    
+                    let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
+                    
+                    controllerView.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
+                    navigation.controller.view.needsLayout = true
+                    completion()
+                    
                     CATransaction.commit()
                 }
             }))
@@ -112,12 +115,14 @@ open class NavigationHeader {
             CATransaction.begin()
             let completion = navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
             if animated {
-                view.change(pos: NSMakePoint(0, navigation.controller.bar.height - height), animated: animated, removeOnCompletion: true, completion: { [weak self] completed in
-                    if completed {
-                        self?._view?.removeFromSuperview()
-                        self?._view = nil
-                        completion()
-                    }
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    let animator = animated ? view.animator() : view
+                    animator.setFrameOrigin(NSMakePoint(0, navigation.controller.bar.height - height))
+                    
+                }, completionHandler: { [weak view, weak self] in
+                    view?.removeFromSuperview()
+                    self?._view = nil
+                    completion()
                 })
             } else {
                 view.removeFromSuperview()
@@ -129,8 +134,9 @@ open class NavigationHeader {
             if let additionalHeader = additionalHeader, additionalHeader.needShown  {
                 inset += additionalHeader.height
             }
-            navigation.controller.view.setFrameSize(NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset))
-            navigation.controller.view.setFrameOrigin(NSMakePoint(0, inset))
+            
+            let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
+            controllerView.frame = CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset))
         }
         
     }
@@ -155,16 +161,19 @@ public class CallNavigationHeader : NavigationHeader {
                     let contentInset = navigation.controller.bar.height + height
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
-                    navigation.navigationBar.change(pos: NSMakePoint(0, height), animated: animated)
+                    let navigationBar = animated ? navigation.navigationBar.animator() : navigation.navigationBar
                     
-                    self.simpleHeader?.view.change(pos: NSMakePoint(0, height + navigation.controller.bar.height), animated: animated)
+                    navigationBar.setFrameOrigin(NSMakePoint(0, height))
                     
-                    view.change(pos: NSMakePoint(0, 0), animated: animated, completion: { [weak navigation] completed in
-                        if let navigation = navigation, completed {
-                            navigation.controller.view.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
-                            navigation.controller.view.needsLayout = true
-                        }
-                    })
+                    let simple = animated ? self.simpleHeader?.view.animator() : self.simpleHeader?.view
+                    simple?.setFrameOrigin(NSMakePoint(0, height + navigation.controller.bar.height))
+                    
+                    let headerView = animated ? view.animator() : view
+                    
+                    headerView.setFrameOrigin(NSMakePoint(0, 0))
+                    let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
+                    controllerView.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
+                    controllerView.needsLayout = true
                     
                 }
             }))
@@ -182,11 +191,11 @@ public class CallNavigationHeader : NavigationHeader {
         
         if let navigation = navigation {
             if animated {
-                view.change(pos: NSMakePoint(0, -height), animated: animated, removeOnCompletion: false, completion: { [weak self] completed in
-                    if completed {
-                        self?._view?.removeFromSuperview()
-                        self?._view = nil
-                    }
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    view.animator().setFrameOrigin(NSMakePoint(0, -height))
+                }, completionHandler: { [weak view, weak self] in
+                    view?.removeFromSuperview()
+                    self?._view = nil
                 })
             } else {
                 view.removeFromSuperview()
@@ -194,12 +203,16 @@ public class CallNavigationHeader : NavigationHeader {
             }
             
             if let header = simpleHeader, header.needShown {
-                header.view.change(pos: NSMakePoint(0, navigation.controller.bar.height), animated: animated)
+                let headerView = animated ? header.view.animator() : header.view
+                headerView.setFrameOrigin(NSMakePoint(0, navigation.controller.bar.height))
             }
             
-            navigation.navigationBar.change(pos: NSZeroPoint, animated: animated)
-            navigation.controller.view.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height)
-            navigation.controller.view.needsLayout = true
+            let navigationBar = animated ? navigation.navigationBar.animator() : navigation.navigationBar
+            navigationBar.setFrameOrigin(.zero)
+            
+            let controller = animated ? navigation.controller.view.animator() : navigation.controller.view
+            controller.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height)
+            controller.needsLayout = true
         }
         
     }

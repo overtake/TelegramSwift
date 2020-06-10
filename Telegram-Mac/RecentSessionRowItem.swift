@@ -40,7 +40,7 @@ class RecentSessionRowItem: GeneralRowItem {
         
         _ = attr.append(string: session.ip + " " + session.country, color: theme.colors.grayText, font: .normal(.text))
         
-        descLayout = TextViewLayout(attr, lineSpacing: 2)
+        descLayout = TextViewLayout(attr, maximumNumberOfLines: 2, lineSpacing: 2)
     
         dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
         
@@ -51,8 +51,8 @@ class RecentSessionRowItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        headerLayout.measure(width: width - 60)
-        descLayout.measure(width: width - 60)
+        headerLayout.measure(width: blockWidth - 80)
+        descLayout.measure(width: blockWidth - 80)
         dateLayout.measure(width: .greatestFiniteMagnitude)
         return success
     }
