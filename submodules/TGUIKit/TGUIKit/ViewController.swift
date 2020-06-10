@@ -1008,6 +1008,11 @@ open class ModalController : ModalViewController {
         ready.set(controller.controller.ready.get())
     }
     
+    open override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
+    
     open override func loadView() {
         self._view = controller.view
         NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
