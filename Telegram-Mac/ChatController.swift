@@ -2769,7 +2769,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.closeAfterPeek = { [weak self] peek in
             
-            
             let showConfirm:()->Void = {
                 confirm(for: context.window, header: L10n.privateChannelPeekHeader, information: L10n.privateChannelPeekText, okTitle: L10n.privateChannelPeekOK, cancelTitle: L10n.privateChannelPeekCancel, successHandler: { _ in
                     self?.chatInteraction.joinChannel()
@@ -2785,8 +2784,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } else {
                 showConfirm()
             }
-            
-            
         }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
