@@ -1192,7 +1192,6 @@
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
         for mediaList in listControllers {
             if mediaList.view.superview != nil {
-                genericView.activePanel._change(pos: NSMakePoint(genericView.activePanel.frame.minX, current), animated: animated)
                 return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
             }
         }
