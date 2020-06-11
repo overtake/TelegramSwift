@@ -655,7 +655,7 @@ class MainViewController: TelegramViewController {
     }
     
     func isCanMinimisize() -> Bool{
-        return self.tabController.current == chatListNavigation
+        return self.tabController.current == chatListNavigation || self.tabController.current == contacts || self.tabController.current == self.phoneCalls
     }
     
     override init(_ context: AccountContext) {

@@ -352,7 +352,7 @@ final class AccountContext {
             }
         }
         
-        let updated = (signal |> then(.complete() |> suspendAwareDelay(60.0 * 60.0, queue: Queue.concurrentDefaultQueue()))) |> restart
+        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: Queue.concurrentDefaultQueue()))) |> restart
         preloadGifsDisposable.set(updated.start())
         
         #endif

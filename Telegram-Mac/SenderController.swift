@@ -174,6 +174,20 @@ class Sender: NSObject {
         }
         
         
+        if FastSettings.isPossibleReplaceEmojies {
+            let text = input.inputText.stringEmojiReplacements
+            if text != input.inputText {
+                let mutable = input.attributedString.mutableCopy() as! NSMutableAttributedString
+                mutable.replaceCharacters(in: mutable.range, with: text)
+                input.attributedString.enumerateAttributes(in: input.attributedString.range, options: [], using: { value, range, _ in
+                    if mutable.range.intersection(range) != nil {
+                        mutable.addAttributes(value, range: range)
+                    }
+                })
+                input = ChatTextInputState(inputText: mutable.string, selectionRange: 0 ..< mutable.string.length, attributes: chatTextAttributes(from: mutable))
+            }
+        }
+        
         var mediaReference: AnyMediaReference? = nil
         
         
