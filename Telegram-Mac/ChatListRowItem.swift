@@ -1132,9 +1132,9 @@ class ChatListRowItem: TableRowItem {
     
     var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
         if isSelected && context.sharedContext.layout != .single {
-            return chatNameLayout
+            return chatNameSelectedLayout
         }
-        return chatNameSelectedLayout
+        return chatNameLayout
     }
     
     var ctxMessageLayout:(TextNodeLayout, TextNode)? {

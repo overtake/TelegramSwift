@@ -504,28 +504,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
         
         
-        window.set(handler: { () -> KeyHandlerResult in
-            
-            let beginPendingTime:CFAbsoluteTime = CACurrentMediaTime()
-            
-            let afterSentSound:NSSound? = {
-                
-                let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                var sound:NSSound?
-                if let p = p {
-                    sound = NSSound(contentsOfFile: p, byReference: true)
-                    sound?.volume = 1.0
-                }
-                
-                return sound
-            }()
-            
-            afterSentSound?.play()
-            
-            alert(for: context.window, info: "Play sound took: \(CACurrentMediaTime() - beginPendingTime)")
-            
-            return .invoked
-        }, with: self, for: .E, priority: .supreme, modifierFlags: [.control, .command])
         
         
 //        window.set(handler: { [weak self] () -> KeyHandlerResult in
@@ -540,7 +518,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in
-            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            
+            showModal(with: VideoAvatarModalController(context: context), for: window)
+            
+          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif
