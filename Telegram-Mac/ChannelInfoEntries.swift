@@ -317,15 +317,20 @@ class ChannelInfoArguments : PeerInfoArguments {
         self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
     }
     func share() {
-        let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
         let context = self.context
         
-        _ = peer.start(next: { peer in
-            var link: String = "https://t.me/\(peer.id.id)"
-            if let address = peer.addressName, !address.isEmpty {
-                link = "https://t.me/\(address)"
+        _ = peer.start(next: { peerView in
+            if let peer = peerViewMainPeer(peerView) {
+                var link: String = "https://t.me/\(peer.id.id)"
+                if let address = peer.addressName, !address.isEmpty {
+                    link = "https://t.me/\(address)"
+                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+                    link = invitation.link
+                }
+                showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
             }
-            showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
+           
         })
         
     }
@@ -739,8 +744,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
         case let .userName(_, value, viewType):
-            let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true)
         case let .report(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
@@ -883,7 +887,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             
             if let username = channel.username, !username.isEmpty {
-                aboutBlock.append(.userName(sectionId: .desc, value: username, viewType: .singleItem))
+                aboutBlock.append(.userName(sectionId: .desc, value: "https://t.me/\(username)", viewType: .singleItem))
+            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+                aboutBlock.append(.userName(sectionId: .desc, value: invitation.link, viewType: .singleItem))
             }
             
             applyBlock(aboutBlock)

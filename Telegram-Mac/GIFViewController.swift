@@ -383,6 +383,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         }
         if self.isLoaded() == true {
             self.genericView.updateSearchState(state, animated: true)
+            self.genericView.tableView?.scroll(to: .up(true))
         }
     }
     

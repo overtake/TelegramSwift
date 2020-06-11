@@ -185,6 +185,7 @@ class EBlockRowView: TableRowView {
                 if let item = item {
                     _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
                 }
+                
                 self?.popover?.close()
                 self?.popover = nil
             })
@@ -207,6 +208,11 @@ class EBlockRowView: TableRowView {
                 strongSelf.popover?.contentViewController = EmojiToleranceController(emoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak strongSelf, weak item] emoji, modifier in
                     if let item = item {
                         _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
+                        if let modifier = modifier {
+                            item.selectHandler(emoji + modifier)
+                        } else {
+                            item.selectHandler(emoji)
+                        }
                     }
                     strongSelf?.popover?.close()
                     strongSelf?.popover = nil

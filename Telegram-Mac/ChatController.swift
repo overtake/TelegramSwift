@@ -1871,10 +1871,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if canDelete {
                             if mustManageDeleteMessages(messages, for: peer, account: context.account), let memberId = messages[0].author?.id {
                                 
-                                let options:[ModalOptionSet] = [ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionBanUser, selected: false, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
+                                var options:[ModalOptionSet] = []
+                                
+                                options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true))
+                                if let channel = peer as? TelegramChannel {
+                                    if channel.hasPermission(.banMembers) {
+                                        options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionBanUser, selected: false, editable: true))
+                                    }
+                                }
+                                options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true))
+                                options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true))
+                                
+                                
                                 
                                 showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), title: L10n.supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
                                     
@@ -2769,7 +2777,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.closeAfterPeek = { [weak self] peek in
             
-            
             let showConfirm:()->Void = {
                 confirm(for: context.window, header: L10n.privateChannelPeekHeader, information: L10n.privateChannelPeekText, okTitle: L10n.privateChannelPeekOK, cancelTitle: L10n.privateChannelPeekCancel, successHandler: { _ in
                     self?.chatInteraction.joinChannel()
@@ -2779,15 +2786,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             let timeout = TimeInterval(peek) - Date().timeIntervalSince1970
-            
             if timeout > 0 {
                 let signal = Signal<NoValue, NoError>.complete() |> delay(timeout, queue: .mainQueue())
                 self?.peekDisposable.set(signal.start(completed: showConfirm))
             } else {
                 showConfirm()
             }
-            
-            
         }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in

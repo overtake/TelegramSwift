@@ -144,6 +144,33 @@ public extension String {
     }
 }
 
+extension NSAttributedString {
+    var stringEmojiReplacements:NSAttributedString {
+        let text:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
+        
+        for(key, obj) in emojiReplacements {
+            var nextRange = NSRange(location: 0, length: text.length)
+            var emojiRange = text.string.nsstring.range(of: key, options: [], range: nextRange)
+            while emojiRange.location != NSNotFound {
+                var length: Int = emojiRange.length
+                var c_prev: String = "!"
+                var c_next: String = "!"
+                let r_p = NSRange(location: max(0, Int(emojiRange.location) - 1), length: emojiRange.location == 0 ? 0 : 1)
+                let r_n = NSRange(location: max(0, emojiRange.length + emojiRange.location), length: min(1, text.length - (emojiRange.location + emojiRange.length)))
+                c_prev = text.string.nsstring.substring(with: r_p)
+                c_next = text.string.nsstring.substring(with: r_n)
+                if c_prev.trimmed.length == 0 && c_next.trimmed.length == 0 {
+                    text.replaceCharacters(in: emojiRange, with: obj)
+                    length = obj.length
+                }
+                nextRange = NSRange(location: emojiRange.location + length, length: text.length - emojiRange.location - length)
+                emojiRange = text.string.nsstring.range(of: key, options: [], range: nextRange)
+            }
+        }
+        return text
+    }
+}
+
 
 private let emojiRevervedReplacements:[String:String] = {
     var dictionary:[String:String] = [:]

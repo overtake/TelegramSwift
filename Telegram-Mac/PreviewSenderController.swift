@@ -173,7 +173,7 @@ fileprivate class PreviewSenderView : Control {
         }, for: .Click)
         
         closeButton.set(handler: { [weak self] _ in
-            self?.controller?.close()
+            self?.controller?.closeModal()
         }, for: .Click)
         
         fileButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderFile), for: .Normal)
@@ -809,6 +809,23 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return .invokeNext
     }
     
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        
+        let currentText = self.genericView.textView.string()
+        let basicText = self.temporaryInputState?.inputText ?? ""
+        if (self.temporaryInputState == nil && !currentText.isEmpty) || (basicText != currentText) {
+            confirm(for: context.window, header: L10n.mediaSenderDiscardChangesHeader, information: L10n.mediaSenderDiscardChangesText, okTitle: L10n.mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
+                self?.closeModal()
+            })
+        } else {
+            self.closeModal()
+        }
+    }
+    
+    fileprivate func closeModal() {
+        super.close()
+    }
+    
     func send(_ silent: Bool, atDate: Date? = nil) {
         
         let text = self.genericView.textView.string().trimmed
@@ -1003,7 +1020,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
 
             if self.genericView.tableView.isEmpty {
-                self.close()
+                self.closeModal()
                 if self.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
                     let attributedString = self.genericView.textView.attributedString()
                     let input = ChatTextInputState(inputText: attributedString.string, selectionRange: attributedString.string.length ..< attributedString.string.length, attributes: chatTextAttributes(from: attributedString))
@@ -1086,7 +1103,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 
                 self.sent = true
                 self.emoji.popover?.hide()
-                self.modal?.close(true)
+                self.closeModal()
                 
                 var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
                 

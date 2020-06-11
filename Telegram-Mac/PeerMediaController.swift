@@ -1055,7 +1055,7 @@
         var firstUpdate: Bool = true
         genericView.mainTable?.updatedItems = { [weak self] items in
             let filter = items.filter {
-                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem")
+                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem") && !($0 is SearchEmptyRowItem)
             }
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false
@@ -1192,7 +1192,6 @@
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
         for mediaList in listControllers {
             if mediaList.view.superview != nil {
-                genericView.activePanel._change(pos: NSMakePoint(genericView.activePanel.frame.minX, current), animated: animated)
                 return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
             }
         }

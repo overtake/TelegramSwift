@@ -343,8 +343,9 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         if let caption = caption, !captionSeized  {
             caption.measure(width: pagerSize.width - 300)
             captionSeized = true
-        } else if let caption = caption {
-            pagerSize.height -= min(140, caption.layoutSize.height + 20)
+        }
+        if let caption = caption {
+            pagerSize.height -= min(140, caption.layoutSize.height + 60)
         }
         return pagerSize
     }
