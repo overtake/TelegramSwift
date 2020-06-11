@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 
-class VideoAvatarModalController: ModalController {
+class VideoAvatarModalController: ModalViewController {
     private let context: AccountContext
     init(context: AccountContext) {
         self.context = context
+        super.init()
     }
 }
