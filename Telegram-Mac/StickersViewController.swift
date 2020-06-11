@@ -705,6 +705,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }
         if self.isLoaded() == true {
             self.genericView.updateSearchState(state, animated: true)
+            self.genericView.tableView.scroll(to: .up(true))
+
         }
     }
     
@@ -1029,7 +1031,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         }
                         
                         let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated)
-                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: first.swap(false)), nil, searchData: searchData)
+                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: nil), nil, searchData: searchData)
                     }
                 }
                 

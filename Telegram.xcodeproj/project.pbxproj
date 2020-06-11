@@ -880,6 +880,7 @@
 		D0BEB99A216D10920055B718 /* MediaPreviewEditControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */; };
 		D0C39EC3233A5D9B003CD402 /* WalletTransactionPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C39EC2233A5D9B003CD402 /* WalletTransactionPreviewController.swift */; };
 		D0C39EC5233A6077003CD402 /* GeneralBlockTextRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C39EC4233A6077003CD402 /* GeneralBlockTextRowItem.swift */; };
+		D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */; };
 		D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */; };
 		D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */; };
 		D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD309722197E62005D23DD /* FFMpegGlobals.m */; };
@@ -2030,6 +2031,7 @@
 		D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewEditControl.swift; sourceTree = "<group>"; };
 		D0C39EC2233A5D9B003CD402 /* WalletTransactionPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletTransactionPreviewController.swift; sourceTree = "<group>"; };
 		D0C39EC4233A6077003CD402 /* GeneralBlockTextRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralBlockTextRowItem.swift; sourceTree = "<group>"; };
+		D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAvatarModalController.swift; sourceTree = "<group>"; };
 		D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieBufferCompressor.swift; sourceTree = "<group>"; };
 		D0CD3093221970F8005D23DD /* FFMpegRemuxer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegRemuxer.h; sourceTree = "<group>"; };
 		D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegRemuxer.m; sourceTree = "<group>"; };
@@ -3046,6 +3048,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				D0CBB0F32492972A00620C65 /* Video-Avatar */,
 				9F354E9A227062F3006F1D42 /* haptic */,
 				9F3D5F6122044D3500CB0CAA /* updater */,
 				9F0AE6BA2199BBA400A8B53A /* media-player */,
@@ -4817,6 +4820,14 @@
 			name = editor;
 			sourceTree = "<group>";
 		};
+		D0CBB0F32492972A00620C65 /* Video-Avatar */ = {
+			isa = PBXGroup;
+			children = (
+				D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */,
+			);
+			name = "Video-Avatar";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -5639,6 +5650,7 @@
 				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
+				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
 				9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */,
 				D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
