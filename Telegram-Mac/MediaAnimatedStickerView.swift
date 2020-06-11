@@ -245,8 +245,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 }
             })
             self.thumbView.set(arguments: arguments)
-        } else {
-            self.thumbView.dispose()
         }
 
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference).start())
@@ -262,7 +260,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 self.playerView.isHidden = true
                 self.thumbView.isHidden = false
                 if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
-                    if !parameters.hidePlayer {
+                    if parameters.hidePlayer {
                         self.playerView.isHidden = false
                         self.thumbView.isHidden = true
                     }

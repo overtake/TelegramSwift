@@ -3599,6 +3599,12 @@ internal final class L10n {
   internal static var logoutOptionsTitle: String  { return L10n.tr("Localizable", "LogoutOptions.Title") }
   /// SCAM
   internal static var markScam: String  { return L10n.tr("Localizable", "Mark.Scam") }
+  /// Discard Changes
+  internal static var mediaSenderDiscardChangesHeader: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Header") }
+  /// Discard
+  internal static var mediaSenderDiscardChangesOK: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.OK") }
+  /// Are you sure you want to discard all changes?
+  internal static var mediaSenderDiscardChangesText: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Text") }
   /// %d
   internal static func messageAccessoryPanelForwardedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Message.AccessoryPanel.Forwarded_countable", p1)

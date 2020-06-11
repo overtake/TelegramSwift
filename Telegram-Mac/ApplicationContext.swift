@@ -583,18 +583,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         someActionsDisposable.add(applyUpdateTextIfNeeded(context.account.postbox).start())
         
-        someActionsDisposable.add(context.globalPeerHandler.get().start(next: { location in
-            if let peerId = location?.peerId {
-                _ = updateLaunchSettings(context.account.postbox, {
-                    $0.withUpdatedNavigation(.chat(peerId, necessary: false))
-                }).start()
-            } else {
-                _ = updateLaunchSettings(context.account.postbox, {
-                    $0.withUpdatedNavigation(nil)
-                }).start()
-            }
-        }))
-        
+ 
         
         let foldersSemaphore = DispatchSemaphore(value: 0)
         var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
@@ -621,37 +610,37 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 leftController.tabController.select(index: leftController.settingsIndex)
             case let .chat(peerId, necessary):
                 
-//                let peerSemaphore = DispatchSemaphore(value: 0)
-//                var peer: Peer?
-//                _ = context.account.postbox.transaction { transaction in
-//                    peer = transaction.getPeer(peerId)
-//                    peerSemaphore.signal()
-//                }.start()
-//                peerSemaphore.wait()
+                let peerSemaphore = DispatchSemaphore(value: 0)
+                var peer: Peer?
+                _ = context.account.postbox.transaction { transaction in
+                    peer = transaction.getPeer(peerId)
+                    peerSemaphore.signal()
+                }.start()
+                peerSemaphore.wait()
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 
-//                if (necessary || context.sharedContext.layout != .single) && launchSettings.openAtLaunch {
-//                    if let peer = peer {
-//                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
-//                        controller.navigationController = self.rightController
-//                        controller.loadViewIfNeeded(self.rightController.bounds)
-//
-//                        self.launchAction = .navigate(controller)
-//
-//                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
-//                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-//                    } else {
-//                       // self._ready.set(self.leftController.chatList.ready.get())
-//                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-//                        self._ready.set(.single(true))
-//                    }
-//                } else {
-//                   // self._ready.set(.single(true))
-//                    _ready.set(leftController.chatList.ready.get())
-//                    self.leftController.tabController.select(index: self.leftController.chatIndex)
-//                }
+                if (necessary || context.sharedContext.layout != .single) {
+                    if let peer = peer {
+                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
+                        controller.navigationController = self.rightController
+                        controller.loadViewIfNeeded(self.rightController.bounds)
+
+                        self.launchAction = .navigate(controller)
+
+                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+                    } else {
+                       // self._ready.set(self.leftController.chatList.ready.get())
+                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+                        self._ready.set(.single(true))
+                    }
+                } else {
+                   // self._ready.set(.single(true))
+                    _ready.set(leftController.chatList.ready.get())
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
+                }
             }
         } else {
            // self._ready.set(.single(true))

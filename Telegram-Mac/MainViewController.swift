@@ -32,6 +32,12 @@ final class UpdateTabView : Control {
             progressView.isHidden = !isInstalling
             imageView.isHidden = isInstalling || layoutState != .minimisize
             
+            if layoutState != .minimisize, isInstalling, let superview = self.superview {
+                change(size: NSMakeSize(60, frame.height), animated: true, timingFunction: .spring)
+                change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
+                progressView.change(pos: self.bounds.focus(progressView.frame.size).origin, animated: true, timingFunction: .spring)
+            }
+            
         }
     }
     
@@ -184,7 +190,6 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
             if authrorized, let controller = context.bindings.rootNavigation().controller as? ChatController {
                 controller.chatInteraction.saveState(true)
             }
-            
             updateApplication(sharedContext: context)
         }, for: .Click)
     }
@@ -650,7 +655,7 @@ class MainViewController: TelegramViewController {
     }
     
     func isCanMinimisize() -> Bool{
-        return self.tabController.current == chatListNavigation
+        return self.tabController.current == chatListNavigation || self.tabController.current == contacts || self.tabController.current == self.phoneCalls
     }
     
     override init(_ context: AccountContext) {

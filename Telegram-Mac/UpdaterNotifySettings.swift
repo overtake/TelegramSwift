@@ -56,7 +56,7 @@ struct LaunchSettings: PreferencesEntry, Equatable {
     
     init(decoder: PostboxDecoder) {
         self.applyText = decoder.decodeOptionalStringForKey("at")
-        self.navigation = decoder.decodeObjectForKey("n", decoder: { LaunchNavigation(decoder: $0) }) as? LaunchNavigation
+        self.navigation = decoder.decodeObjectForKey("n1", decoder: { LaunchNavigation(decoder: $0) }) as? LaunchNavigation
         self.previousText = decoder.decodeOptionalStringForKey("pt")
         self.openAtLaunch = decoder.decodeBoolForKey("oat", orElse: true)
     }
@@ -68,9 +68,9 @@ struct LaunchSettings: PreferencesEntry, Equatable {
             encoder.encodeNil(forKey: "at")
         }
         if let navigation = navigation {
-            encoder.encodeObject(navigation, forKey: "n")
+            encoder.encodeObject(navigation, forKey: "n1")
         } else {
-            encoder.encodeNil(forKey: "n")
+            encoder.encodeNil(forKey: "n1")
         }
         if let previousText = previousText {
             encoder.encodeString(previousText, forKey: "pt")
