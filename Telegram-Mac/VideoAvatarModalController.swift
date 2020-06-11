@@ -13,5 +13,6 @@ class VideoAvatarModalController: ModalController {
     private let context: AccountContext
     init(context: AccountContext) {
         self.context = context
+        super.init()
     }
 }
