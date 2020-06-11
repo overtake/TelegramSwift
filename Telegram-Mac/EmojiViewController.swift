@@ -249,6 +249,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         }
         if self.isLoaded() == true {
             self.genericView.updateSearchState(state, animated: true)
+            self.genericView.tableView.scroll(to: .up(true))
         }
     }
 
@@ -429,7 +430,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         genericView.tableView.endTableUpdates()
         genericView.updateVisibility(genericView.tableView.isEmpty, isSearch: search != nil)
         
-        self.genericView.tableView.scroll(to: .up(true))
+       // self.genericView.tableView.scroll(to: .up(true))
     }
     
     func update(with interactions: EntertainmentInteractions) {
