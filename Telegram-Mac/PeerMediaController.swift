@@ -1055,7 +1055,7 @@
         var firstUpdate: Bool = true
         genericView.mainTable?.updatedItems = { [weak self] items in
             let filter = items.filter {
-                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem")
+                !($0 is PeerMediaEmptyRowItem) && !($0.className == "Telegram.GeneralRowItem") && !($0 is SearchEmptyRowItem)
             }
             self?.genericView.updateCorners(filter.isEmpty ? .all : [.topLeft, .topRight], animated: !firstUpdate)
             firstUpdate = false

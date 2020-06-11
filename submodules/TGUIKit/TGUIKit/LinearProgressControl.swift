@@ -135,8 +135,8 @@ public class LinearProgressControl: Control {
             self.scrubblingTempState = progress
             self.onLiveScrobbling?(nil)
             // }
-        } else {
-            super.mouseDown(with: event)
+        } else if !userInteractionEnabled {
+            //super.mouseDown(with: event)
         }
     }
     

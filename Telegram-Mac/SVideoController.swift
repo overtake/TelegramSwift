@@ -45,7 +45,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private let hideControlsDisposable = MetaDisposable()
     private let postbox: Postbox
     private var pictureInPicture: Bool = false
-    private var hideControls: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    private var hideControls: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
     private var controlsIsHidden: Bool = false
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
     
@@ -116,7 +116,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private func updateIdleTimer() {
         NSCursor.unhide()
-        hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(3.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
+        hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
             self.hideControls.set(true)
             if !self.pictureInPicture {
@@ -144,7 +144,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func setHandlersOn(window: Window) {
         
         updateIdleTimer()
-        hideControls.set(false)
+        
+        let mouseInsidePlayer = genericView.mediaPlayer.mouseInside()
+        
+        hideControls.set(!mouseInsidePlayer)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
             if let window = self?.genericView.window, let contentView = window.contentView {
@@ -183,11 +186,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
-            if let window = self?.genericView.window, let contentView = window.contentView {
-                let point = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                if contentView.hitTest(point) != nil {
-                    self?.updateControlVisibility(true)
-                }
+            if let window = self?.genericView.window, self?.genericView.mediaPlayer.mouseInside() == true {
+                self?.updateControlVisibility(true)
             }
             return .rejected
         }, with: self, for: .leftMouseDown, priority: .modal)

@@ -507,17 +507,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewEnterPressed(_ event: NSEvent) -> Bool {
         
         if FastSettings.checkSendingAbility(for: event) {
-            if FastSettings.isPossibleReplaceEmojies {
-                let text = textView.string().stringEmojiReplacements
-                if textView.string() != text {
-                    self.textView.setString(text)
-                    let attributed = self.textView.attributedString()
-                    let range = self.textView.selectedRange()
-                    let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-                    chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-                }
-            }
-            
             let text = textView.string().trimmed
             if text.length > chatInteraction.presentation.maxInputCharacters {
                 alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))

@@ -257,7 +257,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     for subview in self.subviews {
                         if NSPointInRect(point, subview.frame) {
                             if let contentView = subview as? ChatMediaContentView, let media = contentView.media {
-                                if let reference = item.packReference {
+                                if let reference = item.packReference, item.packInfo.featured {
                                     item.arguments.showPack(reference)
                                 } else {
                                     item.arguments.sendMedia(media, contentView, false)
