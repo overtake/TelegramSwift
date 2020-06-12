@@ -80,9 +80,6 @@
 - (void)dealloc
 {
     [self deleteBuffers];
-    if (_currentContext != nil) {
-        CFRelease(_currentContext);
-    }
 }
 
 - (void)prepareForInputWithFormatDescription:(CMFormatDescriptionRef)inputFormatDescription outputRetainedBufferCountHint:(size_t)outputRetainedBufferCountHint
