@@ -80,7 +80,6 @@
 - (void)dealloc
 {
     CGLSetCurrentContext(nil);
-    CFRelease(_currentContext);
     [self deleteBuffers];
 }
 
