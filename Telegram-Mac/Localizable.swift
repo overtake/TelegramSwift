@@ -3693,6 +3693,8 @@ internal final class L10n {
   internal static var messageContextSaveGif: String  { return L10n.tr("Localizable", "Message.Context.SaveGif") }
   /// Select
   internal static var messageContextSelect: String  { return L10n.tr("Localizable", "Message.Context.Select") }
+  /// Unpin
+  internal static var messageContextUnpin: String  { return L10n.tr("Localizable", "Message.Context.Unpin") }
   /// Notify all members
   internal static var messageContextConfirmNotifyPin: String  { return L10n.tr("Localizable", "Message.Context.Confirm.NotifyPin") }
   /// Would you like to pin this message?

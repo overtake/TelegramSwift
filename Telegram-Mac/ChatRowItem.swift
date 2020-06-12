@@ -1952,27 +1952,34 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
     
     if !message.isScheduledMessage {
+        
+        let pinText = chatInteraction.presentation.pinnedMessageId == message.id ? L10n.messageContextUnpin : L10n.messageContextPin
+        let needUnpin = chatInteraction.presentation.pinnedMessageId == message.id
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
-                    if peer.isSupergroup {
+                items.append(ContextMenuItem(pinText, handler: {
+                    if peer.isSupergroup, !needUnpin {
                         modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                            chatInteraction.updatePinned(message.id, false, result != .thrid)
+                            chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId == message.id, result != .thrid)
                         })
                     } else {
-                        chatInteraction.updatePinned(message.id, false, true)
+                        chatInteraction.updatePinned(message.id, needUnpin, true)
                     }
                 }))
             }
         } else if message.id.peerId == account.peerId {
-            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-                chatInteraction.updatePinned(message.id, false, true)
+            items.append(ContextMenuItem(pinText, handler: {
+                chatInteraction.updatePinned(message.id, needUnpin, true)
             }))
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
-            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-                modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                    chatInteraction.updatePinned(message.id, false, result == .thrid)
-                })
+            items.append(ContextMenuItem(pinText, handler: {
+                if !needUnpin {
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                        chatInteraction.updatePinned(message.id, needUnpin, result == .thrid)
+                    })
+                } else {
+                    chatInteraction.updatePinned(message.id, needUnpin, false)
+                }
             }))
         }
     }
