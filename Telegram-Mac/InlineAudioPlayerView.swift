@@ -60,7 +60,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         repeatControl.disableActions()
         repeatControl.autohighlight = false
         textView.isSelectable = false
-        
         containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))
         
         super.init(header)
@@ -87,7 +86,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 controller.toggleRepeat()
                 control.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
             }
-            
         }, for: .Click)
         
         
@@ -180,7 +178,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
     }
     
-
     
     private var playProgressStyle:ControlStyle {
         return ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear)
@@ -256,7 +253,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         if let supportTableView = supportTableView {
             addGlobalAudioToVisible(tableView: supportTableView)
         }
-        
     }
     
     private func addGlobalAudioToVisible(tableView: TableView) {
@@ -306,7 +302,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     func songDidChanged(song:APSongItem, for controller:APController) {
         next.set(image: controller.nextEnabled ? theme.icons.audioPlayerNext : theme.icons.audioPlayerLockedNext, for: .Normal)
         previous.set(image: controller.prevEnabled ? theme.icons.audioPlayerPrev : theme.icons.audioPlayerLockedPrev, for: .Normal)
-        let layout = TextViewLayout(attributedTitle(for: song), maximumNumberOfLines:2, alignment: .center)
+        let layout = TextViewLayout(attributedTitle(for: song), maximumNumberOfLines:2, alignment: .left)
         self.textView.update(layout)
         self.needsLayout = true
         
@@ -357,19 +353,17 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         super.layout()
         containerView.frame = bounds
 
-        
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + 40 + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 40)))
+        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10)))
         textView.update(textView.layout)
         
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)
 
-        
         let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
         
-        textView.centerY(x: next.frame.maxX + floorToScreenPixels(backingScaleFactor, (w - textView.frame.width)/2))
+        textView.centerY(x: next.frame.maxX + 10)
         
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)

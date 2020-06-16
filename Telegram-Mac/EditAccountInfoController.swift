@@ -282,7 +282,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                                 }
                             }
                         } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                            return updateAccountPhoto(account: context.account, resource: resource, mapResourceToAvatarSizes: { resource, representations in
+                            return updateAccountPhoto(account: context.account, resource: resource, videoResource: nil, mapResourceToAvatarSizes: { resource, representations in
                                 return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                             })
                         } |> deliverOnMainQueue

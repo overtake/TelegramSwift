@@ -168,8 +168,8 @@ class ChatControllerView : View, ChatInputDelegate {
         //inputView.autoresizingMask = [.width]
         super.init(frame: frameRect)
         
-        self.layer = CAGradientLayer()
-        self.layer?.disableActions()
+//        self.layer = CAGradientLayer()
+//        self.layer?.disableActions()
         
         addSubview(tableView)
         addSubview(inputView)
@@ -260,10 +260,10 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void {
         if let view = header.currentView {
-            view.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
-            return { [weak view] in
-                view?.layer?.removeAllAnimations()
-            }
+//            view.layer?.animatePosition(from: NSMakePoint(0, -current), to: NSMakePoint(0, previous), duration: 0.2, removeOnCompletion: false)
+//            return { [weak view] in
+//               view?.layer?.removeAllAnimations()
+//            }
         }
         return {}
     }
@@ -327,71 +327,58 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     override func setFrameSize(_ newSize: NSSize) {
-        if let view = inputContextHelper.accessoryView {
-            view.setFrameSize(NSMakeSize(newSize.width, view.frame.height))
-        }
+        super.setFrameSize(newSize)
         
-        if let currentView = header.currentView {
-            currentView.setFrameSize(NSMakeSize(newSize.width, currentView.frame.height))
-            tableView.setFrameSize(NSMakeSize(newSize.width, newSize.height - inputView.frame.height - currentView.frame.height))
-        } else {
-            tableView.setFrameSize(NSMakeSize(newSize.width, newSize.height - inputView.frame.height))
-        }
-        inputView.setFrameSize(NSMakeSize(newSize.width, inputView.frame.height))
-        gradientMaskView.frame = tableView.frame
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
                 view.updateBackground(animated: false)
             }
         })
-        
-        super.setFrameSize(newSize)
-
     }
+
     
     override func layout() {
         super.layout()
-        header.currentView?.setFrameOrigin(NSZeroPoint)
-        if let currentView = header.currentView {
-            tableView.setFrameOrigin(0, currentView.frame.height)
-            currentView.needsDisplay = true
-
-        } else {
-            tableView.setFrameOrigin(0, 0)
-        }
-        gradientMaskView.frame = tableView.frame
-        
+        updateFrame(frame, animated: false)
+    }
+    
+    func updateFrame(_ frame: NSRect, animated: Bool) {
         if let view = inputContextHelper.accessoryView {
-            view.setFrameOrigin(0, frame.height - inputView.frame.height - view.frame.height)
+            (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
         }
-        inputView.setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
+        if let currentView = header.currentView {
+            (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
+            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, currentView.frame.height, frame.width, frame.height - inputView.frame.height - currentView.frame.height)
+            
+            currentView.needsDisplay = true
+        } else {
+            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, 0, frame.width, frame.height - inputView.frame.height)
+        }
+        (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
+        (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
+        
+        
+        (animated ? inputView.animator() : inputView).setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
         if let indicator = progressView?.subviews.first {
-            indicator.center()
+            (animated ? indicator.animator() : indicator).center()
         }
         
-        progressView?.center()
+        (animated ? progressView?.animator() : progressView)?.center()
         
-        scroller.setFrameOrigin(frame.width - scroller.frame.width - 6, tableView.frame.height - 6 - scroller.frame.height)
+        (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6, tableView.frame.height - 6 - scroller.frame.height))
         
         if let mentions = mentions {
-            mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: false )
+            (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
         }
         if let failed = failed {
             var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
             if let mentions = mentions {
                 offset += (mentions.frame.height + 6)
             }
-            failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: false )
+            (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
         }
-        
-        self.tableView.enumerateVisibleViews(with: { view in
-            if let view = view as? ChatRowView {
-                view.updateBackground(animated: false)
-            }
-        })
     }
-    
 
     override var responder: NSResponder? {
         return inputView.responder
@@ -440,7 +427,7 @@ class ChatControllerView : View, ChatInputDelegate {
             state = .promo(kind)
         } else if interfaceState.isSearchMode.0 {
             state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
-        }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.isEmpty {
+        }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock))
             } else if settings.contains(.canReport) {
@@ -498,7 +485,7 @@ class ChatControllerView : View, ChatInputDelegate {
                         if let mentions = mentions {
                             offset += (mentions.frame.height + 6)
                         }
-                        failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: animated)
+                        failed.setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
                         addSubview(failed)
                     }
                     if animated {
@@ -3388,6 +3375,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return genericView.navigationHeaderDidNoticeAnimation(current, previous, animated)
     }
 
+    override func updateFrame(_ frame: NSRect, animated: Bool) {
+        super.updateFrame(frame, animated: animated)
+        self.genericView.updateFrame(frame, animated: animated)
+    }
     
     private func openScheduledChat() {
         self.chatInteraction.saveState(scrollState: self.immediateScrollState())
@@ -3687,7 +3678,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }, theme.icons.chatArchive))
                                 }
                                 
-                                if peer.canSendMessage, !peer.isSecretChat {
+                                if peer.canSendMessage, peerView.peerId.namespace != Namespaces.Peer.SecretChat {
                                     let text: String
                                     if peer.id != context.peerId {
                                         text = L10n.chatRightContextScheduledMessages
@@ -3716,7 +3707,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
                                             }
                                             
-                                            modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+                                            modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
                                                 self?.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
                                                     switch status {
                                                     case .success:
