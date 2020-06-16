@@ -79,8 +79,9 @@
 
 - (void)dealloc
 {
+    CGLSetCurrentContext(nil);
+    CGLReleaseContext(_currentContext);
     [self deleteBuffers];
-    CFRelease(_currentContext);
 }
 
 - (void)prepareForInputWithFormatDescription:(CMFormatDescriptionRef)inputFormatDescription outputRetainedBufferCountHint:(size_t)outputRetainedBufferCountHint
@@ -357,10 +358,8 @@
     
 bail:
     CGLUnlockContext(_currentContext);
-    if (oldContext != _currentContext && oldContext != NULL) {
+    if (oldContext != _currentContext) {
         CGLSetCurrentContext(oldContext);
-        if (oldContext)
-            CFRelease(oldContext);
     }
     
     
@@ -458,8 +457,6 @@ bail:
     CGLUnlockContext(_currentContext);
     if (oldContext != _currentContext) {
         CGLSetCurrentContext(oldContext);
-        if (oldContext)
-            CFRelease(oldContext);
     }
     
     
@@ -527,8 +524,6 @@ bail:
     
     if (oldContext != _currentContext) {
         CGLSetCurrentContext(oldContext);
-        if (oldContext)
-            CFRelease(oldContext);
     }
     
     

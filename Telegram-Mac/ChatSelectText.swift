@@ -28,55 +28,61 @@ class SelectManager : NSResponder {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private var ranges:[(AnyHashable,WeakReference<TextView>, SelectContainer)] = []
+    private var ranges:Atomic<[(AnyHashable,WeakReference<TextView>, SelectContainer)]> = Atomic(value: [])
     
     func add(range:NSRange, textView: TextView, text: NSAttributedString, header: String?, stableId: AnyHashable) {
-        ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, header: header)))
+        _ = ranges.modify { ranges in
+            var ranges = ranges
+            ranges.append((stableId, WeakReference(value: textView), SelectContainer(text: text, range: range, header: header)))
+            return ranges
+        }
     }
     
     func removeAll() {
-        for selection in ranges {
-            if let value = selection.1.value {
-                value.layout?.clearSelect()
-                value.canBeResponder = true
-                value.setNeedsDisplay()
+        _ = ranges.modify { ranges in
+            for selection in ranges {
+                if let value = selection.1.value {
+                    value.layout?.clearSelect()
+                    value.canBeResponder = true
+                    value.setNeedsDisplay()
+                }
             }
+            return []
         }
-        ranges.removeAll()
     }
     
     func remove(for id:Int64) {
         
     }
     var isEmpty:Bool {
-        return ranges.isEmpty
+        return ranges.with { $0.isEmpty }
     }
     
     
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
-        
-        for i in stride(from: ranges.count - 1, to: -1, by: -1) {
-            let container = ranges[i].2
-            if let header = container.header, ranges.count > 1 {
-                _ = string.append(string: header + "\n", color: nil, font: .normal(.text))
-            }
-            
-            if container.range.location != NSNotFound {
-                if container.range.location != 0, ranges.count > 1 {
-                    _ = string.append(string: "...", color: nil, font: .normal(.text))
+        _ = ranges.with { ranges in
+            for i in stride(from: ranges.count - 1, to: -1, by: -1) {
+                let container = ranges[i].2
+                if let header = container.header, ranges.count > 1 {
+                    _ = string.append(string: header + "\n", color: nil, font: .normal(.text))
                 }
-                string.append(container.text.attributedSubstring(from: container.range))
-                if container.range.location + container.range.length != container.text.length, ranges.count > 1 {
-                    _ = string.append(string: "...", color: nil, font: .normal(.text))
+                
+                if container.range.location != NSNotFound {
+                    if container.range.location != 0, ranges.count > 1 {
+                        _ = string.append(string: "...", color: nil, font: .normal(.text))
+                    }
+                    string.append(container.text.attributedSubstring(from: container.range))
+                    if container.range.location + container.range.length != container.text.length, ranges.count > 1 {
+                        _ = string.append(string: "...", color: nil, font: .normal(.text))
+                    }
                 }
-            }
-            
-            if i != 0 {
-                _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
+                
+                if i != 0 {
+                    _ = string.append(string: "\n\n", color: nil, font: .normal(.text))
+                }
             }
         }
-
         return string
     }
     
@@ -111,76 +117,92 @@ class SelectManager : NSResponder {
     }
     
     func selectNextChar() -> Bool {
-        if let last = ranges.last, let textView = last.1.value {
-            if last.2.range.max < last.2.text.length, let layout = textView.layout {
-                
-                var range = last.2.range
-                
-                switch layout.selectedRange.cursorAlignment {
-                case let .min(cursorAlignment), let .max(cursorAlignment):
-                    if range.min >= cursorAlignment {
-                        range.length += 1
-                    } else {
-                        range.location += 1
-                        if range.length > 1 {
-                            range.length -= 1
+        var result: Bool = false
+        _ = ranges.modify { ranges in
+            var ranges = ranges
+            if let last = ranges.last, let textView = last.1.value {
+                if last.2.range.max < last.2.text.length, let layout = textView.layout {
+                    
+                    var range = last.2.range
+                    
+                    switch layout.selectedRange.cursorAlignment {
+                    case let .min(cursorAlignment), let .max(cursorAlignment):
+                        if range.min >= cursorAlignment {
+                            range.length += 1
+                        } else {
+                            range.location += 1
+                            if range.length > 1 {
+                                range.length -= 1
+                            }
                         }
                     }
+                    let location = min(max(0, range.location), last.2.text.length)
+                    let length = max(min(range.length, last.2.text.length - location), 0)
+                    range = NSMakeRange(location, length)
+                    
+                    layout.selectedRange.range = range
+                    ranges[ranges.count - 1] = (last.0, last.1, SelectContainer(text: last.2.text, range: range, header: last.2.header))
+                    textView.needsDisplay = true
+                    result = true
+                    return ranges
                 }
-                let location = min(max(0, range.location), last.2.text.length)
-                let length = max(min(range.length, last.2.text.length - location), 0)
-                range = NSMakeRange(location, length)
-                
-                layout.selectedRange.range = range
-                ranges[ranges.count - 1] = (last.0, last.1, SelectContainer(text: last.2.text, range: range, header: last.2.header))
-                textView.needsDisplay = true
-                return true
             }
+            result = false
+            return ranges
         }
-        return false
+        return result
     }
     
     func selectPrevChar() -> Bool {
-        if let first = ranges.first, let textView = first.1.value {
-            if let layout = textView.layout {
-                
-                var range = first.2.range
-                
-                switch layout.selectedRange.cursorAlignment {
-                case let .min(cursorAlignment), let .max(cursorAlignment):
-                    if range.location >= cursorAlignment {
-                        if range.length > 1 {
-                            range.length -= 1
+        var result: Bool = false
+        _ = ranges.modify { ranges in
+            var ranges = ranges
+            if let first = ranges.first, let textView = first.1.value {
+                if let layout = textView.layout {
+                    
+                    var range = first.2.range
+                    
+                    switch layout.selectedRange.cursorAlignment {
+                    case let .min(cursorAlignment), let .max(cursorAlignment):
+                        if range.location >= cursorAlignment {
+                            if range.length > 1 {
+                                range.length -= 1
+                            } else {
+                                range.location -= 1
+                            }
                         } else {
-                            range.location -= 1
-                        }
-                    } else {
-                        if range.location > 0 {
-                            range.location -= 1
-                            range.length += 1
+                            if range.location > 0 {
+                                range.location -= 1
+                                range.length += 1
+                            }
                         }
                     }
+                    
+                    let location = min(max(0, range.location), first.2.text.length)
+                    let length = max(min(range.length, first.2.text.length - location), 0)
+                    range = NSMakeRange(location, length)
+                    layout.selectedRange.range = range
+                    ranges[0] = (first.0, first.1, SelectContainer(text: first.2.text, range: range, header: first.2.header))
+                    textView.needsDisplay = true
+                    result = true
+                    return ranges
                 }
-    
-                let location = min(max(0, range.location), first.2.text.length)
-                let length = max(min(range.length, first.2.text.length - location), 0)
-                range = NSMakeRange(location, length)
-                layout.selectedRange.range = range
-                ranges[0] = (first.0, first.1, SelectContainer(text: first.2.text, range: range, header: first.2.header))
-                textView.needsDisplay = true
-                return true
             }
+            result = false
+            return ranges
         }
-        return false
+        return result
     }
     
     func find(_ stableId:AnyHashable) -> NSRange? {
-        for range in ranges {
-            if range.0 == stableId {
-                return range.2.range
+        return ranges.with { ranges -> NSRange? in
+            for range in ranges {
+                if range.0 == stableId {
+                    return range.2.range
+                }
             }
+            return nil
         }
-        return nil
     }
     
     override func becomeFirstResponder() -> Bool {

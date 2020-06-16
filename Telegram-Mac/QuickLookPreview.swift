@@ -33,7 +33,7 @@ private class QuickLookPreviewItem : NSObject, QLPreviewItem {
     
     var previewItemTitle: String! {
         if let media = media as? TelegramMediaFile {
-            return media.fileName ?? tr(L10n.quickLookPreview)
+            return media.fileName ?? L10n.quickLookPreview
         }
         return L10n.quickLookPreview
     }

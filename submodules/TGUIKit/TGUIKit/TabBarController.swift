@@ -31,20 +31,23 @@ private class TabBarViewController : View {
         super.setFrameSize(newSize)
     }
     
-    override func layout() {
-        super.layout()
-        
+    func updateFrame(_ frame: NSRect, animated: Bool) {
         for subview in subviews {
             if let subview = subview as? TabBarView {
-                subview.frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
+                (animated ? subview.animator() : subview).frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
             } else {
                 if tabView.isHidden {
-                    subview.frame = bounds
+                    (animated ? subview.animator() : subview).frame = bounds
                 } else {
-                    subview.frame = NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height)
+                    (animated ? subview.animator() : subview).frame = NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height)
                 }
             }
         }
+    }
+    
+    override func layout() {
+        super.layout()
+        updateFrame(frame, animated: false)
     }
 }
 
@@ -114,6 +117,11 @@ public class TabBarController: ViewController, TabViewDelegate {
         genericView.tabView.isHidden = hide
         current?.view.frame = hide ? bounds : NSMakeRect(0, 0, bounds.width, bounds.height - genericView.tabView.frame.height)
         
+    }
+    
+    public override func updateFrame(_ frame: NSRect, animated: Bool) {
+        super.updateFrame(frame, animated: animated)
+        self.genericView.updateFrame(frame, animated: animated)
     }
     
     public func select(index:Int) -> Void {
