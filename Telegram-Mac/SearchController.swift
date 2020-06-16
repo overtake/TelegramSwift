@@ -976,6 +976,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             switch type {
             case let .peer(peer, _, _):
                 open(peer.id, nil, false)
+                _ = addRecentlySearchedPeer(postbox: context.account.postbox, peerId: peer.id).start()
             case let .savedMessages(peer):
                 open(peer.id, nil, false)
             case .articles:

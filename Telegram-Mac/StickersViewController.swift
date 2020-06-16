@@ -1019,8 +1019,6 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         }
                     } |> delay(0.2, queue: prepareQueue)
 
-                    let first = Atomic<Bool>(value: true)
-                    
                     return combineLatest(searchLocal, searchRemote, emojiRelated) |> map { local, remote, emojiRelated in
                         var value = FoundStickerSets()
                         if let local = local {
@@ -1183,7 +1181,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let entries = previous.with ({ $0 })
                 let index:StickerPacksIndex?
                 
-                if let foundPacks = foundPacks.with ({ $0 }) {
+                if let foundPacks = foundPacks.with ({ $0 }), self.searchState.state == .Focus {
                     self.position.set(.loadFeaturedMore(foundPacks))
                 } else {
                     switch position.direction {

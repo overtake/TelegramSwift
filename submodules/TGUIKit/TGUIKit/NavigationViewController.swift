@@ -89,12 +89,13 @@ open class NavigationHeader {
                     
                     let animator = animated ? view.animator() : view
                     animator.setFrameOrigin(NSMakePoint(0, inset))
-                    
-                    let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
-                    
-                    controllerView.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
-                    navigation.controller.view.needsLayout = true
-                    completion()
+
+                    NSAnimationContext.runAnimationGroup({ ctx in
+                        navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
+                    }, completionHandler: {
+                        completion()
+                    })
+                   // navigation.controller.view.needsLayout = true
                     
                     CATransaction.commit()
                 }
@@ -134,9 +135,7 @@ open class NavigationHeader {
             if let additionalHeader = additionalHeader, additionalHeader.needShown  {
                 inset += additionalHeader.height
             }
-            
-            let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
-            controllerView.frame = CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset))
+            navigation.controller.updateFrame(CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset)), animated: animated)
         }
         
     }
@@ -171,9 +170,7 @@ public class CallNavigationHeader : NavigationHeader {
                     let headerView = animated ? view.animator() : view
                     
                     headerView.setFrameOrigin(NSMakePoint(0, 0))
-                    let controllerView = animated ? navigation.controller.view.animator() : navigation.controller.view
-                    controllerView.frame = NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset)
-                    controllerView.needsLayout = true
+                    navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
                     
                 }
             }))
@@ -209,10 +206,7 @@ public class CallNavigationHeader : NavigationHeader {
             
             let navigationBar = animated ? navigation.navigationBar.animator() : navigation.navigationBar
             navigationBar.setFrameOrigin(.zero)
-            
-            let controller = animated ? navigation.controller.view.animator() : navigation.controller.view
-            controller.frame = NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height)
-            controller.needsLayout = true
+            navigation.controller.updateFrame(NSMakeRect(0, navigation.controller.bar.height, navigation.controller.frame.width, navigation.frame.height - navigation.controller.bar.height), animated: animated)
         }
         
     }

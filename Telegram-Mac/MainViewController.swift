@@ -658,6 +658,11 @@ class MainViewController: TelegramViewController {
         return self.tabController.current == chatListNavigation || self.tabController.current == contacts || self.tabController.current == self.phoneCalls
     }
     
+    override func updateFrame(_ frame: NSRect, animated: Bool) {
+        super.updateFrame(frame, animated: animated)
+        self.tabController.updateFrame(frame, animated: animated)
+    }
+    
     override init(_ context: AccountContext) {
         
         chatListNavigation = NavigationViewController(ChatListController(context), context.window)

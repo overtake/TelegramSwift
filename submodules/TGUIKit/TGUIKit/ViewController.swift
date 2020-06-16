@@ -488,6 +488,12 @@ open class ViewController : NSObject {
         return true
     }
     
+    open func updateFrame(_ frame: NSRect, animated: Bool) {
+        if isLoaded() {
+            (animated ? self.view.animator() : self.view).frame = frame
+        }
+    }
+    
     open func getLeftBarViewOnce() -> BarView {
         return enableBack ? BackNavigationBar(self) : BarView(controller: self)
     }

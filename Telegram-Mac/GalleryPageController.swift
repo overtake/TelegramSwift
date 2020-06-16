@@ -304,6 +304,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             return .invokeNext
         }, with: self, for: .leftMouseUp)
         
+        
+        window.set(mouseHandler: { event -> KeyHandlerResult in
+            dragged = nil
+            return .rejected
+        }, with: self, for: .leftMouseDown)
     
         window.set(mouseHandler: { event -> KeyHandlerResult in
             guard dragged == nil else {return .rejected}
@@ -601,12 +606,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             view.minMagnify = item.minMagnify
             view.maxMagnify = item.maxMagnify
         
-
+            item.size.set(.single(item.sizeValue))
             
             item.view.set(.single(view.contentView))
-            smartUpdaterDisposable.set(view.smartUpdaterValue.start(next: { size in
-                item.size.set(.single(size))
-            }))
+//            smartUpdaterDisposable.set(view.smartUpdaterValue.start(next: { size in
+//                item.size.set(.single(size))
+//            }))
             
         }
     }
@@ -650,7 +655,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     
                 }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
-                magnifyDisposable.set(controllerView.magnifyUpdater.get().start(next: { [weak self] value in
+                magnifyDisposable.set(controllerView.magnifyUpdaterValue.start(next: { [weak self] value in
                     self?.captionScrollView.isHidden = value > 1.0
                 }))
                 
@@ -746,7 +751,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }, dismiss: { [weak self] in
                 _ = self?.interactions.dismiss()
             })
-            item.magnify.set(magnify.magnifyUpdater.get())
+            item.magnify.set(magnify.magnifyUpdaterValue)
             controller.view = magnify
             if hasInited {
                 item.request()
