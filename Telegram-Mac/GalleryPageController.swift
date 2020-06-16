@@ -751,7 +751,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }, dismiss: { [weak self] in
                 _ = self?.interactions.dismiss()
             })
-            item.magnify.set(magnify.magnifyUpdaterValue)
+            item.magnify.set(magnify.magnifyUpdaterValue |> deliverOnPrepareQueue)
             controller.view = magnify
             if hasInited {
                 item.request()
