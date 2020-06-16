@@ -129,7 +129,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 
             }
             
-            let result = combineLatest(queue: .mainQueue(), signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { data, magnify -> Signal<(NSImage?, ImageOrientation?), NoError> in
+            let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { data, magnify -> Signal<(NSImage?, ImageOrientation?), NoError> in
                 
                 let (size, orientation) = data
                 return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)

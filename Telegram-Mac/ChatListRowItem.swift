@@ -324,7 +324,7 @@ class ChatListRowItem: TableRowItem {
     private var groupLatestPeers:[ChatListGroupReferencePeer] = []
     
     private var textLeftCutout: CGFloat = 0.0
-    let contentImageSize = CGSize(width: 18.0, height: 18.0)
+    let contentImageSize = CGSize(width: 16, height: 16)
     let contentImageSpacing: CGFloat = 2.0
     let contentImageTrailingSpace: CGFloat = 5.0
     private(set) var contentImageSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -761,11 +761,11 @@ class ChatListRowItem: TableRowItem {
         }
         
         if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, false, .left)
+            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
         
         if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(messageWidth, size.height), nil, true, .left)
+            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
         
         var textCutout: TextNodeCutout?
