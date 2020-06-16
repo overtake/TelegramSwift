@@ -1218,8 +1218,10 @@ class GalleryViewer: NSResponder {
                     }
                 }
                 
-                strongSelf.backgroundView._change(opacity: 1, animated: false)
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
+                    
+                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
+                    
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
                             return nil
@@ -1230,7 +1232,7 @@ class GalleryViewer: NSResponder {
                     if ignoreStableId != stableId {
                         return strongSelf?.delegate?.contentInteractionView(for: stableId, animateIn: false)
                     }
-
+                    
                     return nil
                 }, completion:{ [weak strongSelf] in
                     //strongSelf?.backgroundView.alphaValue = 1.0

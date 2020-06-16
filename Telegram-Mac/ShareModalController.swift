@@ -454,6 +454,7 @@ class ShareMessageObject : ShareObject {
             if let comment = comment?.trimmed, !comment.isEmpty {
                 _ = Sender.enqueue(message: EnqueueMessage.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId).start()
             }
+            
             _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId).start()
         }
         return .complete()

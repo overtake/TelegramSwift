@@ -99,14 +99,14 @@ class Sender: NSObject {
            
             
             let options = NSMutableDictionary()
-            options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+            options.setValue(85 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
             
-            let colorQuality: Float = 0.8
+            let colorQuality: Float = 0.3
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
             
             let asset = AVAsset(url: URL(fileURLWithPath: path))
             let imageGenerator = AVAssetImageGenerator(asset: asset)
-            imageGenerator.maximumSize = CGSize(width: 320, height: 320)
+            imageGenerator.maximumSize = CGSize(width: 85, height: 85)
             imageGenerator.appliesPreferredTrackTransform = true
             let fullSizeImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
             
@@ -123,11 +123,7 @@ class Sender: NSObject {
                         preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource))
                     }
                 }
-                
-                
             }
-            
-           
         } else if mimeType.hasPrefix("image") || mimeType.hasSuffix("pdf"), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             let options = NSMutableDictionary()

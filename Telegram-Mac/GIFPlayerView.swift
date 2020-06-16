@@ -12,38 +12,6 @@ import AVFoundation
 import SwiftSignalKit
 
 
-private final class PlayerValue<T> {
-    private var value: T
-    
-    public init(value: T) {
-        self.value = value
-        
-    }
-    
-    deinit {
-    }
-    
-    public func with<R>(_ f: (T) -> R) -> R {
-        let result = f(self.value)
-        
-        return result
-    }
-    
-    public func modify(_ f: (T) -> T) -> T {
-        let result = f(self.value)
-        self.value = result
-        
-        return result
-    }
-    
-    public func swap(_ value: T) -> T {
-        let previous = self.value
-        self.value = value
-        
-        return previous
-    }
-}
-
 
 final class CIStickerContext : CIContext {
     deinit {
@@ -123,17 +91,17 @@ class GIFPlayerView: TransformImageView {
     
     private let sampleLayer:TAVSampleBufferDisplayLayer = TAVSampleBufferDisplayLayer()
     
-    private var _reader:PlayerValue<AVAssetReader?> = PlayerValue(value:nil)
-    private var _asset:PlayerValue<AVURLAsset?> = PlayerValue(value:nil)
-    private let _output:PlayerValue<AVAssetReaderTrackOutput?> = PlayerValue(value:nil)
-    private let _track:PlayerValue<AVAssetTrack?> = PlayerValue(value:nil)
-    private let _needReset:PlayerValue<Bool> = PlayerValue(value:false)
-    private let _timer:PlayerValue<CFRunLoopTimer?> = PlayerValue(value:nil)
-    private let _loopAction:PlayerValue<(()->LoopActionResult)?> = PlayerValue(value:nil)
-    private let _timebase:PlayerValue<CMTimebase?> = PlayerValue(value:nil)
-    private let _stopRequesting:PlayerValue<Bool> = PlayerValue(value:false)
-    private let _swapNext:PlayerValue<Bool> = PlayerValue(value:true)
-    private let _data:PlayerValue<AVGifData?> = PlayerValue(value:nil)
+    private var _reader:Atomic<AVAssetReader?> = Atomic(value:nil)
+    private var _asset:Atomic<AVURLAsset?> = Atomic(value:nil)
+    private let _output:Atomic<AVAssetReaderTrackOutput?> = Atomic(value:nil)
+    private let _track:Atomic<AVAssetTrack?> = Atomic(value:nil)
+    private let _needReset:Atomic<Bool> = Atomic(value:false)
+    private let _timer:Atomic<CFRunLoopTimer?> = Atomic(value:nil)
+    private let _loopAction:Atomic<(()->LoopActionResult)?> = Atomic(value:nil)
+    private let _timebase:Atomic<CMTimebase?> = Atomic(value:nil)
+    private let _stopRequesting:Atomic<Bool> = Atomic(value:false)
+    private let _swapNext:Atomic<Bool> = Atomic(value:true)
+    private let _data:Atomic<AVGifData?> = Atomic(value:nil)
 
     func setLoopAction(_ action:(()->LoopActionResult)?) {
         _ = _loopAction.swap(action)
@@ -361,7 +329,7 @@ class GIFPlayerView: TransformImageView {
     
 }
 
-fileprivate func restartReading(_reader:PlayerValue<AVAssetReader?>, _asset:PlayerValue<AVURLAsset?>, _track:PlayerValue<AVAssetTrack?>, _output:PlayerValue<AVAssetReaderTrackOutput?>, _needReset:PlayerValue<Bool>, _timer:PlayerValue<CFRunLoopTimer?>, layer: AVSampleBufferDisplayLayer, _timebase:PlayerValue<CMTimebase?>) -> Bool {
+fileprivate func restartReading(_reader:Atomic<AVAssetReader?>, _asset:Atomic<AVURLAsset?>, _track:Atomic<AVAssetTrack?>, _output:Atomic<AVAssetReaderTrackOutput?>, _needReset:Atomic<Bool>, _timer:Atomic<CFRunLoopTimer?>, layer: AVSampleBufferDisplayLayer, _timebase:Atomic<CMTimebase?>) -> Bool {
     
     if let timebase = layer.controlTimebase, let timer = _timer.modify({$0}) {
         _ = _timer.swap(nil)
@@ -399,7 +367,7 @@ fileprivate func restartReading(_reader:PlayerValue<AVAssetReader?>, _asset:Play
                         let timer = CFRunLoopTimerCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent(), veryLongTimeInterval, 0, 0, {
                             (cfRunloopTimer, info) -> Void in
                             if let info = info {
-                                let s = Unmanaged<PlayerValue<Bool>>.fromOpaque(info).takeUnretainedValue()
+                                let s = Unmanaged<Atomic<Bool>>.fromOpaque(info).takeUnretainedValue()
                                 _ = s.swap(true)
                             }
                         }, &context);

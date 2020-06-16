@@ -12,7 +12,6 @@ open class MagnifyView : NSView {
     
     public private(set) var magnify:CGFloat = 1.0 {
         didSet {
-            magnifyUpdater.set(magnify)
         }
     }
     public var maxMagnify:CGFloat = 8.0
@@ -24,7 +23,12 @@ open class MagnifyView : NSView {
         return smartUpdater.get() |> distinctUntilChanged
     }
     
-    public let magnifyUpdater:ValuePromise<CGFloat> = ValuePromise(1, ignoreRepeated: true)
+    fileprivate let magnifyUpdater:Promise<CGFloat> = Promise(1)
+    
+    public var magnifyUpdaterValue:Signal<CGFloat, NoError> {
+        return magnifyUpdater.get() |> distinctUntilChanged
+    }
+    
     private var mov_start:NSPoint = NSZeroPoint
     private var mov_content_start:NSPoint = NSZeroPoint
     
@@ -33,7 +37,7 @@ open class MagnifyView : NSView {
     let containerView:NSView = NSView()
     open var contentSize:NSSize = NSZeroSize {
         didSet {
-            if oldValue != contentSize  {
+            if abs(oldValue.width - contentSize.width) > 1 || abs(oldValue.height - contentSize.height) > 1  {
                 contentView.frame = focus(magnifiedSize)
             }
         }
@@ -88,10 +92,12 @@ open class MagnifyView : NSView {
     
     public func zoomIn() {
         add(magnify: 0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
+        magnifyUpdater.set(.single(magnify) |> delay(0.2, queue: .mainQueue()))
     }
     
     public func zoomOut() {
         add(magnify: -0.5, for: NSMakePoint(containerView.frame.width/2, containerView.frame.height/2), animated: true)
+        magnifyUpdater.set(.single(magnify) |> delay(0.2, queue: .mainQueue()))
     }
     
     open override func layout() {
@@ -111,6 +117,7 @@ open class MagnifyView : NSView {
         
         if event.phase == .ended {
             smartUpdater.set(.single(magnifiedSize) |> delay(0.3, queue: Queue.mainQueue()))
+            magnifyUpdater.set(.single(magnify) |> delay(0.2, queue: .mainQueue()))
         } else if event.phase == .began {
             smartUpdater.set(smartUpdater.get())
         }
@@ -120,6 +127,7 @@ open class MagnifyView : NSView {
       //  super.smartMagnify(with: event)
         addSmart(for: containerView.convert(event.locationInWindow, from: nil))
         smartUpdater.set(.single(magnifiedSize) |> delay(0.2, queue: Queue.mainQueue()))
+        magnifyUpdater.set(.single(magnify) |> delay(0.2, queue: .mainQueue()))
     }
     
     func addSmart(for location:NSPoint) {
@@ -153,15 +161,20 @@ open class MagnifyView : NSView {
         var point:NSPoint = past.origin
         let focused = focus(magnifiedSize).origin
         if NSPointInRect(location, contentView.frame) {
-            if magnifiedSize.width < frame.width || magnifiedSize.height < frame.height {
-                point = focused
+            if magnifiedSize.width < frame.width {
+                point.x = focused.x
             } else {
                 point.x -= (magnifiedSize.width - past.width) * ((location.x - past.minX) / past.width)
-                point.y -= (magnifiedSize.height - past.height) * ((location.y - past.minY) / past.height)
-                
-                point = adjust(with: point)
+                point = adjust(with: point, adjustX: true, adjustY: false)
                 
             }
+            if magnifiedSize.height < frame.height {
+                point.y = focused.y
+            } else {
+                point.y -= (magnifiedSize.height - past.height) * ((location.y - past.minY) / past.height)
+                point = adjust(with: point, adjustX: false, adjustY: true)
+            }
+            
         } else {
             point = focused
         }
@@ -202,10 +215,14 @@ open class MagnifyView : NSView {
         
     }
     
-    private func adjust(with point:NSPoint) -> NSPoint {
+    private func adjust(with point:NSPoint, adjustX: Bool = true, adjustY: Bool = true) -> NSPoint {
         var point = point
-        point.x = floorToScreenPixels(backingScaleFactor, max(min(0, point.x), point.x + (frame.width - (point.x + magnifiedSize.width))))
-        point.y = floorToScreenPixels(backingScaleFactor, max(min(0, point.y), point.y + (frame.height - (point.y + magnifiedSize.height))))
+        if adjustX {
+            point.x = floorToScreenPixels(backingScaleFactor, max(min(0, point.x), point.x + (frame.width - (point.x + magnifiedSize.width))))
+        }
+        if adjustY {
+            point.y = floorToScreenPixels(backingScaleFactor, max(min(0, point.y), point.y + (frame.height - (point.y + magnifiedSize.height))))
+        }
         return point
     }
     

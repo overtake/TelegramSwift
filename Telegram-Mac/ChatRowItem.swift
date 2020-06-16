@@ -1989,6 +1989,10 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: {
             chatInteraction.forwardMessages([message.id])
         }))
+    } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat, !message.containsSecretMedia {
+        items.append(ContextMenuItem(L10n.messageContextShare, handler: {
+            chatInteraction.forwardMessages([message.id])
+        }))
     }
     
     if canDeleteMessage(message, account: account) {
@@ -2049,7 +2053,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                         items.append(quickLook)
                     }
                    
-                    if data.complete {
+                    if data.complete, !message.containsSecretMedia {
                         items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
                             saveAs(file, account: account)
                         }))
