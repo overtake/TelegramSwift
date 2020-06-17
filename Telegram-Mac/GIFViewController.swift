@@ -487,6 +487,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         let tabsArguments = GifTabsArguments(context: context, select: { [weak self] id in
             self?.makeSearchCommand?(.close)
             self?.tabsState.set(id)
+            self?.scrollup()
         })
         
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])

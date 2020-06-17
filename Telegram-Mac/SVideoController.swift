@@ -239,6 +239,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        hideOnIdleDisposable.set(nil)
         _ = enableScreenSleep()
         NSCursor.unhide()
         window?.removeAllHandlers(for: self)

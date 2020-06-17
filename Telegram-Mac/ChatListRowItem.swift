@@ -548,7 +548,7 @@ class ChatListRowItem: TableRowItem {
             
             let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
             _ = contentImageFillSize
-            if embeddedState == nil {
+            if embeddedState == nil, false {
                 for message in messages {
                     inner: for media in message.media {
                         if !message.containsSecretMedia {

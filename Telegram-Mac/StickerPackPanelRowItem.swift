@@ -220,7 +220,12 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
         longDisposable.set(nil)
+        
         self.isMouseDown = true
+        
+        guard event.clickCount == 1 else {
+            return
+        }
         
         let point = convert(event.locationInWindow, from: nil)
         for subview in self.subviews {
