@@ -368,8 +368,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     private func configureCaptionAutohide() {
         let view = controller.selectedViewController?.view as? MagnifyView
-        captionScrollView.removeFromSuperview()
-        controller.view.addSubview(captionScrollView)
+        if captionScrollView.superview != nil {
+            captionScrollView.removeFromSuperview()
+            controller.view.addSubview(captionScrollView)
+        }
         autohideCaptionDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
             guard let `self` = self else {
                 return
