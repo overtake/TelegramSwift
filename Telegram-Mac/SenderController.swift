@@ -73,7 +73,7 @@ class VideoMessageSenderContainer : MediaSenderContainer {
 
 class Sender: NSObject {
     
-    private static func previewForFile(_ path: String, account: Account) -> [TelegramMediaImageRepresentation] {
+    private static func previewForFile(_ path: String, isSecretRelated: Bool, account: Account) -> [TelegramMediaImageRepresentation] {
         var preview:[TelegramMediaImageRepresentation] = []
         
 //        if isDirectory(path) {
@@ -99,14 +99,14 @@ class Sender: NSObject {
            
             
             let options = NSMutableDictionary()
-            options.setValue(85 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+            options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
             
             let colorQuality: Float = 0.3
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
             
             let asset = AVAsset(url: URL(fileURLWithPath: path))
             let imageGenerator = AVAssetImageGenerator(asset: asset)
-            imageGenerator.maximumSize = CGSize(width: 85, height: 85)
+            imageGenerator.maximumSize = CGSize(width: 320, height: 320)
             imageGenerator.appliesPreferredTrackTransform = true
             let fullSizeImage = try? imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
             
@@ -118,7 +118,7 @@ class Sender: NSObject {
                     
                     CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
                     if CGImageDestinationFinalize(colorDestination) {
-                        let resource = LocalFileMediaResource(fileId: arc4random64())
+                        let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
                         preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource))
                     }
@@ -146,7 +146,7 @@ class Sender: NSObject {
                         CGImageDestinationSetProperties(colorDestination, nil)
                         CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
                         if CGImageDestinationFinalize(colorDestination) {
-                            let resource = LocalFileMediaResource(fileId: arc4random64())
+                            let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                             account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
                             preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource))
                         }
@@ -231,7 +231,7 @@ class Sender: NSObject {
             |> deliverOnMainQueue
     }
     
-    static func generateMedia(for container:MediaSenderContainer, account: Account) -> Signal<(Media,String), NoError> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool) -> Signal<(Media,String), NoError> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -244,7 +244,7 @@ class Sender: NSObject {
                 let mimeType = MIMEType(path)
                 let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: isMedia)
                 let resource: TelegramMediaResource = path.isDirectory ? LocalFileArchiveMediaResource(randomId: randomId, path: path) : LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, size: fs(path))
-                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
+                media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
             }
             
             if !container.isFile {
@@ -259,7 +259,7 @@ class Sender: NSObject {
                     
                     let resource: TelegramMediaResource
                     if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
-                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path))
+                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
                     } else {
                         resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
@@ -272,7 +272,7 @@ class Sender: NSObject {
                     
                     let resource: TelegramMediaResource
                     if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
-                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path))
+                        resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
                     } else {
                         resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
@@ -280,7 +280,7 @@ class Sender: NSObject {
                     
                     
                     attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: PixelDimensions(container.size), flags: [.instantRoundVideo]))
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
 
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                    
@@ -326,11 +326,11 @@ class Sender: NSObject {
                 } else if mimeType.hasPrefix("video") {
                     let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true)
                     
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileVideoMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileVideoMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
                 } else if mimeType.hasPrefix("image/gif") {
                     let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true)
                     
-                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileGifMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileGifMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
                 } else {
                     makeFileMedia(true)
                 }
@@ -460,7 +460,7 @@ class Sender: NSObject {
         }
         
         for path in media {
-            senders.append(generateMedia(for: path, account: context.account) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
+            senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
                 return enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId, localGroupingKey: nil)])
             })
         }
