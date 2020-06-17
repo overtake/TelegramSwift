@@ -1097,6 +1097,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let chatInteraction = self.chatInteraction
         let nextTransaction = self.nextTransaction
         
+        let peerId = self.chatInteraction.peerId
+        
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {
             slowModeInProgressDisposable.set((context.account.postbox.unsentMessageIdsView() |> mapToSignal { view -> Signal<[MessageId], NoError> in
@@ -1723,7 +1725,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             filePanel(with: exts, allowMultiple: false, for: context.window, completion: { [weak self] files in
                 guard let `self` = self else {return}
                 if let file = files?.first {
-                    self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: file, isFile: !asMedia), account: context.account) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
+                    self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: file, isFile: !asMedia), account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
                         self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                     }))
                 }
@@ -2088,7 +2090,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         guard let `self` = self else {return}
                         self.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedEditedData(data)})})})
                         if new != url {
-                            self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: new.path, isFile: false), account: context.account) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
+                            self.updateMediaDisposable.set((Sender.generateMedia(for: MediaSenderContainer(path: new.path, isFile: false), account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { [weak self] media, _ in
                                 self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                             }))
                         } else {
@@ -3301,7 +3303,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         })
         
-        let peerId = self.chatInteraction.peerId
         switch self.mode {
         case .history:
             let failed = context.account.postbox.failedMessageIdsView(peerId: peerId) |> deliverOnMainQueue
@@ -4647,6 +4648,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return []
         }
         
+        let peerId = self.chatInteraction.peerId
+        
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             
@@ -4673,7 +4676,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         guard let strongSelf = self else {
                             return
                         }
-                        _ = (Sender.generateMedia(for: MediaSenderContainer(path: list[0], isFile: false), account: strongSelf.chatInteraction.context.account) |> deliverOnMainQueue).start(next: { media, _ in
+                        _ = (Sender.generateMedia(for: MediaSenderContainer(path: list[0], isFile: false), account: strongSelf.chatInteraction.context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { media, _ in
                             self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                         })
                     })]
@@ -4739,7 +4742,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         guard let strongSelf = self else {
                             return
                         }
-                        _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: strongSelf.chatInteraction.context.account)} |> deliverOnMainQueue).start(next: { media, _ in
+                        _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: strongSelf.chatInteraction.context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) } |> deliverOnMainQueue).start(next: { media, _ in
                             self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                         })
                     })]

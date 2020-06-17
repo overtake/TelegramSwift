@@ -633,7 +633,7 @@ private final class PreviewMedia : Comparable, Identifiable {
         return PreviewMedia(container: container, index: index, media: media)
     }
     
-    func generateMedia(account: Account) -> Media {
+    func generateMedia(account: Account, isSecretRelated: Bool) -> Media {
         
         if let media = self.media {
             return media
@@ -648,7 +648,7 @@ private final class PreviewMedia : Comparable, Identifiable {
             }
         }
         
-        _ = Sender.generateMedia(for: container, account: account).start(next: { media, path in
+        _ = Sender.generateMedia(for: container, account: account, isSecretRelated: isSecretRelated).start(next: { media, path in
             generated = media
             semaphore.signal()
         })
@@ -673,9 +673,9 @@ private func previewMedias(containers:[MediaSenderContainer], savedState: [Previ
 }
 
 
-private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], account: Account) -> UpdateTransition<Media> {
+private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], isSecretRelated: Bool, account: Account) -> UpdateTransition<Media> {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { item in
-        return item.generateMedia(account: account)
+        return item.generateMedia(account: account, isSecretRelated: isSecretRelated)
     })
     return UpdateTransition(deleted: removed, inserted: inserted, updated: updated)
 }
@@ -929,6 +929,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         })
         
         let archiveRandomId = arc4random()
+        
+        let isSecretRelated = chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat
        
         
         let previousMedias:Atomic<[PreviewMedia]> = Atomic(value: [])
@@ -960,7 +962,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}), urls, state)
         } |> map { previews, urls, state in
-            return (prepareMedias(left: previousMedias.swap(previews), right: previews, account: context.account), urls, state, previews)
+            return (prepareMedias(left: previousMedias.swap(previews), right: previews, isSecretRelated: isSecretRelated, account: context.account), urls, state, previews)
         }
 
         actionsDisposable.add(urlsTransition.start(next: { transition, urls, state, previews in

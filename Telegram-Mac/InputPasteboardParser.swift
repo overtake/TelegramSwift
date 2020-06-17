@@ -175,12 +175,12 @@ class InputPasteboardParser: NSObject {
             }
             
             if files.count == 1, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
-                _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.context.account) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                _ = (Sender.generateMedia(for: MediaSenderContainer(path: files[0].path, isFile: false), account: chatInteraction.context.account, isSecretRelated: chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })
                 return false
             } else if let image = image, let editState = chatInteraction.presentation.interfaceState.editState, editState.canEditMedia {
-                _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.context.account)} |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
+                _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: chatInteraction.context.account, isSecretRelated: chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat) } |> deliverOnMainQueue).start(next: { [weak chatInteraction] media, _ in
                     chatInteraction?.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                 })
                 return false
