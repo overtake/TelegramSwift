@@ -314,7 +314,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                            
                            
                             
-                            var text = chatListText(account: account, for: message).string.nsstring
+                            var text = chatListText(account: account, for: message, applyUserName: true).string.nsstring
                             var subText:String?
                             if text.contains("\n") {
                                 let parts = text.components(separatedBy: "\n")
