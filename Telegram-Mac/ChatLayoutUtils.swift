@@ -63,12 +63,12 @@ class ChatLayoutUtils: NSObject {
                 size = NSMakeSize(250, 250)
             } else if file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif")) {
 
-                var contentSize = contentSize
-                let addition = max(300 - contentSize.width, 300 - contentSize.height)
-                if addition > 0 {
-                    contentSize.width += addition
-                    contentSize.height += addition
-                }
+//                var contentSize = contentSize
+//                let addition = max(300 - contentSize.width, 300 - contentSize.height)
+//                if addition > 0 {
+//                    contentSize.width += addition
+//                    contentSize.height += addition
+//                }
                 
                 if file.isVideo && contentSize.width > contentSize.height {
                     size = contentSize.aspectFitted(NSMakeSize(min(420, width), contentSize.height))
