@@ -276,6 +276,12 @@ class GeneralInteractedRowView: GeneralRowView {
         }, for: .Down)
         
         containerView.set(handler: { [weak self] _ in
+            if let event = NSApp.currentEvent {
+                self?.mouseDragged(with: event)
+            }
+        }, for: .MouseDragging)
+        
+        containerView.set(handler: { [weak self] _ in
             self?.invokeIfNeededUp()
         }, for: .Up)
     }

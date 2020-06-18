@@ -141,7 +141,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false, maxWidth: CGFloat? = nil) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
     
     if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
         let mutableAttributedText = NSMutableAttributedString()
@@ -219,7 +219,16 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
                 _ = attributedText.append(string: peer.displayTitle + "\n", color: theme.chatList.peerTextColor, font: .normal(.text))
             }
             
-            _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
+            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
+                var peerText: String = (author.id == account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
+                
+                peerText += (folder ? ": " : "\n")
+                _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
+            } else {
+                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
+            }
+            
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if message.media.first is TelegramMediaAction {
             _ = attributedText.append(string: serviceMessageText(message, account:account), color: theme.chatList.grayTextColor, font: .normal(.text))
