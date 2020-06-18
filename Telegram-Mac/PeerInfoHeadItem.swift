@@ -677,24 +677,24 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }
         if let peer = item.peer {
 //
-//            if let user = peer as? TelegramUser {
-//                let signal = requestPeerPhotos(account: item.context.account, peerId: peer.id) |> deliverOnMainQueue
-//                requestPeerPhotosDisposable.set(signal.start(next: { [weak self] photo in
-//                    if let first = photo.first, let `self` = self, let video = first.image.videoRepresentations.last {
-//                        if self.photoVideoView == nil {
-//                            self.photoVideoView = GIFContainerView()
-//                            self.photoVideoView!.frame = self.photoView.frame
-//                            self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
-//                            self.addSubview(self.photoVideoView!)
-//                        }
-//                        let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
-//
-////                        _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: PeerReference(user)!, resource: video.resource)).start()
-//                        //
-//                        self.photoVideoView!.update(with: FileMediaReference.standalone(media: file), size: self.photoView.frame.size, viewSize: self.photoView.frame.size, context: item.context, table: item.table, iconSignal: .complete())
-//                    }
-//                }))
-//            }
+            let signal = requestPeerPhotos(account: item.context.account, peerId: peer.id) |> deliverOnMainQueue
+            requestPeerPhotosDisposable.set(signal.start(next: { [weak self] photo in
+                if let first = photo.first, let `self` = self, let video = first.image.videoRepresentations.last {
+                    if self.photoVideoView == nil {
+                        self.photoVideoView = GIFContainerView()
+                        self.photoVideoView!.frame = self.photoView.frame
+                        self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
+                        self.addSubview(self.photoVideoView!)
+                    }
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    
+                    self.photoVideoView?.set(handler: { [weak self] _ in
+                        self?.photoView.send(event: .Click)
+                    }, for: .Click)
+                    
+                    self.photoVideoView!.update(with: FileMediaReference.standalone(media: file), size: self.photoView.frame.size, viewSize: self.photoView.frame.size, context: item.context, table: item.table, iconSignal: .complete())
+                }
+            }))
             photoView.setPeer(account: item.context.account, peer: peer)
         }
         nameView.setFrameSize(item.nameSize)
