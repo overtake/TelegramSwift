@@ -6189,6 +6189,218 @@ internal final class L10n {
   internal static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Slow mode is enabled. This text is too long to send as one message.
   internal static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
+  /// ACTIONS
+  internal static var statsGroupActionsTitle: String  { return L10n.tr("Localizable", "Stats.GroupActionsTitle") }
+  /// GROWTH
+  internal static var statsGroupGrowthTitle: String  { return L10n.tr("Localizable", "Stats.GroupGrowthTitle") }
+  /// MEMBERS' PRIMARY LANGUAGE
+  internal static var statsGroupLanguagesTitle: String  { return L10n.tr("Localizable", "Stats.GroupLanguagesTitle") }
+  /// Members
+  internal static var statsGroupMembers: String  { return L10n.tr("Localizable", "Stats.GroupMembers") }
+  /// GROUP MEMBERS
+  internal static var statsGroupMembersTitle: String  { return L10n.tr("Localizable", "Stats.GroupMembersTitle") }
+  /// Messages
+  internal static var statsGroupMessages: String  { return L10n.tr("Localizable", "Stats.GroupMessages") }
+  /// MESSAGES
+  internal static var statsGroupMessagesTitle: String  { return L10n.tr("Localizable", "Stats.GroupMessagesTitle") }
+  /// NEW MEMBERS BY SOURCE
+  internal static var statsGroupNewMembersBySourceTitle: String  { return L10n.tr("Localizable", "Stats.GroupNewMembersBySourceTitle") }
+  /// OVERVIEW
+  internal static var statsGroupOverview: String  { return L10n.tr("Localizable", "Stats.GroupOverview") }
+  /// Posting Members
+  internal static var statsGroupPosters: String  { return L10n.tr("Localizable", "Stats.GroupPosters") }
+  /// %d
+  internal static func statsGroupTopAdminBansCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_countable", p1)
+  }
+  /// %d bans
+  internal static func statsGroupTopAdminBansFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_few", p1)
+  }
+  /// %d bans
+  internal static func statsGroupTopAdminBansMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_many", p1)
+  }
+  /// %d ban
+  internal static func statsGroupTopAdminBansOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_one", p1)
+  }
+  /// %d bans
+  internal static func statsGroupTopAdminBansOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_other", p1)
+  }
+  /// %d bans
+  internal static func statsGroupTopAdminBansTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_two", p1)
+  }
+  /// %d bans
+  internal static func statsGroupTopAdminBansZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminBans_zero", p1)
+  }
+  /// %d
+  internal static func statsGroupTopAdminDeletionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_countable", p1)
+  }
+  /// %d deletions
+  internal static func statsGroupTopAdminDeletionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_few", p1)
+  }
+  /// %d deletions
+  internal static func statsGroupTopAdminDeletionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_many", p1)
+  }
+  /// %d deletion
+  internal static func statsGroupTopAdminDeletionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_one", p1)
+  }
+  /// %d deletions
+  internal static func statsGroupTopAdminDeletionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_other", p1)
+  }
+  /// %d deletions
+  internal static func statsGroupTopAdminDeletionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_two", p1)
+  }
+  /// %d deletions
+  internal static func statsGroupTopAdminDeletionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminDeletions_zero", p1)
+  }
+  /// %d
+  internal static func statsGroupTopAdminKicksCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_countable", p1)
+  }
+  /// %d kicks
+  internal static func statsGroupTopAdminKicksFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_few", p1)
+  }
+  /// %d kicks
+  internal static func statsGroupTopAdminKicksMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_many", p1)
+  }
+  /// %d kick
+  internal static func statsGroupTopAdminKicksOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_one", p1)
+  }
+  /// %d kicks
+  internal static func statsGroupTopAdminKicksOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_other", p1)
+  }
+  /// %d kicks
+  internal static func statsGroupTopAdminKicksTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_two", p1)
+  }
+  /// %d kicks
+  internal static func statsGroupTopAdminKicksZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopAdminKicks_zero", p1)
+  }
+  /// TOP ADMINS
+  internal static var statsGroupTopAdminsTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopAdminsTitle") }
+  /// TOP HOURS
+  internal static var statsGroupTopHoursTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopHoursTitle") }
+  /// %d
+  internal static func statsGroupTopInviterInvitesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_countable", p1)
+  }
+  /// %d invitations
+  internal static func statsGroupTopInviterInvitesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_few", p1)
+  }
+  /// %d invitations
+  internal static func statsGroupTopInviterInvitesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_many", p1)
+  }
+  /// %d invitation
+  internal static func statsGroupTopInviterInvitesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_one", p1)
+  }
+  /// %d invitations
+  internal static func statsGroupTopInviterInvitesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_other", p1)
+  }
+  /// %d invitations
+  internal static func statsGroupTopInviterInvitesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_two", p1)
+  }
+  /// %d invitations
+  internal static func statsGroupTopInviterInvitesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopInviterInvites_zero", p1)
+  }
+  /// TOP INVITERS
+  internal static var statsGroupTopInvitersTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopInvitersTitle") }
+  /// %d
+  internal static func statsGroupTopPosterCharsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_countable", p1)
+  }
+  /// %d symbols per message
+  internal static func statsGroupTopPosterCharsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_few", p1)
+  }
+  /// %d symbols per message
+  internal static func statsGroupTopPosterCharsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_many", p1)
+  }
+  /// %d symbol per message
+  internal static func statsGroupTopPosterCharsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_one", p1)
+  }
+  /// %d symbols per message
+  internal static func statsGroupTopPosterCharsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_other", p1)
+  }
+  /// %d symbols per message
+  internal static func statsGroupTopPosterCharsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_two", p1)
+  }
+  /// %d symbols per message
+  internal static func statsGroupTopPosterCharsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterChars_zero", p1)
+  }
+  /// %d
+  internal static func statsGroupTopPosterMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_countable", p1)
+  }
+  /// %d messages
+  internal static func statsGroupTopPosterMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_few", p1)
+  }
+  /// %d messages
+  internal static func statsGroupTopPosterMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_many", p1)
+  }
+  /// %d message
+  internal static func statsGroupTopPosterMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_one", p1)
+  }
+  /// %d messages
+  internal static func statsGroupTopPosterMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_other", p1)
+  }
+  /// %d messages
+  internal static func statsGroupTopPosterMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_two", p1)
+  }
+  /// %d messages
+  internal static func statsGroupTopPosterMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.GroupTopPosterMessages_zero", p1)
+  }
+  /// TOP MEMBERS
+  internal static var statsGroupTopPostersTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopPostersTitle") }
+  /// TOP DAYS OF WEEK
+  internal static var statsGroupTopWeekdaysTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopWeekdaysTitle") }
+  /// Viewing Members
+  internal static var statsGroupViewers: String  { return L10n.tr("Localizable", "Stats.GroupViewers") }
+  /// Actions
+  internal static var statsGroupTopAdminActions: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Actions") }
+  /// Promote
+  internal static var statsGroupTopAdminPromote: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Promote") }
+  /// History
+  internal static var statsGroupTopInviterHistory: String  { return L10n.tr("Localizable", "Stats.GroupTopInviter.History") }
+  /// Promote
+  internal static var statsGroupTopInviterPromote: String  { return L10n.tr("Localizable", "Stats.GroupTopInviter.Promote") }
+  /// History
+  internal static var statsGroupTopPosterHistory: String  { return L10n.tr("Localizable", "Stats.GroupTopPoster.History") }
+  /// Promote
+  internal static var statsGroupTopPosterPromote: String  { return L10n.tr("Localizable", "Stats.GroupTopPoster.Promote") }
   /// Activate
   internal static var statusBarActivate: String  { return L10n.tr("Localizable", "StatusBar.Activate") }
   /// Hide

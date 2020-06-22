@@ -434,6 +434,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     if items.count > rdx {
                         let item = items[rdx]
                         identifiers.removeValue(forKey: item.identifier)
+                        cache.removeObject(forKey: item.identifier as AnyObject)
                         items.remove(at: rdx)
                     }
                 }
@@ -445,6 +446,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 for (idx,item) in transition.updated {
                     let item = searchItem(item.stableId) ?? item
                     identifiers[item.identifier] = item
+                    cache.removeObject(forKey: item.identifier as AnyObject)
                     if idx < items.count {
                         items[idx] = item
                     }
@@ -607,10 +609,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             view.contentSize = item.sizeValue
             view.minMagnify = item.minMagnify
             view.maxMagnify = item.maxMagnify
+            
         
             item.size.set(.single(item.sizeValue))
             
             item.view.set(.single(view.contentView))
+            
 //            smartUpdaterDisposable.set(view.smartUpdaterValue.start(next: { size in
 //                item.size.set(.single(size))
 //            }))
@@ -760,6 +764,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }
             magnify.updateStatus(item.status)
             cache.setObject(controller, forKey: identifier as AnyObject)
+            
+            if selectedItem == item, hasInited {
+               // item.view.set(.single(magnify.contentView))
+                item.appear(for: magnify.contentView)
+            }
             return controller
         }
     }
@@ -833,17 +842,16 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
-                                strongSelf?.lockedTransition = false
                                 strongSelf?.captionScrollView.change(opacity: 1.0)
                                 strongSelf?.hasInited = true
                                 strongSelf?.selectedItem?.appear(for: selectedView?.contentView)
+                                strongSelf?.lockedTransition = false
                             }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                         } else {
                             selectedView?.isHidden = false
                             self?.hasInited = true
-                            self?.lockedTransition = false
                             self?.selectedItem?.appear(for: selectedView?.contentView)
-
+                            self?.lockedTransition = false
                         }
                         if let selectedView = selectedView {
                             addVideoTimebase?((item.stableId, selectedView.contentView))

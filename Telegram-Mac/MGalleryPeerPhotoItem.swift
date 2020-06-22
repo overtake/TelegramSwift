@@ -15,18 +15,9 @@ import TGUIKit
 
 class MGalleryPeerPhotoItem: MGalleryItem {
     let media:TelegramMediaImage
-    private let video: SVideoController?
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         
         self.media = entry.photo!
-        
-        if let photo = entry.photo, let video = photo.videoRepresentations.last {
-            let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: photo.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
-            self.video = SVideoController(postbox: context.account.postbox, reference: FileMediaReference.standalone(media: video), fetchAutomatically: true)
-        } else {
-            self.video = nil
-        }
-        
         super.init(context, entry, pagerSize)
     }
     
@@ -111,13 +102,6 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         
         
         fetch()
-    }
-    override func singleView() -> NSView {
-        if let video = self.video {
-            return video.view
-        } else {
-            return super.singleView()
-        }
     }
     
     override func fetch() -> Void {

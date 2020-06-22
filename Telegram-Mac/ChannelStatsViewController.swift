@@ -14,7 +14,7 @@ import Postbox
 import SyncCore
 import GraphCore
 
-private struct UIStatsState : Equatable {
+struct UIStatsState : Equatable {
     let loading: Set<InputDataIdentifier>
     init(loading: Set<InputDataIdentifier>) {
         self.loading = loading
@@ -76,7 +76,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
         
         
         struct Graph {
-            let graph: ChannelStatsGraph
+            let graph: StatsGraph
             let title: String
             let identifier: InputDataIdentifier
             let type: ChartItemType

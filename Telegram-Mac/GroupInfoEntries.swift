@@ -274,6 +274,10 @@ final class GroupInfoArguments : PeerInfoArguments {
         pushViewController(LinkInvationController(context, peerId: peerId))
     }
     
+    func stats(_ datacenterId: Int32) {
+        self.pushViewController(GroupStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+    }
+    
     func showMore() {
         let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
             self?.updateState(f)

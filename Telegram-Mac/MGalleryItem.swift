@@ -361,7 +361,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var identifier:NSPageController.ObjectIdentifier {
-        return entry.identifier
+        return entry.identifier + self.className
     }
     
     var sizeValue:NSSize {
@@ -469,7 +469,6 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                     if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, !first {
                       //  if magnify.magnify > 1 {
                         if value.rotation == nil {
-                            NSLog("\(value.size), \(size)")
                             size = value.size?.aspectFitted(size) ?? size
                         } else {
                             size = value.size ?? size

@@ -868,6 +868,8 @@
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
 		D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */; };
 		D09D9DF4229C289F00378796 /* GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF3229C289F00378796 /* GZip.m */; };
+		D0A2764E249C9D6B005E3C77 /* PeerPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */; };
+		D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */; };
 		D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */; };
 		D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */; };
 		D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */; };
@@ -2019,6 +2021,8 @@
 		D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedStickerUtils.swift; sourceTree = "<group>"; };
 		D09D9DF2229C289F00378796 /* GZip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GZip.h; sourceTree = "<group>"; };
 		D09D9DF3229C289F00378796 /* GZip.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GZip.m; sourceTree = "<group>"; };
+		D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotos.swift; sourceTree = "<group>"; };
+		D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsStatsController.swift; sourceTree = "<group>"; };
 		D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasController.swift; sourceTree = "<group>"; };
 		D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasColorPicker.swift; sourceTree = "<group>"; };
 		D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasControls.swift; sourceTree = "<group>"; };
@@ -2597,6 +2601,7 @@
 				A7393D452409044C00CE44CA /* ChannelOverviewStatsRowItem.swift */,
 				A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */,
 				A76C8AA324221F5400FDB071 /* StatisticsLoadingRowItem.swift */,
+				D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */,
 			);
 			name = stats;
 			sourceTree = "<group>";
@@ -3126,6 +3131,7 @@
 		C2303E881D9A767E00098E12 /* right */ = {
 			isa = PBXGroup;
 			children = (
+				D0A2764C249C9C8E005E3C77 /* user-photos */,
 				9F1BABAC21E5EBFE0075C03E /* undo */,
 				9FC4DA9421DD0B21003E2A62 /* channel-members */,
 				C2423A521F2234EA0041907F /* instantpage */,
@@ -4792,6 +4798,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		D0A2764C249C9C8E005E3C77 /* user-photos */ = {
+			isa = PBXGroup;
+			children = (
+				D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */,
+			);
+			name = "user-photos";
+			sourceTree = "<group>";
+		};
 		D0A75F2824487A05001F84A0 /* canvas */ = {
 			isa = PBXGroup;
 			children = (
@@ -5386,6 +5400,7 @@
 				D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */,
 				C22674311DBE9B50000BA9ED /* FetchCachedRepresentations.swift in Sources */,
 				C25C13311E8A406D00AE26A1 /* FeaturedStickerPacksController.swift in Sources */,
+				D0A2764E249C9D6B005E3C77 /* PeerPhotos.swift in Sources */,
 				9FC8ADA22062E2DF0094F7B4 /* PassportNewPhoneNumberRowItem.swift in Sources */,
 				9F0E6F7A203EFE870086699C /* Preferences.swift in Sources */,
 				9F0AE6BE2199BEBE00A8B53A /* SVideoController.swift in Sources */,
@@ -5507,6 +5522,7 @@
 				9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
 				D076F88D2296FD18004F895A /* DiscussionHeaderItem.swift in Sources */,
+				D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */,
 				C2CFCAC01EBB9C8100843F6A /* CallAudioPlayer.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,

@@ -444,7 +444,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
-                        chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                        chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         messageOffset += chatNameLayout.0.size.height + 2
                     }
                     if let messageLayout = item.ctxMessageLayout, !hiddemMessage {

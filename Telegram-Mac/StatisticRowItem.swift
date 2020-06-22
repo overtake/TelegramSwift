@@ -19,6 +19,7 @@ public enum ChartItemType {
     case step
     case twoAxisStep
     case hourlyStep
+    case area
 }
 
 
@@ -39,6 +40,8 @@ class StatisticRowItem: GeneralRowItem {
             controller.isZoomable = false
         case .pie:
             controller = PercentPieChartController(chartsCollection: collection)
+        case .area:
+            controller = PercentPieChartController(chartsCollection: collection, initiallyZoomed: false)
         case .bars:
             controller = StackedBarsChartController(chartsCollection: collection)
             controller.isZoomable = false

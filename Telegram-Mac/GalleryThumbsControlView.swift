@@ -25,10 +25,10 @@ class GalleryThumbContainer : Control {
             size = item.media.representations.first?.dimensions.size
             item.fetch()
         } else if let item = item as? MGalleryGIFItem {
-            signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
+            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryVideoItem {
-            signal = chatMessageImageFile(account: item.context.account, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
+            signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: item.entry.fileReference(item.media), scale: backingScaleFactor)
             size = item.media.videoSize
         } else if let item = item as? MGalleryPeerPhotoItem {
             signal = chatMessagePhoto(account: item.context.account, imageReference: item.entry.imageReference(item.media), scale: backingScaleFactor)
