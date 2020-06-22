@@ -411,109 +411,168 @@ class GalleryViewer: NSResponder {
 
         let pagerSize = self.pagerSize
         
-        ready.set(context.account.postbox.transaction { transaction -> Peer? in
-            return transaction.getPeer(peerId)
-        } |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
-            guard let `self` = self else {return false}
-            if let peer = peer {
-                var representations:[TelegramMediaImageRepresentation] = []//peer.profileImageRepresentations
-                if let representation = peer.smallProfileImage {
-                    representations.append(representation)
-                }
-                if let representation = peer.largeProfileImage {
-                    representations.append(representation)
-                }
-                
-                var image:TelegramMediaImage? = nil
-                var msg: Message? = nil
-                if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-                    let action = message.media.first as! TelegramMediaAction
-                    switch action.action {
-                    case let .photoUpdated(updated):
-                        image = updated
-                        msg = message
-                    default:
-                        break
-                    }
-                }
-                
-                if image == nil {
-                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-                }
-                
-                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0,MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize))], updated: []))
-                
-                
-                self.pager.set(index: 0, animated: false)
-                self.controls.update(self.pager.selectedItem?.entry)
-                return true
-            }
-            return false
-        })
-
+        let previous: Atomic<[GalleryEntry]> = Atomic(value: [])
         
-        self.disposable.set((combineLatest(requestPeerPhotos(account: context.account, peerId: peerId), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer -> (UpdateTransition<MGalleryItem>, Int, Int) in
-            
-            var inserted:[(Int, MGalleryItem)] = []
-            var updated:[(Int, MGalleryItem)] = []
-            var deleted:[Int] = []
-            var photos = photos
-            var currentIndex: Int = 0
-            var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser
-            
-            if !foundIndex, !photos.isEmpty {
-                photos.removeFirst()
-            }
-            
-            if !photos.isEmpty {
-                
-                var photosDate:[TimeInterval] = []
-                
-                for i in 0 ..< photos.count {
-                    let photo = photos[i]
-                    photosDate.append(TimeInterval(photo.date))
-                    if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-                        let action = message.media.first as! TelegramMediaAction
-                        switch action.action {
-                        case let .photoUpdated(updated):
-                            if photo.image.id == updated?.id {
-                                currentIndex = i
-                                foundIndex = true
-                            }
-                        default: 
-                            break
-                        }
-                    } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(PixelDimensions(640, 640))?.resource.id.uniqueId {
-                        foundIndex = true
-                        currentIndex = i
-                        
-                    }
-                }
-                var index: Int = foundIndex ? 0 : 1
-                for i in 0 ..< photos.count {
-                    if currentIndex == i && foundIndex {
-                     //   deleted.append(i)
-                       // inserted.append((i, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peer: peer, date: photosDate[i]), pagerSize)))
+        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(account: context.account, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected) in
+            let (deleted, inserted, updated) = proccessEntriesWithoutReverse(previous.swap(entries), right: entries, { entry -> MGalleryItem in
+                switch entry {
+                case let .photo(_, _, photo, _, _, _, _):
+                    if !photo.videoRepresentations.isEmpty {
+                        return MGalleryGIFItem(context, entry, pagerSize)
                     } else {
-                        inserted.append((index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize)))
+                        return MGalleryPeerPhotoItem(context, entry, pagerSize)
                     }
-                    index += 1
+                default:
+                    preconditionFailure()
                 }
-            }
-            
-            
-            return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), max(0, photos.count), currentIndex)
-            
-        } |> deliverOnMainQueue).start(next: { [weak self] transition, total, selected in
-            guard let `self` = self else {return}
-            
-           // self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
-            _ = self.pager.merge(with: transition, afterTransaction: { [weak self] in
-                guard let `self` = self else {return}
-                self.controls.update(self.pager.selectedItem?.entry)
             })
-            
+            return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), selected)
+        } |> deliverOnMainQueue
+        
+        let first = Atomic(value: true)
+        
+        disposable.set(transaction.start(next: { [weak self] transaction, selected in
+            _ = self?.pager.merge(with: transaction, afterTransaction: {
+                self?.controls.update(self?.pager.selectedItem?.entry)
+            })
+            self?.ready.set(.single(true))
+            if first.swap(false) {
+                self?.pager.set(index: selected, animated: false)
+            }
         }))
+        
+//
+//        ready.set(context.account.postbox.transaction { transaction -> Peer? in
+//            return transaction.getPeer(peerId)
+//        } |> deliverOnMainQueue |> map { [weak self] peer -> Bool in
+//            guard let `self` = self else {return false}
+//            if let peer = peer {
+//                var representations:[TelegramMediaImageRepresentation] = []//peer.profileImageRepresentations
+//                if let representation = peer.smallProfileImage {
+//                    representations.append(representation)
+//                }
+//                if let representation = peer.largeProfileImage {
+//                    representations.append(representation)
+//                }
+//
+//                var videoRepresentations: [TelegramMediaImage.VideoRepresentation] = []
+//
+//
+//                var image:TelegramMediaImage? = nil
+//                var msg: Message? = nil
+//                if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
+//                    let action = message.media.first as! TelegramMediaAction
+//                    switch action.action {
+//                    case let .photoUpdated(updated):
+//                        image = updated
+//                        msg = message
+//                    default:
+//                        break
+//                    }
+//                }
+//
+//                if image == nil {
+//                    image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, videoRepresentations: videoRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+//                }
+//
+//
+//
+//                let item: MGalleryItem
+//                if !image!.videoRepresentations.isEmpty {
+//                    item = MGalleryGIFItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize)
+//                } else {
+//                    item = MGalleryPeerPhotoItem(context, .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0), pagerSize)
+//                }
+//
+//                _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: [(0, item)], updated: []))
+//
+//
+//                self.pager.set(index: 0, animated: false)
+//                self.controls.update(self.pager.selectedItem?.entry)
+//                return true
+//            }
+//            return false
+//        })
+//
+//
+//        self.disposable.set((combineLatest(peerPhotos(account: context.account, peerId: peerId, force: true), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer -> (UpdateTransition<MGalleryItem>, Int, Int) in
+//
+//            var inserted:[(Int, MGalleryItem)] = []
+//            var updated:[(Int, MGalleryItem)] = []
+//            var deleted:[Int] = []
+//            var photos = photos
+//            var currentIndex: Int = 0
+//            var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser
+//
+//            if !foundIndex, !photos.isEmpty {
+//                photos.removeFirst()
+//            }
+//
+//            if !photos.isEmpty {
+//
+//                var photosDate:[TimeInterval] = []
+//
+//                for i in 0 ..< photos.count {
+//                    let photo = photos[i]
+//                    photosDate.append(TimeInterval(photo.date))
+//                    if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
+//                        let action = message.media.first as! TelegramMediaAction
+//                        switch action.action {
+//                        case let .photoUpdated(updated):
+//                            if photo.image.id == updated?.id {
+//                                currentIndex = i
+//                                foundIndex = true
+//                            }
+//                        default:
+//                            break
+//                        }
+//                    } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(PixelDimensions(640, 640))?.resource.id.uniqueId {
+//                        foundIndex = true
+//                        currentIndex = i
+//
+//                    }
+//                }
+//                var index: Int = foundIndex ? 0 : 1
+//                for i in 0 ..< photos.count {
+//
+//                    let item: (Int, MGalleryItem)
+//
+//                    if currentIndex == i && foundIndex {
+//                        deleted.append(i)
+//                        let item: (Int, MGalleryItem)
+//                        if !photos[i].image.videoRepresentations.isEmpty {
+//                            item = (i, MGalleryGIFItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize))
+//                        } else {
+//                            item = (i, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: firstStableId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize))
+//                        }
+//
+//                        inserted.append(item)
+//
+//                    } else {
+//                        if !photos[i].image.videoRepresentations.isEmpty {
+//                            item = (index, MGalleryGIFItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize))
+//                        } else {
+//                            item = (index, MGalleryPeerPhotoItem(context, .photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]), pagerSize))
+//                        }
+//                        inserted.append(item)
+//                    }
+//                    index += 1
+//                }
+//            }
+//
+//
+//            return (UpdateTransition(deleted: deleted, inserted: inserted, updated: updated), max(0, photos.count), currentIndex)
+//
+//        } |> deliverOnMainQueue).start(next: { [weak self] transition, total, selected in
+//            guard let `self` = self else {return}
+//
+//           // self?.controls.index.set(.single((selected + 1, max(totalCount, 1))))
+//            _ = self.pager.merge(with: transition, afterTransaction: { [weak self] in
+//                guard let `self` = self else {return}
+//                self.controls.update(self.pager.selectedItem?.entry)
+//            })
+//
+//        }))
         
         self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
             guard let `self` = self else {return}

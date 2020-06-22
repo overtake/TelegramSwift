@@ -19,7 +19,7 @@ struct ChannelOverviewItem : Equatable {
     let value: NSAttributedString
 }
 
-extension ChannelStatsValue {
+extension StatsValue {
     var attributedString: NSAttributedString {
         
         let deltaValue = self.current - self.previous
@@ -42,7 +42,7 @@ extension ChannelStatsValue {
 
     }
 }
-extension ChannelStatsPercentValue {
+extension StatsPercentValue {
     var attributedString: NSAttributedString {
         let attr = NSMutableAttributedString()
 

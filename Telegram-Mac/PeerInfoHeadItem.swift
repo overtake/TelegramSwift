@@ -200,6 +200,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
         }
         
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            if cachedData.statsDatacenterId > 0 {
+                items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
+                    arguments.stats(cachedData.statsDatacenterId)
+                }))
+            }
+        }
         
         if access.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))
@@ -280,7 +287,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     private(set) fileprivate var items: [ActionItem] = []
     
-    private let fetchPeerAvatar = MetaDisposable()
+    private let fetchPeerAvatar = DisposableSet()
     private let onlineMemberCountDisposable = MetaDisposable()
     
     fileprivate let editing: Bool
@@ -290,6 +297,10 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     let canEditPhoto: Bool
     
+    
+    let peerPhotosDisposable = MetaDisposable()
+    
+    var photos: [TelegramPeerPhoto] = []
     
     init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?)->Void = { _ in }) {
         let peer = peerViewMainPeer(peerView)
@@ -320,11 +331,15 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.canEditPhoto = canEditPhoto && editing
         
         if let peer = peer {
-            if let largeProfileImage = peer.largeProfileImage {
-                if let peerReference = PeerReference(peer) {
-                    fetchPeerAvatar.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+            if let peerReference = PeerReference(peer) {
+                if let largeProfileImage = peer.largeProfileImage {
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                }
+                if let smallProfileImage = peer.smallProfileImage {
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                 }
             }
+            
         }
         self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
@@ -352,6 +367,14 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
         
         _ = self.makeSize(initialSize.width, oldWidth: 0)
+        
+        if let peer = peer {
+            let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
+            peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                self?.photos = photos
+                self?.redraw()
+            }))
+        }
         
     }
     
@@ -630,6 +653,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         statusView.centerX(y: nameView.frame.maxY + 4)
         actionsView.centerX(y: statusView.frame.maxY + item.viewType.innerInset.top)
         photoEditableView?.centerX(y: item.viewType.innerInset.top)
+        
+        photoVideoView?.frame = photoView.frame
     }
     
     required init?(coder: NSCoder) {
@@ -675,27 +700,35 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         guard let item = item as? PeerInfoHeadItem else {
             return
         }
-        if let peer = item.peer {
-//
-            let signal = requestPeerPhotos(account: item.context.account, peerId: peer.id) |> deliverOnMainQueue
-            requestPeerPhotosDisposable.set(signal.start(next: { [weak self] photo in
-                if let first = photo.first, let `self` = self, let video = first.image.videoRepresentations.last {
-                    if self.photoVideoView == nil {
-                        self.photoVideoView = GIFContainerView()
-                        self.photoVideoView!.frame = self.photoView.frame
-                        self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
-                        self.addSubview(self.photoVideoView!)
-                    }
-                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+        
+        photoView.setPeer(account: item.context.account, peer: item.peer)
+        
+        if !item.photos.isEmpty {
+            
+            if let first = item.photos.first, let video = first.image.videoRepresentations.last {
+               
+                if self.photoVideoView == nil {
+                    self.photoVideoView = GIFContainerView()
+                    self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
+                    self.addSubview(self.photoVideoView!)
                     
                     self.photoVideoView?.set(handler: { [weak self] _ in
                         self?.photoView.send(event: .Click)
                     }, for: .Click)
-                    
-                    self.photoVideoView!.update(with: FileMediaReference.standalone(media: file), size: self.photoView.frame.size, viewSize: self.photoView.frame.size, context: item.context, table: item.table, iconSignal: .complete())
                 }
-            }))
-            photoView.setPeer(account: item.context.account, peer: peer)
+                self.photoVideoView!.frame = self.photoView.frame
+
+                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                
+                self.photoVideoView!.update(with: FileMediaReference.standalone(media: file), size: self.photoView.frame.size, viewSize: self.photoView.frame.size, context: item.context, table: item.table, iconSignal: .complete())
+                
+            } else {
+                self.photoVideoView?.removeFromSuperview()
+                self.photoVideoView = nil
+            }
+        } else {
+            self.photoVideoView?.removeFromSuperview()
+            self.photoVideoView = nil
         }
         nameView.setFrameSize(item.nameSize)
         nameView.update(item)
