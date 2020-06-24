@@ -18,7 +18,7 @@ import Postbox
 enum ChatHeaderState : Identifiable, Equatable {
     case none
     case search(ChatSearchInteractions, Peer?, String?)
-    case addContact(block: Bool)
+    case addContact(block: Bool, autoArchived: Bool)
     case shareInfo
     case pinned(MessageId)
     case report
@@ -69,13 +69,17 @@ enum ChatHeaderState : Identifiable, Equatable {
             } else {
                 return false
             }
+        case let .addContact(block, autoArchive):
+            if case .addContact(block, autoArchive) = rhs {
+                return true
+            } else {
+                return false
+            }
         default:
             return lhs.stableId == rhs.stableId
         }
     }
 }
-
-
 
 
 class ChatHeaderController {
@@ -127,8 +131,8 @@ class ChatHeaderController {
     private func viewIfNecessary(_ size:NSSize) -> View? {
         let view:View?
         switch _headerState {
-        case let .addContact(block):
-            view = AddContactView(chatInteraction, canBlock: block)
+        case let .addContact(block, autoArchived):
+            view = AddContactView(chatInteraction, canBlock: block, autoArchived: autoArchived)
         case .shareInfo:
             view = ShareInfoView(chatInteraction)
         case let .pinned(messageId):
@@ -517,8 +521,9 @@ class AddContactView : Control {
     private let add:TitleButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
     private let blockButton: TitleButton = TitleButton()
+    private let unarchiveButton = TitleButton()
     private let buttonsContainer = View()
-    init(_ chatInteraction:ChatInteraction, canBlock: Bool) {
+    init(_ chatInteraction:ChatInteraction, canBlock: Bool, autoArchived: Bool) {
         self.chatInteraction = chatInteraction
         super.init()
         self.style = ControlStyle(backgroundColor: theme.colors.background)
@@ -539,13 +544,25 @@ class AddContactView : Control {
             chatInteraction.blockContact()
         }, for: .SingleClick)
         
+        unarchiveButton.set(handler: { _ in
+            chatInteraction.unarchive()
+        }, for: .SingleClick)
         
        
         
-        buttonsContainer.addSubview(add)
         if canBlock {
             buttonsContainer.addSubview(blockButton)
         }
+        if autoArchived {
+            buttonsContainer.addSubview(unarchiveButton)
+        }
+        
+        if !autoArchived && canBlock {
+            buttonsContainer.addSubview(add)
+        } else if !autoArchived && !canBlock {
+            buttonsContainer.addSubview(add)
+        }
+        
         addSubview(buttonsContainer)
         addSubview(dismiss)
         updateLocalizationAndTheme(theme: theme)
@@ -564,7 +581,9 @@ class AddContactView : Control {
             add.set(text: L10n.peerInfoAddContact, for: .Normal)
         }
         blockButton.set(text: L10n.peerInfoBlockUser, for: .Normal)
-
+        unarchiveButton.set(text: L10n.peerInfoUnarchive, for: .Normal)
+        
+        unarchiveButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         
         self.backgroundColor = theme.colors.background
         needsLayout = true
@@ -578,14 +597,28 @@ class AddContactView : Control {
     
     override func layout() {
         dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
-        if blockButton.superview == nil {
-            buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
-            add.setFrameSize(NSMakeSize(add.frame.width, buttonsContainer.frame.height))
-            add.center()
-        } else {
-            buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
-            add.frame = NSMakeRect(buttonsContainer.frame.width / 2, 0, buttonsContainer.frame.width / 2, buttonsContainer.frame.height)
-            blockButton.frame = NSMakeRect(0, 0, buttonsContainer.frame.width / 2, buttonsContainer.frame.height)
+        
+        var buttons:[Control] = []
+        
+        
+        if add.superview != nil {
+            buttons.append(add)
+        }
+        if blockButton.superview != nil {
+            buttons.append(blockButton)
+        }
+        if unarchiveButton.superview != nil {
+            buttons.append(unarchiveButton)
+        }
+        
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
+
+        
+        let buttonWidth: CGFloat = floor(buttonsContainer.frame.width / CGFloat(buttons.count))
+        var x: CGFloat = 0
+        for button in buttons {
+            button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
+            x += buttonWidth
         }
     }
     

@@ -201,12 +201,13 @@ extension Peer {
                     }
                     name += lastName
                 }
-                return name
+                
+                return name.replacingOccurrences(of: "􀇻", with: "")
             }
         case let group as TelegramGroup:
-            return group.title
+            return group.title.replacingOccurrences(of: "􀇻", with: "")
         case let channel as TelegramChannel:
-            return channel.title
+            return channel.title.replacingOccurrences(of: "􀇻", with: "")
         case let filter as TelegramFilterCategory:
             return filter.displayTitle ?? ""
         default:
@@ -245,16 +246,16 @@ extension Peer {
         switch self {
         case let user as TelegramUser:
             if let firstName = user.firstName {
-                return firstName
+                return firstName.replacingOccurrences(of: "􀇻", with: "")
             } else if let lastName = user.lastName {
-                return lastName
+                return lastName.replacingOccurrences(of: "􀇻", with: "")
             } else {
                 return tr(L10n.peerDeletedUser)
             }
         case let group as TelegramGroup:
-            return group.title
+            return group.title.replacingOccurrences(of: "􀇻", with: "")
         case let channel as TelegramChannel:
-            return channel.title
+            return channel.title.replacingOccurrences(of: "􀇻", with: "")
         case let filter as TelegramFilterCategory:
             return filter.displayTitle ?? ""
         default:

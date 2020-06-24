@@ -527,16 +527,20 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
         }
         
-        
-        
-        
+                
         self.image.set(arguments: arguments)
-        
-        if let positionFlags = positionFlags {
-            autoplayVideoView?.view.positionFlags = positionFlags
+        if arguments.imageSize.width == arguments.boundingSize.width {
+            if let positionFlags = positionFlags {
+                autoplayVideoView?.view.positionFlags = positionFlags
+            } else  {
+                autoplayVideoView?.view.positionFlags = nil
+                autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
+            }
         } else {
-            autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
+            autoplayVideoView?.view.positionFlags = nil
+            autoplayVideoView?.view.layer?.cornerRadius = 0
         }
+        
         
         var first: Bool = true
         
