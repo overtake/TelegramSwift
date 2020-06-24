@@ -23,6 +23,27 @@ enum CallTone {
 }
 
 
+public struct CallAuxiliaryServer {
+    public enum Connection {
+        case stun
+        case turn(username: String, password: String)
+    }
+    
+    public let host: String
+    public let port: Int
+    public let connection: Connection
+    
+    public init(
+        host: String,
+        port: Int,
+        connection: Connection
+        ) {
+        self.host = host
+        self.port = port
+        self.connection = connection
+    }
+}
+
 
 
 enum VoIPState : Int {
@@ -31,6 +52,32 @@ enum VoIPState : Int {
     case established = 3
     case failed = 4
 }
+
+
+private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc /*, OngoingCallThreadLocalContextQueueWebrtcCustom*/ {
+    private let queue: Queue
+    
+    init(queue: Queue) {
+        self.queue = queue
+        
+        super.init()
+    }
+    
+    func dispatch(_ f: @escaping () -> Void) {
+        self.queue.async {
+            f()
+        }
+    }
+    
+    func dispatch(after seconds: Double, block f: @escaping () -> Void) {
+        self.queue.after(seconds, f)
+    }
+    
+    func isCurrent() -> Bool {
+        return self.queue.isCurrent()
+    }
+}
+
 
 let callQueue = Queue(name: "VoIPQueue")
 
@@ -43,6 +90,49 @@ func pullCurrentSession(_ f:@escaping (PCallSession?)->Void) {
 }
 
 
+private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAuxiliaryServer] {
+    guard let data = appConfiguration.data else {
+        return []
+    }
+    guard let servers = data["rtc_servers"] as? [[String: Any]] else {
+        return []
+    }
+    var result: [CallAuxiliaryServer] = []
+    for server in servers {
+        guard let host = server["host"] as? String else {
+            continue
+        }
+        guard let portString = server["port"] as? String else {
+            continue
+        }
+        guard let username = server["username"] as? String else {
+            continue
+        }
+        guard let password = server["password"] as? String else {
+            continue
+        }
+        guard let port = Int(portString) else {
+            continue
+        }
+        result.append(CallAuxiliaryServer(
+            host: host,
+            port: port,
+            connection: .stun
+        ))
+        result.append(CallAuxiliaryServer(
+            host: host,
+            port: port,
+            connection: .turn(
+                username: username,
+                password: password
+            )
+        ))
+    }
+    return result
+}
+
+
+
 
 class PCallSession {
     let peerId:PeerId
@@ -52,7 +142,18 @@ class PCallSession {
     
     private(set) var peer: Peer?
     private let peerDisposable = MetaDisposable()
-    private var contextRef: Unmanaged<CallBridge>?
+    private var ongoingContext: OngoingCallContext?
+    private var ongoingContextStateDisposable: Disposable?
+    
+
+    private let serializedData: String?
+    private let dataSaving: VoiceCallDataSaving
+    private let derivedState: VoipDerivedState
+    private let proxyServer: ProxyServerSettings?
+    private let auxiliaryServers: [OngoingCallContext.AuxiliaryServer]
+    private let currentNetworkType: NetworkType
+    private let updatedNetworkType: Signal<NetworkType, NoError>
+
     
     private let stateDisposable = MetaDisposable()
     private let timeoutDisposable = MetaDisposable()
@@ -71,6 +172,10 @@ class PCallSession {
     private var callSessionValue:CallSession? = nil
     private let proxyDisposable = MetaDisposable()
     private let requestMicroAccessDisposable = MetaDisposable()
+    
+    
+    private let callSessionManager: CallSessionManager
+        
     init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
@@ -79,74 +184,125 @@ class PCallSession {
         
         assert(callQueue.isCurrent())
         
-        
-        
         self.account = account
         self.sharedContext = sharedContext
         self.peerId = peerId
         self.id = id
+        self.callSessionManager = account.callSessionManager
+        self.updatedNetworkType = account.networkType
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        var data: (PreferencesView, Peer?, ProxyServerSettings?, NetworkType)!
+        let _ = combineLatest(
+            account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration])
+                |> take(1),
+            account.postbox.transaction { transaction -> Peer? in
+                return transaction.getPeer(peerId)
+            },
+            proxySettings(accountManager: sharedContext.accountManager) |> take(1),
+            account.networkType |> take(1)
+            ).start(next: { preferences, peer, proxy, networkType in
+                data = (preferences, peer, proxy.effectiveActiveServer, networkType)
+                semaphore.signal()
+            })
+        semaphore.wait()
+
+        
+       
+
+        let configuration = data.0.values[PreferencesKeys.voipConfiguration] as? VoipConfiguration ?? VoipConfiguration.defaultValue
+        let appConfiguration = data.0.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+        let derivedState =  data.0.values[ApplicationSpecificPreferencesKeys.voipDerivedState] as? VoipDerivedState ?? VoipDerivedState.default
+        
+        self.serializedData = configuration.serializedData
+        self.dataSaving = .never
+        self.derivedState = derivedState
+        self.proxyServer = data.2
+        self.peer = data.1
+        self.currentNetworkType = data.3
         
         
-        peerDisposable.set((account.postbox.multiplePeersView([peerId]) |> deliverOnMainQueue).start(next: { [weak self] view in
-            self?.peer = view.peers[peerId]
-        }))
-
-
-        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
-            return account.postbox.transaction { transaction in
-                return (session, currentVoipConfiguration(transaction: transaction))
+        self.auxiliaryServers = getAuxiliaryServers(appConfiguration: appConfiguration).map { server -> OngoingCallContext.AuxiliaryServer in
+            let mappedConnection: OngoingCallContext.AuxiliaryServer.Connection
+            switch server.connection {
+            case .stun:
+                mappedConnection = .stun
+            case let .turn(username, password):
+                mappedConnection = .turn(username: username, password: password)
             }
-        } |> deliverOnMainQueue |> beforeNext { [weak self] session, configuration in
+            return OngoingCallContext.AuxiliaryServer(
+                host: server.host,
+                port: server.port,
+                connection: mappedConnection
+            )
+        }
+        
+        let signal = account.callSessionManager.callState(internalId: id) |> deliverOn(callQueue) |> beforeNext { [weak self] session in
             self?.proccessState(session, configuration)
         }
         
+        state.set(signal |> map { $0.state })
         
-        state.set(signal |> map { $0.0.state})
-        
-        proxyDisposable.set((combineLatest(queue: callQueue, proxySettings(accountManager: sharedContext.accountManager), voiceCallSettings(sharedContext.accountManager))).start(next: { [weak self] proxySetttings, callSettings in
-            guard let `self` = self else {return}
-            callSession = self
-            let bridge:CallBridge
-            if let server = proxySetttings.effectiveActiveServer, proxySetttings.useForCalls {
-                switch server.connection {
-                case let .socks5(username, password):
-                    bridge = CallBridge(proxy: CProxy(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
-                default:
-                    bridge = CallBridge(proxy: nil)
-                }
-            } else {
-                bridge = CallBridge(proxy: nil)
-            }
-            
-            if let inputDeviceId = callSettings.inputDeviceId {
-                bridge.setCurrentInputDeviceId(inputDeviceId)
-            }
-            if let outputDeviceId = callSettings.outputDeviceId {
-                bridge.setCurrentOutputDeviceId(outputDeviceId)
-            }
-            bridge.setMutedOtherSounds(callSettings.muteSounds)
-            
-            self.contextRef = Unmanaged.passRetained(bridge)
-            bridge.stateChangeHandler = { value in
-                callQueue.async {
-                    if let state = VoIPState(rawValue: Int(value)) {
-                        self.voipStateChanged(state)
-                    }
-                }
-            }
-        }))
-        
-        callQueue.async {
-           
-        }
-        
-       
-        
+//
+//
+//        peerDisposable.set((account.postbox.multiplePeersView([peerId]) |> deliverOnMainQueue).start(next: { [weak self] view in
+//            self?.peer = view.peers[peerId]
+//        }))
+//
+//        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
+//            return account.postbox.transaction { transaction in
+//                return (session, currentVoipConfiguration(transaction: transaction))
+//            }
+//        } |> deliverOnMainQueue |> beforeNext { [weak self] session, configuration in
+//            self?.proccessState(session, configuration)
+//        }
+//
+//        state.set(signal |> map { $0.0.state})
+//
+//        proxyDisposable.set((combineLatest(queue: callQueue, proxySettings(accountManager: sharedContext.accountManager), voiceCallSettings(sharedContext.accountManager))).start(next: { [weak self] proxySetttings, callSettings in
+//            guard let `self` = self else {return}
+//            callSession = self
+//            let bridge:OngoingCallThreadLocalContext
+//            if let server = proxySetttings.effectiveActiveServer, proxySetttings.useForCalls {
+//                switch server.connection {
+//                case let .socks5(username, password):
+//                    bridge = OngoingCallThreadLocalContext(proxy: VoipProxyServer(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
+//                default:
+//                    bridge = OngoingCallThreadLocalContext(proxy: nil)
+//                }
+//            } else {
+//                bridge = OngoingCallThreadLocalContext(proxy: nil)
+//            }
+//
+//            if let inputDeviceId = callSettings.inputDeviceId {
+//                bridge.setCurrentInputDeviceId(inputDeviceId)
+//            }
+//            if let outputDeviceId = callSettings.outputDeviceId {
+//                bridge.setCurrentOutputDeviceId(outputDeviceId)
+//            }
+//            bridge.setMutedOtherSounds(callSettings.muteSounds)
+//
+//            self.contextRef = Unmanaged.passRetained(bridge)
+//            bridge.stateChangeHandler = { value in
+//                callQueue.async {
+//                    if let state = VoIPState(rawValue: Int(value)) {
+//                        self.voipStateChanged(state)
+//                    }
+//                }
+//            }
+//        }))
+//
+//        callQueue.async {
+//
+//        }
+//
+//
+//
     }
     
-    private func voipStateChanged(_ state:VoIPState) {
-        switch state {
-        case .established:
+    private func voipStateChanged(_ state:OngoingCallContextState) {
+        switch state.state {
+        case .connected:
             if (startTime < Double.ulpOfOne) {
                 stopAudio()
                 startTime = CFAbsoluteTimeGetCurrent();
@@ -201,13 +357,9 @@ class PCallSession {
         return 0.0;
     }
     
-    func stopTransmission() {
+    func stopTransmission(_ id: CallId?) {
         durationPromise.set(.complete())
-        callQueue.async {
-            callSession = nil
-            self.contextRef?.release()
-            self.contextRef = nil
-        }
+        ongoingContext?.stop(callId: id, sendDebugLogs: false, debugLogValue: Promise())
     }
     
     func drop(_ reason:DropCallReason) {
@@ -238,41 +390,37 @@ class PCallSession {
     
     func mute() {
         isMute = true
-        withContext { context in
-            context.mute()
-        }
+        ongoingContext?.setIsMuted(true)
     }
     
     func unmute() {
         isMute = false
-        withContext { context in
-            context.unmute()
-        }
+        ongoingContext?.setIsMuted(false)
     }
     
     func toggleMute() {
         self.isMute = !self.isMute
-        withContext { context in
-            if context.isMuted() {
-                context.unmute()
-            } else {
-                context.mute()
-            }
-        }
+        ongoingContext?.setIsMuted(self.isMute)
     }
     
     private func proccessState(_ session: CallSession, _ configuration: VoipConfiguration) {
         self.callSessionValue = session
         
         switch session.state {
-        case .active(let id, let key, _, let connection, let maxLayer, _, let allowP2p):
+        case let .active(id, key, _, connections, maxLayer, version, allowP2P):
             playTone(.callToneConnecting)
             
-            let cdata = TGCallConnection(key: key, keyHash: key, defaultConnection: TGCallConnectionDescription(identifier: connection.primary.id, ipv4: connection.primary.ip, ipv6: connection.primary.ipv6, port: connection.primary.port, peerTag: connection.primary.peerTag), alternativeConnections: connection.alternatives.map {TGCallConnectionDescription(identifier: $0.id, ipv4: $0.ip, ipv6: $0.ipv6, port: $0.port, peerTag: $0.peerTag)}, maxLayer: maxLayer)
+            let logName = "\(id.id)_\(id.accessHash)"
+
+            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, isVideo: false, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
+            self.ongoingContext = ongoingContext
             
-            withContext { context in
-                context.startTransmissionIfNeeded(session.isOutgoing, allowP2p: allowP2p, serializedData: configuration.serializedData ?? "", connection: cdata)
-            }
+            stateDisposable.set((ongoingContext.state |> deliverOn(callQueue)).start(next: { [weak self] state in
+                if let state = state {
+                    self?.voipStateChanged(state)
+                }
+            }))
+            
             invalidateTimeout()
         case .ringing:
             playRingtone()
@@ -286,8 +434,8 @@ class PCallSession {
             invalidateTimeout()
             stopAudio()
             break
-        case .terminated(_, let reason, let report):
-            stopTransmission()
+        case let .terminated(callId, reason, report):
+            stopTransmission(callId)
             invalidateTimeout()
             switch reason {
             case .error:
@@ -295,13 +443,6 @@ class PCallSession {
             default:
                 playTone(.callToneEnded)
             }
-//            if let report = report {
-//                let account = self.account
-//                Queue.mainQueue().async {
-//                    showModal(with: CallRatingModalViewController(account, report: report), for: mainWindow)
-//                }
-//            }
-            
         default:
             break
         }
@@ -312,10 +453,6 @@ class PCallSession {
         stateDisposable.dispose()
         drop(.disconnect)
         proxyDisposable.dispose()
-        let contextRef = self.contextRef
-        callQueue.async {
-            contextRef?.release()
-        }
     }
     
     private func playRingtone() {
@@ -327,14 +464,6 @@ class PCallSession {
     }
     
     
-    private func withContext(_ f: @escaping (CallBridge) -> Void) {
-        callQueue.async {
-            if let contextRef = self.contextRef {
-                let context = contextRef.takeUnretainedValue()
-                f(context)
-            }
-        }
-    }
   
     func hangUpCurrentCall() {
         hangUpCurrentCall(false)
@@ -470,10 +599,12 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     
                     return (confirmation |> filter {$0} |> map { _ in
                         callSession?.hangUpCurrentCall()
-                        } |> mapToSignal { _ in return account.callSessionManager.request(peerId: peerId) } |> deliverOn(callQueue) ).start(next: { id in
-                            subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
-                            subscriber.putCompletion()
-                        })
+                    } |> mapToSignal { _ in
+                        return account.callSessionManager.request(peerId: peerId, isVideo: false)
+                    } |> deliverOn(callQueue) ).start(next: { id in
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
+                        subscriber.putCompletion()
+                    })
                 }
                 
                 return EmptyDisposable

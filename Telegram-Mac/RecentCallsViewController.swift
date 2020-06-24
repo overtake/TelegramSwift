@@ -123,7 +123,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             } else {
                 let text = outgoing ? tr(L10n.callRecentOutgoing) : tr(L10n.callRecentIncoming)
                 if messages.count == 1 {
-                    if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_,_,let duration) = action.action, let value = duration, value > 0 {
+                    if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
                     } else {
                         statusText = text
@@ -269,7 +269,7 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
             var failed:Bool = false
             let outgoing: Bool = !message.flags.contains(.Incoming)
             if let action = message.media.first as? TelegramMediaAction {
-                if case .phoneCall(_, let discardReason, _) = action.action {
+                if case .phoneCall(_, let discardReason, _, _) = action.action {
                     var missed: Bool = false
                     if let reason = discardReason {
                         switch reason {

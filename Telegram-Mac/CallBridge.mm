@@ -6,12 +6,79 @@
 //  Copyright © 2017 Telegram. All rights reserved.
 //
 
-#import "CallBridge.h"
+#import "OngoingCallThreadLocalContext.h"
 #import "VoIPController.h"
 #import "VoIPServerConfig.h"
 #import "TGCallUtils.h"
-#import "TGCallConnectionDescription.h"
+#import "OngoingCallConnectionDescription.h"
+#import "TgVoip.h"
 #define CVoIPController tgvoip::VoIPController
+
+#import <memory>
+#import <MtProtoKit/MtProtoKit.h>
+
+void TGCallAesIgeEncrypt(uint8_t *inBytes, uint8_t *outBytes, size_t length, uint8_t *key, uint8_t *iv) {
+    MTAesEncryptRaw(inBytes, outBytes, length, key, iv);
+}
+
+void TGCallAesIgeDecrypt(uint8_t *inBytes, uint8_t *outBytes, size_t length, uint8_t *key, uint8_t *iv) {
+    MTAesDecryptRaw(inBytes, outBytes, length, key, iv);
+}
+
+void TGCallSha1(uint8_t *msg, size_t length, uint8_t *output) {
+    MTRawSha1(msg, length, output);
+}
+
+void TGCallSha256(uint8_t *msg, size_t length, uint8_t *output) {
+    MTRawSha256(msg, length, output);
+}
+
+void TGCallAesCtrEncrypt(uint8_t *inOut, size_t length, uint8_t *key, uint8_t *iv, uint8_t *ecount, uint32_t *num) {
+    uint8_t *outData = (uint8_t *)malloc(length);
+    MTAesCtr *aesCtr = [[MTAesCtr alloc] initWithKey:key keyLength:32 iv:iv ecount:ecount num:*num];
+    [aesCtr encryptIn:inOut out:outData len:length];
+    memcpy(inOut, outData, length);
+    free(outData);
+    
+    [aesCtr getIv:iv];
+    
+    memcpy(ecount, [aesCtr ecount], 16);
+    *num = [aesCtr num];
+}
+
+void TGCallRandomBytes(uint8_t *buffer, size_t length) {
+    arc4random_buf(buffer, length);
+}
+
+static TgVoipNetworkType callControllerNetworkTypeForType(OngoingCallNetworkType type) {
+    switch (type) {
+        case OngoingCallNetworkTypeWifi:
+            return TgVoipNetworkType::WiFi;
+        case OngoingCallNetworkTypeCellularGprs:
+            return TgVoipNetworkType::Gprs;
+        case OngoingCallNetworkTypeCellular3g:
+            return TgVoipNetworkType::ThirdGeneration;
+        case OngoingCallNetworkTypeCellularLte:
+            return TgVoipNetworkType::Lte;
+        default:
+            return TgVoipNetworkType::ThirdGeneration;
+    }
+}
+
+static TgVoipDataSaving callControllerDataSavingForType(OngoingCallDataSaving type) {
+    switch (type) {
+        case OngoingCallDataSavingNever:
+            return TgVoipDataSaving::Never;
+        case OngoingCallDataSavingCellular:
+            return TgVoipDataSaving::Mobile;
+        case OngoingCallDataSavingAlways:
+            return TgVoipDataSaving::Always;
+        default:
+            return TgVoipDataSaving::Never;
+    }
+}
+
+
 
 @implementation CProxy
 -(id)initWithHost:(NSString*)host port:(int32_t)port user:(NSString *)user pass:(NSString *)pass {
@@ -72,41 +139,231 @@ const NSTimeInterval TGCallPacketTimeout = 10;
 
 @end
 
-@interface CallBridge ()
+@interface OngoingCallThreadLocalContext () {
+    int32_t _contextId;
+    
+    OngoingCallNetworkType _networkType;
+    NSTimeInterval _callReceiveTimeout;
+    NSTimeInterval _callRingTimeout;
+    NSTimeInterval _callConnectTimeout;
+    NSTimeInterval _callPacketTimeout;
+    
+    TgVoip *_tgVoip;
+    
+    OngoingCallState _state;
+    int32_t _signalBars;
+    NSData *_lastDerivedState;
+
+}
 @property (nonatomic, strong) VoIPControllerHolder *controller;
 @property (nonatomic, assign) BOOL _isMuted;
 - (void)controllerStateChanged:(int)state;
+
+
+
 @end
 
 static void controllerStateCallback(tgvoip::VoIPController *controller, int state)
 {
-    CallBridge *session = (__bridge CallBridge *)controller->implData;
+    OngoingCallThreadLocalContext *session = (__bridge OngoingCallThreadLocalContext *)controller->implData;
     [session controllerStateChanged:state];
+}
+
+static MTAtomic *callContexts() {
+    static MTAtomic *instance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [[MTAtomic alloc] initWithValue:[[NSMutableDictionary alloc] init]];
+    });
+    return instance;
+}
+
+
+@interface OngoingCallThreadLocalContextReference : NSObject
+
+@property (nonatomic, weak) OngoingCallThreadLocalContext *context;
+@property (nonatomic, strong, readonly) id<OngoingCallThreadLocalContextQueue> queue;
+
+@end
+
+
+@implementation OngoingCallThreadLocalContextReference
+
+- (instancetype)initWithContext:(OngoingCallThreadLocalContext *)context queue:(id<OngoingCallThreadLocalContextQueue>)queue {
+    self = [super init];
+    if (self != nil) {
+        self.context = context;
+        _queue = queue;
+    }
+    return self;
+}
+
+@end
+
+
+static int32_t nextId = 1;
+
+static int32_t addContext(OngoingCallThreadLocalContext *context, id<OngoingCallThreadLocalContextQueue> queue) {
+    int32_t contextId = OSAtomicIncrement32(&nextId);
+    [callContexts() with:^id(NSMutableDictionary *dict) {
+        dict[@(contextId)] = [[OngoingCallThreadLocalContextReference alloc] initWithContext:context queue:queue];
+        return nil;
+    }];
+    return contextId;
+}
+
+static void removeContext(int32_t contextId) {
+    [callContexts() with:^id(NSMutableDictionary *dict) {
+        [dict removeObjectForKey:@(contextId)];
+        return nil;
+    }];
+}
+
+static void withContext(int32_t contextId, void (^f)(OngoingCallThreadLocalContext *)) {
+    __block OngoingCallThreadLocalContextReference *reference = nil;
+    [callContexts() with:^id(NSMutableDictionary *dict) {
+        reference = dict[@(contextId)];
+        return nil;
+    }];
+    if (reference != nil) {
+        [reference.queue dispatch:^{
+            __strong OngoingCallThreadLocalContext *context = reference.context;
+            if (context != nil) {
+                f(context);
+            }
+        }];
+    }
 }
 
 
 
-@implementation CallBridge
+@implementation OngoingCallThreadLocalContext
 
--(id)initWithProxy:(CProxy *)proxy {
++ (int32_t)maxLayer {
+    return 92;
+}
+
+
+- (instancetype _Nonnull)initWithQueue:(id<OngoingCallThreadLocalContextQueue> _Nonnull)queue networkType:(OngoingCallNetworkType)networkType dataSaving:(OngoingCallDataSaving)dataSaving derivedState:(NSData * _Nonnull)derivedState key:(NSData * _Nonnull)key isOutgoing:(bool)isOutgoing primaryConnection:(OngoingCallConnectionDescription * _Nonnull)primaryConnection alternativeConnections:(NSArray<OngoingCallConnectionDescription *> * _Nonnull)alternativeConnections maxLayer:(int32_t)maxLayer allowP2P:(BOOL)allowP2P logPath:(NSString * _Nonnull)logPath {
     self = [super init];
     if (self != nil) {
-        CVoIPController *controller = new CVoIPController();
-        controller->implData = (__bridge void *)self;
-        tgvoip::VoIPController::Callbacks callbacks={0};
-        callbacks.connectionStateChanged=&controllerStateCallback;
-        controller->SetCallbacks(callbacks);
+        
+        _contextId = addContext(self, queue);
+        
+        _callReceiveTimeout = 20.0;
+        _callRingTimeout = 90.0;
+        _callConnectTimeout = 30.0;
+        _callPacketTimeout = 10.0;
+        _networkType = networkType;
+
+        
+        
+        std::unique_ptr<TgVoipProxy> proxyValue = nullptr;
         if (proxy != nil) {
-            controller->SetProxy(tgvoip::PROXY_SOCKS5, std::string([proxy.host UTF8String]), proxy.port, std::string([proxy.user UTF8String]), std::string([proxy.pass UTF8String]));
+            TgVoipProxy *proxyObject = new TgVoipProxy();
+            proxyObject->host = proxy.host.UTF8String;
+            proxyObject->port = (uint16_t)proxy.port;
+            proxyObject->login = proxy.user.UTF8String ?: "";
+            proxyObject->password = proxy.pass.UTF8String ?: "";
+            proxyValue = std::unique_ptr<TgVoipProxy>(proxyObject);
         }
         
-        CVoIPController::crypto.sha1 = &TGCallSha1;
-        CVoIPController::crypto.sha256 = &TGCallSha256;
-        CVoIPController::crypto.rand_bytes = &TGCallRandomBytes;
-        CVoIPController::crypto.aes_ige_encrypt = &TGCallAesIgeEncryptInplace;
-        CVoIPController::crypto.aes_ige_decrypt = &TGCallAesIgeDecryptInplace;
-        CVoIPController::crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
-        _controller = [[VoIPControllerHolder alloc] initWithController:controller];
+        
+        
+        TgVoipCrypto crypto;
+        crypto.sha1 = &TGCallSha1;
+        crypto.sha256 = &TGCallSha256;
+        crypto.rand_bytes = &TGCallRandomBytes;
+        crypto.aes_ige_encrypt = &TGCallAesIgeEncrypt;
+        crypto.aes_ige_decrypt = &TGCallAesIgeDecrypt;
+        crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
+        
+        std::vector<TgVoipEndpoint> endpoints;
+        NSArray<OngoingCallConnectionDescription *> *connections = [@[primaryConnection] arrayByAddingObjectsFromArray:alternativeConnections];
+        for (OngoingCallConnectionDescription *connection in connections) {
+            unsigned char peerTag[16];
+            [connection.peerTag getBytes:peerTag length:16];
+            
+            TgVoipEndpoint endpoint;
+            endpoint.endpointId = connection.identifier;
+            endpoint.host = {
+                .ipv4 = std::string(connection.ipv4.UTF8String),
+                .ipv6 = std::string(connection.ipv6.UTF8String)
+            };
+            endpoint.port = (uint16_t)connection.port;
+            endpoint.type = TgVoipEndpointType::UdpRelay;
+            memcpy(endpoint.peerTag, peerTag, 16);
+            endpoints.push_back(endpoint);
+        }
+        
+        TgVoipConfig config = {
+            .initializationTimeout = _callConnectTimeout,
+            .receiveTimeout = _callPacketTimeout,
+            .dataSaving = callControllerDataSavingForType(dataSaving),
+            .enableP2P = static_cast<bool>(allowP2P),
+            .enableAEC = false,
+            .enableNS = true,
+            .enableAGC = true,
+            .enableCallUpgrade = false,
+            .logPath = logPath.length == 0 ? "" : std::string(logPath.UTF8String),
+            .maxApiLayer = [OngoingCallThreadLocalContext maxLayer]
+        };
+        
+        std::vector<uint8_t> encryptionKeyValue;
+        encryptionKeyValue.resize(key.length);
+        memcpy(encryptionKeyValue.data(), key.bytes, key.length);
+        
+        TgVoipEncryptionKey encryptionKey = {
+            .value = encryptionKeyValue,
+            .isOutgoing = isOutgoing,
+        };
+        
+        
+        _tgVoip = TgVoip::makeInstance(
+                                       config,
+                                       { derivedStateValue },
+                                       endpoints,
+                                       proxyValue,
+                                       callControllerNetworkTypeForType(networkType),
+                                       encryptionKey,
+                                       crypto
+                                       );
+        
+        _state = OngoingCallStateInitializing;
+        _signalBars = -1;
+        
+        __weak OngoingCallThreadLocalContext *weakSelf = self;
+        _tgVoip->setOnStateUpdated([weakSelf](TgVoipState state) {
+            __strong OngoingCallThreadLocalContext *strongSelf = weakSelf;
+            if (strongSelf) {
+                [strongSelf controllerStateChanged:state];
+            }
+        });
+        _tgVoip->setOnSignalBarsUpdated([weakSelf](int signalBars) {
+            __strong OngoingCallThreadLocalContext *strongSelf = weakSelf;
+            if (strongSelf) {
+                [strongSelf signalBarsChanged:signalBars];
+            }
+        });
+
+        
+//
+//        CVoIPController *controller = new CVoIPController();
+//        controller->implData = (__bridge void *)self;
+//        tgvoip::VoIPController::Callbacks callbacks={0};
+//        callbacks.connectionStateChanged=&controllerStateCallback;
+//        controller->SetCallbacks(callbacks);
+//        if (proxy != nil) {
+//            controller->SetProxy(tgvoip::PROXY_SOCKS5, std::string([proxy.host UTF8String]), proxy.port, std::string([proxy.user UTF8String]), std::string([proxy.pass UTF8String]));
+//        }
+//
+//        CVoIPController::crypto.sha1 = &TGCallSha1;
+//        CVoIPController::crypto.sha256 = &TGCallSha256;
+//        CVoIPController::crypto.rand_bytes = &TGCallRandomBytes;
+//        CVoIPController::crypto.aes_ige_encrypt = &TGCallAesIgeEncryptInplace;
+//        CVoIPController::crypto.aes_ige_decrypt = &TGCallAesIgeDecryptInplace;
+//        CVoIPController::crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
+//        _controller = [[VoIPControllerHolder alloc] initWithController:controller];
         
     }
     return self;
@@ -213,7 +470,7 @@ static void controllerStateCallback(tgvoip::VoIPController *controller, int stat
     NSArray *connections = [@[connection.defaultConnection] arrayByAddingObjectsFromArray:connection.alternativeConnections];
     for (NSUInteger i = 0; i < connections.count; i++)
     {
-        TGCallConnectionDescription *desc = connections[i];
+        OngoingCallConnectionDescription *desc = connections[i];
         
         tgvoip::Endpoint endpoint {};
         

@@ -211,7 +211,7 @@ class AvatarControl: NSView {
                         photo = nil
                         self.setState(account: account, state: .Empty)
                         let icon = theme.icons.deletedAccount
-                        self.setSignal(generateEmptyPhoto(frame.size, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(frame.size.width - 20, frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+                        self.setSignal(generateEmptyPhoto(frame.size, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, frame.size.width - 20), min(frame.size.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
                         return
                     } else {
                         photo = .peer(peer, representation, letters, message)

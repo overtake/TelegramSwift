@@ -4943,6 +4943,12 @@ internal final class L10n {
   }
   /// Sorry, you can't create a group with these users due to their privacy settings.
   internal static var privacyGroupsAndChannelsInviteToChannelMultipleError: String  { return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelMultipleError") }
+  /// Automatically archive and mute new chats, groups and channels from non-contacts.
+  internal static var privacyAndSecurityAutoArchiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.AutoArchiveDesc") }
+  /// NEW CHATS FROM UNKNOWN USERS
+  internal static var privacyAndSecurityAutoArchiveHeader: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.AutoArchiveHeader") }
+  /// Archive and Mute
+  internal static var privacyAndSecurityAutoArchiveText: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.AutoArchiveText") }
   /// %@ users
   internal static func privacyAndSecurityBlockedUsers(_ p1: String) -> String {
     return L10n.tr("Localizable", "PrivacyAndSecurity.BlockedUsers", p1)
