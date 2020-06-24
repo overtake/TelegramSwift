@@ -2893,6 +2893,8 @@ internal final class L10n {
   internal static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Copy to Clipboard
   internal static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
+  /// Set As Main Photo
+  internal static var galleryContextMainPhoto: String  { return L10n.tr("Localizable", "Gallery.Context.MainPhoto") }
   /// Save As...
   internal static var galleryContextSaveAs: String  { return L10n.tr("Localizable", "Gallery.Context.SaveAs") }
   /// Shared Media
@@ -4533,6 +4535,8 @@ internal final class L10n {
   internal static var peerInfoStopBot: String  { return L10n.tr("Localizable", "PeerInfo.StopBot") }
   /// Subscribers
   internal static var peerInfoSubscribers: String  { return L10n.tr("Localizable", "PeerInfo.Subscribers") }
+  /// Unarchive
+  internal static var peerInfoUnarchive: String  { return L10n.tr("Localizable", "PeerInfo.Unarchive") }
   /// Unblock User
   internal static var peerInfoUnblockUser: String  { return L10n.tr("Localizable", "PeerInfo.UnblockUser") }
   /// username

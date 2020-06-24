@@ -174,7 +174,7 @@ class ChatRowItem: TableRowItem {
         
         if isBubbled {
             
-            var tempWidth: CGFloat = width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset)
+            var tempWidth: CGFloat = width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset) - 20
             
             if isSharable || isStorage {
                 tempWidth -= 35

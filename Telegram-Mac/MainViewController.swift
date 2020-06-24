@@ -369,31 +369,49 @@ class MainViewController: TelegramViewController {
         }))
     }
     
-    private func _showFastChatSettings(_ control: Control, items: [SPopoverItem]) {
+    private func _showFastChatSettings(_ control: Control, unreadCount: Int32) {
+        var items: [SPopoverItem] = []
+        let context = self.context
         
-        switch self.chatList.mode {
-        case .plain, .filter:
-            if self.tabController.current == chatListNavigation, !items.isEmpty {
-                if let popover = control.popover {
-                    popover.hide()
-                } else {
-                    showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxX, inset: NSMakePoint(control.frame.width + 40, 0))
-                }
-            }
-        default:
-            break
+        if unreadCount > 0 {
+            items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
+                confirm(for: context.window, information: L10n.chatListPopoverConfirm, successHandler: { _ in
+                    _ = context.account.postbox.transaction ({ transaction -> Void in
+                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root, filterPredicate: nil)
+                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive, filterPredicate: nil)
+                    }).start()
+                })
+            }))
+        }
+        
+        if self.tabController.current == chatListNavigation, !items.isEmpty {
+            showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxX, inset: NSMakePoint(control.frame.width + 12, 0))
         }
     }
     
     func showFastChatSettings() {
-     //   self.showFastChatSettings(tabController.control(for: self.chatIndex))
+        self.showFastChatSettings(tabController.control(for: self.chatIndex))
     }
     
     private func showFastChatSettings(_ control: Control) {
-//        
-//        filterMenuDisposable.set(self.chatList.filterMenuItems.start(next: { [weak self] items in
-//            self?._showFastChatSettings(control, items: items)
-//        }))
+        
+        let context = self.context
+        let unreadCountsKey = PostboxViewKey.unreadCounts(items: [.total(nil)])
+        
+        _ = (context.account.postbox.combinedView(keys: [unreadCountsKey]) |> take(1) |> deliverOnMainQueue).start(next: { [weak self, weak control] view in
+            let totalUnreadState: ChatListTotalUnreadState
+            if let value = view.views[unreadCountsKey] as? UnreadMessageCountsView, let (_, total) = value.total() {
+                totalUnreadState = total
+            } else {
+                totalUnreadState = ChatListTotalUnreadState(absoluteCounters: [:], filteredCounters: [:])
+            }
+            let total = totalUnreadState.absoluteCounters.reduce(0, { current, value in
+                return current + value.value.messageCount
+            })
+            if let control = control {
+                self?._showFastChatSettings(control, unreadCount: total)
+            }
+        })
     }
     private let filterMenuDisposable = MetaDisposable()
     private let settingsDisposable = MetaDisposable()

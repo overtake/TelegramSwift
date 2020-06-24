@@ -461,7 +461,8 @@ public final class OngoingCallContext {
         
         cleanupCallLogs(account: account)
         queue.sync {
-            if version == OngoingCallThreadLocalContextWebrtc.version() {
+            //version == OngoingCallThreadLocalContextWebrtc.version()
+            if false {
                 var voipProxyServer: VoipProxyServerWebrtc?
                 if let proxyServer = proxyServer {
                     switch proxyServer.connection {

@@ -429,7 +429,7 @@ class ChatControllerView : View, ChatInputDelegate {
             state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
-                state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock))
+                state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
                 state = .report
             } else if settings.contains(.canShareContact) {
@@ -1769,6 +1769,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                
             }
             
+        }
+        
+        chatInteraction.unarchive = {
+            _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+            _ = context.account.postbox.transaction { transaction in
+                transaction.updatePeerCachedData(peerIds: [peerId], update: { peerId, cachedData in
+                    if let cachedData = cachedData as? CachedUserData {
+                        let current = cachedData.peerStatusSettings
+                        var flags = current?.flags ?? []
+                        flags.remove(.autoArchived)
+                        flags.remove(.canBlock)
+                        flags.remove(.canReport)
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                    }
+                    return cachedData
+                })
+            }.start()
         }
         
         chatInteraction.sendPlainText = { [weak self] text in

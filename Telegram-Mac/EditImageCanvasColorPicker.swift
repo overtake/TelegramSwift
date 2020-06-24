@@ -345,7 +345,13 @@ final class EditImageColorPicker: View {
         let weightValue = UserDefaults.standard.value(forKey: "painterBrushWeight") as? CGFloat
 
         
-        let colorLocation = colorValue ?? CGFloat(arc4random()) / CGFloat(UInt32.max)
+        let colorLocation: CGFloat
+        if let colorValue = colorValue {
+            colorLocation = colorValue
+        } else {
+            colorLocation = CGFloat(arc4random()) / CGFloat(UInt32.max)
+            UserDefaults.standard.setValue(colorLocation, forKey: "painterColorLocation")
+        }
         self.location = colorLocation
         knobView.color = backgroundView.color(for: colorLocation)
         

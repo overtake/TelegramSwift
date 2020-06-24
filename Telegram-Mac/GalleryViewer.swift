@@ -936,6 +936,11 @@ class GalleryViewer: NSResponder {
                     self?.deletePhoto()
                 }))
             }
+            if pager.currentIndex != 0 {
+                items.append(SPopoverItem(L10n.galleryContextMainPhoto, { [weak self] in
+                    self?.updateMainPhoto()
+                }))
+            }
         default:
             break
         }
@@ -1057,6 +1062,21 @@ class GalleryViewer: NSResponder {
                 deleteMessages([message])
             }
          }
+    }
+    
+    private func updateMainPhoto() {
+        if let item = self.pager.selectedItem {
+            if let index = self.pager.index(for: item) {
+                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
+                    if let reference = reference {
+                        _ = updatePeerPhotoExisting(network: context.account.network, reference: reference).start()
+                        _ = pager.merge(with: UpdateTransition<MGalleryItem>(deleted: [index], inserted: [(0, item)], updated: []))
+                        pager.selectedIndex.set(0)
+                    }
+                }
+            }
+            
+        }
     }
     
     private func deletePhoto() {

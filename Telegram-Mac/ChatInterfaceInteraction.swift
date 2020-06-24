@@ -145,6 +145,8 @@ final class ChatInteraction : InterfaceObserver  {
     var openScheduledMessages: ()->Void = {}
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    
+    var unarchive: ()->Void = { }
 
     var closeAfterPeek:(Int32)->Void = { _ in }
     
