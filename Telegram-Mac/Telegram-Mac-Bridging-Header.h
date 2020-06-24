@@ -42,7 +42,9 @@
 #import "Svg.h"
 #endif
 
-#import "CallBridge.h"
+#import "OngoingCallThreadLocalContext.h"
+#import "OngoingCallThreadLocalContextWebrtc.h"
+
 #import "CalendarUtils.h"
 #import "RingBuffer.h"
 #import "ocr.h"

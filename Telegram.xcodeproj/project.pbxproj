@@ -552,9 +552,9 @@
 		C26E82D11E83EFFE0046DF2F /* TimeObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = C26E82D01E83EFFE0046DF2F /* TimeObserver.m */; };
 		C271EB901EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C271EB8F1EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift */; };
 		C271EB971EB916870034792D /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C271EB961EB916870034792D /* libtgvoip.framework */; };
-		C271EB9B1EB9DEF00034792D /* CallBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = C271EB9A1EB9DEF00034792D /* CallBridge.mm */; };
+		C271EB9B1EB9DEF00034792D /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = C271EB9A1EB9DEF00034792D /* OngoingCallThreadLocalContext.mm */; };
 		C271EBA21EB9F04E0034792D /* TGCallUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = C271EBA11EB9F04E0034792D /* TGCallUtils.mm */; };
-		C271EBE91EBA22FE0034792D /* TGCallConnectionDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = C271EBE81EBA22FE0034792D /* TGCallConnectionDescription.m */; };
+		C271EBE91EBA22FE0034792D /* OngoingCallConnectionDescription.m in Sources */ = {isa = PBXBuildFile; fileRef = C271EBE81EBA22FE0034792D /* OngoingCallConnectionDescription.m */; };
 		C271EBEB1EBA3BC90034792D /* PCallSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C271EBEA1EBA3BC90034792D /* PCallSession.swift */; };
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */; };
@@ -840,6 +840,9 @@
 		D07450F12340DC8200769D7F /* WalletConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07450F02340DC8200769D7F /* WalletConfiguration.swift */; };
 		D07450F32340E89100769D7F /* sad_man.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07450F22340E89000769D7F /* sad_man.tgs */; };
 		D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07450F42340F28D00769D7F /* wallet_success_created.tgs */; };
+		D074A56524A1DE7700E92F8A /* OngoingCallContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074A56424A1DE7700E92F8A /* OngoingCallContext.swift */; };
+		D074A56724A1DF5200E92F8A /* VoipDerivedState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074A56624A1DF5200E92F8A /* VoipDerivedState.swift */; };
+		D074A56C24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.mm in Sources */ = {isa = PBXBuildFile; fileRef = D074A56A24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.mm */; };
 		D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */; };
 		D076F86D22959958004F895A /* InlineLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86C22959958004F895A /* InlineLoginController.swift */; };
 		D076F8702295B24D004F895A /* InlineAuthOptionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */; };
@@ -1674,12 +1677,12 @@
 		C26E82D01E83EFFE0046DF2F /* TimeObserver.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TimeObserver.m; sourceTree = "<group>"; };
 		C271EB8F1EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectivePrivacySettingsPeersController.swift; sourceTree = "<group>"; };
 		C271EB961EB916870034792D /* libtgvoip.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libtgvoip.framework; path = "../../Library/Developer/Xcode/DerivedData/Telegram-Mac-hikohhgxyaqnbcboyjbphnuqswbk/Build/Products/Debug/libtgvoip.framework"; sourceTree = "<group>"; };
-		C271EB991EB9DEF00034792D /* CallBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CallBridge.h; sourceTree = "<group>"; };
-		C271EB9A1EB9DEF00034792D /* CallBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CallBridge.mm; sourceTree = "<group>"; };
+		C271EB991EB9DEF00034792D /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContext.h; sourceTree = "<group>"; };
+		C271EB9A1EB9DEF00034792D /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContext.mm; sourceTree = "<group>"; };
 		C271EBA01EB9F04E0034792D /* TGCallUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGCallUtils.h; sourceTree = "<group>"; };
 		C271EBA11EB9F04E0034792D /* TGCallUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGCallUtils.mm; sourceTree = "<group>"; };
-		C271EBE71EBA22FE0034792D /* TGCallConnectionDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGCallConnectionDescription.h; sourceTree = "<group>"; };
-		C271EBE81EBA22FE0034792D /* TGCallConnectionDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TGCallConnectionDescription.m; sourceTree = "<group>"; };
+		C271EBE71EBA22FE0034792D /* OngoingCallConnectionDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallConnectionDescription.h; sourceTree = "<group>"; };
+		C271EBE81EBA22FE0034792D /* OngoingCallConnectionDescription.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OngoingCallConnectionDescription.m; sourceTree = "<group>"; };
 		C271EBEA1EBA3BC90034792D /* PCallSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PCallSession.swift; sourceTree = "<group>"; };
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
 		C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberIntroController.swift; sourceTree = "<group>"; };
@@ -1990,6 +1993,10 @@
 		D07450F02340DC8200769D7F /* WalletConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletConfiguration.swift; sourceTree = "<group>"; };
 		D07450F22340E89000769D7F /* sad_man.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = sad_man.tgs; sourceTree = "<group>"; };
 		D07450F42340F28D00769D7F /* wallet_success_created.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = wallet_success_created.tgs; sourceTree = "<group>"; };
+		D074A56424A1DE7700E92F8A /* OngoingCallContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngoingCallContext.swift; sourceTree = "<group>"; };
+		D074A56624A1DF5200E92F8A /* VoipDerivedState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoipDerivedState.swift; sourceTree = "<group>"; };
+		D074A56A24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContextWebrtc.mm; sourceTree = "<group>"; };
+		D074A56B24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContextWebrtc.h; sourceTree = "<group>"; };
 		D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifPanelTabRowItem.swift; sourceTree = "<group>"; };
 		D076F86C22959958004F895A /* InlineLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineLoginController.swift; sourceTree = "<group>"; };
 		D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAuthOptionRowItem.swift; sourceTree = "<group>"; };
@@ -2662,6 +2669,8 @@
 				C2CFCABF1EBB9C8100843F6A /* CallAudioPlayer.swift */,
 				C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */,
 				C2F4ED1A1EC5AE1D005F2696 /* CallRatingModalViewController.swift */,
+				D074A56424A1DE7700E92F8A /* OngoingCallContext.swift */,
+				D074A56624A1DF5200E92F8A /* VoipDerivedState.swift */,
 			);
 			name = calls;
 			sourceTree = "<group>";
@@ -3733,12 +3742,13 @@
 		C271EB981EB9DEDA0034792D /* calls */ = {
 			isa = PBXGroup;
 			children = (
+				D074A56924A1EB0D00E92F8A /* webrtc */,
 				C271EBA01EB9F04E0034792D /* TGCallUtils.h */,
 				C271EBA11EB9F04E0034792D /* TGCallUtils.mm */,
-				C271EB991EB9DEF00034792D /* CallBridge.h */,
-				C271EB9A1EB9DEF00034792D /* CallBridge.mm */,
-				C271EBE71EBA22FE0034792D /* TGCallConnectionDescription.h */,
-				C271EBE81EBA22FE0034792D /* TGCallConnectionDescription.m */,
+				C271EB991EB9DEF00034792D /* OngoingCallThreadLocalContext.h */,
+				C271EB9A1EB9DEF00034792D /* OngoingCallThreadLocalContext.mm */,
+				C271EBE71EBA22FE0034792D /* OngoingCallConnectionDescription.h */,
+				C271EBE81EBA22FE0034792D /* OngoingCallConnectionDescription.m */,
 				C2AF011B1F03D4C600D8AC1D /* TGCallAesCtr.h */,
 				C2AF011C1F03D4C600D8AC1D /* TGCallAesCtr.m */,
 			);
@@ -4636,6 +4646,15 @@
 			path = tgs;
 			sourceTree = "<group>";
 		};
+		D074A56924A1EB0D00E92F8A /* webrtc */ = {
+			isa = PBXGroup;
+			children = (
+				D074A56B24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.h */,
+				D074A56A24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.mm */,
+			);
+			name = webrtc;
+			sourceTree = "<group>";
+		};
 		D076F86E2295B1F6004F895A /* inline-auth */ = {
 			isa = PBXGroup;
 			children = (
@@ -5215,7 +5234,7 @@
 				C2CE43E920F4F74F00656543 /* UpdateModalController.swift in Sources */,
 				C22EE6191E66ECB200334C38 /* ReportReasonModalController.swift in Sources */,
 				C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */,
-				C271EBE91EBA22FE0034792D /* TGCallConnectionDescription.m in Sources */,
+				C271EBE91EBA22FE0034792D /* OngoingCallConnectionDescription.m in Sources */,
 				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,
 				9F0368012277091800456348 /* LAnimationButton.swift in Sources */,
 				C26505931E0301A5001954DC /* MGalleryPhotoItem.swift in Sources */,
@@ -5471,6 +5490,7 @@
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
+				D074A56524A1DE7700E92F8A /* OngoingCallContext.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
@@ -5499,6 +5519,7 @@
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
+				D074A56C24A1EB4000E92F8A /* OngoingCallThreadLocalContextWebrtc.mm in Sources */,
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
@@ -5534,7 +5555,7 @@
 				C2C9B9341E8016C400380D79 /* NSObject+SPInvocationGrabbing.m in Sources */,
 				D07450D5233B8D2900769D7F /* WalletTransactionDateStickItem.swift in Sources */,
 				C224A72D1EB75A3100F43F3F /* ExMajorNavigationController.swift in Sources */,
-				C271EB9B1EB9DEF00034792D /* CallBridge.mm in Sources */,
+				C271EB9B1EB9DEF00034792D /* OngoingCallThreadLocalContext.mm in Sources */,
 				A7831B2A24040B6B0056AEAC /* StatisticRowItem.swift in Sources */,
 				C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */,
 				C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */,
@@ -5808,6 +5829,7 @@
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2905E1E207E545600990AD7 /* InstantPageAudioItem.swift in Sources */,
+				D074A56724A1DF5200E92F8A /* VoipDerivedState.swift in Sources */,
 				9FFAE4FC205A8C89000C028E /* MediaTrackDecodableFrame.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,
@@ -5985,7 +6007,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6135,7 +6157,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
@@ -6345,7 +6367,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6494,7 +6516,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6697,7 +6719,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6769,7 +6791,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
@@ -6795,7 +6817,10 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"TGVOIP_USE_CUSTOM_CRYPTO=1",
+				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = NO;
 				GCC_WARN_ABOUT_POINTER_SIGNEDNESS = NO;

@@ -214,7 +214,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case let .phoneCall(callId: _, discardReason: reason, duration: duration):
+                case let .phoneCall(callId: _, discardReason: reason, duration: duration, _):
                     if let reason = reason {
                         switch reason {
                         case .busy:

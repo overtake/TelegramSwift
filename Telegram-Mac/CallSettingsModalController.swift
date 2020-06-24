@@ -107,7 +107,7 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
 
 private func inputDevices() -> Signal<[AudioDevice], NoError> {
     return Signal { subscriber in
-        subscriber.putNext(CallBridge.inputDevices())
+        subscriber.putNext([])
         subscriber.putCompletion()
         return ActionDisposable {
         }
@@ -115,7 +115,7 @@ private func inputDevices() -> Signal<[AudioDevice], NoError> {
 }
 private func outputDevices() -> Signal<[AudioDevice], NoError> {
     return Signal { subscriber in
-        subscriber.putNext(CallBridge.outputDevices())
+        subscriber.putNext([])
         subscriber.putCompletion()
         return ActionDisposable {
             
