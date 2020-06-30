@@ -12,6 +12,7 @@ import TelegramCore
 import SyncCore
 import Postbox
 import TGUIKit
+import TgVoipWebrtc
 
 enum CallTone {
     case callToneUndefined
@@ -175,7 +176,12 @@ class PCallSession {
     
     
     private let callSessionManager: CallSessionManager
-        
+    
+    
+    var isVideo: Bool {
+        return callSessionValue?.type == .video
+    }
+    
     init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId) {
         
         Queue.mainQueue().async {
@@ -412,8 +418,10 @@ class PCallSession {
             
             let logName = "\(id.id)_\(id.accessHash)"
 
-            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, isVideo: false, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
+            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, isVideo: session.type == .video, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
             self.ongoingContext = ongoingContext
+            
+            ongoingContext.setEnableVideo(true)
             
             stateDisposable.set((ongoingContext.state |> deliverOn(callQueue)).start(next: { [weak self] state in
                 if let state = state {
@@ -566,6 +574,14 @@ class PCallSession {
         player = nil
     }
     
+    func makeIncomingVideoView(completion: @escaping (NSView?) -> Void) {
+        self.ongoingContext?.makeIncomingVideoView(completion: completion)
+    }
+    
+    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
+        self.ongoingContext?.makeOutgoingVideoView(completion: completion)
+    }
+    
 }
 
 enum PCallResult {
@@ -574,7 +590,7 @@ enum PCallResult {
     case samePeer(PCallSession)
 }
 
-func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false) -> Signal<PCallResult, NoError> {
+func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false, isVideo: Bool = false) -> Signal<PCallResult, NoError> {
     return requestAudioPermission() |> deliverOnMainQueue |> mapToSignal { hasAccess -> Signal<PCallResult, NoError> in
         if hasAccess {
             return Signal { subscriber in
@@ -600,7 +616,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     return (confirmation |> filter {$0} |> map { _ in
                         callSession?.hangUpCurrentCall()
                     } |> mapToSignal { _ in
-                        return account.callSessionManager.request(peerId: peerId, isVideo: false)
+                        return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
                         subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
                         subscriber.putCompletion()
@@ -623,6 +639,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
             return .complete()
         }
     }
+
     
 }
 

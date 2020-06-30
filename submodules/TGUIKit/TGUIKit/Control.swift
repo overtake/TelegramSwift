@@ -163,6 +163,12 @@ open class Control: View {
         if animates {
             self.layer?.animateBackground()
         }
+        
+        stateDidUpdated(state)
+    }
+    
+    open func stateDidUpdated(_ state: ControlState) {
+        
     }
     
     private var mouseIsDown:Bool = false
@@ -387,6 +393,9 @@ open class Control: View {
         super.mouseDown(with: event)
     }
     
+    open override func menu(for event: NSEvent) -> NSMenu? {
+        return nil
+    }
     
     public func send(event:ControlEvent) -> Void {
         for value in handlers {
