@@ -43,7 +43,6 @@
 #endif
 
 #import "OngoingCallThreadLocalContext.h"
-#import "OngoingCallThreadLocalContextWebrtc.h"
 
 #import "CalendarUtils.h"
 #import "RingBuffer.h"

@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import SyncCore
 import Postbox
-
+import TgVoipWebrtc
 
 
 private func callConnectionDescription(_ connection: CallSessionConnection) -> OngoingCallConnectionDescription {
@@ -433,15 +433,14 @@ public final class OngoingCallContext {
     private var networkTypeDisposable: Disposable?
     
     public static var maxLayer: Int32 {
-        return OngoingCallThreadLocalContext.maxLayer()
-        //return max(OngoingCallThreadLocalContext.maxLayer(), OngoingCallThreadLocalContextWebrtc.maxLayer())
+        return max(OngoingCallThreadLocalContext.maxLayer(), OngoingCallThreadLocalContextWebrtc.maxLayer())
     }
     
     public static func versions(includeExperimental: Bool) -> [String] {
         var result: [String] = [OngoingCallThreadLocalContext.version()]
         if includeExperimental {
             result.append(OngoingCallThreadLocalContextWebrtc.version())
-            //result.append(OngoingCallThreadLocalContextWebrtcCustom.version())
+//            result.append(OngoingCallThreadLocalContextWebrtcCustom.version())
         }
         return result
     }
@@ -449,7 +448,7 @@ public final class OngoingCallContext {
     public init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, isVideo: Bool, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, logName: String) {
         let _ = setupLogs
         OngoingCallThreadLocalContext.applyServerConfig(serializedData)
-        //OngoingCallThreadLocalContextWebrtc.applyServerConfig(serializedData)
+        OngoingCallThreadLocalContextWebrtc.applyServerConfig(serializedData)
         
         self.internalId = internalId
         self.account = account
@@ -461,8 +460,7 @@ public final class OngoingCallContext {
         
         cleanupCallLogs(account: account)
         queue.sync {
-            //version == OngoingCallThreadLocalContextWebrtc.version()
-            if false {
+            if version == OngoingCallThreadLocalContextWebrtc.version() {
                 var voipProxyServer: VoipProxyServerWebrtc?
                 if let proxyServer = proxyServer {
                     switch proxyServer.connection {

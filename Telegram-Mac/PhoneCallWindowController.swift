@@ -14,27 +14,100 @@ import Postbox
 import SwiftSignalKit
 
 
-private class ShadowView : View {
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        ctx.clear(NSMakeRect(0, 0, frame.width, frame.height))
-        
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [NSColor.black.withAlphaComponent(0.4).cgColor, NSColor.clear.cgColor]), locations: nil)!
-        
-        ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: frame.height), options: CGGradientDrawingOptions())
-    }
-    
+private struct CallControlData {
+    let text: String
+    let isVisualEffect: Bool
+    let icon: CGImage
+    let iconSize: NSSize
+    let backgroundColor: NSColor
 }
 
+private final class CallControl : Control {
+    private let imageView: ImageView = ImageView()
+    private var imageBackgroundView:NSView? = nil
+    private let textView: TextView = TextView()
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
+    }
+    
+    override func stateDidUpdated( _ state: ControlState) {
+        
+        switch controlState {
+        case .Highlight:
+            imageBackgroundView?._change(opacity: 0.9)
+            textView.change(opacity: 0.9)
+        default:
+            imageBackgroundView?._change(opacity: 1.0)
+            textView.change(opacity: 1.0)
+        }
+    }
+    
+    func updateWithData(_ data: CallControlData, animated: Bool) {
+        let layout = TextViewLayout(.initialize(string: data.text, color: .white, font: .medium(11)), maximumNumberOfLines: 1)
+        layout.measure(width: data.iconSize.width)
+        
+        textView.update(layout)
+        
+        if data.isVisualEffect {
+            if !(self.imageBackgroundView is NSVisualEffectView) || self.imageBackgroundView == nil {
+                self.imageBackgroundView?.removeFromSuperview()
+                self.imageBackgroundView = NSVisualEffectView()
+                self.imageBackgroundView?.wantsLayer = true
+                self.addSubview(self.imageBackgroundView!)
+            }
+            let view = self.imageBackgroundView as! NSVisualEffectView
+            
+            view.material = .light
+            view.blendingMode = .withinWindow
+        } else {
+            if self.imageBackgroundView is NSVisualEffectView || self.imageBackgroundView == nil {
+                self.imageBackgroundView?.removeFromSuperview()
+                self.imageBackgroundView = View()
+                self.addSubview(self.imageBackgroundView!)
+            }
+            self.imageBackgroundView?.background = data.backgroundColor
+        }
+        imageView.removeFromSuperview()
+        self.imageBackgroundView?.addSubview(imageView)
+
+        imageBackgroundView!.setFrameSize(data.iconSize)
+        imageBackgroundView!.layer?.cornerRadius = data.iconSize.height / 2
+
+        
+        imageView.image = data.icon
+        imageView.sizeToFit()
+        
+        setFrameSize(NSMakeSize(data.iconSize.width, data.iconSize.height + 5 + layout.layoutSize.height))
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        imageView.center()
+        if let imageBackgroundView = imageBackgroundView {
+            textView.centerX(y: imageBackgroundView.frame.height + 5)
+        }
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 private class PhoneCallWindowView : View {
-    //private var avatar:AvatarControl = AvatarControl
     fileprivate let imageView:TransformImageView = TransformImageView()
-    fileprivate let controls:NSVisualEffectView = NSVisualEffectView()
+    fileprivate let controls:View = View()
     fileprivate let backgroundView:View = View()
-    let acceptControl:ImageButton = ImageButton()
-    let declineControl:ImageButton = ImageButton()
+    let acceptControl:CallControl = CallControl(frame: .zero)
+    let declineControl:CallControl = CallControl(frame: .zero)
     let muteControl:ImageButton = ImageButton()
     let closeMissedControl:ImageButton = ImageButton()
     private var textNameView: NSTextField = NSTextField()
@@ -43,20 +116,34 @@ private class PhoneCallWindowView : View {
     
     private let secureTextView:TextView = TextView()
     fileprivate let secureContainerView:NSView = NSView()
+    
+    private var incomingVideoView: NSView?
+    private var outgoingVideoView: Control = Control(frame: NSMakeRect(0, 0, 150, 100))
+    
+    
+    private var basicControls: View = View()
+    
+    private var state: CallSessionState?
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(backgroundView)
         addSubview(imageView)
+        addSubview(backgroundView)
+        
+        outgoingVideoView.layer?.cornerRadius = .cornerRadius
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 4
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        outgoingVideoView.shadow = shadow
+        
         addSubview(controls)
+        controls.addSubview(basicControls)
+
         self.backgroundColor = NSColor(0x000000, 0.8)
         
-       // shadowView.layer?.shadowColor = NSColor.blackTransparent.cgColor
-              // controls.backgroundColor = NSColor(0x000000, 0.85)
-        
-        controls.material = .dark
-        controls.blendingMode = .behindWindow
         secureContainerView.wantsLayer = true
-        secureContainerView.background = NSColor(0x000000, 0.75)
         secureTextView.backgroundColor = .clear
 
         secureContainerView.addSubview(secureTextView)
@@ -66,21 +153,12 @@ private class PhoneCallWindowView : View {
 
         
     
-        backgroundView.backgroundColor = .clear
+        backgroundView.backgroundColor = NSColor(0x000000, 0.15)
         backgroundView.frame = NSMakeRect(0, 0, frameRect.width, frameRect.height)
         
-        acceptControl.autohighlight = false
-        acceptControl.set(image: theme.icons.callWindowAccept, for: .Normal)
-        _ = acceptControl.sizeToFit()
+
         
-        declineControl.autohighlight = false
-        declineControl.set(image: theme.icons.callWindowDecline, for: .Normal)
-        _ = declineControl.sizeToFit()
-        
-        muteControl.autohighlight = false
-        muteControl.set(image: theme.icons.callWindowMute, for: .Normal)
-        _ = muteControl.sizeToFit()
-        controls.addSubview(muteControl)
+
         
         closeMissedControl.autohighlight = false
         closeMissedControl.set(image: theme.icons.callWindowCancel, for: .Normal)
@@ -90,11 +168,12 @@ private class PhoneCallWindowView : View {
         closeMissedControl.layer?.borderColor = theme.colors.border.cgColor
         
         
+        self.addSubview(textNameView)
+        self.addSubview(statusTextView)
+
         
         controls.addSubview(acceptControl)
         controls.addSubview(declineControl)
-        controls.addSubview(textNameView)
-        controls.addSubview(statusTextView)
         controls.addSubview(closeMissedControl)
         
         textNameView.font = .medium(18.0)
@@ -117,19 +196,8 @@ private class PhoneCallWindowView : View {
         statusTextView.isEditable = false
         statusTextView.isBordered = false
         statusTextView.focusRingType = .none
-        
-       // self.backgroundView.backgroundColor = .blackTransparent
-        let controlsSize = NSMakeSize(frameRect.width, 160)
-        controls.frame = NSMakeRect(0, frameRect.height - controlsSize.height, controlsSize.width, controlsSize.height)
-       // controls.backgroundColor = .blackTransparent
-      //  controls.flip = false
-        //controls.material = .ultraDark
-        //controls.blendingMode = .behindWindow
-        //controls.state = .followsWindowActiveState
-        imageView.setFrameSize(frameRect.size.width, frameRect.size.height - controlsSize.height)
-        
-        declineControl.setFrameOrigin(80, 30)
-        acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80, 30)
+
+        imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
         layer?.cornerRadius = 10
         
@@ -137,26 +205,76 @@ private class PhoneCallWindowView : View {
         closeMissedControl.layer?.opacity = 0
         
         
+        acceptControl.updateWithData(CallControlData(text: "Accept", isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(60, 60), backgroundColor: .greenUI), animated: false)
+        declineControl.updateWithData(CallControlData(text: "Decline", isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: false)
+        
+        
+        basicControls.backgroundColor = .random
+
     }
     
+    private func mainControlY(_ control: NSView) -> CGFloat {
+        return controls.frame.height - control.frame.height - 50
+    }
     
-
+    private func mainControlCenter(_ control: NSView) -> CGFloat {
+        return floorToScreenPixels(backingScaleFactor, (controls.frame.width - control.frame.width) / 2)
+    }
+    
     override func layout() {
         super.layout()
         
+        backgroundView.frame = bounds
+        imageView.frame = bounds
+        
+        incomingVideoView?.frame = bounds
+        
+        outgoingVideoView.frame = NSMakeRect(frame.width - outgoingVideoView.frame.width - 20, frame.height - 120 - outgoingVideoView.frame.height, outgoingVideoView.frame.width, outgoingVideoView.frame.height)
+        
+        
+        
         textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 24))
-        textNameView.centerX(y: controls.frame.height - textNameView.frame.height - 20)
+        textNameView.centerX(y: 50)
         statusTextView.setFrameSize(statusTextView.sizeThatFits(NSMakeSize(controls.frame.width - 40, 30)))
-        statusTextView.centerX(y: controls.frame.height - textNameView.frame.height - 20 - 20)
+        statusTextView.centerX(y: textNameView.frame.maxY + 5)
         
         secureTextView.center()
         secureTextView.setFrameOrigin(secureTextView.frame.minX + 2, secureTextView.frame.minY)
-        secureContainerView.centerX(y: frame.height - 170 - secureContainerView.frame.height)
-        muteControl.setFrameOrigin(frame.width - 60 - muteControl.frame.width, 30 + floorToScreenPixels(backingScaleFactor, (declineControl.frame.height - muteControl.frame.height)/2))
+        secureContainerView.centerX(y: statusTextView.frame.maxY + 5)
         
-        closeMissedControl.setFrameOrigin(80, 30)
+        
+        let controlsSize = NSMakeSize(frame.width, 220)
+        controls.frame = NSMakeRect(0, frame.height - controlsSize.height, controlsSize.width, controlsSize.height)
+        
+   
+        
+        if let state = self.state {
+            switch state {
+            case .accepting:
+                acceptControl.setFrameOrigin(NSMakePoint(mainControlCenter(acceptControl), mainControlY(acceptControl)))
+            case .active:
+                acceptControl.setFrameOrigin(NSMakePoint(mainControlCenter(acceptControl), mainControlY(acceptControl)))
+            case .requesting:
+                acceptControl.setFrameOrigin(NSMakePoint(mainControlCenter(acceptControl), mainControlY(acceptControl)))
+            case .dropping:
+                acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
+            case .terminated:
+                acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
+            case .ringing:
+                closeMissedControl.setFrameOrigin(80, mainControlY(closeMissedControl))
+                
+                declineControl.setFrameOrigin(80, mainControlY(declineControl))
+                acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
+                
+                basicControls.frame = NSMakeRect(0, 0, controls.frame.width, 80)
+
+            }
+        }
+        
         
     }
+    
+    
     
     func updateName(_ name:String) {
         textNameView.stringValue = name
@@ -168,7 +286,10 @@ private class PhoneCallWindowView : View {
         needsLayout = true
     }
     
-    func updateState(_ state:CallSessionState, accountPeer: Peer?, animated: Bool) {
+    func updateState(_ state:CallSessionState, session:PCallSession, accountPeer: Peer?, animated: Bool) {
+        
+        self.state = state
+        
         switch state {
         case .accepting:
             statusTextView.stringValue = L10n.callStatusConnecting
@@ -181,6 +302,27 @@ private class PhoneCallWindowView : View {
             secureContainerView.layer?.cornerRadius = secureContainerView.frame.height / 2
             
             statusTextView.stringValue = L10n.callStatusConnecting
+            
+            
+            session.makeIncomingVideoView { [weak self] view in
+                if let view = view, let `self` = self {
+                    view.frame = self.imageView.frame
+                    self.incomingVideoView = view
+                    self.imageView.addSubview(view)
+                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.needsLayout = true
+                }
+            }
+            session.makeOutgoingVideoView { [weak self] view in
+                if let view = view, let `self` = self {
+                    view.frame = self.outgoingVideoView.bounds
+                    self.outgoingVideoView.addSubview(view)
+                    self.imageView.addSubview(self.outgoingVideoView)
+                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.needsLayout = true
+                }
+            }
+            
         case .ringing:
             if let accountPeer = accountPeer {
                 statusTextView.stringValue = L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle)
@@ -221,8 +363,8 @@ private class PhoneCallWindowView : View {
                     self?.declineControl.isHidden = true
                 }
             })
-            acceptControl.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - acceptControl.frame.width) / 2), 30), animated: animated)
-            acceptControl.set(image: theme.icons.callWindowDecline, for: .Normal)
+            acceptControl.change(pos: NSMakePoint(mainControlCenter(acceptControl), mainControlY(acceptControl)), animated: animated)
+           // acceptControl.set(image: theme.icons.callWindowDecline, for: .Normal)
             
             muteControl.isHidden = false
             muteControl.change(opacity: 1, animated: animated)
@@ -233,6 +375,7 @@ private class PhoneCallWindowView : View {
                 }
             })
             
+            
         case .ringing:
             declineControl.isHidden = false
             muteControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
@@ -240,8 +383,8 @@ private class PhoneCallWindowView : View {
                     self?.muteControl.isHidden = true
                 }
             })
-            acceptControl.set(image: theme.icons.callWindowAccept, for: .Normal)
-            acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, 30), animated: animated)
+          //  acceptControl.set(image: theme.icons.callWindowAccept, for: .Normal)
+            acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, mainControlY(acceptControl)), animated: animated)
             declineControl.change(opacity: 1, animated: animated)
             
             closeMissedControl.change(opacity: 0, animated: animated, completion: { [weak self] completed in
@@ -281,8 +424,8 @@ private class PhoneCallWindowView : View {
                     }
                 })
                 
-                acceptControl.set(image: theme.icons.callWindowAccept, for: .Normal)
-                acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, 30), animated: animated)
+          //      acceptControl.set(image: theme.icons.callWindowAccept, for: .Normal)
+                acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, mainControlY(acceptControl)), animated: animated)
             }
         case .dropping:
             break
@@ -329,7 +472,7 @@ class PhoneCallWindowController {
         
         stateDisposable.set(combineLatest(queue: .mainQueue(), session.state.get(), accountPeer).start(next: { [weak self] state, accountPeer in
             if let strongSelf = self {
-                strongSelf.applyState(state, accountPeer: accountPeer, animated: !strongSelf.first)
+                strongSelf.applyState(state, session: strongSelf.session!, accountPeer: accountPeer, animated: !strongSelf.first)
                 strongSelf.first = false
             }
         }))
@@ -351,9 +494,9 @@ class PhoneCallWindowController {
         self.session = session
     
         
-        let size = NSMakeSize(300, 460)
+        let size = NSMakeSize(360, 500)
         if let screen = NSScreen.main {
-            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView], backing: .buffered, defer: true, screen: screen)
+            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .resizable, .borderless], backing: .buffered, defer: true, screen: screen)
             self.window.level = .modalPanel
             self.window.backgroundColor = .clear
         } else {
@@ -453,7 +596,7 @@ class PhoneCallWindowController {
     @objc open func windowDidResignKey() {
         keyStateDisposable.set((session.state.get() |> deliverOnMainQueue).start(next: { [weak self] state in
             if let strongSelf = self {
-                if case .active = state, !strongSelf.window.isKeyWindow {
+                if case .active = state, !strongSelf.session.isVideo, !strongSelf.window.isKeyWindow {
                     closeCall()
                 }
                 
@@ -461,9 +604,9 @@ class PhoneCallWindowController {
         }))
     }
     
-    private func applyState(_ state:CallSessionState, accountPeer: Peer?, animated: Bool) {
+    private func applyState(_ state:CallSessionState, session: PCallSession, accountPeer: Peer?, animated: Bool) {
         self.state = state
-        view.updateState(state, accountPeer: accountPeer, animated: animated)
+        view.updateState(state, session: session, accountPeer: accountPeer, animated: animated)
         switch state {
         case .ringing:
             break
