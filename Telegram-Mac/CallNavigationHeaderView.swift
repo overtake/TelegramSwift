@@ -152,11 +152,11 @@ class CallNavigationHeaderView: NavigationHeaderView {
     }
     
     private func updateMutedBg(_ session:PCallSession, animated: Bool) {
-        backgroundView.background = session.isMute ? grayColor : blueColor
+        backgroundView.background = session.data.isMuted ? grayColor : blueColor
         if animated {
             backgroundView.layer?.animateBackground()
         }
-        muteControl.set(image: !session.isMute ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
+        muteControl.set(image: !session.data.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
         _ = muteControl.sizeToFit()
         needsLayout = true
     }

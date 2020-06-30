@@ -133,7 +133,11 @@ private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAux
 }
 
 
-
+struct CallAccessData : Equatable {
+    let isMuted: Bool
+    let isVideoEnabled: Bool
+    let isVerticalVideo: Bool
+}
 
 class PCallSession {
     let peerId:PeerId
@@ -160,7 +164,19 @@ class PCallSession {
     private let timeoutDisposable = MetaDisposable()
     
     let state:Promise<CallSessionState> = Promise()
-    private(set) var isMute:Bool = false
+    
+    
+    private let dataSignal:ValuePromise<CallAccessData> = ValuePromise(CallAccessData(isMuted: false, isVideoEnabled: true, isVerticalVideo: false))
+    
+    var dataValue:Signal<CallAccessData, NoError> {
+        return dataSignal.get()
+    }
+    private(set) var data: CallAccessData = CallAccessData(isMuted: false, isVideoEnabled: true, isVerticalVideo: false) {
+        didSet {
+            dataSignal.set(data)
+        }
+    }
+    
     private var player:CallAudioPlayer? = nil
     private var playingRingtone:Bool = false
     
@@ -176,7 +192,7 @@ class PCallSession {
     
     
     private let callSessionManager: CallSessionManager
-    
+        
     
     var isVideo: Bool {
         return callSessionValue?.type == .video
@@ -248,62 +264,6 @@ class PCallSession {
         }
         
         state.set(signal |> map { $0.state })
-        
-//
-//
-//        peerDisposable.set((account.postbox.multiplePeersView([peerId]) |> deliverOnMainQueue).start(next: { [weak self] view in
-//            self?.peer = view.peers[peerId]
-//        }))
-//
-//        let signal = account.callSessionManager.callState(internalId: id) |> mapToSignal { session -> Signal<(CallSession, VoipConfiguration), NoError> in
-//            return account.postbox.transaction { transaction in
-//                return (session, currentVoipConfiguration(transaction: transaction))
-//            }
-//        } |> deliverOnMainQueue |> beforeNext { [weak self] session, configuration in
-//            self?.proccessState(session, configuration)
-//        }
-//
-//        state.set(signal |> map { $0.0.state})
-//
-//        proxyDisposable.set((combineLatest(queue: callQueue, proxySettings(accountManager: sharedContext.accountManager), voiceCallSettings(sharedContext.accountManager))).start(next: { [weak self] proxySetttings, callSettings in
-//            guard let `self` = self else {return}
-//            callSession = self
-//            let bridge:OngoingCallThreadLocalContext
-//            if let server = proxySetttings.effectiveActiveServer, proxySetttings.useForCalls {
-//                switch server.connection {
-//                case let .socks5(username, password):
-//                    bridge = OngoingCallThreadLocalContext(proxy: VoipProxyServer(host: server.host, port: server.port, user: username != nil ? username : "", pass: password != nil ? password : ""))
-//                default:
-//                    bridge = OngoingCallThreadLocalContext(proxy: nil)
-//                }
-//            } else {
-//                bridge = OngoingCallThreadLocalContext(proxy: nil)
-//            }
-//
-//            if let inputDeviceId = callSettings.inputDeviceId {
-//                bridge.setCurrentInputDeviceId(inputDeviceId)
-//            }
-//            if let outputDeviceId = callSettings.outputDeviceId {
-//                bridge.setCurrentOutputDeviceId(outputDeviceId)
-//            }
-//            bridge.setMutedOtherSounds(callSettings.muteSounds)
-//
-//            self.contextRef = Unmanaged.passRetained(bridge)
-//            bridge.stateChangeHandler = { value in
-//                callQueue.async {
-//                    if let state = VoIPState(rawValue: Int(value)) {
-//                        self.voipStateChanged(state)
-//                    }
-//                }
-//            }
-//        }))
-//
-//        callQueue.async {
-//
-//        }
-//
-//
-//
     }
     
     private func voipStateChanged(_ state:OngoingCallContextState) {
@@ -395,18 +355,26 @@ class PCallSession {
     }
     
     func mute() {
-        isMute = true
-        ongoingContext?.setIsMuted(true)
+        data = CallAccessData(isMuted: true, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
+        ongoingContext?.setIsMuted(data.isMuted)
+    }
+    func setVideoEnabled(_ isEnabled: Bool) {
+        data = CallAccessData(isMuted: data.isMuted, isVideoEnabled: isEnabled, isVerticalVideo: data.isVerticalVideo)
+        ongoingContext?.setEnableVideo(data.isVideoEnabled)
+    }
+    func toggleVideoEnabled() {
+        data = CallAccessData(isMuted: data.isMuted, isVideoEnabled: !data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
+        ongoingContext?.setEnableVideo(data.isVideoEnabled)
     }
     
     func unmute() {
-        isMute = false
-        ongoingContext?.setIsMuted(false)
+        data = CallAccessData(isMuted: false, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
+        ongoingContext?.setIsMuted(data.isMuted)
     }
     
     func toggleMute() {
-        self.isMute = !self.isMute
-        ongoingContext?.setIsMuted(self.isMute)
+        data = CallAccessData(isMuted: !data.isMuted, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
+        ongoingContext?.setIsMuted(data.isMuted)
     }
     
     private func proccessState(_ session: CallSession, _ configuration: VoipConfiguration) {
@@ -421,7 +389,7 @@ class PCallSession {
             let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, isVideo: session.type == .video, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
             self.ongoingContext = ongoingContext
             
-            ongoingContext.setEnableVideo(true)
+            ongoingContext.setEnableVideo(self.data.isVideoEnabled && session.type == .video)
             
             stateDisposable.set((ongoingContext.state |> deliverOn(callQueue)).start(next: { [weak self] state in
                 if let state = state {

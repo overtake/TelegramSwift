@@ -2435,6 +2435,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var callWindowDeclineSmall: CGImage {
+      if let image = cached.with({ $0["callWindowDeclineSmall"] }) {
+          return image
+      } else {
+          let image = _callWindowDeclineSmall()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowDeclineSmall"] = image
+              return current
+          }
+          return image
+      }
+  }
   var callWindowAccept: CGImage {
       if let image = cached.with({ $0["callWindowAccept"] }) {
           return image
@@ -2443,6 +2456,32 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["callWindowAccept"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var callWindowVideo: CGImage {
+      if let image = cached.with({ $0["callWindowVideo"] }) {
+          return image
+      } else {
+          let image = _callWindowVideo()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowVideo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var callWindowVideoActive: CGImage {
+      if let image = cached.with({ $0["callWindowVideoActive"] }) {
+          return image
+      } else {
+          let image = _callWindowVideoActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowVideoActive"] = image
               return current
           }
           return image
@@ -2461,14 +2500,14 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var callWindowUnmute: CGImage {
-      if let image = cached.with({ $0["callWindowUnmute"] }) {
+  var callWindowMuteActive: CGImage {
+      if let image = cached.with({ $0["callWindowMuteActive"] }) {
           return image
       } else {
-          let image = _callWindowUnmute()
+          let image = _callWindowMuteActive()
           _ = cached.modify { current in 
               var current = current
-              current["callWindowUnmute"] = image
+              current["callWindowMuteActive"] = image
               return current
           }
           return image
@@ -6874,9 +6913,12 @@ final class TelegramIconsTheme {
   private let _chatSearchCancel: ()->CGImage
   private let _chatSearchFrom: ()->CGImage
   private let _callWindowDecline: ()->CGImage
+  private let _callWindowDeclineSmall: ()->CGImage
   private let _callWindowAccept: ()->CGImage
+  private let _callWindowVideo: ()->CGImage
+  private let _callWindowVideoActive: ()->CGImage
   private let _callWindowMute: ()->CGImage
-  private let _callWindowUnmute: ()->CGImage
+  private let _callWindowMuteActive: ()->CGImage
   private let _callWindowClose: ()->CGImage
   private let _callWindowDeviceSettings: ()->CGImage
   private let _callSettings: ()->CGImage
@@ -7390,9 +7432,12 @@ final class TelegramIconsTheme {
       chatSearchCancel: @escaping()->CGImage,
       chatSearchFrom: @escaping()->CGImage,
       callWindowDecline: @escaping()->CGImage,
+      callWindowDeclineSmall: @escaping()->CGImage,
       callWindowAccept: @escaping()->CGImage,
+      callWindowVideo: @escaping()->CGImage,
+      callWindowVideoActive: @escaping()->CGImage,
       callWindowMute: @escaping()->CGImage,
-      callWindowUnmute: @escaping()->CGImage,
+      callWindowMuteActive: @escaping()->CGImage,
       callWindowClose: @escaping()->CGImage,
       callWindowDeviceSettings: @escaping()->CGImage,
       callSettings: @escaping()->CGImage,
@@ -7905,9 +7950,12 @@ final class TelegramIconsTheme {
       self._chatSearchCancel = chatSearchCancel
       self._chatSearchFrom = chatSearchFrom
       self._callWindowDecline = callWindowDecline
+      self._callWindowDeclineSmall = callWindowDeclineSmall
       self._callWindowAccept = callWindowAccept
+      self._callWindowVideo = callWindowVideo
+      self._callWindowVideoActive = callWindowVideoActive
       self._callWindowMute = callWindowMute
-      self._callWindowUnmute = callWindowUnmute
+      self._callWindowMuteActive = callWindowMuteActive
       self._callWindowClose = callWindowClose
       self._callWindowDeviceSettings = callWindowDeviceSettings
       self._callSettings = callSettings
