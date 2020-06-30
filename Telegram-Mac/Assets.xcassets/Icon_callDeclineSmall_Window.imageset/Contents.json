@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_call_cancel.png",
+      "filename" : "ic_calls_declinesmall.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_call_cancel@2x.png",
+      "filename" : "ic_calls_declinesmall@2x.png",
       "scale" : "2x"
     },
     {

@@ -473,6 +473,16 @@ internal final class L10n {
   }
   /// Hide Telegram
   internal static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
+  /// Accept
+  internal static var callAccept: String  { return L10n.tr("Localizable", "Call.Accept") }
+  /// Camera
+  internal static var callCamera: String  { return L10n.tr("Localizable", "Call.Camera") }
+  /// Close
+  internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
+  /// Decline
+  internal static var callDecline: String  { return L10n.tr("Localizable", "Call.Decline") }
+  /// Mute
+  internal static var callMute: String  { return L10n.tr("Localizable", "Call.Mute") }
   /// %@'s app does not support calls. They need to update their app before you can call them.
   internal static func callParticipantVersionOutdatedError(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.ParticipantVersionOutdatedError", p1)
@@ -481,6 +491,8 @@ internal final class L10n {
   internal static func callPrivacyErrorMessage(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.PrivacyErrorMessage", p1)
   }
+  /// Recall
+  internal static var callRecall: String  { return L10n.tr("Localizable", "Call.Recall") }
   /// %d
   internal static func callShortMinutesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Call.ShortMinutes_countable", p1)
