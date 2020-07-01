@@ -210,7 +210,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType)
+        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         if messageText.length > 0 {

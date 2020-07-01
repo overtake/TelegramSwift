@@ -487,6 +487,13 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         
     })
     
+    controller.updateRightBarView = { view in
+        if let view = view as? ImageBarView {
+            view.button.set(image: theme.icons.chatActions, for: .Normal)
+            view.button.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        }
+    }
+    
     controller.didLoaded = { controller, _ in
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())

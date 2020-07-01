@@ -4037,7 +4037,7 @@ internal final class L10n {
   internal static var notificationSettingsResetNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotifications") }
   /// You can set custom notifications for specific chats below.
   internal static var notificationSettingsResetNotificationsText: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotificationsText") }
-  /// Send Message Effect
+  /// On Send Message
   internal static var notificationSettingsSendMessageEffect: String  { return L10n.tr("Localizable", "NotificationSettings.SendMessageEffect") }
   /// SHOW NOTIFICATIONS FROM
   internal static var notificationSettingsShowNotificationsFrom: String  { return L10n.tr("Localizable", "NotificationSettings.ShowNotificationsFrom") }
@@ -4045,6 +4045,8 @@ internal final class L10n {
   internal static var notificationSettingsSnoof: String  { return L10n.tr("Localizable", "NotificationSettings.Snoof") }
   /// SHOW NOTIFICATIONS WHEN
   internal static var notificationSettingsSnoofHeader: String  { return L10n.tr("Localizable", "NotificationSettings.SnoofHeader") }
+  /// IN-APP SOUND EFFECTS
+  internal static var notificationSettingsSoundEffects: String  { return L10n.tr("Localizable", "NotificationSettings.SoundEffects") }
   /// Notifications
   internal static var notificationSettingsToggleNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications") }
   /// Reset notifications

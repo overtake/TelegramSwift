@@ -342,6 +342,7 @@ class InputDataController: GenericViewController<InputDataView> {
     private let hasDone: Bool
     var updateDoneValue:([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void
     var customRightButton:((ViewController)->BarView?)?
+    var updateRightBarView:((BarView)->Void)?
     var afterTransaction: (InputDataController)->Void
     var backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
     var returnKeyInvocation:(InputDataIdentifier?, NSEvent) -> InputDataReturnResult
@@ -392,6 +393,11 @@ class InputDataController: GenericViewController<InputDataView> {
         requestUpdateBackBar()
         requestUpdateCenterBar()
         requestUpdateRightBar()
+    }
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        self.updateRightBarView?(self.rightBarView)
     }
     
     
