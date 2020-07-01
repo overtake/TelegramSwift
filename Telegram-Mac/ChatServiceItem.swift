@@ -448,7 +448,7 @@ class ChatServiceRowView: TableRowView {
                     self.addSubview(imageView!)
                 }
                 imageView?.setSignal(signal: cachedMedia(media: image, arguments: arguments, scale: backingScaleFactor))
-                imageView?.setSignal( chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor), cacheImage: { [weak image] result in
+                imageView?.setSignal( chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message!), media: image), toRepresentationSize:NSMakeSize(100,100), scale: backingScaleFactor, autoFetchFullSize: true), cacheImage: { [weak image] result in
                     if let media = image {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil)
                     }

@@ -1395,7 +1395,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     offset += chatName.0.size.height + 1
                 }
                 
-                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + offset)
+                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
                 for (_, media, mediaSize) in self.currentMediaPreviewSpecs {

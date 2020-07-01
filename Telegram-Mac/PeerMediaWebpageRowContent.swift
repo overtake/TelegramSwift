@@ -15,46 +15,58 @@ import SwiftSignalKit
 
 class PeerMediaWebpageRowItem: PeerMediaRowItem {
     
-    var textLayout:TextViewLayout?
-    var linkLayout:TextViewLayout?
+    private(set) var textLayout:TextViewLayout?
+    private(set) var linkLayouts:[TextViewLayout] = []
     
-    var iconText:NSAttributedString?
-    var firstCharacter:String?
-    var icon:TelegramMediaImage?
-    var iconArguments:TransformImageArguments?
-    var thumb:CGImage? = nil
+    private(set) var iconText:NSAttributedString?
+    private(set) var firstCharacter:String?
+    private(set) var icon:TelegramMediaImage?
+    private(set) var iconArguments:TransformImageArguments?
+    private(set) var thumb:CGImage? = nil
     override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         super.init(initialSize,interface,object, viewType: viewType)
 
         
-        let attributed = NSMutableAttributedString()
-        loop: for attr in message.attributes {
-           if let attr = attr as? TextEntitiesMessageAttribute {
-               for entity in attr.entities {
-                   inner: switch entity.type {
-                   case .Email:
+        var linkLayouts:[TextViewLayout] = []
+        
+        var links:[NSAttributedString] = []
+
+        for attr in message.attributes {
+            if let attr = attr as? TextEntitiesMessageAttribute {
+                for entity in attr.entities {
+                    inner: switch entity.type {
+                    case .Email:
+                        let attributed = NSMutableAttributedString()
                         let link = message.text.nsstring.substring(with: NSMakeRange(min(entity.range.lowerBound, message.text.length), max(min(entity.range.upperBound - entity.range.lowerBound, message.text.length - entity.range.lowerBound), 0)))
                         let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
                         attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                        break loop
-                   case .Url:
+                        links.append(attributed)
+                    case .Url:
+                        let attributed = NSMutableAttributedString()
                         let link = message.text.nsstring.substring(with: NSMakeRange(min(entity.range.lowerBound, message.text.length), max(min(entity.range.upperBound - entity.range.lowerBound, message.text.length - entity.range.lowerBound), 0)))
                         let range = attributed.append(string: link, color: theme.colors.link, font: .normal(.text))
                         attributed.addAttribute(.link, value: inApp(for: link as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                        break loop
-                   case let .TextUrl(url):
+                        links.append(attributed)
+                    case let .TextUrl(url):
+                        let attributed = NSMutableAttributedString()
                         let range = attributed.append(string: url, color: theme.colors.link, font: .normal(.text))
-                        attributed.addAttribute(.link, value: inApp(for: url as NSString, context: interface.context, peerId: interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
-                        break loop
-                   default:
-                       break inner
-                   }
-               }
-               break
-           }
-       }
-       linkLayout = TextViewLayout(attributed, maximumNumberOfLines: 1, truncationType: .end)
-       linkLayout?.interactions = globalLinkExecutor
+                        attributed.addAttribute(.link, value: inApp(for: url as NSString, context: interface.context, peerId:
+                            interface.peerId, openInfo: interface.openInfo, applyProxy: interface.applyProxy, confirm: false), range: range)
+                        links.append(attributed)
+                    default:
+                        break inner
+                    }
+                }
+                break
+            }
+        }
+        
+        for attributed in links {
+            let linkLayout = TextViewLayout(attributed, maximumNumberOfLines: 1, truncationType: .middle)
+            linkLayout.interactions = globalLinkExecutor
+            linkLayouts.append(linkLayout)
+        }
+        
         
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
@@ -94,7 +106,8 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 
                 textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
             }
-        } else {
+        } else if let linkLayout = linkLayouts.first {
+            let attributed = linkLayout.attributedString
             var hostName: String = attributed.string
             if let url = URL(string: attributed.string), let host = url.host, !host.isEmpty {
                 hostName = host
@@ -109,7 +122,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
             if !hostName.isEmpty {
                 let _ = attributedText.append(string: "\n")
             }
-            if message.text != linkLayout?.attributedString.string {
+            if message.text != linkLayout.attributedString.string {
                 let _ = attributedText.append(string: message.text, color: theme.colors.text, font: .normal(.short))
             }
             textLayout = TextViewLayout(attributedText, maximumNumberOfLines: 3, truncationType: .end)
@@ -137,26 +150,26 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 }
             }
         }
-       
         
-        linkLayout?.interactions = TextViewInteractions(processURL: { [weak self] url in
-            if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
-                if self.hasInstantPage {
-                    showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
-                    return
+        for linkLayout in linkLayouts {
+            linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
+                if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
+                    if self.hasInstantPage {
+                        showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
+                        return
+                    }
                 }
-            }
-            globalLinkExecutor.processURL(url)
-        }, copy: { [weak self] in
-                guard let `self` = self else {return false}
-                if let string = self.linkLayout?.attributedString.string {
-                    copyToClipboard(string)
-                    return false
-                }
-                return true
-        }, localizeLinkCopy: { link in
+                globalLinkExecutor.processURL(url)
+            }, copy: { [weak linkLayout] in
+                guard let linkLayout = linkLayout else {return false}
+                copyToClipboard(linkLayout.attributedString.string)
+                return false
+            }, localizeLinkCopy: { link in
                 return L10n.textContextCopyLink
-        })
+            })
+        }
+        
+        self.linkLayouts = linkLayouts
         
         _ = makeSize(initialSize.width, oldWidth: 0)
         
@@ -184,15 +197,19 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         let result = super.makeSize(width, oldWidth: oldWidth)
         textLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right)
-        linkLayout?.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right - (hasInstantPage ? 10 : 0))
+        
+        for linkLayout in linkLayouts {
+            linkLayout.measure(width: self.blockWidth - contentInset.left - contentInset.right - self.viewType.innerInset.left - self.viewType.innerInset.right - (hasInstantPage ? 10 : 0))
+        }
         
         var textSizes:CGFloat = 0
         if let tLayout = textLayout {
             textSizes += tLayout.layoutSize.height
         }
-        if let lLayout = linkLayout {
-            textSizes += lLayout.layoutSize.height
+        for linkLayout in linkLayouts {
+            textSizes += linkLayout.layoutSize.height
         }
+        
         contentSize = NSMakeSize(width, max(textSizes + contentInset.top + contentInset.bottom + 2.0, 40))
         
         return result
@@ -208,29 +225,31 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     
     private var imageView:TransformImageView
     private var textView:TextView
-    private var linkView:TextView
+    private var linkViews:[TextView] = []
     private var ivImage: ImageView? = nil
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame:NSMakeRect(0, 0, PeerMediaIconSize.width, PeerMediaIconSize.height))
         textView = TextView()
-        linkView = TextView()
         super.init(frame: frameRect)
         
-        linkView.isSelectable = false
         
         addSubview(imageView)
         addSubview(textView)
-        addSubview(linkView)
-        
     }
     
    override func layout() {
         super.layout()
         if let item = item as? PeerMediaWebpageRowItem {
-            textView.update(item.textLayout, origin: NSMakePoint(item.contentInset.left,item.contentInset.top))
-            linkView.isHidden = item.linkLayout == nil
-            linkView.update(item.linkLayout, origin: NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0),textView.frame.maxY + 2.0))
             ivImage?.setFrameOrigin(item.contentInset.left, textView.frame.maxY + 6.0)
+            textView.setFrameOrigin(NSMakePoint(item.contentInset.left,item.contentInset.top))
+            
+            var linkY: CGFloat = textView.frame.maxY + 2.0
+            
+            for linkView in self.linkViews {
+                linkView.setFrameOrigin(NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0), linkY))
+                linkY += linkView.frame.height
+            }
+            
         }
     }
     
@@ -239,7 +258,7 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             super.mouseUp(with: event)
             return
         }
-        item.linkLayout?.interactions.processURL(event)
+       // item.linkLayout?.interactions.processURL(event)
         
     }
     
@@ -247,12 +266,31 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
         
         super.set(item: item,animated:animated)
         textView.backgroundColor = backdorColor
-        linkView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
             
             textView.userInteractionEnabled = !item.isArticle
             
+            textView.update(item.textLayout, origin: NSMakePoint(item.contentInset.left,item.contentInset.top))
+            
 
+            while self.linkViews.count > item.linkLayouts.count {
+                let last = self.linkViews.removeLast()
+                last.removeFromSuperview()
+            }
+            while self.linkViews.count < item.linkLayouts.count {
+                let new = TextView()
+                addSubview(new)
+                self.linkViews.append(new)
+            }
+            
+            var linkY: CGFloat = textView.frame.maxY + 2.0
+            
+            for (i, linkView) in self.linkViews.enumerated() {
+                let linkLayout = item.linkLayouts[i]
+                linkView.backgroundColor = backdorColor
+                linkView.update(linkLayout, origin: NSMakePoint(item.contentInset.left + (item.hasInstantPage ? 10 : 0), linkY))
+                linkY += linkLayout.layoutSize.height
+            }
             
             if item.hasInstantPage {
                 if ivImage == nil {
@@ -288,7 +326,9 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     override func updateSelectingMode(with selectingMode:Bool, animated:Bool = false) {
         super.updateSelectingMode(with: selectingMode, animated: animated)
         self.textView.isSelectable = !selectingMode
-        self.linkView.userInteractionEnabled = !selectingMode
+        for linkView in self.linkViews {
+            linkView.userInteractionEnabled = !selectingMode
+        }
         self.textView.userInteractionEnabled = !selectingMode
     }
     

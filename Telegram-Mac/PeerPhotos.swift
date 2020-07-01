@@ -91,7 +91,7 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
                 default:
                     break
                 }
-            } else if let base = firstStableId.base as? String, base == photo.image.representationForDisplayAtSize(PixelDimensions(640, 640))?.resource.id.uniqueId {
+            } else if i == 0 {
                 foundIndex = true
                 currentIndex = i
                 
