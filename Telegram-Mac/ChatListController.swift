@@ -1068,8 +1068,13 @@ class ChatListController : PeersListController {
                 if self.genericView.tableView._mouseInside() {
                     let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(event.locationInWindow, from: nil))
                     if row >= 0 {
-                        self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
-                        return .invoked
+                        let view = self.genericView.hitTest(self.genericView.convert(event.locationInWindow, from: nil))
+                        if view?.className.contains("Segment") == false {
+                            self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
+                            return .invoked
+                        } else {
+                            return .rejected
+                        }
                     }
                 }
             }

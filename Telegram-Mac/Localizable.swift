@@ -1427,12 +1427,64 @@ internal final class L10n {
   internal static var chatListMap: String  { return L10n.tr("Localizable", "Chat.List.Map") }
   /// Photo
   internal static var chatListPhoto: String  { return L10n.tr("Localizable", "Chat.List.Photo") }
+  /// %d
+  internal static func chatListPhotoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_countable", p1)
+  }
+  /// %d Photo
+  internal static func chatListPhotoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_few", p1)
+  }
+  /// %d Photo
+  internal static func chatListPhotoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_many", p1)
+  }
+  /// Photo
+  internal static var chatListPhotoOne: String  { return L10n.tr("Localizable", "Chat.List.Photo_one") }
+  /// %d Photo
+  internal static func chatListPhotoOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_other", p1)
+  }
+  /// %d Photo
+  internal static func chatListPhotoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_two", p1)
+  }
+  /// %d Photo
+  internal static func chatListPhotoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo_zero", p1)
+  }
   /// %@ Sticker
   internal static func chatListSticker(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.List.Sticker", p1)
   }
   /// Video
   internal static var chatListVideo: String  { return L10n.tr("Localizable", "Chat.List.Video") }
+  /// %d
+  internal static func chatListVideoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_countable", p1)
+  }
+  /// %d Videos
+  internal static func chatListVideoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_few", p1)
+  }
+  /// %d Videos
+  internal static func chatListVideoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_many", p1)
+  }
+  /// Video
+  internal static var chatListVideoOne: String  { return L10n.tr("Localizable", "Chat.List.Video_one") }
+  /// %d Videos
+  internal static func chatListVideoOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_other", p1)
+  }
+  /// %d Videos
+  internal static func chatListVideoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_two", p1)
+  }
+  /// %d Videos
+  internal static func chatListVideoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video_zero", p1)
+  }
   /// Voice message
   internal static var chatListVoice: String  { return L10n.tr("Localizable", "Chat.List.Voice") }
   /// Payment: %@
@@ -3985,6 +4037,8 @@ internal final class L10n {
   internal static var notificationSettingsResetNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotifications") }
   /// You can set custom notifications for specific chats below.
   internal static var notificationSettingsResetNotificationsText: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotificationsText") }
+  /// Send Message Effect
+  internal static var notificationSettingsSendMessageEffect: String  { return L10n.tr("Localizable", "NotificationSettings.SendMessageEffect") }
   /// SHOW NOTIFICATIONS FROM
   internal static var notificationSettingsShowNotificationsFrom: String  { return L10n.tr("Localizable", "NotificationSettings.ShowNotificationsFrom") }
   /// App is in Focus
