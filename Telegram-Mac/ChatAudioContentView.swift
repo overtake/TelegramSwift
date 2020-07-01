@@ -221,7 +221,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     override func clean() {
         //fetchDisposable.dispose()
         statusDisposable.dispose()
-        globalAudio?.re move(listener: self)
+        globalAudio?.remove(listener: self)
     }
     
 }

@@ -1067,6 +1067,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         self.genericView.stateValueInteractiveUpdate = { [weak self] state in
             guard let `self` = self else { return }
+            self.genericView.tableView.scroll(to: .up(true))
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }
         

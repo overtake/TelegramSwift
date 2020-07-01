@@ -167,7 +167,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.generalSettingsInAppSounds), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSoundEffects), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_effect, data: InputDataGeneralData(name: L10n.notificationSettingsSendMessageEffect, color: theme.colors.text, type: .switchable(FastSettings.inAppSounds), viewType: .singleItem, action: {
