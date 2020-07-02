@@ -163,6 +163,14 @@ internal final class L10n {
   internal static var alertConfirmStop: String  { return L10n.tr("Localizable", "Alert.Confirm.Stop") }
   /// Sorry, you can't forward messages to this conversation.
   internal static var alertForwardError: String  { return L10n.tr("Localizable", "Alert.Forward.Error") }
+  /// Cancel
+  internal static var alertHideNewChatsCancel: String  { return L10n.tr("Localizable", "Alert.HideNewChats.Cancel") }
+  /// Hide new chats?
+  internal static var alertHideNewChatsHeader: String  { return L10n.tr("Localizable", "Alert.HideNewChats.Header") }
+  /// Go to Settings
+  internal static var alertHideNewChatsOK: String  { return L10n.tr("Localizable", "Alert.HideNewChats.OK") }
+  /// Are you receiving lots of new chats from users who are not in your Contact List. Do you want to have such chats automatically muted and archived?
+  internal static var alertHideNewChatsText: String  { return L10n.tr("Localizable", "Alert.HideNewChats.Text") }
   /// Unfortunately, you can't access this message. You are not a member of the chat where it was posted.
   internal static var alertPrivateChannelAccessError: String  { return L10n.tr("Localizable", "Alert.PrivateChannel.AccessError") }
   /// Delete
@@ -1431,25 +1439,25 @@ internal final class L10n {
   internal static func chatListPhotoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_countable", p1)
   }
-  /// %d Photo
+  /// %d Photos
   internal static func chatListPhotoFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_few", p1)
   }
-  /// %d Photo
+  /// %d Photos
   internal static func chatListPhotoMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_many", p1)
   }
   /// Photo
   internal static var chatListPhotoOne: String  { return L10n.tr("Localizable", "Chat.List.Photo_one") }
-  /// %d Photo
+  /// %d Photos
   internal static func chatListPhotoOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_other", p1)
   }
-  /// %d Photo
+  /// %d Photos
   internal static func chatListPhotoTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_two", p1)
   }
-  /// %d Photo
+  /// %d Photos
   internal static func chatListPhotoZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.List.Photo_zero", p1)
   }
@@ -4037,7 +4045,7 @@ internal final class L10n {
   internal static var notificationSettingsResetNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotifications") }
   /// You can set custom notifications for specific chats below.
   internal static var notificationSettingsResetNotificationsText: String  { return L10n.tr("Localizable", "NotificationSettings.ResetNotificationsText") }
-  /// On Send Message
+  /// Sent Message
   internal static var notificationSettingsSendMessageEffect: String  { return L10n.tr("Localizable", "NotificationSettings.SendMessageEffect") }
   /// SHOW NOTIFICATIONS FROM
   internal static var notificationSettingsShowNotificationsFrom: String  { return L10n.tr("Localizable", "NotificationSettings.ShowNotificationsFrom") }
@@ -4045,7 +4053,7 @@ internal final class L10n {
   internal static var notificationSettingsSnoof: String  { return L10n.tr("Localizable", "NotificationSettings.Snoof") }
   /// SHOW NOTIFICATIONS WHEN
   internal static var notificationSettingsSnoofHeader: String  { return L10n.tr("Localizable", "NotificationSettings.SnoofHeader") }
-  /// IN-APP SOUND EFFECTS
+  /// SOUND EFFECTS
   internal static var notificationSettingsSoundEffects: String  { return L10n.tr("Localizable", "NotificationSettings.SoundEffects") }
   /// Notifications
   internal static var notificationSettingsToggleNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications") }
