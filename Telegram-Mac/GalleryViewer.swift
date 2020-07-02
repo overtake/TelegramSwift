@@ -905,14 +905,14 @@ class GalleryViewer: NSResponder {
         
        
         
-        if let _ = self.contentInteractions, case .history = type, chatMode == .history {
-            items.append(SPopoverItem(L10n.galleryContextShowMessage, {[weak self] in
-                self?.showMessage()
-            }))
-            items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
-                self?.showSharedMedia()
-            }))
+        if let _ = self.contentInteractions, chatMode == .history {
             if let message = pager.selectedItem?.entry.message {
+                items.append(SPopoverItem(L10n.galleryContextShowMessage, {[weak self] in
+                    self?.showMessage()
+                }))
+                items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
+                    self?.showSharedMedia()
+                }))
                 if canDeleteMessage(message, account: context.account) {
                     items.append(SPopoverItem(L10n.galleryContextDeletePhoto, {[weak self] in
                         self?.deleteMessage(control)

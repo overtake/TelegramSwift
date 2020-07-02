@@ -166,8 +166,8 @@ class ChatMediaLayoutParameters : Equatable {
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {
     let isWebpage: Bool
 
-    init(showMedia:@escaping(Message)->Void, showMessage:@escaping(Message)->Void, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings) {
-       self.isWebpage = isWebpage
+    init(showMedia:@escaping(Message)->Void = { _ in }, showMessage:@escaping(Message)->Void = { _ in }, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings) {
+        self.isWebpage = isWebpage
         super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
         self.showMedia = showMedia
         self.showMessage = showMessage
