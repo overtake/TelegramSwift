@@ -381,12 +381,31 @@ private final class MediaVideoCell : MediaCell {
                         videoView = MediaVideoCell.VideoAutoplayView(mediaPlayer: player, view: MediaPlayerView(backgroundThread: true))
                         
                         videoView?.view.setVideoLayerGravity(.resizeAspectFill)
-                        videoView?.view.positionFlags = nil
+                        
+                        var posititionFlags: LayoutPositionFlags = []
+                        if layout.corners.topLeft.corner > 0 {
+                            posititionFlags.insert(.top)
+                            posititionFlags.insert(.left)
+                        }
+                        if layout.corners.topRight.corner > 0 {
+                            posititionFlags.insert(.top)
+                            posititionFlags.insert(.right)
+                        }
+                        if layout.corners.bottomLeft.corner > 0 {
+                            posititionFlags.insert(.bottom)
+                            posititionFlags.insert(.left)
+                        }
+                        if layout.corners.bottomRight.corner > 0 {
+                            posititionFlags.insert(.bottom)
+                            posititionFlags.insert(.right)
+                        }
+                        videoView?.view.positionFlags = posititionFlags.isEmpty ? nil : posititionFlags
                         videoView?.view.frame = self.imageView.frame
                         
                         videoView!.mediaPlayer.attachPlayerView(videoView!.view)
                         
                         videoView?.mediaPlayer.play()
+                        
                         
                         self.addSubview(videoView!.view, positioned: .above, relativeTo: self.imageView)
                         
@@ -487,6 +506,9 @@ private final class MediaVideoCell : MediaCell {
     private func updateVideoAccessory(_ status: MediaResourceStatus, mediaPlayerStatus: MediaPlayerStatus? = nil, file: TelegramMediaFile, animated: Bool) {
         let maxWidth = frame.width - 10
         let text: String
+        
+        let status: MediaResourceStatus = .Local
+        
         
         if let status = mediaPlayerStatus, status.generationTimestamp > 0, status.duration > 0 {
             text = String.durationTransformed(elapsed: Int(status.duration - (status.timestamp + (CACurrentMediaTime() - status.generationTimestamp))))

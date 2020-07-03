@@ -3277,6 +3277,8 @@ internal final class L10n {
   internal static var groupPermissionSectionTitle: String  { return L10n.tr("Localizable", "GroupPermission.SectionTitle") }
   /// Exception
   internal static var groupPermissionTitle: String  { return L10n.tr("Localizable", "GroupPermission.Title") }
+  /// Group Statistics
+  internal static var groupStatsTitle: String  { return L10n.tr("Localizable", "GroupStats.Title") }
   /// CHOOSE FROM YOUR STICKERS
   internal static var groupStickersChooseHeader: String  { return L10n.tr("Localizable", "GroupStickers.ChooseHeader") }
   /// You can create your own custom sticker set using the @stickers bot.
