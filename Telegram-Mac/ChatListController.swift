@@ -1087,10 +1087,7 @@ class ChatListController : PeersListController {
                 
             }))
     
-    
-    
-        
-        
+
         context.window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if event.modifierFlags.contains(.control) {

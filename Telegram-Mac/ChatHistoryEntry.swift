@@ -624,7 +624,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText)
         }
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
-        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(message.timestamp - Int32(timeDifference))), entry.isRead, renderType, itemType, fwdType, data)
+        
+        
+        let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+        
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(timestamp)), entry.isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             if groupInfo == nil {
@@ -662,14 +666,19 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         if prev == nil && dayGrouping {
-            let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
+            let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+            let dateId = chatDateId(for: timestamp)
             let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
             entries.append(.DateEntry(index, renderType))
         }
         
         if let next = next, dayGrouping {
-            let dateId = chatDateId(for: message.timestamp - Int32(timeDifference))
-            let nextDateId = chatDateId(for: next.message.timestamp - Int32(timeDifference))
+            let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+            let nextTimestamp = Int32(min(TimeInterval(next.message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+            let dateId = chatDateId(for: timestamp)
+            let nextDateId = chatDateId(for: nextTimestamp)
             
             
             if dateId != nextDateId {
@@ -682,7 +691,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
-        entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(maxReadIndex.timestamp - Int32(timeDifference)), renderType))
+        let timestamp = Int32(min(TimeInterval(maxReadIndex.timestamp) - timeDifference, TimeInterval(Int32.max)))
+        entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(timestamp), renderType))
         hasUnread = true
     }
     

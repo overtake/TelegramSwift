@@ -252,6 +252,8 @@ class PeerMediaPhotosController: TableViewController {
             
         })
         
+        self.genericView.needUpdateVisibleAfterScroll = true
+        
         self.genericView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: self.tags)
         
         let perPageCount:()->Int = {
