@@ -545,7 +545,7 @@
 		C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26505961E041B90001954DC /* MGalleryGIFItem.swift */; };
 		C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26546CB1EA0AC3C00E3969A /* ChatVideoMessageItem.swift */; };
 		C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A37EB1E5DE464006977AC /* ChannelAdminsViewController.swift */; };
-		C26A37EE1E5DE48F006977AC /* ChannelBlacklistViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A37ED1E5DE48F006977AC /* ChannelBlacklistViewController.swift */; };
+		C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A37ED1E5DE48F006977AC /* ChannelBlocklistViewController.swift */; };
 		C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A71981DC9FA5100F69385 /* EditMessageModel.swift */; };
 		C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */; };
 		C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */; };
@@ -1669,7 +1669,7 @@
 		C26505961E041B90001954DC /* MGalleryGIFItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MGalleryGIFItem.swift; sourceTree = "<group>"; };
 		C26546CB1EA0AC3C00E3969A /* ChatVideoMessageItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatVideoMessageItem.swift; sourceTree = "<group>"; };
 		C26A37EB1E5DE464006977AC /* ChannelAdminsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelAdminsViewController.swift; sourceTree = "<group>"; };
-		C26A37ED1E5DE48F006977AC /* ChannelBlacklistViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelBlacklistViewController.swift; sourceTree = "<group>"; };
+		C26A37ED1E5DE48F006977AC /* ChannelBlocklistViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelBlocklistViewController.swift; sourceTree = "<group>"; };
 		C26A71981DC9FA5100F69385 /* EditMessageModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditMessageModel.swift; sourceTree = "<group>"; };
 		C26A719A1DC9FB3600F69385 /* InputPasteboardParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputPasteboardParser.swift; sourceTree = "<group>"; };
 		C26D8A3B1E464944002FAA3F /* JoinLinkPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JoinLinkPreviewModalController.swift; sourceTree = "<group>"; };
@@ -4001,7 +4001,7 @@
 				C29340EF1F506BC80074991E /* groupstickers */,
 				C230BEB81EE9AE5B0029586C /* logs */,
 				C26A37EB1E5DE464006977AC /* ChannelAdminsViewController.swift */,
-				C26A37ED1E5DE48F006977AC /* ChannelBlacklistViewController.swift */,
+				C26A37ED1E5DE48F006977AC /* ChannelBlocklistViewController.swift */,
 				C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */,
 				C20CB7281E60886E00C992AC /* LinkInvationController.swift */,
 				C22EE61D1E67506800334C38 /* ChannelMembersViewController.swift */,
@@ -5721,7 +5721,7 @@
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
 				C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */,
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,
-				C26A37EE1E5DE48F006977AC /* ChannelBlacklistViewController.swift in Sources */,
+				C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */,
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,

@@ -110,7 +110,7 @@ private class TokenView : Control {
         dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white), for: .Highlight)
         _ = dismiss.sizeToFit()
         
-        nameView.backgroundColor = _backgroundColor
+        nameView.backgroundColor = .clear
         self.background = _backgroundColor
     }
     
@@ -231,21 +231,17 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
                 
                 let dif = mainw - (point.x + (i == count - 1 ? mainw/3 : next.frame.width) + between.x)
                 if dif < between.x {
-                   // if !token.isPerfectSized {
-                   //     token.change(size: NSMakeSize(frame.width - startPointX - between.x, token.frame.height), animated: animated)
-                   // }
+                    // if !token.isPerfectSized {
+                    //     token.change(size: NSMakeSize(frame.width - startPointX - between.x, token.frame.height), animated: animated)
+                    // }
                     point.x = between.x
-                    if i != count - 1 {
-                        point.y += token.frame.height + between.y
-                    }
+                    point.y += token.frame.height + between.y
                 }
                 
             }
             if subview == container.subviews.last {
                 if mainw - point.x > mainw/3 {
-                   // if point.x != between.x {
-                        extraLine = true
-                  //  }
+                    extraLine = true
                 }
             }
         }
@@ -262,6 +258,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
             _change(size: NSMakeSize(mainw, height), animated: animated)
             delegate?.tokenizedViewDidChangedHeight(self, height: height, animated: animated)
         }
+
         CATransaction.commit()
     }
     

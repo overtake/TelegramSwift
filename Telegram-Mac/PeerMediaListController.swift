@@ -113,14 +113,20 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
 
         
         if let nextMessage = next {
-            let dateId = mediaDateId(for: message.timestamp - Int32(timeDifference))
-            let nextDateId = mediaDateId(for: nextMessage.timestamp - Int32(timeDifference))
+            
+            let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+            let nextTimestamp = Int32(min(TimeInterval(nextMessage.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+            
+            let dateId = mediaDateId(for: timestamp)
+            let nextDateId = mediaDateId(for: nextTimestamp)
             if dateId != nextDateId {
                 let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
                 tempItems.append((.date(index), .sectionId(index.successor())))
             }
         } else {
-            let dateId = mediaDateId(for: message.timestamp - Int32(timeDifference))
+            let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+            let dateId = mediaDateId(for: timestamp)
             let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
             tempItems.append((.date(index), .sectionId(index.successor())))
         }

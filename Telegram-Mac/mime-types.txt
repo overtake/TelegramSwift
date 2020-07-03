@@ -248,6 +248,7 @@ m:text/plain
 m:text/x-m
 m1v:video/mpeg
 mp4:video/mp4
+mkv:video/mkv
 m4v:video/m4v
 m2a:audio/mpeg
 m2v:video/mpeg
