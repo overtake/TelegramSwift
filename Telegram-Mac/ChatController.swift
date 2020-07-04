@@ -629,9 +629,15 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         if case let .groupedPhotos(entries, _) = entry.appearance.entry {
                             for inner in entries {
                                 if case let .MessageEntry(values) = inner {
+                                    
+                                    //                                    if !scrollIndex.isLess(than: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) && scrollIndex.isLessOrEqual(to: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) {
+
+                                    
                                     let timestamp = Int32(min(TimeInterval(values.0.timestamp) - timeDifference, TimeInterval(Int32.max)))
 
-                                    if !scrollIndex.isLess(than: MessageIndex(values.0.withUpdatedTimestamp(timestamp))) && scrollIndex.isLessOrEqual(to: MessageIndex(values.0.withUpdatedTimestamp(timestamp))) {
+                                    let messageIndex = MessageIndex(values.0.withUpdatedTimestamp(timestamp))
+                                    
+                                    if !scrollIndex.isLess(than: messageIndex) && scrollIndex.isLessOrEqual(to: messageIndex) {
                                         scrollToItem = position.swap(to: entry.appearance.entry.stableId, innerId: inner.stableId)
                                     }
                                 }
