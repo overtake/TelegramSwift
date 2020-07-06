@@ -1069,13 +1069,19 @@ class ChatListController : PeersListController {
         
         self.suggestAutoarchiveDisposable.set((getServerProvidedSuggestions(postbox: self.context.account.postbox)
             |> deliverOnMainQueue).start(next: { [weak self] values in
-                guard let strongSelf = self else {
+                guard let strongSelf = self, let window = strongSelf.window, let navigation = strongSelf.navigationController else {
                     return
                 }
                 if strongSelf.didSuggestAutoarchive {
                     return
                 }
                 if !values.contains(.autoarchivePopular) {
+                    return
+                }
+                if !window.isKeyWindow {
+                    return
+                }
+                if navigation.stackCount > 1 {
                     return
                 }
                 

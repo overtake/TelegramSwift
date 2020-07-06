@@ -920,7 +920,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
         if let innerId = innerId.base as? MessageId {
             let view = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.message.id == innerId })
-            return view ?? self
+            return view ?? NSView()
         }
         return self
     }

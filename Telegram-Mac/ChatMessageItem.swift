@@ -257,7 +257,7 @@ class ChatMessageItem: ChatRowItem {
             
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
-                    copy.detectLinks(type: .Links, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble))
+                    copy.detectLinks(type: [.Links, .Hashtags, .Mentions], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble))
                 }
             }
 
