@@ -192,13 +192,15 @@ class PCallSession {
     
     
     private let callSessionManager: CallSessionManager
+    
+    private var videoCapturer: OngoingCallVideoCapturer?
+    
+
         
     
-    var isVideo: Bool {
-        return callSessionValue?.type == .video
-    }
+    var isVideo: Bool
     
-    init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId) {
+    init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -212,6 +214,13 @@ class PCallSession {
         self.id = id
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
+        
+        self.isVideo = initialState?.type == .video
+        self.isVideo = self.isVideo || startWithVideo
+        if self.isVideo {
+            self.videoCapturer = OngoingCallVideoCapturer()
+        }
+
         
         let semaphore = DispatchSemaphore(value: 0)
         var data: (PreferencesView, Peer?, ProxyServerSettings?, NetworkType)!
@@ -259,7 +268,14 @@ class PCallSession {
             )
         }
         
-        let signal = account.callSessionManager.callState(internalId: id) |> deliverOn(callQueue) |> beforeNext { [weak self] session in
+        var callSessionState: Signal<CallSession, NoError> = .complete()
+        if let initialState = initialState {
+            callSessionState = .single(initialState)
+        }
+        callSessionState = callSessionState
+            |> then(callSessionManager.callState(internalId: id))
+        
+        let signal = callSessionState |> deliverOn(callQueue) |> beforeNext { [weak self] session in
             self?.proccessState(session, configuration)
         }
         
@@ -386,7 +402,7 @@ class PCallSession {
             
             let logName = "\(id.id)_\(id.accessHash)"
 
-            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, isVideo: session.type == .video, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
+            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
             self.ongoingContext = ongoingContext
             
             ongoingContext.setEnableVideo(self.data.isVideoEnabled && session.type == .video)
@@ -547,7 +563,7 @@ class PCallSession {
     }
     
     func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
-        self.ongoingContext?.makeOutgoingVideoView(completion: completion)
+        self.videoCapturer?.makeOutgoingVideoView(completion: completion)
     }
     
 }
@@ -586,7 +602,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     } |> mapToSignal { _ in
                         return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id)))
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
                         subscriber.putCompletion()
                     })
                 }
