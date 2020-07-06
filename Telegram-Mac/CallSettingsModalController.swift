@@ -43,42 +43,42 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
     sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
-    index += 1
-
-    let currentOutput = outputDevices.first(where: {$0.deviceId == state.outputDeviceId}) ?? inputDevices.first!
-
-    let outputDevices = outputDevices.map { device -> SPopoverItem in
-        return SPopoverItem(device.deviceName, {
-            arguments.updateOutputDevice(device.deviceId)
-        })
-    }
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_device, data: InputDataGeneralData(name: L10n.callSettingsOutputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentOutput.deviceName, outputDevices), viewType: .singleItem)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
-    index += 1
-    
-    
-    let currentInput = inputDevices.first(where: {$0.deviceId == state.inputDeviceId}) ?? inputDevices.first!
-    
-    let inputDevices = inputDevices.map { device -> SPopoverItem in
-        return SPopoverItem(device.deviceName, {
-            arguments.updateInputDevice(device.deviceId)
-        })
-    }
-    
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_device, data: InputDataGeneralData(name: L10n.callSettingsInputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentInput.deviceName, inputDevices), viewType: .singleItem)))
-    index += 1
-    
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOutputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+//    index += 1
+//
+//    let currentOutput = outputDevices.first(where: {$0.deviceId == state.outputDeviceId}) ?? inputDevices.first!
+//
+//    let outputDevices = outputDevices.map { device -> SPopoverItem in
+//        return SPopoverItem(device.deviceName, {
+//            arguments.updateOutputDevice(device.deviceId)
+//        })
+//    }
+//    
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_device, data: InputDataGeneralData(name: L10n.callSettingsOutputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentOutput.deviceName, outputDevices), viewType: .singleItem)))
+//    index += 1
+//    
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
+//    
+//    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+//    index += 1
+//    
+//    
+//    let currentInput = inputDevices.first(where: {$0.deviceId == state.inputDeviceId}) ?? inputDevices.first!
+//    
+//    let inputDevices = inputDevices.map { device -> SPopoverItem in
+//        return SPopoverItem(device.deviceName, {
+//            arguments.updateInputDevice(device.deviceId)
+//        })
+//    }
+//    
+//    
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_device, data: InputDataGeneralData(name: L10n.callSettingsInputText, color: theme.colors.text, icon: nil, type: .contextSelector(currentInput.deviceName, inputDevices), viewType: .singleItem)))
+//    index += 1
+//    
+//    
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
