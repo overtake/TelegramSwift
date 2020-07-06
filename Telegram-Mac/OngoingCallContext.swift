@@ -14,6 +14,27 @@ import SyncCore
 import Postbox
 import TgVoipWebrtc
 
+public final class OngoingCallVideoCapturer {
+    fileprivate let impl: OngoingCallThreadLocalContextVideoCapturer
+    
+    public init() {
+        self.impl = OngoingCallThreadLocalContextVideoCapturer()
+    }
+    
+    public func switchCamera() {
+        self.impl.switchVideoCamera()
+    }
+    
+    public func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
+        self.impl.makeOutgoingVideoView(completion)
+    }
+    
+    public func setIsVideoEnabled(_ value: Bool) {
+        self.impl.setIsVideoEnabled(value)
+    }
+}
+
+
 
 private func callConnectionDescription(_ connection: CallSessionConnection) -> OngoingCallConnectionDescription {
     return OngoingCallConnectionDescription(connectionId: connection.id, ip: connection.ip, ipv6: connection.ipv6, port: connection.port, peerTag: connection.peerTag)
@@ -445,7 +466,7 @@ public final class OngoingCallContext {
         return result
     }
     
-    public init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, isVideo: Bool, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, logName: String) {
+    public init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, video: OngoingCallVideoCapturer?, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, logName: String) {
         let _ = setupLogs
         OngoingCallThreadLocalContext.applyServerConfig(serializedData)
         OngoingCallThreadLocalContextWebrtc.applyServerConfig(serializedData)
@@ -491,9 +512,9 @@ public final class OngoingCallContext {
                         ))
                     }
                 }
-                let context = OngoingCallThreadLocalContextWebrtc(queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, rtcServers: rtcServers, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, isVideo: isVideo, primaryConnection: callConnectionDescriptionWebrtc(connections.primary), alternativeConnections: connections.alternatives.map(callConnectionDescriptionWebrtc), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
+                let context = OngoingCallThreadLocalContextWebrtc(queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, rtcServers: rtcServers, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescriptionWebrtc(connections.primary), alternativeConnections: connections.alternatives.map(callConnectionDescriptionWebrtc), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
                     callSessionManager?.sendSignalingData(internalId: internalId, data: data)
-                })
+                }, videoCapturer: video?.impl)
                 
                 self.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
                 context.stateChanged = { [weak self] state, videoState, remoteVideoState in
