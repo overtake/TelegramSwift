@@ -338,8 +338,8 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
     }
 }
 
-func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: toRepresentationSize, synchronousLoad: synchronousLoad, peer: peer)
+func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toRepresentationSize:NSSize = NSMakeSize(1280, 1280), peer: Peer? = nil, scale:CGFloat, synchronousLoad: Bool = false, autoFetchFullSize: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: toRepresentationSize, autoFetchFullSize: autoFetchFullSize, synchronousLoad: synchronousLoad, peer: peer)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in

@@ -49,6 +49,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var controlsIsHidden: Bool = false
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
     
+    private var isPaused: Bool = true
     
     private var _videoFramePreview: MediaPlayerFramePreview?
     private var videoFramePreview: MediaPlayerFramePreview {
@@ -80,12 +81,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     func play(_ startTime: TimeInterval? = nil) {
         mediaPlayer.play()
+        self.isPaused = false
         if let startTime = startTime, startTime > 0 {
             mediaPlayer.seek(timestamp: startTime)
         }
     }
     
     func playOrPause() {
+        self.isPaused = !self.isPaused
         mediaPlayer.togglePlayPause()
         if let status = genericView.status {
             switch status.status {
@@ -98,10 +101,12 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     }
     
     func pause() {
+        self.isPaused = true
         mediaPlayer.pause()
     }
     
     func play() {
+        self.isPaused = false
         self.play(nil)
     }
     
@@ -119,7 +124,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
             self.hideControls.set(true)
-            if !self.pictureInPicture {
+            if !self.pictureInPicture, !self.isPaused {
                 NSCursor.hide()
             }
         }))
@@ -131,7 +136,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
-                NSCursor.hide()
+                if !self.isPaused {
+                    NSCursor.hide()
+                }
             }
             hideControls.set(hide)
         } else {

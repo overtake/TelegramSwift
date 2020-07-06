@@ -371,13 +371,13 @@ final class AccountContext {
         globalPeerHandler.set(.single(nil))
         
         if account.network.globalTime > 0 {
-            timeDifference = account.network.globalTime - Date().timeIntervalSince1970
+            timeDifference = floor(account.network.globalTime - Date().timeIntervalSince1970)
         }
         
         updateDifferenceDisposable.set((Signal<Void, NoError>.single(Void())
             |> delay(5, queue: Queue.mainQueue()) |> restart).start(next: { [weak self, weak account] in
                 if let account = account, account.network.globalTime > 0 {
-                    self?.timeDifference = account.network.globalTime - Date().timeIntervalSince1970
+                    self?.timeDifference = floor(account.network.globalTime - Date().timeIntervalSince1970)
                 }
         }))
         

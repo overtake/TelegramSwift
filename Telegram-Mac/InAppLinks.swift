@@ -64,6 +64,7 @@ enum InAppSettingsSection : String {
     case themes
     case devices
     case folders
+    case privacy
 }
 
 enum ChatInitialActionBehavior : Equatable {
@@ -596,6 +597,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             controller = RecentSessionsController(context)
         case .folders:
             controller = ChatListFiltersListController(context: context)
+        case .privacy:
+            controller = PrivacyAndSecurityViewController(context, initialSettings: (nil, nil), focusOnItemTag: .autoArchive)
         }
         context.sharedContext.bindings.rootNavigation().push(controller)
         afterComplete(true)

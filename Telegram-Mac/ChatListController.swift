@@ -316,6 +316,11 @@ class ChatListController : PeersListController {
     private let undoTooltipControl: UndoTooltipControl
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
+    
+    private let suggestAutoarchiveDisposable = MetaDisposable()
+    
+    private var didSuggestAutoarchive: Bool = false
+    
     private let hiddenItemsValue: Atomic<HiddenItems> = Atomic(value: HiddenItems(archive: FastSettings.archiveStatus, promo: Set()))
     private let hiddenItemsState: ValuePromise<HiddenItems> = ValuePromise(HiddenItems(archive: FastSettings.archiveStatus, promo: Set()), ignoreRepeated: true)
     
@@ -1062,14 +1067,46 @@ class ChatListController : PeersListController {
         super.viewDidAppear(animated)
         
         
+        self.suggestAutoarchiveDisposable.set((getServerProvidedSuggestions(postbox: self.context.account.postbox)
+            |> deliverOnMainQueue).start(next: { [weak self] values in
+                guard let strongSelf = self, let window = strongSelf.window, let navigation = strongSelf.navigationController else {
+                    return
+                }
+                if strongSelf.didSuggestAutoarchive {
+                    return
+                }
+                if !values.contains(.autoarchivePopular) {
+                    return
+                }
+                if !window.isKeyWindow {
+                    return
+                }
+                if navigation.stackCount > 1 {
+                    return
+                }
+                
+                let context = strongSelf.context
+                
+                confirm(for: context.window, header: L10n.alertHideNewChatsHeader, information: L10n.alertHideNewChatsText, okTitle: L10n.alertHideNewChatsOK, cancelTitle: L10n.alertHideNewChatsCancel, successHandler: { _ in
+                    execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
+                })
+                
+            }))
+    
+
         context.window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if event.modifierFlags.contains(.control) {
                 if self.genericView.tableView._mouseInside() {
                     let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(event.locationInWindow, from: nil))
                     if row >= 0 {
-                        self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
-                        return .invoked
+                        let view = self.genericView.hitTest(self.genericView.convert(event.locationInWindow, from: nil))
+                        if view?.className.contains("Segment") == false {
+                            self.genericView.tableView.item(at: row).view?.mouseDown(with: event)
+                            return .invoked
+                        } else {
+                            return .rejected
+                        }
                     }
                 }
             }
@@ -1316,6 +1353,8 @@ class ChatListController : PeersListController {
         context.window.removeAllHandlers(for: genericView.tableView)
         
         removeRevealStateIfNeeded(nil)
+        
+        suggestAutoarchiveDisposable.set(nil)
     }
     
 //    override func getLeftBarViewOnce() -> BarView {
@@ -1332,6 +1371,7 @@ class ChatListController : PeersListController {
         archivationTooltipDisposable.dispose()
         activityStatusesDisposable?.dispose()
         filterDisposable.dispose()
+        suggestAutoarchiveDisposable.dispose()
     }
     
     

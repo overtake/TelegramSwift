@@ -19,7 +19,7 @@ enum MessageTextMediaViewType {
     case none
 }
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji) -> NSString {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> NSString {
     var messageText: NSString = message.text.fixed.nsstring
     for media in message.media {
         switch media {
@@ -28,7 +28,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
                 messageText = tr(L10n.chatListServiceDestructingPhoto).nsstring
             } else {
-                messageText = L10n.chatListPhoto.nsstring
+                messageText = L10n.chatListPhotoCountable(messagesCount).nsstring
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
@@ -62,7 +62,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                              messageText = (L10n.chatListGIF + ", " + message.text.fixed).nsstring
                         }
                     } else {
-                        messageText = L10n.chatListVideo.nsstring
+                        messageText = L10n.chatListVideoCountable(messagesCount).nsstring
                         if !message.text.fixed.isEmpty {
                             switch mediaViewType {
                             case .emoji:
@@ -141,7 +141,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
     
     if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
         let mutableAttributedText = NSMutableAttributedString()
@@ -210,7 +210,7 @@ func chatListText(account:Account, for message:Message?, renderedPeer:RenderedPe
             }
         }
         
-        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType)
+        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         if messageText.length > 0 {

@@ -12,7 +12,7 @@ import SyncCore
 import Postbox
 import TGUIKit
 
-class ChatFileLayoutParameters : ChatMediaLayoutParameters {
+class ChatFileLayoutParameters : ChatMediaGalleryParameters {
     var nameNode:TextNode = TextNode()
     var name:(TextNodeLayout, TextNode)?
     let hasThumb:Bool
@@ -53,7 +53,7 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
         
 
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+        super.init(isWebpage: false, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
         
     }
     override func makeLabelsForWidth(_ width: CGFloat) {
@@ -72,10 +72,26 @@ class ChatFileLayoutParameters : ChatMediaLayoutParameters {
 class ChatFileMediaItem: ChatMediaItem {
 
     
-    
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia, isChatRelated: true)
+        
+        (self.parameters as? ChatFileLayoutParameters)?.showMedia = { [weak self] message in
+            guard let `self` = self else {return}
+            
+            var type:GalleryAppearType = .history
+            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
+                type = .alone
+            } else if message.containsSecretMedia {
+                type = .secret
+            }
+            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
+        }
+            
+        (self.parameters as? ChatFileLayoutParameters)?.showMessage = { [weak self] message in
+            self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+        }
+        
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -87,7 +103,6 @@ class ChatFileMediaItem: ChatMediaItem {
         parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80))
         
        
-        
         let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
         
         let optionalWidth = max(parameters.name?.0.size.width ?? 0, max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth)) + (file.previewRepresentations.isEmpty ? 50 : 80)

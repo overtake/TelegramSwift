@@ -164,10 +164,13 @@ private final class VideoAvatarProgressView: View {
     }
 }
 
+
 private final class VideoAvatarContainer : View {
     let circle: View = View()
     
-    let player: GifPlayerBufferView = GifPlayerBufferView()
+    private var mediaPlayer: MediaPlayer?
+    private var view: MediaPlayerView?
+    
     private let fetchDisposable = MetaDisposable()
     private let statusDisposable = MetaDisposable()
 
@@ -176,15 +179,12 @@ private final class VideoAvatarContainer : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(circle)
-        addSubview(player)
         circle.frame = bounds
-        player.frame = NSMakeRect(2, 2, frameRect.width - 4, frameRect.height - 4)
         
         circle.layer?.cornerRadius = bounds.width / 2
         circle.layer?.borderWidth = 1
         circle.layer?.borderColor = theme.colors.accent.cgColor
         
-        player.layer?.cornerRadius = bounds.width / 2
 
         isEventLess = true
 
@@ -197,14 +197,44 @@ private final class VideoAvatarContainer : View {
        // circle.layer?.animateScaleCenter(from: 1.0, to: 0.2, duration: 0.2)
     }
     
-    func updateWith(file: TelegramMediaFile, reference: PeerReference?, context: AccountContext) {
-        player.update(FileMediaReference.standalone(media: file), context: context)
+    func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, reference: PeerReference?, context: AccountContext) {
+       // player.update(FileMediaReference.standalone(media: file), context: context)
         if let reference = reference {
             fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
         } else {
             fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start())
         }
-        player.ticking = true
+        
+        let mediaReference: MediaResourceReference
+        if let reference = reference {
+            mediaReference = MediaResourceReference.avatar(peer: reference, resource: file.resource)
+        } else {
+            mediaReference = MediaResourceReference.standalone(resource: file.resource)
+        }
+        
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        
+        
+        let view = MediaPlayerView()
+        
+        view.setVideoLayerGravity(.resizeAspectFill)
+        
+        mediaPlayer.attachPlayerView(view)
+        
+        mediaPlayer.actionAtEnd = .loop(nil)
+        
+        view.frame = NSMakeRect(2, 2, frame.width - 4, frame.height - 4)
+        view.layer?.cornerRadius = bounds.width / 2
+
+        addSubview(view)
+        
+        self.mediaPlayer = mediaPlayer
+        self.view = view
+        
+        mediaPlayer.play()
+        if let seekTo = seekTo {
+            mediaPlayer.seek(timestamp: seekTo)
+        }
         
         let statusSignal = context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue
         
@@ -500,9 +530,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
 
         let file: TelegramMediaFile?
+        let seekTo: TimeInterval?
         if let photo = photo, let video = photo.image.videoRepresentations.last {
             file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: photo.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+            seekTo = video.startTimestamp
         } else {
+            seekTo = nil
             file = nil
         }
         
@@ -517,7 +550,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 control.animateIn()
                 self.videoAvatarView = control
             }
-            control.updateWith(file: file, reference: PeerReference(peer), context: chatInteraction.context)
+            control.updateWith(file: file, seekTo: seekTo, reference: PeerReference(peer), context: chatInteraction.context)
             
         } else {
             if let view = self.videoAvatarView {

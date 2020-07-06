@@ -13,11 +13,61 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 
+/*
+ 
+ struct InteractiveEmojiConfiguration : Equatable {
+ static var defaultValue: InteractiveEmojiConfiguration {
+ return InteractiveEmojiConfiguration(emojis: [], confettiCompitable: [:])
+ }
+ 
+ let emojis: [String]
+ private let confettiCompitable: [String: InteractiveEmojiConfetti]
+ 
+ fileprivate init(emojis: [String], confettiCompitable: [String: InteractiveEmojiConfetti]) {
+ self.emojis = emojis.map { $0.fixed }
+ self.confettiCompitable = confettiCompitable
+ }
+ 
+ static func with(appConfiguration: AppConfiguration) -> InteractiveEmojiConfiguration {
+ if let data = appConfiguration.data, let value = data["emojies_send_dice"] as? [String] {
+ let dict:[String : Any]? = data["emojies_send_dice_success"] as? [String:Any]
+ 
+ var confetti:[String: InteractiveEmojiConfetti] = [:]
+ if let dict = dict {
+ for (key, value) in dict {
+ if let data = value as? [String: Any], let frameStart = data["frame_start"] as? Double, let value = data["value"] as? Double {
+ confetti[key] = InteractiveEmojiConfetti(playAt: Int32(frameStart), value: Int32(value))
+ }
+ }
+ }
+ return InteractiveEmojiConfiguration(emojis: value, confettiCompitable: confetti)
+ } else {
+ return .defaultValue
+ }
+ }
+ 
+ func playConfetti(_ emoji: String) -> InteractiveEmojiConfetti? {
+ return confettiCompitable[emoji]
+ }
+ }
+ */
+
+private struct AutoarchiveConfiguration : Equatable {
+    let autoarchive_setting_available: Bool
+    init(autoarchive_setting_available: Bool) {
+        self.autoarchive_setting_available = autoarchive_setting_available
+    }
+    static func with(appConfiguration: AppConfiguration) -> AutoarchiveConfiguration {
+        return AutoarchiveConfiguration(autoarchive_setting_available: appConfiguration.data?["autoarchive_setting_available"] as? Bool ?? false)
+    }
+}
+
 
 enum PrivacyAndSecurityEntryTag: ItemListItemTag {
     case accountTimeout
     case topPeers
     case cloudDraft
+    case autoArchive
     func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? PrivacyAndSecurityEntryTag, self == other {
             return true
@@ -29,11 +79,13 @@ enum PrivacyAndSecurityEntryTag: ItemListItemTag {
     fileprivate var stableId: AnyHashable {
         switch self {
         case .accountTimeout:
-            return 13
+            return PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId
         case .topPeers:
-            return 19
+            return PrivacyAndSecurityEntry.togglePeerSuggestions(sectionId: 0, enabled: false, viewType: .singleItem).stableId
         case .cloudDraft:
-            return 22
+            return PrivacyAndSecurityEntry.clearCloudDrafts(sectionId: 0, viewType: .singleItem).stableId
+        case .autoArchive:
+            return PrivacyAndSecurityEntry.autoArchiveToggle(sectionId: 0, value: false, viewType: .singleItem).stableId
         }
     }
 }
@@ -531,12 +583,17 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     sectionId += 1
     
     
-    entries.append(.autoArchiveHeader(sectionId: sectionId))
-    entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
-    entries.append(.autoArchiveDesc(sectionId: sectionId))
+    let autoarchiveConfiguration = AutoarchiveConfiguration.with(appConfiguration: context.appConfiguration)
 
-    entries.append(.section(sectionId: sectionId))
-    sectionId += 1
+    
+    if autoarchiveConfiguration.autoarchive_setting_available {
+        entries.append(.autoArchiveHeader(sectionId: sectionId))
+        entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
+        entries.append(.autoArchiveDesc(sectionId: sectionId))
+        
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
+    }
 
     entries.append(.accountHeader(sectionId: sectionId))
 
@@ -633,7 +690,8 @@ class PrivacyAndSecurityViewController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-
+        
+        
         let statePromise = ValuePromise(PrivacyAndSecurityControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: PrivacyAndSecurityControllerState())
         let updateState: ((PrivacyAndSecurityControllerState) -> PrivacyAndSecurityControllerState) -> Void = { f in
@@ -974,7 +1032,12 @@ class PrivacyAndSecurityViewController: TableViewController {
     init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
         self.focusOnItemTag = focusOnItemTag
         super.init(context)
-        self.privacySettingsPromise.set(.single(initialSettings))
+        
+        let thenSignal:Signal<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), NoError> = requestAccountPrivacySettings(account: context.account) |> map {
+            return ($0, initialSettings.1)
+        }
+        
+        self.privacySettingsPromise.set(.single(initialSettings) |> then(thenSignal))
     }
 }
 

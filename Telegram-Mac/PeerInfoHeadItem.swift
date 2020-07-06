@@ -553,7 +553,11 @@ private final class NameContainer : View {
 
 private final class PeerInfoHeadView : GeneralContainableRowView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
-    private var photoVideoView: GIFContainerView?
+    private var photoVideoView: MediaPlayerView?
+    private var photoVideoPlayer: MediaPlayer?
+
+    
+    
     private let nameView = NameContainer(frame: .zero)
     private let statusView = TextView()
     private let actionsView = View()
@@ -617,7 +621,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 if let list = list {
                     let list = list.filter { path -> Bool in
                         if let size = fs(path) {
-                            return size <= 1500 * 1024 * 1024
+                            return size <= 2000 * 1024 * 1024
                         }
                         return false
                     }
@@ -708,19 +712,35 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             if let first = item.photos.first, let video = first.image.videoRepresentations.last {
                
                 if self.photoVideoView == nil {
-                    self.photoVideoView = GIFContainerView()
+                    
+                    self.photoVideoView = MediaPlayerView()
                     self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
                     self.addSubview(self.photoVideoView!)
                     
-                    self.photoVideoView?.set(handler: { [weak self] _ in
-                        self?.photoView.send(event: .Click)
-                    }, for: .Click)
+                    self.photoVideoView!.isEventLess = true
+                    
+//                    self.photoVideoView?.set(handler: { [weak self] _ in
+//                        self?.photoView.send(event: .Click)
+//                    }, for: .Click)
                 }
                 self.photoVideoView!.frame = self.photoView.frame
 
                 let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                 
-                self.photoVideoView!.update(with: FileMediaReference.standalone(media: file), size: self.photoView.frame.size, viewSize: self.photoView.frame.size, context: item.context, table: item.table, iconSignal: .complete())
+                
+                let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                
+                mediaPlayer.actionAtEnd = .loop(nil)
+                
+                self.photoVideoPlayer = mediaPlayer
+                
+                mediaPlayer.play()
+
+                if let seekTo = video.startTimestamp {
+                    mediaPlayer.seek(timestamp: seekTo)
+                }
+                
+                mediaPlayer.attachPlayerView(self.photoVideoView!)
                 
             } else {
                 self.photoVideoView?.removeFromSuperview()

@@ -27,9 +27,9 @@ final class ChatVideoAutoplayView {
     let view: MediaPlayerView
     
     fileprivate var playTimer: SwiftSignalKit.Timer?
-    
-    private var timer: SwiftSignalKit.Timer? = nil
     var status: MediaPlayerStatus?
+
+    private var timer: SwiftSignalKit.Timer? = nil
     
     init(mediaPlayer: MediaPlayer, view: MediaPlayerView) {
         self.mediaPlayer = mediaPlayer

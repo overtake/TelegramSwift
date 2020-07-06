@@ -347,7 +347,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
     }
     
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.channelStatsTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: L10n.groupStatsTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextOject = statsContext
     controller.didLoaded = { controller, _ in

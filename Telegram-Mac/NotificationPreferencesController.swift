@@ -61,7 +61,8 @@ private final class NotificationArguments {
     let updateJoinedNotifications: (Bool) -> Void
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void) {
+    let toggleInAppSounds:(Bool)->Void
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -75,6 +76,7 @@ private final class NotificationArguments {
         self.updateJoinedNotifications = updateJoinedNotifications
         self.toggleBadge = toggleBadge
         self.toggleRequestUserAttention = toggleRequestUserAttention
+        self.toggleInAppSounds = toggleInAppSounds
     }
 }
 
@@ -92,6 +94,8 @@ private let _id_new_contacts = InputDataIdentifier("_id_new_contacts")
 private let _id_snoof = InputDataIdentifier("_id_snoof")
 private let _id_tone = InputDataIdentifier("_id_tone")
 private let _id_bounce = InputDataIdentifier("_id_bounce")
+
+private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
 private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], arguments: NotificationArguments) -> [InputDataEntry] {
     
@@ -155,6 +159,22 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
+    
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSoundEffects), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    index += 1
+
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_effect, data: InputDataGeneralData(name: L10n.notificationSettingsSendMessageEffect, color: theme.colors.text, type: .switchable(FastSettings.inAppSounds), viewType: .singleItem, action: {
+        arguments.toggleInAppSounds(!FastSettings.inAppSounds)
+    })))
+    index += 1
+    
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -167,12 +187,6 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-//
-//
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_muted_chats, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeMutedChats, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayStyle == .raw), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
-//        arguments.toggleIncludeUnreadChats(settings.totalUnreadCountDisplayStyle != .raw)
-//    })))
-//    index += 1
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.group)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
         arguments.toggleIncludeGroups(!settings.totalUnreadCountIncludeTags.contains(.group))
@@ -285,6 +299,8 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             return value.withUpdatedRequestUserAttention(!value.requestUserAttention)
         }).start()
+    }, toggleInAppSounds: { value in
+        FastSettings.toggleInAppSouds(value)
     })
     
     let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }) |> map { inAppSettings, globalSettings, accounts -> [InputDataEntry] in
