@@ -867,9 +867,9 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
             if file.isInstantVideo {
                 return false
             }
-            if file.isVoice {
-                return false
-            }
+//            if file.isVoice {
+//                return false
+//            }
         }
         if media is TelegramMediaContact {
             return false

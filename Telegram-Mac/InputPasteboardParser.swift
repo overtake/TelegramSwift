@@ -40,7 +40,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fs(path.path) {
-                    return size <= 1500 * 1024 * 1024
+                    return size <= 2000 * 1024 * 1024
                 }
                 
                 return false
@@ -89,7 +89,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 1500 * 1024 * 1024
+                    return size <= 2000 * 1024 * 1024
                 }
                 
                 return false
@@ -155,7 +155,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 1500 * 1024 * 1024
+                    return size <= 2000 * 1024 * 1024
                 }
                 
                 return false

@@ -72,7 +72,7 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
         case let .fileSizeLimitHeader(_, viewType):
             return GeneralTextRowItem(initialSize, text: L10n.dataAndStorageCateroryFileSizeLimitHeader, viewType: viewType)
         case let .fileSizeLimit(_, limit, category, viewType):
-            let list:[Int32] = [Int32(1 * 1024 * 1024), Int32(5 * 1024 * 1024), Int32(10 * 1024 * 1024), Int32(50 * 1024 * 1024), Int32(100 * 1024 * 1024), Int32(300 * 1024 * 1024), Int32(500 * 1024 * 1024), Int32(1500 * 1024 * 1024)]
+            let list:[Int32] = [Int32(1 * 1024 * 1024), Int32(5 * 1024 * 1024), Int32(10 * 1024 * 1024), Int32(50 * 1024 * 1024), Int32(100 * 1024 * 1024), Int32(300 * 1024 * 1024), Int32(500 * 1024 * 1024), Int32(2000 * 1024 * 1024)]
             
             var titles:[String] = []
             titles.append(String.prettySized(with: Int(limit)))

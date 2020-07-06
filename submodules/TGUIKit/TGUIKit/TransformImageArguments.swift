@@ -24,7 +24,7 @@ public enum ImageCorner: Equatable {
         }
     }
     
-    var corner:CGFloat {
+    public var corner:CGFloat {
         switch self {
         case let .Corner(corner):
             return corner

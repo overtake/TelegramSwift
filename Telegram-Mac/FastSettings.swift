@@ -484,14 +484,14 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
     })
 }
 
-func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox) -> Signal<String?, NoError>  {
+func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bool = false) -> Signal<String?, NoError>  {
     let path = downloadFilePath(file, postbox)
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
         guard let (boxPath, adopted) = expanded else {
             return nil
         }
         if let id = file.id {
-            if let path = paths.path(for: id) {
+            if let path = paths.path(for: id), !saveAnyway {
                 let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
                 if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
                     return path.downloadedPath

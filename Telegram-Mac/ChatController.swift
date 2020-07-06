@@ -597,7 +597,11 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
 //                    }
                 }
             case let .positionRestoration(scrollIndex, relativeOffset):
-                let scrollIndex = scrollIndex.withUpdatedTimestamp(scrollIndex.timestamp - Int32(timeDifference))
+                
+                let timestamp = Int32(min(TimeInterval(scrollIndex.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+                
+                let scrollIndex = scrollIndex.withUpdatedTimestamp(timestamp)
                 var index = toView.filteredEntries.count - 1
                 for entry in toView.filteredEntries {
                     if entry.appearance.entry.index >= scrollIndex {
@@ -625,7 +629,15 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         if case let .groupedPhotos(entries, _) = entry.appearance.entry {
                             for inner in entries {
                                 if case let .MessageEntry(values) = inner {
-                                    if !scrollIndex.isLess(than: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) && scrollIndex.isLessOrEqual(to: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) {
+                                    
+                                    //                                    if !scrollIndex.isLess(than: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) && scrollIndex.isLessOrEqual(to: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) {
+
+                                    
+                                    let timestamp = Int32(min(TimeInterval(values.0.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+                                    let messageIndex = MessageIndex(values.0.withUpdatedTimestamp(timestamp))
+                                    
+                                    if !scrollIndex.isLess(than: messageIndex) && scrollIndex.isLessOrEqual(to: messageIndex) {
                                         scrollToItem = position.swap(to: entry.appearance.entry.stableId, innerId: inner.stableId)
                                     }
                                 }
@@ -2320,7 +2332,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             let result = result.filter { path -> Bool in
                                 if let size = fs(path) {
-                                    return size <= 1500 * 1024 * 1024
+                                    return size <= 2000 * 1024 * 1024
                                 }
                                 return false
                             }
@@ -2353,7 +2365,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             let result = result.filter { path -> Bool in
                                 if let size = fs(path) {
-                                    return size <= 1500 * 1024 * 1024
+                                    return size <= 2000 * 1024 * 1024
                                 }
                                 return false
                             }
@@ -4685,7 +4697,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let list = list.filter { path -> Bool in
                     if let size = fs(path) {
-                        return size <= 1500 * 1024 * 1024
+                        return size <= 2000 * 1024 * 1024
                     }
 
                     return false

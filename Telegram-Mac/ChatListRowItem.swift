@@ -367,7 +367,7 @@ class ChatListRowItem: TableRowItem {
         
         self.titleText = titleText
         if peers.count == 1 {
-            self.messageText = chatListText(account: context.account, for: message, folder: true)
+            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, folder: true)
         } else {
             let textString = NSMutableAttributedString(string: "")
             var isFirst = true
@@ -737,7 +737,7 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             if text == nil {
-                var messageText = chatListText(account: context.account, for: message, renderedPeer: renderedPeer, embeddedState: embeddedState)
+                var messageText = chatListText(account: context.account, for: message, messagesCount: self.messages.count, renderedPeer: renderedPeer, embeddedState: embeddedState)
                 if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
                     if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
                         copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)

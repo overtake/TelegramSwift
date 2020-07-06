@@ -951,6 +951,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             if animated && isPresented {
                 control.change(pos: shareViewPoint(item), animated: true)
+            } else {
+                control.setFrameOrigin(shareViewPoint(item))
             }
             
             if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer  {

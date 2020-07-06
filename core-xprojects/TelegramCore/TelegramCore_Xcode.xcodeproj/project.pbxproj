@@ -286,6 +286,7 @@
 		D0C50E351E93A86600F62E39 /* CallSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C50E331E93A86600F62E39 /* CallSessionManager.swift */; };
 		D0CA3F85207391560042D2B6 /* SecureIdPadding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA3F83207391560042D2B6 /* SecureIdPadding.swift */; };
 		D0CA8E4C227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CA8E4A227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift */; };
+		D0CB09AE24ADEFC9008CD050 /* Suggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CB09AD24ADEFC9008CD050 /* Suggestions.swift */; };
 		D0D376E722DCCFD600FA7D7C /* SlowMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D376E522DCCFD600FA7D7C /* SlowMode.swift */; };
 		D0D3CE4023BB3F1100864F3C /* PendingUpdateMessageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */; };
 		D0D3CE4423BB3FD200864F3C /* ChatUpdatingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */; };
@@ -390,12 +391,6 @@
 		A7D281E3236C257C0000A9BF /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281E9236C27030000A9BF /* MtProtoKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D281EB236C2FAD0000A9BF /* SyncCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SyncCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7D281EE236C32900000A9BF /* NetworkLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NetworkLogging.m; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/NetworkLogging.m"; sourceTree = "<group>"; };
-		A7D281EF236C32900000A9BF /* NetworkLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkLogging.h; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/NetworkLogging.h"; sourceTree = "<group>"; };
-		A7D281F2236C32A00000A9BF /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Reachability.h; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/Reachability.h"; sourceTree = "<group>"; };
-		A7D281F3236C32A00000A9BF /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Reachability.m; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/Reachability.m"; sourceTree = "<group>"; };
-		A7D281F6236C32AA0000A9BF /* Crypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Crypto.m; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/Crypto.m"; sourceTree = "<group>"; };
-		A7D281F7236C32AA0000A9BF /* Crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Crypto.h; path = "../../../submodules/telegram-ios/submodules/TelegramCore/Sources/Crypto.h"; sourceTree = "<group>"; };
 		A7D281FA236C34660000A9BF /* SynchronizeInstalledStickerPacksOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SynchronizeInstalledStickerPacksOperation.swift; sourceTree = "<group>"; };
 		A7D281FC236C35E30000A9BF /* TelegramMediaWebFile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramMediaWebFile.swift; sourceTree = "<group>"; };
 		A7F2833C239E4EE300742C20 /* ContentSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentSettings.swift; sourceTree = "<group>"; };
@@ -705,6 +700,7 @@
 		D0CA3F83207391560042D2B6 /* SecureIdPadding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureIdPadding.swift; sourceTree = "<group>"; };
 		D0CA8E4A227209C4008A74C3 /* ManagedSynchronizeGroupMessageStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedSynchronizeGroupMessageStats.swift; sourceTree = "<group>"; };
 		D0CAF2E91D75EC600011F558 /* MtProtoKitDynamic.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MtProtoKitDynamic.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0CB09AD24ADEFC9008CD050 /* Suggestions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Suggestions.swift; sourceTree = "<group>"; };
 		D0CC4AA322BA44960088F36D /* TelegramApi.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApi.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0CC4ADB22BA47280088F36D /* TelegramApiMac.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramApiMac.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0D376E522DCCFD600FA7D7C /* SlowMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlowMode.swift; sourceTree = "<group>"; };
@@ -795,12 +791,6 @@
 		A7D281ED236C327B0000A9BF /* thrid-party */ = {
 			isa = PBXGroup;
 			children = (
-				A7D281F7236C32AA0000A9BF /* Crypto.h */,
-				A7D281F6236C32AA0000A9BF /* Crypto.m */,
-				A7D281F2236C32A00000A9BF /* Reachability.h */,
-				A7D281F3236C32A00000A9BF /* Reachability.m */,
-				A7D281EF236C32900000A9BF /* NetworkLogging.h */,
-				A7D281EE236C32900000A9BF /* NetworkLogging.m */,
 			);
 			path = "thrid-party";
 			sourceTree = "<group>";
@@ -1198,6 +1188,7 @@
 		D05A32DF1E6F096B002760B4 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				D0CB09AD24ADEFC9008CD050 /* Suggestions.swift */,
 				D026099D20C695AF006C34AC /* Wallpapers.swift */,
 				D05A32E01E6F0982002760B4 /* UpdatedAccountPrivacySettings.swift */,
 				D05A32E31E6F0B2E002760B4 /* RecentAccountSessions.swift */,
@@ -1828,6 +1819,7 @@
 				D015E00F225CA61100CB9E8A /* FindChannelById.swift in Sources */,
 				D04D8FF5209A4B0700865719 /* NetworkSettings.swift in Sources */,
 				D05464982073872C002ECC1E /* SecureIdBankStatementValue.swift in Sources */,
+				D0CB09AE24ADEFC9008CD050 /* Suggestions.swift in Sources */,
 				D0B4188E1D7E0578004562A4 /* StoreMessage_Telegram.swift in Sources */,
 				D0B844461DAB91FD005F29E1 /* RecentPeers.swift in Sources */,
 				D0E412E2206AB24700BEE4A2 /* SecureFileMediaResource.swift in Sources */,

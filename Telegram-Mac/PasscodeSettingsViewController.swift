@@ -219,7 +219,7 @@ class PasscodeSettingsViewController: TableViewController {
             }))
             
             
-            showPopover(for: view, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0, -25))
+            showPopover(for: view, with: SPopoverViewController(items: items, visibility: items.count), edge: .minX, inset: NSMakePoint(0, -25))
         }
         
     }

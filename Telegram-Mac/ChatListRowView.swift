@@ -42,7 +42,7 @@ private class ChatListDraggingContainerView : View {
                 if let item = item, let list = list {
                     let list = list.filter { path -> Bool in
                         if let size = fs(path) {
-                            return size <= 1500 * 1024 * 1024
+                            return size <= 2000 * 1024 * 1024
                         }
                         return false
                     }
@@ -1395,7 +1395,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     offset += chatName.0.size.height + 1
                 }
                 
-                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + offset)
+                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
                 for (_, media, mediaSize) in self.currentMediaPreviewSpecs {
