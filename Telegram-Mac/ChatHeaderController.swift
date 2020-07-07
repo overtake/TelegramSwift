@@ -21,7 +21,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case addContact(block: Bool, autoArchived: Bool)
     case shareInfo
     case pinned(MessageId)
-    case report
+    case report(autoArchived: Bool)
     case promo(PromoChatListItem.Kind)
     var stableId:Int {
         switch self {
@@ -139,8 +139,8 @@ class ChatHeaderController {
             view = ChatPinnedView(messageId, chatInteraction: chatInteraction)
         case let .search(interactions, initialPeer, initialString):
             view = ChatSearchHeader(interactions, chatInteraction: chatInteraction, initialPeer: initialPeer, initialString: initialString)
-        case .report:
-            view = ChatReportView(chatInteraction)
+        case let .report(autoArchived):
+            view = ChatReportView(chatInteraction, autoArchived: autoArchived)
         case let .promo(kind):
             view = ChatSponsoredView(chatInteraction: chatInteraction, kind: kind)
         case .none:
@@ -386,9 +386,12 @@ class ChatPinnedView : Control {
 class ChatReportView : Control {
     private let chatInteraction:ChatInteraction
     private let report:TitleButton = TitleButton()
+    private let unarchiveButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
 
-    init(_ chatInteraction:ChatInteraction) {
+    private let buttonsContainer = View()
+    
+    init(_ chatInteraction:ChatInteraction, autoArchived: Bool) {
         self.chatInteraction = chatInteraction
         super.init()
         dismiss.disableActions()
@@ -409,8 +412,18 @@ class ChatReportView : Control {
             chatInteraction.dismissPeerStatusOptions()
         }, for: .SingleClick)
         
+        unarchiveButton.set(handler: { _ in
+            chatInteraction.unarchive()
+        }, for: .SingleClick)
+        
+        buttonsContainer.addSubview(report)
+
+        if autoArchived {
+            buttonsContainer.addSubview(unarchiveButton)
+        }
+        addSubview(buttonsContainer)
+        
         addSubview(dismiss)
-        addSubview(report)
         updateLocalizationAndTheme(theme: theme)
     }
     
@@ -421,6 +434,11 @@ class ChatReportView : Control {
         report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
         report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         _ = report.sizeToFit()
+        
+        unarchiveButton.set(text: L10n.peerInfoUnarchive, for: .Normal)
+        
+        unarchiveButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
+        
         self.backgroundColor = theme.colors.background
         needsLayout = true
     }
@@ -434,6 +452,25 @@ class ChatReportView : Control {
     override func layout() {
         report.center()
         dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
+        
+        
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
+        
+        
+        var buttons:[Control] = []
+        if report.superview != nil {
+            buttons.append(report)
+        }
+        if unarchiveButton.superview != nil {
+            buttons.append(unarchiveButton)
+        }
+        
+        let buttonWidth: CGFloat = floor(buttonsContainer.frame.width / CGFloat(buttons.count))
+        var x: CGFloat = 0
+        for button in buttons {
+            button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
+            x += buttonWidth
+        }
     }
     
     required init?(coder: NSCoder) {

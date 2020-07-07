@@ -628,7 +628,21 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
         
-        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(timestamp)), entry.isRead, renderType, itemType, fwdType, data)
+        
+        var isRead = entry.isRead
+        if !message.flags.contains(.Incoming) {
+            var k = i
+            loop: while k < messagesEntries.count - 1 {
+                let next = messagesEntries[k + 1]
+                if next.message.flags.contains(.Incoming) {
+                    isRead = true
+                    break loop
+                }
+                k += 1
+            }
+        }
+        
+        let entry: ChatHistoryEntry = .MessageEntry(message, MessageIndex(message.withUpdatedTimestamp(timestamp)), isRead, renderType, itemType, fwdType, data)
         
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             if groupInfo == nil {

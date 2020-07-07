@@ -431,7 +431,7 @@ class ChatControllerView : View, ChatInputDelegate {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
-                state = .report
+                state = .report(autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canShareContact) {
                 state = .shareInfo
             } else {
@@ -444,6 +444,7 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             state = .none
         }
+        
         CATransaction.begin()
         header.updateState(state, animated: animated, for: self)
         
@@ -1788,6 +1789,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let removeFlagsSignal = context.account.postbox.transaction { transaction in
                 transaction.updatePeerCachedData(peerIds: [peerId], update: { peerId, cachedData in
                     if let cachedData = cachedData as? CachedUserData {
+                        let current = cachedData.peerStatusSettings
+                        var flags = current?.flags ?? []
+                        flags.remove(.autoArchived)
+                        flags.remove(.canBlock)
+                        flags.remove(.canReport)
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                    }
+                    if let cachedData = cachedData as? CachedChannelData {
+                        let current = cachedData.peerStatusSettings
+                        var flags = current?.flags ?? []
+                        flags.remove(.autoArchived)
+                        flags.remove(.canBlock)
+                        flags.remove(.canReport)
+                        return cachedData.withUpdatedPeerStatusSettings(PeerStatusSettings(flags: flags, geoDistance: current?.geoDistance))
+                    }
+                    if let cachedData = cachedData as? CachedGroupData {
                         let current = cachedData.peerStatusSettings
                         var flags = current?.flags ?? []
                         flags.remove(.autoArchived)
