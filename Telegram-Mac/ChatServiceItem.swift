@@ -375,6 +375,11 @@ class ChatServiceRowView: TableRowView {
     
     private var textView:TextView
     private var imageView:TransformImageView?
+    
+    private var photoVideoView: MediaPlayerView?
+    private var photoVideoPlayer: MediaPlayer?
+
+    
     required init(frame frameRect: NSRect) {
         textView = TextView()
         textView.isSelectable = false
@@ -408,6 +413,8 @@ class ChatServiceRowView: TableRowView {
                 imageView?.setFrameSize(imageArguments.imageSize)
                 imageView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
                 self.imageView?.set(arguments: imageArguments)
+                self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
+
             }
             
         }
@@ -456,6 +463,35 @@ class ChatServiceRowView: TableRowView {
                 
                 
                 imageView?.set(arguments: arguments)
+                
+                
+                if let video = image.videoRepresentations.last {
+                    if self.photoVideoView == nil {
+                        self.photoVideoView = MediaPlayerView()
+                        self.photoVideoView!.layer?.cornerRadius = 70 / 2
+                        self.addSubview(self.photoVideoView!)
+                        self.photoVideoView!.isEventLess = true
+                    }
+                    self.photoVideoView!.frame = NSMakeRect(0, 0, 70, 70)
+                    
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    
+                    mediaPlayer.actionAtEnd = .loop(nil)
+                    self.photoVideoPlayer = mediaPlayer
+                    mediaPlayer.play()
+                    
+                    if let seekTo = video.startTimestamp {
+                        mediaPlayer.seek(timestamp: seekTo)
+                    }
+                    mediaPlayer.attachPlayerView(self.photoVideoView!)
+                    
+                } else {
+                    self.photoVideoView?.removeFromSuperview()
+                    self.photoVideoView = nil
+                }
+                
             } else {
                 imageView?.removeFromSuperview()
                 imageView = nil
