@@ -26,15 +26,10 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private var session:PCallSession? = nil {
         didSet {
             if let session = session {
-                durationDisposable.set(session.durationPromise.get().start(next: { [weak self] duration in
-                    self?.durationView.stringValue = String.durationTransformed(elapsed: Int(duration))
-                    self?.durationView.sizeToFit()
-                    self?.needsLayout = true
-                }))
                 
-                stateDisposable.set((session.state.get() |> deliverOnMainQueue).start(next: { [weak self] state in
-                    switch state {
-                    case .terminated, .dropping:
+                stateDisposable.set((session.state |> deliverOnMainQueue).start(next: { [weak self] state in
+                    switch state.state {
+                    case .terminated, .terminating:
                         self?.hide()
                     default:
                         break
@@ -152,11 +147,11 @@ class CallNavigationHeaderView: NavigationHeaderView {
     }
     
     private func updateMutedBg(_ session:PCallSession, animated: Bool) {
-        backgroundView.background = session.data.isMuted ? grayColor : blueColor
-        if animated {
-            backgroundView.layer?.animateBackground()
-        }
-        muteControl.set(image: !session.data.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
+//        backgroundView.background = session.data.isMuted ? grayColor : blueColor
+//        if animated {
+//            backgroundView.layer?.animateBackground()
+//        }
+//        muteControl.set(image: !session.data.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
         _ = muteControl.sizeToFit()
         needsLayout = true
     }

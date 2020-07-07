@@ -15,13 +15,16 @@ import TGUIKit
 import TgVoipWebrtc
 
 enum CallTone {
-    case callToneUndefined
-    case callToneRingback
-    case callToneBusy
-    case callToneConnecting
-    case callToneFailed
-    case callToneEnded
+    case undefined
+    case ringback
+    case busy
+    case connecting
+    case failed
+    case ended
+    case ringing
 }
+
+
 
 
 public struct CallAuxiliaryServer {
@@ -44,18 +47,47 @@ public struct CallAuxiliaryServer {
         self.connection = connection
     }
 }
-
-
-
-enum VoIPState : Int {
-    case waitInit = 1
-    case waitInitAck = 2
-    case established = 3
-    case failed = 4
+ struct CallState: Equatable {
+    enum State: Equatable {
+        case waiting
+        case ringing
+        case requesting(Bool)
+        case connecting(Data?)
+        case active(Double, Int32?, Data)
+        case reconnecting(Double, Int32?, Data)
+        case terminating
+        case terminated(CallId?, CallSessionTerminationReason?, Bool)
+    }
+    
+    enum VideoState: Equatable {
+        case notAvailable
+        case available(Bool)
+        case active
+        case activeOutgoing
+    }
+    
+    enum RemoteVideoState: Equatable {
+        case inactive
+        case active
+    }
+    
+    let state: State
+    let videoState: VideoState
+    let remoteVideoState: RemoteVideoState
+    let isMuted: Bool
+    let isOutgoingVideoPaused: Bool
+    
+    init(state: State, videoState: VideoState, remoteVideoState: RemoteVideoState, isMuted: Bool, isOutgoingVideoPaused: Bool) {
+        self.state = state
+        self.videoState = videoState
+        self.remoteVideoState = remoteVideoState
+        self.isMuted = isMuted
+        self.isOutgoingVideoPaused = isOutgoingVideoPaused
+    }
 }
 
 
-private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc /*, OngoingCallThreadLocalContextQueueWebrtcCustom*/ {
+private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc  {
     private let queue: Queue
     
     init(queue: Queue) {
@@ -133,23 +165,23 @@ private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAux
 }
 
 
-struct CallAccessData : Equatable {
-    let isMuted: Bool
-    let isVideoEnabled: Bool
-    let isVerticalVideo: Bool
-}
 
 class PCallSession {
     let peerId:PeerId
     let account: Account
     let sharedContext: SharedAccountContext
-    let id:CallSessionInternalId
+    let internalId:CallSessionInternalId
     
     private(set) var peer: Peer?
     private let peerDisposable = MetaDisposable()
-    private var ongoingContext: OngoingCallContext?
-    private var ongoingContextStateDisposable: Disposable?
+    private var sessionState: CallSession?
     
+    private var ongoingContext: OngoingCallContext?
+    private var callContextState: OngoingCallContextState?
+    private var ongoingContextStateDisposable: Disposable?
+    private var reception: Int32?
+    private var receptionDisposable: Disposable?
+
 
     private let serializedData: String?
     private let dataSaving: VoiceCallDataSaving
@@ -163,19 +195,24 @@ class PCallSession {
     private let stateDisposable = MetaDisposable()
     private let timeoutDisposable = MetaDisposable()
     
-    let state:Promise<CallSessionState> = Promise()
+    private let sessionStateDisposable = MetaDisposable()
     
+    private let statePromise:ValuePromise<CallState> = ValuePromise()
     
-    private let dataSignal:ValuePromise<CallAccessData> = ValuePromise(CallAccessData(isMuted: false, isVideoEnabled: true, isVerticalVideo: false))
-    
-    var dataValue:Signal<CallAccessData, NoError> {
-        return dataSignal.get()
+    var state:Signal<CallState, NoError> {
+        return statePromise.get()
     }
-    private(set) var data: CallAccessData = CallAccessData(isMuted: false, isVideoEnabled: true, isVerticalVideo: false) {
-        didSet {
-            dataSignal.set(data)
-        }
+    
+    private let canBeRemovedPromise = Promise<Bool>(false)
+    private var didSetCanBeRemoved = false
+    public var canBeRemoved: Signal<Bool, NoError> {
+        return self.canBeRemovedPromise.get()
     }
+    
+    private let hungUpPromise = ValuePromise<Bool>()
+    
+    private var activeTimestamp: Double?
+
     
     private var player:CallAudioPlayer? = nil
     private var playingRingtone:Bool = false
@@ -183,11 +220,7 @@ class PCallSession {
     private var startTime:Double = 0
     private var callAcceptedTime:Double = 0
     
-    private var tranmissionState:VoIPState = .waitInit
     private var completed: Bool = false
-    let durationPromise:Promise<TimeInterval> = Promise()
-    private var callSessionValue:CallSession? = nil
-    private let proxyDisposable = MetaDisposable()
     private let requestMicroAccessDisposable = MetaDisposable()
     
     
@@ -195,12 +228,17 @@ class PCallSession {
     
     private var videoCapturer: OngoingCallVideoCapturer?
     
+    let isOutgoing: Bool
+    private(set) var isVideo: Bool
+    
+    private var callWasActive = false
+    
+    private var droppedCall = false
+    private var dropCallKitCallTimer: SwiftSignalKit.Timer?
+    
 
-        
     
-    var isVideo: Bool
-    
-    init(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
+    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -211,16 +249,22 @@ class PCallSession {
         self.account = account
         self.sharedContext = sharedContext
         self.peerId = peerId
-        self.id = id
+        self.internalId = id
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
+        self.isOutgoing = isOutgoing
         
+
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
+        
         if self.isVideo {
             self.videoCapturer = OngoingCallVideoCapturer()
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .activeOutgoing, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
+        } else {
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         }
-
+        
         
         let semaphore = DispatchSemaphore(value: 0)
         var data: (PreferencesView, Peer?, ProxyServerSettings?, NetworkType)!
@@ -275,28 +319,17 @@ class PCallSession {
         callSessionState = callSessionState
             |> then(callSessionManager.callState(internalId: id))
         
-        let signal = callSessionState |> deliverOn(callQueue) |> beforeNext { [weak self] session in
-            self?.proccessState(session, configuration)
-        }
+        let signal = callSessionState |> deliverOn(callQueue)
         
-        state.set(signal |> map { $0.state })
+        self.sessionStateDisposable.set(signal.start(next: { [weak self] sessionState in
+            if let strongSelf = self {
+                strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: strongSelf.reception)
+            }
+        })
+)
+        
     }
     
-    private func voipStateChanged(_ state:OngoingCallContextState) {
-        switch state.state {
-        case .connected:
-            if (startTime < Double.ulpOfOne) {
-                stopAudio()
-                startTime = CFAbsoluteTimeGetCurrent();
-                durationPromise.set((.single(duration) |> deliverOnMainQueue) |> then (Signal<()->TimeInterval, NoError>.single({[weak self] in return self?.duration ?? 0}) |> map {$0()} |> delay(1.01, queue: Queue.mainQueue()) |> restart))
-            }
-        case .failed:
-            playTone(.callToneFailed)
-            discardCurrentCallWithReason(.error(.disconnected))
-        default:
-            break
-        }
-    }
     
     private func startTimeout(_ duration:TimeInterval, discardReason: CallSessionTerminationReason) {
         timeoutDisposable.set((Signal<Void, NoError>.complete() |> delay(duration, queue: Queue.mainQueue())).start(completed: { [weak self] in
@@ -304,9 +337,6 @@ class PCallSession {
         }))
     }
     
-
-
-
     
     private func invalidateTimeout() {
         timeoutDisposable.set(nil)
@@ -340,16 +370,15 @@ class PCallSession {
     }
     
     func stopTransmission(_ id: CallId?) {
-        durationPromise.set(.complete())
         ongoingContext?.stop(callId: id, sendDebugLogs: false, debugLogValue: Promise())
     }
     
     func drop(_ reason:DropCallReason) {
-        account.callSessionManager.drop(internalId: id, reason: reason, debugLog: .single(nil))
+        account.callSessionManager.drop(internalId: internalId, reason: reason, debugLog: .single(nil))
     }
     private func acceptAfterAccess() {
         callAcceptedTime = CFAbsoluteTimeGetCurrent()
-        account.callSessionManager.accept(internalId: id)
+        account.callSessionManager.accept(internalId: internalId)
     }
     
     func acceptCallSession() {
@@ -370,81 +399,275 @@ class PCallSession {
         
     }
     
+    public func setEnableVideo(_ value: Bool) {
+        self.ongoingContext?.setEnableVideo(value)
+    }
+
+    
+    private var isOutgoingVideoPaused: Bool = false
+    private var isMuted: Bool = false
+    
     func mute() {
-        data = CallAccessData(isMuted: true, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
-        ongoingContext?.setIsMuted(data.isMuted)
-    }
-    func setVideoEnabled(_ isEnabled: Bool) {
-        data = CallAccessData(isMuted: data.isMuted, isVideoEnabled: isEnabled, isVerticalVideo: data.isVerticalVideo)
-        ongoingContext?.setEnableVideo(data.isVideoEnabled)
-    }
-    func toggleVideoEnabled() {
-        data = CallAccessData(isMuted: data.isMuted, isVideoEnabled: !data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
-        ongoingContext?.setEnableVideo(data.isVideoEnabled)
+        self.isMuted = true
+        ongoingContext?.setIsMuted(self.isMuted)
     }
     
     func unmute() {
-        data = CallAccessData(isMuted: false, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
-        ongoingContext?.setIsMuted(data.isMuted)
+        self.isMuted = false
+        ongoingContext?.setIsMuted(self.isMuted)
     }
     
     func toggleMute() {
-        data = CallAccessData(isMuted: !data.isMuted, isVideoEnabled: data.isVideoEnabled, isVerticalVideo: data.isVerticalVideo)
-        ongoingContext?.setIsMuted(data.isMuted)
-    }
-    
-    private func proccessState(_ session: CallSession, _ configuration: VoipConfiguration) {
-        self.callSessionValue = session
-        
-        switch session.state {
-        case let .active(id, key, _, connections, maxLayer, version, allowP2P):
-            playTone(.callToneConnecting)
-            
-            let logName = "\(id.id)_\(id.accessHash)"
-
-            let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.id, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: session.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowP2P, logName: logName)
-            self.ongoingContext = ongoingContext
-            
-            ongoingContext.setEnableVideo(self.data.isVideoEnabled && session.type == .video)
-            
-            stateDisposable.set((ongoingContext.state |> deliverOn(callQueue)).start(next: { [weak self] state in
-                if let state = state {
-                    self?.voipStateChanged(state)
-                }
-            }))
-            
-            invalidateTimeout()
-        case .ringing:
-            playRingtone()
-        case .requesting(let ringing):
-            if ringing {
-                playTone(.callToneRingback)
-                startTimeout(callReceiveTimeout, discardReason: .ended(.busy))
-            }
-            
-        case .dropping:
-            invalidateTimeout()
-            stopAudio()
-            break
-        case let .terminated(callId, reason, report):
-            stopTransmission(callId)
-            invalidateTimeout()
-            switch reason {
-            case .error:
-                playTone(.callToneFailed)
-            default:
-                playTone(.callToneEnded)
-            }
-        default:
-            break
+        self.isMuted = !self.isMuted
+        ongoingContext?.setIsMuted(self.isMuted)
+        if let state = self.sessionState {
+            self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
         }
     }
+    func setOutgoingVideoIsPaused(_ isEnabled: Bool) {
+        self.isOutgoingVideoPaused = isEnabled
+        self.videoCapturer?.setIsVideoEnabled(!self.isOutgoingVideoPaused)
+        if let state = self.sessionState {
+            self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
+        }
+    }
+    func toggleOutgoingVideo() {
+        self.isOutgoingVideoPaused = !self.isOutgoingVideoPaused
+        self.videoCapturer?.setIsVideoEnabled(!self.isOutgoingVideoPaused)
+        if let state = self.sessionState {
+            self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
+        }
+    }
+
+    
+    private func updateSessionState(sessionState: CallSession, callContextState: OngoingCallContextState?, reception: Int32?) {
+        if case .video = sessionState.type {
+            self.isVideo = true
+        }
+        let previous = self.sessionState
+        self.sessionState = sessionState
+        self.callContextState = callContextState
+        self.reception = reception
+        
+        
+        let presentationState: CallState?
+        
+        var wasActive = false
+        var wasTerminated = false
+        if let previous = previous {
+            switch previous.state {
+            case .active:
+                wasActive = true
+            case .terminated:
+                wasTerminated = true
+            default:
+                break
+            }
+        }
+        
+        
+        let mappedVideoState: CallState.VideoState
+        let mappedRemoteVideoState: CallState.RemoteVideoState
+        if let callContextState = callContextState {
+            switch callContextState.videoState {
+            case .notAvailable:
+                mappedVideoState = .notAvailable
+            case let .available(enabled):
+                mappedVideoState = .available(enabled)
+            case .active:
+                mappedVideoState = .active
+            case .activeOutgoing:
+                mappedVideoState = .activeOutgoing
+            }
+            switch callContextState.remoteVideoState {
+            case .inactive:
+                mappedRemoteVideoState = .inactive
+            case .active:
+                mappedRemoteVideoState = .active
+            }
+        } else {
+            if self.isVideo {
+                mappedVideoState = .activeOutgoing
+            } else {
+                mappedVideoState = .notAvailable
+            }
+            mappedRemoteVideoState = .inactive
+        }
+        
+        switch sessionState.state {
+        case .ringing:
+            presentationState = CallState(state: .ringing, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+        case .accepting:
+            self.callWasActive = true
+            presentationState = CallState(state: .connecting(nil), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+        case .dropping:
+            presentationState = CallState(state: .terminating, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+        case let .terminated(id, reason, options):
+            presentationState = CallState(state: .terminated(id, reason, false), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+        case let .requesting(ringing):
+            presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+        case let .active(_, _, keyVisualHash, _, _, _, _):
+            self.callWasActive = true
+            if let callContextState = callContextState {
+                switch callContextState.state {
+                case .initializing:
+                    presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+                case .failed:
+                    presentationState = nil
+                    self.callSessionManager.drop(internalId: self.internalId, reason: .disconnect, debugLog: .single(nil))
+                case .connected:
+                    let timestamp: Double
+                    if let activeTimestamp = self.activeTimestamp {
+                        timestamp = activeTimestamp
+                    } else {
+                        timestamp = CFAbsoluteTimeGetCurrent()
+                        self.activeTimestamp = timestamp
+                    }
+                    presentationState = CallState(state: .active(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+                case .reconnecting:
+                    let timestamp: Double
+                    if let activeTimestamp = self.activeTimestamp {
+                        timestamp = activeTimestamp
+                    } else {
+                        timestamp = CFAbsoluteTimeGetCurrent()
+                        self.activeTimestamp = timestamp
+                    }
+                    presentationState = CallState(state: .reconnecting(timestamp, reception, keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+                }
+            } else {
+                presentationState = CallState(state: .connecting(keyVisualHash), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+            }
+        }
+        
+        switch sessionState.state {
+        case .requesting:
+            break
+        case let .active(id, key, _, connections, maxLayer, version, allowsP2P):
+            if !wasActive {
+                let logName = "\(id.id)_\(id.accessHash)"
+                
+                let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, logName: logName)
+                self.ongoingContext = ongoingContext
+                
+                
+                self.ongoingContextStateDisposable = (ongoingContext.state
+                    |> deliverOnMainQueue).start(next: { [weak self] contextState in
+                        if let strongSelf = self {
+                            if let sessionState = strongSelf.sessionState {
+                                strongSelf.updateSessionState(sessionState: sessionState, callContextState: contextState, reception: strongSelf.reception)
+                            } else {
+                                strongSelf.callContextState = contextState
+                            }
+                        }
+                    })
+                
+                self.receptionDisposable = (ongoingContext.reception
+                    |> deliverOnMainQueue).start(next: { [weak self] reception in
+                        if let strongSelf = self {
+                            if let sessionState = strongSelf.sessionState {
+                                strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: reception)
+                            } else {
+                                strongSelf.reception = reception
+                            }
+                        }
+                    })
+                
+            }
+        case let .terminated(id, _, options):
+            if wasActive {
+                let debugLogValue = Promise<String?>()
+                self.ongoingContext?.stop(callId: id, sendDebugLogs: options.contains(.sendDebugLogs), debugLogValue: debugLogValue)
+            }
+        default:
+            if wasActive {
+                let debugLogValue = Promise<String?>()
+                self.ongoingContext?.stop(debugLogValue: debugLogValue)
+            }
+        }
+        if case .terminated = sessionState.state, !wasTerminated {
+            if !self.didSetCanBeRemoved {
+                self.didSetCanBeRemoved = true
+                self.canBeRemovedPromise.set(.single(true) |> delay(2.4, queue: Queue.mainQueue()))
+            }
+            self.hungUpPromise.set(true)
+            if sessionState.isOutgoing {
+                if !self.droppedCall {
+                    let dropCallKitCallTimer = SwiftSignalKit.Timer(timeout: 2.4, repeat: false, completion: { [weak self] in
+                        if let strongSelf = self {
+                            strongSelf.dropCallKitCallTimer = nil
+                            if !strongSelf.droppedCall {
+                                strongSelf.droppedCall = true
+                            }
+                        }
+                    }, queue: Queue.mainQueue())
+                    self.dropCallKitCallTimer = dropCallKitCallTimer
+                    dropCallKitCallTimer.start()
+                }
+            }
+        }
+        if let presentationState = presentationState {
+            self.statePromise.set(presentationState)
+            self.updateTone(presentationState, callContextState: callContextState, previous: previous)
+        }
+
+    }
+    
+    private func updateTone(_ state: CallState, callContextState: OngoingCallContextState?, previous: CallSession?) {
+        var tone: CallTone?
+        if let callContextState = callContextState, case .reconnecting = callContextState.state {
+            tone = .connecting
+        } else if let previous = previous {
+            switch previous.state {
+            case .accepting, .active, .dropping, .requesting:
+                switch state.state {
+                case .connecting:
+                    if case .requesting = previous.state {
+                        tone = .ringback
+                    } else {
+                        tone = .connecting
+                    }
+                case .requesting(true):
+                    tone = .ringback
+                case let .terminated(_, reason, _):
+                    if let reason = reason {
+                        switch reason {
+                        case let .ended(type):
+                            switch type {
+                            case .busy:
+                                tone = .busy
+                            case .hungUp, .missed:
+                                tone = .ended
+                            }
+                        case .error:
+                            tone = .failed
+                        }
+                    }
+                case .ringing:
+                    tone = .ringing
+                default:
+                    break
+                }
+            default:
+                break
+            }
+        } else if previous == nil && !isOutgoing {
+            tone = .ringing
+        }
+        if let tone = tone {
+            playTone(tone)
+        } else {
+            stopTone()
+        }
+    }
+    
+
     
     deinit {
         peerDisposable.dispose()
         stateDisposable.dispose()
         drop(.disconnect)
-        proxyDisposable.dispose()
+        sessionStateDisposable.dispose()
+        ongoingContextStateDisposable?.dispose()
     }
     
     private func playRingtone() {
@@ -464,7 +687,7 @@ class PCallSession {
     func hangUpCurrentCall(_ external: Bool) {
         completed = external
         var reason:CallSessionTerminationReason = .ended(.hungUp)
-        if let session = callSessionValue {
+        if let session = sessionState {
             if case .terminated = session.state {
                 reason = session.isOutgoing ? .ended(.missed) : .ended(.busy)
             }
@@ -497,16 +720,18 @@ class PCallSession {
         let path:String?
         switch tone
         {
-        case .callToneBusy:
+        case .busy:
             path = Bundle.main.path(forResource: "voip_busy", ofType:"caf")
-        case .callToneRingback:
+        case .ringback:
             path = Bundle.main.path(forResource: "voip_ringback", ofType:"caf")
-        case .callToneConnecting:
+        case .connecting:
             path = Bundle.main.path(forResource: "voip_connecting", ofType:"mp3")
-        case .callToneFailed:
+        case .failed:
             path = Bundle.main.path(forResource: "voip_fail", ofType:"caf")
-        case .callToneEnded:
+        case .ended:
             path = Bundle.main.path(forResource: "voip_end", ofType:"caf")
+        case .ringing:
+            path = Bundle.main.path(forResource: "opening", ofType:"m4a")
         default:
             path = nil;
         }
@@ -517,33 +742,30 @@ class PCallSession {
         }
     }
     
-    private func loopsForTone(_ tone:CallTone) -> Int
-    {
-        switch tone
-        {
-        case .callToneBusy:
+    private func loopsForTone(_ tone:CallTone) -> Int {
+        switch tone {
+        case .busy:
             return 3;
-            
-        case .callToneRingback:
-            return -1;
-            
-        case .callToneConnecting:
-            return -1;
-            
-        case .callToneFailed:
-            return 1;
-            
-        case .callToneEnded:
-            return 1;
-            
+        case .ringback:
+            return -1
+        case .connecting:
+            return -1
+        case .failed:
+            return 1
+        case .ended:
+            return 1
+        case .ringing:
+            return -1
         default:
-            return 0;
+            return 0
         }
     }
     
     private func playTone(_ tone:URL, loops:Int, completion:(()->Void)? = nil) {
-        self.player = CallAudioPlayer(tone, loops: loops, completion: completion)
-        self.player?.play()
+        if self.player?.tone.path != tone.path {
+            self.player = CallAudioPlayer(tone, loops: loops, completion: completion)
+            self.player?.play()
+        }
     }
     
     private func playTone(_ tone:CallTone) {
@@ -552,7 +774,7 @@ class PCallSession {
         }
     }
     
-    private func stopAudio() {
+    private func stopTone() {
         playingRingtone = false
         player?.stop()
         player = nil
@@ -602,7 +824,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     } |> mapToSignal { _ in
                         return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
                         subscriber.putCompletion()
                     })
                 }
@@ -618,7 +840,6 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                 default:
                     break
                 }
-                //[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"]];
             })
             return .complete()
         }

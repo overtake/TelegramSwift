@@ -120,6 +120,7 @@ private:
 - (void)configure {
     NSAssert([VideoMetalView isMetalAvailable], @"Metal not availiable on this device");
     self.wantsLayer = YES;
+    self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawDuringViewResize;
     _metalView = [VideoMetalView createMetalView:self.bounds];
     _metalView.delegate = self;
     _metalView.layer.cornerRadius = 4;

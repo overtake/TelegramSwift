@@ -641,8 +641,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         if let session = callSession {
-            _ = (session.state.get() |> take(1)).start(next: { [weak session] state in
-                if case .active = state, let session = session {
+            _ = (session.state |> take(1)).start(next: { [weak session] state in
+                if case .active = state.state, let session = session {
                     context.sharedContext.showCallHeader(with: session)
                 }
             })

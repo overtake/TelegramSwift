@@ -410,16 +410,18 @@ class ShareMessageObject : ShareObject {
     init(_ context: AccountContext, _ message:Message, _ groupMessages:[Message] = []) {
         self.messageIds = groupMessages.isEmpty ? [message.id] : groupMessages.map{$0.id}
         self.message = message
-        let peer = messageMainPeer(message) as? TelegramChannel
-//        if let author = message.forwardInfo?.author as? TelegramChannel {
-//            peer = author
-//        } else {
+        var peer = messageMainPeer(message) as? TelegramChannel
+        var messageId = message.id
+        if let author = message.forwardInfo?.author as? TelegramChannel {
+            peer = author
+            messageId = message.forwardInfo?.sourceMessageId ?? message.id
+        }
 //            peer = messageMainPeer(message) as? TelegramChannel
 //        }
         if let peer = peer, let address = peer.username {
             switch peer.info {
             case .broadcast:
-                self.link = "https://t.me/" + address + "/" + "\(message.id.id)"
+                self.link = "https://t.me/" + address + "/" + "\(messageId.id)"
             default:
                 self.link = nil
             }

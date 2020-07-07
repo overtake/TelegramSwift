@@ -108,7 +108,7 @@ class SharedWakeupManager {
                             if session != nil {
                                 account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
                             } else {
-                                showPhoneCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo))
+                                showPhoneCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo))
                             }
                         }
                     } )
