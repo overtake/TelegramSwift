@@ -45,6 +45,10 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
     RTCVideoRotation _rotation;
     
     void (^_isActiveUpdated)(bool);
+    bool _isActiveValue;
+    bool _inForegroundValue;
+    bool _isPaused;
+
 }
 
 @end
@@ -56,7 +60,11 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
     if (self != nil) {
         _source = source;
         _isActiveUpdated = [isActiveUpdated copy];
+        _isActiveValue = true;
+        _inForegroundValue = true;
+        _isPaused = false;
         
+
         if (![self setupCaptureSession:[[AVCaptureSession alloc] init]]) {
             return nil;
         }
@@ -93,6 +101,44 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
   _isActiveUpdated = nil;
   [self stopCaptureWithCompletionHandler:nil];
 }
+    
+    
+    
+- (void)setIsEnabled:(bool)isEnabled {
+    BOOL updated = _isPaused != !isEnabled;
+    _isPaused = !isEnabled;
+    
+    if (updated) {
+        if (_isPaused) {
+            [RTCDispatcher
+             dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+             block:^{
+                 [self->_captureSession stopRunning];
+                 self->_isRunning = NO;
+             }];
+        } else {
+            [RTCDispatcher
+             dispatchAsyncOnType:RTCDispatcherTypeCaptureSession
+             block:^{
+                 [self->_captureSession startRunning];
+                 self->_isRunning = YES;
+             }];
+        }
+    }
+    
+    [self updateIsActiveValue];
+}
+
+- (void)updateIsActiveValue {
+    bool isActive = _inForegroundValue && !_isPaused;
+    if (isActive != _isActiveValue) {
+        _isActiveValue = isActive;
+        if (_isActiveUpdated) {
+            _isActiveUpdated(_isActiveValue);
+        }
+    }
+}
+
 
 - (void)startCaptureWithDevice:(AVCaptureDevice *)device
                         format:(AVCaptureDeviceFormat *)format
@@ -172,7 +218,10 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
     RTCVideoFrame *videoFrame = [[RTCVideoFrame alloc] initWithBuffer:rtcPixelBuffer
                                                              rotation:_rotation
                                                           timeStampNs:timeStampNs];
-    getObjCVideoSource(_source)->OnCapturedFrame(videoFrame);
+    
+    if (!_isPaused) {
+        getObjCVideoSource(_source)->OnCapturedFrame(videoFrame);
+    }
 }
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
@@ -213,16 +262,16 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
         self->_hasRetriedOnFatalError = NO;
     }];
     
-    if (_isActiveUpdated) {
-        _isActiveUpdated(true);
-    }
+    
+    _inForegroundValue = true;
+    [self updateIsActiveValue];
 }
 
 - (void)handleCaptureSessionDidStopRunning:(NSNotification *)notification {
   RTCLog(@"Capture session stopped.");
-    if (_isActiveUpdated) {
-        _isActiveUpdated(false);
-    }
+    _inForegroundValue = false;
+    [self updateIsActiveValue];
+
 }
 
 - (void)handleFatalError {

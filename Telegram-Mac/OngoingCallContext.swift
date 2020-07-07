@@ -14,22 +14,22 @@ import SyncCore
 import Postbox
 import TgVoipWebrtc
 
-public final class OngoingCallVideoCapturer {
+final class OngoingCallVideoCapturer {
     fileprivate let impl: OngoingCallThreadLocalContextVideoCapturer
     
-    public init() {
+    init() {
         self.impl = OngoingCallThreadLocalContextVideoCapturer()
     }
     
-    public func switchCamera() {
+    func switchCamera() {
         self.impl.switchVideoCamera()
     }
     
-    public func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
         self.impl.makeOutgoingVideoView(completion)
     }
     
-    public func setIsVideoEnabled(_ value: Bool) {
+    func setIsVideoEnabled(_ value: Bool) {
         self.impl.setIsVideoEnabled(value)
     }
 }
@@ -50,7 +50,7 @@ private func callConnectionDescriptionWebrtc(_ connection: CallSessionConnection
 
 private let callLogsLimit = 20
 
-public func callLogNameForId(id: Int64, account: Account) -> String? {
+func callLogNameForId(id: Int64, account: Account) -> String? {
     let path = callLogsPath(account: account)
     let namePrefix = "\(id)_"
     
@@ -66,7 +66,7 @@ public func callLogNameForId(id: Int64, account: Account) -> String? {
     return nil
 }
 
-public func callLogsPath(account: Account) -> String {
+func callLogsPath(account: Account) -> String {
     return account.basePath + "/calls"
 }
 
@@ -119,29 +119,29 @@ private let setupLogs: Bool = {
     return true
 }()
 
-public struct OngoingCallContextState: Equatable {
-    public enum State {
+struct OngoingCallContextState: Equatable {
+    enum State {
         case initializing
         case connected
         case reconnecting
         case failed
     }
     
-    public enum VideoState: Equatable {
+    enum VideoState: Equatable {
         case notAvailable
         case available(Bool)
         case active
         case activeOutgoing
     }
     
-    public enum RemoteVideoState: Equatable {
+    enum RemoteVideoState: Equatable {
         case inactive
         case active
     }
     
-    public let state: State
-    public let videoState: VideoState
-    public let remoteVideoState: RemoteVideoState
+    let state: State
+    let videoState: VideoState
+    let remoteVideoState: RemoteVideoState
 }
 
 private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc /*, OngoingCallThreadLocalContextQueueWebrtcCustom*/ {
@@ -330,32 +330,6 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
     }
 }
 
-/*extension OngoingCallThreadLocalContextWebrtcCustom: OngoingCallThreadLocalContextProtocol {
- func nativeSetNetworkType(_ type: NetworkType) {
- self.setNetworkType(ongoingNetworkTypeForTypeWebrtcCustom(type))
- }
- 
- func nativeStop(_ completion: @escaping (String?, Int64, Int64, Int64, Int64) -> Void) {
- self.stop(completion)
- }
- 
- func nativeSetIsMuted(_ value: Bool) {
- self.setIsMuted(value)
- }
- 
- func nativeDebugInfo() -> String {
- return self.debugInfo() ?? ""
- }
- 
- func nativeVersion() -> String {
- return self.version() ?? ""
- }
- 
- func nativeGetDerivedState() -> Data {
- return self.getDerivedState()
- }
- }*/
-
 private extension OngoingCallContextState.State {
     init(_ state: OngoingCallState) {
         switch state {
@@ -407,18 +381,18 @@ private extension OngoingCallContextState.State {
  }
  }*/
 
-public final class OngoingCallContext {
-    public struct AuxiliaryServer {
-        public enum Connection {
+final class OngoingCallContext {
+    struct AuxiliaryServer {
+        enum Connection {
             case stun
             case turn(username: String, password: String)
         }
         
-        public let host: String
-        public let port: Int
-        public let connection: Connection
+        let host: String
+        let port: Int
+        let connection: Connection
         
-        public init(
+        init(
             host: String,
             port: Int,
             connection: Connection
@@ -429,7 +403,7 @@ public final class OngoingCallContext {
         }
     }
     
-    public let internalId: CallSessionInternalId
+    let internalId: CallSessionInternalId
     
     private let queue = Queue()
     private let account: Account
@@ -439,25 +413,25 @@ public final class OngoingCallContext {
     private var contextRef: Unmanaged<OngoingCallThreadLocalContextHolder>?
     
     private let contextState = Promise<OngoingCallContextState?>(nil)
-    public var state: Signal<OngoingCallContextState?, NoError> {
+    var state: Signal<OngoingCallContextState?, NoError> {
         return self.contextState.get()
     }
     
     private var signalingDataDisposable: Disposable?
     
     private let receptionPromise = Promise<Int32?>(nil)
-    public var reception: Signal<Int32?, NoError> {
+    var reception: Signal<Int32?, NoError> {
         return self.receptionPromise.get()
     }
     
     private let audioSessionDisposable = MetaDisposable()
     private var networkTypeDisposable: Disposable?
     
-    public static var maxLayer: Int32 {
+    static var maxLayer: Int32 {
         return max(OngoingCallThreadLocalContext.maxLayer(), OngoingCallThreadLocalContextWebrtc.maxLayer())
     }
     
-    public static func versions(includeExperimental: Bool) -> [String] {
+    static func versions(includeExperimental: Bool) -> [String] {
         var result: [String] = [OngoingCallThreadLocalContext.version()]
         if includeExperimental {
             result.append(OngoingCallThreadLocalContextWebrtc.version())
@@ -466,7 +440,7 @@ public final class OngoingCallContext {
         return result
     }
     
-    public init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, video: OngoingCallVideoCapturer?, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, logName: String) {
+    init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, video: OngoingCallVideoCapturer?, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, logName: String) {
         let _ = setupLogs
         OngoingCallThreadLocalContext.applyServerConfig(serializedData)
         OngoingCallThreadLocalContextWebrtc.applyServerConfig(serializedData)
@@ -617,7 +591,7 @@ public final class OngoingCallContext {
         }
     }
     
-    public func stop(callId: CallId? = nil, sendDebugLogs: Bool = false, debugLogValue: Promise<String?>) {
+    func stop(callId: CallId? = nil, sendDebugLogs: Bool = false, debugLogValue: Promise<String?>) {
         let account = self.account
         let logPath = self.logPath
         
@@ -654,25 +628,25 @@ public final class OngoingCallContext {
         }
     }
     
-    public func setIsMuted(_ value: Bool) {
+    func setIsMuted(_ value: Bool) {
         self.withContext { context in
             context.nativeSetIsMuted(value)
         }
     }
     
-    public func setEnableVideo(_ value: Bool) {
+    func setEnableVideo(_ value: Bool) {
         self.withContext { context in
             context.nativeSetVideoEnabled(value)
         }
     }
     
-    public func switchVideoCamera() {
+    func switchVideoCamera() {
         self.withContext { context in
             context.nativeSwitchVideoCamera()
         }
     }
     
-    public func debugInfo() -> Signal<(String, String), NoError> {
+    func debugInfo() -> Signal<(String, String), NoError> {
         let poll = Signal<(String, String), NoError> { subscriber in
             self.withContext { context in
                 let version = context.nativeVersion()
@@ -686,7 +660,7 @@ public final class OngoingCallContext {
         return (poll |> then(.complete() |> delay(0.5, queue: Queue.concurrentDefaultQueue()))) |> restart
     }
     
-    public func makeIncomingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (NSView?) -> Void) {
         self.withContext { context in
             if let context = context as? OngoingCallThreadLocalContextWebrtc {
                 context.makeIncomingVideoView(completion)
@@ -696,7 +670,7 @@ public final class OngoingCallContext {
         }
     }
     
-    public func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
         self.withContext { context in
             if let context = context as? OngoingCallThreadLocalContextWebrtc {
                 context.makeOutgoingVideoView(completion)

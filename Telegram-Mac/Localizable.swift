@@ -2047,6 +2047,10 @@ internal final class L10n {
   internal static var chatUnsupportedUpdatedApp: String  { return L10n.tr("Localizable", "Chat.Unsupported.UpdatedApp") }
   /// processing...
   internal static var chatVideoProcessing: String  { return L10n.tr("Localizable", "Chat.Video.Processing") }
+  /// Incoming Video Call
+  internal static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
+  /// Outgoing Video Call
+  internal static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
   /// Chat Background
   internal static var chatWPBackgroundTitle: String  { return L10n.tr("Localizable", "Chat.WP.BackgroundTitle") }
   /// Color
