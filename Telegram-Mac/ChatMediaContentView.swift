@@ -324,6 +324,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                 super.mouseDragged(with: event)
             }
             
+        } else {
+            super.mouseDragged(with: event)
         }
         
     }

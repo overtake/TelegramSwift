@@ -643,6 +643,43 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         activeDragging = false
     }
 
+    @objc func updatePlayerIfNeeded() {
+        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        if accept {
+            photoVideoPlayer?.play()
+        } else {
+            photoVideoPlayer?.pause()
+            photoVideoPlayer?.seek(timestamp: 0)
+        }
+    }
+    
+    
+    override func viewDidMoveToWindow() {
+        updateListeners()
+    }
+    
+    func updateListeners() {
+        if let window = window {
+            NotificationCenter.default.removeObserver(self)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: self)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.frameDidChangeNotification, object: item?.table?.view)
+        } else {
+            removeNotificationListeners()
+        }
+    }
+    
+    func removeNotificationListeners() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    deinit {
+        removeNotificationListeners()
+        requestPeerPhotosDisposable.dispose()
+    }
+    
     
     
     override func layout() {
@@ -799,6 +836,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         borderView._change(opacity: item.viewType.hasBorder ? 1.0 : 0.0, animated: animated)
         
         needsLayout = true
+        updateListeners()
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
@@ -809,7 +847,4 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         return photoView.copy()
     }
     
-    deinit {
-        requestPeerPhotosDisposable.dispose()
-    }
 }

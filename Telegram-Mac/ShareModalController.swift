@@ -416,8 +416,8 @@ class ShareMessageObject : ShareObject {
             peer = author
             messageId = message.forwardInfo?.sourceMessageId ?? message.id
         }
-//            peer = messageMainPeer(message) as? TelegramChannel
-//        }
+        //            peer = messageMainPeer(message) as? TelegramChannel
+        //        }
         if let peer = peer, let address = peer.username {
             switch peer.info {
             case .broadcast:
