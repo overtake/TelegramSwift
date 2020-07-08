@@ -1067,8 +1067,11 @@ class ChatListController : PeersListController {
         super.viewDidAppear(animated)
         
         
-        self.suggestAutoarchiveDisposable.set((getServerProvidedSuggestions(postbox: self.context.account.postbox)
-            |> deliverOnMainQueue).start(next: { [weak self] values in
+        let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
+        
+        
+        
+        self.suggestAutoarchiveDisposable.set(combineLatest(queue: .mainQueue(), isLocked, context.isKeyWindow, getServerProvidedSuggestions(postbox: self.context.account.postbox)).start(next: { [weak self] locked, isKeyWindow, values in
                 guard let strongSelf = self, let window = strongSelf.window, let navigation = strongSelf.navigationController else {
                     return
                 }
@@ -1078,10 +1081,13 @@ class ChatListController : PeersListController {
                 if !values.contains(.autoarchivePopular) {
                     return
                 }
-                if !window.isKeyWindow {
+                if !isKeyWindow {
                     return
                 }
                 if navigation.stackCount > 1 {
+                    return
+                }
+                if locked {
                     return
                 }
                 

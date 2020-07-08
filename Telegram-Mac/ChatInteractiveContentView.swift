@@ -205,6 +205,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayView.mediaPlayer.play()
             } else {
                 autoplayView.mediaPlayer.pause()
+                autoplayView.mediaPlayer.seek(timestamp: 0)
                 autoplayVideoView?.playTimer?.invalidate()
             }
         }

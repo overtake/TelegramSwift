@@ -402,7 +402,7 @@ class ChatSelectText : NSObject {
                     return .invoked
                     
                 } else if chatInteraction.presentation.state == .selecting {
-                    self.runSelector(false, window: window, chatInteraction:chatInteraction)
+                    self.runSelector(false, window: window, chatInteraction: chatInteraction)
                     return .invokeNext
                 }
             }

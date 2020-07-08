@@ -71,6 +71,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
 
     
+    var passlock: Signal<Bool, NoError> {
+        return sharedContextPromise.get() |> mapToSignal {
+            return $0.notificationManager.passlocked
+        }
+    }
+    
     fileprivate var contextValue: AuthorizedApplicationContext?
     private let context = Promise<AuthorizedApplicationContext?>()
     
