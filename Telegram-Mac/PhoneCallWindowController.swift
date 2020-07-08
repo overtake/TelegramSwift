@@ -224,7 +224,7 @@ private final class OutgoingVideoView : Control {
     }
     
     override var mouseDownCanMoveWindow: Bool {
-        return false
+        return isEventLess
     }
 }
 
@@ -784,6 +784,7 @@ private class PhoneCallWindowView : View {
         case .ringing, .requesting, .terminating, .terminated:
             let videoFrame = bounds
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
+            outgoingVideoView.isEventLess = true
         default:
             var point = NSMakePoint(frame.width - 150 - 20, frame.height - 140 - 100)
             if outgoingVideoView.hasBeenMoved {
@@ -791,6 +792,7 @@ private class PhoneCallWindowView : View {
             }
             let videoFrame = NSMakeRect(point.x, point.y, 150, 100)
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
+            outgoingVideoView.isEventLess = false
         }
         
         needsLayout = true
