@@ -228,10 +228,67 @@ private final class OutgoingVideoView : Control {
     }
 }
 
+private final class IncomingVideoView : Control {
+    
+    private var disabledView: NSVisualEffectView?
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        for subview in subviews {
+            subview.frame = bounds
+        }
+    }
+    
+    func setIsPaused(_ paused: Bool, animated: Bool) {
+        if paused {
+            if disabledView == nil {
+                let current = NSVisualEffectView()
+                current.material = .dark
+                current.state = .active
+                current.blendingMode = .withinWindow
+                current.wantsLayer = true
+                current.frame = bounds
+                self.disabledView = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            } else {
+                self.disabledView?.frame = bounds
+            }
+        } else {
+            if let disabledView = self.disabledView {
+                self.disabledView = nil
+                if animated {
+                    disabledView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak disabledView] _ in
+                        disabledView?.removeFromSuperview()
+                    })
+                } else {
+                    disabledView.removeFromSuperview()
+                }
+            }
+        }
+    }
+    
+    
+    override var mouseDownCanMoveWindow: Bool {
+        return true
+    }
+}
+
 private class PhoneCallWindowView : View {
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let controls:View = View()
-    fileprivate let backgroundView:View = View()
+    fileprivate let backgroundView:Control = Control()
     let acceptControl:CallControl = CallControl(frame: .zero)
     let declineControl:CallControl = CallControl(frame: .zero)
     
@@ -282,12 +339,12 @@ private class PhoneCallWindowView : View {
         super.init(frame: frameRect)
         addSubview(imageView)
         
-        addSubview(outgoingVideoView)
         addSubview(backgroundView)
-        
-        backgroundView.isEventLess = true
-//        controls.isEventLess = true
-//        basicControls.isEventLess = true
+        addSubview(outgoingVideoView)
+
+        //backgroundView.isEventLess = true
+        controls.isEventLess = true
+        basicControls.isEventLess = true
 
         outgoingVideoView.layer?.cornerRadius = .cornerRadius
         
@@ -340,7 +397,7 @@ private class PhoneCallWindowView : View {
 
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
-        layer?.cornerRadius = 10
+        //layer?.cornerRadius = 10
         
         acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(60, 60), backgroundColor: .greenUI), animated: false)
         declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: false)
@@ -806,9 +863,12 @@ class PhoneCallWindowController {
         
         let size = NSMakeSize(340, 480)
         if let screen = NSScreen.main {
-            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless], backing: .buffered, defer: true, screen: screen)
+            self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: false, screen: screen)
+            self.window.minSize = size
             self.window.level = .modalPanel
-            self.window.backgroundColor = .clear
+            self.window.isOpaque = false
+//            self.window.contentView?.layer
+//            self.window.backgroundColor = .clear
         } else {
             fatalError("screen not found")
         }
@@ -863,8 +923,8 @@ class PhoneCallWindowController {
         
  
         self.window.contentView = view
-        self.window.backgroundColor = .clear
-        self.window.contentView?.layer?.cornerRadius = 10
+        //self.window.backgroundColor = .clear
+        //self.window.contentView?.layer?.cornerRadius = 10
         self.window.titlebarAppearsTransparent = true
         self.window.isMovableByWindowBackground = true
  
@@ -901,6 +961,10 @@ class PhoneCallWindowController {
             self.window.sendEvent(event)
         })
         
+        self.view.backgroundView.set(handler: { [weak self] _ in
+            self?.view.updateControlsVisibility()
+
+        }, for: .Click)
     }
     
     private func recall() {

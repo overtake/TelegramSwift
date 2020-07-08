@@ -281,17 +281,13 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     open override func hitTest(_ point: NSPoint) -> NSView? {
         if isEventLess {
-            for view in subviews {
-                if NSPointInRect(point, view.frame) {
-                    if let view = view as? View {
-                        if view.isEventLess {
-                            continue
-                        }
-                    }
-                    return view
+            let view = super.hitTest(point)
+            if let view = view as? View {
+                if view.isEventLess || view === self {
+                    return nil
                 }
             }
-            return nil
+            return view
         } else {
             return super.hitTest(point)
         }
