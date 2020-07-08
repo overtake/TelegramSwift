@@ -48,7 +48,7 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
     bool _isActiveValue;
     bool _inForegroundValue;
     bool _isPaused;
-
+    int _skippedFrame;
 }
 
 @end
@@ -63,7 +63,7 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
         _isActiveValue = true;
         _inForegroundValue = true;
         _isPaused = false;
-        
+        _skippedFrame = 0;
 
         if (![self setupCaptureSession:[[AVCaptureSession alloc] init]]) {
             return nil;
@@ -107,7 +107,7 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
 - (void)setIsEnabled:(bool)isEnabled {
     BOOL updated = _isPaused != !isEnabled;
     _isPaused = !isEnabled;
-    
+    _skippedFrame = 0;
     if (updated) {
         if (_isPaused) {
             [RTCDispatcher
@@ -219,9 +219,10 @@ static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr
                                                              rotation:_rotation
                                                           timeStampNs:timeStampNs];
     
-    if (!_isPaused) {
+    if (!_isPaused && _skippedFrame > 15) {
         getObjCVideoSource(_source)->OnCapturedFrame(videoFrame);
     }
+    _skippedFrame = MIN(_skippedFrame + 1, 16);
 }
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
