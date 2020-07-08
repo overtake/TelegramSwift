@@ -277,6 +277,11 @@ final class AccountContext {
     }
     
     
+    private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+    
+    var isKeyWindow: Signal<Bool, NoError> {
+        return isKeyWindowValue.get() |> deliverOnMainQueue
+    }
     
     private let _autoplayMedia: Atomic<AutoplayMediaPreferences> = Atomic(value: AutoplayMediaPreferences.defaultSettings)
     
@@ -401,8 +406,14 @@ final class AccountContext {
         }))
         
         
+        NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
+        NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
+        
     }
     
+    @objc private func updateKeyWindow() {
+        self.isKeyWindowValue.set(window.isKeyWindow)
+    }
     
     private func updateTheme(_ update: ApplyThemeUpdate) {
         switch update {
@@ -460,6 +471,7 @@ final class AccountContext {
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
         preloadGifsDisposable.dispose()
+        NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
         self.diceCache.cleanup()

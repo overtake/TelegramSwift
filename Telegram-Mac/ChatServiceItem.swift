@@ -13,6 +13,8 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 class ChatServiceItem: ChatRowItem {
+    
+    static var photoSize = NSMakeSize(140, 140)
 
     let text:TextViewLayout
     private(set) var imageArguments:TransformImageArguments?
@@ -122,7 +124,7 @@ class ChatServiceItem: ChatRowItem {
                 case let .photoUpdated(image):
                     if let _ = image {
                         let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedPhoto) : tr(L10n.chatServiceGroupUpdatedPhoto(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
-                        let size = NSMakeSize(70, 70)
+                        let size = ChatServiceItem.photoSize
                         imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                     } else {
                         let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelRemovedPhoto) : tr(L10n.chatServiceGroupRemovedPhoto(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -378,7 +380,6 @@ class ChatServiceRowView: TableRowView {
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
-
     
     required init(frame frameRect: NSRect) {
         textView = TextView()
@@ -414,7 +415,6 @@ class ChatServiceRowView: TableRowView {
                 imageView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
                 self.imageView?.set(arguments: imageArguments)
                 self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
-
             }
             
         }
@@ -428,6 +428,43 @@ class ChatServiceRowView: TableRowView {
             }
         }
     }
+    
+    @objc func updatePlayerIfNeeded() {
+        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        if accept {
+            photoVideoPlayer?.play()
+        } else {
+            photoVideoPlayer?.pause()
+            photoVideoPlayer?.seek(timestamp: 0)
+        }
+    }
+    
+    
+    override func viewDidMoveToWindow() {
+        updateListeners()
+    }
+    
+    func updateListeners() {
+        if let window = window {
+            NotificationCenter.default.removeObserver(self)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: self)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.frameDidChangeNotification, object: item?.table?.view)
+        } else {
+            removeNotificationListeners()
+        }
+    }
+    
+    func removeNotificationListeners() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    deinit {
+        removeNotificationListeners()
+    }
+    
     
     override func mouseUp(with event: NSEvent) {
         if let imageView = imageView, imageView._mouseInside() {
@@ -443,12 +480,14 @@ class ChatServiceRowView: TableRowView {
         return imageView ?? self
     }
     
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.disableBackgroundDrawing = true
 
         
         if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
+            
             if let image = item.image {
                 if imageView == nil {
                     self.imageView = TransformImageView()
@@ -468,11 +507,11 @@ class ChatServiceRowView: TableRowView {
                 if let video = image.videoRepresentations.last {
                     if self.photoVideoView == nil {
                         self.photoVideoView = MediaPlayerView()
-                        self.photoVideoView!.layer?.cornerRadius = 70 / 2
+                        self.photoVideoView!.layer?.cornerRadius = ChatServiceItem.photoSize.width / 2
                         self.addSubview(self.photoVideoView!)
                         self.photoVideoView!.isEventLess = true
                     }
-                    self.photoVideoView!.frame = NSMakeRect(0, 0, 70, 70)
+                    self.photoVideoView!.frame = NSMakeRect(0, 0, ChatServiceItem.photoSize.width, ChatServiceItem.photoSize.height)
                     
                     let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                     
@@ -497,6 +536,7 @@ class ChatServiceRowView: TableRowView {
                 imageView = nil
             }
             self.needsLayout = true
+            updateListeners()
         }
     }
     

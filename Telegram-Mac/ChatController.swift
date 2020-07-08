@@ -1051,7 +1051,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             chatInteraction.focusMessageId(nil, reply, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
             historyState = historyState.withRemovingReplies(max: reply)
         } else {
-            let laterId = previousView.with({$0?.originalView?.laterId })
+            let laterId = previousView.with { $0?.originalView?.laterId }
             if laterId != nil {
                 setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), count: requestCount, animated: true))
             } else {
@@ -2354,7 +2354,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: context.window, info: L10n.appMaxFileSize)
+                                alert(for: context.window, info: L10n.appMaxFileSize1)
                             } else {
                                 self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
                             }
@@ -2387,7 +2387,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: context.window, info: L10n.appMaxFileSize)
+                                alert(for: context.window, info: L10n.appMaxFileSize1)
                             } else {
                                 self?.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true, nil)
                             }
