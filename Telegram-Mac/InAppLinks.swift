@@ -225,7 +225,7 @@ func copyContextText(from type: LinkType) -> String {
 func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     
     switch inapp {
-    case let .external(link,needConfirm):
+    case let .external(link, needConfirm):
         var url:String = link.trimmed
         
         var reversedUrl = String(url.reversed())
