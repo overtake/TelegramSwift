@@ -789,7 +789,7 @@ class LayoutAccountController : TableViewController {
        // self.rightBarView.border = [.Right]
         let context = self.context
         genericView.getBackgroundColor = {
-            return .clear//            theme.colors.background
+            return .clear
         }
         
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in

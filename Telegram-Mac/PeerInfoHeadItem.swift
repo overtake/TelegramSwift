@@ -563,7 +563,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     private let actionsView = View()
     private var photoEditableView: PeerInfoPhotoEditableView?
     
-    private let requestPeerPhotosDisposable = MetaDisposable()
     
     private var activeDragging: Bool = false {
         didSet {
@@ -677,7 +676,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     deinit {
         removeNotificationListeners()
-        requestPeerPhotosDisposable.dispose()
     }
     
     
