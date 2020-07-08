@@ -169,7 +169,7 @@ internal final class L10n {
   internal static var alertHideNewChatsHeader: String  { return L10n.tr("Localizable", "Alert.HideNewChats.Header") }
   /// Go to Settings
   internal static var alertHideNewChatsOK: String  { return L10n.tr("Localizable", "Alert.HideNewChats.OK") }
-  /// Are you receiving lots of new chats from users who are not in your Contact List. Do you want to have such chats automatically muted and archived?
+  /// You are receiving lots of new chats from users who are not in your Contact List. Do you want to have such chats automatically muted and archived?
   internal static var alertHideNewChatsText: String  { return L10n.tr("Localizable", "Alert.HideNewChats.Text") }
   /// Unfortunately, you can't access this message. You are not a member of the chat where it was posted.
   internal static var alertPrivateChannelAccessError: String  { return L10n.tr("Localizable", "Alert.PrivateChannel.AccessError") }
@@ -211,8 +211,8 @@ internal final class L10n {
   }
   /// An error occurred while sending the previous message. Would you like to try resending it?
   internal static var alertSendErrorText: String  { return L10n.tr("Localizable", "Alert.SendError.Text") }
-  /// Maximum file size is 1.5 GB
-  internal static var appMaxFileSize: String  { return L10n.tr("Localizable", "App.MaxFileSize") }
+  /// Maximum file size is 2.0 GB
+  internal static var appMaxFileSize1: String  { return L10n.tr("Localizable", "App.MaxFileSize1") }
   /// Hold to record video. Click to switch to audio
   internal static var appTooltipVideoRecord: String  { return L10n.tr("Localizable", "App.Tooltip.VideoRecord") }
   /// Hold to record audio. Click to switch to video
@@ -4324,7 +4324,7 @@ internal final class L10n {
   /// Update photo
   internal static var peerCreatePeerContextUpdatePhoto: String  { return L10n.tr("Localizable", "Peer.CreatePeer.Context.UpdatePhoto") }
   /// You can send and receive files of any type up to 1.5 GB each and access them anywhere.
-  internal static var peerMediaSharedFilesEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedFilesEmptyList") }
+  internal static var peerMediaSharedFilesEmptyList1: String  { return L10n.tr("Localizable", "Peer.Media.SharedFilesEmptyList1") }
   /// All links shared in this chat will appear here.
   internal static var peerMediaSharedLinksEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedLinksEmptyList") }
   /// Share photos and videos in this chat - or this paperclip stays unhappy.

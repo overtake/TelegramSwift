@@ -59,6 +59,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     private var _lockedValue:LockNotificationsData = LockNotificationsData()
     private let _passlock = Promise<Bool>()
 
+    var passlocked: Signal<Bool, NoError> {
+        return _passlock.get()
+    }
+
     
     private func updateLocked(_ f:(LockNotificationsData) -> LockNotificationsData) {
         _lockedValue = f(_lockedValue)
