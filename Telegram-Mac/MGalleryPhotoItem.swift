@@ -133,10 +133,19 @@ class MGalleryPhotoItem: MGalleryItem {
                 
                 let (size, orientation) = data
                 return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
-                    |> map { transform in
+                    |> map { [weak self] transform in
                         
-                        let size = NSMakeSize(ceil(size.width * magnify), ceil(size.height * magnify))
+                        var size = NSMakeSize(ceil(size.width * magnify), ceil(size.height * magnify))
                         let image = transform(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+                        
+                        if let image = image, orientation == nil {
+                            let newSize = image.size.aspectFitted(size)
+                            if newSize != size {
+                                size = newSize
+                                self?.modifiedSize = image.size
+                            }
+                        }
+                        
                         if let orientation = orientation {
                             let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
                             if let transformed = transformed {
