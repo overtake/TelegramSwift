@@ -1801,6 +1801,8 @@ internal final class L10n {
   internal static func chatServiceChannelUpdatedTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedTitle", p1)
   }
+  /// channel video updated
+  internal static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
   /// %@ invited %@
   internal static func chatServiceGroupAddedMembers(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers", p1, p2)
@@ -1846,6 +1848,10 @@ internal final class L10n {
   /// %@ changed the group name to "%@"
   internal static func chatServiceGroupUpdatedTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedTitle", p1, p2)
+  }
+  /// %@ updated group video
+  internal static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
   }
   /// %@ disabled the self-destruct timer
   internal static func chatServiceSecretChatDisabledTimer(_ p1: String) -> String {
