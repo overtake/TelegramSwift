@@ -100,7 +100,8 @@ class Sender: NSObject {
             
             let options = NSMutableDictionary()
             options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
-            
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+
             let colorQuality: Float = 0.3
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
             
@@ -131,11 +132,13 @@ class Sender: NSObject {
             
             let colorQuality: Float = 0.7
             options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-            
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+
             let sourceOptions = NSMutableDictionary()
             sourceOptions.setValue(320 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
             sourceOptions.setObject(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as NSString)
-            
+            sourceOptions.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+
             if let imageSource = CGImageSourceCreateWithData(thumbData as CFData, sourceOptions) {
                 let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, sourceOptions)
                 if let image = image {

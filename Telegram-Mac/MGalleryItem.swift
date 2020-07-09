@@ -353,7 +353,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     
     var disableAnimations: Bool = false
     
-    private(set) var modifiedSize: NSSize? = nil
+    var modifiedSize: NSSize? = nil
     
     private(set) var magnifyValue:CGFloat = 1.0
     var stableId: AnyHashable {
@@ -466,7 +466,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
 //                    }
 //                } else {
                     var size = magnify.contentSize
-                    if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, !first {
+                    if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, let modifiedSize = self.modifiedSize {
                       //  if magnify.magnify > 1 {
                         if value.rotation == nil {
                             size = value.size?.aspectFitted(size) ?? size
