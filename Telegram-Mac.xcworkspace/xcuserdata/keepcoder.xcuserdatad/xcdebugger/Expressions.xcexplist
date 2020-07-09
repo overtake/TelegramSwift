@@ -44,6 +44,14 @@
          contextName = "closure #6 in DiceCache.init(postbox:network:):DiceCache.swift">
       </ContextState>
       <ContextState
+         contextName = "MagnifyView.contentSize.didset:MagnifyView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.contentSize">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TableView.merge(with:):TableView.swift">
       </ContextState>
       <ContextState
