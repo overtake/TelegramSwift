@@ -311,8 +311,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 return L10n.chatServiceSecretChatDisabledTimer(authorName)
             }
         case let .photoUpdated(image: image):
-            if let _ = image {
-                return peer.isChannel ? L10n.chatServiceChannelUpdatedPhoto : L10n.chatServiceGroupUpdatedPhoto(authorName)
+            if let image = image {
+                let text: String
+                if image.videoRepresentations.isEmpty {
+                    text = peer.isChannel ? L10n.chatServiceChannelUpdatedPhoto : L10n.chatServiceGroupUpdatedPhoto(authorName)
+                } else {
+                    text = peer.isChannel ? L10n.chatServiceChannelUpdatedVideo : L10n.chatServiceGroupUpdatedVideo(authorName)
+                }
+                return text
             } else {
                 return peer.isChannel ? L10n.chatServiceChannelRemovedPhoto : L10n.chatServiceGroupRemovedPhoto(authorName)
             }
