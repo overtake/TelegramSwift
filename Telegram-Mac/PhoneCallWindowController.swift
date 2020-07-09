@@ -166,6 +166,7 @@ private final class OutgoingVideoView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
+        self.layer?.cornerRadius = .cornerRadius
     }
     
     required init?(coder: NSCoder) {
@@ -187,7 +188,6 @@ private final class OutgoingVideoView : Control {
                 current.state = .active
                 current.blendingMode = .withinWindow
                 current.wantsLayer = true
-                current.layer?.cornerRadius = .cornerRadius
                 current.frame = bounds
                 self.disabledView = current
                 addSubview(current, positioned: .below, relativeTo: overlay)
@@ -234,6 +234,7 @@ private final class IncomingVideoView : Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.layer?.cornerRadius = .cornerRadius
     }
     
     required init?(coder: NSCoder) {
@@ -346,7 +347,6 @@ private class PhoneCallWindowView : View {
         controls.isEventLess = true
         basicControls.isEventLess = true
 
-        outgoingVideoView.layer?.cornerRadius = .cornerRadius
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 4
@@ -397,7 +397,6 @@ private class PhoneCallWindowView : View {
 
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
-        //layer?.cornerRadius = 10
         
         acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(60, 60), backgroundColor: .greenUI), animated: false)
         declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: false)
