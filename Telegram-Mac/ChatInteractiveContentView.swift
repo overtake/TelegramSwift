@@ -522,7 +522,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
                 self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
-                   //     cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }
                 })
             }
