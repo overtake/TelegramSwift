@@ -386,7 +386,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             options[kCGImageSourceShouldCache as NSString] = false as NSNumber
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
