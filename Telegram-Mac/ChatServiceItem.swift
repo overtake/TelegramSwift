@@ -122,12 +122,20 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                 case let .photoUpdated(image):
-                    if let _ = image {
-                        let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedPhoto) : tr(L10n.chatServiceGroupUpdatedPhoto(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                    if let image = image {
+                        
+                        let text: String
+                        if image.videoRepresentations.isEmpty {
+                            text = peer.isChannel ? L10n.chatServiceChannelUpdatedPhoto : L10n.chatServiceGroupUpdatedPhoto(authorName)
+                        } else {
+                            text = peer.isChannel ? L10n.chatServiceChannelUpdatedVideo : L10n.chatServiceGroupUpdatedVideo(authorName)
+                        }
+                        
+                        let _ =  attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                         let size = ChatServiceItem.photoSize
                         imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                     } else {
-                        let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelRemovedPhoto) : tr(L10n.chatServiceGroupRemovedPhoto(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let _ =  attributedString.append(string: peer.isChannel ? L10n.chatServiceChannelRemovedPhoto : L10n.chatServiceGroupRemovedPhoto(authorName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         
                     }
                     if let authorId = authorId {
