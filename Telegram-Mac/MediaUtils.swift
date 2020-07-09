@@ -287,7 +287,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             
             let options = NSMutableDictionary()
             
-            options.setValue(max(fittedSize.width * scale, fittedSize.height * scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+            options.setValue(max(fittedSize.width, fittedSize.height) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
             options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
@@ -365,8 +365,8 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
                     options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
 
-                    //   options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                       options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     }
                     
@@ -386,7 +386,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             options[kCGImageSourceShouldCache as NSString] = false as NSNumber
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
@@ -2442,11 +2442,14 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
             
             if let fullSizeData = data.fullSizeData {
                 let options = NSMutableDictionary()
+               // options.setValue(max(fittedSize.width * 3, fittedSize.height * 3) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
+                options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
-                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+
                 if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options) {
-                    if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
+                    if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         fullSizeImage = image
                     } else if let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
                         fullSizeImage = image
@@ -2455,11 +2458,15 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
             }
             
             let options = NSMutableDictionary()
-            options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+          //  options.setValue(max(fittedSize.width * 3, fittedSize.height * 3) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+            options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
+            options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
+            options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
             
             var thumbnailImage: CGImage?
-            if let thumbnailData = data.thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options) {
+            if let thumbnailData = data.thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options) {
                 thumbnailImage = image
             }
             
