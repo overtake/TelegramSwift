@@ -25,6 +25,62 @@ enum CallTone {
 }
 
 
+enum CallControllerStatusValue: Equatable {
+    case text(String)
+    case timer(Double)
+}
+
+
+extension CallState.State {
+    func statusText(_ accountPeer: Peer?) -> CallControllerStatusValue {
+        let statusValue: CallControllerStatusValue
+        switch self {
+        case .waiting, .connecting:
+            statusValue = .text(L10n.callStatusConnecting)
+        case let .requesting(ringing):
+            if ringing {
+                statusValue = .text(L10n.callStatusRinging)
+            } else {
+                statusValue = .text(L10n.callStatusRequesting)
+            }
+        case .terminating:
+            statusValue = .text(L10n.callStatusEnded)
+        case let .terminated(_, reason, _):
+            if let reason = reason {
+                switch reason {
+                case let .ended(type):
+                    switch type {
+                    case .busy:
+                        statusValue = .text(L10n.callStatusBusy)
+                    case .hungUp, .missed:
+                        statusValue = .text(L10n.callStatusEnded)
+                    }
+                case .error:
+                    statusValue = .text(L10n.callStatusFailed)
+                }
+            } else {
+                statusValue = .text(L10n.callStatusEnded)
+            }
+        case .ringing:
+            if let accountPeer = accountPeer {
+                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle))
+            } else {
+                statusValue = .text(L10n.callStatusCalling)
+            }
+        case .active(let timestamp, _, _), .reconnecting(let timestamp, _, _):
+            if case .reconnecting = self {
+                statusValue = .text(L10n.callStatusConnecting)
+            } else {
+                statusValue = .timer(timestamp)
+            }
+        }
+        return statusValue
+    }
+}
+
+
+
+
 
 
 public struct CallAuxiliaryServer {
