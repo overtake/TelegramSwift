@@ -188,6 +188,8 @@ private final class OutgoingVideoView : Control {
                 current.state = .active
                 current.blendingMode = .withinWindow
                 current.wantsLayer = true
+                current.layer?.cornerRadius = 3
+
                 current.frame = bounds
                 self.disabledView = current
                 addSubview(current, positioned: .below, relativeTo: overlay)
@@ -231,6 +233,16 @@ private final class OutgoingVideoView : Control {
 private final class IncomingVideoView : Control {
     
     private var disabledView: NSVisualEffectView?
+    fileprivate var videoView: NSView? {
+        didSet {
+            if let videoView = oldValue {
+                videoView.removeFromSuperview()
+            } else if let videoView = videoView {
+                addSubview(videoView, positioned: .below, relativeTo: self.subviews.first)
+            }
+            needsLayout = true
+        }
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -246,9 +258,16 @@ private final class IncomingVideoView : Control {
         for subview in subviews {
             subview.frame = bounds
         }
+        
+        if let textView = disabledView?.subviews.first as? TextView {
+            let layout = textView.layout
+            layout?.measure(width: frame.width - 40)
+            textView.update(layout)
+            textView.center()
+        }
     }
     
-    func setIsPaused(_ paused: Bool, animated: Bool) {
+    func setIsPaused(_ paused: Bool, peer: TelegramUser?, animated: Bool) {
         if paused {
             if disabledView == nil {
                 let current = NSVisualEffectView()
@@ -257,6 +276,8 @@ private final class IncomingVideoView : Control {
                 current.blendingMode = .withinWindow
                 current.wantsLayer = true
                 current.frame = bounds
+                
+                
                 self.disabledView = current
                 addSubview(current)
                 
@@ -266,6 +287,16 @@ private final class IncomingVideoView : Control {
             } else {
                 self.disabledView?.frame = bounds
             }
+            self.disabledView?.removeAllSubviews()
+            if let peer = peer {
+                let textView = TextView()
+                let layout = TextViewLayout(.initialize(string: L10n.callVideoPaused(peer.compactDisplayTitle), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
+                textView.userInteractionEnabled = false
+                textView.isSelectable = false
+                textView.update(layout)
+                self.disabledView?.addSubview(textView)
+            }
+            
         } else {
             if let disabledView = self.disabledView {
                 self.disabledView = nil
@@ -278,6 +309,7 @@ private final class IncomingVideoView : Control {
                 }
             }
         }
+        needsLayout = true
     }
     
     
@@ -326,7 +358,7 @@ private class PhoneCallWindowView : View {
     
     private let secureTextView:TextView = TextView()
     
-    fileprivate var incomingVideoView: NSView?
+    fileprivate var incomingVideoView: IncomingVideoView?
     fileprivate var outgoingVideoView: OutgoingVideoView = OutgoingVideoView(frame: NSMakeRect(0, 0, 150, 100))
     private var outgoingVideoViewRequested: Bool = false
     private var incomingVideoViewRequested: Bool = false
@@ -335,6 +367,9 @@ private class PhoneCallWindowView : View {
     private var basicControls: View = View()
     
     private var state: CallState?
+    
+    private let fetching = MetaDisposable()
+
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -350,7 +385,7 @@ private class PhoneCallWindowView : View {
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 4
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.15)
         shadow.shadowOffset = NSMakeSize(0, 0)
         outgoingVideoView.shadow = shadow
         
@@ -437,15 +472,15 @@ private class PhoneCallWindowView : View {
             
             var point = self.outgoingVideoView.frame.origin
             
-            if self.outgoingVideoView.frame.maxX > self.frame.width {
+            if self.outgoingVideoView.frame.maxX > self.frame.width - 20 {
                 point.x = self.frame.width - self.outgoingVideoView.frame.width - 20
-            } else if self.outgoingVideoView.frame.minX < 0 {
+            } else if self.outgoingVideoView.frame.minX - 20 < 0 {
                 point.x = 20
             }
             
-            if self.outgoingVideoView.frame.maxY > self.frame.height {
+            if self.outgoingVideoView.frame.maxY > self.frame.height - 20 {
                 point.y = self.frame.height - self.outgoingVideoView.frame.height - 20
-            } else if self.outgoingVideoView.frame.minY < 0 {
+            } else if self.outgoingVideoView.frame.minY - 20 < 0 {
                 point.y = 20
             }
             
@@ -466,6 +501,7 @@ private class PhoneCallWindowView : View {
         return floorToScreenPixels(backingScaleFactor, (controls.frame.width - control.frame.width) / 2)
     }
     
+    private var previousFrame: NSRect = .zero
     
     override func layout() {
         super.layout()
@@ -501,6 +537,15 @@ private class PhoneCallWindowView : View {
             if outgoingVideoView.hasBeenMoved {
                 point = outgoingVideoView.frame.origin
             }
+            
+            if previousFrame.size != frame.size {
+                point.x += (frame.width - outgoingVideoView.frame.minX) - (previousFrame.width - outgoingVideoView.frame.minX)
+                point.y += (frame.height - outgoingVideoView.frame.minY) - (previousFrame.height - outgoingVideoView.frame.minY)
+                
+                point.x = max(min(frame.width - self.outgoingVideoView.frame.width - 20, point.x), 20)
+                point.y = max(min(frame.height - self.outgoingVideoView.frame.height - 20, point.y), 20)
+            }
+            
             let videoFrame = NSMakeRect(point.x, point.y, 150, 100)
             outgoingVideoView.frame = videoFrame
         }
@@ -556,7 +601,7 @@ private class PhoneCallWindowView : View {
             break
         }
       
-        
+        previousFrame = self.frame
     }
     
     var activeControlsViews:[CallControl] {
@@ -626,7 +671,7 @@ private class PhoneCallWindowView : View {
 
     }
     
-    func updateState(_ state:CallState, session:PCallSession, accountPeer: Peer?, animated: Bool) {
+    func updateState(_ state:CallState, session:PCallSession, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         
         let inputCameraIsActive = (state.videoState == .activeOutgoing || state.videoState == .active) && state.isOutgoingVideoPaused
         
@@ -696,9 +741,11 @@ private class PhoneCallWindowView : View {
                 self.incomingVideoViewRequested = true
                 session.makeIncomingVideoView(completion: { [weak self] view in
                     if let view = view, let `self` = self {
-                        view.frame = self.imageView.frame
-                        self.incomingVideoView = view
-                        self.imageView.addSubview(view)
+                        if self.incomingVideoView == nil {
+                            self.incomingVideoView = IncomingVideoView(frame: self.imageView.frame)
+                            self.imageView.addSubview(self.incomingVideoView!)
+                        }
+                        self.incomingVideoView?.videoView = view
                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         self.needsLayout = true
                     }
@@ -725,8 +772,6 @@ private class PhoneCallWindowView : View {
         default:
             break
         }
-
-        
         
         switch state.state {
         case .active, .connecting, .requesting:
@@ -779,6 +824,9 @@ private class PhoneCallWindowView : View {
         
         outgoingVideoView.setIsPaused(state.isOutgoingVideoPaused, animated: animated)
         
+        incomingVideoView?.setIsPaused(state.remoteVideoState == .inactive, peer: peer, animated: animated)
+
+        
         switch state.state {
         case .ringing, .requesting, .terminating, .terminated:
             let videoFrame = bounds
@@ -793,15 +841,44 @@ private class PhoneCallWindowView : View {
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
             outgoingVideoView.isEventLess = false
         }
+        if let peer = peer {
+            updatePeerUI(peer, session: session)
+        }
         
         needsLayout = true
     }
+    
+    
+    private func updatePeerUI(_ user:TelegramUser, session: PCallSession) {
+        
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        
+        if let dimension = user.profileImageRepresentations.last?.dimensions.size {
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: self.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
+            self.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), peer: user, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
+                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+            })
+            self.imageView.set(arguments: arguments)
+            
+            if let reference = PeerReference(user) {
+                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
+            }
+            
+        } else {
+            self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user) |> map { TransformImageResult($0, true) })
+        }
+        self.updateName(user.displayTitle)
+        
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
+        fetching.dispose()
         statusTimer?.invalidate()
     }
 }
@@ -818,13 +895,7 @@ class PhoneCallWindowController {
     var first:Bool = true
 
     private func sessionDidUpdated() {
-        peerDisposable.set((session.account.viewTracker.peerView(session.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
-            if let strongSelf = self {
-                if let user = peerView.peers[peerView.peerId] as? TelegramUser {
-                    strongSelf.updatePeerUI(user)
-                }
-            }
-        }))
+
         
         let account = session.account
         
@@ -836,9 +907,13 @@ class PhoneCallWindowController {
             }
         }
         
-        stateDisposable.set(combineLatest(queue: .mainQueue(), session.state, accountPeer).start(next: { [weak self] state, accountPeer in
+        let peer = session.account.viewTracker.peerView(session.peerId) |> map {
+            return $0.peers[$0.peerId] as? TelegramUser
+        }
+        
+        stateDisposable.set(combineLatest(queue: .mainQueue(), session.state, accountPeer, peer).start(next: { [weak self] state, accountPeer, peer in
             if let strongSelf = self {
-                strongSelf.applyState(state, session: strongSelf.session!, accountPeer: accountPeer, animated: !strongSelf.first)
+                strongSelf.applyState(state, session: strongSelf.session!, accountPeer: accountPeer, peer: peer, animated: !strongSelf.first)
                 strongSelf.first = false
             }
         }))
@@ -850,9 +925,7 @@ class PhoneCallWindowController {
     private let stateDisposable = MetaDisposable()
     private let durationDisposable = MetaDisposable()
     private let recallDisposable = MetaDisposable()
-    private let peerDisposable = MetaDisposable()
     private let keyStateDisposable = MetaDisposable()
-    private let fetching = MetaDisposable()
     
     
     fileprivate var eventLocalMonitor: Any?
@@ -868,8 +941,6 @@ class PhoneCallWindowController {
             self.window.minSize = size
             self.window.level = .modalPanel
             self.window.isOpaque = false
-//            self.window.contentView?.layer
-//            self.window.backgroundColor = .clear
         } else {
             fatalError("screen not found")
         }
@@ -997,9 +1068,9 @@ class PhoneCallWindowController {
         }))
     }
     
-    private func applyState(_ state:CallState, session: PCallSession, accountPeer: Peer?, animated: Bool) {
+    private func applyState(_ state:CallState, session: PCallSession, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         self.state = state
-        view.updateState(state, session: session, accountPeer: accountPeer, animated: animated)
+        view.updateState(state, session: session, accountPeer: accountPeer, peer: peer, animated: animated)
         switch state.state {
         case .ringing:
             break
@@ -1052,9 +1123,7 @@ class PhoneCallWindowController {
         stateDisposable.dispose()
         durationDisposable.dispose()
         recallDisposable.dispose()
-        peerDisposable.dispose()
         keyStateDisposable.dispose()
-        fetching.dispose()
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
@@ -1068,48 +1137,10 @@ class PhoneCallWindowController {
     }
     
     func show() {
-        var first: Bool = true
-        disposable.set((session.account.postbox.loadedPeerWithId(session.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
-            if let strongSelf = self {
-                strongSelf.updatePeerUI(peer as! TelegramUser)
-                
-                if first {
-                    first = false
-                    strongSelf.window.makeKeyAndOrderFront(self)
-                    strongSelf.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
-                    strongSelf.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
-                }
-            }
-        }))
-        
+        self.window.makeKeyAndOrderFront(self)
+        self.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
+        self.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
     }
-    
-    private func updatePeerUI(_ user:TelegramUser) {
-        
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-        
-
-        if let dimension = user.profileImageRepresentations.last?.dimensions.size {
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: view.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
-            view.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: true)
-            view.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), peer: user, scale: view.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
-                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
-            })
-            view.imageView.set(arguments: arguments)
-
-            if let reference = PeerReference(user) {
-                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
-            }
-            
-        } else {
-            view.imageView.setSignal(signal: generateEmptyRoundAvatar(view.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user) |> map { TransformImageResult($0, true) })
-        }
-        
-       
-        view.updateName(user.displayTitle)
-        
-    }
-    
 }
 
 private var controller:PhoneCallWindowController?
