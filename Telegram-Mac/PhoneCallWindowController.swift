@@ -13,13 +13,6 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
-enum CallControllerStatusValue: Equatable {
-    case text(String)
-    case timer(Double)
-}
-
-
-
 extension CallSessionTerminationReason {
     var recall: Bool {
         let recall:Bool
@@ -326,15 +319,13 @@ private class PhoneCallWindowView : View {
     let declineControl:CallControl = CallControl(frame: .zero)
     
     
-    private var statusTimer: SwiftSignalKit.Timer?
-    
-
-    
     let b_Mute:CallControl = CallControl(frame: .zero)
     let b_VideoCamera:CallControl = CallControl(frame: .zero)
 
     let muteControl:ImageButton = ImageButton()
     private var textNameView: NSTextField = NSTextField()
+    
+    private var statusTimer: SwiftSignalKit.Timer?
     
     var status: CallControllerStatusValue = .text("") {
         didSet {
@@ -385,7 +376,7 @@ private class PhoneCallWindowView : View {
         
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 4
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.15)
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.6)
         shadow.shadowOffset = NSMakeSize(0, 0)
         outgoingVideoView.shadow = shadow
         
@@ -398,7 +389,7 @@ private class PhoneCallWindowView : View {
         
         addSubview(secureTextView)
     
-        backgroundView.backgroundColor = NSColor(0x000000, 0.3)
+        backgroundView.backgroundColor = NSColor(0x000000, 0)
         backgroundView.frame = NSMakeRect(0, 0, frameRect.width, frameRect.height)
         
 
@@ -680,50 +671,7 @@ private class PhoneCallWindowView : View {
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
         self.state = state
-        
-        let statusValue: CallControllerStatusValue
-        switch state.state {
-        case .waiting, .connecting:
-            statusValue = .text(L10n.callStatusConnecting)
-        case let .requesting(ringing):
-            if ringing {
-                statusValue = .text(L10n.callStatusRinging)
-            } else {
-                statusValue = .text(L10n.callStatusRequesting)
-            }
-        case .terminating:
-            statusValue = .text(L10n.callStatusEnded)
-        case let .terminated(_, reason, _):
-            if let reason = reason {
-                switch reason {
-                case let .ended(type):
-                    switch type {
-                    case .busy:
-                        statusValue = .text(L10n.callStatusBusy)
-                    case .hungUp, .missed:
-                        statusValue = .text(L10n.callStatusEnded)
-                    }
-                case .error:
-                    statusValue = .text(L10n.callStatusFailed)
-                }
-            } else {
-                statusValue = .text(L10n.callStatusEnded)
-            }
-        case .ringing:
-            if let accountPeer = accountPeer {
-                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle))
-            } else {
-                statusValue = .text(L10n.callStatusCalling)
-            }
-        case .active(let timestamp, _, _), .reconnecting(let timestamp, _, _):
-            if case .reconnecting = state.state {
-                statusValue = .text(L10n.callStatusConnecting)
-            } else {
-                statusValue = .timer(timestamp)
-            }
-        }
-
-        self.status = statusValue
+        self.status = state.state.statusText(accountPeer)
         
         switch state.state {
         case let .active(_, _, visual):
@@ -928,6 +876,9 @@ class PhoneCallWindowController {
     private let keyStateDisposable = MetaDisposable()
     
     
+    private let closeDisposable = MetaDisposable()
+
+    
     fileprivate var eventLocalMonitor: Any?
     fileprivate var eventGlobalMonitor: Any?
 
@@ -982,12 +933,7 @@ class PhoneCallWindowController {
         
         view.declineControl.set(handler: { [weak self] _ in
             if let state = self?.state {
-                switch state.state {
-                case .terminated:
-                    closeCall()
-                default:
-                    self?.session.hangUpCurrentCall()
-                }
+                self?.session.hangUpCurrentCall()
             } else {
                 closeCall()
             }
@@ -1037,6 +983,16 @@ class PhoneCallWindowController {
             self?.view.updateControlsVisibility()
 
         }, for: .Click)
+        
+        let signal = session.canBeRemoved |> deliverOnMainQueue
+        
+        closeDisposable.set(signal.start(next: { value in
+            if value {
+                closeCall()
+            }
+        }))
+        
+        window.animationBehavior = .utilityWindow
     }
     
     private func recall() {
@@ -1080,20 +1036,13 @@ class PhoneCallWindowController {
             break
         case .active:
             session.sharedContext.showCallHeader(with: session)
-            
         case .terminating:
             break
         case .terminated(_, let error, _):
             switch error {
             case .ended(let reason)?:
-                switch reason {
-                case .hungUp, .missed:
-                    closeCall(1.0)
-                default:
-                    break
-                }
+                break
             case let .error(error)?:
-                closeCall(1.0)
                 disposable.set((session.account.postbox.loadedPeerWithId(session.peerId) |> deliverOnMainQueue).start(next: { peer in
                     switch error {
                     case .privacyRestricted:
@@ -1124,6 +1073,7 @@ class PhoneCallWindowController {
         durationDisposable.dispose()
         recallDisposable.dispose()
         keyStateDisposable.dispose()
+        closeDisposable.dispose()
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
@@ -1160,17 +1110,11 @@ func showPhoneCallWindow(_ session:PCallSession) {
 }
 private let closeDisposable = MetaDisposable()
 
-func closeCall(_ timeout:TimeInterval? = nil) {
-    var signal = Signal<Void, NoError>.single(Void()) |> deliverOnMainQueue
-    if let timeout = timeout {
-        signal = signal |> delay(timeout, queue: Queue.mainQueue())
-    }
-    closeDisposable.set(signal.start(completed: {
-        //controller?.window.styleMask = [.borderless]
-        controller?.view.controls.removeFromSuperview()
-        controller?.window.orderOut(nil)
+func closeCall(minimisize: Bool = false) {
+    controller?.window.orderOut(nil)
+    if !minimisize {
         controller = nil
-    }))
+    }
 }
 
 
