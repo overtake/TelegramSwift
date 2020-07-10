@@ -14,7 +14,7 @@ import Postbox
 import SyncCore
 import GraphCore
 
-private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState, peers: [PeerId : Peer]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, context: GroupStatsContext, accountContext: AccountContext, openPeerInfo: @escaping(PeerId)->Void, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
+private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState, peers: [PeerId : Peer]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, revealSection: @escaping(UIStatsState.RevealSection)->Void, context: GroupStatsContext, accountContext: AccountContext, openPeerInfo: @escaping(PeerId)->Void, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -27,10 +27,12 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
         }))
     } else if let stats = state.stats  {
         
+        let dates = "\(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(stats.period.minDate)))) – \(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(stats.period.maxDate))))"
+
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
@@ -175,13 +177,19 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
         var addNextSection: Bool = false
         
         
-        let dates = "\(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(stats.period.minDate)))) – \(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(stats.period.maxDate))))"
         
         if let peers = peers {
-            let topPosters = stats.topPosters.filter { $0.messageCount > 0 && peers[$0.peerId] != nil && !peers[$0.peerId]!.rawDisplayTitle.isEmpty }
+            var topPosters = stats.topPosters.filter { $0.messageCount > 0 && peers[$0.peerId] != nil && !peers[$0.peerId]!.rawDisplayTitle.isEmpty }
             if !topPosters.isEmpty {
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopPostersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
+                
+                let needReveal = !uiState.revealed.contains(.topPosters) && topPosters.count > 10
+                let toRevealCount = topPosters.count - 10
+                if needReveal {
+                    topPosters = Array(topPosters.prefix(10))
+                }
+                
                 for (i, topPoster) in topPosters.enumerated() {
                     if let peer = peers[topPoster.peerId], topPoster.messageCount > 0 {
                         var textComponents: [String] = []
@@ -191,18 +199,37 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                                 textComponents.append(L10n.statsGroupTopPosterCharsCountable(Int(topPoster.averageChars)))
                             }
                         }
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_posters_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: bestGeneralViewType(topPosters, for: i), action: {
+                        
+                        var viewType = bestGeneralViewType(topPosters, for: i)
+                        
+                        if topPoster == topPosters.last, needReveal {
+                            viewType = .innerItem
+                        }
+                        
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_posters_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
                         index += 1
                     }
                 }
+                
+                if needReveal {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topPosters.id, equatable: nil, item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                            
+                            revealSection(UIStatsState.RevealSection.topPosters)
+                            
+                        }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                    }))
+                    index += 1
+                }
+                
                 addNextSection = true
             }
             
-            let topAdmins = stats.topAdmins.filter {
+            var topAdmins = stats.topAdmins.filter {
                 return peers[$0.peerId] != nil && ($0.deletedCount + $0.kickedCount + $0.bannedCount) > 0 && !peers[$0.peerId]!.rawDisplayTitle.isEmpty
             }
             
@@ -213,6 +240,12 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 }
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopAdminsTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
+                
+                let needReveal = !uiState.revealed.contains(.topPosters) && topAdmins.count > 10
+                let toRevealCount = topAdmins.count - 10
+                if needReveal {
+                    topAdmins = Array(topAdmins.prefix(10))
+                }
                 
                 for (i, topAdmin) in topAdmins.enumerated() {
                     if let peer = peers[topAdmin.peerId] {
@@ -228,14 +261,34 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                             textComponents.append(L10n.statsGroupTopAdminBansCountable(Int(topAdmin.bannedCount)))
                         }
                         
+                        var viewType = bestGeneralViewType(topPosters, for: i)
+                        
+                        if topAdmin == topAdmins.last, needReveal {
+                            viewType = .innerItem
+                        }
+                        
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_admin_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: bestGeneralViewType(topAdmins, for: i), action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
                         index += 1
                     }
                 }
+                
+                
+                if needReveal {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topAdmins.id, equatable: nil, item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                            
+                            revealSection(UIStatsState.RevealSection.topAdmins)
+                            
+                        }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                    }))
+                    index += 1
+                }
+                
+                
             } else {
                 entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
@@ -243,7 +296,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
             }
             
             
-            let topInviters = stats.topInviters.filter {
+            var topInviters = stats.topInviters.filter {
                 return peers[$0.peerId] != nil && $0.inviteCount > 0 && !peers[$0.peerId]!.rawDisplayTitle.isEmpty
             }
             
@@ -256,20 +309,47 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopInvitersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
                 
+                
+                let needReveal = !uiState.revealed.contains(.topPosters) && topInviters.count > 10
+                let toRevealCount = topInviters.count - 10
+                if needReveal {
+                    topInviters = Array(topInviters.prefix(10))
+                }
+                
+                
                 for (i, topInviter) in topInviters.enumerated() {
                     if let peer = peers[topInviter.peerId] {
                         
                         var textComponents: [String] = []
                         textComponents.append(L10n.statsGroupTopInviterInvitesCountable(Int(topInviter.inviteCount)))
                         
+                        var viewType = bestGeneralViewType(topPosters, for: i)
+                        
+                        if topInviter == topInviters.last, needReveal {
+                            viewType = .innerItem
+                        }
+                        
+                        
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_inviter_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: bestGeneralViewType(topInviters, for: i), action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
                         index += 1
                     }
                 }
+                
+                if needReveal {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topInviters.id, equatable: nil, item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                            
+                            revealSection(UIStatsState.RevealSection.topInviters)
+                            
+                        }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                    }))
+                    index += 1
+                }
+                
             } else {
                 entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
@@ -340,6 +420,10 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
                 } else {
                     return state.withRemovedLoading(identifier)
                 }
+            }
+        }, revealSection: { section in
+            updateState {
+                $0.withRevealedSection(section)
             }
         }, context: statsContext, accountContext: context, openPeerInfo: openPeerInfo, detailedDisposable: detailedDisposable)
     } |> map {
