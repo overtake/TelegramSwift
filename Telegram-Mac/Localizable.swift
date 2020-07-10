@@ -487,7 +487,7 @@ internal final class L10n {
   internal static var callCamera: String  { return L10n.tr("Localizable", "Call.Camera") }
   /// Close
   internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
-  /// Decline
+  /// End
   internal static var callDecline: String  { return L10n.tr("Localizable", "Call.Decline") }
   /// Mute
   internal static var callMute: String  { return L10n.tr("Localizable", "Call.Mute") }
@@ -577,6 +577,10 @@ internal final class L10n {
   internal static var callStatusRinging: String  { return L10n.tr("Localizable", "Call.StatusRinging") }
   /// Undefined error, please try later.
   internal static var callUndefinedError: String  { return L10n.tr("Localizable", "Call.UndefinedError") }
+  /// %@'s paused video
+  internal static func callVideoPaused(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.VideoPaused", p1)
+  }
   /// Finish the call with %@ and start a new one with %@?
   internal static func callConfirmDiscardCurrentDescription(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description", p1, p2)
@@ -1813,7 +1817,7 @@ internal final class L10n {
   internal static func chatServiceChannelUpdatedTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedTitle", p1)
   }
-  /// channel video updated
+  /// channel photo updated
   internal static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
   /// %@ invited %@
   internal static func chatServiceGroupAddedMembers(_ p1: String, _ p2: String) -> String {
@@ -1861,7 +1865,7 @@ internal final class L10n {
   internal static func chatServiceGroupUpdatedTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedTitle", p1, p2)
   }
-  /// %@ updated group video
+  /// %@ updated group photo
   internal static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
   }
