@@ -2393,3 +2393,37 @@ func + (left: CGSize, right: CGSize) -> CGSize {
 func - (left: CGSize, right: CGSize) -> CGSize {
     return CGSize(width: left.width - right.width, height: left.height - right.height)
 }
+
+
+func freeSystemGygabytes() -> UInt64? {
+    let attrs = try? FileManager.default.attributesOfFileSystem(forPath: "/")
+    
+    if let freeBytes = attrs?[FileAttributeKey.systemFreeSize] as? UInt64 {
+        return freeBytes / 1073741824
+    }
+    return nil
+}
+
+func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: AccountContext) {
+    let alert: NSAlert = NSAlert()
+    alert.addButton(withTitle: L10n.systemMemoryWarningOK)
+    alert.addButton(withTitle: L10n.systemMemoryWarningDataAndStorage)
+   // alert.addButton(withTitle: L10n.systemMemoryWarningManageSystemStorage)
+    
+    alert.messageText = L10n.systemMemoryWarningHeader
+    alert.informativeText = L10n.systemMemoryWarningText(freeSpace == 0 ? L10n.systemMemoryWarningLessThen1GB : L10n.systemMemoryWarningFreeSpace(Int(freeSpace)))
+    alert.alertStyle = .critical
+    
+    alert.beginSheetModal(for: window, completionHandler: { response in
+        switch response.rawValue {
+        case 1000:
+            break
+        case 1001:
+            context.sharedContext.bindings.rootNavigation().push(StorageUsageController(context))
+        case 1002:
+            openSystemSettings(.storage)
+        default:
+            break
+        }
+    })
+}

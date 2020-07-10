@@ -14,20 +14,48 @@ import Postbox
 import SyncCore
 import GraphCore
 
+
+
 struct UIStatsState : Equatable {
+    
+    enum RevealSection : Hashable {
+        case topPosters
+        case topAdmins
+        case topInviters
+        
+        var id: InputDataIdentifier {
+            switch self {
+            case .topPosters:
+                return InputDataIdentifier("_id_top_posters")
+            case .topAdmins:
+                return InputDataIdentifier("_id_top_admins")
+            case .topInviters:
+                return InputDataIdentifier("_id_top_inviters")
+            }
+        }
+    }
+    
     let loading: Set<InputDataIdentifier>
-    init(loading: Set<InputDataIdentifier>) {
+    let revealed:Set<RevealSection>
+    init(loading: Set<InputDataIdentifier>, revealed: Set<RevealSection> = Set()) {
         self.loading = loading
+        self.revealed = revealed
     }
     func withAddedLoading(_ token: InputDataIdentifier) -> UIStatsState {
         var loading = self.loading
         loading.insert(token)
-        return UIStatsState(loading: loading)
+        return UIStatsState(loading: loading, revealed: self.revealed)
     }
     func withRemovedLoading(_ token: InputDataIdentifier) -> UIStatsState {
         var loading = self.loading
         loading.remove(token)
-        return UIStatsState(loading: loading)
+        return UIStatsState(loading: loading, revealed: self.revealed)
+    }
+    
+    func withRevealedSection(_ section: RevealSection) -> UIStatsState {
+        var revealed = self.revealed
+        revealed.insert(section)
+        return UIStatsState(loading: self.loading, revealed: revealed)
     }
 }
 
@@ -268,45 +296,3 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     
     return controller
 }
-/*
- private let peerId: PeerId
- private let statsContext: ChannelStatsContext
- init(_ context: AccountContext, peerId: PeerId, datacenterId: Int32) {
- self.peerId = peerId
- self.statsContext = ChannelStatsContext(network: context.account.network, postbox: context.account.postbox, datacenterId: datacenterId, peerId: peerId)
- super.init(context)
- }
- 
- override func viewDidLoad() {
- super.viewDidLoad()
- 
- readyOnce()
- 
- //  self.statsContext.loadFollowersGraph()
- let signal = self.statsContext.state |> deliverOnMainQueue
- signal.start(next: { [weak self] state in
- if let state = state.stats {
- switch state.muteGraph {
- case let .Loaded(string):
- ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: false, success: { collection in
- let controller: BaseChartController
- // if bar {
- controller = DailyBarsChartController(chartsCollection: collection)
- // } else {
- // controller = GeneralLinesChartController(chartsCollection: collection)
- //  }
- self?.genericView.chartView.setup(controller: controller, title: "Mute graph")
- self?.genericView.chartView.apply(theme: .day, animated: false)
- 
- 
- }, failure: { error in
- var bp:Int = 0
- bp += 1
- })
- default:
- break
- }
- }
- })
- }
- */
