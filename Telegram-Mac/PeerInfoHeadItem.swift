@@ -52,7 +52,7 @@ fileprivate final class ActionButton : Control {
         self.removeAllHandlers()
         if let subItems = item.subItems {
             self.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }), edge: .maxY, inset: NSMakePoint(-33, -60))
+                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(-33, -60))
             }, for: .Down)
         } else {
             self.set(handler: { [weak item] _ in
@@ -131,9 +131,15 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
         }
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
-            items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
+            items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: {
+                arguments.call(false)
+            }))
         }
-        
+        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
+            items.append(ActionItem(text: L10n.peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
+                arguments.call(true)
+            }))
+        }
         let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         if !peer.isBot {

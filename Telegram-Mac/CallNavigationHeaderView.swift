@@ -203,8 +203,15 @@ class CallNavigationHeaderView: NavigationHeaderView {
                 
             } else {
                 backgroundView.background = (state.isMuted ? grayColor : blueColor).withAlphaComponent(0.6)
-                muteControl.isEnabled = false
-                endCall.isEnabled = false
+                muteControl.removeAllHandlers()
+                endCall.removeAllHandlers()
+                callInfo.removeAllHandlers()
+                dropCall.removeAllHandlers()
+                muteControl.change(opacity: 0.8, animated: animated)
+                endCall.change(opacity: 0.8, animated: animated)
+                statusTextView._change(opacity: 0.8, animated: animated)
+                callInfo._change(opacity: 0.8, animated: animated)
+                dropCall._change(opacity: 0.8, animated: animated)
             }
         default:
             break

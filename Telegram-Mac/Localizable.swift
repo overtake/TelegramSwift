@@ -4665,6 +4665,8 @@ internal final class L10n {
   internal static var peerInfoActionStatistics: String  { return L10n.tr("Localizable", "PeerInfo.Action.Statistics") }
   /// Unmute
   internal static var peerInfoActionUnmute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Unmute") }
+  /// Video
+  internal static var peerInfoActionVideoCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.VideoCall") }
   /// Add To Group
   internal static var peerInfoBotAddToGroup: String  { return L10n.tr("Localizable", "PeerInfo.Bot.AddToGroup") }
   /// Help
