@@ -505,6 +505,7 @@ func initialize() -> [String] {
     
     array.append("profile_add_member")
     array.append("profile_call")
+    array.append("profile_video_call")
     array.append("profile_leave")
     array.append("profile_message")
     array.append("profile_more")

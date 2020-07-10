@@ -6283,6 +6283,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_video_call: CGImage {
+      if let image = cached.with({ $0["profile_video_call"] }) {
+          return image
+      } else {
+          let image = _profile_video_call()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_video_call"] = image
+              return current
+          }
+          return image
+      }
+  }
   var profile_leave: CGImage {
       if let image = cached.with({ $0["profile_leave"] }) {
           return image
@@ -7209,6 +7222,7 @@ final class TelegramIconsTheme {
   private let _tab_settings_active: ()->CGImage
   private let _profile_add_member: ()->CGImage
   private let _profile_call: ()->CGImage
+  private let _profile_video_call: ()->CGImage
   private let _profile_leave: ()->CGImage
   private let _profile_message: ()->CGImage
   private let _profile_more: ()->CGImage
@@ -7728,6 +7742,7 @@ final class TelegramIconsTheme {
       tab_settings_active: @escaping()->CGImage,
       profile_add_member: @escaping()->CGImage,
       profile_call: @escaping()->CGImage,
+      profile_video_call: @escaping()->CGImage,
       profile_leave: @escaping()->CGImage,
       profile_message: @escaping()->CGImage,
       profile_more: @escaping()->CGImage,
@@ -8246,6 +8261,7 @@ final class TelegramIconsTheme {
       self._tab_settings_active = tab_settings_active
       self._profile_add_member = profile_add_member
       self._profile_call = profile_call
+      self._profile_video_call = profile_video_call
       self._profile_leave = profile_leave
       self._profile_message = profile_message
       self._profile_more = profile_more

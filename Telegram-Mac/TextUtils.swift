@@ -352,13 +352,13 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
 
         case let .titleUpdated(title: title):
             return peer.isChannel ? L10n.chatServiceChannelUpdatedTitle(title) : L10n.chatServiceGroupUpdatedTitle(authorName, title)
-        case let .phoneCall(callId: _, discardReason: reason, duration: duration, _):
+        case let .phoneCall(callId: _, discardReason: reason, duration: duration, isVideo):
             
             if let duration = duration, duration > 0 {
                 if message.author?.id == account.peerId {
-                    return L10n.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration))
+                    return isVideo ? L10n.chatListServiceVideoCallOutgoing(.stringForShortCallDurationSeconds(for: duration)) : L10n.chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration))
                 } else {
-                    return L10n.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
+                    return isVideo ? L10n.chatListServiceVideoCallIncoming(.stringForShortCallDurationSeconds(for: duration)) : L10n.chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
                 }
             }
             
