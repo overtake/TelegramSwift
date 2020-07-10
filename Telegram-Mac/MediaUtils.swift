@@ -287,7 +287,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             
             let options = NSMutableDictionary()
             
-            options.setValue(max(fittedSize.width, fittedSize.height) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+            options.setValue(max(fittedSize.width * scale, fittedSize.height * scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
             options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
             options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
@@ -309,8 +309,10 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
                 }
             }
             
+            options.setValue(150 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+
             var thumbnailImage: CGImage?
-            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+            if let thumbnailData = thumbnailData, let imageSource = CGImageSourceCreateWithData(thumbnailData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                 thumbnailImage = image
             }
             

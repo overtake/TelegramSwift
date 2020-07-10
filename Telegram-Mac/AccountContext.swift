@@ -263,6 +263,7 @@ final class AccountContext {
     private let actualizeCloudTheme = MetaDisposable()
     private let applyThemeDisposable = MetaDisposable()
     private let cloudThemeObserver = MetaDisposable()
+    private let freeSpaceDisposable = MetaDisposable()
     private let prefDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
@@ -291,6 +292,8 @@ final class AccountContext {
     
 
     var isInGlobalSearch: Bool = false
+    
+    private var lastTimeFreeSpaceNotified: TimeInterval?
     
     private let _contentSettings: Atomic<ContentSettings> = Atomic(value: ContentSettings.default)
     
@@ -409,6 +412,42 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
+        
+        #if !SHARE
+        var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
+            
+            subscriber.putNext(freeSystemGygabytes())
+            subscriber.putCompletion()
+            
+            return ActionDisposable {
+                
+            }
+        } |> runOn(.concurrentDefaultQueue())
+        
+        freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 60.0 * 3, queue: Queue.concurrentDefaultQueue()))) |> restart
+        
+        
+        let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
+        
+        
+        freeSpaceDisposable.set(combineLatest(queue: .mainQueue(), freeSpaceSignal, isKeyWindow, isLocked).start(next: { [weak self] space, isKeyWindow, locked in
+            
+            
+            var limit: UInt64 = 2
+            #if DEBUG
+            limit = 400
+            #endif
+            
+            guard let `self` = self, isKeyWindow, !locked, let space = space, space < limit else {
+                return
+            }
+            if self.lastTimeFreeSpaceNotified == nil || (self.lastTimeFreeSpaceNotified! + 60.0 * 60.0 * 3 < Date().timeIntervalSince1970) {
+                self.lastTimeFreeSpaceNotified = Date().timeIntervalSince1970
+                showOutOfMemoryWarning(window, freeSpace: space, context: self)
+            }
+            
+        }))
+        #endif
     }
     
     @objc private func updateKeyWindow() {
@@ -471,6 +510,7 @@ final class AccountContext {
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
         preloadGifsDisposable.dispose()
+        freeSpaceDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
