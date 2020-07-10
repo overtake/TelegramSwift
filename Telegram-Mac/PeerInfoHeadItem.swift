@@ -190,6 +190,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            if cachedData.statsDatacenterId > 0 {
+                items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
+                    arguments.stats(cachedData.statsDatacenterId)
+                }))
+            }
+        }
+        
         if let group = peer as? TelegramGroup {
             if case .Member = group.membership {
                 items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
@@ -200,13 +208,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
         }
         
-        if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if cachedData.statsDatacenterId > 0 {
-                items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
-                    arguments.stats(cachedData.statsDatacenterId)
-                }))
-            }
-        }
         
         if access.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))

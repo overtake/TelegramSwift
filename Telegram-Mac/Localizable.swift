@@ -6499,6 +6499,34 @@ internal final class L10n {
   internal static var statsGroupTopWeekdaysTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopWeekdaysTitle") }
   /// Viewing Members
   internal static var statsGroupViewers: String  { return L10n.tr("Localizable", "Stats.GroupViewers") }
+  /// %d
+  internal static func statsShowMoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_countable", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_few", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_many", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_one", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_other", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_two", p1)
+  }
+  /// Show %d More
+  internal static func statsShowMoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.ShowMore_zero", p1)
+  }
   /// Actions
   internal static var statsGroupTopAdminActions: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Actions") }
   /// Promote
@@ -6683,6 +6711,22 @@ internal final class L10n {
   internal static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   internal static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
+  /// App Data Storage
+  internal static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
+  /// %d GB
+  internal static func systemMemoryWarningFreeSpace(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "System.MemoryWarning.FreeSpace", p1)
+  }
+  /// Warning!
+  internal static var systemMemoryWarningHeader: String  { return L10n.tr("Localizable", "System.MemoryWarning.Header") }
+  /// Less then 1GB
+  internal static var systemMemoryWarningLessThen1GB: String  { return L10n.tr("Localizable", "System.MemoryWarning.LessThen1GB") }
+  /// OK
+  internal static var systemMemoryWarningOK: String  { return L10n.tr("Localizable", "System.MemoryWarning.OK") }
+  /// Your Mac is running low on disk space. Please free up some space by removing unnecessary files or changing your cache settings.\n\nFree space available: ~%@
+  internal static func systemMemoryWarningText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "System.MemoryWarning.Text", p1)
+  }
   /// Window
   internal static var td7AD5loTitle: String  { return L10n.tr("Localizable", "Td7-aD-5lo.title") }
   /// Appearance

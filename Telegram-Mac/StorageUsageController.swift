@@ -253,6 +253,12 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             index += 1
         }
     } else {
+        
+        entries.append(.clearAll(sectionId, true, .singleItem))
+        
+        entries.append(.section(sectionId))
+        sectionId += 1
+        
         entries.append(.collecting(sectionId, L10n.storageUsageCalculating, .singleItem))
     }
     
