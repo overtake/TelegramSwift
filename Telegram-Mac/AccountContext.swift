@@ -426,7 +426,7 @@ final class AccountContext {
         }
         } |> runOn(.concurrentDefaultQueue())
         
-        freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 60.0 * 3, queue: Queue.concurrentDefaultQueue()))) |> restart
+        freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 30, queue: Queue.concurrentDefaultQueue()))) |> restart
         
         
         let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
