@@ -53,23 +53,27 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
     
     
     override func mouseDragged(with event: NSEvent) {
-        super.mouseDragged(with: event)
-        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {return}
+        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {
+            super.mouseDragged(with: event)
+            return
+        }
         
         if item.sizes.count == availableRects.count {
             let point = containerView.convert(event.locationInWindow, from: nil)
             for i in 0 ..< availableRects.count {
                 if NSPointInRect(point, availableRects[i]), item.current != i {
                     item.current = item.sizes[i]
-                    self.needsDisplay = true
+                    containerView.needsDisplay = true
                 }
             }
         }
     }
     
     override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {return}
+        guard let item = item as? SelectSizeRowItem, !item.sizes.isEmpty else {
+            super.mouseUp(with: event)
+            return
+        }
         
         if item.sizes.count == availableRects.count {
             let point = containerView.convert(event.locationInWindow, from: nil)
@@ -253,7 +257,14 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
                     let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                    titleNode.1.draw(NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    
+                    var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
+                    
+                    if i == titles.count - 1 {
+                        rect.origin.x = min(rect.minX, (point.x + 5) - titleNode.0.size.width)
+                    }
+                    
+                    titleNode.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
             
