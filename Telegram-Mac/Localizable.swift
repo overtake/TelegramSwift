@@ -6687,6 +6687,8 @@ internal final class L10n {
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
+  /// No Limit
+  internal static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
   /// Suggest Frequent Contacts
   internal static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.

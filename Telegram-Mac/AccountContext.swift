@@ -200,6 +200,9 @@ final class AccountContextBindings {
     #endif
 }
 
+private var lastTimeFreeSpaceNotified: TimeInterval?
+
+
 final class AccountContext {
     let sharedContext: SharedAccountContext
     let account: Account
@@ -293,7 +296,6 @@ final class AccountContext {
 
     var isInGlobalSearch: Bool = false
     
-    private var lastTimeFreeSpaceNotified: TimeInterval?
     
     private let _contentSettings: Atomic<ContentSettings> = Atomic(value: ContentSettings.default)
     
@@ -421,10 +423,10 @@ final class AccountContext {
             
             return ActionDisposable {
                 
-            }
+        }
         } |> runOn(.concurrentDefaultQueue())
         
-        freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 60.0 * 3, queue: Queue.concurrentDefaultQueue()))) |> restart
+        freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 30, queue: Queue.concurrentDefaultQueue()))) |> restart
         
         
         let isLocked = (NSApp.delegate as? AppDelegate)?.passlock ?? .single(false)
@@ -433,7 +435,7 @@ final class AccountContext {
         freeSpaceDisposable.set(combineLatest(queue: .mainQueue(), freeSpaceSignal, isKeyWindow, isLocked).start(next: { [weak self] space, isKeyWindow, locked in
             
             
-            var limit: UInt64 = 2
+            var limit: UInt64 = 5
             #if DEBUG
             limit = 400
             #endif
@@ -441,8 +443,8 @@ final class AccountContext {
             guard let `self` = self, isKeyWindow, !locked, let space = space, space < limit else {
                 return
             }
-            if self.lastTimeFreeSpaceNotified == nil || (self.lastTimeFreeSpaceNotified! + 60.0 * 60.0 * 3 < Date().timeIntervalSince1970) {
-                self.lastTimeFreeSpaceNotified = Date().timeIntervalSince1970
+            if lastTimeFreeSpaceNotified == nil || (lastTimeFreeSpaceNotified! + 60.0 * 60.0 * 3 < Date().timeIntervalSince1970) {
+                lastTimeFreeSpaceNotified = Date().timeIntervalSince1970
                 showOutOfMemoryWarning(window, freeSpace: space, context: self)
             }
             

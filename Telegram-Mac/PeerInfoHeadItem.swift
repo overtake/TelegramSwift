@@ -375,7 +375,9 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         _ = self.makeSize(initialSize.width, oldWidth: 0)
         
+        
         if let peer = peer {
+            self.photos = syncPeerPhotos(peerId: peer.id)
             let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
                 self?.photos = photos
@@ -740,6 +742,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
     }
     
+    private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
@@ -753,36 +757,42 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             
             if let first = item.photos.first, let video = first.image.videoRepresentations.last {
                
-                if self.photoVideoView == nil {
+               
+
+                let equal = videoRepresentation?.resource.id.isEqual(to: video.resource.id) ?? false
+                
+                if !equal {
                     
-                    self.photoVideoView = MediaPlayerView()
+                    self.photoVideoView?.removeFromSuperview()
+                    self.photoVideoView = nil
+                    
+                    self.photoVideoView = MediaPlayerView(backgroundThread: true)
                     self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
                     self.addSubview(self.photoVideoView!)
-                    
                     self.photoVideoView!.isEventLess = true
                     
-//                    self.photoVideoView?.set(handler: { [weak self] _ in
-//                        self?.photoView.send(event: .Click)
-//                    }, for: .Click)
-                }
-                self.photoVideoView!.frame = self.photoView.frame
+                    self.photoVideoView!.frame = self.photoView.frame
 
-                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
-                
-                
-                let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
-                
-                mediaPlayer.actionAtEnd = .loop(nil)
-                
-                self.photoVideoPlayer = mediaPlayer
-                
-                mediaPlayer.play()
+                    
+                    let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                    
+                    
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    
+                    mediaPlayer.actionAtEnd = .loop(nil)
+                    
+                    self.photoVideoPlayer = mediaPlayer
+                    
+                    if let seekTo = video.startTimestamp {
+                        mediaPlayer.seek(timestamp: seekTo)
+                    }
+                    mediaPlayer.attachPlayerView(self.photoVideoView!)
+                    
+                    self.videoRepresentation = video
 
-                if let seekTo = video.startTimestamp {
-                    mediaPlayer.seek(timestamp: seekTo)
                 }
                 
-                mediaPlayer.attachPlayerView(self.photoVideoView!)
+                
                 
             } else {
                 self.photoVideoView?.removeFromSuperview()

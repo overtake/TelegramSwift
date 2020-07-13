@@ -21,6 +21,11 @@ private struct PeerPhotos {
 
 private var peerAvatars:Atomic<[PeerId: PeerPhotos]> = Atomic(value: [:])
 
+
+func syncPeerPhotos(peerId: PeerId) -> [TelegramPeerPhoto] {
+    return peerAvatars.with { $0[peerId].map { $0.photos } ?? [] }
+}
+
 func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhoto], NoError> {
     let photos = peerAvatars.with { $0[peerId] }
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {

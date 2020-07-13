@@ -36,7 +36,11 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
+<<<<<<< HEAD
 	<string>202816</string>
+=======
+	<string>202858</string>
+>>>>>>> beta
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>

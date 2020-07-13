@@ -1912,9 +1912,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 var options:[ModalOptionSet] = []
                                 
                                 options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true))
+                                
+                                var hasRestrict: Bool = false
+                                
                                 if let channel = peer as? TelegramChannel {
                                     if channel.hasPermission(.banMembers) {
                                         options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionBanUser, selected: false, editable: true))
+                                        hasRestrict = true
                                     }
                                 }
                                 options.append(ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true))
@@ -1926,19 +1930,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     
-                                    if result[0] == .selected {
+                                    var index:Int = 0
+                                    if result[index] == .selected {
                                         signals.append(deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forEveryone))
                                     }
-                                    if result[1] == .selected {
-                                        signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
-                                    }
-                                    if result[2] == .selected {
-                                        signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
-                                    }
-                                    if result[3] == .selected {
-                                        signals.append(clearAuthorHistory(account: context.account, peerId: peerId, memberId: memberId))
+                                    index += 1
+                                    
+                                    if hasRestrict {
+                                        if result[index] == .selected {
+                                            signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
+                                        }
+                                        index += 1
                                     }
                                     
+                                    if result[index] == .selected {
+                                        signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+                                    }
+                                    index += 1
+
+                                    if result[index] == .selected {
+                                        signals.append(clearAuthorHistory(account: context.account, peerId: peerId, memberId: memberId))
+                                    }
+                                    index += 1
+
                                     _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
                                     strongSelf?.chatInteraction.update({$0.withoutSelectionState()})
                                 }), for: context.window)
