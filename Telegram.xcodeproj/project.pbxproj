@@ -305,7 +305,7 @@
 		C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */; };
 		C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */; };
 		C20CAD121FE291E300EFF8BF /* ChatBubbleAccessoryForward.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CAD111FE291E200EFF8BF /* ChatBubbleAccessoryForward.swift */; };
-		C20CAD151FE436E300EFF8BF /* TextSizeSettingsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CAD141FE436E300EFF8BF /* TextSizeSettingsRowItem.swift */; };
+		C20CAD151FE436E300EFF8BF /* SelectSizeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CAD141FE436E300EFF8BF /* SelectSizeRowItem.swift */; };
 		C20CB7291E60886F00C992AC /* LinkInvationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20CB7281E60886E00C992AC /* LinkInvationController.swift */; };
 		C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB01DA996480042616A /* EBlockItem.swift */; };
 		C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20D5AB21DA9965B0042616A /* EBlockRowView.swift */; };
@@ -1384,7 +1384,7 @@
 		C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatEmptyPeerItem.swift; sourceTree = "<group>"; };
 		C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListNothingItem.swift; sourceTree = "<group>"; };
 		C20CAD111FE291E200EFF8BF /* ChatBubbleAccessoryForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBubbleAccessoryForward.swift; sourceTree = "<group>"; };
-		C20CAD141FE436E300EFF8BF /* TextSizeSettingsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextSizeSettingsRowItem.swift; sourceTree = "<group>"; };
+		C20CAD141FE436E300EFF8BF /* SelectSizeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectSizeRowItem.swift; sourceTree = "<group>"; };
 		C20CB7281E60886E00C992AC /* LinkInvationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkInvationController.swift; sourceTree = "<group>"; };
 		C20D5AB01DA996480042616A /* EBlockItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockItem.swift; sourceTree = "<group>"; };
 		C20D5AB21DA9965B0042616A /* EBlockRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EBlockRowView.swift; sourceTree = "<group>"; };
@@ -2739,7 +2739,7 @@
 				D02BD7C1232D14CC00D1814A /* items */,
 				D014AA272317DA0E00CE5362 /* themes */,
 				9F7B5FC922003D8C0087D020 /* wallpapers */,
-				C20CAD141FE436E300EFF8BF /* TextSizeSettingsRowItem.swift */,
+				C20CAD141FE436E300EFF8BF /* SelectSizeRowItem.swift */,
 				9F0B8F161FFB7F1A00073D3F /* AccentColorRowItem.swift */,
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
@@ -5296,7 +5296,7 @@
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */,
-				C20CAD151FE436E300EFF8BF /* TextSizeSettingsRowItem.swift in Sources */,
+				C20CAD151FE436E300EFF8BF /* SelectSizeRowItem.swift in Sources */,
 				D01C731722A9814C000DA008 /* InputPasswordController.swift in Sources */,
 				9F10CE922061BE19002DD61A /* InputDataController.swift in Sources */,
 				9F10CE9820626B1B002DD61A /* PassportDocumentRowItem.swift in Sources */,

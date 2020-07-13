@@ -6657,6 +6657,8 @@ internal final class L10n {
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
+  /// No Limit
+  internal static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
   /// Suggest Frequent Contacts
   internal static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.
@@ -6683,7 +6685,7 @@ internal final class L10n {
   internal static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   internal static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
-  /// Data And Storage
+  /// App Data Storage
   internal static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB
   internal static func systemMemoryWarningFreeSpace(_ p1: Int) -> String {
@@ -6693,11 +6695,9 @@ internal final class L10n {
   internal static var systemMemoryWarningHeader: String  { return L10n.tr("Localizable", "System.MemoryWarning.Header") }
   /// Less then 1GB
   internal static var systemMemoryWarningLessThen1GB: String  { return L10n.tr("Localizable", "System.MemoryWarning.LessThen1GB") }
-  /// Manage System Storage
-  internal static var systemMemoryWarningManageSystemStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.ManageSystemStorage") }
   /// OK
   internal static var systemMemoryWarningOK: String  { return L10n.tr("Localizable", "System.MemoryWarning.OK") }
-  /// Your Mac is running low of disk space. Please clean it up.\n\nIf you don't clean your Mac soon it can lead to unexpected consequences.\n\nFree space available:%@
+  /// Your Mac is running low on disk space. Please free up some space by removing unnecessary files or changing your cache settings.\n\nFree space available: ~%@
   internal static func systemMemoryWarningText(_ p1: String) -> String {
     return L10n.tr("Localizable", "System.MemoryWarning.Text", p1)
   }

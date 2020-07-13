@@ -516,14 +516,14 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .changePhoto(_, new):
                 let text:String
-                if new.isEmpty {
+                if new.0.isEmpty {
                     text = result.isGroup ? tr(L10n.groupEventLogServicePhotoRemoved(peer.displayTitle)) : tr(L10n.channelEventLogServicePhotoRemoved(peer.displayTitle))
                 } else {
                     text = result.isGroup ? tr(L10n.groupEventLogServicePhotoUpdated(peer.displayTitle)) : tr(L10n.channelEventLogServicePhotoUpdated(peer.displayTitle))
                     
                     let size = NSMakeSize(70, 70)
                     imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: new, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                    image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: new.0, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .participantLeave:

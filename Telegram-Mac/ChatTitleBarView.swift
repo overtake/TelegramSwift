@@ -523,11 +523,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         }
     }
     
+    private var currentPhoto: TelegramPeerPhoto?
+    
     private func applyVideoAvatarIfNeeded(_ photo: TelegramPeerPhoto?) {
-        guard let window = self.window as? Window else {
+        guard let window = self.window as? Window, currentPhoto?.image != photo?.image else {
             return
         }
+        
+        currentPhoto = photo
+        
         let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+
 
         let file: TelegramMediaFile?
         let seekTo: TimeInterval?
