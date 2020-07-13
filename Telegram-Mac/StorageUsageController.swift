@@ -16,13 +16,15 @@ import SwiftSignalKit
 private final class StorageUsageControllerArguments {
     let context: AccountContext
     let updateKeepMedia: () -> Void
+    let updateMediaLimit: (Int32) -> Void
     let openPeerMedia: (PeerId) -> Void
     let clearAll:()->Void
-    init(context: AccountContext, updateKeepMedia: @escaping () -> Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void) {
+    init(context: AccountContext, updateKeepMedia: @escaping () -> Void, updateMediaLimit: @escaping(Int32)->Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void) {
         self.context = context
         self.updateKeepMedia = updateKeepMedia
         self.openPeerMedia = openPeerMedia
         self.clearAll = clearAll
+        self.updateMediaLimit = updateMediaLimit
     }
 }
 
@@ -33,6 +35,7 @@ private enum StorageUsageSection: Int32 {
 
 private enum StorageUsageEntry: TableItemListNodeEntry {
     case keepMedia(Int32, String, String, GeneralViewType)
+    case keepMediaLimit(Int32, Int32, GeneralViewType)
     case keepMediaInfo(Int32, String, GeneralViewType)
     case clearAll(Int32, Bool, GeneralViewType)
     case collecting(Int32, String, GeneralViewType)
@@ -44,14 +47,16 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         switch self {
         case .keepMedia:
             return 0
-        case .keepMediaInfo:
+        case .keepMediaLimit:
             return 1
-        case .clearAll:
+        case .keepMediaInfo:
             return 2
-        case .collecting:
+        case .clearAll:
             return 3
-        case .peersHeader:
+        case .collecting:
             return 4
+        case .peersHeader:
+            return 5
         case let .peer(_, _, peer, _, _):
             return Int32(peer.id.hashValue)
         case .section(let sectionId):
@@ -63,16 +68,18 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         switch self {
         case .keepMedia:
             return 0
-        case .keepMediaInfo:
+        case .keepMediaLimit:
             return 1
-        case .clearAll:
+        case .keepMediaInfo:
             return 2
-        case .collecting:
+        case .clearAll:
             return 3
-        case .peersHeader:
+        case .collecting:
             return 4
+        case .peersHeader:
+            return 5
         case let .peer(_, index, _, _, _):
-            return 5 + index
+            return 6 + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -81,6 +88,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     var index:Int32 {
         switch self {
         case .keepMedia(let sectionId, _, _, _):
+            return (sectionId * 1000) + stableIndex
+        case .keepMediaLimit(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case .keepMediaInfo(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -101,6 +110,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         switch lhs {
         case let .keepMedia(sectionId, text, value, viewType):
             if case .keepMedia(sectionId, text, value, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .keepMediaLimit(sectionId, value, viewType):
+            if case .keepMediaLimit(sectionId, value, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -170,7 +185,11 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .context(value), viewType: viewType, action: {
                 arguments.updateKeepMedia()
             })
-
+        case let .keepMediaLimit(_, value, viewType):
+            let values = [5, 10, 20, 50, Int32.max]
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "10GB", "20GB", "50GB", L10n.storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
+                arguments.updateMediaLimit(values[selected])
+            })
         case let .keepMediaInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .collecting(_, text, viewType):
@@ -209,7 +228,11 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.keepMedia(sectionId, L10n.storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .singleItem))
+    entries.append(.keepMedia(sectionId, L10n.storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .firstItem))
+    
+    entries.append(.keepMediaLimit(sectionId, cacheSettings.defaultCacheStorageLimitGigabytes, .lastItem))
+
+    
     entries.append(.keepMediaInfo(sectionId, L10n.storageUsageKeepMediaDescription, .textBottomItem))
     
     entries.append(.section(sectionId))
@@ -321,6 +344,10 @@ class StorageUsageController: TableViewController {
                 }
             }
            
+        }, updateMediaLimit: { limit in
+            let _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, { current in
+                return current.withUpdatedDefaultCacheStorageLimitGigabytes(limit)
+            }).start()
         }, openPeerMedia: { peerId in
             let _ = (statsPromise.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak statsPromise] result in
                 if let result = result, case let .result(stats) = result {

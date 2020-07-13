@@ -14,6 +14,8 @@ import SwiftSignalKit
 import TGUIKit
 class MGalleryGIFItem: MGalleryItem {
 
+    private var mediaPlayer: MediaPlayer!
+    
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         super.init(context, entry, pagerSize)
         
@@ -21,21 +23,27 @@ class MGalleryGIFItem: MGalleryItem {
         
         let fileReference = entry.fileReference(media)
        
-        disposable.set(view.get().start(next: { view in
-            (view as? GifPlayerBufferView)?.update(fileReference, context: context)
+        self.mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(media.resource), streamable: media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        mediaPlayer.actionAtEnd = .loop(nil)
+
+        
+        disposable.set(view.get().start(next: { [weak self] view in
+            if let view = (view as? MediaPlayerView) {
+                self?.mediaPlayer.attachPlayerView(view)
+            }
         }))
         
     }
     
     override func appear(for view: NSView?) {
         super.appear(for: view)
-        (view as? GifPlayerBufferView)?.ticking = true
+        self.mediaPlayer.play()
     }
     
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         
-        (view as? GifPlayerBufferView)?.ticking = false
+        self.mediaPlayer.pause()
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
@@ -74,7 +82,8 @@ class MGalleryGIFItem: MGalleryItem {
 //    }
 
     override func singleView() -> NSView {
-        let player = GifPlayerBufferView()
+        let player = MediaPlayerView(backgroundThread: true)
+        player.positionFlags = nil
         //player.layerContentsRedrawPolicy = .duringViewResize
         return player
     }

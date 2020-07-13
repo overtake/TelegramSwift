@@ -330,6 +330,14 @@ final class MediaPlayerView: View {
         }
     }
     
+    override func setFrameSize(_ newSize: NSSize) {
+        let oldValue = self.frame
+        super.setFrameSize(newSize)
+        if !oldValue.size.equalTo(self.frame.size) {
+            self.updateLayout()
+        }
+    }
+    
     func updateLayout() {
         let bounds = self.bounds
         
