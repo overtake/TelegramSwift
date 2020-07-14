@@ -465,7 +465,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
 
             if let magnify = view.superview?.superview as? MagnifyView {
                 var size = magnify.contentSize
-                if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, let _ = self.modifiedSize {
+                if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem {
                     if value.rotation == nil {
                         size = value.size?.aspectFitted(size) ?? size
                     } else {

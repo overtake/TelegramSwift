@@ -136,10 +136,6 @@ class MGalleryPhotoItem: MGalleryItem {
                     self.image = image
                     self.orientation = orientation
                 }
-                deinit {
-                    var bp:Int = 0
-                    bp += 1
-                }
             }
             
             let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { [weak self] data, magnify -> Signal<Data, NoError> in
