@@ -2427,3 +2427,14 @@ func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: Accoun
         }
     })
 }
+
+
+
+extension NSCursor  {
+    static var set_windowResizeNorthWestSouthEastCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthWestSouthEastCursor()
+    }
+    static var set_windowResizeNorthEastSouthWestCursor: NSCursor? {
+        return ObjcUtils.windowResizeNorthEastSouthWestCursor()
+    }
+}

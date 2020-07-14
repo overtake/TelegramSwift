@@ -23,10 +23,12 @@ typedef NS_ENUM(int32_t, OngoingCallStateWebrtc) {
 };
 
 typedef NS_ENUM(int32_t, OngoingCallVideoStateWebrtc) {
-    OngoingCallVideoStateInactiveWebrtc,
-    OngoingCallVideoStateActiveOutgoingWebrtc,
+    OngoingCallVideoStatePossibleWebrtc,
+    OngoingCallVideoStateOutgoingRequestedWebrtc,
+    OngoingCallVideoStateIncomingRequestedWebrtc,
     OngoingCallVideoStateActiveWebrtc
 };
+
 
 typedef NS_ENUM(int32_t, OngoingCallRemoteVideoStateWebrtc) {
     OngoingCallRemoteVideoStateInactiveWebrtc,
