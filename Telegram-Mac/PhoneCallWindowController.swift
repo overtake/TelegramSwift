@@ -627,6 +627,9 @@ private class PhoneCallWindowView : View {
         default:
             var point = outgoingVideoView.frame.origin
 
+            
+            let size = outgoingVideoView.frame.size
+
             if previousFrame.size != frame.size {
                 
                 point.x += (frame.width - point.x) - (previousFrame.width - point.x)
