@@ -13,6 +13,13 @@ import SyncCore
 import SwiftSignalKit
 import TGUIKit
 
+final class GPreviewValueClass {
+    let value: GPreviewValue
+    init(_ value: GPreviewValue) {
+        self.value = value
+    }
+}
+
 
 enum GPreviewValue {
     case image(NSImage?, ImageOrientation?)
@@ -52,6 +59,7 @@ enum GPreviewValue {
             return nil
         }
     }
+    
 }
 
 func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
@@ -323,7 +331,7 @@ private final class MGalleryItemView : NSView {
 }
 
 class MGalleryItem: NSObject, Comparable, Identifiable {
-    let image:Promise<GPreviewValue> = Promise()
+    let image:Promise<GPreviewValueClass> = Promise()
     let view:Promise<NSView> = Promise()
     let size:Promise<NSSize> = Promise()
     let magnify:Promise<CGFloat> = Promise(1)
@@ -445,7 +453,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         
         var first:Bool = true
         
-        let image = combineLatest(self.image.get(), view.get()) |> map { [weak self] value, view  in
+        let image = combineLatest(self.image.get() |> map { $0.value }, view.get()) |> map { [weak self] value, view  in
             guard let `self` = self else {return}
             view.layer?.contents = value.image
             
@@ -456,32 +464,15 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             view.layer?.backgroundColor = self.backgroundColor.cgColor
 
             if let magnify = view.superview?.superview as? MagnifyView {
-//                if let size = value.size, size.width - size.height != self.sizeValue.width - self.sizeValue.height, size.width > 150 && size.height > 150, magnify.magnify == 1.0, first {
-//                    self.modifiedSize = size
-//                    if magnify.contentSize != self.sizeValue {
-//                        magnify.contentSize = self.sizeValue
-//                    } else {
-//                        let size = magnify.contentSize
-//                        magnify.contentSize = size
-//                    }
-//                } else {
-                    var size = magnify.contentSize
-                    if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, let modifiedSize = self.modifiedSize {
-                      //  if magnify.magnify > 1 {
-                        if value.rotation == nil {
-                            size = value.size?.aspectFitted(size) ?? size
-                        } else {
-                            size = value.size ?? size
-                        }
-                       // } else {
-                         //   size = value.size ?? size
-                       // }
-                       // if rotation == .left || rotation == .right {
-                           // size = value.size ?? size
-                      //  }
+                var size = magnify.contentSize
+                if self is MGalleryPhotoItem || self is MGalleryPeerPhotoItem, let _ = self.modifiedSize {
+                    if value.rotation == nil {
+                        size = value.size?.aspectFitted(size) ?? size
+                    } else {
+                        size = value.size ?? size
                     }
-                    magnify.contentSize = size
-              //  }
+                }
+                magnify.contentSize = size
             }
             first = false
         }

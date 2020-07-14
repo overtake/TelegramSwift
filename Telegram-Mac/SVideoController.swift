@@ -364,12 +364,21 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             closePipVideo()
         })
         
-        mediaPlayer.actionAtEnd = .action { [weak self] in
-            Queue.mainQueue().async {
-                self?.mediaPlayer.seek(timestamp: 0)
-                self?.mediaPlayer.pause()
-                self?.updateIdleTimer()
-                self?.hideControls.set(false)
+        if let duration = reference.media.duration, duration < 30 {
+            mediaPlayer.actionAtEnd = .loop({ [weak self] in
+                Queue.mainQueue().async {
+                    self?.updateIdleTimer()
+                    self?.hideControls.set(false)
+                }
+            })
+        } else {
+            mediaPlayer.actionAtEnd = .action { [weak self] in
+                Queue.mainQueue().async {
+                    self?.mediaPlayer.seek(timestamp: 0)
+                    self?.mediaPlayer.pause()
+                    self?.updateIdleTimer()
+                    self?.hideControls.set(false)
+                }
             }
         }
         

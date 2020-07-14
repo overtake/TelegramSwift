@@ -126,35 +126,15 @@ public class UpdateTransition<T> {
     public let deleted:[Int]
     public let animateVisibleOnly: Bool
     public init(deleted:[Int], inserted:[(Int,T)], updated:[(Int,T)], animateVisibleOnly: Bool = true) {
-        
-
-  
-//        for d_idx in stride(from: deleted.count - 1, to: -1, by: -1) {
-//            in_loop: for i_idx in stride(from: inserted.count - 1, to: -1, by: -1) {
-//                if deleted[d_idx] == inserted[i_idx].0 {
-//                    if !updated.isEmpty {
-//                        u_loop: for u_udx in 0 ..< updated.count {
-//                            assert(updated[u_udx].0 != inserted[i_idx].0)
-//                            if updated[u_udx].0 > inserted[i_idx].0 {
-//                                updated.insert(inserted[i_idx], at: u_udx)
-//                                break u_loop
-//                            }
-//                        }
-//                    } else {
-//                        updated.append(inserted[i_idx])
-//                    }
-//
-//                    deleted.remove(at: d_idx)
-//                    inserted.remove(at: i_idx)
-//                    break in_loop
-//                }
-//            }
-//        }
-        
         self.inserted = inserted
         self.updated = updated
         self.deleted = deleted
         self.animateVisibleOnly = animateVisibleOnly
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     public var isEmpty:Bool {
