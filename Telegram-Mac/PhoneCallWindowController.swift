@@ -501,9 +501,6 @@ class PhoneCallWindowController {
                     }
                 })) 
             }
-            
-            
-            
         }
     }
     
@@ -587,7 +584,6 @@ func closeCall(_ timeout:TimeInterval? = nil) {
         signal = signal |> delay(timeout, queue: Queue.mainQueue())
     }
     closeDisposable.set(signal.start(completed: {
-        //controller?.window.styleMask = [.borderless]
         controller?.view.controls.removeFromSuperview()
         controller?.window.orderOut(nil)
         controller = nil
