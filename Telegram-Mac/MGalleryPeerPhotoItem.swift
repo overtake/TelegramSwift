@@ -98,7 +98,7 @@ class MGalleryPeerPhotoItem: MGalleryItem {
             })
         } 
         
-        self.image.set(result |> map { .image($0.0, $0.1) } |> deliverOnMainQueue)
+        self.image.set(result |> map { GPreviewValueClass(.image($0.0, $0.1)) } |> deliverOnMainQueue)
         
         
         fetch()

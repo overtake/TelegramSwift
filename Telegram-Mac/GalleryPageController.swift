@@ -162,9 +162,18 @@ class GalleryPageView : NSView {
     
 }
 
+private final class PageController : NSPageController {
+    
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+}
+
 class GalleryPageController : NSObject, NSPageControllerDelegate {
 
-    private let controller:NSPageController = NSPageController()
+    private let controller:PageController = PageController()
     private let ioDisposabe:MetaDisposable = MetaDisposable()
     private let smartUpdaterDisposable = MetaDisposable()
     private var identifiers:[NSPageController.ObjectIdentifier:MGalleryItem] = [:]
@@ -421,7 +430,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             while !queuedTransitions.isEmpty {
                 let transition = queuedTransitions[0]
                 
-                let searchItem:(AnyHashable)->MGalleryItem? = { stableId in
+                let searchItem:(AnyHashable, [MGalleryItem])->MGalleryItem? = { stableId, items in
                     for item in items {
                         if item.stableId == stableId {
                             return item
@@ -439,12 +448,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     }
                 }
                 for (idx,item) in transition.inserted {
-                    let item = searchItem(item.stableId) ?? item
+                    let item = searchItem(item.stableId, items) ?? item
                     identifiers[item.identifier] = item
                     items.insert(item, at: min(idx, items.count))
                 }
                 for (idx,item) in transition.updated {
-                    let item = searchItem(item.stableId) ?? item
+                    let item = searchItem(item.stableId, items) ?? item
                     identifiers[item.identifier] = item
                     cache.removeObject(forKey: item.identifier as AnyObject)
                     if idx < items.count {
@@ -475,7 +484,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     if wasInited {
                         items[controller.selectedIndex].request(immediately: false)
                     }
-                    //pageControllerDidEndLiveTransition(controller, force: true)
                 }
                 if wasInited {
                     transitionCallFunc?(self.thumbsControl.layoutItems(with: self.items, selectedIndex: controller.selectedIndex, animated: animated), selectedItem)
@@ -832,7 +840,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if let oldView = from(item.stableId), let oldWindow = oldView.window, let oldScreen = oldWindow.screen {
                 selectedView.isHidden = true
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
+                ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
@@ -959,10 +967,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 newRect.origin = newRect.origin.offsetBy(dx: -screen.frame.minX, dy: -screen.frame.minY)
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
-                ioDisposabe.set((item.image.get() |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self] value in
+                ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak item] value in
                     self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: {
-                        completion?((true, item.stableId))
-                    }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
+                        completion?((true, item?.stableId))
+                    }, stableId: item?.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
                 }))
                 
                 addVideoTimebase?((item.stableId, selectedView.contentView))

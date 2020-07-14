@@ -397,7 +397,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
             return .complete()
         } |> deliverOnMainQueue)
         
-        self.image.set(result |> map { .image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil, nil) } |> deliverOnMainQueue)
+        self.image.set(result |> map { GPreviewValueClass(.image($0 != nil ? NSImage(cgImage: $0!, size: $0!.backingSize) : nil, nil)) } |> deliverOnMainQueue)
         
         fetch()
     }

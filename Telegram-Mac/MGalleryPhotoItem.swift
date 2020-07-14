@@ -129,7 +129,16 @@ class MGalleryPhotoItem: MGalleryItem {
                 
             }
             
-            let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { data, magnify -> Signal<(NSImage?, ImageOrientation?), NoError> in
+            class Data {
+                let image: NSImage?
+                let orientation: ImageOrientation?
+                init(_ image: NSImage?, _ orientation: ImageOrientation?) {
+                    self.image = image
+                    self.orientation = orientation
+                }
+            }
+            
+            let result = combineLatest(signal, self.magnify.get() |> distinctUntilChanged) |> mapToSignal { [weak self] data, magnify -> Signal<Data, NoError> in
                 
                 let (size, orientation) = data
                 return chatGalleryPhoto(account: context.account, imageReference: entry.imageReference(media), scale: System.backingScale, secureIdAccessContext: secureIdAccessContext, synchronousLoad: true)
@@ -149,13 +158,13 @@ class MGalleryPhotoItem: MGalleryItem {
                         if let orientation = orientation {
                             let transformed = image?.createMatchingBackingDataWithImage(orienation: orientation)
                             if let transformed = transformed {
-                                return (NSImage(cgImage: transformed, size: size), orientation)
+                                return Data(NSImage(cgImage: transformed, size: size), orientation)
                             }
                         }
                         if let image = image {
-                            return (NSImage(cgImage: image, size: size), orientation)
+                            return Data(NSImage(cgImage: image, size: size), orientation)
                         } else {
-                            return (nil, orientation)
+                            return Data(nil, orientation)
                         }
                 }
                 
@@ -168,7 +177,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 return .never()
             })
             
-            self.image.set(result |> map { .image($0.0, $0.1) } |> deliverOnMainQueue)
+            self.image.set(result |> map { GPreviewValueClass(.image($0.image, $0.orientation)) } |> deliverOnMainQueue)
             
             
             fetch()
