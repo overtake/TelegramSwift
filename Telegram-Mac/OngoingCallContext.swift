@@ -129,9 +129,10 @@ struct OngoingCallContextState: Equatable {
     
     enum VideoState: Equatable {
         case notAvailable
-        case available(Bool)
+        case possible
+        case outgoingRequested
+        case incomingRequested
         case active
-        case activeOutgoing
     }
     
     enum RemoteVideoState: Equatable {
@@ -499,14 +500,16 @@ final class OngoingCallContext {
                         let mappedState = OngoingCallContextState.State(state)
                         let mappedVideoState: OngoingCallContextState.VideoState
                         switch videoState {
-                        case .inactiveWebrtc:
-                            mappedVideoState = .available(true)
+                        case .possibleWebrtc:
+                            mappedVideoState = .possible
+                        case .incomingRequestedWebrtc:
+                            mappedVideoState = .incomingRequested
+                        case .outgoingRequestedWebrtc:
+                            mappedVideoState = .outgoingRequested
                         case .activeWebrtc:
                             mappedVideoState = .active
-                        case .activeOutgoingWebrtc:
-                            mappedVideoState = .activeOutgoing
                         @unknown default:
-                            mappedVideoState = .available(false)
+                            mappedVideoState = .notAvailable
                         }
                         let mappedRemoteVideoState: OngoingCallContextState.RemoteVideoState
                         switch remoteVideoState {

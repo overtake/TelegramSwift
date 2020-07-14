@@ -435,11 +435,8 @@ final class AccountContext {
         freeSpaceDisposable.set(combineLatest(queue: .mainQueue(), freeSpaceSignal, isKeyWindow, isLocked).start(next: { [weak self] space, isKeyWindow, locked in
             
             
-            var limit: UInt64 = 5
-            #if DEBUG
-            limit = 400
-            #endif
-            
+            let limit: UInt64 = 5
+           
             guard let `self` = self, isKeyWindow, !locked, let space = space, space < limit else {
                 return
             }

@@ -193,10 +193,10 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
         _sendSignalingData = [sendSignalingData copy];
         _videoCapturer = videoCapturer;
         if (videoCapturer != nil) {
-            _videoState = OngoingCallVideoStateActiveOutgoingWebrtc;
+            _videoState = OngoingCallVideoStateOutgoingRequestedWebrtc;
             _remoteVideoState = OngoingCallRemoteVideoStateActiveWebrtc;
         } else {
-            _videoState = OngoingCallVideoStateInactiveWebrtc;
+            _videoState = OngoingCallVideoStatePossibleWebrtc;
             _remoteVideoState = OngoingCallRemoteVideoStateInactiveWebrtc;
         }
         
@@ -285,30 +285,27 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
                                        callControllerNetworkTypeForType(networkType),
                                        encryptionKey,
                                        [_videoCapturer getInterface],
-                                       [weakSelf, queue](TgVoipState state) {
+                                       [weakSelf, queue](TgVoipState state, TgVoip::VideoState videoState) {
                                            [queue dispatch:^{
                                                __strong OngoingCallThreadLocalContextWebrtc *strongSelf = weakSelf;
                                                if (strongSelf) {
-                                                   [strongSelf controllerStateChanged:state];
-                                               }
-                                           }];
-                                       },
-                                       [weakSelf, queue](bool isActive) {
-                                           [queue dispatch:^{
-                                               __strong OngoingCallThreadLocalContextWebrtc *strongSelf = weakSelf;
-                                               if (strongSelf) {
-                                                   OngoingCallVideoStateWebrtc videoState;
-                                                   if (isActive) {
-                                                       videoState = OngoingCallVideoStateActiveWebrtc;
-                                                   } else {
-                                                       videoState = OngoingCallVideoStateInactiveWebrtc;
+                                                   OngoingCallVideoStateWebrtc mappedVideoState;
+                                                   switch (videoState) {
+                                                       case TgVoip::VideoState::possible:
+                                                       mappedVideoState = OngoingCallVideoStatePossibleWebrtc;
+                                                       break;
+                                                       case TgVoip::VideoState::outgoingRequested:
+                                                       mappedVideoState = OngoingCallVideoStateOutgoingRequestedWebrtc;
+                                                       break;
+                                                       case TgVoip::VideoState::incomingRequested:
+                                                       mappedVideoState = OngoingCallVideoStateIncomingRequestedWebrtc;
+                                                       break;
+                                                       case TgVoip::VideoState::active:
+                                                       mappedVideoState = OngoingCallVideoStateActiveWebrtc;
+                                                       break;
                                                    }
-                                                   if (strongSelf->_videoState != videoState) {
-                                                       strongSelf->_videoState = videoState;
-                                                       if (strongSelf->_stateChanged) {
-                                                           strongSelf->_stateChanged(strongSelf->_state, strongSelf->_videoState, strongSelf->_remoteVideoState);
-                                                       }
-                                                   }
+                                                   
+                                                   [strongSelf controllerStateChanged:state videoState:mappedVideoState];
                                                }
                                            }];
                                        },
@@ -358,6 +355,32 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
 - (bool)needRate {
     return false;
 }
+    
+- (void)controllerStateChanged:(TgVoipState)state videoState:(OngoingCallVideoStateWebrtc)videoState {
+    OngoingCallStateWebrtc callState = OngoingCallStateInitializingWebrtc;
+    switch (state) {
+        case TgVoipState::Estabilished:
+        callState = OngoingCallStateConnectedWebrtc;
+        break;
+        case TgVoipState::Failed:
+        callState = OngoingCallStateFailedWebrtc;
+        break;
+        case TgVoipState::Reconnecting:
+        callState = OngoingCallStateReconnectingWebrtc;
+        break;
+        default:
+        break;
+    }
+    
+    if (_state != callState || _videoState != videoState) {
+        _state = callState;
+        _videoState = videoState;
+        
+        if (_stateChanged) {
+            _stateChanged(_state, _videoState, _remoteVideoState);
+        }
+    }
+}
 
 - (void)stop:(void (^)(NSString *, int64_t, int64_t, int64_t, int64_t))completion {
     if (_tgVoip) {
@@ -404,35 +427,7 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
     }
 }
 
-- (void)controllerStateChanged:(TgVoipState)state {
-    OngoingCallStateWebrtc callState = OngoingCallStateInitializingWebrtc;
-    switch (state) {
-        case TgVoipState::Estabilished:
-            callState = OngoingCallStateConnectedWebrtc;
-            break;
-        case TgVoipState::Failed:
-            callState = OngoingCallStateFailedWebrtc;
-            break;
-        case TgVoipState::Reconnecting:
-            callState = OngoingCallStateReconnectingWebrtc;
-            break;
-        default:
-            break;
-    }
-    
-    if (callState != _state) {
-        _state = callState;
-        
-        if (_stateChanged) {
-            if (_videoState == OngoingCallVideoStateActiveOutgoingWebrtc) {
-                if (_state == OngoingCallStateConnectedWebrtc) {
-                    _videoState = OngoingCallVideoStateActiveWebrtc;
-                }
-            }
-            _stateChanged(_state, _videoState, _remoteVideoState);
-        }
-    }
-}
+
 
 - (void)signalBarsChanged:(int32_t)signalBars {
     if (signalBars != _signalBars) {
@@ -465,11 +460,7 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
     }
 }
 
-- (void)setVideoEnabled:(bool)videoEnabled {
-    if (_tgVoip) {
-        _tgVoip->setSendVideo(videoEnabled);
-    }
-}
+
 
 - (void)switchVideoCamera {
     if (_tgVoip) {

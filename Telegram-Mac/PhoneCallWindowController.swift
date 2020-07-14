@@ -13,6 +13,8 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 
+private let defaultWindowSize = NSMakeSize(340, 480)
+
 extension CallSessionTerminationReason {
     var recall: Bool {
         let recall:Bool
@@ -150,9 +152,17 @@ private final class CallControl : Control {
 
 private final class OutgoingVideoView : Control {
     
+    static var defaultSize: NSSize = NSMakeSize(150, 100)
+    
+    enum ResizeDirection {
+        case topLeft
+        case topRight
+        case bottomLeft
+        case bottomRight
+    }
+    
     let overlay: Control = Control()
     
-    var hasBeenMoved: Bool = false
     
     private var disabledView: NSVisualEffectView?
     
@@ -216,6 +226,37 @@ private final class OutgoingVideoView : Control {
             overlay._change(size: frame.size, animated: animated)
             disabledView?._change(size: frame.size, animated: animated)
         }
+        updateCursorRects()
+    }
+    
+    private func updateCursorRects() {
+        resetCursorRects()
+        if let cursor = NSCursor.set_windowResizeNorthEastSouthWestCursor {
+            addCursorRect(NSMakeRect(0, frame.height - 10, 10, 10), cursor: cursor)
+            addCursorRect(NSMakeRect(frame.width - 10, 0, 10, 10), cursor: cursor)
+        }
+        if let cursor = NSCursor.set_windowResizeNorthWestSouthEastCursor {
+            addCursorRect(NSMakeRect(0, 0, 10, 10), cursor: cursor)
+            addCursorRect(NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), cursor: cursor)
+        }
+    }
+    
+    override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        updateCursorRects()
+    }
+    
+    func runResizer(at point: NSPoint) -> ResizeDirection? {
+        let rects: [(NSRect, ResizeDirection)] = [(NSMakeRect(0, frame.height - 10, 10, 10), .bottomLeft),
+                               (NSMakeRect(frame.width - 10, 0, 10, 10), .topRight),
+                               (NSMakeRect(0, 0, 10, 10), .topLeft),
+                               (NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), .bottomRight)]
+        for rect in rects {
+            if NSPointInRect(point, rect.0) {
+                return rect.1
+            }
+        }
+        return nil
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -433,25 +474,63 @@ private class PhoneCallWindowView : View {
         
         
         var start: NSPoint? = nil
-        
+        var resizeOutgoingVideoDirection: OutgoingVideoView.ResizeDirection? = nil
         outgoingVideoView.overlay.set(handler: { [weak self] control in
             guard let `self` = self, let window = self.window, self.outgoingVideoView.frame != self.bounds else {
                 start = nil
                 return
             }
             start = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            resizeOutgoingVideoDirection = self.outgoingVideoView.runResizer(at: self.outgoingVideoView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+
+            
         }, for: .Down)
         
         outgoingVideoView.overlay.set(handler: { [weak self] control in
             guard let `self` = self, let window = self.window, let startPoint = start else {
                 return
             }
+            
             let current = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-            
             let difference = current - startPoint
-            
-            self.outgoingVideoView.setFrameOrigin(self.outgoingVideoView.frame.origin + difference)
-            self.outgoingVideoView.hasBeenMoved = true
+
+            if let resizeDirection = resizeOutgoingVideoDirection {
+                let frame = self.outgoingVideoView.frame
+                let size: NSSize
+                let point: NSPoint
+                let value_w = difference.x
+                let value_h = difference.x * (frame.height / frame.width)
+
+                switch resizeDirection {
+                case .topLeft:
+                    size = NSMakeSize(frame.width - value_w, frame.height - value_h)
+                    point = NSMakePoint(frame.minX + value_w, frame.minY + value_h)
+                case .topRight:
+                    size = NSMakeSize(frame.width + value_w, frame.height + value_h)
+                    point = NSMakePoint(frame.minX, frame.minY - value_h)
+                case .bottomLeft:
+                    size = NSMakeSize(frame.width - value_w, frame.height - value_h)
+                    point = NSMakePoint(frame.minX + value_w, frame.minY)
+                case .bottomRight:
+                    size = NSMakeSize(frame.width + value_w, frame.height + value_h)
+                    point = NSMakePoint(frame.minX, frame.minY)
+                }
+                if size.width < OutgoingVideoView.defaultSize.width || size.height < OutgoingVideoView.defaultSize.height {
+                    return
+                }
+                if point.x < 20 ||
+                    point.y < 20 ||
+                    (self.frame.width - (point.x + size.width)) < 20 ||
+                    (self.frame.height - (point.y + size.height)) < 20 ||
+                    size.width > (defaultWindowSize.width - 40) ||
+                    size.height > (defaultWindowSize.height - 40) {
+                    return
+                }
+                self.outgoingVideoView.updateFrame(CGRect(origin: point, size: size), animated: false)
+
+            } else {
+                self.outgoingVideoView.setFrameOrigin(self.outgoingVideoView.frame.origin + difference)
+            }
             start = current
             
         }, for: .MouseDragging)
@@ -461,23 +540,45 @@ private class PhoneCallWindowView : View {
                 return
             }
             
+            
+            let frame = self.outgoingVideoView.frame
             var point = self.outgoingVideoView.frame.origin
             
-            if self.outgoingVideoView.frame.maxX > self.frame.width - 20 {
-                point.x = self.frame.width - self.outgoingVideoView.frame.width - 20
-            } else if self.outgoingVideoView.frame.minX - 20 < 0 {
+
+            var size = frame.size
+            if let event = NSApp.currentEvent, event.clickCount == 2 {
+                
+                let inside = self.outgoingVideoView.convert(event.locationInWindow, from: nil)
+                
+                if frame.width > OutgoingVideoView.defaultSize.width {
+                    size = OutgoingVideoView.defaultSize
+                    point.x += floor(inside.x / 2)
+                    point.y += floor(inside.y / 2)
+                } else {
+                    size = NSMakeSize(defaultWindowSize.width - 40, (defaultWindowSize.width - 40) * (OutgoingVideoView.defaultSize.height / OutgoingVideoView.defaultSize.width))
+                    point.x -= floor(inside.x / 2)
+                    point.y -= floor(inside.y / 2)
+                }
+                
+            }
+            
+            if (size.width + point.x) > self.frame.width - 20 {
+                point.x = self.frame.width - size.width - 20
+            } else if point.x - 20 < 0 {
                 point.x = 20
             }
             
-            if self.outgoingVideoView.frame.maxY > self.frame.height - 20 {
-                point.y = self.frame.height - self.outgoingVideoView.frame.height - 20
-            } else if self.outgoingVideoView.frame.minY - 20 < 0 {
+            if (size.height + point.y) > self.frame.height - 20 {
+                point.y = self.frame.height - size.height - 20
+            } else if point.y - 20 < 0 {
                 point.y = 20
             }
             
-            self.outgoingVideoView._change(pos: point, animated: true)
+            let updatedRect = CGRect(origin: point, size: size)
+            self.outgoingVideoView.updateFrame(updatedRect, animated: true)
             
             start = nil
+            resizeOutgoingVideoDirection = nil
         }, for: .Up)
         
         outgoingVideoView.frame = NSMakeRect(frame.width - outgoingVideoView.frame.width - 20, frame.height - 140 - outgoingVideoView.frame.height, outgoingVideoView.frame.width, outgoingVideoView.frame.height)
@@ -524,21 +625,19 @@ private class PhoneCallWindowView : View {
             let videoFrame = bounds
             outgoingVideoView.frame = videoFrame
         default:
-            var point = NSMakePoint(frame.width - 150 - 20, frame.height - 140 - 100)
-            if outgoingVideoView.hasBeenMoved {
-                point = outgoingVideoView.frame.origin
-            }
-            
+            var point = outgoingVideoView.frame.origin
+
             if previousFrame.size != frame.size {
-                point.x += (frame.width - outgoingVideoView.frame.minX) - (previousFrame.width - outgoingVideoView.frame.minX)
-                point.y += (frame.height - outgoingVideoView.frame.minY) - (previousFrame.height - outgoingVideoView.frame.minY)
                 
-                point.x = max(min(frame.width - self.outgoingVideoView.frame.width - 20, point.x), 20)
-                point.y = max(min(frame.height - self.outgoingVideoView.frame.height - 20, point.y), 20)
+                point.x += (frame.width - point.x) - (previousFrame.width - point.x)
+                point.y += (frame.height - point.y) - (previousFrame.height - point.y)
+                
+                point.x = max(min(frame.width - size.width - 20, point.x), 20)
+                point.y = max(min(frame.height - size.height - 20, point.y), 20)
             }
             
-            let videoFrame = NSMakeRect(point.x, point.y, 150, 100)
-            outgoingVideoView.frame = videoFrame
+            let videoFrame = NSMakeRect(point.x, point.y, size.width, size.height)
+            outgoingVideoView.updateFrame(videoFrame, animated: false)
         }
         
         
@@ -664,7 +763,7 @@ private class PhoneCallWindowView : View {
     
     func updateState(_ state:CallState, session:PCallSession, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         
-        let inputCameraIsActive = (state.videoState == .activeOutgoing || state.videoState == .active) && state.isOutgoingVideoPaused
+        let inputCameraIsActive = (state.videoState == .active || state.videoState == .active) && state.isOutgoingVideoPaused
         
         self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, isVisualEffect: !inputCameraIsActive, icon: inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
@@ -705,7 +804,7 @@ private class PhoneCallWindowView : View {
         
         
         switch state.videoState {
-        case .active, .activeOutgoing:
+        case .active, .outgoingRequested:
             if !self.outgoingVideoViewRequested {
                 self.outgoingVideoViewRequested = true
                 session.makeOutgoingVideoView(completion: { [weak self] view in
@@ -781,11 +880,11 @@ private class PhoneCallWindowView : View {
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
             outgoingVideoView.isEventLess = true
         default:
-            var point = NSMakePoint(frame.width - 150 - 20, frame.height - 140 - 100)
-            if outgoingVideoView.hasBeenMoved {
-                point = outgoingVideoView.frame.origin
+            var point = outgoingVideoView.frame.origin
+            if outgoingVideoView.isEventLess {
+                point = NSMakePoint(frame.width - OutgoingVideoView.defaultSize.width - 20, frame.height - 140 - OutgoingVideoView.defaultSize.height)
             }
-            let videoFrame = NSMakeRect(point.x, point.y, 150, 100)
+            let videoFrame = NSMakeRect(point.x, point.y, OutgoingVideoView.defaultSize.width, OutgoingVideoView.defaultSize.height)
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
             outgoingVideoView.isEventLess = false
         }
@@ -874,10 +973,12 @@ class PhoneCallWindowController {
     private let durationDisposable = MetaDisposable()
     private let recallDisposable = MetaDisposable()
     private let keyStateDisposable = MetaDisposable()
-    
+    private let readyDisposable = MetaDisposable()
     
     private let closeDisposable = MetaDisposable()
 
+    
+    private let ready: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
     fileprivate var eventLocalMonitor: Any?
     fileprivate var eventGlobalMonitor: Any?
@@ -886,7 +987,7 @@ class PhoneCallWindowController {
     init(_ session:PCallSession) {
         self.session = session
         
-        let size = NSMakeSize(340, 480)
+        let size = defaultWindowSize
         if let screen = NSScreen.main {
             self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: false, screen: screen)
             self.window.minSize = size
@@ -1065,6 +1166,7 @@ class PhoneCallWindowController {
         case .reconnecting:
             break
         }
+        self.ready.set(true)
     }
     
     deinit {
@@ -1074,6 +1176,7 @@ class PhoneCallWindowController {
         recallDisposable.dispose()
         keyStateDisposable.dispose()
         closeDisposable.dispose()
+        readyDisposable.dispose()
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
@@ -1087,9 +1190,13 @@ class PhoneCallWindowController {
     }
     
     func show() {
-        self.window.makeKeyAndOrderFront(self)
-        self.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
-        self.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
+        let ready = self.ready.get() |> filter { $0 } |> take(1)
+        
+        readyDisposable.set(ready.start(next: { [weak self] _ in
+            self?.window.makeKeyAndOrderFront(self)
+            self?.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
+            self?.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
+        }))
     }
 }
 

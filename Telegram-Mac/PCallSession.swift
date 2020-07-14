@@ -115,11 +115,13 @@ public struct CallAuxiliaryServer {
         case terminated(CallId?, CallSessionTerminationReason?, Bool)
     }
     
+    
     enum VideoState: Equatable {
         case notAvailable
-        case available(Bool)
+        case possible
+        case outgoingRequested
+        case incomingRequested
         case active
-        case activeOutgoing
     }
     
     enum RemoteVideoState: Equatable {
@@ -286,15 +288,18 @@ class PCallSession {
     
     let isOutgoing: Bool
     private(set) var isVideo: Bool
-    
+    private var isVideoPossible: Bool
+
     private var callWasActive = false
+    private var videoWasActive = false
+
     
     private var droppedCall = false
     private var dropCallKitCallTimer: SwiftSignalKit.Timer?
     
 
     
-    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
+    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -309,14 +314,15 @@ class PCallSession {
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
-        
+        self.isVideoPossible = isVideoPossible
+
 
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
         
         if self.isVideo {
             self.videoCapturer = OngoingCallVideoCapturer()
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .activeOutgoing, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .active, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         } else {
             self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         }
@@ -528,12 +534,15 @@ class PCallSession {
             switch callContextState.videoState {
             case .notAvailable:
                 mappedVideoState = .notAvailable
-            case let .available(enabled):
-                mappedVideoState = .available(enabled)
+            case .possible:
+                mappedVideoState = .possible
+            case .outgoingRequested:
+                mappedVideoState = .outgoingRequested
+            case .incomingRequested:
+                mappedVideoState = .incomingRequested
             case .active:
                 mappedVideoState = .active
-            case .activeOutgoing:
-                mappedVideoState = .activeOutgoing
+                self.videoWasActive = true
             }
             switch callContextState.remoteVideoState {
             case .inactive:
@@ -543,11 +552,17 @@ class PCallSession {
             }
         } else {
             if self.isVideo {
-                mappedVideoState = .activeOutgoing
+                mappedVideoState = .outgoingRequested
+            } else if self.isVideoPossible {
+                mappedVideoState = .possible
             } else {
                 mappedVideoState = .notAvailable
             }
-            mappedRemoteVideoState = .inactive
+            if videoWasActive {
+                mappedRemoteVideoState = .active
+            } else {
+                mappedRemoteVideoState = .inactive
+            }
         }
         
         switch sessionState.state {
@@ -643,12 +658,12 @@ class PCallSession {
         if case .terminated = sessionState.state, !wasTerminated {
             if !self.didSetCanBeRemoved {
                 self.didSetCanBeRemoved = true
-                self.canBeRemovedPromise.set(.single(true) |> delay(2.4, queue: Queue.mainQueue()))
+                self.canBeRemovedPromise.set(.single(true) |> delay(1.6, queue: Queue.mainQueue()))
             }
             self.hungUpPromise.set(true)
             if sessionState.isOutgoing {
                 if !self.droppedCall {
-                    let dropCallKitCallTimer = SwiftSignalKit.Timer(timeout: 2.4, repeat: false, completion: { [weak self] in
+                    let dropCallKitCallTimer = SwiftSignalKit.Timer(timeout: 1.6, repeat: false, completion: { [weak self] in
                         if let strongSelf = self {
                             strongSelf.dropCallKitCallTimer = nil
                             if !strongSelf.droppedCall {
@@ -880,7 +895,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     } |> mapToSignal { _ in
                         return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: true)))
                         subscriber.putCompletion()
                     })
                 }
