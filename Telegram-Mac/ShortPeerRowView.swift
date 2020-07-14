@@ -660,4 +660,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
        
     }
     
+    override func accessibilityLabel() -> String? {
+        return item.title
+    }
+    
 }
