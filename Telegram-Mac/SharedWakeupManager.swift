@@ -104,11 +104,13 @@ class SharedWakeupManager {
             if !ringingStatesActivated.contains(account.id) {
                 _ = (account.callSessionManager.ringingStates() |> deliverOn(callQueue)).start(next: { states in
                     pullCurrentSession( { session in
-                        if let state = states.first {
-                            if session != nil {
-                                account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
-                            } else {
-                                showPhoneCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: true))
+                        DispatchQueue.main.async {
+                            if let state = states.first {
+                                if session != nil {
+                                    account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                                } else {
+                                    showPhoneCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: true))
+                                }
                             }
                         }
                     } )
