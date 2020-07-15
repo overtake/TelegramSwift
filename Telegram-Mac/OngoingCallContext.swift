@@ -181,9 +181,9 @@ private func ongoingNetworkTypeForType(_ type: NetworkType) -> OngoingCallNetwor
 private func ongoingNetworkTypeForTypeWebrtc(_ type: NetworkType) -> OngoingCallNetworkTypeWebrtc {
     switch type {
     case .none:
-        return .wifiWebrtc
+        return .wifi
     case .wifi:
-        return .wifiWebrtc
+        return .wifi
     }
 }
 
@@ -223,28 +223,16 @@ private func ongoingDataSavingForType(_ type: VoiceCallDataSaving) -> OngoingCal
 private func ongoingDataSavingForTypeWebrtc(_ type: VoiceCallDataSaving) -> OngoingCallDataSavingWebrtc {
     switch type {
     case .never:
-        return .neverWebrtc
+        return .never
     case .cellular:
-        return .cellularWebrtc
+        return .cellular
     case .always:
-        return .alwaysWebrtc
+        return .always
     default:
-        return .neverWebrtc
+        return .never
     }
 }
 
-/*private func ongoingDataSavingForTypeWebrtcCustom(_ type: VoiceCallDataSaving) -> OngoingCallDataSavingWebrtcCustom {
- switch type {
- case .never:
- return .never
- case .cellular:
- return .cellular
- case .always:
- return .always
- default:
- return .never
- }
- }*/
 
 private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeSetNetworkType(_ type: NetworkType)
@@ -311,11 +299,11 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
     }
     
     func nativeSetVideoEnabled(_ value: Bool) {
-        self.setVideoEnabled(value)
+       // self.setVideoEnabled(value)
     }
     
     func nativeSwitchVideoCamera() {
-        self.switchVideoCamera()
+       // self.switchVideoCamera()
     }
     
     func nativeDebugInfo() -> String {
@@ -351,13 +339,13 @@ private extension OngoingCallContextState.State {
 private extension OngoingCallContextState.State {
     init(_ state: OngoingCallStateWebrtc) {
         switch state {
-        case .initializingWebrtc:
+        case .initializing:
             self = .initializing
-        case .connectedWebrtc:
+        case .connected:
             self = .connected
-        case .failedWebrtc:
+        case .failed:
             self = .failed
-        case .reconnectingWebrtc:
+        case .reconnecting:
             self = .reconnecting
         default:
             self = .failed
@@ -500,22 +488,22 @@ final class OngoingCallContext {
                         let mappedState = OngoingCallContextState.State(state)
                         let mappedVideoState: OngoingCallContextState.VideoState
                         switch videoState {
-                        case .possibleWebrtc:
+                        case .possible:
                             mappedVideoState = .possible
-                        case .incomingRequestedWebrtc:
+                        case .incomingRequested:
                             mappedVideoState = .incomingRequested
-                        case .outgoingRequestedWebrtc:
+                        case .outgoingRequested:
                             mappedVideoState = .outgoingRequested
-                        case .activeWebrtc:
+                        case .active:
                             mappedVideoState = .active
                         @unknown default:
                             mappedVideoState = .notAvailable
                         }
                         let mappedRemoteVideoState: OngoingCallContextState.RemoteVideoState
                         switch remoteVideoState {
-                        case .inactiveWebrtc:
+                        case .inactive:
                             mappedRemoteVideoState = .inactive
-                        case .activeWebrtc:
+                        case .active:
                             mappedRemoteVideoState = .active
                         @unknown default:
                             mappedRemoteVideoState = .inactive
@@ -672,14 +660,5 @@ final class OngoingCallContext {
             }
         }
     }
-    
-    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
-        self.withContext { context in
-            if let context = context as? OngoingCallThreadLocalContextWebrtc {
-                context.makeOutgoingVideoView(completion)
-            } else {
-                completion(nil)
-            }
-        }
-    }
+
 }

@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
+#if WEBRTC_IOS
 #import <UIKit/UIKit.h>
 
 typedef NS_ENUM(NSInteger, RTCDeviceType) {
@@ -91,3 +91,4 @@ typedef NS_ENUM(NSInteger, RTCDeviceType) {
 + (BOOL)isIOS11OrLater;
 
 @end
+#endif

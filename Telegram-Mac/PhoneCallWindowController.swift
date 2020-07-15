@@ -395,6 +395,7 @@ private class PhoneCallWindowView : View {
     private var outgoingVideoViewRequested: Bool = false
     private var incomingVideoViewRequested: Bool = false
 
+    private var imageDimension: NSSize? = nil
     
     private var basicControls: View = View()
     
@@ -694,6 +695,12 @@ private class PhoneCallWindowView : View {
             break
         }
       
+        if let dimension = imageDimension {
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: self.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
+            self.imageView.set(arguments: arguments)
+        }
+        
+        
         previousFrame = self.frame
     }
     
@@ -884,10 +891,13 @@ private class PhoneCallWindowView : View {
             outgoingVideoView.isEventLess = true
         default:
             var point = outgoingVideoView.frame.origin
+            var size = outgoingVideoView.frame.size
             if outgoingVideoView.isEventLess {
                 point = NSMakePoint(frame.width - OutgoingVideoView.defaultSize.width - 20, frame.height - 140 - OutgoingVideoView.defaultSize.height)
+                size = OutgoingVideoView.defaultSize
+                
             }
-            let videoFrame = NSMakeRect(point.x, point.y, OutgoingVideoView.defaultSize.width, OutgoingVideoView.defaultSize.height)
+            let videoFrame = CGRect(origin: point, size: size)
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
             outgoingVideoView.isEventLess = false
         }
@@ -904,6 +914,9 @@ private class PhoneCallWindowView : View {
         let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
         if let dimension = user.profileImageRepresentations.last?.dimensions.size {
+            
+            self.imageDimension = dimension
+            
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: self.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
             self.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), peer: user, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
@@ -916,6 +929,7 @@ private class PhoneCallWindowView : View {
             }
             
         } else {
+            self.imageDimension = nil
             self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: session.account, peer: user) |> map { TransformImageResult($0, true) })
         }
         self.updateName(user.displayTitle)
@@ -935,10 +949,32 @@ private class PhoneCallWindowView : View {
 
 class PhoneCallWindowController {
     let window:Window
+    fileprivate var view:PhoneCallWindowView
+
     let updateLocalizationAndThemeDisposable = MetaDisposable()
     fileprivate var session:PCallSession! {
         didSet {
+            view = PhoneCallWindowView(frame: NSMakeRect(0, 0, window.frame.width, window.frame.height))
+            window.contentView = view
+            first = true
             sessionDidUpdated()
+            
+            if let monitor = eventLocalMonitor {
+                NSEvent.removeMonitor(monitor)
+            }
+            if let monitor = eventGlobalMonitor {
+                NSEvent.removeMonitor(monitor)
+            }
+            
+            eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
+                self?.view.updateControlsVisibility()
+                return event
+            })
+            //
+            eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
+                self?.view.updateControlsVisibility()
+            })
+
         }
     }
 
@@ -968,8 +1004,8 @@ class PhoneCallWindowController {
             }
         }))
         
+        
     }
-    fileprivate let view:PhoneCallWindowView
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
@@ -978,8 +1014,6 @@ class PhoneCallWindowController {
     private let keyStateDisposable = MetaDisposable()
     private let readyDisposable = MetaDisposable()
     
-    private let closeDisposable = MetaDisposable()
-
     
     private let ready: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
@@ -1072,30 +1106,12 @@ class PhoneCallWindowController {
         }, with: self.view, for: .mouseExited)
         
         
-        eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
-            guard let `self` = self else {return event}
-            self.window.sendEvent(event)
-            return event
-        })
-        
-        eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
-            guard let `self` = self else {return}
-            self.window.sendEvent(event)
-        })
         
         self.view.backgroundView.set(handler: { [weak self] _ in
             self?.view.updateControlsVisibility()
 
         }, for: .Click)
-        
-        let signal = session.canBeRemoved |> deliverOnMainQueue
-        
-        closeDisposable.set(signal.start(next: { value in
-            if value {
-                closeCall()
-            }
-        }))
-        
+
         window.animationBehavior = .utilityWindow
     }
     
@@ -1131,6 +1147,7 @@ class PhoneCallWindowController {
     private func applyState(_ state:CallState, session: PCallSession, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         self.state = state
         view.updateState(state, session: session, accountPeer: accountPeer, peer: peer, animated: animated)
+        session.sharedContext.showCallHeader(with: session)
         switch state.state {
         case .ringing:
             break
@@ -1139,7 +1156,7 @@ class PhoneCallWindowController {
         case .requesting:
             break
         case .active:
-            session.sharedContext.showCallHeader(with: session)
+            break
         case .terminating:
             break
         case .terminated(_, let error, _):
@@ -1173,23 +1190,19 @@ class PhoneCallWindowController {
     }
     
     deinit {
+        cleanup()
+    }
+    
+    fileprivate func cleanup() {
         disposable.dispose()
         stateDisposable.dispose()
         durationDisposable.dispose()
         recallDisposable.dispose()
         keyStateDisposable.dispose()
-        closeDisposable.dispose()
         readyDisposable.dispose()
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
-        
-        if let monitor = eventLocalMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
-        if let monitor = eventGlobalMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
     }
     
     func show() {
@@ -1203,27 +1216,34 @@ class PhoneCallWindowController {
     }
 }
 
-private var controller:PhoneCallWindowController?
-
+private let controller:Atomic<PhoneCallWindowController?> = Atomic(value: nil)
+private let closeDisposable = MetaDisposable()
 
 func showPhoneCallWindow(_ session:PCallSession) {
-    Queue.mainQueue().async {
+    _ = controller.modify { controller in
         controller?.session.hangUpCurrentCall()
         if let controller = controller {
             controller.session = session
+            return controller
         } else {
-            controller = PhoneCallWindowController(session)
-            controller?.show()
+            return PhoneCallWindowController(session)
         }
-        
     }
+    controller.with { $0?.show() }
+    
+    let signal = session.canBeRemoved |> deliverOnMainQueue
+    closeDisposable.set(signal.start(next: { value in
+        if value {
+            closeCall()
+        }
+    }))
 }
-private let closeDisposable = MetaDisposable()
 
 func closeCall(minimisize: Bool = false) {
-    controller?.window.orderOut(nil)
-    if !minimisize {
-        controller = nil
+    _ = controller.modify { controller in
+        controller?.cleanup()
+        controller?.window.orderOut(nil)
+        return nil
     }
 }
 
@@ -1240,7 +1260,7 @@ func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallRes
             (header.view as? CallNavigationHeaderView)?.hide()
             showPhoneCallWindow(session)
         } else {
-            controller?.window.orderFront(nil)
+            controller.with { $0?.window.orderFront(nil) }
         }
     }
 }
