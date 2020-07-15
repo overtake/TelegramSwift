@@ -14,7 +14,6 @@ import SyncCore
 
 
 private final class VideoAvatarModalView : View {
-    private let captureLayer: AVCaptureVideoPreviewLayer = AVCaptureVideoPreviewLayer()
     private let captureContainer = View(frame: NSMakeRect(0, 0, 300, 400))
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
@@ -24,16 +23,10 @@ private final class VideoAvatarModalView : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        captureContainer.layer?.addSublayer(captureLayer)
-        captureLayer.videoGravity = .resizeAspectFill
-        captureLayer.frame = captureContainer.bounds
         addSubview(captureContainer)
     }
     
     func updateWithSession(_ session: AVCaptureSession) {
-        captureLayer.session = session
-        captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
-        captureLayer.connection?.isVideoMirrored = true
     }
     
     
@@ -55,12 +48,24 @@ private final class VideoAvatarModalView : View {
 
 class VideoAvatarModalController: ModalViewController {
     private let context: AccountContext
-    private let pipeline: VideoRecorderPipeline
-    private let path: URL = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random64()).mp4")
-    init(context: AccountContext) {
+    init(context: AccountContext, asset: AVURLAsset, track: AVAssetTrack) {
         self.context = context
-        self.pipeline = VideoRecorderPipeline(url: path, liveUploading: nil)
+        
         super.init(frame: NSMakeRect(0, 0, 300, 400))
+        
+        guard let track = asset.tracks(withMediaType: .video).first else {
+            return
+        }
+        let size = track.naturalSize.applying(track.preferredTransform)
+        
+        
+    }
+    
+    override var background: NSColor {
+        return .clear
+    }
+    override var isVisualEffectBackground: Bool {
+        return true
     }
     
     override func viewClass() -> AnyClass {
@@ -74,8 +79,6 @@ class VideoAvatarModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.updateWithSession(pipeline.session)
-        pipeline.start()
 
         
         readyOnce()
