@@ -31,7 +31,7 @@ func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {
         return .single(photos.photos)
     } else {
-        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(requestPeerPhotos(account: account, peerId: peerId) |> map { photos in
+        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(requestPeerPhotos(postbox: account.postbox, network: account.network, peerId: peerId) |> map { photos in
             return peerAvatars.modify { value in
                 var value = value
                 value[peerId] = PeerPhotos(photos: photos, time: Date().timeIntervalSince1970 + 5 * 60)
