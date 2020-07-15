@@ -304,9 +304,7 @@ class PCallSession {
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
         }
-        
-        assert(callQueue.isCurrent())
-        
+                
         self.account = account
         self.sharedContext = sharedContext
         self.peerId = peerId
