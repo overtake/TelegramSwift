@@ -516,10 +516,22 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
+        
+        
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in
             
-            showModal(with: VideoAvatarModalController(context: context), for: window)
+            
+            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
+                if let first = values?.first {
+                    let asset = AVURLAsset(url: URL(fileURLWithPath: first))
+                    let track = asset.tracks(withMediaType: .video).first
+                    if let track = track {
+                        showModal(with: VideoAvatarModalController(context: context, asset: asset, track: track), for: window)
+                    }
+                }
+            })
+          //  showModal(with: VideoAvatarModalController(context: context), for: window)
             
           //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked

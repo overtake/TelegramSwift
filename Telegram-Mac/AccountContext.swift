@@ -436,9 +436,6 @@ final class AccountContext {
             
             
             var limit: UInt64 = 5
-            #if DEBUG
-            limit = 400
-            #endif
             
             guard let `self` = self, isKeyWindow, !locked, let space = space, space < limit else {
                 return

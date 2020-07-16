@@ -784,12 +784,12 @@ public extension CGSize {
     }
     
     func multipliedByScreenScale() -> CGSize {
-        let scale:CGFloat = 2.0
+        let scale:CGFloat = System.backingScale
         return CGSize(width: self.width * scale, height: self.height * scale)
     }
     
     func dividedByScreenScale() -> CGSize {
-        let scale:CGFloat = 2.0
+        let scale:CGFloat = System.backingScale
         return CGSize(width: self.width / scale, height: self.height / scale)
     }
 }
