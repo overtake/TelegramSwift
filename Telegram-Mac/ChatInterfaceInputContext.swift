@@ -92,7 +92,7 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         var index = inputText.index(before: maxIndex)
         
-        if inputText.length <= 6, inputText.isSingleEmoji {
+        if inputText.length <= 7, inputText.isSingleEmoji {
             var inputText = inputText
             if inputText.canHaveSkinToneModifier {
                 inputText = inputText.emojiUnmodified

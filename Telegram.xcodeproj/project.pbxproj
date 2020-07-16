@@ -892,6 +892,8 @@
 		D0D087E2243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D087E1243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift */; };
 		D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */; };
 		D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */ = {isa = PBXBuildFile; fileRef = D0D71385227ADE9400EC88B1 /* maccheck.json */; };
+		D0D7520924C03CD60037D73A /* VideoEditorThumbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D7520824C03CD60037D73A /* VideoEditorThumbs.swift */; };
+		D0D7520B24C04FD60037D73A /* VideoEditorScrubbler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D7520A24C04FD60037D73A /* VideoEditorScrubbler.swift */; };
 		D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D752C722F8A76100E2CB74 /* Geocoding.swift */; };
 		D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D81AED243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift */; };
 		D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */; };
@@ -2051,6 +2053,8 @@
 		D0D087E1243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatlistFilterVisibilityItem.swift; sourceTree = "<group>"; };
 		D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultStickItem.swift; sourceTree = "<group>"; };
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
+		D0D7520824C03CD60037D73A /* VideoEditorThumbs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoEditorThumbs.swift; sourceTree = "<group>"; };
+		D0D7520A24C04FD60037D73A /* VideoEditorScrubbler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoEditorScrubbler.swift; sourceTree = "<group>"; };
 		D0D752C722F8A76100E2CB74 /* Geocoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geocoding.swift; sourceTree = "<group>"; };
 		D0D81AED243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterFolderIconController.swift; sourceTree = "<group>"; };
 		D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollTimerView.swift; sourceTree = "<group>"; };
@@ -4857,6 +4861,8 @@
 			isa = PBXGroup;
 			children = (
 				D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */,
+				D0D7520824C03CD60037D73A /* VideoEditorThumbs.swift */,
+				D0D7520A24C04FD60037D73A /* VideoEditorScrubbler.swift */,
 			);
 			name = "Video-Avatar";
 			sourceTree = "<group>";
@@ -5490,6 +5496,7 @@
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
+				D0D7520B24C04FD60037D73A /* VideoEditorScrubbler.swift in Sources */,
 				D074A56524A1DE7700E92F8A /* OngoingCallContext.swift in Sources */,
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
@@ -5614,6 +5621,7 @@
 				9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */,
 				C2DF47BA1DE79574003AA6C0 /* bitwise.c in Sources */,
 				C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */,
+				D0D7520924C03CD60037D73A /* VideoEditorThumbs.swift in Sources */,
 				9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,
 				C2C73A5B1EEAF3AE00DB8420 /* ChannelEventFilterModalController.swift in Sources */,
