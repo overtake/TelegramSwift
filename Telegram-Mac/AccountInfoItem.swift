@@ -115,20 +115,30 @@ class AccountInfoView : TableRowView {
     override var backdorColor: NSColor {
         return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
-    
+        
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
         if accept {
             photoVideoPlayer?.play()
         } else {
             photoVideoPlayer?.pause()
-            photoVideoPlayer?.seek(timestamp: 0)
         }
     }
     
+    override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        photoVideoPlayer?.seek(timestamp: 0)
+    }
     
     override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
         updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateListeners()
+        updatePlayerIfNeeded()
     }
     
     func updateListeners() {
@@ -161,6 +171,7 @@ class AccountInfoView : TableRowView {
         super.set(item: item)
         
         if let item = item as? AccountInfoItem {
+            
             actionView.image = item.isSelected ? nil : theme.icons.generalNext
             actionView.sizeToFit()
             avatarView.setPeer(account: item.context.account, peer: item.peer)

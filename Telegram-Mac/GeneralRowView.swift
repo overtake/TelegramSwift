@@ -27,6 +27,10 @@ class GeneralContainableRowView : TableRowView {
         self.containerView.addSubview(view)
     }
     
+    override func addSubview(_ view: NSView, positioned place: NSWindow.OrderingMode, relativeTo otherView: NSView?) {
+        self.containerView.addSubview(view, positioned: place, relativeTo: otherView)
+    }
+    
     override var backdorColor: NSColor {
         return theme.colors.background
     }

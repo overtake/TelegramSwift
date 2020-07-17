@@ -76,29 +76,34 @@ struct VideoScrubberValues : Equatable {
     let leftCrop: CGFloat
     let rightCrop: CGFloat
     let minDist: CGFloat
+    let maxDist: CGFloat
     let paused: Bool
-    init(movePos: CGFloat, leftCrop: CGFloat, rightCrop: CGFloat, minDist: CGFloat, paused: Bool) {
+    init(movePos: CGFloat, leftCrop: CGFloat, rightCrop: CGFloat, minDist: CGFloat, maxDist: CGFloat, paused: Bool) {
         self.movePos = movePos
         self.leftCrop = leftCrop
         self.rightCrop = rightCrop
         self.minDist = minDist
         self.paused = paused
+        self.maxDist = maxDist
     }
     
     func withUpdatedMove(_ movePos: CGFloat) -> VideoScrubberValues {
-        return VideoScrubberValues(movePos: min(max(0, movePos), 1), leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, paused: paused)
+        return VideoScrubberValues(movePos: min(max(0, movePos), 1), leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, maxDist: maxDist, paused: paused)
     }
     func withUpdatedLeftCrop(_ leftCrop: CGFloat) -> VideoScrubberValues {
-        return VideoScrubberValues(movePos: movePos, leftCrop: min(max(0, leftCrop), 1), rightCrop: rightCrop, minDist: minDist, paused: paused)
+        return VideoScrubberValues(movePos: movePos, leftCrop: min(max(0, leftCrop), 1), rightCrop: rightCrop, minDist: minDist, maxDist: maxDist, paused: paused)
     }
     func withUpdatedRightCrop(_ rightCrop: CGFloat) -> VideoScrubberValues {
-        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: min(max(0, rightCrop), 1), minDist: minDist, paused: paused)
+        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: min(max(0, rightCrop), 1), minDist: minDist, maxDist: maxDist, paused: paused)
     }
     func withUpdatedMinDist(_ minDist: CGFloat) -> VideoScrubberValues {
-        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, paused: paused)
+        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, maxDist: maxDist, paused: paused)
+    }
+    func withUpdatedMaxDist(_ maxDist: CGFloat) -> VideoScrubberValues {
+        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, maxDist: maxDist, paused: paused)
     }
     func withUpdatedPaused(_ paused: Bool) -> VideoScrubberValues {
-        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, paused: paused)
+        return VideoScrubberValues(movePos: movePos, leftCrop: leftCrop, rightCrop: rightCrop, minDist: minDist, maxDist: maxDist, paused: paused)
     }
 }
 
@@ -110,7 +115,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
     private let leftCrop: ScrubberLeftCrop = ScrubberLeftCrop(frame: .zero)
     private let rightCrop: ScrubberRightCrop = ScrubberRightCrop(frame: .zero)
 
-    private var values = VideoScrubberValues(movePos: 0, leftCrop: 0, rightCrop: 1.0, minDist: 0, paused: false)
+    private var values = VideoScrubberValues(movePos: 0, leftCrop: 0, rightCrop: 1.0, minDist: 0, maxDist: 1, paused: false)
     
     var updateValues:((VideoScrubberValues)->Void)? = nil
     
@@ -120,7 +125,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         addSubview(self.imageViewsContainer)
         addSubview(self.scrubber)
         imageViewsContainer.layer?.cornerRadius = .cornerRadius
-        imageViewsContainer.backgroundColor = .blackTransparent
+        imageViewsContainer.backgroundColor = NSColor.black.withAlphaComponent(0.85)
         
         overlay.isEventLess = true
         overlay.displayDelegate = self
@@ -135,6 +140,9 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         
         func possibleDrag(_ value: CGFloat) -> Bool {
             return value >= 0 && value <= 1
+        }
+        func checkDist(_ leftValue: CGFloat, _ rightValue: CGFloat, _ min: CGFloat, _ max: CGFloat) -> Bool {
+            return (leftValue - rightValue) >= min && (leftValue - rightValue) <= max
         }
         
         var leftCropStart: NSPoint? = nil
@@ -168,7 +176,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
             
             let percent = newValue.x / width
             
-            if (self.values.rightCrop - percent) > self.values.minDist {
+            if checkDist(self.values.rightCrop, percent, self.values.minDist, self.values.maxDist) {
                 if possibleDrag(percent) {
                     leftCropStart = current
                     control.setFrameOrigin(newValue)
@@ -199,9 +207,16 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
             let width = self.frame.width - control.frame.width
 
             let newValue = control.frame.origin - difference
-            let percent = newValue.x / width
+            var percent = newValue.x / width
             
-            if (percent - self.values.leftCrop) > self.values.minDist {
+            if percent < 0 && self.values.rightCrop > 0 {
+                percent = 0
+            }
+            if percent > 1 && self.values.rightCrop < 1 {
+                percent = 1
+            }
+            
+            if checkDist(percent, self.values.leftCrop, self.values.minDist, self.values.maxDist) {
                 if possibleDrag(newValue.x / width) {
                     rightCropStart = current
                     control.setFrameOrigin(newValue)
@@ -231,8 +246,20 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
             let difference = start - current
             let value = difference.x / (self.frame.width - 8)
             
-            let leftValue = self.values.leftCrop - value
-            let rightValue = self.values.rightCrop - value
+            var leftValue = self.values.leftCrop - value
+            var rightValue = self.values.rightCrop - value
+            if leftValue < 0 && self.values.leftCrop > 0 {
+                leftValue = 0
+            }
+            if leftValue > 1 && self.values.leftCrop < 1 {
+                leftValue = 1
+            }
+            if rightValue < 0 && self.values.rightCrop > 0 {
+                rightValue = 0
+            }
+            if rightValue > 1 && self.values.rightCrop < 1 {
+                rightValue = 1
+            }
             if possibleDrag(leftValue) && possibleDrag(rightValue) {
                 distanceStart = current
                 let newValues = self.values.withUpdatedLeftCrop(leftValue).withUpdatedRightCrop(rightValue).withUpdatedPaused(true)
@@ -247,8 +274,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         if layer == overlay.layer {
-            //left
-            ctx.setFillColor(NSColor.blackTransparent.cgColor)
+            ctx.setFillColor(NSColor.black.withAlphaComponent(0.85).cgColor)
             if values.leftCrop > 0 {
                 ctx.fill(NSMakeRect(0, 0, leftCrop.frame.maxX, imageViewsContainer.frame.height))
             }
@@ -262,11 +288,11 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func render(_ images: [CGImage]) {
+    func render(_ images: [CGImage], size: NSSize) {
         
-        while imageViewsContainer.subviews.count > images.count {
-            imageViewsContainer.subviews.removeLast()
-        }
+//        while imageViewsContainer.subviews.count > images.count {
+//            imageViewsContainer.subviews.removeLast()
+//        }
         while imageViewsContainer.subviews.count < images.count {
             let view = ImageView()
             view.animates = true
@@ -275,7 +301,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         
         for (i, image) in images.enumerated() {
             (imageViewsContainer.subviews[i] as? ImageView)?.image = image
-            (imageViewsContainer.subviews[i] as? ImageView)?.setFrameSize(image.systemSize)
+            (imageViewsContainer.subviews[i] as? ImageView)?.setFrameSize(size)
         }
         
         needsLayout = true

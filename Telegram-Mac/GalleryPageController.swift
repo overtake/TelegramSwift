@@ -968,9 +968,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
                 ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak item] value in
-                    self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: {
-                        completion?((true, item?.stableId))
-                    }, stableId: item?.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
+                    if let item = item {
+                        self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: { [weak item] in
+                            if let item = item {
+                                completion?((true, item.stableId))
+                            }
+                        }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
+                    }
                 }))
                 
                 addVideoTimebase?((item.stableId, selectedView.contentView))
