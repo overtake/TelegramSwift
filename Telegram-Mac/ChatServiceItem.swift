@@ -133,7 +133,7 @@ class ChatServiceItem: ChatRowItem {
                         
                         let _ =  attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                         let size = ChatServiceItem.photoSize
-                        imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                        imageArguments = TransformImageArguments(corners: ImageCorners(radius: 10), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                     } else {
                         let _ =  attributedString.append(string: peer.isChannel ? L10n.chatServiceChannelRemovedPhoto : L10n.chatServiceGroupRemovedPhoto(authorName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         
@@ -437,19 +437,32 @@ class ChatServiceRowView: TableRowView {
         }
     }
     
+    
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
-        if accept {
-            photoVideoPlayer?.play()
-        } else {
-            photoVideoPlayer?.pause()
-            photoVideoPlayer?.seek(timestamp: 0)
+        if let photoVideoPlayer = photoVideoPlayer {
+            if accept {
+                photoVideoPlayer.play()
+            } else {
+                photoVideoPlayer.pause()
+            }
         }
     }
     
+    override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        photoVideoPlayer?.seek(timestamp: 0)
+    }
     
     override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
         updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateListeners()
+        updatePlayerIfNeeded()
     }
     
     func updateListeners() {
@@ -492,7 +505,6 @@ class ChatServiceRowView: TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.disableBackgroundDrawing = true
-
         
         if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
             
@@ -515,7 +527,7 @@ class ChatServiceRowView: TableRowView {
                 if let video = image.videoRepresentations.last {
                     if self.photoVideoView == nil {
                         self.photoVideoView = MediaPlayerView()
-                        self.photoVideoView!.layer?.cornerRadius = ChatServiceItem.photoSize.width / 2
+                        self.photoVideoView!.layer?.cornerRadius = 10
                         self.addSubview(self.photoVideoView!)
                         self.photoVideoView!.isEventLess = true
                     }

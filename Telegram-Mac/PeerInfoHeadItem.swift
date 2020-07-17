@@ -644,20 +644,32 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     public override func draggingEnded(_ sender: NSDraggingInfo) {
         activeDragging = false
     }
-
+    
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
-        if accept {
-            photoVideoPlayer?.play()
-        } else {
-            photoVideoPlayer?.pause()
-            photoVideoPlayer?.seek(timestamp: 0)
+        if let photoVideoPlayer = photoVideoPlayer {
+            if accept {
+                photoVideoPlayer.play()
+            } else {
+                photoVideoPlayer.pause()
+            }
         }
     }
     
+    override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
+        photoVideoPlayer?.seek(timestamp: 0)
+    }
     
     override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
         updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateListeners()
+        updatePlayerIfNeeded()
     }
     
     func updateListeners() {
@@ -745,6 +757,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
+        
         photoView.setPeer(account: item.context.account, peer: item.peer)
         
         if !item.photos.isEmpty {
@@ -762,7 +775,12 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     
                     self.photoVideoView = MediaPlayerView(backgroundThread: true)
                     self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
-                    self.addSubview(self.photoVideoView!)
+                    if let photoEditableView = self.photoEditableView {
+                        self.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
+                    } else {
+                        self.addSubview(self.photoVideoView!)
+
+                    }
                     self.photoVideoView!.isEventLess = true
                     
                     self.photoVideoView!.frame = self.photoView.frame
@@ -781,9 +799,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                         mediaPlayer.seek(timestamp: seekTo)
                     }
                     mediaPlayer.attachPlayerView(self.photoVideoView!)
-                    
                     self.videoRepresentation = video
-
+                    updatePlayerIfNeeded()
                 }
                 
                 

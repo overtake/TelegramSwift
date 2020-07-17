@@ -324,9 +324,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                         addSubview(connectionStatusView!)
                         connectionStatusView?.change(pos: NSMakePoint(0,0), animated: true)
                     }
-                    
                     connectionStatusView?.status = connectionStatus
-
+                    applyVideoAvatarIfNeeded(nil)
                 }
             }
         }
@@ -545,7 +544,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             file = nil
         }
         
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, let file = file, let peer = chatInteraction.presentation.mainPeer {
+        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, self.connectionStatusView == nil, let file = file, let peer = chatInteraction.presentation.mainPeer {
             let control: VideoAvatarContainer
             if let view = self.videoAvatarView {
                 control = view

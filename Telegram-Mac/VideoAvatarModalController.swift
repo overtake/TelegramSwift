@@ -42,6 +42,7 @@ private final class VideoAvatarModalView : View {
         
         addSubview(playerContainer)
         addSubview(controls)
+        layout()
         
         
     }
@@ -54,7 +55,8 @@ private final class VideoAvatarModalView : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
+    deinit {
+    }
     
     func update(_ player: AVPlayer, size: NSSize) {
         self.avPlayer.player = player
@@ -72,6 +74,7 @@ private final class VideoAvatarModalView : View {
     }
     func stop() {
         self.avPlayer.player?.pause()
+        self.avPlayer.player = nil
     }
     
     override func layout() {
@@ -90,19 +93,24 @@ private final class VideoAvatarModalView : View {
     }
 }
 
+struct VideoAvatarResult {
+    let thumb: String
+    let video: String
+}
+
 class VideoAvatarModalController: ModalViewController {
     private let context: AccountContext
     fileprivate let videoSize: NSSize
     fileprivate let player: AVPlayer
     fileprivate let item: AVPlayerItem
-    fileprivate let asset: AVURLAsset
+    fileprivate let asset: AVComposition
     fileprivate let track: AVAssetTrack
     
     private let updateThumbsDisposable = MetaDisposable()
     private let rectDisposable = MetaDisposable()
     private let valuesDisposable = MetaDisposable()
     
-    fileprivate let scrubberValues:Atomic<VideoScrubberValues> = Atomic(value: VideoScrubberValues(movePos: 0, leftCrop: 0, rightCrop: 1.0, minDist: 0, paused: false))
+    fileprivate let scrubberValues:Atomic<VideoScrubberValues> = Atomic(value: VideoScrubberValues(movePos: 0, leftCrop: 0, rightCrop: 1.0, minDist: 0, maxDist: 1, paused: true))
     fileprivate let _scrubberValuesSignal: ValuePromise<VideoScrubberValues> = ValuePromise(ignoreRepeated: true)
     var scrubberValuesSignal: Signal<VideoScrubberValues, NoError> {
         return _scrubberValuesSignal.get() |> deliverOnMainQueue
@@ -114,14 +122,16 @@ class VideoAvatarModalController: ModalViewController {
     private var firstTime: Bool = true
     private var timeObserverToken: Any?
     
-    init(context: AccountContext, asset: AVURLAsset, track: AVAssetTrack) {
+    private let completeHandler:((VideoAvatarResult)->Void)?
+    
+    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, completeHandler:((VideoAvatarResult)->Void)? = nil) {
         self.context = context
         self.asset = asset
         self.track = track
-        
+        self.completeHandler = completeHandler
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = size
-        self.item = AVPlayerItem(url: asset.url)
+        self.item = AVPlayerItem(asset: asset)
         self.player = AVPlayer(playerItem: item)
         super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(80, 80)))
         self.bar = .init(height: 0)
@@ -165,26 +175,73 @@ class VideoAvatarModalController: ModalViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.play()
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        genericView.stop()
+        player.pause()
+        
+        if let timeObserverToken = timeObserverToken {
+            player.removeTimeObserver(timeObserverToken)
+            self.timeObserverToken = nil
+        }
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
         
-        let exportSession = AVAssetExportSession(asset: self.asset, presetName: AVAssetExportPreset640x480)!
+        let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality)!
         exportSession.outputFileType = .mp4
+        exportSession.shouldOptimizeForNetworkUse = true
         
         let path = NSTemporaryDirectory() + "\(arc4random()).mp4"
-        
+        let thumbPath = NSTemporaryDirectory() + "\(arc4random()).jpg"
         exportSession.outputURL = URL(fileURLWithPath: path)
         
-        exportSession.videoComposition = currentVideoComposition(for: self.genericView.playerSize)
+        exportSession.videoComposition = currentVideoComposition()
         
-        exportSession.exportAsynchronously(completionHandler: {
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+        let wholeDuration = CMTimeGetSeconds(asset.duration)
+        
+        let from = scrubberValues.with { TimeInterval($0.leftCrop) * wholeDuration }
+        let to = scrubberValues.with { TimeInterval($0.rightCrop) * wholeDuration }
+        
+        let start = CMTimeMakeWithSeconds(from, preferredTimescale: 1000)
+        let duration = CMTimeMakeWithSeconds(to - from, preferredTimescale: 1000)
+        
+        exportSession.timeRange = CMTimeRangeMake(start: start, duration: duration)
+
+        exportSession.exportAsynchronously(completionHandler: { [weak self] in
+            
+            if exportSession.status == .completed, exportSession.error == nil {
+                let asset = AVURLAsset(url: URL(fileURLWithPath: path), options: [:])
+                
+                let imageGenerator = AVAssetImageGenerator(asset: asset)
+                imageGenerator.maximumSize = CGSize(width: 640, height: 640)
+                imageGenerator.appliesPreferredTrackTransform = true
+                let image = try! imageGenerator.copyCGImage(at: CMTime(seconds: 0.0, preferredTimescale: asset.duration.timescale), actualTime: nil)
+                
+                let options = NSMutableDictionary()
+                options.setValue(640 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
+                options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+                
+                let colorQuality: Float = 0.3
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                
+                
+                let mutableData: CFMutableData = NSMutableData() as CFMutableData
+                let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, options)!
+                CGImageDestinationSetProperties(colorDestination, nil)
+                
+                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                CGImageDestinationFinalize(colorDestination)
+                
+                
+                try! (mutableData as Data).write(to: URL(fileURLWithPath: thumbPath))
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.completeHandler?(.init(thumb: thumbPath, video: path))
+                    self?.close()
+                }
+            }
+            
         })
 
         
@@ -192,7 +249,7 @@ class VideoAvatarModalController: ModalViewController {
     }
     
     
-    private func currentVideoComposition(for thumbSize: NSSize) -> AVVideoComposition {
+    private func currentVideoComposition() -> AVVideoComposition {
         let size = track.naturalSize.applying(track.preferredTransform)
         
         var selectedRect = self.genericView.selectionRectView.selectedRect
@@ -206,9 +263,13 @@ class VideoAvatarModalController: ModalViewController {
         let videoComposition = AVMutableVideoComposition()
         videoComposition.renderSize = selectedRect.size
         videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
+        
+        
         let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
         let instruction = AVMutableVideoCompositionInstruction()
-        instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: CMTimeMakeWithSeconds(60, preferredTimescale: 30))
+        
+        instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: self.asset.duration)
+        
         let transform1: CGAffineTransform = track.preferredTransform.translatedBy(x: -selectedRect.minX, y: -selectedRect.minY)
         
         transformer.setTransform(transform1, at: CMTime.zero)
@@ -217,6 +278,7 @@ class VideoAvatarModalController: ModalViewController {
         videoComposition.instructions = [instruction]
         
         
+
         return videoComposition
     }
     
@@ -234,12 +296,12 @@ class VideoAvatarModalController: ModalViewController {
     }
     
     private func updateUserInterface(_ firstTime: Bool) {
-        let size = self.videoSize.aspectFilled(NSMakeSize(0, 40))
+        let size = NSMakeSize(genericView.scrubberView.frame.height, genericView.scrubberView.frame.height)
         
-        let signal = generateVideoScrubberThumbs(for: asset, composition: currentVideoComposition(for: size), size: size, count: Int(ceil(300 / 40)), gradually: firstTime) |> delay(0.2, queue: .concurrentDefaultQueue()) |> deliverOnMainQueue
+        let signal = generateVideoScrubberThumbs(for: asset, composition: currentVideoComposition(), size: size, count: Int(ceil(genericView.scrubberView.frame.width / size.width)), gradually: true) |> delay(0.2, queue: .concurrentDefaultQueue()) |> deliverOnMainQueue
         
         updateThumbsDisposable.set(signal.start(next: { [weak self] images, completed in
-            self?.genericView.scrubberView.render(images)
+            self?.genericView.scrubberView.render(images, size: size)
             self?.firstTime = !completed
         }))
     }
@@ -272,7 +334,7 @@ class VideoAvatarModalController: ModalViewController {
         
         _ = self.scrubberValues.modify { values in
             self.seekToNormal(values)
-            return values.withUpdatedMove(values.leftCrop)
+            return values.withUpdatedMove(values.leftCrop).withUpdatedPaused(false)
         }
         
         let timeScale = CMTimeScale(NSEC_PER_SEC)
@@ -290,13 +352,18 @@ class VideoAvatarModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let duration = CMTimeGetSeconds(asset.duration)
-
-        self.updateValues { values in
-            return values.withUpdatedMinDist((300 / CGFloat(duration)) / 300)
-        }
         
         genericView.update(self.player, size: self.videoSize)
+        
+        let duration = CMTimeGetSeconds(asset.duration)
+        
+        let scrubberSize = genericView.scrubberView.frame.width
+        
+        let valueSec = (scrubberSize / CGFloat(duration)) / scrubberSize
+        
+        self.updateValues { values in
+            return values.withUpdatedMinDist(valueSec).withUpdatedMaxDist(valueSec * 10.0).withUpdatedRightCrop(min(1, valueSec * 10.0))
+        }
         
         genericView.scrubberView.updateValues = { [weak self] values in
             self?.updateValues { _ in
@@ -325,69 +392,25 @@ class VideoAvatarModalController: ModalViewController {
 }
 
 
-/*
- 
- 
- - (NSArray *)videoScrubber:(TGMediaPickerGalleryVideoScrubber *)videoScrubber evenlySpacedTimestamps:(NSInteger)count startingAt:(NSTimeInterval)startTimestamp endingAt:(NSTimeInterval)endTimestamp
- {
- if (endTimestamp < startTimestamp)
- return nil;
- 
- if (count == 0)
- return nil;
- 
- NSTimeInterval duration = [self videoScrubberDuration:videoScrubber];
- if (endTimestamp > duration)
- endTimestamp = duration;
- 
- NSTimeInterval interval = (endTimestamp - startTimestamp) / count;
- 
- NSMutableArray *timestamps = [[NSMutableArray alloc] init];
- for (NSInteger i = 0; i < count; i++)
- [timestamps addObject:@(startTimestamp + i * interval)];
- 
- return timestamps;
- }
 
- 
- + (SSignal *)videoThumbnailsForAVAsset:(AVAsset *)avAsset size:(CGSize)size timestamps:(NSArray *)timestamps
- {
- SSignal *signal = [[SSignal alloc] initWithGenerator:^id<SDisposable>(SSubscriber *subscriber)
- {
- NSMutableArray *images = [[NSMutableArray alloc] init];
- 
- AVAssetImageGenerator *generator = [AVAssetImageGenerator assetImageGeneratorWithAsset:avAsset];
- generator.appliesPreferredTrackTransform = true;
- generator.maximumSize = size;
- generator.requestedTimeToleranceBefore = kCMTimeZero;
- generator.requestedTimeToleranceAfter = kCMTimeZero;
- 
- [generator generateCGImagesAsynchronouslyForTimes:timestamps completionHandler:^(__unused CMTime requestedTime, CGImageRef imageRef, __unused CMTime actualTime, AVAssetImageGeneratorResult result, NSError *error)
- {
- if (error != nil)
- {
- [subscriber putError:error];
- return;
- }
- 
- UIImage *image = [UIImage imageWithCGImage:imageRef];
- if (result == AVAssetImageGeneratorSucceeded && image != nil)
- [images addObject:image];
- 
- if (images.count == timestamps.count)
- {
- [subscriber putNext:images];
- [subscriber putCompletion];
- }
- }];
- 
- return [[SBlockDisposable alloc] initWithBlock:^
- {
- [generator cancelAllCGImageGeneration];
- }];
- }];
- 
- return [signal startOn:[self _thumbnailQueue]];
- }
-
- */
+func selectVideoAvatar(_ f:@escaping(VideoAvatarResult)->Void, context: AccountContext) -> Void {
+    filePanel(with: videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+        if let path = paths?.first {
+            let asset = AVURLAsset(url: URL(fileURLWithPath: path))
+            let track = asset.tracks(withMediaType: .video).first
+            if let track = track {
+                let composition = AVMutableComposition()
+                guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+                    return
+                }
+                do {
+                    try? compositionVideoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: asset.duration), of: track, at: .zero)
+                    
+                    showModal(with: VideoAvatarModalController(context: context, asset: composition, track: track, completeHandler: f), for: context.window)
+                } catch {
+                    
+                }
+            }
+        }
+    })
+}

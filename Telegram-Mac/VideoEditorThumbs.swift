@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 
 
-func generateVideoScrubberThumbs(for asset: AVURLAsset, composition: AVVideoComposition?, size: NSSize, count: Int, gradually: Bool) -> Signal<([CGImage], Bool), NoError> {
+func generateVideoScrubberThumbs(for asset: AVComposition, composition: AVVideoComposition?, size: NSSize, count: Int, gradually: Bool) -> Signal<([CGImage], Bool), NoError> {
     return Signal { subscriber in
         
         var cancelled = false
@@ -30,6 +30,7 @@ func generateVideoScrubberThumbs(for asset: AVURLAsset, composition: AVVideoComp
         }
         generator.appliesPreferredTrackTransform = true
         generator.maximumSize = size.multipliedByScreenScale()
+        
         generator.requestedTimeToleranceBefore = CMTime.zero
         generator.requestedTimeToleranceAfter = CMTime.zero
         generator.videoComposition = composition
