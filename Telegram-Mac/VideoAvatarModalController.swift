@@ -208,7 +208,7 @@ private final class VideoAvatarModalView : View {
         setFrameSize(frame.size)
         layout()
         
-        let size = NSMakeSize(200, 200).aspectFitted(playerContainer.frame.size - NSMakeSize(70, 70))
+        let size = NSMakeSize(200, 200).aspectFitted(playerContainer.frame.size)
         let rect = playerContainer.focus(size)
         selectionRectView.minimumSize = size.aspectFitted(NSMakeSize(150, 150))
         selectionRectView.applyRect(rect, force: true, dimensions: .square)
@@ -256,7 +256,7 @@ private final class VideoAvatarModalView : View {
     override func layout() {
         super.layout()
         
-        playerContainer.centerX(y: 0)
+        playerContainer.centerX(y: 8)
         controls.centerX(y: frame.height - controls.frame.height - 20)
         scrubberView.centerX(y: controls.frame.height - scrubberView.frame.height)
         
@@ -323,7 +323,7 @@ class VideoAvatarModalController: ModalViewController {
         self.asset = asset
         self.track = track
         let size = track.naturalSize.applying(track.preferredTransform)
-        self.videoSize = size
+        self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
         self.item = AVPlayerItem(asset: asset)
         self.player = AVPlayer(playerItem: item)
         self.localize = localize
@@ -389,7 +389,7 @@ class VideoAvatarModalController: ModalViewController {
     
     
     private func currentVideoComposition() -> AVVideoComposition {
-        let size = track.naturalSize.applying(track.preferredTransform)
+        let size = self.videoSize
         
         var selectedRect = self.genericView.selectionRectView.selectedRect
         let viewSize = self.genericView.playerSize
