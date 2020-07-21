@@ -1453,7 +1453,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if access {
                                 let state = ChatRecordingAudioState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
                                 state.start()
-                                delay(0.15, closure: { [weak chatInteraction] in
+                                delay(0.1, closure: { [weak chatInteraction] in
                                     chatInteraction?.update({$0.withRecordingState(state)})
                                 })
                             } else {
