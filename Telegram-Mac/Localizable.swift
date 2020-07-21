@@ -6657,7 +6657,7 @@ internal final class L10n {
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
-  /// Total size of your cache in gigabytes. If your cache goes over this limit the most unused media file will be removed.
+  /// Maximum permitted size of your cache. If your cache goes over this limit the oldest media will be deleted.
   internal static var storageUsageLimitDesc: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Desc") }
   /// No Limit
   internal static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
@@ -7319,6 +7319,12 @@ internal final class L10n {
   internal static var usernameSettingsInputPlaceholder: String  { return L10n.tr("Localizable", "UsernameSettings.InputPlaceholder") }
   /// Hide Others
   internal static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
+  /// Choose a cover for channel photo or video
+  internal static var videoAvatarChooseDescChannel: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Channel") }
+  /// Choose a cover for group photo or video
+  internal static var videoAvatarChooseDescGroup: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Group") }
+  /// Choose a cover for your profile photo or video
+  internal static var videoAvatarChooseDescProfile: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Profile") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

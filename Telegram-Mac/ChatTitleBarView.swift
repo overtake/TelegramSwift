@@ -575,7 +575,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let point = convert(event.locationInWindow, from: nil)
 
         
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled {
+        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, chatInteraction.peerId != chatInteraction.context.peerId {
             if let peer = chatInteraction.peer, let large = peer.largeProfileImage {
                 showPhotosGallery(context: chatInteraction.context, peerId: chatInteraction.peerId, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
                 return

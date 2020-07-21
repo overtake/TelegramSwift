@@ -2427,3 +2427,9 @@ func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: Accoun
         }
     })
 }
+
+extension NSImage {
+    var _cgImage: CGImage? {
+        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+}
