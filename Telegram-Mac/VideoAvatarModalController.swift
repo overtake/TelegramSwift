@@ -325,7 +325,21 @@ class VideoAvatarModalController: ModalViewController {
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
         self.item = AVPlayerItem(asset: asset)
+        
         self.player = AVPlayer(playerItem: item)
+        
+        let videoComposition = AVMutableVideoComposition()
+        videoComposition.renderSize = videoSize
+        videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
+        let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: self.asset.duration)
+        let transform1: CGAffineTransform = track.preferredTransform
+        transformer.setTransform(transform1, at: CMTime.zero)
+        instruction.layerInstructions = [transformer]
+        videoComposition.instructions = [instruction]
+        self.item.videoComposition = videoComposition
+        
         self.localize = localize
         super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(50, 50)))
         self.bar = .init(height: 0)
@@ -409,7 +423,9 @@ class VideoAvatarModalController: ModalViewController {
         
         instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: self.asset.duration)
         
-        let transform1: CGAffineTransform = track.preferredTransform.translatedBy(x: -selectedRect.minX, y: -selectedRect.minY)
+        let point = selectedRect.origin.applying(track.preferredTransform)
+        
+        let transform1: CGAffineTransform = track.preferredTransform.translatedBy(x: -point.x, y: -point.y)
         
         transformer.setTransform(transform1, at: CMTime.zero)
         
