@@ -468,27 +468,6 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case .wallet:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsWallet, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, action: {
                 let context = arguments.context
-//                if #available(OSX 10.12, *) {
-//
-//                    let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
-//                        if let config = configuration.config, let blockchainName = configuration.blockchainName {
-//                            let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
-//                            if hasKeys {
-//                                let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
-//                                _ = signal.start(next: { wallets in
-//                                    if wallets.isEmpty {
-//                                        arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .intro), true)
-//                                    } else {
-//                                        arguments.presentController(WalletInfoController(context: context, tonContext: tonContext, walletInfo: wallets[0].info), true)
-//                                    }
-//                                })
-//                            } else {
-//                                arguments.presentController(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable), true)
-//                            }
-//                        }
-//                    })
-//                }
-                
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .faq:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
@@ -629,12 +608,6 @@ private func accountInfoEntries(peerView:PeerView, accounts: [AccountWithInfo], 
         entries.append(.passport(index: index, peer: peer))
         index += 1
     }
-//    if hasWallet {
-//        entries.append(.wallet(index: index))
-//        index += 1
-//    }
-    
-
 
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
@@ -935,10 +908,6 @@ class LayoutAccountController : TableViewController {
                     if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = genericView.select(item: item)
                     }
-//                case controller.identifier == "wallet-info" || controller.identifier == "wallet-create" || controller.identifier == "wallet-splash":
-//                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
-//                        _ = genericView.select(item: item)
-//                    }
                 default:
                     genericView.cancelSelection()
                 }

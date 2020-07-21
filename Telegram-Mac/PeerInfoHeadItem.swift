@@ -431,18 +431,24 @@ private final class PeerInfoPhotoEditableView : Control {
         backgroundView.isEventLess = true
         
         set(handler: { [weak self] _ in
-            self?.backgroundView.change(opacity: 0.8, animated: true)
-            self?.camera.change(opacity: 0.8, animated: true)
+            if self?.updatingPhotoState == nil {
+                self?.backgroundView.change(opacity: 0.8, animated: true)
+                self?.camera.change(opacity: 0.8, animated: true)
+            }
         }, for: .Highlight)
         
         set(handler: { [weak self] _ in
-            self?.backgroundView.change(opacity: 1.0, animated: true)
-            self?.camera.change(opacity: 1.0, animated: true)
+            if self?.updatingPhotoState == nil {
+                self?.backgroundView.change(opacity: 1.0, animated: true)
+                self?.camera.change(opacity: 1.0, animated: true)
+            }
         }, for: .Normal)
         
         set(handler: { [weak self] _ in
-            self?.backgroundView.change(opacity: 1.0, animated: true)
-            self?.camera.change(opacity: 1.0, animated: true)
+            if self?.updatingPhotoState == nil {
+                self?.backgroundView.change(opacity: 1.0, animated: true)
+                self?.camera.change(opacity: 1.0, animated: true)
+            }
         }, for: .Hover)
         
         backgroundView.backgroundColor = .blackTransparent
@@ -762,10 +768,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         if !item.photos.isEmpty {
             
-            if let first = item.photos.first, let video = first.image.videoRepresentations.last {
+            if let first = item.photos.first, let video = first.image.videoRepresentations.last, item.updatingPhotoState == nil {
                
-               
-
                 let equal = videoRepresentation?.resource.id.isEqual(to: video.resource.id) ?? false
                 
                 if !equal {
@@ -806,10 +810,12 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 
                 
             } else {
+                self.photoVideoPlayer = nil
                 self.photoVideoView?.removeFromSuperview()
                 self.photoVideoView = nil
             }
         } else {
+            self.photoVideoPlayer = nil
             self.photoVideoView?.removeFromSuperview()
             self.photoVideoView = nil
         }

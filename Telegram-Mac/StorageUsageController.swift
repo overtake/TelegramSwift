@@ -201,8 +201,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .keepMediaInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .keepMediaLimit(_, value, viewType):
-            let values = [5, 10, 20, 50, Int32.max]
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "10GB", "20GB", "50GB", L10n.storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
+            let values = [5, 16, 36, Int32.max]
+            var value = value
+            if !values.contains(value) {
+                value = Int32.max
+            }
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "16GB", "32GB", L10n.storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
                 arguments.updateMediaLimit(values[selected])
             })
         case let .keepMediaLimitInfo(_, text, viewType):
@@ -413,7 +417,7 @@ class StorageUsageController: TableViewController {
         }, clearAll: {
             confirm(for: context.window, information: L10n.storageClearAllConfirmDescription, okTitle: L10n.storageClearAll, successHandler: { _ in
                 let path = context.account.postbox.mediaBox.basePath
-                _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.fileConxtets() |> mapToSignal { clearCache(path, excludes: $0) }), for: context.window).start()
+                _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.allFileContexts() |> mapToSignal { clearCache(path, excludes: $0) }), for: context.window).start()
                 statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
             })
         })
