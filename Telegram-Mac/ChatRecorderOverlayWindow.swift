@@ -166,7 +166,7 @@ class ChatRecorderOverlayWindowController : NSObject {
     func stopAndSend() {
         if let recorder = chatInteraction.presentation.recordingState {
             recorder.stop()
-            delay(0.15, closure: {
+            delay(0.1, closure: {
                 self.chatInteraction.mediaPromise.set(recorder.data)
                 closeAllModals()
             })
