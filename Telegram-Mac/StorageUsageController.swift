@@ -36,6 +36,7 @@ private enum StorageUsageSection: Int32 {
 private enum StorageUsageEntry: TableItemListNodeEntry {
     case keepMedia(Int32, String, String, GeneralViewType)
     case keepMediaInfo(Int32, String, GeneralViewType)
+    case keepMediaLimitHeader(Int32, String, GeneralViewType)
     case keepMediaLimit(Int32, Int32, GeneralViewType)
     case keepMediaLimitInfo(Int32, String, GeneralViewType)
     case clearAll(Int32, Bool, GeneralViewType)
@@ -50,16 +51,18 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 0
         case .keepMediaInfo:
             return 1
-        case .keepMediaLimit:
+        case .keepMediaLimitHeader:
             return 2
-        case .keepMediaLimitInfo:
+        case .keepMediaLimit:
             return 3
-        case .clearAll:
+        case .keepMediaLimitInfo:
             return 4
-        case .collecting:
+        case .clearAll:
             return 5
-        case .peersHeader:
+        case .collecting:
             return 6
+        case .peersHeader:
+            return 7
         case let .peer(_, _, peer, _, _):
             return Int32(peer.id.hashValue)
         case .section(let sectionId):
@@ -73,18 +76,20 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 0
         case .keepMediaInfo:
             return 1
-        case .keepMediaLimit:
+        case .keepMediaLimitHeader:
             return 2
-        case .keepMediaLimitInfo:
+        case .keepMediaLimit:
             return 3
-        case .clearAll:
+        case .keepMediaLimitInfo:
             return 4
-        case .collecting:
+        case .clearAll:
             return 5
-        case .peersHeader:
+        case .collecting:
             return 6
+        case .peersHeader:
+            return 7
         case let .peer(_, index, _, _, _):
-            return 7 + index
+            return 8 + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -95,6 +100,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case .keepMedia(let sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case .keepMediaInfo(let sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case .keepMediaLimitHeader(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case .keepMediaLimit(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -123,6 +130,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             }
         case let .keepMediaInfo(sectionId, text, viewType):
             if case .keepMediaInfo(sectionId, text, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .keepMediaLimitHeader(sectionId, value, viewType):
+            if case .keepMediaLimitHeader(sectionId, value, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -200,6 +213,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             })
         case let .keepMediaInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
+        case let .keepMediaLimitHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .keepMediaLimit(_, value, viewType):
             let values = [5, 16, 36, Int32.max]
             var value = value
@@ -249,12 +264,14 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     
     entries.append(.keepMedia(sectionId, L10n.storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .singleItem))
     
-    entries.append(.keepMediaInfo(sectionId, L10n.storageUsageKeepMediaDescription, .textBottomItem))
+    entries.append(.keepMediaInfo(sectionId, L10n.storageUsageKeepMediaDescription1, .textBottomItem))
     
     entries.append(.section(sectionId))
     sectionId += 1
     
     
+    //
+    entries.append(.keepMediaLimitHeader(sectionId, L10n.storageUsageLimitHeader, .textTopItem))
     entries.append(.keepMediaLimit(sectionId, cacheSettings.defaultCacheStorageLimitGigabytes, .singleItem))
     entries.append(.keepMediaLimitInfo(sectionId, L10n.storageUsageLimitDesc, .textBottomItem))
 
