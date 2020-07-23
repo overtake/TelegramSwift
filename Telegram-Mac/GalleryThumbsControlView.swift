@@ -77,6 +77,9 @@ class GalleryThumbsControlView: View {
     private let scrollView: HorizontalScrollView = HorizontalScrollView()
     private let documentView: View = View()
     private var selectedView: View?
+    
+    private var items: [GalleryThumbContainer] = []
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = .clear
@@ -86,6 +89,44 @@ class GalleryThumbsControlView: View {
         scrollView.background = .clear
         
         documentView.backgroundColor = .clear
+        
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
+        NotificationCenter.default.addObserver(self, selector: #selector(scrollDidUpdated), name: NSView.frameDidChangeNotification, object: scrollView)
+
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private var previousRange: NSRange? = nil
+    
+    @objc private func scrollDidUpdated() {
+        
+        
+        var range: NSRange = NSMakeRange(NSNotFound, 0)
+        
+        let distance:(min: CGFloat, max: CGFloat) = (min: scrollView.documentOffset.x - 80, max: scrollView.documentOffset.x + scrollView.frame.width + 80)
+        
+        for (i, item) in items.enumerated() {
+            if item.frame.minX >= distance.min && item.frame.maxX <= distance.max {
+                range.length += 1
+                if range.location == NSNotFound {
+                    range.location = i
+                }
+            } else if range.location != NSNotFound {
+                break
+            }
+        }
+        
+        if previousRange == range {
+            return
+        }
+        
+        previousRange = range
+        
+        documentView.subviews = range.location == NSNotFound ? [] : items.subarray(with: range)
     }
     
     override func layout() {
@@ -108,15 +149,15 @@ class GalleryThumbsControlView: View {
             }
         }, for: .SingleClick)
         
-        var subviews = documentView.subviews
         
         if animated {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         }
         
         let idx = idsExcludeDisabled(at)
-        subviews.insert(view, at: idx)
-        documentView.subviews = subviews
+        
+        items.insert(view, at: idx)
+        
         documentView.needsDisplay = true
     }
     
@@ -139,7 +180,7 @@ class GalleryThumbsControlView: View {
         let idx = idsExcludeDisabled(at)
         
 
-        let subview = documentView.subviews[idx] as! GalleryThumbContainer
+        let subview = items[idx]
         subview.isEnabled = false
         subview.change(opacity: 0, animated: animated, completion: { [weak subview] completed in
             if completed {
@@ -160,19 +201,15 @@ class GalleryThumbsControlView: View {
         
         let idx = idsExcludeDisabled(selectedIndex ?? 0)
         
-
-        
         let minWidth: CGFloat = frame.height / 2
         let difSize = NSMakeSize(frame.height, frame.height)
         
-        
-        
-        var x:CGFloat = 0// startCenter - index * (minWidth + 4) - 4
+        var x:CGFloat = 0
         
         let duration: Double = 0.4
         var selectedView: GalleryThumbContainer?
-        for i in 0 ..< documentView.subviews.count {
-            let view = documentView.subviews[i] as! GalleryThumbContainer
+        for i in 0 ..< items.count {
+            let view = items[i]
             var size = idx == i ? difSize : NSMakeSize(minWidth, frame.height)
             view.overlay.change(opacity: 0.35)
             if view.isEnabled {
@@ -201,12 +238,9 @@ class GalleryThumbsControlView: View {
         
         if let selectedView = selectedView {
             scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated)
-           // documentView.change(pos: NSMakePoint(selectedView.frame.minX, 0), animated: true)
         }
-        
-        
-       // change(size: NSMakeSize(min(500, documentView.frame.width), documentView.frame.height), animated: animated)
-        
+        previousRange = nil
+        scrollDidUpdated()
     }
     
 }
