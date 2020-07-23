@@ -652,7 +652,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     }
     
     @objc func updatePlayerIfNeeded() {
-        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !isDynamicContentLocked
         if let photoVideoPlayer = photoVideoPlayer {
             if accept {
                 photoVideoPlayer.play()
@@ -664,6 +664,11 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
         photoVideoPlayer?.seek(timestamp: 0)
+    }
+    
+    override func viewDidUpdatedDynamicContent() {
+        super.viewDidUpdatedDynamicContent()
+        updatePlayerIfNeeded()
     }
     
     override func viewDidMoveToWindow() {

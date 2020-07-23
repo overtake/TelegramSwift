@@ -1164,7 +1164,6 @@ class GalleryViewer: NSResponder {
                 
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     
-                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
                     
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
@@ -1187,6 +1186,10 @@ class GalleryViewer: NSResponder {
                     }
                 }, addVideoTimebase: { stableId, view  in
                    
+                }, showBackground: { [weak strongSelf] in
+                    DispatchQueue.main.async {
+                        strongSelf?.backgroundView._change(opacity: 1, animated: false)
+                    }
                 })
             }
         });
