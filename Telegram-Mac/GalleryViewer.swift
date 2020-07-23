@@ -1180,16 +1180,13 @@ class GalleryViewer: NSResponder {
                 }, completion:{ [weak strongSelf] in
                     //strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
+                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
                     }
                 }, addVideoTimebase: { stableId, view  in
                    
-                }, showBackground: { [weak strongSelf] in
-                    DispatchQueue.main.async {
-                        strongSelf?.backgroundView._change(opacity: 1, animated: false)
-                    }
                 })
             }
         });

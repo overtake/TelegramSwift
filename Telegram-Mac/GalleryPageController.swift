@@ -842,7 +842,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
                     
-                    showBackground?()
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
@@ -868,7 +867,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         }
                     }
                     
-                    
+                    showBackground?()
+
                     completion?()
 
                 }))

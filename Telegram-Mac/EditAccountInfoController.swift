@@ -265,6 +265,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         }
     }
 
+    var close:(()->Void)? = nil
     
     let updatePhoto:(NSImage)->Void = { image in
        
@@ -428,8 +429,9 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 if let about = updates.1 {
                     signals.append(updateAbout(account: context.account, about: about) |> `catch` { _ in .complete()})
                 }
-                updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: mainWindow).start(completed: {
+                updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
+                    close?()
                 }))
             }
             })
@@ -456,6 +458,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }
+    }
+    
+    close = { [weak controller] in
+        controller?.navigationController?.back()
     }
     
     f(controller)
