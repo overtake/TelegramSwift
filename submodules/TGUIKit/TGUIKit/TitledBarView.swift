@@ -115,7 +115,7 @@ open class TitledBarView: BarView {
     
     open override var backgroundColor: NSColor {
         didSet {
-            containerView.backgroundColor = backgroundColor
+            containerView.backgroundColor = .clear
         }
     }
     

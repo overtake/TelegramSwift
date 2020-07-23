@@ -426,6 +426,15 @@ class VideoAvatarModalController: ModalViewController {
             }
         }
         
+        func roundSize(_ numToRound: CGFloat) -> CGFloat {
+            let numToRound = Int(numToRound)
+            let remainder = numToRound % 16;
+            if (remainder == 0) {
+                return CGFloat(numToRound)
+            }
+            return CGFloat((numToRound - 16) + (16 - remainder));
+        }
+        
         let rotation: Orientation = orientation(for: track)
         
         var selectedRect = self.genericView.selectionRectView.selectedRect
@@ -438,7 +447,9 @@ class VideoAvatarModalController: ModalViewController {
         
         let videoComposition = AVMutableVideoComposition()
         
-        videoComposition.renderSize = selectedRect.size
+        
+        
+        videoComposition.renderSize = NSMakeSize(roundSize(selectedRect.width), roundSize(selectedRect.height))
         videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
         
         let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
