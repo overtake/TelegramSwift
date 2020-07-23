@@ -550,7 +550,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 control = view
             } else {
                 control = VideoAvatarContainer(frame: NSMakeRect(avatarControl.frame.minX - 2, avatarControl.frame.minY - 2, avatarControl.frame.width + 4, avatarControl.frame.height + 4))
-                addSubview(control)
+                addSubview(control, positioned: .below, relativeTo: badgeNode.view)
                 control.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 control.animateIn()
                 self.videoAvatarView = control
@@ -616,6 +616,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         videoAvatarDisposable.dispose()
     }
     
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
     
     override func layout() {
         super.layout()

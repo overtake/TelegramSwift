@@ -1254,7 +1254,7 @@ public extension NSBezierPath {
 public extension NSRect {
     
     func apply(multiplier: NSSize) -> NSRect {
-        return NSMakeRect(round(minX * multiplier.width), round(minY * multiplier.height), round(width * multiplier.width), round(height * multiplier.height))
+        return NSMakeRect(floor(minX * multiplier.width), floor(minY * multiplier.height), floor(width * multiplier.width), floor(height * multiplier.height))
     }
     
     func rotate90Degress(parentSize: NSSize) -> NSRect {

@@ -72,10 +72,12 @@ func generateVideoScrubberThumbs(for asset: AVComposition, composition: AVVideoC
             }
         })
         return ActionDisposable { [weak generator] in
-            generator?.cancelAllCGImageGeneration()
-            cancelled = true
+            Queue.concurrentBackgroundQueue().async {
+                generator?.cancelAllCGImageGeneration()
+                cancelled = true
+            }
         }
-    } |> runOn(.concurrentDefaultQueue())
+    } |> runOn(.concurrentBackgroundQueue())
 }
 func generateVideoAvatarPreview(for asset: AVComposition, composition: AVVideoComposition?, highSize: NSSize, lowSize: NSSize, at seconds: Double) -> Signal<(CGImage?, CGImage?), NoError> {
     return Signal { subscriber in
