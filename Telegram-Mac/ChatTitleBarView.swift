@@ -544,7 +544,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             file = nil
         }
         
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, self.connectionStatusView == nil, let file = file, let peer = chatInteraction.presentation.mainPeer {
+        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, chatInteraction.peerId != chatInteraction.context.peerId, self.connectionStatusView == nil, let file = file, let peer = chatInteraction.presentation.mainPeer {
             let control: VideoAvatarContainer
             if let view = self.videoAvatarView {
                 control = view
