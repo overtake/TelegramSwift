@@ -16,7 +16,7 @@ import SwiftSignalKit
 
 
 private var magicNumber: CGFloat {
-    return 8 / 280
+    return 8 / 370
 }
 
 private final class VideoAvatarKeyFramePreviewView: Control {
@@ -38,7 +38,7 @@ private final class VideoAvatarKeyFramePreviewView: Control {
         imageView.image = image
         self.keyFrame = value
         if animated {
-            flash.layer?.animateAlpha(from: 1, to: 0, duration: 0.6, timingFunction: .easeIn, removeOnCompletion: false, completion: { [weak self] completed in
+            flash.layer?.animateAlpha(from: 1, to: 0, duration: 0.8, timingFunction: .easeIn, removeOnCompletion: false, completion: { [weak self] completed in
                 self?.flash.removeFromSuperview()
                 completion(completed)
             })
@@ -68,8 +68,8 @@ private final class VideoAvatarModalView : View {
     private var keyFrameDotView: View?
     private let controls: View = View()
     
-    fileprivate let ok: ImageButton = ImageButton()
-    fileprivate let cancel: ImageButton = ImageButton()
+    fileprivate let ok: TitleButton = TitleButton()
+    fileprivate let cancel: TitleButton = TitleButton()
 
     fileprivate let scrubberView: VideoEditorScrubblerControl = VideoEditorScrubblerControl(frame: .zero)
     fileprivate let selectionRectView: SelectionRectView
@@ -90,24 +90,52 @@ private final class VideoAvatarModalView : View {
         selectionRectView.dimensions = .square
         
         
-        controls.border = [.Left, .Right]
-        controls.borderColor = NSColor.black.withAlphaComponent(0.2)
-        controls.backgroundColor = NSColor(0x303030)
-        controls.layer?.cornerRadius = .cornerRadius
+      //  controls.border = [.Left, .Right]
+       // controls.borderColor = NSColor.black.withAlphaComponent(0.2)
+        //controls.backgroundColor = NSColor(0x303030)
+        //controls.layer?.cornerRadius = .cornerRadius
         addSubview(playerContainer)
         addSubview(controls)
         
-        controls.addSubview(ok)
-        controls.addSubview(cancel)
+        self.addSubview(ok)
+        self.addSubview(cancel)
         
         addSubview(descView)
         
         descView.userInteractionEnabled = false
         descView.isSelectable = false
         descView.disableBackgroundDrawing = true
+        
+        
+        cancel.set(background: .grayText, for: .Normal)
+        ok.set(background: .accent, for: .Normal)
+        
+        cancel.set(background: NSColor.grayText.withAlphaComponent(0.8), for: .Highlight)
+        ok.set(background: NSColor.accent.withAlphaComponent(0.8), for: .Highlight)
 
-        cancel.set(image: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white), for: .Normal)
-        ok.set(image: NSImage(named: "Icon_SaveEditedMessage")!.precomposed(.accent), for: .Normal)
+        
+        cancel.set(color: .white, for: .Normal)
+        cancel.set(text: L10n.videoAvatarButtonCancel, for: .Normal)
+
+        
+        ok.set(color: .white, for: .Normal)
+        ok.set(text: L10n.videoAvatarButtonSet, for: .Normal)
+
+        _ = cancel.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
+        _ = ok.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
+
+        cancel.layer?.cornerRadius = .cornerRadius
+        ok.layer?.cornerRadius = .cornerRadius
+
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.cancel.shadow = shadow
+        self.ok.shadow = shadow
+
+    //    cancel.set(image: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white), for: .Normal)
+      //  ok.set(image: NSImage(named: "Icon_SaveEditedMessage")!.precomposed(.accent), for: .Normal)
 
         setFrameSize(frame.size)
         layout()
@@ -119,7 +147,7 @@ private final class VideoAvatarModalView : View {
         keyFramePreview?.update(with: image, value: keyFramePreview?.keyFrame, animated: false, completion: { _ in })
     }
     
-    func setKeyFrame(value: CGFloat?, highRes: CGImage? = nil, lowRes: CGImage? = nil, animated: Bool, completion: @escaping(Bool)->Void = { _ in}) -> Void {
+    func setKeyFrame(value: CGFloat?, highRes: CGImage? = nil, lowRes: CGImage? = nil, animated: Bool, completion: @escaping(Bool)->Void = { _ in}, moveToCurrentKeyFrame: @escaping(CGFloat)->Void = { _ in }) -> Void {
         if let keyFramePreview = self.keyFramePreview {
             self.keyFramePreview = nil
             keyFramePreview.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak keyFramePreview] _ in
@@ -137,6 +165,10 @@ private final class VideoAvatarModalView : View {
             let size = selectionRectView.selectedRect.size
             let keyFramePreview = VideoAvatarKeyFramePreviewView(frame: CGRect(origin: point, size: size))
  
+            
+            keyFramePreview.set(handler: { _ in
+                moveToCurrentKeyFrame(value)
+            }, for: .Click)
             
             keyFramePreview.update(with: highRes, value: value, animated: animated, completion: { [weak self, weak keyFramePreview] completed in
                 
@@ -227,7 +259,7 @@ private final class VideoAvatarModalView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
         
-        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 120))
+        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 200))
         let oldVideoContainerSize = playerContainer.frame.size
         playerContainer.setFrameSize(videoContainerSize)
 
@@ -240,10 +272,8 @@ private final class VideoAvatarModalView : View {
         avPlayer.frame = playerContainer.bounds
         selectionRectView.frame = playerContainer.bounds
         controls.setFrameSize(NSMakeSize(370, 44))
-        scrubberView.setFrameSize(NSMakeSize(280, 44))
+        scrubberView.setFrameSize(controls.frame.size)
 
-        ok.setFrameSize(NSMakeSize(controls.frame.height, controls.frame.height))
-        cancel.setFrameSize(NSMakeSize(controls.frame.height, controls.frame.height))
         
         
         if let localize = localize {
@@ -256,14 +286,14 @@ private final class VideoAvatarModalView : View {
     override func layout() {
         super.layout()
         
-        playerContainer.centerX(y: 8)
-        controls.centerX(y: frame.height - controls.frame.height - 20)
+        playerContainer.centerX(y: floorToScreenPixels(backingScaleFactor, (frame.height - 184) - playerContainer.frame.height) / 2)
+        controls.centerX(y: frame.height - controls.frame.height - 100)
         scrubberView.centerX(y: controls.frame.height - scrubberView.frame.height)
         
-        ok.setFrameOrigin(NSMakePoint(controls.frame.width - controls.frame.height, 0))
-        cancel.setFrameOrigin(.zero)
+        ok.centerX(y: frame.height - ok.frame.height - 30, addition: 7 + ok.frame.width / 2)
+        cancel.centerX(y: frame.height - cancel.frame.height - 30, addition: -(7 + cancel.frame.width / 2))
 
-        descView.centerX(y: frame.maxY - descView.frame.height)
+        descView.centerX(y: controls.frame.maxY + 15)
         
         
         if let keyFramePreview = keyFramePreview, let keyFrameDotView = keyFrameDotView, let value = keyFramePreview.keyFrame {
@@ -341,19 +371,19 @@ class VideoAvatarModalController: ModalViewController {
         self.item.videoComposition = videoComposition
         
         self.localize = localize
-        super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(50, 50)))
+        super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(20, 20)))
         self.bar = .init(height: 0)
     }
     
     override open func measure(size: NSSize) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with: contentSize - NSMakeSize(50, 50), animated: false)
+            self.modal?.resize(with: contentSize - NSMakeSize(20, 20), animated: false)
         }
     }
     
     func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with: contentSize - NSMakeSize(50, 50), animated: animated)
+            self.modal?.resize(with: contentSize - NSMakeSize(20, 20), animated: animated)
         }
     }
     
@@ -617,7 +647,7 @@ class VideoAvatarModalController: ModalViewController {
             |> deliverOnMainQueue
         
         keyFrameGeneratorDisposable.set(signal.start(next: { [weak self] highRes, lowRes in
-            self?.genericView.setKeyFrame(value: keyFrame, highRes: highRes, lowRes: lowRes, animated: true, completion: { completed in
+            self?.genericView.setKeyFrame(value: keyFrame, highRes: highRes, lowRes: lowRes, animated: true, completion: {  [weak self] completed in
                 if completed {
                     self?.updateValues {
                         $0.withUpdatedPaused(false)
@@ -633,6 +663,18 @@ class VideoAvatarModalController: ModalViewController {
                     }
                 }
 
+            }, moveToCurrentKeyFrame: { [weak self] keyFrame in
+                self?.updateValues {
+                    $0.withUpdatedSuspended(true)
+                    .withUpdatedMove(keyFrame)
+                }
+                self?.updateValues { [weak self] values in
+                    self?.seekToNormal(values)
+                    return values
+                }
+                self?.updateValues {
+                    $0.withUpdatedSuspended(false)
+                }
             })
             self?.appliedKeyFrame = keyFrame
         }))

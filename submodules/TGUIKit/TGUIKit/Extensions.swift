@@ -512,10 +512,6 @@ public extension NSView {
             x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
         }
         
-        if x == 128.0 {
-            var bp:Int = 0
-            bp += 1
-        }
         
         self.setFrameOrigin(NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!))
     }
@@ -1263,7 +1259,7 @@ public extension NSBezierPath {
 public extension NSRect {
     
     func apply(multiplier: NSSize) -> NSRect {
-        return NSMakeRect(floor(minX * multiplier.width), floor(minY * multiplier.height), floor(width * multiplier.width), floor(height * multiplier.height))
+        return NSMakeRect(round(minX * multiplier.width), round(minY * multiplier.height), round(width * multiplier.width), round(height * multiplier.height))
     }
     
     func rotate90Degress(parentSize: NSSize) -> NSRect {

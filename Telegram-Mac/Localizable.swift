@@ -7321,6 +7321,10 @@ internal final class L10n {
   internal static var usernameSettingsInputPlaceholder: String  { return L10n.tr("Localizable", "UsernameSettings.InputPlaceholder") }
   /// Hide Others
   internal static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
+  /// Cancel
+  internal static var videoAvatarButtonCancel: String  { return L10n.tr("Localizable", "VideoAvatar.Button.Cancel") }
+  /// Set
+  internal static var videoAvatarButtonSet: String  { return L10n.tr("Localizable", "VideoAvatar.Button.Set") }
   /// Choose a cover for channel video
   internal static var videoAvatarChooseDescChannel: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Channel") }
   /// Choose a cover for group video

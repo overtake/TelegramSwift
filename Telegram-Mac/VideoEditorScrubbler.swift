@@ -37,7 +37,7 @@ private final class ScrubberleftTrim: Control {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.round(bounds, flags: [.left, .top, .bottom])
-        ctx.setFillColor(NSColor.grayText.cgColor)
+        ctx.setFillColor(NSColor.accent.cgColor)
         ctx.fill(bounds)
     }
     
@@ -58,7 +58,7 @@ private final class ScrubberrightTrim: Control {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         ctx.round(bounds, flags: [.right, .top, .bottom])
-        ctx.setFillColor(NSColor.grayText.cgColor)
+        ctx.setFillColor(NSColor.accent.cgColor)
         ctx.fill(bounds)
     }
     
@@ -161,6 +161,13 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
         shadow.shadowOffset = NSMakeSize(0, 2)
         self.scrubber.shadow = shadow
+        
+        
+        let shadow1 = NSShadow()
+        shadow1.shadowBlurRadius = 5
+        shadow1.shadowColor = NSColor.black.withAlphaComponent(0.4)
+        shadow1.shadowOffset = NSMakeSize(0, 2)
+        self.shadow = shadow1
         
         
         func possibleDrag(_ value: CGFloat) -> Bool {
@@ -379,6 +386,7 @@ class VideoEditorScrubblerControl : View, ViewDisplayDelegate {
         }
         while imageViewsContainer.subviews.count < images.count {
             let view = ImageView()
+            view.contentGravity = .resizeAspectFill
             view.animates = true
             imageViewsContainer.addSubview(view)
         }
