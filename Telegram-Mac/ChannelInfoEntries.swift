@@ -251,7 +251,6 @@ class ChannelInfoArguments : PeerInfoArguments {
         if let image = custom {
             invoke(image)
         } else {
-            #if BETA || DEBUG || ALPHA
             filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
                 if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                     invoke(image)
@@ -261,13 +260,6 @@ class ChannelInfoArguments : PeerInfoArguments {
                     })
                 }
             })
-            #else
-            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
-                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                    invoke(image)
-                }
-            })
-            #endif
         }
     }
     

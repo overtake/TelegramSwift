@@ -372,7 +372,6 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: {
         
-        #if BETA || DEBUG || ALPHA
         filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
             if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                 updatePhoto(image)
@@ -382,13 +381,6 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 })
             }
         })
-        #else
-        filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
-            if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                updatePhoto(image)
-            } 
-        })
-        #endif
     }, logout: {
         showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
