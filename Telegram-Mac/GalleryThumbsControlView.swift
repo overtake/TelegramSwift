@@ -228,14 +228,12 @@ class GalleryThumbsControlView: View {
         
         let idx = idsExcludeDisabled(at)
         
-
         let subview = items[idx]
         subview.isEnabled = false
         subview.opt?.isEnabled = false
-        subview.opt?.change(opacity: 0, animated: animated, completion: { [weak subview] completed in
-            if completed {
-                subview?.cleanup()
-            }
+        subview.opt?.change(opacity: 0, animated: animated, completion: { [weak subview, weak self] completed in
+            subview?.cleanup()
+            self?.items.remove(at: idx)
         })
     }
     

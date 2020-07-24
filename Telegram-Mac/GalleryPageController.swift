@@ -468,6 +468,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if self.items != items {
                 
                 if items.count > 0 {
+                    
+                    let selectedItem = self.selectedItem
+                    
                     controller.arrangedObjects = items
                     controller.completeTransition()
                     
@@ -483,6 +486,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     }
                     if wasInited {
                         items[controller.selectedIndex].request(immediately: false)
+                        if selectedItem != self.selectedItem {
+                            self.selectedItem?.appear(for: controller.selectedViewController?.view)
+                        }
                     }
                 }
                 if wasInited {
