@@ -48,6 +48,7 @@ class AccountInfoItem: GeneralRowItem {
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
         super.init(initialSize, height: 90, stableId: stableId, action: action)
         
+        self.photos = syncPeerPhotos(peerId: peer.id)
         let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
             self?.photos = photos
@@ -167,6 +168,9 @@ class AccountInfoView : TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
+    
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
         
@@ -178,7 +182,11 @@ class AccountInfoView : TableRowView {
             textView.update(isSelect ? item.activeTextlayout : item.textLayout)
             if !item.photos.isEmpty {
                 if let first = item.photos.first, let video = first.image.videoRepresentations.last {
-                    if self.photoVideoView == nil {
+                    let equal = videoRepresentation?.resource.id.isEqual(to: video.resource.id) ?? false
+                    if !equal {
+                        
+                        self.photoVideoView?.removeFromSuperview()
+                        self.photoVideoView = nil
                         
                         self.photoVideoView = MediaPlayerView()
                         self.photoVideoView!.layer?.cornerRadius = self.avatarView.frame.height / 2
@@ -201,15 +209,18 @@ class AccountInfoView : TableRowView {
                         }
                         
                         mediaPlayer.attachPlayerView(self.photoVideoView!)
-                        
-                    } else {
-                        self.photoVideoView?.removeFromSuperview()
-                        self.photoVideoView = nil
-                    }
+                        self.videoRepresentation = video
+                        updatePlayerIfNeeded()
+                    } 
                 } else {
+                    self.photoVideoPlayer = nil
                     self.photoVideoView?.removeFromSuperview()
                     self.photoVideoView = nil
                 }
+            } else {
+                self.photoVideoPlayer = nil
+                self.photoVideoView?.removeFromSuperview()
+                self.photoVideoView = nil
             }
             needsDisplay = true
             needsLayout = true

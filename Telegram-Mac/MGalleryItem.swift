@@ -528,7 +528,6 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         viewDisposable.dispose()
         fetching.dispose()
         magnifyDisposable.dispose()
-        assertOnMainThread()
     }
     
 }

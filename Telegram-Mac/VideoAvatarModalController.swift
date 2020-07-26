@@ -16,7 +16,7 @@ import SwiftSignalKit
 
 
 private var magicNumber: CGFloat {
-    return 8 / 280
+    return 8 / 370
 }
 
 private final class VideoAvatarKeyFramePreviewView: Control {
@@ -38,7 +38,7 @@ private final class VideoAvatarKeyFramePreviewView: Control {
         imageView.image = image
         self.keyFrame = value
         if animated {
-            flash.layer?.animateAlpha(from: 1, to: 0, duration: 0.6, timingFunction: .easeIn, removeOnCompletion: false, completion: { [weak self] completed in
+            flash.layer?.animateAlpha(from: 1, to: 0, duration: 0.8, timingFunction: .easeIn, removeOnCompletion: false, completion: { [weak self] completed in
                 self?.flash.removeFromSuperview()
                 completion(completed)
             })
@@ -68,8 +68,8 @@ private final class VideoAvatarModalView : View {
     private var keyFrameDotView: View?
     private let controls: View = View()
     
-    fileprivate let ok: ImageButton = ImageButton()
-    fileprivate let cancel: ImageButton = ImageButton()
+    fileprivate let ok: TitleButton = TitleButton()
+    fileprivate let cancel: TitleButton = TitleButton()
 
     fileprivate let scrubberView: VideoEditorScrubblerControl = VideoEditorScrubblerControl(frame: .zero)
     fileprivate let selectionRectView: SelectionRectView
@@ -90,24 +90,52 @@ private final class VideoAvatarModalView : View {
         selectionRectView.dimensions = .square
         
         
-        controls.border = [.Left, .Right]
-        controls.borderColor = NSColor.black.withAlphaComponent(0.2)
-        controls.backgroundColor = NSColor(0x303030)
-        controls.layer?.cornerRadius = .cornerRadius
+      //  controls.border = [.Left, .Right]
+       // controls.borderColor = NSColor.black.withAlphaComponent(0.2)
+        //controls.backgroundColor = NSColor(0x303030)
+        //controls.layer?.cornerRadius = .cornerRadius
         addSubview(playerContainer)
         addSubview(controls)
         
-        controls.addSubview(ok)
-        controls.addSubview(cancel)
+        self.addSubview(ok)
+        self.addSubview(cancel)
         
         addSubview(descView)
         
         descView.userInteractionEnabled = false
         descView.isSelectable = false
         descView.disableBackgroundDrawing = true
+        
+        
+        cancel.set(background: .grayText, for: .Normal)
+        ok.set(background: .accent, for: .Normal)
+        
+        cancel.set(background: NSColor.grayText.withAlphaComponent(0.8), for: .Highlight)
+        ok.set(background: NSColor.accent.withAlphaComponent(0.8), for: .Highlight)
 
-        cancel.set(image: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white), for: .Normal)
-        ok.set(image: NSImage(named: "Icon_SaveEditedMessage")!.precomposed(.accent), for: .Normal)
+        
+        cancel.set(color: .white, for: .Normal)
+        cancel.set(text: L10n.videoAvatarButtonCancel, for: .Normal)
+
+        
+        ok.set(color: .white, for: .Normal)
+        ok.set(text: L10n.videoAvatarButtonSet, for: .Normal)
+
+        _ = cancel.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
+        _ = ok.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
+
+        cancel.layer?.cornerRadius = .cornerRadius
+        ok.layer?.cornerRadius = .cornerRadius
+
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 5
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+        shadow.shadowOffset = NSMakeSize(0, 2)
+        self.cancel.shadow = shadow
+        self.ok.shadow = shadow
+
+    //    cancel.set(image: NSImage(named: "Icon_VideoPlayer_Close")!.precomposed(.white), for: .Normal)
+      //  ok.set(image: NSImage(named: "Icon_SaveEditedMessage")!.precomposed(.accent), for: .Normal)
 
         setFrameSize(frame.size)
         layout()
@@ -119,7 +147,7 @@ private final class VideoAvatarModalView : View {
         keyFramePreview?.update(with: image, value: keyFramePreview?.keyFrame, animated: false, completion: { _ in })
     }
     
-    func setKeyFrame(value: CGFloat?, highRes: CGImage? = nil, lowRes: CGImage? = nil, animated: Bool, completion: @escaping(Bool)->Void = { _ in}) -> Void {
+    func setKeyFrame(value: CGFloat?, highRes: CGImage? = nil, lowRes: CGImage? = nil, animated: Bool, completion: @escaping(Bool)->Void = { _ in}, moveToCurrentKeyFrame: @escaping(CGFloat)->Void = { _ in }) -> Void {
         if let keyFramePreview = self.keyFramePreview {
             self.keyFramePreview = nil
             keyFramePreview.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak keyFramePreview] _ in
@@ -137,6 +165,10 @@ private final class VideoAvatarModalView : View {
             let size = selectionRectView.selectedRect.size
             let keyFramePreview = VideoAvatarKeyFramePreviewView(frame: CGRect(origin: point, size: size))
  
+            
+            keyFramePreview.set(handler: { _ in
+                moveToCurrentKeyFrame(value)
+            }, for: .Click)
             
             keyFramePreview.update(with: highRes, value: value, animated: animated, completion: { [weak self, weak keyFramePreview] completed in
                 
@@ -227,7 +259,7 @@ private final class VideoAvatarModalView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
         
-        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 120))
+        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 200))
         let oldVideoContainerSize = playerContainer.frame.size
         playerContainer.setFrameSize(videoContainerSize)
 
@@ -240,10 +272,8 @@ private final class VideoAvatarModalView : View {
         avPlayer.frame = playerContainer.bounds
         selectionRectView.frame = playerContainer.bounds
         controls.setFrameSize(NSMakeSize(370, 44))
-        scrubberView.setFrameSize(NSMakeSize(280, 44))
+        scrubberView.setFrameSize(controls.frame.size)
 
-        ok.setFrameSize(NSMakeSize(controls.frame.height, controls.frame.height))
-        cancel.setFrameSize(NSMakeSize(controls.frame.height, controls.frame.height))
         
         
         if let localize = localize {
@@ -256,14 +286,14 @@ private final class VideoAvatarModalView : View {
     override func layout() {
         super.layout()
         
-        playerContainer.centerX(y: 8)
-        controls.centerX(y: frame.height - controls.frame.height - 20)
+        playerContainer.centerX(y: floorToScreenPixels(backingScaleFactor, (frame.height - 184) - playerContainer.frame.height) / 2)
+        controls.centerX(y: frame.height - controls.frame.height - 100)
         scrubberView.centerX(y: controls.frame.height - scrubberView.frame.height)
         
-        ok.setFrameOrigin(NSMakePoint(controls.frame.width - controls.frame.height, 0))
-        cancel.setFrameOrigin(.zero)
+        ok.centerX(y: frame.height - ok.frame.height - 30, addition: 7 + ok.frame.width / 2)
+        cancel.centerX(y: frame.height - cancel.frame.height - 30, addition: -(7 + cancel.frame.width / 2))
 
-        descView.centerX(y: frame.maxY - descView.frame.height)
+        descView.centerX(y: controls.frame.maxY + 15)
         
         
         if let keyFramePreview = keyFramePreview, let keyFrameDotView = keyFrameDotView, let value = keyFramePreview.keyFrame {
@@ -300,7 +330,7 @@ class VideoAvatarModalController: ModalViewController {
     private let valuesDisposable = MetaDisposable()
     private let keyFrameGeneratorDisposable = MetaDisposable()
     
-    fileprivate let scrubberValues:Atomic<VideoScrubberValues> = Atomic(value: VideoScrubberValues(movePos: 0, keyFrame: nil, leftCrop: 0, rightCrop: 1.0, minDist: 0, maxDist: 1, paused: true, suspended: false))
+    fileprivate let scrubberValues:Atomic<VideoScrubberValues> = Atomic(value: VideoScrubberValues(movePos: 0, keyFrame: nil, leftTrim: 0, rightTrim: 1.0, minDist: 0, maxDist: 1, paused: true, suspended: false))
     fileprivate let _scrubberValuesSignal: ValuePromise<VideoScrubberValues> = ValuePromise(ignoreRepeated: true)
     var scrubberValuesSignal: Signal<VideoScrubberValues, NoError> {
         return _scrubberValuesSignal.get() |> deliverOnMainQueue
@@ -325,21 +355,35 @@ class VideoAvatarModalController: ModalViewController {
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
         self.item = AVPlayerItem(asset: asset)
+        
         self.player = AVPlayer(playerItem: item)
+        
+        let videoComposition = AVMutableVideoComposition()
+        videoComposition.renderSize = videoSize
+        videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
+        let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: self.asset.duration)
+        let transform1: CGAffineTransform = track.preferredTransform
+        transformer.setTransform(transform1, at: CMTime.zero)
+        instruction.layerInstructions = [transformer]
+        videoComposition.instructions = [instruction]
+        self.item.videoComposition = videoComposition
+        
         self.localize = localize
-        super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(50, 50)))
+        super.init(frame: CGRect(origin: .zero, size: context.window.contentView!.frame.size - NSMakeSize(20, 20)))
         self.bar = .init(height: 0)
     }
     
     override open func measure(size: NSSize) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with: contentSize - NSMakeSize(50, 50), animated: false)
+            self.modal?.resize(with: contentSize - NSMakeSize(20, 20), animated: false)
         }
     }
     
     func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with: contentSize - NSMakeSize(50, 50), animated: animated)
+            self.modal?.resize(with: contentSize - NSMakeSize(20, 20), animated: animated)
         }
     }
     
@@ -390,28 +434,82 @@ class VideoAvatarModalController: ModalViewController {
     
     private func currentVideoComposition() -> AVVideoComposition {
         let size = self.videoSize
+        let naturalSize = self.asset.naturalSize
+        
+        enum Orientation {
+            case up, down, right, left
+        }
+        
+        func orientation(for track: AVAssetTrack) -> Orientation {
+            let t = track.preferredTransform
+            
+            if(t.a == 0 && t.b == 1.0 && t.c == -1.0 && t.d == 0) {
+                return .up
+            } else if(t.a == 0 && t.b == -1.0 && t.c == 1.0 && t.d == 0) {
+                return .down
+            } else if(t.a == 1.0 && t.b == 0 && t.c == 0 && t.d == 1.0) {
+                return .right
+            } else if(t.a == -1.0 && t.b == 0 && t.c == 0 && t.d == -1.0) {
+                return .left
+            } else {
+                return .up
+            }
+        }
+        
+        func roundSize(_ numToRound: CGFloat) -> CGFloat {
+            let numToRound = Int(numToRound)
+            let remainder = numToRound % 16;
+            if (remainder == 0) {
+                return CGFloat(numToRound)
+            }
+            return CGFloat((numToRound - 16) + (16 - remainder));
+        }
+        
+        let rotation: Orientation = orientation(for: track)
         
         var selectedRect = self.genericView.selectionRectView.selectedRect
         let viewSize = self.genericView.playerSize
         let coefficient = NSMakeSize(size.width / viewSize.width, size.height / viewSize.height)
         
-        
         selectedRect = selectedRect.apply(multiplier: coefficient)
         
+        selectedRect.size = NSMakeSize(min(selectedRect.width, selectedRect.height), min(selectedRect.width, selectedRect.height))
         
         let videoComposition = AVMutableVideoComposition()
-        videoComposition.renderSize = selectedRect.size
-        videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
         
+        
+        
+        videoComposition.renderSize = NSMakeSize(roundSize(selectedRect.width), roundSize(selectedRect.height))
+        videoComposition.frameDuration = CMTimeMake(value: 1, timescale: 30)
         
         let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
         let instruction = AVMutableVideoCompositionInstruction()
         
         instruction.timeRange = CMTimeRangeMake(start: CMTime.zero, duration: self.asset.duration)
         
-        let transform1: CGAffineTransform = track.preferredTransform.translatedBy(x: -selectedRect.minX, y: -selectedRect.minY)
+        let point = selectedRect.origin
+        var finalTransform: CGAffineTransform = CGAffineTransform.identity
         
-        transformer.setTransform(transform1, at: CMTime.zero)
+        switch rotation {
+        case .down:
+            finalTransform = finalTransform
+                .translatedBy(x: -point.x, y: naturalSize.width - point.y)
+                .rotated(by: -.pi / 2)
+        case .left:
+            finalTransform = finalTransform
+                .translatedBy(x: naturalSize.width - point.x, y: naturalSize.height - point.y)
+                .rotated(by: .pi)
+        case .right:
+            finalTransform = finalTransform
+                .translatedBy(x: -point.x, y: -point.y)
+                .rotated(by: 0)
+        case .up:
+            finalTransform = finalTransform
+                .translatedBy(x: naturalSize.height - point.x, y: -point.y)
+                .rotated(by: .pi / 2)
+        }
+        
+        transformer.setTransform(finalTransform, at: CMTime.zero)
         
         instruction.layerInstructions = [transformer]
         videoComposition.instructions = [instruction]
@@ -438,7 +536,7 @@ class VideoAvatarModalController: ModalViewController {
     private func updateUserInterface(_ firstTime: Bool) {
         let size = NSMakeSize(genericView.scrubberView.frame.height, genericView.scrubberView.frame.height)
         
-        let signal = generateVideoScrubberThumbs(for: asset, composition: currentVideoComposition(), size: size, count: Int(ceil(genericView.scrubberView.frame.width / size.width)), gradually: true, blur: firstTime)
+        let signal = generateVideoScrubberThumbs(for: asset, composition: currentVideoComposition(), size: size, count: Int(ceil(genericView.scrubberView.frame.width / size.width)), gradually: true, blur: true)
             |> delay(0.2, queue: .concurrentDefaultQueue())
         
         
@@ -474,7 +572,7 @@ class VideoAvatarModalController: ModalViewController {
         }
     }
     private func applyValuesToPlayer(_ values: VideoScrubberValues) {
-        if values.movePos > values.rightCrop - (magicNumber + (magicNumber / 2)), !values.paused {
+        if values.movePos > values.rightTrim - (magicNumber + (magicNumber / 2)), !values.paused {
             play()
         }
         if values.paused {
@@ -499,7 +597,7 @@ class VideoAvatarModalController: ModalViewController {
             self.player.seek(to: CMTimeMakeWithSeconds(TimeInterval(values.movePos) * duration, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
             return values.keyFrame
         } else {
-            self.player.seek(to: CMTimeMakeWithSeconds(TimeInterval(values.leftCrop + magicNumber) * duration, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
+            self.player.seek(to: CMTimeMakeWithSeconds(TimeInterval(values.leftTrim + magicNumber) * duration, preferredTimescale: 1000), toleranceBefore: .zero, toleranceAfter: .zero)
             return nil
         }
     }
@@ -518,12 +616,12 @@ class VideoAvatarModalController: ModalViewController {
             if let result = self.seekToNormal(values) {
                 return values.withUpdatedMove(result)
             } else {
-                return values.withUpdatedMove(values.leftCrop)
+                return values.withUpdatedMove(values.leftTrim)
             }
         }
         
         let timeScale = CMTimeScale(NSEC_PER_SEC)
-        let time = CMTime(seconds: 0.016, preferredTimescale: timeScale)
+        let time = CMTime(seconds: 0.016 * 2, preferredTimescale: timeScale)
 
         
         timeObserverToken = player.addPeriodicTimeObserver(forInterval: time, queue: .main) { [weak self]  time in
@@ -549,7 +647,7 @@ class VideoAvatarModalController: ModalViewController {
             |> deliverOnMainQueue
         
         keyFrameGeneratorDisposable.set(signal.start(next: { [weak self] highRes, lowRes in
-            self?.genericView.setKeyFrame(value: keyFrame, highRes: highRes, lowRes: lowRes, animated: true, completion: { completed in
+            self?.genericView.setKeyFrame(value: keyFrame, highRes: highRes, lowRes: lowRes, animated: true, completion: {  [weak self] completed in
                 if completed {
                     self?.updateValues {
                         $0.withUpdatedPaused(false)
@@ -565,6 +663,18 @@ class VideoAvatarModalController: ModalViewController {
                     }
                 }
 
+            }, moveToCurrentKeyFrame: { [weak self] keyFrame in
+                self?.updateValues {
+                    $0.withUpdatedSuspended(true)
+                    .withUpdatedMove(keyFrame)
+                }
+                self?.updateValues { [weak self] values in
+                    self?.seekToNormal(values)
+                    return values
+                }
+                self?.updateValues {
+                    $0.withUpdatedSuspended(false)
+                }
             })
             self?.appliedKeyFrame = keyFrame
         }))
@@ -595,7 +705,7 @@ class VideoAvatarModalController: ModalViewController {
         let valueSec = (scrubberSize / CGFloat(duration)) / scrubberSize
         
         self.updateValues { values in
-            return values.withUpdatedMinDist(valueSec).withUpdatedMaxDist(valueSec * 10.0).withUpdatedRightCrop(min(1, valueSec * 10.0))
+            return values.withUpdatedMinDist(valueSec).withUpdatedMaxDist(valueSec * 10.0).withUpdatedrightTrim(min(1, valueSec * 10.0))
         }
         
         genericView.scrubberView.updateValues = { [weak self] values in
@@ -665,7 +775,7 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
         
         
         imageGenerator.videoComposition = composition
-        let image = try? imageGenerator.copyCGImage(at: CMTimeMakeWithSeconds(Double(values.keyFrame ?? values.leftCrop) * asset.duration.seconds, preferredTimescale: 1000), actualTime: nil)
+        let image = try? imageGenerator.copyCGImage(at: CMTimeMakeWithSeconds(Double(values.keyFrame ?? values.leftTrim) * asset.duration.seconds, preferredTimescale: 1000), actualTime: nil)
         if let image = image {
             let options = NSMutableDictionary()
             options.setValue(640 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
@@ -692,10 +802,12 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
         
         exportSession.videoComposition = composition
         
+        
+        
         let wholeDuration = CMTimeGetSeconds(asset.duration)
         
-        let from = TimeInterval(values.leftCrop) * wholeDuration
-        let to = TimeInterval(values.rightCrop) * wholeDuration
+        let from = TimeInterval(values.leftTrim) * wholeDuration
+        let to = TimeInterval(values.rightTrim) * wholeDuration
         
         let start = CMTimeMakeWithSeconds(from, preferredTimescale: 1000)
         let duration = CMTimeMakeWithSeconds(to - from, preferredTimescale: 1000)
@@ -709,6 +821,8 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
         }, queue: .concurrentBackgroundQueue())
         
         exportSession.timeRange = CMTimeRangeMake(start: start, duration: duration)
+        
+        
         exportSession.exportAsynchronously(completionHandler: { [weak exportSession] in
             
             timer.invalidate()
@@ -734,3 +848,23 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
         }
     } |> runOn(.concurrentBackgroundQueue())
 }
+
+
+
+/*
+ - (UIImageOrientation)getVideoOrientationFromAsset:(AVAsset *)asset
+ {
+ AVAssetTrack *videoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
+ CGSize size = [videoTrack naturalSize];
+ CGAffineTransform txf = [videoTrack preferredTransform];
+ 
+ if (size.width == txf.tx && size.height == txf.ty)
+ return UIImageOrientationLeft; //return UIInterfaceOrientationLandscapeLeft;
+ else if (txf.tx == 0 && txf.ty == 0)
+ return UIImageOrientationRight; //return UIInterfaceOrientationLandscapeRight;
+ else if (txf.tx == 0 && txf.ty == size.width)
+ return UIImageOrientationDown; //return UIInterfaceOrientationPortraitUpsideDown;
+ else
+ return UIImageOrientationUp;  //return UIInterfaceOrientationPortrait;
+ }
+ */

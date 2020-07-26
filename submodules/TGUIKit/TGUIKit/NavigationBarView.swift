@@ -56,6 +56,7 @@ public class NavigationBarView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
+    
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         super.draw(layer, in: ctx)
