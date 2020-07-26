@@ -14,7 +14,7 @@ import Postbox
 import SwiftSignalKit
 class ChatServiceItem: ChatRowItem {
     
-    static var photoSize = NSMakeSize(140, 140)
+    static var photoSize = NSMakeSize(200, 200)
 
     let text:TextViewLayout
     private(set) var imageArguments:TransformImageArguments?
@@ -439,7 +439,7 @@ class ChatServiceRowView: TableRowView {
     
     
     @objc func updatePlayerIfNeeded() {
-        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         if let photoVideoPlayer = photoVideoPlayer {
             if accept {
                 photoVideoPlayer.play()
@@ -462,6 +462,11 @@ class ChatServiceRowView: TableRowView {
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidUpdatedDynamicContent() {
+        super.viewDidUpdatedDynamicContent()
         updatePlayerIfNeeded()
     }
     

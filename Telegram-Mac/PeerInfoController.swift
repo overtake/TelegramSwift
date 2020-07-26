@@ -318,6 +318,7 @@ class PeerInfoController: EditableViewController<TableView> {
             theme.colors.listBackground
         }
         
+        
         let previousEntries = Atomic<[AppearanceWrapperEntry<PeerInfoSortableEntry>]?>(value: nil)
         let context = self.context
         let peerId = self.peerId
@@ -417,7 +418,6 @@ class PeerInfoController: EditableViewController<TableView> {
                 } else {
                     editable = false
                 }
-               // (self?.centerBarView as? SearchTitleBarView)?.updateSearchVisibility(peer.isSupergroup)
             } else {
                 editable = false
             }

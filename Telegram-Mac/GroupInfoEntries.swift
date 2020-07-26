@@ -713,7 +713,6 @@ final class GroupInfoArguments : PeerInfoArguments {
         } else {
             let context = self.context
  
-            #if BETA || DEBUG || ALPHA
             filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
                 if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                     invoke(image)
@@ -723,13 +722,6 @@ final class GroupInfoArguments : PeerInfoArguments {
                     })
                 }
             })
-            #else
-            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
-                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                    invoke(image)
-                }
-            })
-            #endif
         }
     }
     

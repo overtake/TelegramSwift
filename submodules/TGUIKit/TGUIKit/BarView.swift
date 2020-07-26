@@ -46,15 +46,15 @@ open class BarView: Control {
     open override var isHidden: Bool {
         didSet {
             if !isHidden {
-                layer?.opacity = 1
+             //   layer?.opacity = 1
             }
         }
     }
     
     override open func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        set(background: presentation.colors.background, for: .Normal)
-        backgroundColor = presentation.colors.background
+        set(background: .clear, for: .Normal)
+        backgroundColor = .clear
     }
     
 
