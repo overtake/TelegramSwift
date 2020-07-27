@@ -78,15 +78,13 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let context = context, let parent = parent  {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
                 controller.playOrPause()
-            } else {
-                
-               
+            } else {               
                 let controller:APController
 
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: context.account, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
                 } else {
-                    controller = APChatMusicController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatMusicController(context: context, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()
