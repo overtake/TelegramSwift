@@ -369,7 +369,7 @@ public class SelectionRectView: View {
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        ctx.setFillColor(NSColor.blackTransparent.cgColor)
+        ctx.setFillColor(NSColor.black.withAlphaComponent(0.8).cgColor)
         
         let rect = NSMakeRect(max(1, selectedRect.minX), max(1, selectedRect.minY), min(selectedRect.width, frame.width - 2), min(selectedRect.height, frame.height - 2))
         

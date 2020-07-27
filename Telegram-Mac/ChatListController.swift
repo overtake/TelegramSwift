@@ -1072,7 +1072,7 @@ class ChatListController : PeersListController {
         
         
         self.suggestAutoarchiveDisposable.set(combineLatest(queue: .mainQueue(), isLocked, context.isKeyWindow, getServerProvidedSuggestions(postbox: self.context.account.postbox)).start(next: { [weak self] locked, isKeyWindow, values in
-                guard let strongSelf = self, let window = strongSelf.window, let navigation = strongSelf.navigationController else {
+                guard let strongSelf = self, let navigation = strongSelf.navigationController else {
                     return
                 }
                 if strongSelf.didSuggestAutoarchive {
@@ -1090,8 +1090,11 @@ class ChatListController : PeersListController {
                 if locked {
                     return
                 }
+                strongSelf.didSuggestAutoarchive = true
                 
                 let context = strongSelf.context
+            
+                _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
                 
                 confirm(for: context.window, header: L10n.alertHideNewChatsHeader, information: L10n.alertHideNewChatsText, okTitle: L10n.alertHideNewChatsOK, cancelTitle: L10n.alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))

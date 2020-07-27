@@ -550,6 +550,9 @@ func initialize() -> [String] {
 
     
     array.append("gif_trending")
+    
+    
+    array.append("chat_list_thumb_play")
 
     
     return array

@@ -122,6 +122,8 @@ private final class ChatListMediaPreviewView: View {
     
     private let imageView: TransformImageView
     
+    private let playIcon: ImageView = ImageView()
+    
     private var requestedImage: Bool = false
     private var disposable: Disposable?
     
@@ -131,10 +133,12 @@ private final class ChatListMediaPreviewView: View {
         self.media = media
         
         self.imageView = TransformImageView()
-        
+        self.playIcon.image = theme.icons.chat_list_thumb_play
+        self.playIcon.sizeToFit()
         super.init()
         
         self.addSubview(self.imageView)
+        self.addSubview(self.playIcon)
     }
     
     required init?(coder: NSCoder) {
@@ -152,6 +156,7 @@ private final class ChatListMediaPreviewView: View {
     func updateLayout(size: CGSize) {
         var dimensions = CGSize(width: 100.0, height: 100.0)
         if let image = self.media as? TelegramMediaImage {
+            playIcon.isHidden = true
             if let largest = largestImageRepresentation(image.representations) {
                 dimensions = largest.dimensions.size
                 if !self.requestedImage {
@@ -161,6 +166,12 @@ private final class ChatListMediaPreviewView: View {
                 }
             }
         } else if let file = self.media as? TelegramMediaFile {
+            if file.isAnimated {
+                self.playIcon.isHidden = true
+            } else {
+                self.playIcon.isHidden = false
+            }
+
             if let mediaDimensions = file.dimensions {
                 dimensions = mediaDimensions.size
                 if !self.requestedImage {
@@ -172,7 +183,7 @@ private final class ChatListMediaPreviewView: View {
         }
         
         self.imageView.frame = CGRect(origin: CGPoint(), size: size)
-        
+        //self.playIcon.center()
         self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
         
     }

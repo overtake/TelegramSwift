@@ -50,6 +50,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     private let avatar: AvatarControl = AvatarControl(font: .avatar(22))
     private let nameSeparator: View = View()
     private let secondSeparator: View = View()
+    private var tempImageView: ImageView? = nil
     
     private let updoadPhotoCap:ImageButton = ImageButton()
     private let progressView:RadialProgressContainerView = RadialProgressContainerView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
@@ -58,6 +59,7 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         avatar.setFrameSize(NSMakeSize(60, 60))
+        avatar.layer?.cornerRadius = 30
         progressView.frame = avatar.bounds
         firstNameTextView.delegate = self
         lastNameTextView.delegate = self
@@ -166,6 +168,18 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
             progressView.change(opacity: 1, animated: animated)
             progressView.progress.state = .Fetching(progress: uploadState.progress, force: false)
             self.updoadPhotoCap.isHidden = true
+            
+            if let _ = uploadState.image, self.tempImageView == nil {
+                self.tempImageView = ImageView()
+                self.tempImageView?.contentGravity = .resizeAspect
+                self.tempImageView!.frame = avatar.bounds
+                self.avatar.addSubview(tempImageView!, positioned: .below, relativeTo: self.updoadPhotoCap)
+                if animated {
+                    self.tempImageView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            self.tempImageView?.image = uploadState.image
+            
         } else {
             if animated {
                 progressView.change(opacity: 0, animated: animated, removeOnCompletion: false, completion: { [weak self] complete in
@@ -178,6 +192,17 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
                 progressView.removeFromSuperview()
             }
             updoadPhotoCap.isHidden = item.uploadNewPhoto == nil
+            
+            if let tempImageView = self.tempImageView {
+                self.tempImageView = nil
+                if animated {
+                    tempImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak tempImageView] _ in
+                        tempImageView?.removeFromSuperview()
+                    })
+                } else {
+                    tempImageView.removeFromSuperview()
+                }
+            }
         }
         
         secondSeparator.isHidden = item.uploadNewPhoto == nil

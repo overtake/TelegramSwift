@@ -51,21 +51,21 @@ private class GalleryThumbsTouchBarItem: NSCustomTouchBarItem, NSScrubberDelegat
     }
     
     func insertItem(_ item: MGalleryItem, at: Int) {
-        let index = min(at, entries.count)
-        entries.insert(item, at: index)
-        scrubber.insertItems(at: IndexSet(integer: index))
+//        let index = min(at, entries.count)
+//        entries.insert(item, at: index)
+//        scrubber.insertItems(at: IndexSet(integer: index))
     }
     func removeItem(at: Int) {
-        if at < entries.count {
-            entries.remove(at: at)
-            scrubber.removeItems(at: IndexSet(integer: at))
-        }
+//        if at < entries.count {
+//            entries.remove(at: at)
+//            scrubber.removeItems(at: IndexSet(integer: at))
+//        }
     }
     func updateItem(_ item: MGalleryItem, at: Int) {
-        if at < entries.count {
-            entries[at] = item
-            scrubber.reloadItems(at: IndexSet(integer: at))
-        }
+//        if at < entries.count {
+//            entries[at] = item
+//            scrubber.reloadItems(at: IndexSet(integer: at))
+//        }
     }
     
     required init?(coder: NSCoder) {

@@ -181,6 +181,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 view.addSubview(pView)
             }
         }
+        self.autoplayVideoView?.mediaPlayer.seek(timestamp: 0)
     }
     
     func removeNotificationListeners() {
@@ -198,6 +199,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         partDisposable.dispose()
     }
     
+    
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         if let autoplayView = autoplayVideoView {
@@ -205,7 +207,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayView.mediaPlayer.play()
             } else {
                 autoplayView.mediaPlayer.pause()
-                autoplayView.mediaPlayer.seek(timestamp: 0)
                 autoplayVideoView?.playTimer?.invalidate()
             }
         }
@@ -376,7 +377,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         partDisposable.set(nil)
-        
         
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         

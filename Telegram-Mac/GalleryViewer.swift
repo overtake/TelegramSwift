@@ -1164,7 +1164,6 @@ class GalleryViewer: NSResponder {
                 
                 strongSelf.pager.animateIn(from: { [weak strongSelf] stableId -> NSView? in
                     
-                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
                     
                     if let firstStableId = strongSelf?.firstStableId, let innerIndex = stableId.base as? Int {
                         if let ignore = ignoreStableId?.base as? Int, ignore == innerIndex {
@@ -1181,6 +1180,7 @@ class GalleryViewer: NSResponder {
                 }, completion:{ [weak strongSelf] in
                     //strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
+                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)

@@ -568,7 +568,7 @@ class ChatListRowItem: TableRowItem {
                                     contentImageSpecs.append((message, file, fitSize))
                                 }
                                 break inner
-                            } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content {
+                            } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content, false {
                                 let imageTypes = ["photo", "video", "embed", "gif", "document", "telegram_album"]
                                 if let image = content.image, let type = content.type, imageTypes.contains(type) {
                                     if let _ = largestImageRepresentation(image.representations) {
@@ -590,8 +590,9 @@ class ChatListRowItem: TableRowItem {
                     }
                 }
             }
-            }
-            
+        }
+        
+        contentImageSpecs = Array(contentImageSpecs.prefix(3))
         
         for i in 0 ..< contentImageSpecs.count {
             if i != 0 {

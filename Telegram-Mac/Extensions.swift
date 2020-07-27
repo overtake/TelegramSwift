@@ -2438,3 +2438,9 @@ extension NSCursor  {
         return ObjcUtils.windowResizeNorthEastSouthWestCursor()
     }
 }
+
+extension NSImage {
+    var _cgImage: CGImage? {
+        return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+}

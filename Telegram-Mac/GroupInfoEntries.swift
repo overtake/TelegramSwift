@@ -294,7 +294,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
         
         let cancel = { [weak self] in
-            self?.updatePhotoDisposable.dispose()
+            self?.updatePhotoDisposable.set(nil)
             updateState { state -> GroupInfoState in
                 return state.withoutUpdatingPhotoState()
             }
@@ -303,7 +303,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         
-        let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
+        var updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
             } |> beforeNext { resource in
                 
@@ -341,6 +341,79 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
         }))
         
+        
+    }
+    
+    func updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>) -> Void {
+        
+        let updateState:((GroupInfoState)->GroupInfoState)->Void = { [weak self] f in
+            self?.updateState(f)
+        }
+        
+        let cancel = { [weak self] in
+            self?.updatePhotoDisposable.set(nil)
+            updateState { state -> GroupInfoState in
+                return state.withoutUpdatingPhotoState()
+            }
+        }
+        
+        let context = self.context
+        let peerId = self.peerId
+        
+        
+        let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
+            |> mapError { _ in return UploadPeerPhotoError.generic }
+            |> mapToSignal { state in
+                switch state {
+                case .error:
+                    return .fail(.generic)
+                case let .start(path):
+                    updateState { (state) -> GroupInfoState in
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return PeerInfoUpdatingPhotoState(progress: 0, image: NSImage(contentsOfFile: path)?._cgImage, cancel: cancel)
+                        }
+                    }
+                    return .next(.progress(0))
+                case let .progress(value):
+                    return .next(.progress(value * 0.2))
+                case let .complete(thumb, video, keyFrame):
+                    let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
+                                                          LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
+                                        
+                    return updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: thumbResource), video: uploadedPeerVideo(postbox: context.account.postbox, network: context.account.network, messageMediaPreuploadManager: nil, resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
+                        return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                    }) |> map { result in
+                        switch result {
+                        case let .progress(current):
+                            return .progress(0.2 + (current * 0.8))
+                        default:
+                            return result
+                        }
+                    }
+                }
+        }
+
+        updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+            updateState { state -> GroupInfoState in
+                switch status {
+                case .complete:
+                    return state.withoutUpdatingPhotoState()
+                case let .progress(progress):
+                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                        return previous?.withUpdatedProgress(progress)
+                    }
+                }
+            }
+        }, error: { error in
+            updateState { (state) -> GroupInfoState in
+                return state.withoutUpdatingPhotoState()
+            }
+        }, completed: {
+            updateState { (state) -> GroupInfoState in
+                return state.withoutUpdatingPhotoState()
+            }
+        }))
+
         
     }
     
@@ -638,9 +711,15 @@ final class GroupInfoArguments : PeerInfoArguments {
         if let image = custom {
             invoke(image)
         } else {
-            filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+            let context = self.context
+ 
+            filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
                 if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                     invoke(image)
+                } else if let path = paths?.first {
+                    selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescGroup, signal: { [weak self] signal in
+                        self?.updateVideo(signal)
+                    })
                 }
             })
         }
