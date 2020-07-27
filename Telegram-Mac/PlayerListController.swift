@@ -94,7 +94,7 @@ class PlayerListController: TableViewController {
     private let chatInteraction: ChatInteraction
     private let disposable = MetaDisposable()
     private let messageIndex: MessageIndex
-    init(audioPlayer: InlineAudioPlayerView, context: AccountContext, messageIndex: MessageIndex) {
+    init(audioPlayer: InlineAudioPlayerView, context: AccountContext, currentContext: AccountContext, messageIndex: MessageIndex) {
         self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), context: context)
         self.messageIndex = messageIndex
         self.audioPlayer = audioPlayer
@@ -102,7 +102,7 @@ class PlayerListController: TableViewController {
         
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            self?.audioPlayer.update(with: controller, context: context, tableView: self?.genericView)
+            self?.audioPlayer.update(with: controller, context: currentContext, tableView: self?.genericView)
         }
     }
     

@@ -1453,7 +1453,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if access {
                                 let state = ChatRecordingAudioState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
                                 state.start()
-                                chatInteraction.update({$0.withRecordingState(state)})
+                                delay(0.1, closure: { [weak chatInteraction] in
+                                    chatInteraction?.update({$0.withRecordingState(state)})
+                                })
                             } else {
                                 confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessVoiceMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
                                    switch result {
@@ -2052,6 +2054,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }
+        
+        
+        
         chatInteraction.searchPeerMessages = { [weak self] peer in
             guard let `self` = self else { return }
             self.chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})

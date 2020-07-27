@@ -468,6 +468,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             if self.items != items {
                 
                 if items.count > 0 {
+                    
+                    let selectedItem = self.selectedItem
+                    
                     controller.arrangedObjects = items
                     controller.completeTransition()
                     
@@ -483,6 +486,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     }
                     if wasInited {
                         items[controller.selectedIndex].request(immediately: false)
+                        if selectedItem != self.selectedItem {
+                            self.selectedItem?.appear(for: controller.selectedViewController?.view)
+                        }
                     }
                 }
                 if wasInited {
@@ -829,7 +835,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         return false
     }
     
-    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil) ->Void {
+    func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil, showBackground:(()->Void)? = nil) ->Void {
         
         window.contentView?.addSubview(_prev)
         window.contentView?.addSubview(_next)
@@ -841,6 +847,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 selectedView.isHidden = true
                 
                 ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.7, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak oldView, weak selectedView] value in
+                    
                     
                     if let view = self?.view, let contentInset = self?.contentInset, let contentFrame = self?.contentFrame, let oldView = oldView {
                         let newRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset: contentInset)
@@ -866,7 +873,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         }
                     }
                     
-                    
+                    showBackground?()
+
                     completion?()
 
                 }))
@@ -968,9 +976,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let oldRect = view.focus(item.sizeValue.fitted(contentFrame.size), inset:contentInset)
                 
                 ioDisposabe.set((item.image.get() |> map { $0.value } |> take(1) |> timeout(0.1, queue: Queue.mainQueue(), alternate: .single(.image(nil, nil)))).start(next: { [weak self, weak item] value in
-                    self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: {
-                        completion?((true, item?.stableId))
-                    }, stableId: item?.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
+                    if let item = item {
+                        self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 1, newAlphaTo:0, oldAlphaFrom: 0, oldAlphaTo: 1, contents: value, oldView: oldView, completion: { [weak item] in
+                            if let item = item {
+                                completion?((true, item.stableId))
+                            }
+                        }, stableId: item.stableId, addAccesoryOnCopiedView: addAccesoryOnCopiedView)
+                    }
                 }))
                 
                 addVideoTimebase?((item.stableId, selectedView.contentView))

@@ -21,6 +21,32 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         }
     }
     
+    var dynamicContentStateForRestore:Bool? = nil
+    var interactionStateForRestore:Bool? = nil
+    
+    public var isDynamicContentLocked:Bool = false {
+        didSet {
+            if isDynamicContentLocked != oldValue {
+                viewDidUpdatedDynamicContent()
+            }
+        }
+    }
+    public var userInteractionEnabled:Bool = true {
+        didSet {
+            if userInteractionEnabled != oldValue {
+                viewDidUpdatedInteractivity()
+            }
+        }
+    }
+    
+    open func viewDidUpdatedInteractivity() {
+        
+    }
+    open func viewDidUpdatedDynamicContent() {
+        
+    }
+    
+    
     open private(set) weak var item:TableRowItem?
     private let menuDisposable = MetaDisposable()
     // var selected:Bool?

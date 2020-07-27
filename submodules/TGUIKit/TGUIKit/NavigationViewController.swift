@@ -1083,7 +1083,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     return .success(previous)
                 case let .swiping(delta, previous):
                     
-                    
                     let nPosition = min(max(0, delta), self.containerView.frame.width)
                     self.controller.view._change(pos: NSMakePoint(nPosition, self.controller.view.frame.minY), animated: false)
                     let previousStart = -round(NSWidth(self.containerView.frame)/3.0)

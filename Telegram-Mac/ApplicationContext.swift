@@ -217,6 +217,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return view
         }))
         
+        
         rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
             let view = CallNavigationHeaderView(header)
             return view
@@ -231,6 +232,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         super.init()
+        
+
         
         
         updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
@@ -516,10 +519,22 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
+        
+        
         #if DEBUG
         window.set(handler: { () -> KeyHandlerResult in
             
-            showModal(with: VideoAvatarModalController(context: context), for: window)
+            
+//            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
+//                if let first = values?.first {
+//                    let asset = AVURLAsset(url: URL(fileURLWithPath: first))
+//                    let track = asset.tracks(withMediaType: .video).first
+//                    if let track = track {
+//                        showModal(with: VideoAvatarModalController(context: context, asset: asset, track: track), for: window)
+//                    }
+//                }
+//            })
+          //  showModal(with: VideoAvatarModalController(context: context), for: window)
             
           //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
@@ -651,6 +666,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.updateFoldersDisposable.set((chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] value in
             self?.updateLeftSidebar(with: value, animated: true)
         }))
+        
+        
+        
+        
+        
+        if let controller = globalAudio {
+            let header = self.rightController.header?.view as? InlineAudioPlayerView
+            header?.update(with: controller, context: context, tableView: nil)
+            self.rightController.header?.show(false)
+        }
         
        // _ready.set(.single(true))
     }
@@ -840,7 +865,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         alertsDisposable.dispose()
         termDisposable.dispose()
         viewer?.close()
-        globalAudio?.cleanup()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         chatUndoManagerDisposable.dispose()

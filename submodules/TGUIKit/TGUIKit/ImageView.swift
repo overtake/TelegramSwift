@@ -24,9 +24,14 @@ open class ImageView: NSView {
     
     open var image:CGImage? {
         didSet {
+            let wasImage = self.layer?.contents != nil
             self.layer?.contents = image
             if animates {
-                animate()
+                if !wasImage {
+                    self.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                } else {
+                    animate()
+                }
             }
         }
     }

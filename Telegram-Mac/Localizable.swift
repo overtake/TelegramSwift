@@ -4357,7 +4357,7 @@ internal final class L10n {
   internal static var peerCreatePeerContextRemovePhoto: String  { return L10n.tr("Localizable", "Peer.CreatePeer.Context.RemovePhoto") }
   /// Update photo
   internal static var peerCreatePeerContextUpdatePhoto: String  { return L10n.tr("Localizable", "Peer.CreatePeer.Context.UpdatePhoto") }
-  /// You can send and receive files of any type up to 1.5 GB each and access them anywhere.
+  /// You can send and receive files of any type up to 2.0 GB each and access them anywhere.
   internal static var peerMediaSharedFilesEmptyList1: String  { return L10n.tr("Localizable", "Peer.Media.SharedFilesEmptyList1") }
   /// All links shared in this chat will appear here.
   internal static var peerMediaSharedLinksEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedLinksEmptyList") }
@@ -6685,8 +6685,12 @@ internal final class L10n {
   internal static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Keep Media
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
-  /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
-  internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
+  /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.
+  internal static var storageUsageKeepMediaDescription1: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description1") }
+  /// If your cache size exceeds this limit, the oldest media will be deleted.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
+  internal static var storageUsageLimitDesc: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Desc") }
+  /// MAXIMUM CACHE SIZE
+  internal static var storageUsageLimitHeader: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Header") }
   /// No Limit
   internal static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
   /// Suggest Frequent Contacts
@@ -7347,6 +7351,16 @@ internal final class L10n {
   internal static var usernameSettingsInputPlaceholder: String  { return L10n.tr("Localizable", "UsernameSettings.InputPlaceholder") }
   /// Hide Others
   internal static var vdrFpXzOTitle: String  { return L10n.tr("Localizable", "Vdr-fp-XzO.title") }
+  /// Cancel
+  internal static var videoAvatarButtonCancel: String  { return L10n.tr("Localizable", "VideoAvatar.Button.Cancel") }
+  /// Set
+  internal static var videoAvatarButtonSet: String  { return L10n.tr("Localizable", "VideoAvatar.Button.Set") }
+  /// Choose a cover for channel video
+  internal static var videoAvatarChooseDescChannel: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Channel") }
+  /// Choose a cover for group video
+  internal static var videoAvatarChooseDescGroup: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Group") }
+  /// Choose a cover for your profile video
+  internal static var videoAvatarChooseDescProfile: String  { return L10n.tr("Localizable", "VideoAvatar.ChooseDesc.Profile") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply
