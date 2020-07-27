@@ -54,9 +54,9 @@ class ChatVoiceContentView: ChatAudioContentView {
                 
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(account: context.account, wrapper: APSingleWrapper(resource: parameters.resource, name: tr(L10n.audioControllerVoiceMessage), performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: L10n.audioControllerVoiceMessage, performer: parent.author?.displayTitle, id: parent.chatStableId), streamable: false)
                 } else {
-                    controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatVoiceController(context: context, peerId: parent.id.peerId, index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()
