@@ -423,7 +423,7 @@ final class OngoingCallContext {
     static func versions(includeExperimental: Bool) -> [String] {
         var result: [String] = [OngoingCallThreadLocalContext.version()]
         if includeExperimental {
-            result.append(OngoingCallThreadLocalContextWebrtc.version())
+            result.append(contentsOf: OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: true))
 //            result.append(OngoingCallThreadLocalContextWebrtcCustom.version())
         }
         return result
@@ -444,7 +444,7 @@ final class OngoingCallContext {
         
         cleanupCallLogs(account: account)
         queue.sync {
-            if version == OngoingCallThreadLocalContextWebrtc.version() {
+            if OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: true).contains(version) {
                 var voipProxyServer: VoipProxyServerWebrtc?
                 if let proxyServer = proxyServer {
                     switch proxyServer.connection {
@@ -475,9 +475,9 @@ final class OngoingCallContext {
                         ))
                     }
                 }
-                let context = OngoingCallThreadLocalContextWebrtc(queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, rtcServers: rtcServers, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescriptionWebrtc(connections.primary), alternativeConnections: connections.alternatives.map(callConnectionDescriptionWebrtc), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
+                let context = OngoingCallThreadLocalContextWebrtc(version: version, queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, rtcServers: rtcServers, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescriptionWebrtc(connections.primary), alternativeConnections: connections.alternatives.map(callConnectionDescriptionWebrtc), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
                     callSessionManager?.sendSignalingData(internalId: internalId, data: data)
-                }, videoCapturer: video?.impl)
+                    }, videoCapturer: video?.impl)
                 
                 self.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
                 context.stateChanged = { [weak self] state, videoState, remoteVideoState in

@@ -89,11 +89,7 @@ private final class VideoAvatarModalView : View {
         selectionRectView.isCircleCap = true
         selectionRectView.dimensions = .square
         
-        
-      //  controls.border = [.Left, .Right]
-       // controls.borderColor = NSColor.black.withAlphaComponent(0.2)
-        //controls.backgroundColor = NSColor(0x303030)
-        //controls.layer?.cornerRadius = .cornerRadius
+
         addSubview(playerContainer)
         addSubview(controls)
         
