@@ -22,6 +22,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let playOrPause:ImageButton = ImageButton()
     private let dismiss:ImageButton = ImageButton()
     private let repeatControl:ImageButton = ImageButton()
+    private let volumeControl: ImageButton = ImageButton()
     private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
     private let textView:TextView = TextView()
     private let containerView:Control
@@ -59,6 +60,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         dismiss.disableActions()
         repeatControl.disableActions()
         repeatControl.autohighlight = false
+        volumeControl.autohighlight = false
         textView.isSelectable = false
         containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))
         
@@ -124,6 +126,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         containerView.addSubview(repeatControl)
         containerView.addSubview(textView)
         containerView.addSubview(playingSpeed)
+        containerView.addSubview(volumeControl)
         addSubview(containerView)
         addSubview(separator)
         addSubview(progressView)
@@ -147,6 +150,25 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             (control as! ImageButton).set(image: FastSettings.playingRate == 1.7 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
 
         }, for: .Click)
+        
+        
+        volumeControl.set(handler: { [weak self] control in
+            if control.popover == nil {
+                showPopover(for: control, with: VolumeControllerPopover(initialValue: CGFloat(FastSettings.volumeRate), updatedValue: { updatedVolume in
+                    FastSettings.setVolumeRate(Float(updatedVolume))
+                    self?.controller?.volume = FastSettings.volumeRate
+                    self?.updateLocalizationAndTheme(theme: theme)
+                }), edge: .maxY, inset: NSMakePoint(-5, -50))
+            }
+        }, for: .Hover)
+        
+        volumeControl.set(handler: { [weak self] control in
+            FastSettings.setVolumeRate(FastSettings.volumeRate > 0 ? 0 : 1.0)
+            if let popover = control.popover?.controller as? VolumeControllerPopover {
+                popover.value = CGFloat(FastSettings.volumeRate)
+            }
+            self?.updateLocalizationAndTheme(theme: theme)
+        }, for: .Up)
     }
     
     private func showAudioPlayerList() {
@@ -195,6 +217,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
         dismiss.set(image: theme.icons.auduiPlayerDismiss, for: .Normal)
         
+        volumeControl.set(image: FastSettings.volumeRate == 0 ? theme.icons.inline_audio_volume_off : theme.icons.inline_audio_volume, for: .Normal)
+        
         progressView.fetchingColor = theme.colors.accent.withAlphaComponent(0.5)
         
         if let controller = controller {
@@ -213,7 +237,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         _ = dismiss.sizeToFit()
         _ = repeatControl.sizeToFit()
         _ = playingSpeed.sizeToFit()
-
+        _ = volumeControl.sizeToFit()
         
         previous.centerY(x: 20)
         playOrPause.centerY(x: previous.frame.maxX + 5)
@@ -357,15 +381,23 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
+        
+       
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
         textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10)))
         textView.update(textView.layout)
         
-        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 20)
+        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
 
-        let w = (repeatControl.isHidden ? dismiss.frame.minX : repeatControl.frame.minX) - next.frame.maxX
-        
+
         textView.centerY(x: next.frame.maxX + 10)
+        
+        
+        if repeatControl.isHidden {
+            volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
+        } else {
+            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
+        }
         
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)

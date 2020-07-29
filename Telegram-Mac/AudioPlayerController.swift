@@ -536,6 +536,13 @@ class APController : NSResponder {
             mediaPlayer?.setBaseRate(baseRate)
         }
     }
+    
+    var volume: Float = FastSettings.volumeRate {
+        didSet {
+            mediaPlayer?.setVolume(volume)
+        }
+    }
+    
     init(context: AccountContext, streamable: Bool, baseRate: Double) {
         self.context = context
         self.streamable = streamable
@@ -722,7 +729,7 @@ class APController : NSResponder {
 
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
         
         player.play()
 
