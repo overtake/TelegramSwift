@@ -384,7 +384,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
        
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10)))
+        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10) + volumeControl.frame.width + 50))
         textView.update(textView.layout)
         
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
