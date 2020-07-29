@@ -270,12 +270,15 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             current.x -= (size.width - past.width) * ((point.x - past.minX) / past.width)
             current.y -= (size.height - past.height) * ((point.y - past.minY) / past.height)
             
-
-            contents[index].change(pos: current, animated: false)
             
             if size != contents[index].frame.size {
-                contents[index].change(size: size, animated: true)
+                contents[index].change(size: size, animated: true, timingFunction: .spring)
+                contents[index].layer?.animatePosition(from: contents[index].frame.origin - current, to: .zero, timingFunction: .spring, additive: true)
             }
+            contents[index].setFrameOrigin(current)
+
+
+            
             previous = point
             
             
