@@ -134,6 +134,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
                 content.addSubview(editControl)
                 control = editControl
             }
+            
             control.canEdit = item.layout.messages[i].media[0] is TelegramMediaImage
             control.set(edit: { [weak item] in
                 guard let item = item else {return}
