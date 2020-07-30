@@ -555,9 +555,13 @@ func initialize() -> [String] {
     array.append("chat_list_thumb_play")
 
     
+    array.append("inline_audio_volume")
+    array.append("inline_audio_volume_off")
+
+    
     return array
 }
-
+//swift ./tools/generate-images.swift
 
 
 func generateClass() -> String {
