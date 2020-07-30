@@ -601,8 +601,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     if let contextValue = self.contextValue {
                         contextValue.context.isCurrent = false
                         contextValue.rootView.removeFromSuperview()
-                    } else if context == nil {
-                        globalAudio?.stop()
                     }
                     
                     (HackUtils.findElements(byClass: "Telegram.OpmizeDatabaseView", in: self.window.contentView!).first as? NSView)?.removeFromSuperview()

@@ -262,7 +262,9 @@ struct APTransition {
 
 fileprivate func prepareItems(from:[APEntry]?, to:[APEntry], account:Account) -> Signal<APTransition, NoError> {
     return Signal {(subscriber) in
+
         let (removed, inserted, updated) = proccessEntries(from, right: to, { (entry) -> APItem in
+
             switch entry {
             case  .song:
                 return APSongItem(entry,account)
@@ -271,6 +273,7 @@ fileprivate func prepareItems(from:[APEntry]?, to:[APEntry], account:Account) ->
             }
 
         })
+
         subscriber.putNext(APTransition(inserted: inserted, removed: removed, updated:updated))
         subscriber.putCompletion()
         return EmptyDisposable
@@ -377,12 +380,7 @@ class APController : NSResponder {
 
 
     public let ready:Promise<Bool> = Promise()
-    let context: AccountContext
-    
-    var account: Account {
-        return context.account
-    }
-    
+    let account:Account
     private var _timebase: CMTimebase?
 
     fileprivate let history:Promise<APHistoryLocation> = Promise()
@@ -536,8 +534,8 @@ class APController : NSResponder {
             mediaPlayer?.setBaseRate(baseRate)
         }
     }
-    init(context: AccountContext, streamable: Bool, baseRate: Double) {
-        self.context = context
+    init(account:Account, streamable: Bool, baseRate: Double) {
+        self.account = account
         self.streamable = streamable
         self.baseRate = baseRate
         super.init()
@@ -935,10 +933,10 @@ class APChatController : APController {
     private let peerId:PeerId
     private let index:MessageIndex?
 
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0) {
+    init(account: Account, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0) {
         self.peerId = peerId
         self.index = index
-        super.init(context: context, streamable: streamable, baseRate: baseRate)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -950,7 +948,7 @@ class APChatController : APController {
         let tagMask:MessageTags = self.tags
         let list = self.entries
         let items = self.items
-        let account = self.context.account
+        let account = self.account
         let peerId = self.peerId
         let index = self.index
         let apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError> in
@@ -1009,8 +1007,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(context: context, peerId: peerId, index: index, streamable: true, baseRate: baseRate)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index: index, streamable: true, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1024,8 +1022,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(context: context, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
+    init(account: Account, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(account: account, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {
@@ -1061,9 +1059,9 @@ class APChatVoiceController : APChatController {
 
 class APSingleResourceController : APController {
     let wrapper:APSingleWrapper
-    init(context: AccountContext, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
+    init(account: Account, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
         self.wrapper = wrapper
-        super.init(context: context, streamable: streamable, baseRate: baseRate)
+        super.init(account: account, streamable: streamable, baseRate: baseRate)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
     }
 

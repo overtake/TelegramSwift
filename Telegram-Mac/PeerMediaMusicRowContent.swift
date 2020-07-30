@@ -247,7 +247,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
                 controller.playOrPause()
             } else {
-                let controller = APChatMusicController(context: item.interface.context, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+                let controller = APChatMusicController(account: item.interface.context.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
             }
