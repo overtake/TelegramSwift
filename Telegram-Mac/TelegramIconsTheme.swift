@@ -6751,6 +6751,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var inline_audio_volume: CGImage {
+      if let image = cached.with({ $0["inline_audio_volume"] }) {
+          return image
+      } else {
+          let image = _inline_audio_volume()
+          _ = cached.modify { current in 
+              var current = current
+              current["inline_audio_volume"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var inline_audio_volume_off: CGImage {
+      if let image = cached.with({ $0["inline_audio_volume_off"] }) {
+          return image
+      } else {
+          let image = _inline_audio_volume_off()
+          _ = cached.modify { current in 
+              var current = current
+              current["inline_audio_volume_off"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7271,6 +7297,8 @@ final class TelegramIconsTheme {
   private let _chat_like_inside_empty_bubble_overlay: ()->CGImage
   private let _gif_trending: ()->CGImage
   private let _chat_list_thumb_play: ()->CGImage
+  private let _inline_audio_volume: ()->CGImage
+  private let _inline_audio_volume_off: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7791,7 +7819,9 @@ final class TelegramIconsTheme {
       chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage,
       chat_like_inside_empty_bubble_overlay: @escaping()->CGImage,
       gif_trending: @escaping()->CGImage,
-      chat_list_thumb_play: @escaping()->CGImage
+      chat_list_thumb_play: @escaping()->CGImage,
+      inline_audio_volume: @escaping()->CGImage,
+      inline_audio_volume_off: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8312,5 +8342,7 @@ final class TelegramIconsTheme {
       self._chat_like_inside_empty_bubble_overlay = chat_like_inside_empty_bubble_overlay
       self._gif_trending = gif_trending
       self._chat_list_thumb_play = chat_list_thumb_play
+      self._inline_audio_volume = inline_audio_volume
+      self._inline_audio_volume_off = inline_audio_volume_off
   }
 }
