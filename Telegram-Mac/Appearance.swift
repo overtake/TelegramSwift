@@ -2253,9 +2253,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_like_inside_empty_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
                                                chat_like_inside_empty_bubble_overlay: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(.white, flipVertical: true) },
                                                gif_trending: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon) },
-                                               chat_list_thumb_play: { NSImage(named: "Icon_ChatListThumbPlay")!.precomposed() },
-                                               inline_audio_volume: { NSImage(named: "Icon_InlinePlayer_VolumeOn")!.precomposed(palette.accent) },
-                                               inline_audio_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) }
+                                               chat_list_thumb_play: { NSImage(named: "Icon_ChatListThumbPlay")!.precomposed() }
 
     )
 

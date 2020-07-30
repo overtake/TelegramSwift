@@ -105,7 +105,6 @@
 		C2E8694F1F44481400BDD0A2 /* GridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E8694E1F44481400BDD0A2 /* GridItem.swift */; };
 		C2E869511F4449A700BDD0A2 /* GridItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2E869501F4449A700BDD0A2 /* GridItemNode.swift */; };
 		C2FD33E71E6952A8008D13D4 /* RadialProgressContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */; };
-		D006030924D0256000206226 /* HorizontalSliderControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006030824D0256000206226 /* HorizontalSliderControl.swift */; };
 		D04D214C230ED78300609388 /* SPopoverRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214A230ED78300609388 /* SPopoverRowItem.swift */; };
 		D04D214D230ED78300609388 /* SPopoverViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D214B230ED78300609388 /* SPopoverViewController.swift */; };
 		D050518E2342A75D00D93176 /* DisplayLinkAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */; };
@@ -220,7 +219,6 @@
 		C2E8694E1F44481400BDD0A2 /* GridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItem.swift; sourceTree = "<group>"; };
 		C2E869501F4449A700BDD0A2 /* GridItemNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GridItemNode.swift; sourceTree = "<group>"; };
 		C2FD33E61E6952A8008D13D4 /* RadialProgressContainerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RadialProgressContainerView.swift; sourceTree = "<group>"; };
-		D006030824D0256000206226 /* HorizontalSliderControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalSliderControl.swift; sourceTree = "<group>"; };
 		D04D214A230ED78300609388 /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverRowItem.swift; sourceTree = "<group>"; };
 		D04D214B230ED78300609388 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverViewController.swift; sourceTree = "<group>"; };
 		D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLinkAnimator.swift; sourceTree = "<group>"; };
@@ -542,7 +540,6 @@
 				D0BEB9912163C1F00055B718 /* SelectionRectView.swift */,
 				9F4EEF9921DCD260002C3B33 /* SliderView.swift */,
 				A7D49477235F226C003E9A25 /* SpinningProgressView.swift */,
-				D006030824D0256000206226 /* HorizontalSliderControl.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -680,7 +677,6 @@
 				C291ED991DB35BC5008C6B2A /* Window.swift in Sources */,
 				C296AF841D8D9D7D001DBB59 /* RadialProgressView.swift in Sources */,
 				C24A371A1F338406004ADE5C /* SectionViewController.swift in Sources */,
-				D006030924D0256000206226 /* HorizontalSliderControl.swift in Sources */,
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
 				C24A37161F324A36004ADE5C /* ShadowView.swift in Sources */,

@@ -516,23 +516,7 @@ private final class MediaVideoCell : MediaCell {
             text = String.durationTransformed(elapsed: file.videoDuration)
         }
         
-        var isBuffering: Bool = false
-        if let fetchStatus = self.authenticStatus, let status = mediaPlayerStatus {
-            switch status.status {
-            case .buffering:
-                switch fetchStatus {
-                case .Local:
-                    break
-                default:
-                    isBuffering = true
-                }
-            default:
-                break
-            }
-            
-        }
-        
-        videoAccessory.updateText(text, maxWidth: maxWidth, status: status, isStreamable: file.isStreamable, isCompact: true, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        videoAccessory.updateText(text, maxWidth: maxWidth, status: status, isStreamable: file.isStreamable, isCompact: true, animated: animated, fetch: { [weak self] in
             self?.fetch()
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()

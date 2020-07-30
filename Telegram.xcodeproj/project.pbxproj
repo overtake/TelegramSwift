@@ -879,7 +879,6 @@
 		D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */; };
 		D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* NewContactController.swift */; };
 		D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */; };
-		D0BE207E24D032E400038A8B /* VolumeControllerPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE207D24D032E400038A8B /* VolumeControllerPopover.swift */; };
 		D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB98E21628C250055B718 /* EditImageModalController.swift */; };
 		D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */; };
 		D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB997216BD8A70055B718 /* EditImageControls.swift */; };
@@ -2039,7 +2038,6 @@
 		D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = dart_idle.tgs; sourceTree = "<group>"; };
 		D0B6D72922AA65D3008E36FE /* NewContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewContactController.swift; sourceTree = "<group>"; };
 		D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannelsController.swift; sourceTree = "<group>"; };
-		D0BE207D24D032E400038A8B /* VolumeControllerPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeControllerPopover.swift; sourceTree = "<group>"; };
 		D0BEB98E21628C250055B718 /* EditImageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageModalController.swift; sourceTree = "<group>"; };
 		D0BEB9942166AF270055B718 /* PeerMediaTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaTouchBar.swift; sourceTree = "<group>"; };
 		D0BEB997216BD8A70055B718 /* EditImageControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageControls.swift; sourceTree = "<group>"; };
@@ -3683,7 +3681,6 @@
 			children = (
 				C253E2331DE3776A0022A29F /* InlineAudioPlayerView.swift */,
 				C2CE43E320E2CFE700656543 /* PlayerListController.swift */,
-				D0BE207D24D032E400038A8B /* VolumeControllerPopover.swift */,
 			);
 			name = "inline-audio-player";
 			sourceTree = "<group>";
@@ -5418,7 +5415,6 @@
 				C27A6F711ECF604A00C65577 /* TGCurrencyFormatter.m in Sources */,
 				A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
-				D0BE207E24D032E400038A8B /* VolumeControllerPopover.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				9FA0E53B2052EDFF001E5649 /* HackUtils.m in Sources */,
 				9FC4DA9E21DD1C6C003E2A62 /* ImageCompression.swift in Sources */,
