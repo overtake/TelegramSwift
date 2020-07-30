@@ -150,13 +150,13 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     private func showAudioPlayerList() {
-        guard let window = kitWindow, let context = self.context else {return}
+        guard let window = kitWindow, let context = context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if NSPointInRect(point, textView.frame) {
-            if let controller = controller, let song = controller.currentSong, controller is APChatMusicController {
+            if let song = controller?.currentSong, controller is APChatMusicController {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: context, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
                 default:
                     break
                 }
@@ -226,7 +226,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     private func gotoMessage() {
-        if let message = message, let context = context, context.peerId == controller?.context.peerId {
+        if let message = message, let context = context {
             if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
@@ -238,23 +238,20 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     func update(with controller:APController, context: AccountContext, tableView:TableView?, supportTableView: TableView? = nil) {
         self.controller?.remove(listener: self)
         self.controller = controller
-        self.controller?.add(listener: self)
         self.context = context
+        self.controller?.add(listener: self)
         self.ready.set(controller.ready.get())
         
         repeatControl.isHidden = !(controller is APChatMusicController)
         if let tableView = tableView {
             if self.instantVideoPip == nil {
-                self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
+                self.instantVideoPip = InstantVideoPIP(controller, context: context, window: mainWindow)
             }
-            self.instantVideoPip?.updateTableView(tableView, context: controller.context, controller: controller)
+            self.instantVideoPip?.updateTableView(tableView, context: context, controller: controller)
             addGlobalAudioToVisible(tableView: tableView)
         }
         if let supportTableView = supportTableView {
             addGlobalAudioToVisible(tableView: supportTableView)
-        }
-        if let song = controller.currentSong {
-            songDidChanged(song: song, for: controller)
         }
     }
     
@@ -287,6 +284,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     
     deinit {
         controller?.remove(listener: self)
+        controller?.stop()
         bufferingStatusDisposable.dispose()
     }
     

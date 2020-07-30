@@ -329,7 +329,7 @@ class InstantPageSelectText : NSObject {
                                 if view.controller != nil {
                                     view.controller?.playOrPause()
                                 } else {
-                                    let audio = APSingleResourceController(context: context, wrapper: view.wrapper, streamable: true)
+                                    let audio = APSingleResourceController(account: context.account, wrapper: view.wrapper, streamable: true)
                                     view.controller = audio
                                     audio.start()
                                 }

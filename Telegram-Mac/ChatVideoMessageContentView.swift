@@ -148,9 +148,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
-                        controller = APSingleResourceController(context: context, wrapper: wrapper, streamable: false)
+                        controller = APSingleResourceController(account: context.account, wrapper: wrapper, streamable: false)
+                      //  controller.set(trackProgress: controller.c)
                     } else {
-                        controller = APChatVoiceController(context: context, peerId: parent.id.peerId, index: MessageIndex(parent))
+                        controller = APChatVoiceController(account: context.account, peerId: parent.id.peerId, index: MessageIndex(parent))
                     }
                     
                     parameters.showPlayer(controller)

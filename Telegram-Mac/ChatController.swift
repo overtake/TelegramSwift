@@ -2051,9 +2051,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }
-        
-        
-        
         chatInteraction.searchPeerMessages = { [weak self] peer in
             guard let `self` = self else { return }
             self.chatInteraction.update({$0.updatedSearchMode((false, nil, nil))})

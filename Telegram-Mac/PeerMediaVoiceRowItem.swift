@@ -128,7 +128,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             controller.playOrPause()
         } else {
             
-            let controller:APController = APChatVoiceController(context: item.interface.context, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+            let controller:APController = APChatVoiceController(account: item.interface.context.account, peerId: item.message.id.peerId, index: MessageIndex(item.message))
             item.interface.inlineAudioPlayer(controller)
             controller.start()
         }
