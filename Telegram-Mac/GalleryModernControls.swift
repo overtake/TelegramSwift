@@ -222,6 +222,11 @@ class GalleryModernControlsView: View {
                 rotateControl.isHidden = true
                 fastSaveControl.isHidden = true
             }
+        case let .photo(_, _, photo, _, _, _, _):
+            zoomInControl.isHidden = false
+            zoomOutControl.isHidden = false
+            rotateControl.isHidden = !photo.videoRepresentations.isEmpty
+            fastSaveControl.isHidden = false
         default:
             zoomInControl.isHidden = false
             zoomOutControl.isHidden = false

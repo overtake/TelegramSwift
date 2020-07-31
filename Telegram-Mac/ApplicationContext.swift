@@ -217,6 +217,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return view
         }))
         
+        
         rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
             let view = CallNavigationHeaderView(header)
             return view
@@ -231,6 +232,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         super.init()
+        
+
         
         
         updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
@@ -664,6 +667,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.updateLeftSidebar(with: value, animated: true)
         }))
         
+        
+        
+        
+        
+        if let controller = globalAudio {
+            let header = self.rightController.header?.view as? InlineAudioPlayerView
+            header?.update(with: controller, context: context, tableView: nil)
+            self.rightController.header?.show(false)
+        }
+        
        // _ready.set(.single(true))
     }
     
@@ -852,7 +865,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         alertsDisposable.dispose()
         termDisposable.dispose()
         viewer?.close()
-        globalAudio?.cleanup()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         chatUndoManagerDisposable.dispose()

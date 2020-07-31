@@ -308,6 +308,7 @@
 		A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramMediaDice.swift; sourceTree = "<group>"; };
 		A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedMediaStickersMessageAttribute.swift; sourceTree = "<group>"; };
 		A7D28200236C379D0000A9BF /* PixelDimensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelDimensions.swift; sourceTree = "<group>"; };
+		D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardCountMessageAttribute.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -353,6 +354,7 @@
 		A701F7C8236B2A11002ABF81 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */,
 				A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */,
 				A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */,
 				A701F7C9236B2A11002ABF81 /* TelegramGroup.swift */,
