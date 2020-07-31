@@ -14,24 +14,89 @@ import SyncCore
 import Postbox
 import TgVoipWebrtc
 
+
+public enum OngoingCallVideoOrientation {
+    case rotation0
+    case rotation90
+    case rotation180
+    case rotation270
+}
+
+private extension OngoingCallVideoOrientation {
+    init(_ orientation: OngoingCallVideoOrientationWebrtc) {
+        switch orientation {
+        case .orientation0:
+            self = .rotation0
+        case .orientation90:
+            self = .rotation90
+        case .orientation180:
+            self = .rotation180
+        case .orientation270:
+            self = .rotation270
+        @unknown default:
+            self = .rotation0
+        }
+    }
+}
+
+
+
+public final class OngoingCallContextVideoView {
+    public let view: NSView
+    public let setOnFirstFrameReceived: ((() -> Void)?) -> Void
+    public let getOrientation: () -> OngoingCallVideoOrientation
+    public let setOnOrientationUpdated: (((OngoingCallVideoOrientation) -> Void)?) -> Void
+    
+    public init(
+        view: NSView,
+        setOnFirstFrameReceived: @escaping ((() -> Void)?) -> Void,
+        getOrientation: @escaping () -> OngoingCallVideoOrientation,
+        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation) -> Void)?) -> Void
+        ) {
+        self.view = view
+        self.setOnFirstFrameReceived = setOnFirstFrameReceived
+        self.getOrientation = getOrientation
+        self.setOnOrientationUpdated = setOnOrientationUpdated
+    }
+}
+
+
+
 final class OngoingCallVideoCapturer {
     fileprivate let impl: OngoingCallThreadLocalContextVideoCapturer
     
-    init() {
+    public init() {
         self.impl = OngoingCallThreadLocalContextVideoCapturer()
     }
     
-    func switchCamera() {
+    public func switchCamera() {
         self.impl.switchVideoCamera()
     }
     
-    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
-        self.impl.makeOutgoingVideoView(completion)
+    public func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+        self.impl.makeOutgoingVideoView { view in
+            if let view = view {
+                completion(OngoingCallContextVideoView(
+                    view: view,
+                    setOnFirstFrameReceived: { [weak view] f in
+                        view?.setOnFirstFrameReceived(f)
+                    },
+                    getOrientation: {
+                        return .rotation90
+                },
+                    setOnOrientationUpdated: { _ in
+                }
+                ))
+            } else {
+                completion(nil)
+            }
+        }
     }
     
-    func setIsVideoEnabled(_ value: Bool) {
+    public func setIsVideoEnabled(_ value: Bool) {
         self.impl.setIsVideoEnabled(value)
     }
+
 }
 
 
@@ -651,10 +716,33 @@ final class OngoingCallContext {
         return (poll |> then(.complete() |> delay(0.5, queue: Queue.concurrentDefaultQueue()))) |> restart
     }
     
-    func makeIncomingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
         self.withContext { context in
             if let context = context as? OngoingCallThreadLocalContextWebrtc {
-                context.makeIncomingVideoView(completion)
+                context.makeIncomingVideoView { view in
+                    if let view = view {
+                        completion(OngoingCallContextVideoView(
+                            view: view,
+                            setOnFirstFrameReceived: { [weak view] f in
+                                view?.setOnFirstFrameReceived(f)
+                            },
+                            getOrientation: { [weak view] in
+                                if let view = view {
+                                    return OngoingCallVideoOrientation(view.orientation)
+                                } else {
+                                    return .rotation0
+                                }
+                            },
+                            setOnOrientationUpdated: { [weak view] f in
+                                view?.setOnOrientationUpdated { value in
+                                    f?(OngoingCallVideoOrientation(value))
+                                }
+                            }
+                        ))
+                    } else {
+                        completion(nil)
+                    }
+                }
             } else {
                 completion(nil)
             }
