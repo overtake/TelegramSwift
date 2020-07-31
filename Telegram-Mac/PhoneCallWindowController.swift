@@ -12,6 +12,7 @@ import TelegramCore
 import SyncCore
 import Postbox
 import SwiftSignalKit
+import TgVoipWebrtc
 
 private let defaultWindowSize = NSMakeSize(340, 480)
 
@@ -153,6 +154,27 @@ private final class CallControl : Control {
 private final class OutgoingVideoView : GeneralRowContainerView {
     
     
+    fileprivate var videoView: OngoingCallContextVideoView? {
+        didSet {
+            if let videoView = oldValue {
+                videoView.view.removeFromSuperview()
+            } else if let videoView = videoView {
+                addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
+                videoView.view.frame = self.bounds
+                videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                videoView.view.background = .blackTransparent
+
+                
+                videoView.setOnFirstFrameReceived({ [weak self] in
+                    self?.videoView?.view.background = .black
+                })
+            }
+            needsLayout = true
+        }
+    }
+    
+    //
+    
     static var defaultSize: NSSize = NSMakeSize(150, 100)
     
     enum ResizeDirection {
@@ -275,12 +297,13 @@ private final class OutgoingVideoView : GeneralRowContainerView {
 private final class IncomingVideoView : Control {
     
     private var disabledView: NSVisualEffectView?
-    fileprivate var videoView: NSView? {
+    fileprivate var videoView: OngoingCallContextVideoView? {
         didSet {
             if let videoView = oldValue {
-                videoView.removeFromSuperview()
+                videoView.view.removeFromSuperview()
             } else if let videoView = videoView {
-                addSubview(videoView, positioned: .below, relativeTo: self.subviews.first)
+                addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
+                videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             needsLayout = true
         }
@@ -812,7 +835,6 @@ private class PhoneCallWindowView : View {
                             self.imageView.addSubview(self.incomingVideoView!)
                         }
                         self.incomingVideoView?.videoView = view
-                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         self.needsLayout = true
                     }
                 })
@@ -828,10 +850,7 @@ private class PhoneCallWindowView : View {
                 self.outgoingVideoViewRequested = true
                 session.makeOutgoingVideoView(completion: { [weak self] view in
                     if let view = view, let `self` = self {
-                        view.frame = self.outgoingVideoView.bounds
-                        view.background = .black
-                        self.outgoingVideoView.addSubview(view, positioned: .below, relativeTo: self.outgoingVideoView.overlay)
-                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        self.outgoingVideoView.videoView = view
                         self.needsLayout = true
                     }
                 })
@@ -874,6 +893,18 @@ private class PhoneCallWindowView : View {
                 incomingVideoView = nil
                 
             } else {
+                self.acceptControl.isHidden = true
+                
+                declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDeclineSmall, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
+
+                let activeViews = self.allActiveControlsViews
+                let restWidth = self.allControlRestWidth
+                var x: CGFloat = floor(restWidth / 2)
+                for activeView in activeViews {
+                    activeView._change(pos: NSMakePoint(x, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
+                    x += activeView.size.width + 45
+                }
+                
                 _ = allActiveControlsViews.map {
                     $0.updateEnabled(false, animated: animated)
                 }
@@ -1247,7 +1278,7 @@ func showPhoneCallWindow(_ session:PCallSession) {
     let signal = session.canBeRemoved |> deliverOnMainQueue
     closeDisposable.set(signal.start(next: { value in
         if value {
-           // closeCall()
+            closeCall()
         }
     }))
 }

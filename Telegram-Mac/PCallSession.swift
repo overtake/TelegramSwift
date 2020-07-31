@@ -850,11 +850,11 @@ class PCallSession {
         player = nil
     }
     
-    func makeIncomingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
         self.ongoingContext?.makeIncomingVideoView(completion: completion)
     }
     
-    func makeOutgoingVideoView(completion: @escaping (NSView?) -> Void) {
+    func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
         self.videoCapturer?.makeOutgoingVideoView(completion: completion)
     }
     
