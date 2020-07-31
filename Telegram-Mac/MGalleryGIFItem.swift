@@ -83,6 +83,7 @@ class MGalleryGIFItem: MGalleryItem {
 
     override func singleView() -> NSView {
         let player = MediaPlayerView(backgroundThread: true)
+        player.layerContentsRedrawPolicy = .duringViewResize
         return player
     }
     

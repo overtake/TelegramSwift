@@ -154,7 +154,6 @@
 		A7393D2D2407A14800CE44CA /* TelegramMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */; };
 		A754972623A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */; };
 		A7D28201236C379D0000A9BF /* PixelDimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28200236C379D0000A9BF /* PixelDimensions.swift */; };
-		D006030724D0172D00206226 /* ForwardCountMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -702,7 +701,6 @@
 				A701F866236B2A11002ABF81 /* Namespaces.swift in Sources */,
 				A701F8B0236B2A12002ABF81 /* StandaloneAccountTransaction.swift in Sources */,
 				A701F875236B2A11002ABF81 /* SendScheduledMessageImmediatelyAction.swift in Sources */,
-				D006030724D0172D00206226 /* ForwardCountMessageAttribute.swift in Sources */,
 				A701F87C236B2A11002ABF81 /* AutoremoveTimeoutMessageAttribute.swift in Sources */,
 				A701F8B2236B2A12002ABF81 /* SuggestedLocalizationUpdatesOperation.swift in Sources */,
 				A701F876236B2A11002ABF81 /* SynchronizeAppLogEventsOperation.swift in Sources */,
