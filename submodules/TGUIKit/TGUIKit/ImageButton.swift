@@ -64,7 +64,7 @@ open class ImageButton: Button {
         super.prepare()
         imageView.animates = true
         additionBackgroundView.isEventLess = true
-        imageView.isEventLess = true
+//        imageView.isEventLess = true
         self.addSubview(additionBackgroundView)
         self.addSubview(imageView)
     }
