@@ -153,20 +153,57 @@ private final class CallControl : Control {
 
 private final class OutgoingVideoView : GeneralRowContainerView {
     
+    private var progressIndicator: ProgressIndicator? = nil
     
-    fileprivate var videoView: OngoingCallContextVideoView? {
+    fileprivate var videoView: (OngoingCallContextVideoView?, Bool)? {
         didSet {
-            if let videoView = oldValue {
+            if let videoView = oldValue?.0 {
                 videoView.view.removeFromSuperview()
-            } else if let videoView = videoView {
+                progressIndicator?.removeFromSuperview()
+                progressIndicator = nil
+            } else if let videoView = videoView?.0 {
                 addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
                 videoView.view.frame = self.bounds
                 videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                videoView.view.background = .blackTransparent
 
+                if self.videoView?.1 == true {
+                    videoView.view.background = .blackTransparent
+                    if self.progressIndicator == nil {
+                        self.progressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
+                        self.progressIndicator?.progressColor = .white
+                        addSubview(self.progressIndicator!)
+                        self.progressIndicator!.center()
+                    }
+                } else if self.videoView?.1 == false {
+                    videoView.view.background = .black
+                    if notAvailableView == nil {
+                        let current = TextView()
+                        self.notAvailableView = current
+                        let layout = TextViewLayout(.initialize(string: "Camera is not available", color: .white, font: .normal(13)), maximumNumberOfLines: 2, alignment: .center)
+                        current.userInteractionEnabled = false
+                        current.isSelectable = false
+                        current.update(layout)
+                        self.notAvailableView = current
+                        addSubview(current, positioned: .below, relativeTo: overlay)
+                    }
+                } else {
+                    videoView.view.background = .clear
+                    if let notAvailableView = self.notAvailableView {
+                        self.notAvailableView = nil
+                        notAvailableView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak notAvailableView] _ in
+                            notAvailableView?.removeFromSuperview()
+                        })
+                    }
+                }
                 
                 videoView.setOnFirstFrameReceived({ [weak self] in
-                    self?.videoView?.view.background = .black
+                    self?.videoView?.0?.view.background = .black
+                    if let progressIndicator = self?.progressIndicator {
+                        self?.progressIndicator = nil
+                        progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
+                            progressIndicator?.removeFromSuperview()
+                        })
+                    }
                 })
             }
             needsLayout = true
@@ -188,7 +225,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     
     
     private var disabledView: NSVisualEffectView?
-    
+    private var notAvailableView: TextView?
     
     
     private let maskLayer = CAShapeLayer()
@@ -198,6 +235,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
+        self.cornerRadius = .cornerRadius
         setCorners([.bottomLeft, .bottomRight, .topLeft, .topRight])
         
     }
@@ -208,8 +246,17 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     
     override func layout() {
         super.layout()
-        for subview in subviews {
-            subview.frame = bounds
+        
+        self.overlay.frame = bounds
+        self.videoView?.0?.view.frame = bounds
+        self.progressIndicator?.center()
+        self.disabledView?.frame = bounds
+        
+        if let textView = notAvailableView {
+            let layout = textView.layout
+            layout?.measure(width: frame.width - 40)
+            textView.update(layout)
+            textView.center()
         }
     }
     
@@ -221,7 +268,6 @@ private final class OutgoingVideoView : GeneralRowContainerView {
                 current.state = .active
                 current.blendingMode = .withinWindow
                 current.wantsLayer = true
-                current.layer?.cornerRadius = 3
 
                 current.frame = bounds
                 self.disabledView = current
@@ -249,12 +295,23 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
         if self.frame != frame {
+            let duration: Double = 0.18
+            
+            self.videoView?.0?.view.subviews.first?._change(size: frame.size, animated: animated, duration: duration)
+            self.videoView?.0?.view._change(size: frame.size, animated: animated, duration: duration)
+            self.overlay._change(size: frame.size, animated: animated, duration: duration)
+            self.progressIndicator?.change(pos: frame.focus(NSMakeSize(40, 40)).origin, animated: animated, duration: duration)
+            
+            self.disabledView?._change(size: frame.size, animated: animated, duration: duration)
+            
+            if let textView = notAvailableView, let layout = textView.layout {
+                layout.measure(width: frame.width - 40)
+                textView.update(layout)
+                textView.change(pos: frame.focus(layout.layoutSize).origin, animated: animated, duration: duration)
+            }
+
             self.change(size: frame.size, animated: animated, corners: [.bottomLeft, .bottomRight, .topLeft, .topRight])
-            self.change(pos: frame.origin, animated: animated, duration: 0.18)
-            subviews.first?.subviews.first?._change(size: frame.size, animated: animated, duration: 0.18)
-            subviews.first?._change(size: frame.size, animated: animated, duration: 0.18)
-            overlay._change(size: frame.size, animated: animated, duration: 0.18)
-            disabledView?._change(size: frame.size, animated: animated, duration: 0.18)
+            self.change(pos: frame.origin, animated: animated, duration: duration)
         }
         updateCursorRects()
     }
@@ -845,12 +902,12 @@ private class PhoneCallWindowView : View {
         
         
         switch state.videoState {
-        case .active, .outgoingRequested:
+        case let .outgoingRequested(possible):
             if !self.outgoingVideoViewRequested {
                 self.outgoingVideoViewRequested = true
                 session.makeOutgoingVideoView(completion: { [weak self] view in
                     if let view = view, let `self` = self {
-                        self.outgoingVideoView.videoView = view
+                        self.outgoingVideoView.videoView = (view, possible)
                         self.needsLayout = true
                     }
                 })

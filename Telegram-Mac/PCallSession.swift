@@ -119,7 +119,7 @@ public struct CallAuxiliaryServer {
     enum VideoState: Equatable {
         case notAvailable
         case possible
-        case outgoingRequested
+        case outgoingRequested(Bool)
         case incomingRequested
         case active
     }
@@ -299,7 +299,7 @@ class PCallSession {
     
 
     
-    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
+    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -312,15 +312,35 @@ class PCallSession {
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
-        self.isVideoPossible = isVideoPossible
-
 
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
         
+        
+        let isVideoPossible: Bool
+        if #available(OSX 10.14, *) {
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            switch status {
+            case .notDetermined:
+                isVideoPossible = true
+            case .authorized:
+                isVideoPossible = true
+            case .denied:
+                isVideoPossible = false
+            case .restricted:
+                isVideoPossible = false
+            @unknown default:
+                isVideoPossible = false
+            }
+        } else {
+            isVideoPossible = true
+        }
+        
+        self.isVideoPossible = isVideoPossible
+        
         if self.isVideo {
             self.videoCapturer = OngoingCallVideoCapturer()
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .active, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         } else {
             self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         }
@@ -536,7 +556,7 @@ class PCallSession {
             case .possible:
                 mappedVideoState = .possible
             case .outgoingRequested:
-                mappedVideoState = .outgoingRequested
+                mappedVideoState = .outgoingRequested(self.isVideoPossible)
             case .incomingRequested:
                 mappedVideoState = .incomingRequested
             case .active:
@@ -551,7 +571,7 @@ class PCallSession {
             }
         } else {
             if self.isVideo {
-                mappedVideoState = .outgoingRequested
+                mappedVideoState = .outgoingRequested(self.isVideoPossible)
             } else if self.isVideoPossible {
                 mappedVideoState = .possible
             } else {
@@ -903,7 +923,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     } |> mapToSignal { _ in
                         return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: true)))
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
                         subscriber.putCompletion()
                     })
                 }
