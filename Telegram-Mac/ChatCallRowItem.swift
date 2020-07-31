@@ -111,6 +111,8 @@ private class ChatCallRowView : ChatRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        fallbackControl.animates = false
+        
         addSubview(fallbackControl)
         addSubview(imageView)
         addSubview(headerView)

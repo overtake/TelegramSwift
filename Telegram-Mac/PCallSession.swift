@@ -442,17 +442,18 @@ class PCallSession {
     }
     
     func acceptCallSession() {
-        requestMicroAccessDisposable.set((requestAudioPermission() |> deliverOnMainQueue).start(next: { [weak self] access in
+        requestMicroAccessDisposable.set((requestMicrophonePermission() |> deliverOnMainQueue).start(next: { [weak self] access in
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
                     default:
                         break
                     }
+                    self?.drop(.hangUp)
                 })
             }
         }))
@@ -866,8 +867,17 @@ enum PCallResult {
 }
 
 func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false, isVideo: Bool = false) -> Signal<PCallResult, NoError> {
-    return requestAudioPermission() |> deliverOnMainQueue |> mapToSignal { hasAccess -> Signal<PCallResult, NoError> in
-        if hasAccess {
+    
+    let signal: Signal<(Bool, Bool?), NoError>
+    if isVideo {
+        signal = combineLatest(queue: .mainQueue(), requestMicrophonePermission(), requestCameraPermission() |> map(Optional.init))
+    } else {
+        signal = combineLatest(queue: .mainQueue(), requestMicrophonePermission(), .single(nil))
+    }
+    
+    return signal |> mapToSignal { microAccess, cameraAccess -> Signal<PCallResult, NoError> in
+        
+        if microAccess {
             return Signal { subscriber in
                 
                 assert(callQueue.isCurrent())

@@ -150,7 +150,8 @@ private final class CallControl : Control {
 }
 
 
-private final class OutgoingVideoView : Control {
+private final class OutgoingVideoView : GeneralRowContainerView {
+    
     
     static var defaultSize: NSSize = NSMakeSize(150, 100)
     
@@ -166,10 +167,17 @@ private final class OutgoingVideoView : Control {
     
     private var disabledView: NSVisualEffectView?
     
+    
+    
+    private let maskLayer = CAShapeLayer()
+    
+    
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
-        self.layer?.cornerRadius = .cornerRadius
+        setCorners([.bottomLeft, .bottomRight, .topLeft, .topRight])
+        
     }
     
     required init?(coder: NSCoder) {
@@ -219,12 +227,12 @@ private final class OutgoingVideoView : Control {
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
         if self.frame != frame {
-            self.change(size: frame.size, animated: animated)
-            self.change(pos: frame.origin, animated: animated)
-            subviews.first?.subviews.first?._change(size: frame.size, animated: animated)
-            subviews.first?._change(size: frame.size, animated: animated)
-            overlay._change(size: frame.size, animated: animated)
-            disabledView?._change(size: frame.size, animated: animated)
+            self.change(size: frame.size, animated: animated, corners: [.bottomLeft, .bottomRight, .topLeft, .topRight])
+            self.change(pos: frame.origin, animated: animated, duration: 0.18)
+            subviews.first?.subviews.first?._change(size: frame.size, animated: animated, duration: 0.18)
+            subviews.first?._change(size: frame.size, animated: animated, duration: 0.18)
+            overlay._change(size: frame.size, animated: animated, duration: 0.18)
+            disabledView?._change(size: frame.size, animated: animated, duration: 0.18)
         }
         updateCursorRects()
     }
@@ -391,7 +399,7 @@ private class PhoneCallWindowView : View {
     private let secureTextView:TextView = TextView()
     
     fileprivate var incomingVideoView: IncomingVideoView?
-    fileprivate var outgoingVideoView: OutgoingVideoView = OutgoingVideoView(frame: NSMakeRect(0, 0, 150, 100))
+    fileprivate var outgoingVideoView: OutgoingVideoView
     private var outgoingVideoViewRequested: Bool = false
     private var incomingVideoViewRequested: Bool = false
 
@@ -405,6 +413,7 @@ private class PhoneCallWindowView : View {
 
 
     required init(frame frameRect: NSRect) {
+        outgoingVideoView = OutgoingVideoView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(imageView)
         
@@ -820,6 +829,7 @@ private class PhoneCallWindowView : View {
                 session.makeOutgoingVideoView(completion: { [weak self] view in
                     if let view = view, let `self` = self {
                         view.frame = self.outgoingVideoView.bounds
+                        view.background = .black
                         self.outgoingVideoView.addSubview(view, positioned: .below, relativeTo: self.outgoingVideoView.overlay)
                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         self.needsLayout = true
@@ -846,8 +856,6 @@ private class PhoneCallWindowView : View {
             break
         case .terminated(_, let reason, _):
             if let reason = reason, reason.recall {
-                self.acceptControl.isHidden = false
-                
                 let activeViews = self.activeControlsViews
                 let restWidth = self.controlRestWidth
                 var x: CGFloat = floor(restWidth / 2)
@@ -1209,9 +1217,11 @@ class PhoneCallWindowController {
         let ready = self.ready.get() |> filter { $0 } |> take(1)
         
         readyDisposable.set(ready.start(next: { [weak self] _ in
-            self?.window.makeKeyAndOrderFront(self)
-            self?.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
-            self?.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
+            if self?.window.isVisible == false {
+                self?.window.makeKeyAndOrderFront(self)
+                self?.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
+                self?.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
+            }
         }))
     }
 }
@@ -1221,20 +1231,23 @@ private let closeDisposable = MetaDisposable()
 
 func showPhoneCallWindow(_ session:PCallSession) {
     _ = controller.modify { controller in
-        controller?.session.hangUpCurrentCall()
-        if let controller = controller {
-            controller.session = session
-            return controller
-        } else {
-            return PhoneCallWindowController(session)
+        if session.peerId != controller?.session.peerId {
+            controller?.session.hangUpCurrentCall()
+            if let controller = controller {
+                controller.session = session
+                return controller
+            } else {
+                return PhoneCallWindowController(session)
+            }
         }
+        return controller
     }
     controller.with { $0?.show() }
     
     let signal = session.canBeRemoved |> deliverOnMainQueue
     closeDisposable.set(signal.start(next: { value in
         if value {
-            closeCall()
+           // closeCall()
         }
     }))
 }
