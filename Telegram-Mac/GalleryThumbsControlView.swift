@@ -212,9 +212,8 @@ class GalleryThumbsControlView: View {
     
     func idsExcludeDisabled(_ at: Int) -> Int {
         var idx = at
-        for i in 0 ..< documentView.subviews.count {
-            let subview = documentView.subviews[i] as! GalleryThumbContainer
-            if !subview.isEnabled {
+        for i in 0 ..< items.count {
+            if !items[i].isEnabled {
                 if i <= at {
                     idx += 1
                 }
@@ -227,13 +226,13 @@ class GalleryThumbsControlView: View {
     func removeItem(at: Int, animated: Bool) {
         
         let idx = idsExcludeDisabled(at)
-        
-        let subview = items[idx]
-        subview.isEnabled = false
-        subview.opt?.isEnabled = false
-        subview.opt?.change(opacity: 0, animated: animated, completion: { [weak subview, weak self] completed in
+        var subview:GalleryThumb? = items[idx]
+        subview?.isEnabled = false
+        subview?.opt?.isEnabled = false
+        items.remove(at: idx)
+        subview?.opt?.change(opacity: 0, animated: animated, completion: { completed in
             subview?.cleanup()
-            self?.items.remove(at: idx)
+            subview = nil
         })
     }
     

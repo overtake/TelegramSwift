@@ -297,6 +297,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     return .invoked
                 }
                 
+                let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
+                NSLog("\(hitTestView)")
+                if hitTestView is Control {
+                    return .rejected
+                }
+                
                 if let view = view.contentView as? SVideoView, view.insideControls {
                     return .rejected
                 }
