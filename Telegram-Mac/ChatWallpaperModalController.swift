@@ -129,12 +129,12 @@ class ChatWallpaperModalController: ModalViewController {
                             if CGImageDestinationFinalize(colorDestination) {
                                 let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                                 context.account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource))
+                                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: []))
                             }
                         }
                         
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource))
+                        representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: []))
                         
                         showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: context.window)
                         

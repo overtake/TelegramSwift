@@ -251,7 +251,7 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
                     resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
                 } else if let topItem = item.topItem {
                     let dimensions = topItem.file.dimensions?.size ?? NSMakeSize(35, 35)
-                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: topItem.file.resource)
+                    thumbnailItem = TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: topItem.file.resource, progressiveSizes: [])
                     resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
                 }
                 if let thumbnailItem = thumbnailItem {
