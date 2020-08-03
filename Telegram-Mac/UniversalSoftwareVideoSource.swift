@@ -334,7 +334,31 @@ private final class UniversalSoftwareVideoSourceThread: NSObject {
         source.cancelRead = params.cancel
         source.requiredDataIsNotLocallyAvailable = params.requiredDataIsNotLocallyAvailable
         source.state.set(.generatingFrame)
-        let image = source.readImage(at: params.timestamp).0
+        let result = source.readImage(at: params.timestamp)
+        
+        
+        
+        var image = result.0
+        
+        func rad2deg(_ number: CGFloat) -> CGFloat {
+            return number * 180 / .pi
+        }
+        
+        if !result.1.isZero, let img = image {
+            let degress = rad2deg(result.1)
+            
+            switch degress {
+            case 90:
+                image = img.createMatchingBackingDataWithImage(orienation: .left)
+            case 180:
+                image = img.createMatchingBackingDataWithImage(orienation: .down)
+            case -90:
+                image = img.createMatchingBackingDataWithImage(orienation: .right)
+            default:
+                break
+            }
+        }
+        
         source.cancelRead = .single(false)
         source.requiredDataIsNotLocallyAvailable = nil
         source.state.set(.ready)

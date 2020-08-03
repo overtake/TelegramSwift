@@ -34,6 +34,17 @@ public class HorizontalSliderControl: Control {
             self.sliderBorderInactive = sliderBorderInactive
         }
     }
+    
+    public override func scrollWheel(with event: NSEvent) {
+        var point = slider.frame.origin - NSMakePoint(0, event.scrollingDeltaY)
+        let height = self.foreground.frame.height
+        
+        point.y = min(max(point.y, self.foreground.frame.minY - slider.frame.height / 2), self.foreground.frame.maxY - slider.frame.height / 2)
+        
+        slider.setFrameOrigin(point)
+        let percent = (slider.frame.midY - self.foreground.frame.minY) / height
+        self.value = 1 - min(max(0, percent), 1)
+    }
 
     private var theme: HorizontalSliderControlTheme = HorizontalSliderControlTheme(background: presentation.colors.background, foreground: presentation.colors.grayBackground, activeForeground: presentation.colors.accent, slider: presentation.colors.background, sliderBorder: presentation.colors.accentIcon, sliderBorderInactive: presentation.colors.grayIcon) {
         didSet {
