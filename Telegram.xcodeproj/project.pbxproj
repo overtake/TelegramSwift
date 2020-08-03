@@ -900,6 +900,8 @@
 		D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */; };
 		D0DD91FE246A8A380039D83D /* PeerMediaGifsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */; };
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
+		D0E3684624D80A0D009896D4 /* ClearCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3684524D80A0D009896D4 /* ClearCache.swift */; };
+		D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
 		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
@@ -2061,6 +2063,8 @@
 		D0D81AED243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterFolderIconController.swift; sourceTree = "<group>"; };
 		D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollTimerView.swift; sourceTree = "<group>"; };
 		D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGifsController.swift; sourceTree = "<group>"; };
+		D0E3684524D80A0D009896D4 /* ClearCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClearCache.swift; sourceTree = "<group>"; };
+		D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageCleanProgressRowItem.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
 		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
@@ -2853,6 +2857,8 @@
 				C221ED5D1EA6B36600471C65 /* ChatStorageManagmentModalController.swift */,
 				9FBE0EE0201FBEFC0060FD1C /* DownloadSettingsViewController.swift */,
 				9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */,
+				D0E3684524D80A0D009896D4 /* ClearCache.swift */,
+				D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */,
 			);
 			name = "data-and-storage";
 			sourceTree = "<group>";
@@ -5542,6 +5548,7 @@
 				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
 				C2FD33E91E696A86008D13D4 /* GroupsInCommonViewController.swift in Sources */,
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
+				D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */,
 				C2DF47C21DE79574003AA6C0 /* info.c in Sources */,
 				C2CE43E420E2CFE800656543 /* PlayerListController.swift in Sources */,
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,
@@ -5670,6 +5677,7 @@
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
 				C2E064641ECCB24000387BB8 /* NativeCallSettingsViewController.swift in Sources */,
 				9F3EAB4620A5ED2F003FE7E3 /* genann.c in Sources */,
+				D0E3684624D80A0D009896D4 /* ClearCache.swift in Sources */,
 				D00CE50F2289CE87008C1B4F /* ChatAnimatedStickerItem.swift in Sources */,
 				D07C6D7923464C8000468B1A /* WalletKeychainController.swift in Sources */,
 				C230BEB41EE97B6F0029586C /* RestictedModalViewController.swift in Sources */,

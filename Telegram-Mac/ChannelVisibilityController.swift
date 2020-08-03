@@ -261,7 +261,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             }
             return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: "t.me", defaultText:"https://t.me/", rightItem: rightItem, filter: { $0 }, updated: { updatedText in
                 arguments.updatePublicLinkText(currentText, updatedText)
-            }, limit: 30)
+            }, limit: 33)
         case let .privateLinkInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .publicLinkInfo(_, text, viewType):
