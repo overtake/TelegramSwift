@@ -39,6 +39,8 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     case keepMediaLimitHeader(Int32, String, GeneralViewType)
     case keepMediaLimit(Int32, Int32, GeneralViewType)
     case keepMediaLimitInfo(Int32, String, GeneralViewType)
+    case ccTaskValue(Int32, CCTaskData, GeneralViewType)
+    case ccTaskValueDesc(Int32, String, GeneralViewType)
     case clearAll(Int32, Bool, GeneralViewType)
     case collecting(Int32, String, GeneralViewType)
     case peersHeader(Int32, String, GeneralViewType)
@@ -57,12 +59,16 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 3
         case .keepMediaLimitInfo:
             return 4
-        case .clearAll:
+        case .ccTaskValue:
             return 5
-        case .collecting:
+        case .ccTaskValueDesc:
             return 6
-        case .peersHeader:
+        case .clearAll:
             return 7
+        case .collecting:
+            return 8
+        case .peersHeader:
+            return 9
         case let .peer(_, _, peer, _, _):
             return Int32(peer.id.hashValue)
         case .section(let sectionId):
@@ -82,14 +88,18 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return 3
         case .keepMediaLimitInfo:
             return 4
-        case .clearAll:
+        case .ccTaskValue:
             return 5
-        case .collecting:
+        case .ccTaskValueDesc:
             return 6
-        case .peersHeader:
+        case .clearAll:
             return 7
+        case .collecting:
+            return 8
+        case .peersHeader:
+            return 9
         case let .peer(_, index, _, _, _):
-            return 8 + index
+            return 10 + index
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -108,6 +118,10 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case .keepMediaLimitInfo(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case .clearAll(let sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case .ccTaskValue(let sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case .ccTaskValueDesc(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case .collecting(let sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -148,6 +162,18 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             }
         case let .keepMediaLimitInfo(sectionId, value, viewType):
             if case .keepMediaLimitInfo(sectionId, value, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .ccTaskValue(sectionId, task, viewType):
+            if case .ccTaskValue(sectionId, task, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .ccTaskValueDesc(sectionId, value, viewType):
+            if case .ccTaskValueDesc(sectionId, value, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -228,6 +254,10 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .collecting(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true, viewType: viewType)
+        case let .ccTaskValue(_, task, viewType):
+            return StorageUsageCleanProgressRowItem(initialSize, stableId: stableId, task: task, viewType: viewType)
+        case let .ccTaskValueDesc(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .clearAll(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.storageClearAll), type: .next, viewType: viewType, action: {
                 arguments.clearAll()
@@ -254,7 +284,7 @@ private func stringForKeepMediaTimeout(_ timeout: Int32) -> String {
     }
 }
 
-private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, cacheStats: CacheUsageStatsResult?) -> [StorageUsageEntry] {
+private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, cacheStats: CacheUsageStatsResult?, ccTask: CCTaskData?) -> [StorageUsageEntry] {
     var entries: [StorageUsageEntry] = []
     
     var sectionId:Int32 = 1
@@ -279,52 +309,60 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     entries.append(.section(sectionId))
     sectionId += 1
     
-    var exists:[PeerId:PeerId] = [:]
-    if let cacheStats = cacheStats, case let .result(stats) = cacheStats {
-        
-        entries.append(.clearAll(sectionId, !stats.peers.isEmpty, .singleItem))
-
-        entries.append(.section(sectionId))
-        sectionId += 1
-        
-        var statsByPeerId: [(PeerId, Int64)] = []
-        for (peerId, categories) in stats.media {
-            if exists[peerId] == nil {
-                var combinedSize: Int64 = 0
-                for (_, media) in categories {
-                    for (_, size) in media {
-                        combinedSize += size
-                    }
-                }
-                statsByPeerId.append((peerId, combinedSize))
-                exists[peerId] = peerId
-            }
-            
-        }
-        var index: Int32 = 0
-        
-        let filtered = statsByPeerId.sorted(by: { $0.1 > $1.1 }).filter { peerId, size -> Bool in
-            return size >= 32 * 1024 && stats.peers[peerId] != nil && !stats.peers[peerId]!.isSecretChat
-        }
-        
-        if !filtered.isEmpty {
-            entries.append(.peersHeader(sectionId, L10n.storageUsageChatsHeader, .textTopItem))
-        }
-        
-        for (i, value) in filtered.enumerated() {
-            let peer = stats.peers[value.0]!
-            entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
-            index += 1
-        }
+    
+    if let ccTask = ccTask {
+        entries.append(.ccTaskValue(sectionId, ccTask, .singleItem))
+        entries.append(.ccTaskValueDesc(sectionId, "Your local cache is being cleaned...", .singleItem))
     } else {
         
-        entries.append(.clearAll(sectionId, true, .singleItem))
-        
-        entries.append(.section(sectionId))
-        sectionId += 1
-        
-        entries.append(.collecting(sectionId, L10n.storageUsageCalculating, .singleItem))
+        var exists:[PeerId:PeerId] = [:]
+        if let cacheStats = cacheStats, case let .result(stats) = cacheStats {
+            
+            entries.append(.clearAll(sectionId, !stats.peers.isEmpty, .singleItem))
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
+            var statsByPeerId: [(PeerId, Int64)] = []
+            for (peerId, categories) in stats.media {
+                if exists[peerId] == nil {
+                    var combinedSize: Int64 = 0
+                    for (_, media) in categories {
+                        for (_, size) in media {
+                            combinedSize += size
+                        }
+                    }
+                    statsByPeerId.append((peerId, combinedSize))
+                    exists[peerId] = peerId
+                }
+                
+            }
+            var index: Int32 = 0
+            
+            let filtered = statsByPeerId.sorted(by: { $0.1 > $1.1 }).filter { peerId, size -> Bool in
+                return size >= 32 * 1024 && stats.peers[peerId] != nil && !stats.peers[peerId]!.isSecretChat
+            }
+            
+            if !filtered.isEmpty {
+                entries.append(.peersHeader(sectionId, L10n.storageUsageChatsHeader, .textTopItem))
+            }
+            
+            for (i, value) in filtered.enumerated() {
+                let peer = stats.peers[value.0]!
+                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
+                index += 1
+            }
+        } else {
+            
+            entries.append(.clearAll(sectionId, true, .singleItem))
+            
+            entries.append(.section(sectionId))
+            sectionId += 1
+            
+            entries.append(.collecting(sectionId, L10n.storageUsageCalculating, .singleItem))
+        }
     }
+    
     
     entries.append(.section(sectionId))
     sectionId += 1
@@ -433,8 +471,7 @@ class StorageUsageController: TableViewController {
             })
         }, clearAll: {
             confirm(for: context.window, information: L10n.storageClearAllConfirmDescription, okTitle: L10n.storageClearAll, successHandler: { _ in
-                let path = context.account.postbox.mediaBox.basePath
-                _ = showModalProgress(signal: combineLatest(clearImageCache(), context.account.postbox.mediaBox.allFileContexts() |> mapToSignal { clearCache(path, excludes: $0) }), for: context.window).start()
+                context.cacheCleaner.run()
                 statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
             })
         })
@@ -442,11 +479,11 @@ class StorageUsageController: TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<StorageUsageEntry>]> = Atomic(value: [])
         
         
-        self.genericView.merge(with: combineLatest(cacheSettingsPromise.get() |> deliverOnPrepareQueue, statsPromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue)
+        self.genericView.merge(with: combineLatest(queue: prepareQueue, cacheSettingsPromise.get(), statsPromise.get(), context.cacheCleaner.task, appearanceSignal)
            
-        |> map { cacheSettings, cacheStats, appearance -> TableUpdateTransition in
+        |> map { cacheSettings, cacheStats, ccTask, appearance -> TableUpdateTransition in
                 
-            let entries = storageUsageControllerEntries(cacheSettings: cacheSettings, cacheStats: cacheStats).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = storageUsageControllerEntries(cacheSettings: cacheSettings, cacheStats: cacheStats, ccTask: ccTask).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
                 
         } |> afterDisposed {
