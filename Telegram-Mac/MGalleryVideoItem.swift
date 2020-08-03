@@ -129,7 +129,9 @@ class MGalleryVideoItem: MGalleryItem {
             return media.dimensions?.size
         }
         try? FileManager.default.removeItem(at: url)
-        self.examinatedSize = track.naturalSize.applying(track.preferredTransform)
+        let size = track.naturalSize.applying(track.preferredTransform)
+        self.examinatedSize = NSMakeSize(abs(size.width), abs(size.height))
+        
         return examinatedSize
         
     }
