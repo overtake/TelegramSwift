@@ -97,6 +97,7 @@ final class OngoingCallVideoCapturer {
         self.impl.setIsVideoEnabled(value)
     }
 
+
 }
 
 
@@ -196,9 +197,11 @@ struct OngoingCallContextState: Equatable {
         case notAvailable
         case possible
         case outgoingRequested
-        case incomingRequested
+        case incomingRequested(sendsVideo: Bool)
         case active
     }
+    
+
     
     enum RemoteVideoState: Equatable {
         case inactive
@@ -302,9 +305,10 @@ private func ongoingDataSavingForTypeWebrtc(_ type: VoiceCallDataSaving) -> Ongo
 private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeSetNetworkType(_ type: NetworkType)
     func nativeSetIsMuted(_ value: Bool)
-    func nativeSetVideoEnabled(_ value: Bool)
-    func nativeSwitchVideoCamera()
+    func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer)
+    func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer)
     func nativeStop(_ completion: @escaping (String?, Int64, Int64, Int64, Int64) -> Void)
+    func nativeBeginTermination()
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
@@ -327,11 +331,17 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
         self.stop(completion)
     }
     
+    func nativeBeginTermination() {
+    }
+    
     func nativeSetIsMuted(_ value: Bool) {
         self.setIsMuted(value)
     }
     
-    func nativeSetVideoEnabled(_ value: Bool) {
+    func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
+    }
+    
+    func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
     }
     
     func nativeSwitchVideoCamera() {
@@ -359,16 +369,20 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
         self.stop(completion)
     }
     
+    func nativeBeginTermination() {
+        self.beginTermination()
+    }
+    
     func nativeSetIsMuted(_ value: Bool) {
         self.setIsMuted(value)
     }
     
-    func nativeSetVideoEnabled(_ value: Bool) {
-       // self.setVideoEnabled(value)
+    func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
+        self.requestVideo(capturer.impl)
     }
     
-    func nativeSwitchVideoCamera() {
-       // self.switchVideoCamera()
+    func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
+        self.acceptVideo(capturer.impl)
     }
     
     func nativeDebugInfo() -> String {
@@ -488,7 +502,7 @@ final class OngoingCallContext {
     static func versions(includeExperimental: Bool) -> [String] {
         var result: [String] = [OngoingCallThreadLocalContext.version()]
         if includeExperimental {
-            result.append(contentsOf: OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: true))
+            result.append(contentsOf: OngoingCallThreadLocalContextWebrtc.versions(withIncludeReference: false))
 //            result.append(OngoingCallThreadLocalContextWebrtcCustom.version())
         }
         return result
@@ -542,7 +556,7 @@ final class OngoingCallContext {
                 }
                 let context = OngoingCallThreadLocalContextWebrtc(version: version, queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, rtcServers: rtcServers, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, primaryConnection: callConnectionDescriptionWebrtc(connections.primary), alternativeConnections: connections.alternatives.map(callConnectionDescriptionWebrtc), maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
                     callSessionManager?.sendSignalingData(internalId: internalId, data: data)
-                    }, videoCapturer: video?.impl)
+                    }, videoCapturer: video?.impl, preferredAspectRatio: 0)
                 
                 self.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
                 context.stateChanged = { [weak self] state, videoState, remoteVideoState in
@@ -556,7 +570,9 @@ final class OngoingCallContext {
                         case .possible:
                             mappedVideoState = .possible
                         case .incomingRequested:
-                            mappedVideoState = .incomingRequested
+                            mappedVideoState = .incomingRequested(sendsVideo: false)
+                        case .incomingRequestedAndActive:
+                            mappedVideoState = .incomingRequested(sendsVideo: true)
                         case .outgoingRequested:
                             mappedVideoState = .outgoingRequested
                         case .active:
@@ -690,15 +706,15 @@ final class OngoingCallContext {
         }
     }
     
-    func setEnableVideo(_ value: Bool) {
+    func requestVideo(_ capturer: OngoingCallVideoCapturer) {
         self.withContext { context in
-            context.nativeSetVideoEnabled(value)
+            context.nativeRequestVideo(capturer)
         }
     }
     
-    func switchVideoCamera() {
+    func acceptVideo(_ capturer: OngoingCallVideoCapturer) {
         self.withContext { context in
-            context.nativeSwitchVideoCamera()
+            context.nativeAcceptVideo(capturer)
         }
     }
     
