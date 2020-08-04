@@ -16,6 +16,24 @@ import TgVoipWebrtc
 
 private let defaultWindowSize = NSMakeSize(340, 480)
 
+extension CallState {
+    var videoIsAvailable: Bool {
+        switch state {
+        case .ringing, .requesting:
+            switch videoState {
+            case .notAvailable, .possible:
+                return false
+            default:
+                return true
+            }
+        case .terminating, .terminated, .connecting:
+            return false
+        default:
+            return true
+        }
+    }
+}
+
 extension CallSessionTerminationReason {
     var recall: Bool {
         let recall:Bool
@@ -165,7 +183,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
                 addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
                 videoView.view.frame = self.bounds
                 videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-
+                
                 if self.videoView?.1 == true {
                     videoView.view.background = .blackTransparent
                     if self.progressIndicator == nil {
@@ -179,7 +197,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
                     if notAvailableView == nil {
                         let current = TextView()
                         self.notAvailableView = current
-                        let layout = TextViewLayout(.initialize(string: "Camera is not available", color: .white, font: .normal(13)), maximumNumberOfLines: 2, alignment: .center)
+                        let layout = TextViewLayout(.initialize(string: "Camera is unavailable", color: .white, font: .normal(13)), maximumNumberOfLines: 2, alignment: .center)
                         current.userInteractionEnabled = false
                         current.isSelectable = false
                         current.update(layout)
@@ -837,6 +855,7 @@ private class PhoneCallWindowView : View {
             statusText = durationString
         }
         statusTextView.stringValue = statusText
+        statusTextView.alignment = .center
         needsLayout = true
     }
     
@@ -862,14 +881,24 @@ private class PhoneCallWindowView : View {
     
     func updateState(_ state:CallState, session:PCallSession, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         
-        let inputCameraIsActive = (state.videoState == .active || state.videoState == .active) && state.isOutgoingVideoPaused
-        
+        let inputCameraIsActive: Bool
+        switch state.videoState {
+        case .active:
+            inputCameraIsActive = !state.isOutgoingVideoPaused
+        case .outgoingRequested:
+            inputCameraIsActive = !state.isOutgoingVideoPaused
+        default:
+            inputCameraIsActive = false
+        }
         self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, isVisualEffect: !inputCameraIsActive, icon: inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
+        
+        self.b_VideoCamera.updateEnabled(state.videoIsAvailable, animated: animated)
+        
         self.state = state
-        self.status = state.state.statusText(accountPeer)
+        self.status = state.state.statusText(accountPeer, state.videoState)
         
         switch state.state {
         case let .active(_, _, visual):
@@ -882,7 +911,7 @@ private class PhoneCallWindowView : View {
         
         
         switch state.videoState {
-        case .active:
+        case .active, .incomingRequested:
             if !self.incomingVideoViewRequested {
                 self.incomingVideoViewRequested = true
                 session.makeIncomingVideoView(completion: { [weak self] view in
@@ -902,7 +931,7 @@ private class PhoneCallWindowView : View {
         
         
         switch state.videoState {
-        case let .outgoingRequested(possible):
+        case let .outgoingRequested(possible), let .active(possible):
             if !self.outgoingVideoViewRequested {
                 self.outgoingVideoViewRequested = true
                 session.makeOutgoingVideoView(completion: { [weak self] view in
@@ -980,23 +1009,39 @@ private class PhoneCallWindowView : View {
         incomingVideoView?.setIsPaused(state.remoteVideoState == .inactive, peer: peer, animated: animated)
 
         
+        
         switch state.state {
         case .ringing, .requesting, .terminating, .terminated:
-            let videoFrame = bounds
-            outgoingVideoView.updateFrame(videoFrame, animated: animated)
             outgoingVideoView.isEventLess = true
         default:
-            var point = outgoingVideoView.frame.origin
-            var size = outgoingVideoView.frame.size
-            if outgoingVideoView.isEventLess {
+            switch state.videoState {
+            case .outgoingRequested:
+                outgoingVideoView.isEventLess = true
+            case .incomingRequested:
+                outgoingVideoView.isEventLess = false
+            case .active:
+                outgoingVideoView.isEventLess = false
+            default:
+                outgoingVideoView.isEventLess = true
+            }
+        }
+        
+        var point = outgoingVideoView.frame.origin
+        var size = outgoingVideoView.frame.size
+        
+        if !outgoingVideoView.isEventLess {
+            if point == .zero {
                 point = NSMakePoint(frame.width - OutgoingVideoView.defaultSize.width - 20, frame.height - 140 - OutgoingVideoView.defaultSize.height)
                 size = OutgoingVideoView.defaultSize
-                
             }
-            let videoFrame = CGRect(origin: point, size: size)
-            outgoingVideoView.updateFrame(videoFrame, animated: animated)
-            outgoingVideoView.isEventLess = false
+        } else {
+            point = .zero
+            size = frame.size
         }
+        let videoFrame = CGRect(origin: point, size: size)
+        outgoingVideoView.updateFrame(videoFrame, animated: animated)
+        
+        
         if let peer = peer {
             updatePeerUI(peer, session: session)
         }
@@ -1007,7 +1052,9 @@ private class PhoneCallWindowView : View {
     
     private func updatePeerUI(_ user:TelegramUser, session: PCallSession) {
         
-        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: user.id.toInt64()), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        let id = user.profileImageRepresentations.first?.resource.id.hashValue ?? Int(user.id.toInt64())
+        
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(id)), representations: user.profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
         if let dimension = user.profileImageRepresentations.last?.dimensions.size {
             
@@ -1149,12 +1196,22 @@ class PhoneCallWindowController {
             }
         }, for: .Click)
         
-        self.view.b_VideoCamera.isHidden = !session.isVideo
+       // self.view.b_VideoCamera.isHidden = !session.isVideo
 
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
-            if let session = self?.session {
-                session.toggleOutgoingVideo()
+            if let session = self?.session, let callState = self?.state {
+                
+                switch callState.videoState {
+                case .incomingRequested:
+                    session.acceptVideo()
+                default:
+                    if !session.isVideo {
+                        session.requestVideo()
+                    } else {
+                        session.toggleOutgoingVideo()
+                    }
+                }
             }
         }, for: .Click)
         
@@ -1166,7 +1223,7 @@ class PhoneCallWindowController {
         
         
         view.declineControl.set(handler: { [weak self] _ in
-            if let state = self?.state {
+            if let _ = self?.state {
                 self?.session.hangUpCurrentCall()
             } else {
                 closeCall()

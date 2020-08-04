@@ -25,7 +25,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private let hideDisposable = MetaDisposable()
 
     
-    private weak var session: PCallSession?
+    private var session: PCallSession?
     private var state: CallState?
     private weak var accountPeer: Peer?
     
@@ -187,7 +187,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     
     private func updateState(_ state:CallState, accountPeer: Peer?, animated: Bool) {
         self.state = state
-        self.status = state.state.statusText(accountPeer)
+        self.status = state.state.statusText(accountPeer, state.videoState)
         self.accountPeer = accountPeer
         backgroundView.background = state.isMuted ? grayColor : blueColor
         if animated {

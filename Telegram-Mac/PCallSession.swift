@@ -32,7 +32,7 @@ enum CallControllerStatusValue: Equatable {
 
 
 extension CallState.State {
-    func statusText(_ accountPeer: Peer?) -> CallControllerStatusValue {
+    func statusText(_ accountPeer: Peer?, _ videoState: CallState.VideoState) -> CallControllerStatusValue {
         let statusValue: CallControllerStatusValue
         switch self {
         case .waiting, .connecting:
@@ -71,7 +71,17 @@ extension CallState.State {
             if case .reconnecting = self {
                 statusValue = .text(L10n.callStatusConnecting)
             } else {
-                statusValue = .timer(timestamp)
+                switch videoState {
+                case .notAvailable, .active, .possible, .outgoingRequested:
+                    statusValue = .timer(timestamp)
+                case .incomingRequested:
+                    var text: String
+                    text = "Incoming video call"
+                    if let accountPeer = accountPeer {
+                        text += "\nAnswering as \(accountPeer.addressName ?? accountPeer.compactDisplayTitle)"
+                    }
+                    statusValue = .text(text)
+                }
             }
         }
         return statusValue
@@ -121,7 +131,7 @@ public struct CallAuxiliaryServer {
         case possible
         case outgoingRequested(Bool)
         case incomingRequested
-        case active
+        case active(Bool)
     }
     
     enum RemoteVideoState: Equatable {
@@ -256,7 +266,7 @@ class PCallSession {
     private let sessionStateDisposable = MetaDisposable()
     
     private let statePromise:ValuePromise<CallState> = ValuePromise()
-    
+    private var presentationState: CallState? = nil
     var state:Signal<CallState, NoError> {
         return statePromise.get()
     }
@@ -289,6 +299,7 @@ class PCallSession {
     let isOutgoing: Bool
     private(set) var isVideo: Bool
     private var isVideoPossible: Bool
+    private var isVideoAvailable: Bool
 
     private var callWasActive = false
     private var videoWasActive = false
@@ -299,7 +310,7 @@ class PCallSession {
     
 
     
-    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool) {
+    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
         
         Queue.mainQueue().async {
             _ = globalAudio?.pause()
@@ -315,32 +326,32 @@ class PCallSession {
 
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
+        self.isVideoPossible = isVideoPossible
         
-        
-        let isVideoPossible: Bool
+        let isVideoAvailable: Bool
         if #available(OSX 10.14, *) {
             let status = AVCaptureDevice.authorizationStatus(for: .video)
             switch status {
             case .notDetermined:
-                isVideoPossible = true
+                isVideoAvailable = true
             case .authorized:
-                isVideoPossible = true
+                isVideoAvailable = true
             case .denied:
-                isVideoPossible = false
+                isVideoAvailable = false
             case .restricted:
-                isVideoPossible = false
+                isVideoAvailable = false
             @unknown default:
-                isVideoPossible = false
+                isVideoAvailable = false
             }
         } else {
-            isVideoPossible = true
+            isVideoAvailable = true
         }
         
-        self.isVideoPossible = isVideoPossible
+        self.isVideoAvailable = isVideoAvailable
         
         if self.isVideo {
             self.videoCapturer = OngoingCallVideoCapturer()
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active(self.isVideoAvailable) : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         } else {
             self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused))
         }
@@ -480,9 +491,6 @@ class PCallSession {
         
     }
     
-    public func setEnableVideo(_ value: Bool) {
-        self.ongoingContext?.setEnableVideo(value)
-    }
 
     
     private var isOutgoingVideoPaused: Bool = false
@@ -560,7 +568,7 @@ class PCallSession {
             case .incomingRequested:
                 mappedVideoState = .incomingRequested
             case .active:
-                mappedVideoState = .active
+                mappedVideoState = .active(self.isVideoAvailable)
                 self.videoWasActive = true
             }
             switch callContextState.remoteVideoState {
@@ -697,6 +705,7 @@ class PCallSession {
         }
         if let presentationState = presentationState {
             self.statePromise.set(presentationState)
+            self.presentationState = presentationState
             self.updateTone(presentationState, callContextState: callContextState, previous: previous)
         }
 
@@ -769,6 +778,41 @@ class PCallSession {
     }
     
     
+    public func requestVideo() {
+        isVideo = true
+        isOutgoingVideoPaused = false
+        if self.videoCapturer == nil {
+            let videoCapturer = OngoingCallVideoCapturer()
+            self.videoCapturer = videoCapturer
+        }
+        if let videoCapturer = self.videoCapturer {
+            self.ongoingContext?.requestVideo(videoCapturer)
+        }
+        if let state = presentationState {
+            let updated = CallState(state: state.state, videoState: .outgoingRequested(self.isVideoAvailable), remoteVideoState: state.remoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+            self.statePromise.set(updated)
+            self.presentationState = updated
+        }
+    }
+    
+    public func acceptVideo() {
+        
+        isVideo = true
+        isOutgoingVideoPaused = false
+        if self.videoCapturer == nil {
+            let videoCapturer = OngoingCallVideoCapturer()
+            self.videoCapturer = videoCapturer
+        }
+        if let videoCapturer = self.videoCapturer {
+            self.ongoingContext?.acceptVideo(videoCapturer)
+        }
+        if let state = presentationState {
+            let updated = CallState(state: state.state, videoState: .incomingRequested, remoteVideoState: state.remoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused)
+            self.statePromise.set(updated)
+            self.presentationState = updated
+        }
+    }
+
   
     func hangUpCurrentCall() {
         hangUpCurrentCall(false)
@@ -923,7 +967,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                     } |> mapToSignal { _ in
                         return account.callSessionManager.request(peerId: peerId, isVideo: isVideo)
                     } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo)))
+                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: true)))
                         subscriber.putCompletion()
                     })
                 }
