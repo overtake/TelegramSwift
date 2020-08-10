@@ -73,7 +73,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         if let session = session {
-            showPhoneCallWindow(session)
+            showCallWindow(session)
         }
     }
     
@@ -152,7 +152,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
         
         callInfo.set(handler: { [weak self] _ in
             if let session = self?.session {
-                showPhoneCallWindow(session)
+                showCallWindow(session)
                 self?.hide()
             }
         }, for: .Click)

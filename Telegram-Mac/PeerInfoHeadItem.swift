@@ -125,6 +125,8 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         rowItemsCount += 1
     }
     rowItemsCount = min(rowItemsCount, 4)
+    
+    
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
@@ -135,7 +137,23 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 arguments.call(false)
             }))
         }
-        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
+        
+        let videoConfiguration: VideoCallsConfiguration = VideoCallsConfiguration.init(appConfiguration: item.context.appConfiguration)
+        
+        let isVideoPossible: Bool
+        switch videoConfiguration.videoCallsSupport {
+        case .disabled:
+            isVideoPossible = false
+        case .full:
+            isVideoPossible = true
+        case .onlyVideo:
+            isVideoPossible = true
+        }
+        
+        
+        
+        
+        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty, isVideoPossible {
             items.append(ActionItem(text: L10n.peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
                 arguments.call(true)
             }))

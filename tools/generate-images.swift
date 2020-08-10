@@ -33,6 +33,9 @@ func initialize() -> [String] {
     array.append("chatFallbackCall")
     array.append("chatFallbackCallBubble_incoming")
     array.append("chatFallbackCallBubble_outgoing")
+    array.append("chatFallbackVideoCall")
+    array.append("chatFallbackVideoCallBubble_incoming")
+    array.append("chatFallbackVideoCallBubble_outgoing")
     array.append("chatToggleSelected")
     array.append("chatToggleUnselected")
     array.append("chatMusicPlay")
@@ -557,6 +560,11 @@ func initialize() -> [String] {
     
     array.append("inline_audio_volume")
     array.append("inline_audio_volume_off")
+    
+    
+    array.append("call_tooltip_battery_low")
+    array.append("call_tooltip_camera_off")
+    array.append("call_tooltip_micro_off")
 
     
     return array

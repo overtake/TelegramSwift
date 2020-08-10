@@ -35,7 +35,7 @@ private func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
     }
 }
 
-private func clearCache(_ files: [(String, Int)], excludes: [(partial: String, complete: String)]) -> Signal<Float, NoError> {
+private func clearCache(_ files: [(String, Int)], excludes: [(partial: String, complete: String)], start: TimeInterval) -> Signal<Float, NoError> {
     return Signal { subscriber in
         
         var cancelled = false
@@ -54,7 +54,14 @@ private func clearCache(_ files: [(String, Int)], excludes: [(partial: String, c
         
         for file in files {
             if !cancelled {
-                unlink(file.0)
+                let url = URL(fileURLWithPath: file.0)
+                guard let resourceValues = try? url.resourceValues(forKeys: [.contentModificationDateKey]) else {
+                    continue
+                }
+                let date = resourceValues.contentModificationDate?.timeIntervalSince1970 ?? start
+                if date <= start {
+                    unlink(file.0)
+                }
                 cleaned += file.1
                 subscriber.putNext(Float(cleaned) / Float(total))
             } else {
@@ -88,7 +95,7 @@ private final class CCTask : Equatable {
                 scanFiles(at: account.postbox.mediaBox.basePath, anyway: { value in
                     files.append(value)
                 })
-                return clearCache(files, excludes: excludes)
+                return clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970)
             } |> deliverOn(cacheQueue)
         
         self.disposable.set(signal.start(next: { [weak self] value in
