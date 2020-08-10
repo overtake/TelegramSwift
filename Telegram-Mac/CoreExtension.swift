@@ -2667,6 +2667,7 @@ func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, No
 
 enum SystemSettingsCategory : String {
     case microphone = "Privacy_Microphone"
+    case camera = "Privacy_Camera"
     case storage = "Storage"
     case none = ""
 }
@@ -2678,7 +2679,7 @@ func openSystemSettings(_ category: SystemSettingsCategory) {
             NSWorkspace.shared.launchApplication("/System/Applications/Utilities/System Information.app")
            // [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Safari.app"];
        // }
-    case .microphone:
+    case .microphone, .camera:
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
             NSWorkspace.shared.open(url)
         }

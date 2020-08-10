@@ -284,7 +284,7 @@
 		A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */; };
 		A7F28337239A808500742C20 /* AudioAnimatedSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F28336239A808500742C20 /* AudioAnimatedSticker.swift */; };
 		C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */; };
-		C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */; };
+		C2016F681EAE0A68003AF981 /* CallWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2016F671EAE0A68003AF981 /* CallWindowController.swift */; };
 		C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C201C2311E3B2D1C0026C21E /* FastSettings.swift */; };
 		C20232A81D81D189007C9ADE /* ChatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A71D81D189007C9ADE /* ChatController.swift */; };
 		C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20232A91D81D19C007C9ADE /* ChatRowItem.swift */; };
@@ -904,6 +904,7 @@
 		D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F13EE182100B6DA00562E53 /* Contacts.framework */; };
 		D0E3684624D80A0D009896D4 /* ClearCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3684524D80A0D009896D4 /* ClearCache.swift */; };
 		D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */; };
+		D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
 		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
@@ -1367,7 +1368,7 @@
 		C2016F3A1EAA4538003AF981 /* RecentPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerRowItem.swift; sourceTree = "<group>"; };
 		C2016F431EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/ShareViewController.strings"; sourceTree = "<group>"; };
 		C2016F451EAA4967003AF981 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneCallWindowController.swift; sourceTree = "<group>"; };
+		C2016F671EAE0A68003AF981 /* CallWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallWindowController.swift; sourceTree = "<group>"; };
 		C201C2311E3B2D1C0026C21E /* FastSettings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FastSettings.swift; sourceTree = "<group>"; };
 		C20232A71D81D189007C9ADE /* ChatController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatController.swift; sourceTree = "<group>"; };
 		C20232A91D81D19C007C9ADE /* ChatRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatRowItem.swift; sourceTree = "<group>"; };
@@ -2071,6 +2072,7 @@
 		D0DD91FD246A8A380039D83D /* PeerMediaGifsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGifsController.swift; sourceTree = "<group>"; };
 		D0E3684524D80A0D009896D4 /* ClearCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClearCache.swift; sourceTree = "<group>"; };
 		D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageCleanProgressRowItem.swift; sourceTree = "<group>"; };
+		D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCallsConfiguration.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
 		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
@@ -2683,13 +2685,14 @@
 			isa = PBXGroup;
 			children = (
 				C2E064611ECCB20800387BB8 /* settings */,
-				C2016F671EAE0A68003AF981 /* PhoneCallWindowController.swift */,
+				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				C271EBEA1EBA3BC90034792D /* PCallSession.swift */,
 				C2CFCABF1EBB9C8100843F6A /* CallAudioPlayer.swift */,
 				C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */,
 				C2F4ED1A1EC5AE1D005F2696 /* CallRatingModalViewController.swift */,
 				D074A56424A1DE7700E92F8A /* OngoingCallContext.swift */,
 				D074A56624A1DF5200E92F8A /* VoipDerivedState.swift */,
+				D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */,
 			);
 			name = calls;
 			sourceTree = "<group>";
@@ -5354,7 +5357,7 @@
 				C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */,
 				C2DF47C01DE79574003AA6C0 /* picture.c in Sources */,
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
-				C2016F681EAE0A68003AF981 /* PhoneCallWindowController.swift in Sources */,
+				C2016F681EAE0A68003AF981 /* CallWindowController.swift in Sources */,
 				9FDA713220E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift in Sources */,
 				C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
@@ -5720,6 +5723,7 @@
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
+				D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */,
 				9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */,
 				D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,

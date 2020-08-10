@@ -434,7 +434,11 @@ final class TelegramChatColors {
     }
     
     func chatCallFallbackIcon(_ item: ChatCallRowItem) -> CGImage {
-        return item.hasBubble ? item.isIncoming ? item.presentation.icons.chatFallbackCallBubble_incoming : item.presentation.icons.chatFallbackCallBubble_outgoing : item.presentation.icons.chatFallbackCall
+        if item.isVideo {
+            return item.hasBubble ? item.isIncoming ? item.presentation.icons.chatFallbackVideoCallBubble_incoming : item.presentation.icons.chatFallbackVideoCallBubble_outgoing : item.presentation.icons.chatFallbackVideoCall
+        } else {
+            return item.hasBubble ? item.isIncoming ? item.presentation.icons.chatFallbackCallBubble_incoming : item.presentation.icons.chatFallbackCallBubble_outgoing : item.presentation.icons.chatFallbackCall
+        }
     }
     
     func peerName(_ index: Int) -> NSColor {

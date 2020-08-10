@@ -39,6 +39,9 @@
 		D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */; };
 		D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751C024BE3AC70037D73A /* Instance.cpp */; };
 		D0D751CC24BE3AD40037D73A /* InstanceImplLegacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */; };
+		D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */; };
+		D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */; };
+		D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -100,6 +103,9 @@
 		D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = VideoCaptureInterfaceImpl.cpp; path = ../../submodules/tgcalls/tgcalls/VideoCaptureInterfaceImpl.cpp; sourceTree = "<group>"; };
 		D0D751C024BE3AC70037D73A /* Instance.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Instance.cpp; path = ../../submodules/tgcalls/tgcalls/Instance.cpp; sourceTree = "<group>"; };
 		D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplLegacy.cpp; path = ../../submodules/tgcalls/tgcalls/legacy/InstanceImplLegacy.cpp; sourceTree = "<group>"; };
+		D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCCVPixelBuffer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCCVPixelBuffer.mm; sourceTree = "<group>"; };
+		D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoDecoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoDecoderH264.mm; sourceTree = "<group>"; };
+		D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoEncoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoEncoderH264.mm; sourceTree = "<group>"; };
 		D0E8A78824B339F10056CD6E /* VideoCaptureInterfaceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoCaptureInterfaceImpl.h; sourceTree = "<group>"; };
 		D0E8A78924B339F10056CD6E /* VideoCaptureInterfaceImpl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = VideoCaptureInterfaceImpl.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -148,6 +154,9 @@
 				D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */,
 				D0D751AA24BE3A140037D73A /* TGRTCVideoDecoderH265.mm */,
 				D0D751A924BE3A140037D73A /* TGRTCVideoEncoderH265.mm */,
+				D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */,
+				D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */,
+				D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */,
 				D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */,
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
@@ -347,11 +356,14 @@
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
+				D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */,
 				D0D751B124BE3A140037D73A /* VideoCapturerInterfaceImpl.mm in Sources */,
 				D0D751B224BE3A140037D73A /* TGRTCVideoEncoderH265.mm in Sources */,
 				D0D751B324BE3A140037D73A /* TGRTCVideoDecoderH265.mm in Sources */,
 				D0D751B424BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm in Sources */,
 				D0D751B524BE3A140037D73A /* VideoCameraCapturerMac.mm in Sources */,
+				D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */,
+				D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */,
 				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
 				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
 				D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */,

@@ -364,16 +364,16 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             
             if let reason = reason {
                 let outgoing = !message.flags.contains(.Incoming)
-
+                
                 switch reason {
                 case .busy:
-                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
+                    return outgoing ? (isVideo ? L10n.chatListServiceVideoCallCancelled : L10n.chatListServiceCallCancelled) : (isVideo ? L10n.chatListServiceVideoCallMissed : L10n.chatListServiceCallMissed)
                 case .disconnect:
-                    return tr(L10n.chatListServiceCallMissed)
+                    return isVideo ? L10n.chatListServiceVideoCallMissed : L10n.chatListServiceCallMissed
                 case .hangup:
-                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
+                    return outgoing ? (isVideo ? L10n.chatListServiceVideoCallCancelled : L10n.chatListServiceCallCancelled) : (isVideo ? L10n.chatListServiceVideoCallMissed : L10n.chatListServiceCallMissed)
                 case .missed:
-                    return outgoing ? L10n.chatListServiceCallCancelled : L10n.chatListServiceCallMissed
+                    return outgoing ? (isVideo ? L10n.chatListServiceVideoCallCancelled : L10n.chatListServiceCallCancelled) : (isVideo ? L10n.chatListServiceVideoCallMissed : L10n.chatListServiceCallMissed)
                 }
             }
         case let .gameScore(gameId: _, score: score):

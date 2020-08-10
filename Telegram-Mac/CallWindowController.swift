@@ -1,5 +1,5 @@
 //
-//  CallWindow.swift
+//  PhoneCallWindow.swift
 //  Telegram
 //
 //  Created by keepcoder on 24/04/2017.
@@ -14,21 +14,103 @@ import Postbox
 import SwiftSignalKit
 import TgVoipWebrtc
 
+private enum CallTooltipType : Int32 {
+    case cameraOff
+    case microOff
+    case batteryLow
+    
+    var icon: CGImage {
+        switch self {
+        case .cameraOff:
+            return theme.icons.call_tooltip_camera_off
+        case .microOff:
+            return theme.icons.call_tooltip_micro_off
+        case .batteryLow:
+            return theme.icons.call_tooltip_battery_low
+        }
+    }
+    func text(_ title: String) -> String {
+        switch self {
+        case .cameraOff:
+            return "\(title)'s camera is off"
+        case .microOff:
+            return "\(title)'s microphone is off"
+        case .batteryLow:
+            return "\(title)'s battery is low"
+        }
+    }
+}
 
 
-private let defaultWindowSize = NSMakeSize(358, 477)
+private final class CallTooltipView : Control {
+    private let textView: TextView = TextView()
+    private let icon: ImageView = ImageView()
+    
+    fileprivate var type: CallTooltipType? = nil
+    
+    required override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        addSubview(icon)
+        
+        textView.disableBackgroundDrawing = true
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
+        
+        backgroundColor = NSColor.grayText.withAlphaComponent(0.7)
+        
+//        wantsLayer = true
+//        self.material = .light
+//        self.state = .active
+    }
+    
+    func update(type: CallTooltipType, icon: CGImage, text: String, maxWidth: CGFloat) {
+        
+        self.type = type
+        
+        self.icon.image = icon
+        self.icon.sizeToFit()
+        
+        let attr: NSAttributedString = .initialize(string: text, color: .white, font: .medium(.title))
+        
+        let layout = TextViewLayout(attr, maximumNumberOfLines: 1)
+        layout.measure(width: maxWidth - 30 - icon.backingSize.width)
+        textView.update(layout)
+        
+        setFrameSize(NSMakeSize(30 + self.icon.frame.width + self.textView.frame.width, 26))
+        layer?.cornerRadius = frame.height / 2
+
+        needsLayout = true
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        icon.centerY(x: 10)
+        textView.centerY(x: icon.frame.maxX + 10)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+
+private let defaultWindowSize = NSMakeSize(375, 500)
 
 extension CallState {
     var videoIsAvailable: Bool {
         switch state {
-        case .ringing, .requesting:
+        case .ringing, .requesting, .active, .connecting:
             switch videoState {
-            case .notAvailable, .possible:
+            case .notAvailable:
                 return false
             default:
                 return true
             }
-        case .terminating, .terminated, .connecting:
+        case .terminating, .terminated:
             return false
         default:
             return true
@@ -171,63 +253,113 @@ private final class CallControl : Control {
 }
 
 
-private final class OutgoingVideoView : GeneralRowContainerView {
+private final class OutgoingVideoView : Control {
     
     private var progressIndicator: ProgressIndicator? = nil
+    
+    var isMoved: Bool = false
+    
+    var updateAspectRatio:((Float)->Void)? = nil
+
     
     fileprivate var videoView: (OngoingCallContextVideoView?, Bool)? {
         didSet {
             if let videoView = oldValue?.0 {
-                videoView.view.removeFromSuperview()
                 progressIndicator?.removeFromSuperview()
                 progressIndicator = nil
-            } else if let videoView = videoView?.0 {
-                addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
-                videoView.view.frame = self.bounds
-                videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                
-                if self.videoView?.1 == true {
-                    videoView.view.background = .blackTransparent
-                    if self.progressIndicator == nil {
-                        self.progressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
-                        self.progressIndicator?.progressColor = .white
-                        addSubview(self.progressIndicator!)
-                        self.progressIndicator!.center()
-                    }
-                } else if self.videoView?.1 == false {
-                    videoView.view.background = .clear
-                    if notAvailableView == nil {
-                        let current = TextView()
-                        self.notAvailableView = current
-                        let layout = TextViewLayout(.initialize(string: "Camera is unavailable", color: .white, font: .normal(13)), maximumNumberOfLines: 2, alignment: .center)
-                        current.userInteractionEnabled = false
-                        current.isSelectable = false
-                        current.update(layout)
-                        self.notAvailableView = current
-                        addSubview(current, positioned: .below, relativeTo: overlay)
-                    }
-                } else {
-                    videoView.view.background = .clear
-                    if let notAvailableView = self.notAvailableView {
-                        self.notAvailableView = nil
-                        notAvailableView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak notAvailableView] _ in
-                            notAvailableView?.removeFromSuperview()
-                        })
-                    }
-                }
-                
-                videoView.setOnFirstFrameReceived({ [weak self] aspectRatio in
-                    self?.videoView?.0?.view.background = .black
-                    if let progressIndicator = self?.progressIndicator {
-                        self?.progressIndicator = nil
-                        progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
-                            progressIndicator?.removeFromSuperview()
-                        })
-                    }
-                })
             }
+            
+            if videoView?.1 == false {
+                self.backgroundColor = .black
+                if notAvailableView == nil {
+                    let current = TextView()
+                    self.notAvailableView = current
+                    let text = "Camera is unavailable\n[seettings]()"
+                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(13), textColor: .white), bold: MarkdownAttributeSet(font: .bold(13), textColor: .white), link: MarkdownAttributeSet(font: .normal(13), textColor: .link), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in
+                            openSystemSettings(.camera)
+                        }))
+                    })).mutableCopy() as! NSMutableAttributedString
+                    
+                    let layout = TextViewLayout(attributedText, maximumNumberOfLines: 2, alignment: .center)
+                    layout.interactions = globalLinkExecutor
+                    current.isSelectable = false
+                    current.update(layout)
+                    
+                    self.notAvailableView = current
+                    addSubview(current, positioned: .below, relativeTo: overlay)
+                }
+            } else {
+                if let videoView = videoView?.0 {
+                    addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
+                    videoView.view.frame = self.bounds
+                    videoView.view.layer?.cornerRadius = .cornerRadius
+                    if self.videoView?.1 == true {
+                        videoView.view.background = .blackTransparent
+                        if self.progressIndicator == nil {
+                            self.progressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
+                            self.progressIndicator?.progressColor = .white
+                            addSubview(self.progressIndicator!)
+                            self.progressIndicator!.center()
+                        }
+                    } else {
+                        videoView.view.background = .clear
+                        if let notAvailableView = self.notAvailableView {
+                            self.notAvailableView = nil
+                            notAvailableView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak notAvailableView] _ in
+                                notAvailableView?.removeFromSuperview()
+                            })
+                        }
+                    }
+                    
+                    let view = oldValue?.0?.view
+                    
+                    videoView.setOnFirstFrameReceived({ [weak self, weak view] aspectRatio in
+                        DispatchQueue.main.async {
+                            self?.backgroundColor = .clear
+                            self?.videoView?.0?.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            view?.removeFromSuperview()
+                            if let progressIndicator = self?.progressIndicator {
+                                self?.progressIndicator = nil
+                                progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
+                                    progressIndicator?.removeFromSuperview()
+                                })
+                            }
+                        }
+                        self?.updateAspectRatio?(aspectRatio)
+                    })
+                }
+            }
+            
+            
             needsLayout = true
         }
+    }
+    
+    private var _hidden: Bool = false
+    
+    var isViewHidden: Bool {
+        return _hidden
+    }
+    
+    func unhideView(animated: Bool) {
+        if let view = videoView?.0?.view, _hidden {
+            addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+        }
+        _hidden = false
+    }
+    
+    func hideView(animated: Bool) {
+        if let view = self.videoView?.0?.view, !_hidden {
+            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
+                if completed {
+                    view?.removeFromSuperview()
+                    view?.layer?.removeAllAnimations()
+                }
+            })
+            view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
+        }
+        _hidden = true
     }
     
     override var isEventLess: Bool {
@@ -235,8 +367,6 @@ private final class OutgoingVideoView : GeneralRowContainerView {
             overlay.isEventLess = isEventLess
         }
     }
-    
-    //
     
     static var defaultSize: NSSize = NSMakeSize(100 * System.cameraAspectRatio, 100)
     
@@ -261,9 +391,8 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
-        self.cornerRadius = .cornerRadius
-        setCorners([.bottomLeft, .bottomRight, .topLeft, .topRight])
-        
+        self.layer?.cornerRadius = .cornerRadius
+        self.layer?.masksToBounds = true
     }
     
     required init?(coder: NSCoder) {
@@ -272,7 +401,6 @@ private final class OutgoingVideoView : GeneralRowContainerView {
     
     override func layout() {
         super.layout()
-        
         self.overlay.frame = bounds
         self.videoView?.0?.view.frame = bounds
         self.videoView?.0?.view.subviews.first?.frame = bounds
@@ -295,7 +423,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
                 current.state = .active
                 current.blendingMode = .withinWindow
                 current.wantsLayer = true
-
+                current.layer?.cornerRadius = .cornerRadius
                 current.frame = bounds
                 self.disabledView = current
                 addSubview(current, positioned: .below, relativeTo: overlay)
@@ -340,7 +468,7 @@ private final class OutgoingVideoView : GeneralRowContainerView {
                 textView.update(layout)
                 textView.change(pos: frame.focus(layout.layoutSize).origin, animated: animated, duration: duration)
             }
-            self.change(size: frame.size, animated: animated, corners: [.bottomLeft, .bottomRight, .topLeft, .topRight])
+            self.change(size: frame.size, animated: animated)
             self.change(pos: frame.origin, animated: animated, duration: duration)
         }
         self.frame = frame
@@ -391,16 +519,18 @@ private final class IncomingVideoView : Control {
         didSet {
             if let videoView = oldValue {
                 videoView.view.removeFromSuperview()
-            } else if let videoView = videoView {
+            }
+            if let videoView = videoView {
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
-                videoView.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                videoView.view.background = .blackTransparent
-
-                videoView.setOnFirstFrameReceived({ [weak self] aspectRatio in
-                    self?.videoView?.view.background = .black
-                    self?.updateAspectRatio?(aspectRatio)
-                })
+                videoView.view.background = .clear
                 
+                videoView.setOnFirstFrameReceived({ [weak self] aspectRatio in
+                    DispatchQueue.main.async {
+                        self?.videoView?.view.background = .black
+                        self?.videoView?.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        self?.updateAspectRatio?(aspectRatio)
+                    }
+                })
             }
             needsLayout = true
         }
@@ -448,16 +578,6 @@ private final class IncomingVideoView : Control {
             } else {
                 self.disabledView?.frame = bounds
             }
-            self.disabledView?.removeAllSubviews()
-            if let peer = peer {
-                let textView = TextView()
-                let layout = TextViewLayout(.initialize(string: L10n.callVideoPaused(peer.compactDisplayTitle), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
-                textView.userInteractionEnabled = false
-                textView.isSelectable = false
-                textView.update(layout)
-                self.disabledView?.addSubview(textView)
-            }
-            
         } else {
             if let disabledView = self.disabledView {
                 self.disabledView = nil
@@ -473,19 +593,48 @@ private final class IncomingVideoView : Control {
         needsLayout = true
     }
     
+    private var _hidden: Bool = false
+    
+    var isViewHidden: Bool {
+        return _hidden
+    }
+    
+    func unhideView(animated: Bool) {
+        if let view = videoView?.view, _hidden {
+            addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
+        }
+        _hidden = false
+    }
+    
+    func hideView(animated: Bool) {
+        if let view = self.videoView?.view, !_hidden {
+            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
+                if completed {
+                    view?.removeFromSuperview()
+                    view?.layer?.removeAllAnimations()
+                }
+            })
+            view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
+        }
+        _hidden = true
+    }
+    
     
     override var mouseDownCanMoveWindow: Bool {
         return true
     }
 }
 
-private class CallWindowView : View {
+private class PhoneCallWindowView : View {
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let controls:View = View()
     fileprivate let backgroundView:Control = Control()
     let acceptControl:CallControl = CallControl(frame: .zero)
     let declineControl:CallControl = CallControl(frame: .zero)
     
+    private var tooltips: [CallTooltipView] = []
     
     let b_Mute:CallControl = CallControl(frame: .zero)
     let b_VideoCamera:CallControl = CallControl(frame: .zero)
@@ -530,8 +679,10 @@ private class CallWindowView : View {
     
     private let fetching = MetaDisposable()
 
-    var updateAspectRatio:((Float)->Void)? = nil
+    var updateIncomingAspectRatio:((Float)->Void)? = nil
+
     
+    private var outgoingAspectRatio: CGFloat = 0
 
     required init(frame frameRect: NSRect) {
         outgoingVideoView = OutgoingVideoView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
@@ -615,7 +766,7 @@ private class CallWindowView : View {
             }
             start = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
             resizeOutgoingVideoDirection = self.outgoingVideoView.runResizer(at: self.outgoingVideoView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-
+            
             
         }, for: .Down)
         
@@ -623,6 +774,8 @@ private class CallWindowView : View {
             guard let `self` = self, let window = self.window, let startPoint = start else {
                 return
             }
+            
+            self.outgoingVideoView.isMoved = true
             
             let current = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
             let difference = current - startPoint
@@ -648,9 +801,7 @@ private class CallWindowView : View {
                     size = NSMakeSize(frame.width + value_w, frame.height + value_h)
                     point = NSMakePoint(frame.minX, frame.minY)
                 }
-                if size.width < OutgoingVideoView.defaultSize.width || size.height < OutgoingVideoView.defaultSize.height {
-                    return
-                }
+               
                 if point.x < 20 ||
                     point.y < 20 ||
                     (self.frame.width - (point.x + size.width)) < 20 ||
@@ -668,48 +819,7 @@ private class CallWindowView : View {
             
         }, for: .MouseDragging)
       
-        outgoingVideoView.overlay.set(handler: { [weak self] control in
-            guard let `self` = self, let _ = start else {
-                return
-            }
-            
-            
-            let frame = self.outgoingVideoView.frame
-            var point = self.outgoingVideoView.frame.origin
-            
-
-            var size = frame.size
-            if let event = NSApp.currentEvent, event.clickCount == 2 {
-                
-                let inside = self.outgoingVideoView.convert(event.locationInWindow, from: nil)
-                
-                if frame.width > OutgoingVideoView.defaultSize.width {
-                    size = OutgoingVideoView.defaultSize
-                    point.x += floor(inside.x / 2)
-                    point.y += floor(inside.y / 2)
-                } else {
-                    size = NSMakeSize(defaultWindowSize.width - 40, (defaultWindowSize.width - 40) * (OutgoingVideoView.defaultSize.height / OutgoingVideoView.defaultSize.width))
-                    point.x -= floor(inside.x / 2)
-                    point.y -= floor(inside.y / 2)
-                }
-                
-            }
-            
-            if (size.width + point.x) > self.frame.width - 20 {
-                point.x = self.frame.width - size.width - 20
-            } else if point.x - 20 < 0 {
-                point.x = 20
-            }
-            
-            if (size.height + point.y) > self.frame.height - 20 {
-                point.y = self.frame.height - size.height - 20
-            } else if point.y - 20 < 0 {
-                point.y = 20
-            }
-            
-            let updatedRect = CGRect(origin: point, size: size)
-            self.outgoingVideoView.updateFrame(updatedRect, animated: true)
-            
+        outgoingVideoView.overlay.set(handler: { _ in
             start = nil
             resizeOutgoingVideoDirection = nil
         }, for: .Up)
@@ -717,6 +827,22 @@ private class CallWindowView : View {
         outgoingVideoView.frame = NSMakeRect(frame.width - outgoingVideoView.frame.width - 20, frame.height - 140 - outgoingVideoView.frame.height, outgoingVideoView.frame.width, outgoingVideoView.frame.height)
         
     }
+    
+    func updateOutgoingAspectRatio(_ aspectRatio: CGFloat, animated: Bool) {
+        if aspectRatio > 0, !outgoingVideoView.isEventLess, self.outgoingAspectRatio != aspectRatio {
+            var rect = outgoingVideoView.frame
+            let closest = max(rect.width, rect.height)
+            rect.size = NSMakeSize(closest * aspectRatio, closest)
+            
+            let dif = outgoingVideoView.frame.size - rect.size
+            
+            rect.origin = rect.origin.offsetBy(dx: dif.width / 2, dy: dif.height / 2)
+            
+            outgoingVideoView.updateFrame(rect, animated: animated)
+        }
+        self.outgoingAspectRatio = aspectRatio
+    }
+    
     
     private func mainControlY(_ control: NSView) -> CGFloat {
         return controls.frame.height - control.frame.height - 40
@@ -736,6 +862,10 @@ private class CallWindowView : View {
 
         incomingVideoView?.frame = bounds
         
+        if self.outgoingVideoView.videoView == nil {
+            self.outgoingVideoView.frame = bounds
+        }
+        
         
         textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 36))
         textNameView.centerX(y: 50)
@@ -753,26 +883,27 @@ private class CallWindowView : View {
             return
         }
         
-        switch state.state {
-        case .ringing, .requesting, .terminating, .terminated:
-            let videoFrame = bounds
-            outgoingVideoView.updateFrame(videoFrame, animated: false)
-        default:
-            var point = outgoingVideoView.frame.origin
-
-            let size = outgoingVideoView.frame.size
-
-            if previousFrame.size != frame.size {
+        if !outgoingVideoView.isViewHidden {
+            if outgoingVideoView.isEventLess {
+                let videoFrame = bounds
+                outgoingVideoView.updateFrame(videoFrame, animated: false)
+            } else {
+                var point = outgoingVideoView.frame.origin
+                var size = outgoingVideoView.frame.size
                 
-                point.x += (frame.width - point.x) - (previousFrame.width - point.x)
-                point.y += (frame.height - point.y) - (previousFrame.height - point.y)
+                var updatedXY: Bool = true
                 
-                point.x = max(min(frame.width - size.width - 20, point.x), 20)
-                point.y = max(min(frame.height - size.height - 20, point.y), 20)
+                if previousFrame.size != frame.size, updatedXY {
+                    point.x += (frame.width - point.x) - (previousFrame.width - point.x)
+                    point.y += (frame.height - point.y) - (previousFrame.height - point.y)
+                    
+                    point.x = max(min(frame.width - size.width - 20, point.x), 20)
+                    point.y = max(min(frame.height - size.height - 20, point.y), 20)
+                }
+                
+                let videoFrame = NSMakeRect(point.x, point.y, size.width, size.height)
+                outgoingVideoView.updateFrame(videoFrame, animated: false)
             }
-            
-            let videoFrame = NSMakeRect(point.x, point.y, size.width, size.height)
-            outgoingVideoView.updateFrame(videoFrame, animated: false)
         }
         
         
@@ -829,6 +960,15 @@ private class CallWindowView : View {
         if let dimension = imageDimension {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: self.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
             self.imageView.set(arguments: arguments)
+        }
+        
+        
+        var y: CGFloat = self.controls.frame.minY - 40 + (self.allActiveControlsViews.first?.frame.minY ?? 0)
+        
+        for view in tooltips {
+            let x = focus(view.frame.size).minX
+            view.setFrameOrigin(NSMakePoint(x, y))
+            y -= (view.frame.height + 10)
         }
         
         
@@ -892,12 +1032,21 @@ private class CallWindowView : View {
                 self.textNameView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 self.secureTextView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 self.statusTextView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
+                
+                for tooltip in tooltips {
+                    tooltip.change(opacity: self.mouseInside() ? 1.0 : 0.0)
+                }
+                
             default:
                 self.backgroundView.change(opacity: 1.0)
                 self.controls.change(opacity: 1.0)
                 self.textNameView._change(opacity: 1.0)
                 self.secureTextView._change(opacity: 1.0)
                 self.statusTextView._change(opacity: 1.0)
+                
+                for tooltip in tooltips {
+                    tooltip.change(opacity: 1.0)
+                }
             }
         }
 
@@ -909,8 +1058,6 @@ private class CallWindowView : View {
         switch state.videoState {
         case .active:
             inputCameraIsActive = !state.isOutgoingVideoPaused
-        case .outgoingRequested:
-            inputCameraIsActive = !state.isOutgoingVideoPaused
         default:
             inputCameraIsActive = false
         }
@@ -918,7 +1065,7 @@ private class CallWindowView : View {
         
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
-        self.b_VideoCamera.isHidden = !session.isVideoPossible
+        self.b_VideoCamera.isHidden = !session.isVideoPossible || !session.isVideoAvailable
         self.b_VideoCamera.updateEnabled(state.videoIsAvailable, animated: animated)
         
         self.state = state
@@ -928,14 +1075,19 @@ private class CallWindowView : View {
         case let .active(_, _, visual):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
+            let wasEmpty = secureTextView.layout == nil
             secureTextView.update(layout)
+            if wasEmpty {
+                secureTextView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                secureTextView.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
+            }
         default:
             break
         }
         
         
-        switch state.videoState {
-        case .active, .incomingRequested:
+        switch state.remoteVideoState {
+        case .active:
             if !self.incomingVideoViewRequested {
                 self.incomingVideoViewRequested = true
                 session.makeIncomingVideoView(completion: { [weak self] view in
@@ -944,28 +1096,42 @@ private class CallWindowView : View {
                             self.incomingVideoView = IncomingVideoView(frame: self.imageView.frame)
                             self.imageView.addSubview(self.incomingVideoView!)
                         }
-                        self.incomingVideoView?.updateAspectRatio = self.updateAspectRatio
+                        self.incomingVideoView?.updateAspectRatio = self.updateIncomingAspectRatio
                         self.incomingVideoView?.videoView = view
                         self.needsLayout = true
                     }
                 })
+            } else {
+                self.incomingVideoView?.unhideView(animated: animated)
             }
-        default:
-            break
+        case .inactive, .paused:
+            self.incomingVideoView?.hideView(animated: animated)
+            self.needsLayout = true
         }
         
         
         switch state.videoState {
-        case let .outgoingRequested(possible), let .active(possible):
+        case let .active(possible):
             if !self.outgoingVideoViewRequested {
+                
+                self.outgoingVideoView.unhideView(animated: animated)
+                
                 self.outgoingVideoViewRequested = true
-                session.makeOutgoingVideoView(completion: { [weak self] view in
-                    if let view = view, let `self` = self {
-                        self.outgoingVideoView.videoView = (view, possible)
-                        self.needsLayout = true
-                    }
-                })
+                if possible {
+                    session.makeOutgoingVideoView(completion: { [weak self] view in
+                        if let view = view, let `self` = self {
+                            self.outgoingVideoView.videoView = (view, possible)
+                            self.needsLayout = true
+                        }
+                    })
+                } else {
+                    self.outgoingVideoView.videoView = (nil, possible)
+                    self.needsLayout = true
+                }
             }
+        case .inactive, .paused:
+            self.outgoingVideoViewRequested = false
+            self.outgoingVideoView.hideView(animated: animated)
         default:
             break
         }
@@ -1029,49 +1195,161 @@ private class CallWindowView : View {
         }
         
         
-        outgoingVideoView.setIsPaused(state.isOutgoingVideoPaused, animated: animated)
+        incomingVideoView?.setIsPaused(state.remoteVideoState == .paused, peer: peer, animated: animated)
         
-        incomingVideoView?.setIsPaused(state.remoteVideoState == .inactive, peer: peer, animated: animated)
-
-        
+        let wasEventLess = outgoingVideoView.isEventLess
+       
         
         switch state.state {
         case .ringing, .requesting, .terminating, .terminated:
             outgoingVideoView.isEventLess = true
         default:
             switch state.videoState {
-            case .outgoingRequested:
-                outgoingVideoView.isEventLess = true
-            case .incomingRequested:
-                outgoingVideoView.isEventLess = false
             case .active:
                 outgoingVideoView.isEventLess = false
             default:
                 outgoingVideoView.isEventLess = true
             }
+            if state.remoteVideoState == .inactive {
+                outgoingVideoView.isEventLess = true
+            }
+        }
+        
+        if let peer = peer {
+            updatePeerUI(peer, session: session)
+            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
         }
         
         var point = outgoingVideoView.frame.origin
         var size = outgoingVideoView.frame.size
         
         if !outgoingVideoView.isEventLess {
-            if point == .zero {
-                point = NSMakePoint(frame.width - OutgoingVideoView.defaultSize.width - 20, frame.height - 140 - OutgoingVideoView.defaultSize.height)
-                size = OutgoingVideoView.defaultSize
+            if !self.outgoingVideoView.isMoved {
+                if outgoingAspectRatio > 0 {
+                    size = NSMakeSize(OutgoingVideoView.defaultSize.width * outgoingAspectRatio, OutgoingVideoView.defaultSize.width)
+                } else {
+                    size = OutgoingVideoView.defaultSize
+                }
+                let addition = CGFloat(tooltips.count) * 40
+                
+                point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
             }
         } else {
+            self.outgoingVideoView.isMoved = false
             point = .zero
             size = frame.size
         }
-        let videoFrame = CGRect(origin: point, size: size)
-        outgoingVideoView.updateFrame(videoFrame, animated: animated)
-        
-        
-        if let peer = peer {
-            updatePeerUI(peer, session: session)
+        if !outgoingVideoView.isViewHidden {
+            let videoFrame = CGRect(origin: point, size: size)
+            outgoingVideoView.updateFrame(videoFrame, animated: animated)
         }
         
+        
         needsLayout = true
+    }
+    
+    private func updateTooltips(_ state:CallState, session:PCallSession, peer: TelegramUser, animated: Bool, updateOutgoingVideo: Bool) {
+        var tooltips: [CallTooltipType] = []
+        
+        let maxWidth = defaultWindowSize.width - 40
+        
+        switch state.state {
+        case .active:
+            if state.remoteVideoState == .inactive {
+                switch state.videoState {
+                case .active:
+                    tooltips.append(.cameraOff)
+                default:
+                    break
+                }
+            }
+            if state.remoteAudioState == .muted {
+                tooltips.append(.microOff)
+            }
+            if state.remoteBatteryLevel == .low {
+                tooltips.append(.batteryLow)
+            }
+        default:
+            break
+        }
+        
+        let updated = self.tooltips
+        
+        let removeTips = updated.filter { value in
+            if let type = value.type {
+                return !tooltips.contains(type)
+            }
+            return true
+        }
+        
+        let updateTips = updated.filter { value in
+            if let type = value.type {
+                return tooltips.contains(type)
+            }
+            return false
+        }
+        
+        let newTips: [CallTooltipView] = tooltips.filter { tip -> Bool in
+            for view in updated {
+                if view.type == tip {
+                    return false
+                }
+            }
+            return true
+        }.map { tip in
+            let view = CallTooltipView(frame: .zero)
+            view.update(type: tip, icon: tip.icon, text: tip.text(peer.compactDisplayTitle), maxWidth: maxWidth)
+            return view
+        }
+        
+        for updated in updateTips {
+            if let tip = updated.type {
+                updated.update(type: tip, icon: tip.icon, text: tip.text(peer.compactDisplayTitle), maxWidth: maxWidth)
+            }
+        }
+        
+        for view in removeTips {
+            if animated {
+                view.layer?.animateScaleCenter(from: 1, to: 0.3, duration: 0.2)
+                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, timingFunction: .spring, removeOnCompletion: false, completion: { [weak view] _ in
+                    view?.removeFromSuperview()
+                })
+            } else {
+                view.removeFromSuperview()
+            }
+        }
+        
+        var y: CGFloat = self.controls.frame.minY - 40 + (self.allActiveControlsViews.first?.frame.minY ?? 0)
+        
+        let sorted = (updateTips + newTips).sorted(by: { lhs, rhs in
+            return lhs.type!.rawValue < rhs.type!.rawValue
+        })
+        
+        
+        for view in sorted {
+            let x = focus(view.frame.size).minX
+            if view.superview == nil {
+                addSubview(view)
+                view.layer?.animateScaleSpring(from: 0.3, to: 1.0, duration: 0.2)
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.4, timingFunction: .spring)
+            } else {
+                if animated {
+                    view.layer?.animatePosition(from: NSMakePoint(0, y - view.frame.minY), to: .zero, timingFunction: .spring, additive: true)
+                }
+            }
+            view.setFrameOrigin(NSMakePoint(x, y))
+            
+            y -= (view.frame.height + 10)
+        }
+        
+        self.tooltips = sorted
+        
+        if updateOutgoingVideo, !outgoingVideoView.isMoved {
+            let addition = CGFloat(tooltips.count) * 40
+            let size = self.outgoingVideoView.frame.size
+            let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
+            self.outgoingVideoView.updateFrame(CGRect(origin: point, size: size), animated: animated)
+        }
     }
     
     
@@ -1085,8 +1363,8 @@ private class CallWindowView : View {
             
             self.imageDimension = dimension
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: self.imageView.frame.size, intrinsicInsets: NSEdgeInsets())
-            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: true)
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: defaultWindowSize, intrinsicInsets: NSEdgeInsets())
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: false)
             self.imageView.setSignal(chatMessagePhoto(account: session.account, imageReference: ImageMediaReference.standalone(media: media), peer: user, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
             })
@@ -1115,14 +1393,14 @@ private class CallWindowView : View {
     }
 }
 
-class CallWindowController {
+class PhoneCallWindowController {
     let window:Window
-    fileprivate var view:CallWindowView
+    fileprivate var view:PhoneCallWindowView
 
     let updateLocalizationAndThemeDisposable = MetaDisposable()
     fileprivate var session:PCallSession! {
         didSet {
-            view = CallWindowView(frame: NSMakeRect(0, 0, window.frame.width, window.frame.height))
+            view = PhoneCallWindowView(frame: NSMakeRect(0, 0, window.frame.width, window.frame.height))
             window.contentView = view
             first = true
             sessionDidUpdated()
@@ -1170,13 +1448,13 @@ class CallWindowController {
                 strongSelf.applyState(state, session: strongSelf.session!, accountPeer: accountPeer, peer: peer, animated: !strongSelf.first)
                 strongSelf.first = false
                 
+                strongSelf.updateOutgoingAspectRatio(state.remoteAspectRatio)
             }
         }))
         
-        view.updateAspectRatio = { [weak self] aspectRatio in
-            self?.updateWindowAspectRatio(aspectRatio)
+        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
+            self?.updateIncomingAspectRatio(max(0.75, aspectRatio))
         }
-        
     }
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
@@ -1201,10 +1479,11 @@ class CallWindowController {
             self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: true, screen: screen)
             self.window.minSize = size
             self.window.isOpaque = true
+            self.window.backgroundColor = .black
         } else {
             fatalError("screen not found")
         }
-        view = CallWindowView(frame: NSMakeRect(0, 0, size.width, size.height))
+        view = PhoneCallWindowView(frame: NSMakeRect(0, 0, size.width, size.height))
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
@@ -1226,17 +1505,14 @@ class CallWindowController {
         
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
-            if let session = self?.session, let callState = self?.state {
-                
+            if let `self` = self, let callState = self.state {
                 switch callState.videoState {
-                case .incomingRequested:
-                    session.acceptVideo()
-                default:
-                    if !session.isVideo {
-                        session.requestVideo()
-                    } else {
-                        session.toggleOutgoingVideo()
-                    }
+                case .active, .paused:
+                    self.session.disableVideo()
+                case .inactive:
+                    self.session.requestVideo()
+                case .notAvailable:
+                    break
                 }
             }
         }, for: .Click)
@@ -1305,15 +1581,16 @@ class CallWindowController {
         }))
     }
     
-    private var  aspectRatio: Float = 0
-    private func updateWindowAspectRatio(_ aspectRatio: Float) {
-        if aspectRatio > 0 && self.aspectRatio != aspectRatio, let screen = window.screen {
-            let closestSide: CGFloat
+    private var incomingAspectRatio: Float = 0
+    private func updateIncomingAspectRatio(_ aspectRatio: Float) {
+        if aspectRatio > 0 && self.incomingAspectRatio != aspectRatio, let screen = window.screen {
+            var closestSide: CGFloat
             if aspectRatio > 1 {
                 closestSide = min(window.frame.width, window.frame.height)
             } else {
                 closestSide = max(window.frame.width, window.frame.height)
             }
+            
             var updatedSize = NSMakeSize(closestSide * CGFloat(aspectRatio), closestSide)
             
             if screen.frame.width <= updatedSize.width || screen.frame.height <= updatedSize.height {
@@ -1323,7 +1600,15 @@ class CallWindowController {
             
             window.setFrame(CGRect(origin: window.frame.origin.offsetBy(dx: (window.frame.width - updatedSize.width) / 2, dy: (window.frame.height - updatedSize.height) / 2), size: updatedSize), display: true, animate: true)
             window.aspectRatio = updatedSize
-            self.aspectRatio = aspectRatio
+            self.incomingAspectRatio = aspectRatio
+        }
+    }
+    
+    private var outgoingAspectRatio: Float = 0
+    private func updateOutgoingAspectRatio(_ aspectRatio: Float) {
+        if aspectRatio > 0 && self.outgoingAspectRatio != aspectRatio {
+            self.outgoingAspectRatio = aspectRatio
+            self.view.updateOutgoingAspectRatio(CGFloat(aspectRatio), animated: true)
         }
     }
     
@@ -1336,9 +1621,13 @@ class CallWindowController {
         keyStateDisposable.set((session.state |> deliverOnMainQueue).start(next: { [weak self] state in
             if let strongSelf = self {
                 if case .active = state.state, !strongSelf.session.isVideo, !strongSelf.window.isKeyWindow {
-                    closeCall()
+                    switch state.videoState {
+                    case .active, .paused:
+                        break
+                    default:
+                        closeCall()
+                    }
                 }
-                
             }
         }))
     }
@@ -1417,7 +1706,7 @@ class CallWindowController {
     }
 }
 
-private let controller:Atomic<CallWindowController?> = Atomic(value: nil)
+private let controller:Atomic<PhoneCallWindowController?> = Atomic(value: nil)
 private let closeDisposable = MetaDisposable()
 
 func makeKeyAndOrderFrontCallWindow() -> Bool {
@@ -1439,7 +1728,7 @@ func showCallWindow(_ session:PCallSession) {
                 controller.session = session
                 return controller
             } else {
-                return CallWindowController(session)
+                return PhoneCallWindowController(session)
             }
         }
         return controller

@@ -2435,10 +2435,14 @@ internal final class L10n {
   internal static func chatListServiceCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.Call.outgoing", p1)
   }
+  /// Cancelled Video Call
+  internal static var chatListServiceVideoCallCancelled: String  { return L10n.tr("Localizable", "ChatList.Service.VideoCall.Cancelled") }
   /// Incoming Video Call (%@)
   internal static func chatListServiceVideoCallIncoming(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VideoCall.incoming", p1)
   }
+  /// Missed Video Call
+  internal static var chatListServiceVideoCallMissed: String  { return L10n.tr("Localizable", "ChatList.Service.VideoCall.Missed") }
   /// Outgoing Video Call (%@)
   internal static func chatListServiceVideoCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VideoCall.outgoing", p1)
@@ -5427,8 +5431,6 @@ internal final class L10n {
   internal static var requestAccesErrorConirmSettings: String  { return L10n.tr("Localizable", "RequestAcces.Error.Conirm.Settings") }
   /// Telegram needs access to your microphone to make calls
   internal static var requestAccesErrorHaveNotAccessCall: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.Call") }
-  /// Telegram needs access to your microphone and camera to make calls
-  internal static var requestAccesErrorHaveNotAccessVideoCall: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VideoCall") }
   /// Telegram needs access to your microphone and camera to record video messages.
   internal static var requestAccesErrorHaveNotAccessVideoMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VideoMessages") }
   /// Telegram needs access to your microphone to record voice messages.

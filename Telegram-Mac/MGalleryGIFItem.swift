@@ -92,6 +92,13 @@ class MGalleryGIFItem: MGalleryItem {
             
             var size = size
             
+            let aspectRatio = size.width / size.height
+            let addition = max(300 - size.width, 300 - size.height)
+            
+            if addition > 0 {
+                size.width += addition * aspectRatio
+                size.height += addition
+            }
             
             return size.fitted(pagerSize)
         }
