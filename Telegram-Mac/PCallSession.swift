@@ -319,6 +319,8 @@ class PCallSession {
     private var previousRemoteBatteryLevel: CallState.RemoteBatteryLevel?
 
     
+    private var delayMuteState: Bool? = nil
+    
     private var droppedCall = false
     private var dropCallKitCallTimer: SwiftSignalKit.Timer?
     
@@ -515,11 +517,17 @@ class PCallSession {
     func mute() {
         self.isMuted = true
         ongoingContext?.setIsMuted(self.isMuted)
+        if ongoingContext == nil {
+            delayMuteState = true
+        }
     }
     
     func unmute() {
         self.isMuted = false
         ongoingContext?.setIsMuted(self.isMuted)
+        if ongoingContext == nil {
+            delayMuteState = nil
+        }
     }
     
     func toggleMute() {
@@ -527,6 +535,9 @@ class PCallSession {
         ongoingContext?.setIsMuted(self.isMuted)
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
+        }
+        if ongoingContext == nil {
+            delayMuteState = self.isMuted ? true : nil
         }
     }
     func setOutgoingVideoIsPaused(_ isEnabled: Bool) {
@@ -695,6 +706,14 @@ class PCallSession {
                 let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, auxiliaryServers: auxiliaryServers, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, enableHighBitrateVideoCalls: false, logName: logName)
                 self.ongoingContext = ongoingContext
                 
+                if let delayMuteState = self.delayMuteState {
+                    self.delayMuteState = nil
+                    if delayMuteState {
+                        self.mute()
+                    } else {
+                        self.unmute()
+                    }
+                }
                 
                 self.ongoingContextStateDisposable = (ongoingContext.state
                     |> deliverOnMainQueue).start(next: { [weak self] contextState in
@@ -975,7 +994,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         signal = combineLatest(queue: .mainQueue(), requestMicrophonePermission(), .single(nil))
     }
     
-    let isVideoPossible = account.postbox.transaction { transaction -> VideoCallsConfiguration in
+    var isVideoPossible = account.postbox.transaction { transaction -> VideoCallsConfiguration in
         let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
         return VideoCallsConfiguration(appConfiguration: appConfiguration)
     }
@@ -991,7 +1010,12 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         }
         return isVideoPossible
     }
-
+    
+    isVideoPossible = combineLatest(isVideoPossible, account.postbox.transaction {
+        ($0.getPeerCachedData(peerId: peerId) as? CachedUserData)?.videoCallsAvailable ?? true
+    }) |> map {
+        $0.0 && $0.1
+    }
     
     return combineLatest(queue: .mainQueue(), signal, isVideoPossible) |> mapToSignal { values -> Signal<PCallResult, NoError> in
         

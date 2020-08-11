@@ -103,14 +103,14 @@ private let defaultWindowSize = NSMakeSize(375, 500)
 extension CallState {
     var videoIsAvailable: Bool {
         switch state {
-        case .ringing, .requesting, .active, .connecting:
+        case .active:
             switch videoState {
             case .notAvailable:
                 return false
             default:
                 return true
             }
-        case .terminating, .terminated:
+        case .terminating, .terminated, .ringing, .requesting, .connecting:
             return false
         default:
             return true
@@ -635,6 +635,9 @@ private class PhoneCallWindowView : View {
     let declineControl:CallControl = CallControl(frame: .zero)
     
     private var tooltips: [CallTooltipView] = []
+    private var displayToastsAfterTimestamp: Double?
+    
+
     
     let b_Mute:CallControl = CallControl(frame: .zero)
     let b_VideoCamera:CallControl = CallControl(frame: .zero)
@@ -714,7 +717,7 @@ private class PhoneCallWindowView : View {
         secureTextView.userInteractionEnabled = false
         addSubview(secureTextView)
     
-        backgroundView.backgroundColor = NSColor(0x000000, 0.2)
+        backgroundView.backgroundColor = NSColor(0x000000, 0.4)
         backgroundView.frame = NSMakeRect(0, 0, frameRect.width, frameRect.height)
         
 
@@ -806,8 +809,8 @@ private class PhoneCallWindowView : View {
                     point.y < 20 ||
                     (self.frame.width - (point.x + size.width)) < 20 ||
                     (self.frame.height - (point.y + size.height)) < 20 ||
-                    size.width > (defaultWindowSize.width - 40) ||
-                    size.height > (defaultWindowSize.height - 40) {
+                    size.width > (window.frame.width - 40) ||
+                    size.height > (window.frame.height - 40) {
                     return
                 }
                 self.outgoingVideoView.updateFrame(CGRect(origin: point, size: size), animated: false)
@@ -819,10 +822,35 @@ private class PhoneCallWindowView : View {
             
         }, for: .MouseDragging)
       
-        outgoingVideoView.overlay.set(handler: { _ in
+        outgoingVideoView.overlay.set(handler: { [weak self] control in
+            guard let `self` = self, let _ = start else {
+                return
+            }
+            
+            
+            let frame = self.outgoingVideoView.frame
+            var point = self.outgoingVideoView.frame.origin
+            
+            var size = frame.size
+            if (size.width + point.x) > self.frame.width - 20 {
+                point.x = self.frame.width - size.width - 20
+            } else if point.x - 20 < 0 {
+                point.x = 20
+            }
+            
+            if (size.height + point.y) > self.frame.height - 20 {
+                point.y = self.frame.height - size.height - 20
+            } else if point.y - 20 < 0 {
+                point.y = 20
+            }
+            
+            let updatedRect = CGRect(origin: point, size: size)
+            self.outgoingVideoView.updateFrame(updatedRect, animated: true)
+            
             start = nil
             resizeOutgoingVideoDirection = nil
         }, for: .Up)
+
         
         outgoingVideoView.frame = NSMakeRect(frame.width - outgoingVideoView.frame.width - 20, frame.height - 140 - outgoingVideoView.frame.height, outgoingVideoView.frame.width, outgoingVideoView.frame.height)
         
@@ -1187,7 +1215,9 @@ private class PhoneCallWindowView : View {
                 }
             }
         case .terminating:
-            break
+            _ = allActiveControlsViews.map {
+                $0.updateEnabled(false, animated: animated)
+            }
         case .waiting:
             break
         case .reconnecting(_, _, _):
@@ -1253,26 +1283,33 @@ private class PhoneCallWindowView : View {
         
         let maxWidth = defaultWindowSize.width - 40
         
-        switch state.state {
-        case .active:
-            if state.remoteVideoState == .inactive {
-                switch state.videoState {
+        if let displayToastsAfterTimestamp = self.displayToastsAfterTimestamp {
+            if CACurrentMediaTime() > displayToastsAfterTimestamp {
+                switch state.state {
                 case .active:
-                    tooltips.append(.cameraOff)
+                    if state.remoteVideoState == .inactive {
+                        switch state.videoState {
+                        case .active:
+                            tooltips.append(.cameraOff)
+                        default:
+                            break
+                        }
+                    }
+                    if state.remoteAudioState == .muted {
+                        tooltips.append(.microOff)
+                    }
+                    if state.remoteBatteryLevel == .low {
+                        tooltips.append(.batteryLow)
+                    }
                 default:
                     break
                 }
             }
-            if state.remoteAudioState == .muted {
-                tooltips.append(.microOff)
-            }
-            if state.remoteBatteryLevel == .low {
-                tooltips.append(.batteryLow)
-            }
-        default:
-            break
+        } else {
+            self.displayToastsAfterTimestamp = CACurrentMediaTime() + 1.5
         }
         
+       
         let updated = self.tooltips
         
         let removeTips = updated.filter { value in
@@ -1344,7 +1381,7 @@ private class PhoneCallWindowView : View {
         
         self.tooltips = sorted
         
-        if updateOutgoingVideo, !outgoingVideoView.isMoved {
+        if !outgoingVideoView.isMoved && outgoingVideoView.frame != bounds {
             let addition = CGFloat(tooltips.count) * 40
             let size = self.outgoingVideoView.frame.size
             let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
@@ -1739,14 +1776,26 @@ func showCallWindow(_ session:PCallSession) {
     closeDisposable.set(signal.start(next: { value in
         if value {
             closeCall()
+        } else {
+            var bp:Int = 0
+            bp += 1
         }
     }))
 }
 
 func closeCall(minimisize: Bool = false) {
     _ = controller.modify { controller in
-        controller?.cleanup()
-        controller?.window.orderOut(nil)
+        if let controller = controller {
+            controller.cleanup()
+            if controller.window.isFullScreen {
+                controller.window.toggleFullScreen(nil)
+                delay(0.8, closure: {
+                    controller.window.orderOut(nil)
+                })
+            } else {
+                controller.window.orderOut(nil)
+            }
+        }
         return nil
     }
 }

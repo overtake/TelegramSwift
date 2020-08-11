@@ -133,12 +133,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
         }
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
-            items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: {
-                arguments.call(false)
-            }))
+            if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.voiceCallsAvailable {
+                items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: {
+                    arguments.call(false)
+                }))
+            }
         }
         
-        let videoConfiguration: VideoCallsConfiguration = VideoCallsConfiguration.init(appConfiguration: item.context.appConfiguration)
+        let videoConfiguration: VideoCallsConfiguration = VideoCallsConfiguration(appConfiguration: item.context.appConfiguration)
         
         let isVideoPossible: Bool
         switch videoConfiguration.videoCallsSupport {
@@ -154,9 +156,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty, isVideoPossible {
-            items.append(ActionItem(text: L10n.peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
-                arguments.call(true)
-            }))
+            if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.videoCallsAvailable {
+                items.append(ActionItem(text: L10n.peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
+                    arguments.call(true)
+                }))
+            }
         }
         let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
