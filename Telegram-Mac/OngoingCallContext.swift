@@ -46,17 +46,19 @@ public final class OngoingCallContextVideoView {
     public let setOnFirstFrameReceived: (((Float) -> Void)?) -> Void
     public let getOrientation: () -> OngoingCallVideoOrientation
     public let setOnOrientationUpdated: (((OngoingCallVideoOrientation) -> Void)?) -> Void
-    
+    public let setVideoContentMode: (CALayerContentsGravity) -> Void
     public init(
         view: NSView,
         setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
         getOrientation: @escaping () -> OngoingCallVideoOrientation,
-        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation) -> Void)?) -> Void
+        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation) -> Void)?) -> Void,
+        setVideoContentMode: @escaping(CALayerContentsGravity) -> Void
         ) {
         self.view = view
         self.setOnFirstFrameReceived = setOnFirstFrameReceived
         self.getOrientation = getOrientation
         self.setOnOrientationUpdated = setOnOrientationUpdated
+        self.setVideoContentMode = setVideoContentMode
     }
 }
 
@@ -77,15 +79,14 @@ final class OngoingCallVideoCapturer {
         self.impl.makeOutgoingVideoView { view in
             if let view = view {
                 completion(OngoingCallContextVideoView(
-                    view: view,
-                    setOnFirstFrameReceived: { [weak view] f in
+                    view: view, setOnFirstFrameReceived: { [weak view] f in
                         view?.setOnFirstFrameReceived(f)
-                    },
-                    getOrientation: {
+                    }, getOrientation: {
                         return .rotation90
-                },
-                    setOnOrientationUpdated: { _ in
-                }
+                    }, setOnOrientationUpdated: { _ in
+                    }, setVideoContentMode: { [weak view] mode in
+                        view?.setVideoContentMode(mode)
+                    }
                 ))
             } else {
                 completion(nil)
@@ -595,7 +596,7 @@ final class OngoingCallContext {
                 
                 let context = OngoingCallThreadLocalContextWebrtc(version: version, queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, connections: filteredConnections, maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
                     callSessionManager?.sendSignalingData(internalId: internalId, data: data)
-                    }, videoCapturer: video?.impl, preferredAspectRatio: Float(0), enableHighBitrateVideoCalls: enableHighBitrateVideoCalls)
+                    }, videoCapturer: video?.impl, preferredAspectRatio: Float(System.aspectRatio), enableHighBitrateVideoCalls: enableHighBitrateVideoCalls)
                 
                 self.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
                 context.stateChanged = { [weak self, weak callSessionManager] state, videoState, remoteVideoState, remoteAudioState, remoteBatteryLevel, remotePreferredAspectRatio in
@@ -821,6 +822,8 @@ final class OngoingCallContext {
                                 view?.setOnOrientationUpdated { value in
                                     f?(OngoingCallVideoOrientation(value))
                                 }
+                            }, setVideoContentMode: { [weak view] mode in
+                                view?.setVideoContentMode(mode)
                             }
                         ))
                     } else {

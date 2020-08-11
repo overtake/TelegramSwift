@@ -485,6 +485,8 @@ internal final class L10n {
   internal static var callAccept: String  { return L10n.tr("Localizable", "Call.Accept") }
   /// Camera
   internal static var callCamera: String  { return L10n.tr("Localizable", "Call.Camera") }
+  /// Camera is unavailable\n[seettings]()
+  internal static var callCameraUnavailable: String  { return L10n.tr("Localizable", "Call.CameraUnavailable") }
   /// Close
   internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
   /// End
@@ -595,6 +597,18 @@ internal final class L10n {
   internal static var callRecentMissed: String  { return L10n.tr("Localizable", "Call.Recent.Missed") }
   /// Outgoing
   internal static var callRecentOutgoing: String  { return L10n.tr("Localizable", "Call.Recent.Outgoing") }
+  /// %@'s camera is off
+  internal static func callToastCameraOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
+  }
+  /// %@'s battery is low
+  internal static func callToastLowBattery(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.LowBattery", p1)
+  }
+  /// %@'s microphone is off
+  internal static func callToastMicroOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.MicroOff", p1)
+  }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
   /// Mute other sounds during calls

@@ -32,11 +32,11 @@ private enum CallTooltipType : Int32 {
     func text(_ title: String) -> String {
         switch self {
         case .cameraOff:
-            return "\(title)'s camera is off"
+            return L10n.callToastCameraOff(title)
         case .microOff:
-            return "\(title)'s microphone is off"
+            return L10n.callToastMicroOff(title)
         case .batteryLow:
-            return "\(title)'s battery is low"
+            return L10n.callToastLowBattery(title)
         }
     }
 }
@@ -274,7 +274,7 @@ private final class OutgoingVideoView : Control {
                 if notAvailableView == nil {
                     let current = TextView()
                     self.notAvailableView = current
-                    let text = "Camera is unavailable\n[seettings]()"
+                    let text = L10n.callCameraUnavailable
                     let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(13), textColor: .white), bold: MarkdownAttributeSet(font: .bold(13), textColor: .white), link: MarkdownAttributeSet(font: .normal(13), textColor: .link), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in
                             openSystemSettings(.camera)
@@ -521,6 +521,9 @@ private final class IncomingVideoView : Control {
                 videoView.view.removeFromSuperview()
             }
             if let videoView = videoView {
+                let isFullScreen = self.kitWindow?.isFullScreen ?? false
+                videoView.setVideoContentMode(isFullScreen ? .resizeAspect : .resizeAspectFill)
+                
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
                 videoView.view.background = .clear
                 
@@ -1260,7 +1263,7 @@ private class PhoneCallWindowView : View {
                 } else {
                     size = OutgoingVideoView.defaultSize
                 }
-                let addition = CGFloat(tooltips.count) * 40
+                let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
                 
                 point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
             }
@@ -1382,7 +1385,7 @@ private class PhoneCallWindowView : View {
         self.tooltips = sorted
         
         if !outgoingVideoView.isMoved && outgoingVideoView.frame != bounds {
-            let addition = CGFloat(tooltips.count) * 40
+            let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
             let size = self.outgoingVideoView.frame.size
             let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
             self.outgoingVideoView.updateFrame(CGRect(origin: point, size: size), animated: animated)
@@ -1538,7 +1541,7 @@ class PhoneCallWindowController {
                     break
                 }
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
@@ -1552,13 +1555,13 @@ class PhoneCallWindowController {
                     break
                 }
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         self.view.b_Mute.set(handler: { [weak self] _ in
             if let session = self?.session {
                 session.toggleMute()
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         
         view.declineControl.set(handler: { [weak self] _ in
@@ -1567,7 +1570,7 @@ class PhoneCallWindowController {
             } else {
                 closeCall()
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
  
         self.window.contentView = view
@@ -1596,11 +1599,19 @@ class PhoneCallWindowController {
         }, with: self.view, for: .mouseExited)
         
         
+        window.onToggleFullScreen = { [weak self] value in
+            if value {
+                self?.view.incomingVideoView?.videoView?.setVideoContentMode(.resizeAspect)
+            } else {
+                self?.view.incomingVideoView?.videoView?.setVideoContentMode(.resizeAspectFill)
+            }
+        }
+        
         
         self.view.backgroundView.set(handler: { [weak self] _ in
             self?.view.updateControlsVisibility()
 
-        }, for: .Click)
+        }, for: .SingleClick)
 
         window.animationBehavior = .utilityWindow
     }
