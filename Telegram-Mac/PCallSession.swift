@@ -309,7 +309,8 @@ class PCallSession {
     private(set) var isVideo: Bool
     private(set) var isVideoPossible: Bool
     private(set) var isVideoAvailable: Bool
-
+    private var videoIsForceDisabled: Bool
+    
     private var callWasActive = false
     private var videoWasActive = false
 
@@ -345,6 +346,8 @@ class PCallSession {
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
         self.isVideoPossible = isVideoPossible
+        
+        self.videoIsForceDisabled = !isVideoPossible
         
         let isVideoAvailable: Bool
         if #available(OSX 10.14, *) {
@@ -627,7 +630,9 @@ class PCallSession {
             if let previousVideoState = self.previousVideoState {
                 mappedVideoState = previousVideoState
             } else {
-                if self.isVideo {
+                if self.videoIsForceDisabled {
+                    mappedVideoState = .inactive(self.isVideoAvailable)
+                } else if self.isVideo {
                     mappedVideoState = .active(self.isVideoAvailable)
                 } else if self.isVideoPossible {
                     mappedVideoState = .inactive(self.isVideoAvailable)
@@ -749,10 +754,14 @@ class PCallSession {
                 self.ongoingContext?.stop(debugLogValue: debugLogValue)
             }
         }
-        if case .terminated = sessionState.state, !wasTerminated {
+        if case let .terminated(_, reason, _) = sessionState.state, !wasTerminated {
             if !self.didSetCanBeRemoved {
-                self.didSetCanBeRemoved = true
-                self.canBeRemovedPromise.set(.single(true) |> delay(1.6, queue: Queue.mainQueue()))
+                if reason.recall {
+                    
+                } else {
+                    self.didSetCanBeRemoved = true
+                    self.canBeRemovedPromise.set(.single(true) |> delay(1.6, queue: Queue.mainQueue()))
+                }
             }
             self.hungUpPromise.set(true)
             if sessionState.isOutgoing {
@@ -782,7 +791,7 @@ class PCallSession {
         var tone: CallTone?
         if let callContextState = callContextState, case .reconnecting = callContextState.state {
             tone = .connecting
-        } else if let previous = previous {
+        } else if let previous = previous, callContextState != nil {
             switch previous.state {
             case .accepting, .active, .dropping, .requesting:
                 switch state.state {
@@ -816,7 +825,7 @@ class PCallSession {
             default:
                 break
             }
-        } else if previous == nil && !isOutgoing {
+        } else if callContextState == nil && !isOutgoing {
             tone = .ringing
         }
         if let tone = tone {
@@ -849,6 +858,7 @@ class PCallSession {
         if self.videoCapturer == nil {
             let videoCapturer = OngoingCallVideoCapturer()
             self.videoCapturer = videoCapturer
+            self.videoIsForceDisabled = false
         }
         if let videoCapturer = self.videoCapturer {
             self.ongoingContext?.requestVideo(videoCapturer)
@@ -862,6 +872,7 @@ class PCallSession {
         if let _ = self.videoCapturer {
             self.videoCapturer = nil
             self.ongoingContext?.disableVideo()
+            self.videoIsForceDisabled = true
         }
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
