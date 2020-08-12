@@ -48,7 +48,7 @@ private final class CallTooltipView : Control {
     
     fileprivate var type: CallTooltipType? = nil
     
-    required override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
         addSubview(icon)
@@ -101,7 +101,7 @@ private final class CallTooltipView : Control {
 private let defaultWindowSize = NSMakeSize(375, 500)
 
 extension CallState {
-    var videoIsAvailable: Bool {
+    func videoIsAvailable(_ isVideo: Bool) -> Bool {
         switch state {
         case .active:
             switch videoState {
@@ -110,7 +110,32 @@ extension CallState {
             default:
                 return true
             }
-        case .terminating, .terminated, .ringing, .requesting, .connecting:
+        case .ringing, .requesting, .connecting:
+            switch videoState {
+            case .notAvailable:
+                return false
+            default:
+                if isVideo {
+                    return true
+                } else {
+                    return false
+                }
+            }
+            
+        case .terminating, .terminated:
+            return false
+        default:
+            return true
+        }
+    }
+    
+    var muteIsAvailable: Bool {
+        switch state {
+        case .active:
+            return true
+        case .ringing, .requesting, .connecting:
+            return true
+        case .terminating, .terminated:
             return false
         default:
             return true
@@ -951,6 +976,7 @@ private class PhoneCallWindowView : View {
             acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
         case let .terminated(_, reason, _):
             if let reason = reason, reason.recall {
+                
                 let activeViews = self.activeControlsViews
                 let restWidth = self.controlRestWidth
                 var x: CGFloat = floor(restWidth / 2)
@@ -1097,8 +1123,9 @@ private class PhoneCallWindowView : View {
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
         self.b_VideoCamera.isHidden = !session.isVideoPossible || !session.isVideoAvailable
-        self.b_VideoCamera.updateEnabled(state.videoIsAvailable, animated: animated)
-        
+        self.b_VideoCamera.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
+        self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
+
         self.state = state
         self.status = state.state.statusText(accountPeer, state.videoState)
         
@@ -1183,6 +1210,8 @@ private class PhoneCallWindowView : View {
             break
         case .terminated(_, let reason, _):
             if let reason = reason, reason.recall {
+                self.acceptControl.isHidden = false
+                
                 let activeViews = self.activeControlsViews
                 let restWidth = self.controlRestWidth
                 var x: CGFloat = floor(restWidth / 2)
@@ -1194,11 +1223,16 @@ private class PhoneCallWindowView : View {
                 
                 declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: animated)
 
-                declineControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
-                acceptControl.change(pos: NSMakePoint(80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
+
+                acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
+                declineControl.change(pos: NSMakePoint(80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
                 
                 incomingVideoView?.removeFromSuperview()
                 incomingVideoView = nil
+                
+                _ = activeControlsViews.map {
+                    $0.updateEnabled(false, animated: animated)
+                }
                 
             } else {
                 self.acceptControl.isHidden = true
@@ -1440,9 +1474,7 @@ class PhoneCallWindowController {
     let updateLocalizationAndThemeDisposable = MetaDisposable()
     fileprivate var session:PCallSession! {
         didSet {
-            view = PhoneCallWindowView(frame: NSMakeRect(0, 0, window.frame.width, window.frame.height))
-            window.contentView = view
-            first = true
+            first = false
             sessionDidUpdated()
             
             if let monitor = eventLocalMonitor {
@@ -1565,8 +1597,15 @@ class PhoneCallWindowController {
         
         
         view.declineControl.set(handler: { [weak self] _ in
-            if let _ = self?.state {
-                self?.session.hangUpCurrentCall()
+            if let state = self?.state {
+                switch state.state {
+                case let .terminated(_, reason, _):
+                    if let reason = reason, reason.recall {
+                        closeCall()
+                    }
+                default:
+                    self?.session.hangUpCurrentCall()
+                }
             } else {
                 closeCall()
             }
@@ -1747,6 +1786,7 @@ class PhoneCallWindowController {
         readyDisposable.set(ready.start(next: { [weak self] _ in
             if self?.window.isVisible == false {
                 self?.window.makeKeyAndOrderFront(self)
+                self?.window.orderFrontRegardless()
                 self?.view.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.4)
                 self?.view.layer?.animateAlpha(from: 0.2, to: 1.0, duration: 0.3)
             }
@@ -1761,6 +1801,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
     return controller.with { value in
         if let value = value {
             value.window.makeKeyAndOrderFront(nil)
+            value.window.orderFrontRegardless()
             return true
         } else {
             return  false
@@ -1787,9 +1828,6 @@ func showCallWindow(_ session:PCallSession) {
     closeDisposable.set(signal.start(next: { value in
         if value {
             closeCall()
-        } else {
-            var bp:Int = 0
-            bp += 1
         }
     }))
 }

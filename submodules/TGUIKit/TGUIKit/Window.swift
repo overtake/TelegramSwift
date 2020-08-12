@@ -823,11 +823,11 @@ open class Window: NSWindow {
     }
     
     open override func toggleFullScreen(_ sender: Any?) {
+        self.onToggleFullScreen?(!isFullScreen)
         CATransaction.begin()
         super.toggleFullScreen(sender)
         CATransaction.commit()
         saver?.isFullScreen = isFullScreen
-        self.onToggleFullScreen?(isFullScreen)
     }
     
     @objc func windowDidNeedSaveState(_ notification: Notification) {
