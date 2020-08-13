@@ -787,7 +787,7 @@ class PCallSession {
         var tone: CallTone?
         if let callContextState = callContextState, case .reconnecting = callContextState.state {
             tone = .connecting
-        } else if let previous = previous, callContextState != nil {
+        } else if let previous = previous {
             switch previous.state {
             case .accepting, .active, .dropping, .requesting:
                 switch state.state {
@@ -816,7 +816,11 @@ class PCallSession {
                 case .ringing:
                     tone = .ringing
                 default:
-                    break
+                    if !isOutgoing {
+                        tone = .ringing
+                    } else if isOutgoing {
+                        tone = .ringback
+                    }
                 }
             default:
                 break
