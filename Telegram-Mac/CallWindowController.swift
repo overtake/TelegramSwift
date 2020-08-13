@@ -657,28 +657,8 @@ private class PhoneCallWindowView : View {
 
     let muteControl:ImageButton = ImageButton()
     private var textNameView: NSTextField = NSTextField()
-    
-    private var statusTimer: SwiftSignalKit.Timer?
-    
-    var status: CallControllerStatusValue = .text("") {
-        didSet {
-            if self.status != oldValue {
-                self.statusTimer?.invalidate()
-                if case .timer = self.status {
-                    self.statusTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
-                        self?.updateStatus()
-                    }, queue: Queue.mainQueue())
-                    self.statusTimer?.start()
-                    self.updateStatus()
-                } else {
-                    self.updateStatus()
-                }
-            }
-        }
-    }
-
-    
-    private var statusTextView:NSTextField = NSTextField()
+   
+    private var statusView: CallStatusView = CallStatusView(frame: .zero)
     
     private let secureTextView:TextView = TextView()
     
@@ -735,7 +715,7 @@ private class PhoneCallWindowView : View {
         
 
         self.addSubview(textNameView)
-        self.addSubview(statusTextView)
+        self.addSubview(statusView)
 
         
         controls.addSubview(acceptControl)
@@ -753,14 +733,7 @@ private class PhoneCallWindowView : View {
         textNameView.alignment = .center
         textNameView.cell?.truncatesLastVisibleLine = true
         textNameView.lineBreakMode = .byTruncatingTail
-        statusTextView.font = .normal(18)
-        statusTextView.drawsBackground = false
-        statusTextView.backgroundColor = .clear
-        statusTextView.textColor = nightAccentPalette.text
-        statusTextView.isSelectable = false
-        statusTextView.isEditable = false
-        statusTextView.isBordered = false
-        statusTextView.focusRingType = .none
+        
 
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
@@ -824,6 +797,9 @@ private class PhoneCallWindowView : View {
                     (self.frame.height - (point.y + size.height)) < 20 ||
                     size.width > (window.frame.width - 40) ||
                     size.height > (window.frame.height - 40) {
+                    return
+                }
+                if size.width < 50 || size.height < 50 {
                     return
                 }
                 self.outgoingVideoView.updateFrame(CGRect(origin: point, size: size), animated: false)
@@ -910,10 +886,10 @@ private class PhoneCallWindowView : View {
         
         textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 36))
         textNameView.centerX(y: 50)
-        statusTextView.setFrameSize(statusTextView.sizeThatFits(NSMakeSize(controls.frame.width - 40, 25)))
-        statusTextView.centerX(y: textNameView.frame.maxY + 4)
+        statusView.setFrameSize(statusView.sizeThatFits(NSMakeSize(controls.frame.width - 40, 25)))
+        statusView.centerX(y: textNameView.frame.maxY + 4)
         
-        secureTextView.centerX(y: statusTextView.frame.maxY + 4)
+        secureTextView.centerX(y: statusView.frame.maxY + 4)
         
         let controlsSize = NSMakeSize(frame.width, 220)
         controls.frame = NSMakeRect(0, frame.height - controlsSize.height, controlsSize.width, controlsSize.height)
@@ -1045,25 +1021,6 @@ private class PhoneCallWindowView : View {
         needsLayout = true
     }
     
-    func updateStatus() {
-        var statusText: String = ""
-        switch self.status {
-        case let .text(text):
-            statusText = text
-        case let .timer(referenceTime):
-            let duration = Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
-            let durationString: String
-            if duration > 60 * 60 {
-                durationString = String(format: "%02d:%02d:%02d", arguments: [duration / 3600, (duration / 60) % 60, duration % 60])
-            } else {
-                durationString = String(format: "%02d:%02d", arguments: [(duration / 60) % 60, duration % 60])
-            }
-            statusText = durationString
-        }
-        statusTextView.stringValue = statusText
-        statusTextView.alignment = .center
-        needsLayout = true
-    }
     
     func updateControlsVisibility() {
         if let state = state {
@@ -1073,7 +1030,7 @@ private class PhoneCallWindowView : View {
                 self.controls.change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 self.textNameView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 self.secureTextView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
-                self.statusTextView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
+                self.statusView._change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 
                 for tooltip in tooltips {
                     tooltip.change(opacity: self.mouseInside() ? 1.0 : 0.0)
@@ -1084,7 +1041,7 @@ private class PhoneCallWindowView : View {
                 self.controls.change(opacity: 1.0)
                 self.textNameView._change(opacity: 1.0)
                 self.secureTextView._change(opacity: 1.0)
-                self.statusTextView._change(opacity: 1.0)
+                self.statusView._change(opacity: 1.0)
                 
                 for tooltip in tooltips {
                     tooltip.change(opacity: 1.0)
@@ -1112,7 +1069,7 @@ private class PhoneCallWindowView : View {
         self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
 
         self.state = state
-        self.status = state.state.statusText(accountPeer, state.videoState)
+        self.statusView.status = state.state.statusText(accountPeer, state.videoState)
         
         switch state.state {
         case let .active(_, _, visual):
@@ -1448,7 +1405,6 @@ private class PhoneCallWindowView : View {
     
     deinit {
         fetching.dispose()
-        statusTimer?.invalidate()
     }
 }
 

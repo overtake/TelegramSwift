@@ -769,6 +769,8 @@
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
 		D007AB9F234C8DCB0022C27F /* WalletPasscodeTimeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007AB9E234C8DCB0022C27F /* WalletPasscodeTimeout.swift */; };
 		D007ABA1234CACE40022C27F /* WalletCreateInvoiceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D007ABA0234CACE40022C27F /* WalletCreateInvoiceController.swift */; };
+		D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */; };
+		D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00B191D24E54F20006CCB87 /* CallStatusView.swift */; };
 		D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C73B52302C196004B1E2B /* ChatScheduleController.swift */; };
 		D00CE4F72284D530008C1B4F /* BuildConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F291C9F2264E57F00C66267 /* BuildConfig.m */; };
 		D00CE4F82284D5E3008C1B4F /* TransformOutgoingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */; };
@@ -1934,6 +1936,8 @@
 		D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewModalController.swift; sourceTree = "<group>"; };
 		D007AB9E234C8DCB0022C27F /* WalletPasscodeTimeout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletPasscodeTimeout.swift; sourceTree = "<group>"; };
 		D007ABA0234CACE40022C27F /* WalletCreateInvoiceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletCreateInvoiceController.swift; sourceTree = "<group>"; };
+		D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallReceptionControl.swift; sourceTree = "<group>"; };
+		D00B191D24E54F20006CCB87 /* CallStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallStatusView.swift; sourceTree = "<group>"; };
 		D00C73B52302C196004B1E2B /* ChatScheduleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScheduleController.swift; sourceTree = "<group>"; };
 		D00CA6502281BB0900FFACAD /* Telegram-Sandbox.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "Telegram-Sandbox.entitlements"; sourceTree = "<group>"; };
 		D00CE50C2289C9B7008C1B4F /* MediaAnimatedStickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaAnimatedStickerView.swift; sourceTree = "<group>"; };
@@ -2684,8 +2688,8 @@
 		C2016F661EAE0A49003AF981 /* calls */ = {
 			isa = PBXGroup;
 			children = (
+				D00B191A24E54B83006CCB87 /* ui */,
 				C2E064611ECCB20800387BB8 /* settings */,
-				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				C271EBEA1EBA3BC90034792D /* PCallSession.swift */,
 				C2CFCABF1EBB9C8100843F6A /* CallAudioPlayer.swift */,
 				C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */,
@@ -4507,6 +4511,16 @@
 			name = "folders-sidebar";
 			sourceTree = "<group>";
 		};
+		D00B191A24E54B83006CCB87 /* ui */ = {
+			isa = PBXGroup;
+			children = (
+				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
+				D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */,
+				D00B191D24E54F20006CCB87 /* CallStatusView.swift */,
+			);
+			name = ui;
+			sourceTree = "<group>";
+		};
 		D014AA272317DA0E00CE5362 /* themes */ = {
 			isa = PBXGroup;
 			children = (
@@ -5243,6 +5257,7 @@
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				C2DF47BD1DE79574003AA6C0 /* diag_range.c in Sources */,
 				9F7B5FCB22003DC70087D020 /* WallpaperColorPicker.swift in Sources */,
+				D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */,
 				9FFAE4F7205A8C89000C028E /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */,
 				A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */,
 				D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */,
@@ -5879,6 +5894,7 @@
 				D05051902342BA6700D93176 /* WalletSettingsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,
+				D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */,
 				9F14CBF32007DEB300F22DA9 /* ChatWallpaperModalController.swift in Sources */,
 				9F262D5F21BFD5BC006817CD /* LocalizationPreviewModalController.swift in Sources */,
 				C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */,
