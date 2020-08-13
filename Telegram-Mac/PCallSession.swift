@@ -816,11 +816,7 @@ class PCallSession {
                 case .ringing:
                     tone = .ringing
                 default:
-                    if !isOutgoing {
-                        tone = .ringing
-                    } else if isOutgoing {
-                        tone = .ringback
-                    }
+                    break
                 }
             default:
                 break

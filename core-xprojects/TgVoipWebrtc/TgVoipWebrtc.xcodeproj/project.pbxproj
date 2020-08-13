@@ -511,6 +511,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -549,6 +550,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
@@ -604,6 +606,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
@@ -723,6 +726,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
@@ -842,6 +846,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
@@ -954,6 +959,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
@@ -1073,6 +1079,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
+				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
