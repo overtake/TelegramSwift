@@ -827,6 +827,8 @@ class PCallSession {
             }
         } else if callContextState == nil && !isOutgoing {
             tone = .ringing
+        } else if callContextState == nil && isOutgoing {
+            tone = .ringback
         }
         if let tone = tone {
             playTone(tone)
