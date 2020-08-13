@@ -289,11 +289,6 @@ private final class OutgoingVideoView : Control {
     
     fileprivate var videoView: (OngoingCallContextVideoView?, Bool)? {
         didSet {
-            if let videoView = oldValue?.0 {
-                progressIndicator?.removeFromSuperview()
-                progressIndicator = nil
-            }
-            
             if videoView?.1 == false {
                 self.backgroundColor = .black
                 if notAvailableView == nil {
@@ -319,37 +314,19 @@ private final class OutgoingVideoView : Control {
                     addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
                     videoView.view.frame = self.bounds
                     videoView.view.layer?.cornerRadius = .cornerRadius
-                    if self.videoView?.1 == true {
-                        videoView.view.background = .blackTransparent
-                        if self.progressIndicator == nil {
-                            self.progressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
-                            self.progressIndicator?.progressColor = .white
-                            addSubview(self.progressIndicator!)
-                            self.progressIndicator!.center()
-                        }
-                    } else {
-                        videoView.view.background = .clear
-                        if let notAvailableView = self.notAvailableView {
-                            self.notAvailableView = nil
-                            notAvailableView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak notAvailableView] _ in
-                                notAvailableView?.removeFromSuperview()
+                    
+                    let oldView = oldValue?.0?.view
+                    
+                    videoView.setOnFirstFrameReceived({ [weak self, weak oldView] aspectRatio in
+                        self?.backgroundColor = .clear
+                        self?.videoView?.0?.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: {  _ in
+                            oldView?.removeFromSuperview()
+                        })
+                        if let progressIndicator = self?.progressIndicator {
+                            self?.progressIndicator = nil
+                            progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
+                                progressIndicator?.removeFromSuperview()
                             })
-                        }
-                    }
-                    
-                    let view = oldValue?.0?.view
-                    
-                    videoView.setOnFirstFrameReceived({ [weak self, weak view] aspectRatio in
-                        DispatchQueue.main.async {
-                            self?.backgroundColor = .clear
-                            self?.videoView?.0?.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                            view?.removeFromSuperview()
-                            if let progressIndicator = self?.progressIndicator {
-                                self?.progressIndicator = nil
-                                progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
-                                    progressIndicator?.removeFromSuperview()
-                                })
-                            }
                         }
                         self?.updateAspectRatio?(aspectRatio)
                     })
@@ -369,7 +346,14 @@ private final class OutgoingVideoView : Control {
     
     func unhideView(animated: Bool) {
         if let view = videoView?.0?.view, _hidden {
+            self.subviews.enumerated().forEach { _, view in
+                if !(view is Control) {
+                    view.removeFromSuperview()
+                }
+            }
             addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+            view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         }
         _hidden = false
     }
@@ -377,10 +361,8 @@ private final class OutgoingVideoView : Control {
     func hideView(animated: Bool) {
         if let view = self.videoView?.0?.view, !_hidden {
             view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
-                if completed {
-                    view?.removeFromSuperview()
-                    view?.layer?.removeAllAnimations()
-                }
+                view?.removeFromSuperview()
+                view?.layer?.removeAllAnimations()
             })
             view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
         }
@@ -629,6 +611,11 @@ private final class IncomingVideoView : Control {
     
     func unhideView(animated: Bool) {
         if let view = videoView?.view, _hidden {
+            self.subviews.enumerated().forEach { _, view in
+                if !(view is Control) {
+                    view.removeFromSuperview()
+                }
+            }
             addSubview(view, positioned: .below, relativeTo: self.subviews.first)
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
@@ -639,10 +626,8 @@ private final class IncomingVideoView : Control {
     func hideView(animated: Bool) {
         if let view = self.videoView?.view, !_hidden {
             view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
-                if completed {
-                    view?.removeFromSuperview()
-                    view?.layer?.removeAllAnimations()
-                }
+                view?.removeFromSuperview()
+                view?.layer?.removeAllAnimations()
             })
             view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
         }
