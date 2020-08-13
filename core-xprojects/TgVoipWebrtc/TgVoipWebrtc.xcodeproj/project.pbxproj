@@ -12,6 +12,8 @@
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
 		D00602FF24CF3D7500206226 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FE24CF3D7500206226 /* Message.cpp */; };
 		D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D006030124CF3DAD00206226 /* InstanceImplReference.cpp */; };
+		D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */; };
+		D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00B192124E5722A006CCB87 /* GLKit.framework */; };
 		D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D06E36A724A4FDAC00C7D03A /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */; };
 		D06E36DD24A5000100C7D03A /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DC24A5000100C7D03A /* AudioToolbox.framework */; };
@@ -50,6 +52,8 @@
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
 		D00602FE24CF3D7500206226 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cpp; path = ../../submodules/tgcalls/tgcalls/Message.cpp; sourceTree = "<group>"; };
 		D006030124CF3DAD00206226 /* InstanceImplReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplReference.cpp; path = ../../../submodules/tgcalls/tgcalls/reference/InstanceImplReference.cpp; sourceTree = "<group>"; };
+		D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GLVideoViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/GLVideoViewMac.mm; sourceTree = "<group>"; };
+		D00B192124E5722A006CCB87 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TgVoipWebrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TgVoipWebrtc.h; sourceTree = "<group>"; };
 		D06E368D24A4FD4900C7D03A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -115,6 +119,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
 				D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */,
 				D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */,
 				D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */,
@@ -160,6 +165,7 @@
 				D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */,
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
+				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
 				D00602FC24CF3D6600206226 /* CryptoHelper.cpp */,
@@ -204,6 +210,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D00B192124E5722A006CCB87 /* GLKit.framework */,
 				D0D751A324BE372F0037D73A /* AppKit.framework */,
 				D06E38A624A5EEAD00C7D03A /* Metal.framework */,
 				D06E38A724A5EEAD00C7D03A /* MetalKit.framework */,
@@ -356,6 +363,7 @@
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
+				D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */,
 				D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */,
 				D0D751B124BE3A140037D73A /* VideoCapturerInterfaceImpl.mm in Sources */,
 				D0D751B224BE3A140037D73A /* TGRTCVideoEncoderH265.mm in Sources */,
@@ -528,6 +536,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -582,6 +591,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -700,6 +710,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -818,6 +829,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -929,6 +941,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1047,6 +1060,7 @@
 					"$(PROJECT_DIR)/../../thrid-party/openssl/",
 					"$(PROJECT_DIR)/",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
