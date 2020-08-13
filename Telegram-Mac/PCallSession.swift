@@ -25,10 +25,6 @@ enum CallTone {
 }
 
 
-enum CallControllerStatusValue: Equatable {
-    case text(String)
-    case timer(Double)
-}
 
 
 extension CallState.State {
@@ -36,42 +32,42 @@ extension CallState.State {
         let statusValue: CallControllerStatusValue
         switch self {
         case .waiting, .connecting:
-            statusValue = .text(L10n.callStatusConnecting)
+            statusValue = .text(L10n.callStatusConnecting, nil)
         case let .requesting(ringing):
             if ringing {
-                statusValue = .text(L10n.callStatusRinging)
+                statusValue = .text(L10n.callStatusRinging, nil)
             } else {
-                statusValue = .text(L10n.callStatusRequesting)
+                statusValue = .text(L10n.callStatusRequesting, nil)
             }
         case .terminating:
-            statusValue = .text(L10n.callStatusEnded)
+            statusValue = .text(L10n.callStatusEnded, nil)
         case let .terminated(_, reason, _):
             if let reason = reason {
                 switch reason {
                 case let .ended(type):
                     switch type {
                     case .busy:
-                        statusValue = .text(L10n.callStatusBusy)
+                        statusValue = .text(L10n.callStatusBusy, nil)
                     case .hungUp, .missed:
-                        statusValue = .text(L10n.callStatusEnded)
+                        statusValue = .text(L10n.callStatusEnded, nil)
                     }
                 case .error:
-                    statusValue = .text(L10n.callStatusFailed)
+                    statusValue = .text(L10n.callStatusFailed, nil)
                 }
             } else {
-                statusValue = .text(L10n.callStatusEnded)
+                statusValue = .text(L10n.callStatusEnded, nil)
             }
         case .ringing:
             if let accountPeer = accountPeer {
-                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle))
+                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
             } else {
-                statusValue = .text(L10n.callStatusCalling)
+                statusValue = .text(L10n.callStatusCalling, nil)
             }
-        case .active(let timestamp, _, _), .reconnecting(let timestamp, _, _):
+        case .active(let timestamp, let reception, _), .reconnecting(let timestamp, let reception, _):
             if case .reconnecting = self {
-                statusValue = .text(L10n.callStatusConnecting)
+                statusValue = .text(L10n.callStatusConnecting, reception)
             } else {
-                statusValue = .timer(timestamp)
+                statusValue = .timer(timestamp, reception)
             }
         }
         return statusValue

@@ -32,7 +32,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private var statusTimer: SwiftSignalKit.Timer?
 
     
-    var status: CallControllerStatusValue = .text("") {
+    var status: CallControllerStatusValue = .text("", nil) {
         didSet {
             if self.status != oldValue {
                 self.statusTimer?.invalidate()
@@ -52,9 +52,9 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private func updateStatus() {
         var statusText: String = ""
         switch self.status {
-        case let .text(text):
+        case let .text(text, _):
             statusText = text
-        case let .timer(referenceTime):
+        case let .timer(referenceTime, _):
             let duration = Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
             let durationString: String
             if duration > 60 * 60 {
