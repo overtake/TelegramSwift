@@ -179,7 +179,7 @@ final class InstantPageMediaView: View, InstantPageView {
 
             let resource = MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: Int32(dimensions.width), height: Int32(dimensions.height), zoom: zoom)
             
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             let imageReference = ImageMediaReference.webPage(webPage: WebpageReference(media.webpage), media: image)
             let signal = chatWebpageSnippetPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, small: false)
             self.imageView.setSignal(signal)

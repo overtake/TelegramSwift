@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "decline.png",
+      "filename" : "ic_calls_decline.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "decline@2x.png",
+      "filename" : "ic_calls_decline@2x.png",
       "scale" : "2x"
     },
     {

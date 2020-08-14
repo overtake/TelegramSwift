@@ -14,7 +14,10 @@ class CallAudioPlayer : NSObject, AVAudioPlayerDelegate {
     private var player: AVAudioPlayer?;
     public var completion:(()->Void)?
     
+    let tone: URL
+    
     init(_ url:URL, loops:Int, completion:(()->Void)? = nil) {
+        self.tone = url
         self.player = try? AVAudioPlayer(contentsOf: url)
         self.completion = completion
         super.init()

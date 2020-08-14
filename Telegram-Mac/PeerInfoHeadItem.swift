@@ -52,7 +52,7 @@ fileprivate final class ActionButton : Control {
         self.removeAllHandlers()
         if let subItems = item.subItems {
             self.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }), edge: .maxY, inset: NSMakePoint(-33, -60))
+                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(-33, -60))
             }, for: .Down)
         } else {
             self.set(handler: { [weak item] _ in
@@ -125,15 +125,43 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         rowItemsCount += 1
     }
     rowItemsCount = min(rowItemsCount, 4)
+    
+    
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
             items.append(ActionItem(text: L10n.peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
         }
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
-            items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: arguments.call))
+            if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.voiceCallsAvailable {
+                items.append(ActionItem(text: L10n.peerInfoActionCall, image: theme.icons.profile_call, action: {
+                    arguments.call(false)
+                }))
+            }
         }
         
+        let videoConfiguration: VideoCallsConfiguration = VideoCallsConfiguration(appConfiguration: item.context.appConfiguration)
+        
+        let isVideoPossible: Bool
+        switch videoConfiguration.videoCallsSupport {
+        case .disabled:
+            isVideoPossible = false
+        case .full:
+            isVideoPossible = true
+        case .onlyVideo:
+            isVideoPossible = true
+        }
+        
+        
+        
+        
+        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty, isVideoPossible {
+            if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.videoCallsAvailable {
+                items.append(ActionItem(text: L10n.peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
+                    arguments.call(true)
+                }))
+            }
+        }
         let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         if !peer.isBot {

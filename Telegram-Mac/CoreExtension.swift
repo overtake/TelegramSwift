@@ -2570,7 +2570,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
     }
 }
 
@@ -2622,36 +2622,11 @@ extension MessageIndex {
     
 }
 
-func requestAudioPermission() -> Signal<Bool, NoError> {
-    if #available(OSX 10.14, *) {
-        return Signal { subscriber in
-            let status = AVCaptureDevice.authorizationStatus(for: .audio)
-            var cancelled: Bool = false
-            switch status {
-            case .notDetermined:
-                AVCaptureDevice.requestAccess(for: .audio, completionHandler: { completed in
-                    if !cancelled {
-                        subscriber.putNext(completed)
-                        subscriber.putCompletion()
-                    }
-                })
-            case .authorized:
-                subscriber.putNext(true)
-                subscriber.putCompletion()
-            case .denied:
-                subscriber.putNext(false)
-                subscriber.putCompletion()
-            case .restricted:
-                subscriber.putNext(false)
-                subscriber.putCompletion()
-            }
-            return ActionDisposable {
-                cancelled = true
-            }
-        }
-    } else {
-        return .single(true)
-    }
+func requestMicrophonePermission() -> Signal<Bool, NoError> {
+    return requestMediaPermission(.audio)
+}
+func requestCameraPermission() -> Signal<Bool, NoError> {
+    return requestMediaPermission(.video)
 }
 
 
@@ -2692,6 +2667,7 @@ func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, No
 
 enum SystemSettingsCategory : String {
     case microphone = "Privacy_Microphone"
+    case camera = "Privacy_Camera"
     case storage = "Storage"
     case none = ""
 }
@@ -2703,7 +2679,7 @@ func openSystemSettings(_ category: SystemSettingsCategory) {
             NSWorkspace.shared.launchApplication("/System/Applications/Utilities/System Information.app")
            // [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Safari.app"];
        // }
-    case .microphone:
+    case .microphone, .camera:
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
             NSWorkspace.shared.open(url)
         }

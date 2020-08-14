@@ -1759,9 +1759,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatCallBubble_incoming:  { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.greenBubble_incoming) },
                                                chatCallBubble_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.greenBubble_outgoing) },
                                                chatFallbackCall: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.accentIcon) },
-                                               chatFallbackCallBubble_incoming: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.greenBubble_incoming) },
-                                               chatFallbackCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_MessageCall").precomposed(palette.greenBubble_outgoing) },
-                                               
+                                               chatFallbackCallBubble_incoming: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.textBubble_incoming) },
+                                               chatFallbackCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.textBubble_outgoing) },
+                                               chatFallbackVideoCall: { #imageLiteral(resourceName: "Icon_VideoCall").precomposed(palette.accentIcon) },
+                                               chatFallbackVideoCallBubble_incoming: { #imageLiteral(resourceName: "Icon_VideoCall").precomposed(palette.textBubble_incoming) },
+                                               chatFallbackVideoCallBubble_outgoing: { #imageLiteral(resourceName: "Icon_VideoCall").precomposed(palette.textBubble_outgoing) },
                                                chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
                                                chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
                                                chatMusicPlay:  { #imageLiteral(resourceName: "Icon_ChatMusicPlay").precomposed(palette.fileActivityForeground) },
@@ -1920,10 +1922,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                webgameShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                chatSearchCancel: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                chatSearchFrom: { #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.accentIcon) },
-                                               callWindowDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed() },
-                                               callWindowAccept: { #imageLiteral(resourceName: "Icon_CallAccept_Window").precomposed() },
-                                               callWindowMute: { #imageLiteral(resourceName: "Icon_CallMic_Window").precomposed() },
-                                               callWindowUnmute: { #imageLiteral(resourceName: "Icon_CallMute_Inline").precomposed() },
+                                               callWindowDecline: { #imageLiteral(resourceName: "Icon_CallDecline_Window").precomposed(.white) },
+                                               callWindowDeclineSmall: { NSImage(named: "Icon_callDeclineSmall_Window")!.precomposed(.white) },
+                                               callWindowAccept: { #imageLiteral(resourceName: "Icon_CallAccept_Window").precomposed(.white) },
+                                               callWindowVideo: { #imageLiteral(resourceName: "Icon_CallVideo_Window").precomposed(.white) },
+                                               callWindowVideoActive: { #imageLiteral(resourceName: "Icon_CallVideo_Window").precomposed(.grayIcon) },
+                                               callWindowMute: { #imageLiteral(resourceName: "Icon_CallMuted_Window").precomposed(.white) },
+                                               callWindowMuteActive: { #imageLiteral(resourceName: "Icon_CallMuted_Window").precomposed(.grayIcon) },
                                                callWindowClose: { #imageLiteral(resourceName: "Icon_CallWindowClose").precomposed(.white) },
                                                callWindowDeviceSettings: { #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(.white) },
                                                callSettings: { #imageLiteral(resourceName: "Icon_CallDeviceSettings").precomposed(palette.accentIcon) },
@@ -2219,6 +2224,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                tab_settings_active: { NSImage(named: "Icon_TabSettings")!.precomposed(palette.accentIcon) },
                                                profile_add_member: { generateProfileIcon(NSImage(named: "Icon_Profile_AddMember")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_call: { generateProfileIcon(NSImage(named: "Icon_Profile_Call")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
+                                               profile_video_call: { generateProfileIcon(NSImage(named: "Icon_Profile_VideoCall")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_leave: { generateProfileIcon(NSImage(named: "Icon_Profile_Leave")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_message: { generateProfileIcon(NSImage(named: "Icon_Profile_Message")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
                                                profile_more: { generateProfileIcon(NSImage(named: "Icon_Profile_More")!.precomposed(palette.accentIcon), backgroundColor: palette.underSelectedColor) },
@@ -2255,7 +2261,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                gif_trending: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon) },
                                                chat_list_thumb_play: { NSImage(named: "Icon_ChatListThumbPlay")!.precomposed() },
                                                inline_audio_volume: { NSImage(named: "Icon_InlinePlayer_VolumeOn")!.precomposed(palette.accent) },
-                                               inline_audio_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) }
+                                               inline_audio_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
+                                               call_tooltip_battery_low: { NSImage(named: "Icon_Call_BatteryLow")!.precomposed(.white) },
+                                               call_tooltip_camera_off: { NSImage(named: "Icon_Call_CameraOff")!.precomposed(.white) },
+                                               call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) }
 
     )
 
