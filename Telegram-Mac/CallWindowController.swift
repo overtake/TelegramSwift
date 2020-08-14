@@ -884,14 +884,14 @@ class PhoneCallWindowController {
                 NSEvent.removeMonitor(monitor)
             }
             
-//            eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
-//                self?.view.updateControlsVisibility()
-//                return event
-//            })
-//            //
-//            eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
-//                self?.view.updateControlsVisibility()
-//            })
+            eventLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
+                self?.view.updateControlsVisibility()
+                return event
+            })
+            //
+            eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
+                self?.view.updateControlsVisibility()
+            })
 
         }
     }
