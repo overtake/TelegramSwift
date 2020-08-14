@@ -805,6 +805,9 @@
 		D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
 		D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
 		D05051902342BA6700D93176 /* WalletSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D050518F2342BA6700D93176 /* WalletSettingsController.swift */; };
+		D0530D3E24E69133003273BC /* CallControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0530D3D24E69132003273BC /* CallControl.swift */; };
+		D0530D4024E693A5003273BC /* CameraViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0530D3F24E693A5003273BC /* CameraViews.swift */; };
+		D0530D4224E69459003273BC /* CallTooltipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0530D4124E69459003273BC /* CallTooltipView.swift */; };
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
@@ -1971,6 +1974,9 @@
 		D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccentColorModalController.swift; sourceTree = "<group>"; };
 		D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramIconsTheme.swift; sourceTree = "<group>"; };
 		D050518F2342BA6700D93176 /* WalletSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSettingsController.swift; sourceTree = "<group>"; };
+		D0530D3D24E69132003273BC /* CallControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallControl.swift; sourceTree = "<group>"; };
+		D0530D3F24E693A5003273BC /* CameraViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViews.swift; sourceTree = "<group>"; };
+		D0530D4124E69459003273BC /* CallTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallTooltipView.swift; sourceTree = "<group>"; };
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
@@ -4517,6 +4523,9 @@
 				C2016F671EAE0A68003AF981 /* CallWindowController.swift */,
 				D00B191B24E54BA3006CCB87 /* CallReceptionControl.swift */,
 				D00B191D24E54F20006CCB87 /* CallStatusView.swift */,
+				D0530D3D24E69132003273BC /* CallControl.swift */,
+				D0530D3F24E693A5003273BC /* CameraViews.swift */,
+				D0530D4124E69459003273BC /* CallTooltipView.swift */,
 			);
 			name = ui;
 			sourceTree = "<group>";
@@ -5277,6 +5286,7 @@
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
 				C2DF47C51DE79574003AA6C0 /* stream.c in Sources */,
 				C271EBA21EB9F04E0034792D /* TGCallUtils.mm in Sources */,
+				D0530D3E24E69133003273BC /* CallControl.swift in Sources */,
 				C2CE43E920F4F74F00656543 /* UpdateModalController.swift in Sources */,
 				C22EE6191E66ECB200334C38 /* ReportReasonModalController.swift in Sources */,
 				C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */,
@@ -5750,6 +5760,7 @@
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
+				D0530D4224E69459003273BC /* CallTooltipView.swift in Sources */,
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
 				9F7B74052227F4F2006610E4 /* SharedAccountInfo.swift in Sources */,
@@ -5884,6 +5895,7 @@
 				9FFAE4FC205A8C89000C028E /* MediaTrackDecodableFrame.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,
+				D0530D4024E693A5003273BC /* CameraViews.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
