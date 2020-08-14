@@ -1,0 +1,1124 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */; };
+		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
+		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
+		D00602FF24CF3D7500206226 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FE24CF3D7500206226 /* Message.cpp */; };
+		D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D006030124CF3DAD00206226 /* InstanceImplReference.cpp */; };
+		D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */; };
+		D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00B192124E5722A006CCB87 /* GLKit.framework */; };
+		D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D06E36A724A4FDAC00C7D03A /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */; };
+		D06E36DD24A5000100C7D03A /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DC24A5000100C7D03A /* AudioToolbox.framework */; };
+		D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DE24A5000700C7D03A /* VideoToolbox.framework */; };
+		D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E024A5001300C7D03A /* CoreMedia.framework */; };
+		D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E224A5001800C7D03A /* AVFoundation.framework */; };
+		D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */; };
+		D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D751A324BE372F0037D73A /* AppKit.framework */; };
+		D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */; };
+		D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */; };
+		D0D751B124BE3A140037D73A /* VideoCapturerInterfaceImpl.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */; };
+		D0D751B224BE3A140037D73A /* TGRTCVideoEncoderH265.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751A924BE3A140037D73A /* TGRTCVideoEncoderH265.mm */; };
+		D0D751B324BE3A140037D73A /* TGRTCVideoDecoderH265.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751AA24BE3A140037D73A /* TGRTCVideoDecoderH265.mm */; };
+		D0D751B424BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */; };
+		D0D751B524BE3A140037D73A /* VideoCameraCapturerMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */; };
+		D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D751AD24BE3A140037D73A /* DarwinInterface.mm */; };
+		D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751B724BE3AC60037D73A /* NetworkManager.cpp */; };
+		D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751B824BE3AC60037D73A /* MediaManager.cpp */; };
+		D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */; };
+		D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */; };
+		D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */; };
+		D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BC24BE3AC70037D73A /* Manager.cpp */; };
+		D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BD24BE3AC70037D73A /* InstanceImpl.cpp */; };
+		D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */; };
+		D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751C024BE3AC70037D73A /* Instance.cpp */; };
+		D0D751CC24BE3AD40037D73A /* InstanceImplLegacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */; };
+		D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */; };
+		D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */; };
+		D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
+		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
+		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
+		D00602FE24CF3D7500206226 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cpp; path = ../../submodules/tgcalls/tgcalls/Message.cpp; sourceTree = "<group>"; };
+		D006030124CF3DAD00206226 /* InstanceImplReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplReference.cpp; path = ../../../submodules/tgcalls/tgcalls/reference/InstanceImplReference.cpp; sourceTree = "<group>"; };
+		D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GLVideoViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/GLVideoViewMac.mm; sourceTree = "<group>"; };
+		D00B192124E5722A006CCB87 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
+		D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TgVoipWebrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TgVoipWebrtc.h; sourceTree = "<group>"; };
+		D06E368D24A4FD4900C7D03A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D06E369724A4FD4A00C7D03A /* TgVoipWebrtcTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TgVoipWebrtcTests.swift; sourceTree = "<group>"; };
+		D06E369924A4FD4A00C7D03A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmac_framework_objc_static.a; sourceTree = "<group>"; };
+		D06E36AA24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCDefaultVideoEncoderFactory.mm; sourceTree = "<group>"; };
+		D06E36AB24A4FF3100C7D03A /* TGRTCVideoEncoderH265.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCVideoEncoderH265.h; sourceTree = "<group>"; };
+		D06E36AC24A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCDefaultVideoDecoderFactory.mm; sourceTree = "<group>"; };
+		D06E36AD24A4FF3100C7D03A /* TGRTCVideoDecoderH265.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCVideoDecoderH265.h; sourceTree = "<group>"; };
+		D06E36AE24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCDefaultVideoEncoderFactory.h; sourceTree = "<group>"; };
+		D06E36AF24A4FF3100C7D03A /* TGRTCVideoEncoderH265.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCVideoEncoderH265.mm; sourceTree = "<group>"; };
+		D06E36B024A4FF3100C7D03A /* TGRTCVideoDecoderH265.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCVideoDecoderH265.mm; sourceTree = "<group>"; };
+		D06E36B124A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCDefaultVideoDecoderFactory.h; sourceTree = "<group>"; };
+		D06E36B324A4FF3100C7D03A /* TgVoip.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TgVoip.mm; sourceTree = "<group>"; };
+		D06E36B524A4FF3100C7D03A /* NetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkManager.h; sourceTree = "<group>"; };
+		D06E36B624A4FF3100C7D03A /* TgVoip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TgVoip.h; sourceTree = "<group>"; };
+		D06E36B724A4FF3100C7D03A /* Manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Manager.h; sourceTree = "<group>"; };
+		D06E36B824A4FF3100C7D03A /* ThreadLocalObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ThreadLocalObject.h; sourceTree = "<group>"; };
+		D06E36BA24A4FF3100C7D03A /* Manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Manager.cpp; sourceTree = "<group>"; };
+		D06E36BB24A4FF3100C7D03A /* ThreadLocalObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThreadLocalObject.cpp; sourceTree = "<group>"; };
+		D06E36BC24A4FF3100C7D03A /* NetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NetworkManager.cpp; sourceTree = "<group>"; };
+		D06E36BD24A4FF3100C7D03A /* CodecsApple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CodecsApple.h; sourceTree = "<group>"; };
+		D06E36BE24A4FF3100C7D03A /* CodecsApple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CodecsApple.mm; sourceTree = "<group>"; };
+		D06E36BF24A4FF3100C7D03A /* MediaManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MediaManager.cpp; sourceTree = "<group>"; };
+		D06E36C124A4FF3100C7D03A /* MediaManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaManager.h; sourceTree = "<group>"; };
+		D06E36DC24A5000100C7D03A /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		D06E36DE24A5000700C7D03A /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		D06E36E024A5001300C7D03A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		D06E36E224A5001800C7D03A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		D06E38A624A5EEAD00C7D03A /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		D06E38A724A5EEAD00C7D03A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OngoingCallThreadLocalContext.mm; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Sources/OngoingCallThreadLocalContext.mm"; sourceTree = "<group>"; };
+		D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OngoingCallThreadLocalContext.h; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/PublicHeaders/TgVoip/OngoingCallThreadLocalContext.h"; sourceTree = "<group>"; };
+		D0D751A324BE372F0037D73A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoMetalViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoMetalViewMac.mm; sourceTree = "<group>"; };
+		D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCDefaultVideoEncoderFactory.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCDefaultVideoEncoderFactory.mm; sourceTree = "<group>"; };
+		D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoCapturerInterfaceImpl.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoCapturerInterfaceImpl.mm; sourceTree = "<group>"; };
+		D0D751A924BE3A140037D73A /* TGRTCVideoEncoderH265.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoEncoderH265.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoEncoderH265.mm; sourceTree = "<group>"; };
+		D0D751AA24BE3A140037D73A /* TGRTCVideoDecoderH265.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoDecoderH265.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoDecoderH265.mm; sourceTree = "<group>"; };
+		D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCDefaultVideoDecoderFactory.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCDefaultVideoDecoderFactory.mm; sourceTree = "<group>"; };
+		D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoCameraCapturerMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoCameraCapturerMac.mm; sourceTree = "<group>"; };
+		D0D751AD24BE3A140037D73A /* DarwinInterface.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DarwinInterface.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinInterface.mm; sourceTree = "<group>"; };
+		D0D751B724BE3AC60037D73A /* NetworkManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = NetworkManager.cpp; path = ../../submodules/tgcalls/tgcalls/NetworkManager.cpp; sourceTree = "<group>"; };
+		D0D751B824BE3AC60037D73A /* MediaManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = MediaManager.cpp; path = ../../submodules/tgcalls/tgcalls/MediaManager.cpp; sourceTree = "<group>"; };
+		D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadLocalObject.cpp; path = ../../submodules/tgcalls/tgcalls/ThreadLocalObject.cpp; sourceTree = "<group>"; };
+		D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = VideoCaptureInterface.cpp; path = ../../submodules/tgcalls/tgcalls/VideoCaptureInterface.cpp; sourceTree = "<group>"; };
+		D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CodecSelectHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CodecSelectHelper.cpp; sourceTree = "<group>"; };
+		D0D751BC24BE3AC70037D73A /* Manager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Manager.cpp; path = ../../submodules/tgcalls/tgcalls/Manager.cpp; sourceTree = "<group>"; };
+		D0D751BD24BE3AC70037D73A /* InstanceImpl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImpl.cpp; path = ../../submodules/tgcalls/tgcalls/InstanceImpl.cpp; sourceTree = "<group>"; };
+		D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = VideoCaptureInterfaceImpl.cpp; path = ../../submodules/tgcalls/tgcalls/VideoCaptureInterfaceImpl.cpp; sourceTree = "<group>"; };
+		D0D751C024BE3AC70037D73A /* Instance.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Instance.cpp; path = ../../submodules/tgcalls/tgcalls/Instance.cpp; sourceTree = "<group>"; };
+		D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplLegacy.cpp; path = ../../submodules/tgcalls/tgcalls/legacy/InstanceImplLegacy.cpp; sourceTree = "<group>"; };
+		D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCCVPixelBuffer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCCVPixelBuffer.mm; sourceTree = "<group>"; };
+		D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoDecoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoDecoderH264.mm; sourceTree = "<group>"; };
+		D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoEncoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoEncoderH264.mm; sourceTree = "<group>"; };
+		D0E8A78824B339F10056CD6E /* VideoCaptureInterfaceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoCaptureInterfaceImpl.h; sourceTree = "<group>"; };
+		D0E8A78924B339F10056CD6E /* VideoCaptureInterfaceImpl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = VideoCaptureInterfaceImpl.mm; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D06E368624A4FD4900C7D03A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
+				D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */,
+				D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */,
+				D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */,
+				D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */,
+				D06E36DD24A5000100C7D03A /* AudioToolbox.framework in Frameworks */,
+				D06E36A724A4FDAC00C7D03A /* libmac_framework_objc_static.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D006030024CF3DA000206226 /* reference */ = {
+			isa = PBXGroup;
+			children = (
+				D006030124CF3DAD00206226 /* InstanceImplReference.cpp */,
+			);
+			path = reference;
+			sourceTree = "<group>";
+		};
+		D06E367F24A4FD4900C7D03A = {
+			isa = PBXGroup;
+			children = (
+				D006030024CF3DA000206226 /* reference */,
+				D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */,
+				D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */,
+				D0D751C024BE3AC70037D73A /* Instance.cpp */,
+				D0D751BD24BE3AC70037D73A /* InstanceImpl.cpp */,
+				D0D751BC24BE3AC70037D73A /* Manager.cpp */,
+				D0D751B824BE3AC60037D73A /* MediaManager.cpp */,
+				D0D751B724BE3AC60037D73A /* NetworkManager.cpp */,
+				D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */,
+				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
+				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
+				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
+				D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */,
+				D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */,
+				D0D751AA24BE3A140037D73A /* TGRTCVideoDecoderH265.mm */,
+				D0D751A924BE3A140037D73A /* TGRTCVideoEncoderH265.mm */,
+				D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */,
+				D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */,
+				D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */,
+				D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */,
+				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
+				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
+				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
+				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
+				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
+				D00602FC24CF3D6600206226 /* CryptoHelper.cpp */,
+				D00602FE24CF3D7500206226 /* Message.cpp */,
+				D0D7519D24BE33190037D73A /* tgcalls */,
+				D06E368B24A4FD4900C7D03A /* TgVoipWebrtc */,
+				D06E369624A4FD4A00C7D03A /* TgVoipWebrtcTests */,
+				D06E368A24A4FD4900C7D03A /* Products */,
+				D06E36A324A4FDA000C7D03A /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		D06E368A24A4FD4900C7D03A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D06E368B24A4FD4900C7D03A /* TgVoipWebrtc */ = {
+			isa = PBXGroup;
+			children = (
+				D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */,
+				D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */,
+				D06E36A824A4FF3100C7D03A /* Impl */,
+				D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */,
+				D06E368D24A4FD4900C7D03A /* Info.plist */,
+			);
+			path = TgVoipWebrtc;
+			sourceTree = "<group>";
+		};
+		D06E369624A4FD4A00C7D03A /* TgVoipWebrtcTests */ = {
+			isa = PBXGroup;
+			children = (
+				D06E369724A4FD4A00C7D03A /* TgVoipWebrtcTests.swift */,
+				D06E369924A4FD4A00C7D03A /* Info.plist */,
+			);
+			path = TgVoipWebrtcTests;
+			sourceTree = "<group>";
+		};
+		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D00B192124E5722A006CCB87 /* GLKit.framework */,
+				D0D751A324BE372F0037D73A /* AppKit.framework */,
+				D06E38A624A5EEAD00C7D03A /* Metal.framework */,
+				D06E38A724A5EEAD00C7D03A /* MetalKit.framework */,
+				D06E36E224A5001800C7D03A /* AVFoundation.framework */,
+				D06E36E024A5001300C7D03A /* CoreMedia.framework */,
+				D06E36DE24A5000700C7D03A /* VideoToolbox.framework */,
+				D06E36DC24A5000100C7D03A /* AudioToolbox.framework */,
+				D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D06E36A824A4FF3100C7D03A /* Impl */ = {
+			isa = PBXGroup;
+			children = (
+				D06E36A924A4FF3100C7D03A /* Apple */,
+				D06E36B324A4FF3100C7D03A /* TgVoip.mm */,
+				D06E36B524A4FF3100C7D03A /* NetworkManager.h */,
+				D06E36B624A4FF3100C7D03A /* TgVoip.h */,
+				D06E36B724A4FF3100C7D03A /* Manager.h */,
+				D06E36B824A4FF3100C7D03A /* ThreadLocalObject.h */,
+				D06E36BA24A4FF3100C7D03A /* Manager.cpp */,
+				D06E36BB24A4FF3100C7D03A /* ThreadLocalObject.cpp */,
+				D06E36BC24A4FF3100C7D03A /* NetworkManager.cpp */,
+				D06E36BD24A4FF3100C7D03A /* CodecsApple.h */,
+				D06E36BE24A4FF3100C7D03A /* CodecsApple.mm */,
+				D06E36BF24A4FF3100C7D03A /* MediaManager.cpp */,
+				D06E36C124A4FF3100C7D03A /* MediaManager.h */,
+				D0E8A78824B339F10056CD6E /* VideoCaptureInterfaceImpl.h */,
+				D0E8A78924B339F10056CD6E /* VideoCaptureInterfaceImpl.mm */,
+			);
+			name = Impl;
+			path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Impl";
+			sourceTree = "<group>";
+		};
+		D06E36A924A4FF3100C7D03A /* Apple */ = {
+			isa = PBXGroup;
+			children = (
+				D06E36AA24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.mm */,
+				D06E36AB24A4FF3100C7D03A /* TGRTCVideoEncoderH265.h */,
+				D06E36AC24A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.mm */,
+				D06E36AD24A4FF3100C7D03A /* TGRTCVideoDecoderH265.h */,
+				D06E36AE24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.h */,
+				D06E36AF24A4FF3100C7D03A /* TGRTCVideoEncoderH265.mm */,
+				D06E36B024A4FF3100C7D03A /* TGRTCVideoDecoderH265.mm */,
+				D06E36B124A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.h */,
+			);
+			path = Apple;
+			sourceTree = "<group>";
+		};
+		D0D7519D24BE33190037D73A /* tgcalls */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = tgcalls;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D06E368424A4FD4900C7D03A /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
+				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D06E368824A4FD4900C7D03A /* TgVoipWebrtc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D06E369D24A4FD4A00C7D03A /* Build configuration list for PBXNativeTarget "TgVoipWebrtc" */;
+			buildPhases = (
+				D06E368424A4FD4900C7D03A /* Headers */,
+				D06E368524A4FD4900C7D03A /* Sources */,
+				D06E368624A4FD4900C7D03A /* Frameworks */,
+				D06E368724A4FD4900C7D03A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TgVoipWebrtc;
+			productName = TgVoipWebrtc;
+			productReference = D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D06E368024A4FD4900C7D03A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1030;
+				LastUpgradeCheck = 1030;
+				ORGANIZATIONNAME = "Mikhail Filimonov";
+				TargetAttributes = {
+					D06E368824A4FD4900C7D03A = {
+						CreatedOnToolsVersion = 10.3;
+					};
+				};
+			};
+			buildConfigurationList = D06E368324A4FD4900C7D03A /* Build configuration list for PBXProject "TgVoipWebrtc" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D06E367F24A4FD4900C7D03A;
+			productRefGroup = D06E368A24A4FD4900C7D03A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D06E368824A4FD4900C7D03A /* TgVoipWebrtc */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D06E368724A4FD4900C7D03A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D06E368524A4FD4900C7D03A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */,
+				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
+				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,
+				D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */,
+				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
+				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
+				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
+				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
+				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
+				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
+				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
+				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
+				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
+				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
+				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
+				D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */,
+				D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */,
+				D0D751B124BE3A140037D73A /* VideoCapturerInterfaceImpl.mm in Sources */,
+				D0D751B224BE3A140037D73A /* TGRTCVideoEncoderH265.mm in Sources */,
+				D0D751B324BE3A140037D73A /* TGRTCVideoDecoderH265.mm in Sources */,
+				D0D751B424BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm in Sources */,
+				D0D751B524BE3A140037D73A /* VideoCameraCapturerMac.mm in Sources */,
+				D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */,
+				D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */,
+				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
+				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
+				D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */,
+				D0D751CC24BE3AD40037D73A /* InstanceImplLegacy.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D06E369B24A4FD4A00C7D03A /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		D06E369C24A4FD4A00C7D03A /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		D06E369E24A4FD4A00C7D03A /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugAppStore;
+		};
+		D06E369F24A4FD4A00C7D03A /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseAppStore;
+		};
+		D0D751CD24BF0A950037D73A /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		D0D751CE24BF0A950037D73A /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugHockeyapp;
+		};
+		D0D751CF24BF0AB50037D73A /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0D751D024BF0AB50037D73A /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0D751D124BF0ABA0037D73A /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0D751D224BF0ABA0037D73A /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0D751D324BF0ACE0037D73A /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Github;
+		};
+		D0D751D424BF0ACE0037D73A /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					WEBRTC_POSIX,
+					WEBRTC_MAC,
+					RTC_ENABLE_VP9,
+					"TGVOIP_NAMESPACE=tgvoip_webrtc",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/webrtc/sdk/objc",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
+					"$(PROJECT_DIR)/webrtc/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
+				);
+				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LLVM_LTO = YES_THIN;
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Github;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D06E368324A4FD4900C7D03A /* Build configuration list for PBXProject "TgVoipWebrtc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D06E369B24A4FD4A00C7D03A /* DebugAppStore */,
+				D0D751D324BF0ACE0037D73A /* Github */,
+				D0D751CD24BF0A950037D73A /* DebugHockeyapp */,
+				D0D751CF24BF0AB50037D73A /* HockeyappMacAlpha */,
+				D06E369C24A4FD4A00C7D03A /* ReleaseAppStore */,
+				D0D751D124BF0ABA0037D73A /* ReleaseHockeyapp */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+		D06E369D24A4FD4A00C7D03A /* Build configuration list for PBXNativeTarget "TgVoipWebrtc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D06E369E24A4FD4A00C7D03A /* DebugAppStore */,
+				D0D751D424BF0ACE0037D73A /* Github */,
+				D0D751CE24BF0A950037D73A /* DebugHockeyapp */,
+				D0D751D024BF0AB50037D73A /* HockeyappMacAlpha */,
+				D06E369F24A4FD4A00C7D03A /* ReleaseAppStore */,
+				D0D751D224BF0ABA0037D73A /* ReleaseHockeyapp */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D06E368024A4FD4900C7D03A /* Project object */;
+}

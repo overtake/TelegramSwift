@@ -43,6 +43,10 @@
 + (NSString * __nullable)_youtubeVideoIdFromText:(NSString * __nullable)text originalUrl:(NSString * __nullable)originalUrl startTime:(NSTimeInterval *)startTime;
 +(NSArray<OpenWithObject *> *)appsForFileUrl:(NSString *)fileUrl;
 
+    
++(NSCursor * __nullable)windowResizeNorthWestSouthEastCursor;
++(NSCursor * __nullable)windowResizeNorthEastSouthWestCursor;
+    
 @end
 
 

@@ -17,69 +17,106 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private let backgroundView = NSView()
     private let callInfo:TitleButton = TitleButton()
     private let endCall:TitleButton = TitleButton()
-    private let durationView:NSTextField = NSTextField()
+    private let statusTextView:NSTextField = NSTextField()
     private let muteControl:ImageButton = ImageButton()
     private let dropCall:ImageButton = ImageButton()
-    private let durationDisposable = MetaDisposable()
-    private let stateDisposable = MetaDisposable()
-    private let peerDisposable = MetaDisposable()
-    private var session:PCallSession? = nil {
+
+    private let disposable = MetaDisposable()
+    private let hideDisposable = MetaDisposable()
+
+    
+    private var session: PCallSession?
+    private var state: CallState?
+    private weak var accountPeer: Peer?
+    
+    private var statusTimer: SwiftSignalKit.Timer?
+
+    
+    var status: CallControllerStatusValue = .text("", nil) {
         didSet {
-            if let session = session {
-                durationDisposable.set(session.durationPromise.get().start(next: { [weak self] duration in
-                    self?.durationView.stringValue = String.durationTransformed(elapsed: Int(duration))
-                    self?.durationView.sizeToFit()
-                    self?.needsLayout = true
-                }))
-                
-                stateDisposable.set((session.state.get() |> deliverOnMainQueue).start(next: { [weak self] state in
-                    switch state {
-                    case .terminated, .dropping:
-                        self?.hide()
-                    default:
-                        break
-                    }
-                }))
-            } else {
-                durationDisposable.set(nil)
-                stateDisposable.set(nil)
+            if self.status != oldValue {
+                self.statusTimer?.invalidate()
+                if case .timer = self.status {
+                    self.statusTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
+                        self?.updateStatus()
+                    }, queue: Queue.mainQueue())
+                    self.statusTimer?.start()
+                    self.updateStatus()
+                } else {
+                    self.updateStatus()
+                }
             }
         }
     }
     
+    private func updateStatus() {
+        var statusText: String = ""
+        switch self.status {
+        case let .text(text, _):
+            statusText = text
+        case let .timer(referenceTime, _):
+            let duration = Int32(CFAbsoluteTimeGetCurrent() - referenceTime)
+            let durationString: String
+            if duration > 60 * 60 {
+                durationString = String(format: "%02d:%02d:%02d", arguments: [duration / 3600, (duration / 60) % 60, duration % 60])
+            } else {
+                durationString = String(format: "%02d:%02d", arguments: [(duration / 60) % 60, duration % 60])
+            }
+            statusText = durationString
+        }
+        statusTextView.stringValue = statusText
+        statusTextView.sizeToFit()
+        needsLayout = true
+    }
+
+    
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         if let session = session {
-            showPhoneCallWindow(session)
+            showCallWindow(session)
         }
     }
     
     func hide() {
         header?.hide(true)
-        stateDisposable.set(nil)
-        durationDisposable.set(nil)
+        disposable.set(nil)
     }
     
     func update(with session: PCallSession) {
         self.session = session
         
+        let account = session.account
+        
         let signal = Signal<Peer?, NoError>.single(session.peer) |> then(session.account.postbox.loadedPeerWithId(session.peerId) |> map(Optional.init) |> deliverOnMainQueue)
         
-        peerDisposable.set(signal.start(next: { [weak self] peer in
+        let accountPeer: Signal<Peer?, NoError> =  session.sharedContext.activeAccounts |> mapToSignal { accounts in
+            if accounts.accounts.count == 1 {
+                return .single(nil)
+            } else {
+                return account.postbox.loadedPeerWithId(account.peerId) |> map(Optional.init)
+            }
+        }
+        
+        disposable.set(combineLatest(queue: .mainQueue(), session.state, signal, accountPeer).start(next: { [weak self] state, peer, accountPeer in
             if let peer = peer {
                 self?.callInfo.set(text: peer.displayTitle, for: .Normal)
-                self?.needsLayout = true
+            }
+            self?.updateState(state, accountPeer: accountPeer, animated: false)
+            self?.needsLayout = true
+            self?.ready.set(.single(true))
+        }))
+        
+        hideDisposable.set((session.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
+            if value {
+                self?.hide()
             }
         }))
         
-        self.ready.set(.single(true))
-        updateMutedBg(session, animated: false)
     }
     
     deinit {
-        stateDisposable.dispose()
-        durationDisposable.dispose()
-        peerDisposable.dispose()
+        disposable.dispose()
+        hideDisposable.dispose()
     }
     
     override init(_ header: NavigationHeader) {
@@ -89,19 +126,17 @@ class CallNavigationHeaderView: NavigationHeaderView {
         backgroundView.wantsLayer = true
         addSubview(backgroundView)
         
-        durationView.font = .normal(.text)
-        durationView.drawsBackground = false
-        durationView.backgroundColor = .clear
-        durationView.isSelectable = false
-        durationView.isEditable = false
-        durationView.isBordered = false
-        durationView.focusRingType = .none
-        durationView.maximumNumberOfLines = 1
+        statusTextView.font = .normal(.text)
+        statusTextView.drawsBackground = false
+        statusTextView.backgroundColor = .clear
+        statusTextView.isSelectable = false
+        statusTextView.isEditable = false
+        statusTextView.isBordered = false
+        statusTextView.focusRingType = .none
+        statusTextView.maximumNumberOfLines = 1
 
-        addSubview(durationView)
+        addSubview(statusTextView)
         
-
-
         callInfo.set(font: .medium(.text), for: .Normal)
         callInfo.disableActions()
         addSubview(callInfo)
@@ -117,7 +152,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
         
         callInfo.set(handler: { [weak self] _ in
             if let session = self?.session {
-                showPhoneCallWindow(session)
+                showCallWindow(session)
                 self?.hide()
             }
         }, for: .Click)
@@ -137,7 +172,6 @@ class CallNavigationHeaderView: NavigationHeaderView {
         muteControl.set(handler: { [weak self] control in
             if let session = self?.session {
                 session.toggleMute()
-                self?.updateMutedBg(session, animated: true)
             }
         }, for: .Click)
         
@@ -151,14 +185,37 @@ class CallNavigationHeaderView: NavigationHeaderView {
         return theme.colors.grayText
     }
     
-    private func updateMutedBg(_ session:PCallSession, animated: Bool) {
-        backgroundView.background = session.isMute ? grayColor : blueColor
+    private func updateState(_ state:CallState, accountPeer: Peer?, animated: Bool) {
+        self.state = state
+        self.status = state.state.statusText(accountPeer, state.videoState)
+        self.accountPeer = accountPeer
+        backgroundView.background = state.isMuted ? grayColor : blueColor
         if animated {
             backgroundView.layer?.animateBackground()
         }
-        muteControl.set(image: !session.isMute ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
+        muteControl.set(image: !state.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
         _ = muteControl.sizeToFit()
         needsLayout = true
+        
+        switch state.state {
+        case let .terminated(_, reason, _):
+            if let reason = reason, reason.recall {
+                
+            } else {
+                backgroundView.background = (state.isMuted ? grayColor : blueColor).withAlphaComponent(0.6)
+                muteControl.removeAllHandlers()
+                endCall.removeAllHandlers()
+                callInfo.removeAllHandlers()
+                dropCall.removeAllHandlers()
+                muteControl.change(opacity: 0.8, animated: animated)
+                endCall.change(opacity: 0.8, animated: animated)
+                statusTextView._change(opacity: 0.8, animated: animated)
+                callInfo._change(opacity: 0.8, animated: animated)
+                dropCall._change(opacity: 0.8, animated: animated)
+            }
+        default:
+            break
+        }
     }
     
     override func layout() {
@@ -166,7 +223,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
         
         backgroundView.frame = bounds
         muteControl.centerY(x:20)
-        durationView.centerY(x: muteControl.frame.maxX + 6)
+        statusTextView.centerY(x: muteControl.frame.maxX + 6)
         callInfo.center()
         dropCall.centerY(x: frame.width - dropCall.frame.width - 20)
         endCall.centerY(x: dropCall.frame.minX - 6 - endCall.frame.width)
@@ -182,12 +239,12 @@ class CallNavigationHeaderView: NavigationHeaderView {
         _ = dropCall.sizeToFit()
         endCall.set(text: tr(L10n.callHeaderEndCall), for: .Normal)
         _ = endCall.sizeToFit(NSZeroSize, NSMakeSize(80, 20), thatFit: true)
-        durationView.textColor = .white
+        statusTextView.textColor = .white
         callInfo.set(color: .white, for: .Normal)
         endCall.set(color: .white, for: .Normal)
         
-        if let session = session {
-            updateMutedBg(session, animated: false)
+        if let state = state {
+            self.updateState(state, accountPeer: accountPeer, animated: false)
         }
         
         needsLayout = true

@@ -218,6 +218,8 @@ final class AccountContext {
     let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
     let activeSessionsContext: ActiveSessionsContext
+    let cacheCleaner: AccountClearCache
+
  //   let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
     #endif
     
@@ -309,6 +311,7 @@ final class AccountContext {
     
     private let preloadGifsDisposable = MetaDisposable()
     
+    
     //, tonContext: StoredTonContext?
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext
@@ -320,6 +323,7 @@ final class AccountContext {
         self.fetchManager = FetchManager(postbox: account.postbox)
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.activeSessionsContext = ActiveSessionsContext(account: account)
+        self.cacheCleaner = AccountClearCache(account: account)
      //   self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
         #endif
         
@@ -435,7 +439,7 @@ final class AccountContext {
         freeSpaceDisposable.set(combineLatest(queue: .mainQueue(), freeSpaceSignal, isKeyWindow, isLocked).start(next: { [weak self] space, isKeyWindow, locked in
             
             
-            var limit: UInt64 = 5
+            let limit: UInt64 = 5
             
             guard let `self` = self, isKeyWindow, !locked, let space = space, space < limit else {
                 return
@@ -446,6 +450,11 @@ final class AccountContext {
             }
             
         }))
+        
+        account.callSessionManager.updateVersions(versions: OngoingCallContext.versions(includeExperimental: true, includeReference: false).map { version, supportsVideo -> CallSessionManagerImplementationVersion in
+            CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
+        })
+        
         #endif
     }
     

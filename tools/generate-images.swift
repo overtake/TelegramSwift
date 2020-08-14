@@ -33,6 +33,9 @@ func initialize() -> [String] {
     array.append("chatFallbackCall")
     array.append("chatFallbackCallBubble_incoming")
     array.append("chatFallbackCallBubble_outgoing")
+    array.append("chatFallbackVideoCall")
+    array.append("chatFallbackVideoCallBubble_incoming")
+    array.append("chatFallbackVideoCallBubble_outgoing")
     array.append("chatToggleSelected")
     array.append("chatToggleUnselected")
     array.append("chatMusicPlay")
@@ -189,9 +192,12 @@ func initialize() -> [String] {
     array.append("chatSearchCancel")
     array.append("chatSearchFrom")
     array.append("callWindowDecline")
+    array.append("callWindowDeclineSmall")
     array.append("callWindowAccept")
+    array.append("callWindowVideo")
+    array.append("callWindowVideoActive")
     array.append("callWindowMute")
-    array.append("callWindowUnmute")
+    array.append("callWindowMuteActive")
     array.append("callWindowClose")
     array.append("callWindowDeviceSettings")
     array.append("callSettings")
@@ -502,6 +508,7 @@ func initialize() -> [String] {
     
     array.append("profile_add_member")
     array.append("profile_call")
+    array.append("profile_video_call")
     array.append("profile_leave")
     array.append("profile_message")
     array.append("profile_more")
@@ -553,6 +560,11 @@ func initialize() -> [String] {
     
     array.append("inline_audio_volume")
     array.append("inline_audio_volume_off")
+    
+    
+    array.append("call_tooltip_battery_low")
+    array.append("call_tooltip_camera_off")
+    array.append("call_tooltip_micro_off")
 
     
     return array

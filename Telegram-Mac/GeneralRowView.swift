@@ -73,6 +73,9 @@ class GeneralContainableRowView : TableRowView {
 }
 
 class GeneralRowContainerView : Control {
+    
+    var cornerRadius: CGFloat = 10
+    
     private let maskLayer = CAShapeLayer()
     private var newPath: CGPath?
     required init(frame frameRect: NSRect) {
@@ -124,16 +127,16 @@ class GeneralRowContainerView : Control {
         
         
         if corners.contains(.topLeft)  {
-            bottomLeftRadius = 10
+            bottomLeftRadius = cornerRadius
         }
         if corners.contains(.topRight) {
-            bottomRightRadius = 10
+            bottomRightRadius = cornerRadius
         }
         if corners.contains(.bottomLeft) {
-            topLeftRadius = 10
+            topLeftRadius = cornerRadius
         }
         if corners.contains(.bottomRight) {
-            topRightRadius = 10
+            topRightRadius = cornerRadius
         }
         
         path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
