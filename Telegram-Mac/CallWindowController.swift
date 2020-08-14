@@ -15,7 +15,7 @@ import SwiftSignalKit
 import TgVoipWebrtc
 
 
-private let defaultWindowSize = NSMakeSize(375, 500)
+private let defaultWindowSize = NSMakeSize(385, 550)
 
 extension CallState {
     func videoIsAvailable(_ isVideo: Bool) -> Bool {
@@ -333,9 +333,9 @@ private class PhoneCallWindowView : View {
         textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 40))
         textNameView.centerX(y: 50)
         statusView.setFrameSize(statusView.sizeThatFits(NSMakeSize(controls.frame.width - 40, 25)))
-        statusView.centerX(y: textNameView.frame.maxY + 4)
+        statusView.centerX(y: textNameView.frame.maxY + 8)
         
-        secureTextView.centerX(y: statusView.frame.maxY + 4)
+        secureTextView.centerX(y: statusView.frame.maxY + 8)
         
         let controlsSize = NSMakeSize(frame.width, 220)
         controls.frame = NSMakeRect(0, frame.height - controlsSize.height, controlsSize.width, controlsSize.height)
@@ -912,7 +912,7 @@ class PhoneCallWindowController {
         }))
         
         view.updateIncomingAspectRatio = { [weak self] aspectRatio in
-            self?.updateIncomingAspectRatio(max(0.75, aspectRatio))
+            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
         }
     }
     private var state:CallState? = nil
