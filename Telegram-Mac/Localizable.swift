@@ -481,6 +481,18 @@ internal final class L10n {
   }
   /// Hide Telegram
   internal static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
+  /// Accept
+  internal static var callAccept: String  { return L10n.tr("Localizable", "Call.Accept") }
+  /// Camera
+  internal static var callCamera: String  { return L10n.tr("Localizable", "Call.Camera") }
+  /// Camera is unavailable\n[seettings]()
+  internal static var callCameraUnavailable: String  { return L10n.tr("Localizable", "Call.CameraUnavailable") }
+  /// Close
+  internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
+  /// End
+  internal static var callDecline: String  { return L10n.tr("Localizable", "Call.Decline") }
+  /// Mute
+  internal static var callMute: String  { return L10n.tr("Localizable", "Call.Mute") }
   /// %@'s app does not support calls. They need to update their app before you can call them.
   internal static func callParticipantVersionOutdatedError(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.ParticipantVersionOutdatedError", p1)
@@ -489,6 +501,8 @@ internal final class L10n {
   internal static func callPrivacyErrorMessage(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.PrivacyErrorMessage", p1)
   }
+  /// Recall
+  internal static var callRecall: String  { return L10n.tr("Localizable", "Call.Recall") }
   /// %d
   internal static func callShortMinutesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Call.ShortMinutes_countable", p1)
@@ -565,6 +579,10 @@ internal final class L10n {
   internal static var callStatusRinging: String  { return L10n.tr("Localizable", "Call.StatusRinging") }
   /// Undefined error, please try later.
   internal static var callUndefinedError: String  { return L10n.tr("Localizable", "Call.UndefinedError") }
+  /// %@'s paused video
+  internal static func callVideoPaused(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.VideoPaused", p1)
+  }
   /// Finish the call with %@ and start a new one with %@?
   internal static func callConfirmDiscardCurrentDescription(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description", p1, p2)
@@ -579,6 +597,18 @@ internal final class L10n {
   internal static var callRecentMissed: String  { return L10n.tr("Localizable", "Call.Recent.Missed") }
   /// Outgoing
   internal static var callRecentOutgoing: String  { return L10n.tr("Localizable", "Call.Recent.Outgoing") }
+  /// %@'s camera is off
+  internal static func callToastCameraOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
+  }
+  /// %@'s battery is low
+  internal static func callToastLowBattery(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.LowBattery", p1)
+  }
+  /// %@'s microphone is off
+  internal static func callToastMicroOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Call.Toast.MicroOff", p1)
+  }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
   /// Mute other sounds during calls
@@ -2041,6 +2071,10 @@ internal final class L10n {
   internal static var chatUnsupportedUpdatedApp: String  { return L10n.tr("Localizable", "Chat.Unsupported.UpdatedApp") }
   /// processing...
   internal static var chatVideoProcessing: String  { return L10n.tr("Localizable", "Chat.Video.Processing") }
+  /// Incoming Video Call
+  internal static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
+  /// Outgoing Video Call
+  internal static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
   /// Chat Background
   internal static var chatWPBackgroundTitle: String  { return L10n.tr("Localizable", "Chat.WP.BackgroundTitle") }
   /// Color
@@ -2414,6 +2448,18 @@ internal final class L10n {
   /// Outgoing Call (%@)
   internal static func chatListServiceCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.Call.outgoing", p1)
+  }
+  /// Cancelled Video Call
+  internal static var chatListServiceVideoCallCancelled: String  { return L10n.tr("Localizable", "ChatList.Service.VideoCall.Cancelled") }
+  /// Incoming Video Call (%@)
+  internal static func chatListServiceVideoCallIncoming(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VideoCall.incoming", p1)
+  }
+  /// Missed Video Call
+  internal static var chatListServiceVideoCallMissed: String  { return L10n.tr("Localizable", "ChatList.Service.VideoCall.Missed") }
+  /// Outgoing Video Call (%@)
+  internal static func chatListServiceVideoCallOutgoing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VideoCall.outgoing", p1)
   }
   /// Archive
   internal static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
@@ -4637,6 +4683,8 @@ internal final class L10n {
   internal static var peerInfoActionStatistics: String  { return L10n.tr("Localizable", "PeerInfo.Action.Statistics") }
   /// Unmute
   internal static var peerInfoActionUnmute: String  { return L10n.tr("Localizable", "PeerInfo.Action.Unmute") }
+  /// Video
+  internal static var peerInfoActionVideoCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.VideoCall") }
   /// Add To Group
   internal static var peerInfoBotAddToGroup: String  { return L10n.tr("Localizable", "PeerInfo.Bot.AddToGroup") }
   /// Help
@@ -6655,6 +6703,8 @@ internal final class L10n {
   internal static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Keep Media
   internal static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
+  /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
+  internal static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.
   internal static var storageUsageKeepMediaDescription1: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description1") }
   /// If your cache size exceeds this limit, the oldest media will be deleted.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.

@@ -20,6 +20,7 @@ class ChatCallRowItem: ChatRowItem {
     
     let outgoing:Bool
     let failed: Bool
+    let isVideo: Bool
     private let requestSessionId = MetaDisposable()
     override func viewClass() -> AnyClass {
         return ChatCallRowView.self
@@ -31,7 +32,17 @@ class ChatCallRowItem: ChatRowItem {
         let action = message.media[0] as! TelegramMediaAction
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
         outgoing = !message.flags.contains(.Incoming)
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? tr(L10n.chatCallOutgoing) : tr(L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
+        
+        let video: Bool
+        switch action.action {
+        case let .phoneCall(_, _, _, isVideo):
+            video = isVideo
+        default:
+            video = false
+        }
+        self.isVideo = video
+        
+        headerLayout = TextViewLayout(.initialize(string: outgoing ? (video ? L10n.chatVideoCallOutgoing : L10n.chatCallOutgoing) : (video ? L10n.chatVideoCallIncoming : L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration, _):
             let attr = NSMutableAttributedString()
@@ -78,7 +89,7 @@ class ChatCallRowItem: ChatRowItem {
         if let peerId = message?.id.peerId {
             let context = self.context
             
-            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
                 applyUIPCallResult(context.sharedContext, result)
             }))
         }
@@ -99,6 +110,8 @@ private class ChatCallRowView : ChatRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
+        fallbackControl.animates = false
         
         addSubview(fallbackControl)
         addSubview(imageView)

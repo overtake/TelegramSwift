@@ -228,14 +228,14 @@ class UserInfoArguments : PeerInfoArguments {
         self.peerChat(self.peerId)
     }
     
-    func call() {
+    func call(_ isVideo: Bool) {
         let context = self.context
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
             return peerViewMainPeer($0)?.id
         } |> filter { $0 != nil } |> map { $0! }
         
         let call = peer |> mapToSignal {
-            phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: $0)
+            phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: $0, isVideo: isVideo)
         } |> deliverOnMainQueue
         
         self.callDisposable.set(call.start(next: { result in

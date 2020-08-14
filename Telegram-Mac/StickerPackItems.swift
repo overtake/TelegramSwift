@@ -188,7 +188,7 @@ class StickerPackRowView: HorizontalRowView {
                 resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
                 file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: [.FileName(fileName: "sticker.webp"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
             } else if let item = item.topItem, let dimensions = item.file.dimensions, let resource = chatMessageStickerResource(file: item.file, small: true) as? TelegramMediaResource {
-                thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource)
+                thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource, progressiveSizes: [])
                 resourceReference = MediaResourceReference.media(media: .standalone(media: item.file), resource: resource)
                 file = item.file
             }

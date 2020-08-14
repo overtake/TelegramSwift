@@ -13,3 +13,6 @@ url=git@gitlab.com:peter-iakovlev/telegram-ios.git
 [submodule "submodules/rlottie"]
 	path = submodules/rlottie
 url=git@github.com:overtake/rlottie.git
+[submodule "submodules/tgcalls"]
+	path = submodules/tgcalls
+	url = git@github.com:john-preston/tgcalls.git

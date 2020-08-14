@@ -241,7 +241,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopAdminsTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
                 
-                let needReveal = !uiState.revealed.contains(.topPosters) && topAdmins.count > 10
+                let needReveal = !uiState.revealed.contains(.topAdmins) && topAdmins.count > 10
                 let toRevealCount = topAdmins.count - 10
                 if needReveal {
                     topAdmins = Array(topAdmins.prefix(10))
@@ -310,7 +310,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 index += 1
                 
                 
-                let needReveal = !uiState.revealed.contains(.topPosters) && topInviters.count > 10
+                let needReveal = !uiState.revealed.contains(.topInviters) && topInviters.count > 10
                 let toRevealCount = topInviters.count - 10
                 if needReveal {
                     topInviters = Array(topInviters.prefix(10))

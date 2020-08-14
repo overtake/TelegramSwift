@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/TgVoipWebrtc/TgVoipWebrtc.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/Reachability/Reachability.xcodeproj">
    </FileRef>
    <FileRef
@@ -54,12 +57,6 @@
    </FileRef>
    <FileRef
       location = "group:core-xprojects/SyncCore/SyncCore_Xcode.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:core-xprojects/TonBinding/TonBinding_Xcode.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:core-xprojects/WalletCore/WalletCore_Xcode.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:core-xprojects/EncryptionProviderMac/EncryptionProvider_Xcode.xcodeproj">
