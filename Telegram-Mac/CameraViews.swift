@@ -238,15 +238,15 @@ final class OutgoingVideoView : Control {
     }
     
     private func updateCursorRects() {
-        resetCursorRects()
-        if let cursor = NSCursor.set_windowResizeNorthEastSouthWestCursor {
-            addCursorRect(NSMakeRect(0, frame.height - 10, 10, 10), cursor: cursor)
-            addCursorRect(NSMakeRect(frame.width - 10, 0, 10, 10), cursor: cursor)
-        }
-        if let cursor = NSCursor.set_windowResizeNorthWestSouthEastCursor {
-            addCursorRect(NSMakeRect(0, 0, 10, 10), cursor: cursor)
-            addCursorRect(NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), cursor: cursor)
-        }
+//        resetCursorRects()
+//        if let cursor = NSCursor.set_windowResizeNorthEastSouthWestCursor {
+//            addCursorRect(NSMakeRect(0, frame.height - 10, 10, 10), cursor: cursor)
+//            addCursorRect(NSMakeRect(frame.width - 10, 0, 10, 10), cursor: cursor)
+//        }
+//        if let cursor = NSCursor.set_windowResizeNorthWestSouthEastCursor {
+//            addCursorRect(NSMakeRect(0, 0, 10, 10), cursor: cursor)
+//            addCursorRect(NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), cursor: cursor)
+//        }
     }
     
     override func cursorUpdate(with event: NSEvent) {
