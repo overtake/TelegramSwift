@@ -301,6 +301,11 @@ private class PhoneCallWindowView : View {
             
             rect.origin = rect.origin.offsetBy(dx: dif.width / 2, dy: dif.height / 2)
             
+            if !outgoingVideoView.isMoved {
+                let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
+                rect.origin = NSMakePoint(frame.width - rect.width - 20, frame.height - 140 - rect.height - addition)
+            }
+            
             outgoingVideoView.updateFrame(rect, animated: animated)
         }
         self.outgoingAspectRatio = aspectRatio
@@ -319,9 +324,7 @@ private class PhoneCallWindowView : View {
     
     override func layout() {
         super.layout()
-        
-        NSLog("\(frame)")
-        
+                
         backgroundView.frame = bounds
         imageView.frame = bounds
 
@@ -736,7 +739,12 @@ private class PhoneCallWindowView : View {
                 }
             }
         } else {
-            self.displayToastsAfterTimestamp = CACurrentMediaTime() + 1.5
+            switch state.state {
+            case .active:
+                self.displayToastsAfterTimestamp = CACurrentMediaTime() + 2.0
+            default:
+                break
+            }
         }
         
        
@@ -801,7 +809,7 @@ private class PhoneCallWindowView : View {
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.4, timingFunction: .spring)
             } else {
                 if animated {
-                    view.layer?.animatePosition(from: NSMakePoint(0, y - view.frame.minY), to: .zero, timingFunction: .spring, additive: true)
+                    view.change(pos: NSMakePoint(x, y), animated: animated)
                 }
             }
             view.setFrameOrigin(NSMakePoint(x, y))
@@ -921,6 +929,7 @@ class PhoneCallWindowController {
         
         view.updateIncomingAspectRatio = { [weak self] aspectRatio in
             self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
+            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
         }
     }
     private var state:CallState? = nil
