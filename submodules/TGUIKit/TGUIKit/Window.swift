@@ -278,7 +278,7 @@ open class Window: NSWindow {
     public var orderOutHandler:(()->Void)? = nil
     public weak var rootViewController: ViewController?
     public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
-    
+    public var onToggleFullScreen:((Bool)->Void)? = nil
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
         responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
     }
@@ -823,6 +823,7 @@ open class Window: NSWindow {
     }
     
     open override func toggleFullScreen(_ sender: Any?) {
+        self.onToggleFullScreen?(!isFullScreen)
         CATransaction.begin()
         super.toggleFullScreen(sender)
         CATransaction.commit()

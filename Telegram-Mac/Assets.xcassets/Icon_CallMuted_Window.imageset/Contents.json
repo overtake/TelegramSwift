@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "ic_mic2.png",
+      "filename" : "ic_calls_mute.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "ic_mic2@2x.png",
+      "filename" : "ic_calls_mute@2x.png",
       "scale" : "2x"
     },
     {

@@ -28,6 +28,16 @@
 
 @implementation ObjcUtils
 
+    
++(NSCursor * __nullable)windowResizeNorthWestSouthEastCursor {
+    NSCursor *cursor = [[NSCursor class] performSelector:@selector(_windowResizeNorthWestSouthEastCursor)];
+    return cursor;
+}
+  
++(NSCursor * __nullable)windowResizeNorthEastSouthWestCursor {
+    NSCursor *cursor = [[NSCursor class] performSelector:@selector(_windowResizeNorthEastSouthWestCursor)];
+    return cursor;
+}
 
 + (NSData *)dataFromHexString:(NSString *)string
 {

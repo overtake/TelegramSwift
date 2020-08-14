@@ -1788,7 +1788,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.unarchive = {
             _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
-            _ = context.account.postbox.transaction { transaction in
+            let removeFlagsSignal = context.account.postbox.transaction { transaction in
                 transaction.updatePeerCachedData(peerIds: [peerId], update: { peerId, cachedData in
                     if let cachedData = cachedData as? CachedUserData {
                         let current = cachedData.peerStatusSettings
@@ -1816,7 +1816,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     return cachedData
                 })
-            }.start()
+            }
+            let unmuteSignal = updatePeerMuteSetting(account: context.account, peerId: peerId, muteInterval: nil)
+            
+            _ = combineLatest(unmuteSignal, removeFlagsSignal).start()
         }
         
         chatInteraction.sendPlainText = { [weak self] text in

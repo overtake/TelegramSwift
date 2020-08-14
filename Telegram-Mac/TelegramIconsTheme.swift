@@ -407,6 +407,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatFallbackVideoCall: CGImage {
+      if let image = cached.with({ $0["chatFallbackVideoCall"] }) {
+          return image
+      } else {
+          let image = _chatFallbackVideoCall()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatFallbackVideoCall"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatFallbackVideoCallBubble_incoming: CGImage {
+      if let image = cached.with({ $0["chatFallbackVideoCallBubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chatFallbackVideoCallBubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatFallbackVideoCallBubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatFallbackVideoCallBubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chatFallbackVideoCallBubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chatFallbackVideoCallBubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatFallbackVideoCallBubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatToggleSelected: CGImage {
       if let image = cached.with({ $0["chatToggleSelected"] }) {
           return image
@@ -2435,6 +2474,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var callWindowDeclineSmall: CGImage {
+      if let image = cached.with({ $0["callWindowDeclineSmall"] }) {
+          return image
+      } else {
+          let image = _callWindowDeclineSmall()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowDeclineSmall"] = image
+              return current
+          }
+          return image
+      }
+  }
   var callWindowAccept: CGImage {
       if let image = cached.with({ $0["callWindowAccept"] }) {
           return image
@@ -2443,6 +2495,32 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["callWindowAccept"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var callWindowVideo: CGImage {
+      if let image = cached.with({ $0["callWindowVideo"] }) {
+          return image
+      } else {
+          let image = _callWindowVideo()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowVideo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var callWindowVideoActive: CGImage {
+      if let image = cached.with({ $0["callWindowVideoActive"] }) {
+          return image
+      } else {
+          let image = _callWindowVideoActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["callWindowVideoActive"] = image
               return current
           }
           return image
@@ -2461,14 +2539,14 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var callWindowUnmute: CGImage {
-      if let image = cached.with({ $0["callWindowUnmute"] }) {
+  var callWindowMuteActive: CGImage {
+      if let image = cached.with({ $0["callWindowMuteActive"] }) {
           return image
       } else {
-          let image = _callWindowUnmute()
+          let image = _callWindowMuteActive()
           _ = cached.modify { current in 
               var current = current
-              current["callWindowUnmute"] = image
+              current["callWindowMuteActive"] = image
               return current
           }
           return image
@@ -6244,6 +6322,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_video_call: CGImage {
+      if let image = cached.with({ $0["profile_video_call"] }) {
+          return image
+      } else {
+          let image = _profile_video_call()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_video_call"] = image
+              return current
+          }
+          return image
+      }
+  }
   var profile_leave: CGImage {
       if let image = cached.with({ $0["profile_leave"] }) {
           return image
@@ -6725,6 +6816,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var call_tooltip_battery_low: CGImage {
+      if let image = cached.with({ $0["call_tooltip_battery_low"] }) {
+          return image
+      } else {
+          let image = _call_tooltip_battery_low()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_tooltip_battery_low"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var call_tooltip_camera_off: CGImage {
+      if let image = cached.with({ $0["call_tooltip_camera_off"] }) {
+          return image
+      } else {
+          let image = _call_tooltip_camera_off()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_tooltip_camera_off"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var call_tooltip_micro_off: CGImage {
+      if let image = cached.with({ $0["call_tooltip_micro_off"] }) {
+          return image
+      } else {
+          let image = _call_tooltip_micro_off()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_tooltip_micro_off"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -6757,6 +6887,9 @@ final class TelegramIconsTheme {
   private let _chatFallbackCall: ()->CGImage
   private let _chatFallbackCallBubble_incoming: ()->CGImage
   private let _chatFallbackCallBubble_outgoing: ()->CGImage
+  private let _chatFallbackVideoCall: ()->CGImage
+  private let _chatFallbackVideoCallBubble_incoming: ()->CGImage
+  private let _chatFallbackVideoCallBubble_outgoing: ()->CGImage
   private let _chatToggleSelected: ()->CGImage
   private let _chatToggleUnselected: ()->CGImage
   private let _chatMusicPlay: ()->CGImage
@@ -6913,9 +7046,12 @@ final class TelegramIconsTheme {
   private let _chatSearchCancel: ()->CGImage
   private let _chatSearchFrom: ()->CGImage
   private let _callWindowDecline: ()->CGImage
+  private let _callWindowDeclineSmall: ()->CGImage
   private let _callWindowAccept: ()->CGImage
+  private let _callWindowVideo: ()->CGImage
+  private let _callWindowVideoActive: ()->CGImage
   private let _callWindowMute: ()->CGImage
-  private let _callWindowUnmute: ()->CGImage
+  private let _callWindowMuteActive: ()->CGImage
   private let _callWindowClose: ()->CGImage
   private let _callWindowDeviceSettings: ()->CGImage
   private let _callSettings: ()->CGImage
@@ -7206,6 +7342,7 @@ final class TelegramIconsTheme {
   private let _tab_settings_active: ()->CGImage
   private let _profile_add_member: ()->CGImage
   private let _profile_call: ()->CGImage
+  private let _profile_video_call: ()->CGImage
   private let _profile_leave: ()->CGImage
   private let _profile_message: ()->CGImage
   private let _profile_more: ()->CGImage
@@ -7243,6 +7380,9 @@ final class TelegramIconsTheme {
   private let _chat_list_thumb_play: ()->CGImage
   private let _inline_audio_volume: ()->CGImage
   private let _inline_audio_volume_off: ()->CGImage
+  private let _call_tooltip_battery_low: ()->CGImage
+  private let _call_tooltip_camera_off: ()->CGImage
+  private let _call_tooltip_micro_off: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7276,6 +7416,9 @@ final class TelegramIconsTheme {
       chatFallbackCall: @escaping()->CGImage,
       chatFallbackCallBubble_incoming: @escaping()->CGImage,
       chatFallbackCallBubble_outgoing: @escaping()->CGImage,
+      chatFallbackVideoCall: @escaping()->CGImage,
+      chatFallbackVideoCallBubble_incoming: @escaping()->CGImage,
+      chatFallbackVideoCallBubble_outgoing: @escaping()->CGImage,
       chatToggleSelected: @escaping()->CGImage,
       chatToggleUnselected: @escaping()->CGImage,
       chatMusicPlay: @escaping()->CGImage,
@@ -7432,9 +7575,12 @@ final class TelegramIconsTheme {
       chatSearchCancel: @escaping()->CGImage,
       chatSearchFrom: @escaping()->CGImage,
       callWindowDecline: @escaping()->CGImage,
+      callWindowDeclineSmall: @escaping()->CGImage,
       callWindowAccept: @escaping()->CGImage,
+      callWindowVideo: @escaping()->CGImage,
+      callWindowVideoActive: @escaping()->CGImage,
       callWindowMute: @escaping()->CGImage,
-      callWindowUnmute: @escaping()->CGImage,
+      callWindowMuteActive: @escaping()->CGImage,
       callWindowClose: @escaping()->CGImage,
       callWindowDeviceSettings: @escaping()->CGImage,
       callSettings: @escaping()->CGImage,
@@ -7725,6 +7871,7 @@ final class TelegramIconsTheme {
       tab_settings_active: @escaping()->CGImage,
       profile_add_member: @escaping()->CGImage,
       profile_call: @escaping()->CGImage,
+      profile_video_call: @escaping()->CGImage,
       profile_leave: @escaping()->CGImage,
       profile_message: @escaping()->CGImage,
       profile_more: @escaping()->CGImage,
@@ -7761,7 +7908,10 @@ final class TelegramIconsTheme {
       gif_trending: @escaping()->CGImage,
       chat_list_thumb_play: @escaping()->CGImage,
       inline_audio_volume: @escaping()->CGImage,
-      inline_audio_volume_off: @escaping()->CGImage
+      inline_audio_volume_off: @escaping()->CGImage,
+      call_tooltip_battery_low: @escaping()->CGImage,
+      call_tooltip_camera_off: @escaping()->CGImage,
+      call_tooltip_micro_off: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -7794,6 +7944,9 @@ final class TelegramIconsTheme {
       self._chatFallbackCall = chatFallbackCall
       self._chatFallbackCallBubble_incoming = chatFallbackCallBubble_incoming
       self._chatFallbackCallBubble_outgoing = chatFallbackCallBubble_outgoing
+      self._chatFallbackVideoCall = chatFallbackVideoCall
+      self._chatFallbackVideoCallBubble_incoming = chatFallbackVideoCallBubble_incoming
+      self._chatFallbackVideoCallBubble_outgoing = chatFallbackVideoCallBubble_outgoing
       self._chatToggleSelected = chatToggleSelected
       self._chatToggleUnselected = chatToggleUnselected
       self._chatMusicPlay = chatMusicPlay
@@ -7950,9 +8103,12 @@ final class TelegramIconsTheme {
       self._chatSearchCancel = chatSearchCancel
       self._chatSearchFrom = chatSearchFrom
       self._callWindowDecline = callWindowDecline
+      self._callWindowDeclineSmall = callWindowDeclineSmall
       self._callWindowAccept = callWindowAccept
+      self._callWindowVideo = callWindowVideo
+      self._callWindowVideoActive = callWindowVideoActive
       self._callWindowMute = callWindowMute
-      self._callWindowUnmute = callWindowUnmute
+      self._callWindowMuteActive = callWindowMuteActive
       self._callWindowClose = callWindowClose
       self._callWindowDeviceSettings = callWindowDeviceSettings
       self._callSettings = callSettings
@@ -8243,6 +8399,7 @@ final class TelegramIconsTheme {
       self._tab_settings_active = tab_settings_active
       self._profile_add_member = profile_add_member
       self._profile_call = profile_call
+      self._profile_video_call = profile_video_call
       self._profile_leave = profile_leave
       self._profile_message = profile_message
       self._profile_more = profile_more
@@ -8280,5 +8437,8 @@ final class TelegramIconsTheme {
       self._chat_list_thumb_play = chat_list_thumb_play
       self._inline_audio_volume = inline_audio_volume
       self._inline_audio_volume_off = inline_audio_volume_off
+      self._call_tooltip_battery_low = call_tooltip_battery_low
+      self._call_tooltip_camera_off = call_tooltip_camera_off
+      self._call_tooltip_micro_off = call_tooltip_micro_off
   }
 }

@@ -2,12 +2,12 @@
   "images" : [
     {
       "idiom" : "universal",
-      "filename" : "accept.png",
+      "filename" : "ic_calls_accept.png",
       "scale" : "1x"
     },
     {
       "idiom" : "universal",
-      "filename" : "accept@2x.png",
+      "filename" : "ic_calls_accept@2x.png",
       "scale" : "2x"
     },
     {

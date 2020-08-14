@@ -74,6 +74,7 @@
 		D001F3F61E128A1C007A8C60 /* PendingMessageUploadedContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09BB6B51DB0428000A905C0 /* PendingMessageUploadedContent.swift */; };
 		D001F3F71E128A1C007A8C60 /* ApplyUpdateMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01AC9221DD5E9A200E8160F /* ApplyUpdateMessage.swift */; };
 		D00422D421677F4500719B67 /* ManagedAccountPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00422D221677F4500719B67 /* ManagedAccountPresence.swift */; };
+		D00602F724CF397000206226 /* ForwardCountMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00602F624CF397000206226 /* ForwardCountMessageAttribute.swift */; };
 		D00BDA1A1EE593D600C64C5E /* TelegramChannelAdminRights.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00BDA181EE593D600C64C5E /* TelegramChannelAdminRights.swift */; };
 		D00BDA1D1EE5952A00C64C5E /* TelegramChannelBannedRights.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00BDA1B1EE5952A00C64C5E /* TelegramChannelBannedRights.swift */; };
 		D00C7CCD1E3620C30080C3D5 /* CachedChannelParticipants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00C7CCB1E3620C30080C3D5 /* CachedChannelParticipants.swift */; };
@@ -416,6 +417,7 @@
 		C2FD33EA1E696C78008D13D4 /* GroupsInCommon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupsInCommon.swift; sourceTree = "<group>"; };
 		D003702A1DA42586004308D3 /* PhoneNumber.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhoneNumber.swift; sourceTree = "<group>"; };
 		D00422D221677F4500719B67 /* ManagedAccountPresence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedAccountPresence.swift; sourceTree = "<group>"; };
+		D00602F624CF397000206226 /* ForwardCountMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ForwardCountMessageAttribute.swift; path = ../../SyncCore/Sources/ForwardCountMessageAttribute.swift; sourceTree = "<group>"; };
 		D00BDA181EE593D600C64C5E /* TelegramChannelAdminRights.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramChannelAdminRights.swift; sourceTree = "<group>"; };
 		D00BDA1B1EE5952A00C64C5E /* TelegramChannelBannedRights.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramChannelBannedRights.swift; sourceTree = "<group>"; };
 		D00C7CCB1E3620C30080C3D5 /* CachedChannelParticipants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CachedChannelParticipants.swift; sourceTree = "<group>"; };
@@ -1148,6 +1150,7 @@
 				D0329EA122FC5A7C00F9F071 /* MessageReactions.swift */,
 				D072F356231542740009E66F /* MessageReactionList.swift */,
 				D01AC9201DD5E7E500E8160F /* RequestEditMessage.swift */,
+				D00602F624CF397000206226 /* ForwardCountMessageAttribute.swift */,
 				D0DC354D1DE368F7000195EB /* RequestChatContextResults.swift */,
 				D0DC354F1DE36900000195EB /* ChatContextResult.swift */,
 				D0E35A0F1DE49E1C00BC6096 /* OutgoingMessageWithChatContextResult.swift */,
@@ -1821,6 +1824,7 @@
 				D05464982073872C002ECC1E /* SecureIdBankStatementValue.swift in Sources */,
 				D0CB09AE24ADEFC9008CD050 /* Suggestions.swift in Sources */,
 				D0B4188E1D7E0578004562A4 /* StoreMessage_Telegram.swift in Sources */,
+				D00602F724CF397000206226 /* ForwardCountMessageAttribute.swift in Sources */,
 				D0B844461DAB91FD005F29E1 /* RecentPeers.swift in Sources */,
 				D0E412E2206AB24700BEE4A2 /* SecureFileMediaResource.swift in Sources */,
 				D0439B5E228ECB270067E026 /* RequestPhoneNumber.swift in Sources */,
