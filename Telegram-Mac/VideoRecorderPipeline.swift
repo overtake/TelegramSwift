@@ -101,10 +101,11 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
             session.sessionPreset = .medium
         }
         
-        if let videoDevice = AVCaptureDevice.default(for: .video) {
+        let videoDevice = AVCaptureDevice.devices(for: .video).first(where: { $0.isConnected && !$0.isSuspended})
+        let audioDevice = AVCaptureDevice.devices(for: .audio).first(where: { $0.isConnected && !$0.isSuspended})
+        if let videoDevice = videoDevice {
             setSelectedVideoDevice(videoDevice)
-            if let audioDevice = AVCaptureDevice.default(for: .audio) {
-                
+            if let audioDevice = audioDevice {
                 setSelectedAudioDevice(audioDevice)
             }
         } else if let videoDevice = AVCaptureDevice.default(for: .muxed) {

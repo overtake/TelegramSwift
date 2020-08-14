@@ -320,6 +320,8 @@ private class PhoneCallWindowView : View {
     override func layout() {
         super.layout()
         
+        NSLog("\(frame)")
+        
         backgroundView.frame = bounds
         imageView.frame = bounds
 
@@ -330,7 +332,7 @@ private class PhoneCallWindowView : View {
         }
         
         
-        textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 40))
+        textNameView.setFrameSize(NSMakeSize(controls.frame.width - 40, 45))
         textNameView.centerX(y: 50)
         statusView.setFrameSize(statusView.sizeThatFits(NSMakeSize(controls.frame.width - 40, 25)))
         statusView.centerX(y: textNameView.frame.maxY + 8)
@@ -542,13 +544,16 @@ private class PhoneCallWindowView : View {
                     if let view = view, let `self` = self {
                         self.incomingVideoView.videoView = view
                         self.incomingVideoView.updateAspectRatio = self.updateIncomingAspectRatio
+                        self.incomingVideoView.firstFrameHandler = { [weak self] in
+                            self?.incomingVideoView.unhideView(animated: animated)
+                        }
                     }
                 })
-            } else {
-                self.incomingVideoView.unhideView(animated: animated)
             }
         case .inactive, .paused:
+            self.incomingVideoViewRequested = false
             self.incomingVideoView.hideView(animated: animated)
+            self.incomingVideoView._cameraInitialized.set(.notInited)
             self.needsLayout = true
         }
         
@@ -556,13 +561,15 @@ private class PhoneCallWindowView : View {
         switch state.videoState {
         case let .active(possible):
             if !self.outgoingVideoViewRequested {
-                self.outgoingVideoView.unhideView(animated: animated)
                 self.outgoingVideoViewRequested = true
                 self.outgoingVideoView._cameraInitialized.set(.initializing)
                 if possible {
                     session.makeOutgoingVideoView(completion: { [weak self] view in
                         if let view = view, let `self` = self {
                             self.outgoingVideoView.videoView = (view, possible)
+                            self.outgoingVideoView.firstFrameHandler = { [weak self] in
+                                self?.outgoingVideoView.unhideView(animated: animated)
+                            }
                             self.needsLayout = true
                         }
                     })
@@ -574,6 +581,7 @@ private class PhoneCallWindowView : View {
         case .inactive, .paused:
             self.outgoingVideoViewRequested = false
             self.outgoingVideoView.hideView(animated: animated)
+            self.outgoingVideoView._cameraInitialized.set(.notInited)
         default:
             break
         }
@@ -1042,6 +1050,7 @@ class PhoneCallWindowController {
         }, for: .Click)
 
         window.animationBehavior = .utilityWindow
+        updateIncomingAspectRatio(0.7)
     }
     
     private func recall() {
@@ -1256,10 +1265,18 @@ func closeCall(minimisize: Bool = false) {
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {
-                    controller.window.orderOut(nil)
+                    NSAnimationContext.runAnimationGroup({ ctx in
+                        controller.window.animator().alphaValue = 0
+                    }, completionHandler: {
+                        controller.window.orderOut(nil)
+                    })
                 })
             } else {
-                controller.window.orderOut(nil)
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    controller.window.animator().alphaValue = 0
+                }, completionHandler: {
+                    controller.window.orderOut(nil)
+                })
             }
         }
         return nil

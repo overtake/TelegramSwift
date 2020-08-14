@@ -25,11 +25,13 @@ final class OutgoingVideoView : Control {
     
     var updateAspectRatio:((Float)->Void)? = nil
     
-    let _cameraInitialized: ValuePromise<CameraState> = ValuePromise(.notInited)
+    let _cameraInitialized: ValuePromise<CameraState> = ValuePromise(.notInited, ignoreRepeated: true)
     
     var cameraInitialized: Signal<CameraState, NoError> {
         return _cameraInitialized.get()
     }
+    
+    var firstFrameHandler:(()->Void)? = nil
     
     var videoView: (OngoingCallContextVideoView?, Bool)? {
         didSet {
@@ -53,7 +55,8 @@ final class OutgoingVideoView : Control {
                     
                     self.notAvailableView = current
                     addSubview(current, positioned: .below, relativeTo: overlay)
-                    self._cameraInitialized.set(.notInited)
+                    self._cameraInitialized.set(.inited)
+                    self.firstFrameHandler?()
                 }
             } else {
                 if let videoView = videoView?.0 {
@@ -79,6 +82,7 @@ final class OutgoingVideoView : Control {
                             }
                             self.updateAspectRatio?(aspectRatio)
                         }
+                        self.firstFrameHandler?()
                     })
                 } else {
                     self._cameraInitialized.set(.notInited)
@@ -162,7 +166,6 @@ final class OutgoingVideoView : Control {
         super.layout()
         self.overlay.frame = bounds
         self.videoView?.0?.view.frame = bounds
-        self.videoView?.0?.view.subviews.first?.frame = bounds
         self.progressIndicator?.center()
         self.disabledView?.frame = bounds
         
@@ -273,11 +276,13 @@ final class IncomingVideoView : Control {
     
     var updateAspectRatio:((Float)->Void)? = nil
     
-    let _cameraInitialized: ValuePromise<CameraState> = ValuePromise(.notInited)
+    let _cameraInitialized: ValuePromise<CameraState> = ValuePromise(.notInited, ignoreRepeated: true)
     
     var cameraInitialized: Signal<CameraState, NoError> {
         return _cameraInitialized.get()
     }
+    
+    var firstFrameHandler:(()->Void)? = nil
     
     private var disabledView: NSVisualEffectView?
     var videoView: OngoingCallContextVideoView? {
@@ -298,9 +303,11 @@ final class IncomingVideoView : Control {
                     self?._cameraInitialized.set(.inited)
                     self?.videoView?.view.background = .black
                     self?.updateAspectRatio?(aspectRatio)
+                    self?.firstFrameHandler?()
                 })
             } else {
-                _cameraInitialized.set(.notInited)
+                _cameraInitialized.set(.inited)
+                self.firstFrameHandler?()
             }
             needsLayout = true
         }
