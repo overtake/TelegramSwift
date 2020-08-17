@@ -384,19 +384,19 @@ final class IncomingVideoView : Control {
                 }
             }
             addSubview(view, positioned: .below, relativeTo: self.subviews.first)
-            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+//            view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
         }
         _hidden = false
     }
     
     func hideView(animated: Bool) {
         if let view = self.videoView?.view, !_hidden {
-            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
+            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.4, removeOnCompletion: false, completion: { [weak view] completed in
                 view?.removeFromSuperview()
                 view?.layer?.removeAllAnimations()
             })
-            view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
+           // view.layer?.animateScaleCenter(from: 1, to: 0.2, duration: 0.2)
         }
         _hidden = true
     }
