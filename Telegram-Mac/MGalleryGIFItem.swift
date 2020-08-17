@@ -92,6 +92,10 @@ class MGalleryGIFItem: MGalleryItem {
             
             var size = size
             
+            if size.width == 0 || size.height == 0 {
+                size = NSMakeSize(300, 300)
+            }
+            
             let aspectRatio = size.width / size.height
             let addition = max(300 - size.width, 300 - size.height)
             
