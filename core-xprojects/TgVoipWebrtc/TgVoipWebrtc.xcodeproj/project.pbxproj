@@ -20,6 +20,8 @@
 		D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DE24A5000700C7D03A /* VideoToolbox.framework */; };
 		D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E024A5001300C7D03A /* CoreMedia.framework */; };
 		D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E224A5001800C7D03A /* AVFoundation.framework */; };
+		D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */; };
+		D0D4CD8124EC6CF80017D48D /* DesktopCapturer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */; };
 		D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */; };
 		D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D751A324BE372F0037D73A /* AppKit.framework */; };
@@ -86,6 +88,8 @@
 		D06E36E224A5001800C7D03A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D06E38A624A5EEAD00C7D03A /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D06E38A724A5EEAD00C7D03A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ScreenCapturer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/ScreenCapturer.mm; sourceTree = "<group>"; };
+		D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DesktopCapturer.cpp; path = ../../submodules/tgcalls/tgcalls/DesktopCapturer.cpp; sourceTree = "<group>"; };
 		D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OngoingCallThreadLocalContext.mm; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Sources/OngoingCallThreadLocalContext.mm"; sourceTree = "<group>"; };
 		D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OngoingCallThreadLocalContext.h; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/PublicHeaders/TgVoip/OngoingCallThreadLocalContext.h"; sourceTree = "<group>"; };
 		D0D751A324BE372F0037D73A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -154,6 +158,7 @@
 				D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */,
 				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
 				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
+				D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */,
 				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
 				D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */,
 				D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */,
@@ -166,6 +171,7 @@
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
 				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
+				D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
 				D00602FC24CF3D6600206226 /* CryptoHelper.cpp */,
@@ -355,8 +361,10 @@
 				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
+				D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
+				D0D4CD8124EC6CF80017D48D /* DesktopCapturer.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
