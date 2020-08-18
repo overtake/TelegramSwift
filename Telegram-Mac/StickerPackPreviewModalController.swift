@@ -268,7 +268,7 @@ class StickerPackPreviewModalController: ModalViewController {
         super.viewDidLoad()
         
         
-        disposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: false) |> deliverOnMainQueue).start(next: { [weak self] result in
+        disposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             guard let `self` = self else {return}
             switch result {
             case .none:

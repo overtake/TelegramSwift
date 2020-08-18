@@ -892,7 +892,7 @@ class PCallSession {
         }
         discardCurrentCallWithReason(reason)
         
-        if callContextState == nil, let session = sessionState, !session.isOutgoing {
+        if callContextState == nil, let session = sessionState, session.isOutgoing {
             self.didSetCanBeRemoved = true
             self.canBeRemovedPromise.set(.single(true))
         }

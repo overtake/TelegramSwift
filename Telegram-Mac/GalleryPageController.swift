@@ -298,7 +298,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
                 
                 let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
-                NSLog("\(hitTestView)")
                 if hitTestView is Control {
                     return .rejected
                 }

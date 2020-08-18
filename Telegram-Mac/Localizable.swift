@@ -485,7 +485,7 @@ internal final class L10n {
   internal static var callAccept: String  { return L10n.tr("Localizable", "Call.Accept") }
   /// Camera
   internal static var callCamera: String  { return L10n.tr("Localizable", "Call.Camera") }
-  /// Camera is unavailable\n[seettings]()
+  /// Camera is unavailable\n[settings]()
   internal static var callCameraUnavailable: String  { return L10n.tr("Localizable", "Call.CameraUnavailable") }
   /// Close
   internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
@@ -3831,6 +3831,8 @@ internal final class L10n {
   internal static var messageStatusArchiveFailed: String  { return L10n.tr("Localizable", "Message.Status.Archive.Failed") }
   /// file size limit exceeded
   internal static var messageStatusArchiveFailedSizeLimit: String  { return L10n.tr("Localizable", "Message.Status.Archive.FailedSizeLimit") }
+  /// Copy Music Name
+  internal static var messageTextCopyMusicTitle: String  { return L10n.tr("Localizable", "Message.Text.CopyMusicTitle") }
   /// Copy Message Link
   internal static var messageContextCopyMessageLink1: String  { return L10n.tr("Localizable", "MessageContext.CopyMessageLink1") }
   /// %@d

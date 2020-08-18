@@ -495,8 +495,13 @@ class ChatMediaItem: ChatRowItem {
                         }
                     }
                 }
+                
             }
-            
+            if let media = self?.media as? TelegramMediaFile, media.isMusic, let name = media.fileName {
+                items.insert(ContextMenuItem(L10n.messageTextCopyMusicTitle, handler: {
+                    copyToClipboard(name)
+                }), at: 1)
+            }
             return items
         }
     }
