@@ -70,7 +70,7 @@ class TouchBarStickerItemView: NSScrubberItemView {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions.aspectFitted(imageSize), boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
             
             imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
-            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: file, small: true, scale: backingScaleFactor, fetched: true), cacheImage: { result in
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: stickerPackFileReference(file), small: true, scale: backingScaleFactor, fetched: true), cacheImage: { result in
                 cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
             })
             imageView.set(arguments: arguments)

@@ -45,7 +45,7 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
                 imageView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
             }
             
-            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: reference.media, small: false, scale: backingScaleFactor, fetched: true), clearInstantly: true, animate:true)
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, fetched: true), clearInstantly: true, animate:true)
             
             let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
             layout.measure(width: .greatestFiniteMagnitude)

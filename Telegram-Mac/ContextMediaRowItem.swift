@@ -266,7 +266,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             view = TransformImageView()
                         }
                         
-                        view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: data.file, small: true, scale: backingScaleFactor, fetched: true))
+                        view.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: stickerPackFileReference(data.file), small: true, scale: backingScaleFactor, fetched: true))
                         let imageSize = item.result.sizes[i].aspectFitted(NSMakeSize(item.height, item.height - 8))
                         view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
                         
