@@ -599,6 +599,8 @@ internal final class L10n {
   internal static var callRecentMissed: String  { return L10n.tr("Localizable", "Call.Recent.Missed") }
   /// Outgoing
   internal static var callRecentOutgoing: String  { return L10n.tr("Localizable", "Call.Recent.Outgoing") }
+  /// Sorry, you can’t make a call on the same device.
+  internal static var callSameDeviceError: String  { return L10n.tr("Localizable", "Call.SameDevice.Error") }
   /// %@'s camera is off
   internal static func callToastCameraOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
