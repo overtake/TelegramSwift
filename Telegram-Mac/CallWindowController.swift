@@ -1055,7 +1055,6 @@ class PhoneCallWindowController {
         
         self.view.backgroundView.set(handler: { [weak self] _ in
             self?.view.updateControlsVisibility()
-
         }, for: .Click)
 
         window.animationBehavior = .utilityWindow
@@ -1170,11 +1169,8 @@ class PhoneCallWindowController {
         case .reconnecting:
             break
         }
-//        if session.isVideo {
-//            self.ready.set(self.view.outgoingVideoView.cameraInitialized)
-//        } else {
-            self.ready.set(.single(true))
-//        }
+        self.ready.set(.single(true))
+
     }
     
     deinit {

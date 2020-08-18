@@ -369,6 +369,38 @@ class ShareLinkObject : ShareObject {
     }
 }
 
+
+class ShareUrlObject : ShareObject {
+    let url:String
+    init(_ context: AccountContext, url:String) {
+        self.url = url
+        super.init(context)
+    }
+    
+    override var hasLink: Bool {
+        return true
+    }
+    
+    override func shareLink() {
+        copyToClipboard(url)
+    }
+    
+    override func perform(to peerIds:[PeerId], comment: String? = nil) -> Signal<Never, String> {
+        for peerId in peerIds {
+            
+            var attributes:[MessageAttribute] = []
+            if FastSettings.isChannelMessagesMuted(peerId) {
+                attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+            }
+            
+            let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
+                        
+            _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil)]).start()
+        }
+        return .complete()
+    }
+}
+
 class ShareContactObject : ShareObject {
     let user:TelegramUser
     init(_ context: AccountContext, user:TelegramUser) {
