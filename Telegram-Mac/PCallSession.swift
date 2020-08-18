@@ -1008,6 +1008,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         signal = combineLatest(queue: .mainQueue(), requestMicrophonePermission(), .single(nil))
     }
     
+    
     var isVideoPossible = account.postbox.transaction { transaction -> VideoCallsConfiguration in
         let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
         return VideoCallsConfiguration(appConfiguration: appConfiguration)
@@ -1031,10 +1032,21 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         $0.0 && $0.1
     }
     
-    return combineLatest(queue: .mainQueue(), signal, isVideoPossible) |> mapToSignal { values -> Signal<PCallResult, NoError> in
+    let accounts = sharedContext.activeAccounts
+
+    
+    return combineLatest(queue: .mainQueue(), signal, isVideoPossible, accounts) |> mapToSignal { values -> Signal<PCallResult, NoError> in
         
         let (microAccess, _) = values.0
         let isVideoPossible = values.1
+        let activeAccounts = values.2
+        
+        for account in activeAccounts.accounts {
+            if account.1.peerId == peerId {
+                alert(for: mainWindow, info: L10n.callSameDeviceError)
+                return .complete()
+            }
+        }
         
         if microAccess {
             return Signal { subscriber in

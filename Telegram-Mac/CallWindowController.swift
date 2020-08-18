@@ -294,7 +294,7 @@ private class PhoneCallWindowView : View {
     func updateOutgoingAspectRatio(_ aspectRatio: CGFloat, animated: Bool) {
         if aspectRatio > 0, !outgoingVideoView.isEventLess, self.outgoingAspectRatio != aspectRatio {
             var rect = outgoingVideoView.frame
-            let closest: CGFloat = 100
+            let closest: CGFloat = 150
             rect.size = NSMakeSize(floor(closest * aspectRatio), closest)
             
             let dif = outgoingVideoView.frame.size - rect.size
@@ -683,7 +683,7 @@ private class PhoneCallWindowView : View {
         if !outgoingVideoView.isEventLess {
             if !self.outgoingVideoView.isMoved {
                 if outgoingAspectRatio > 0 {
-                    size = NSMakeSize(100 * outgoingAspectRatio, 100)
+                    size = NSMakeSize(150 * outgoingAspectRatio, 150)
                 } else {
                     size = OutgoingVideoView.defaultSize
                 }
