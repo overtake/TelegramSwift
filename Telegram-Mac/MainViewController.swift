@@ -36,6 +36,11 @@ final class UpdateTabView : Control {
                 change(size: NSMakeSize(60, frame.height), animated: true, timingFunction: .spring)
                 change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
                 progressView.change(pos: self.bounds.focus(progressView.frame.size).origin, animated: true, timingFunction: .spring)
+            } else {
+                if let superview = self.superview {
+                    change(size: NSMakeSize(self.textView.frame.width + 40, frame.height), animated: true, timingFunction: .spring)
+                    change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
+                }
             }
             
         }

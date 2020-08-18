@@ -516,12 +516,26 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                 detector = nil
             }
         }
-    
         
         if let peer = chatPresentationInterfaceState.peer, peer.webUrlRestricted {
             subscriber.putNext((nil, .single({ _ in return nil })))
             subscriber.putCompletion()
             detector = nil
+        }
+        
+        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.media.first {
+            if let media = media as? TelegramMediaWebpage {
+                let url: String?
+                switch media.content {
+                case let .Loaded(content):
+                    url = content.url
+                case let .Pending(content):
+                    url = content.1
+                }
+                subscriber.putNext((url, .single({ _ in return media })))
+                subscriber.putCompletion()
+                detector = nil
+            }
         }
         
         if let dataDetector = detector {

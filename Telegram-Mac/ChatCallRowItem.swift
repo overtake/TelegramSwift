@@ -26,6 +26,8 @@ class ChatCallRowItem: ChatRowItem {
         return ChatCallRowView.self
     }
     
+    private let callId: Int64?
+    
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         let message = object.message!
@@ -35,10 +37,12 @@ class ChatCallRowItem: ChatRowItem {
         
         let video: Bool
         switch action.action {
-        case let .phoneCall(_, _, _, isVideo):
+        case let .phoneCall(callId, _, _, isVideo):
             video = isVideo
+            self.callId = callId
         default:
             video = false
+            self.callId = nil
         }
         self.isVideo = video
         
@@ -92,6 +96,52 @@ class ChatCallRowItem: ChatRowItem {
             requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
                 applyUIPCallResult(context.sharedContext, result)
             }))
+        }
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        
+        let context = self.context
+        let callId = self.callId ?? 0
+        
+        return super.menuItems(in: location) |> map { items in
+            var items = items
+            
+            
+            let logPath = callLogsPath(account: context.account)
+            
+            guard let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: logPath), includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey], options: [.skipsSubdirectoryDescendants], errorHandler: nil) else {
+                return items
+            }
+            
+            var foundLog: String? = nil
+            
+            while let item = enumerator.nextObject() {
+                guard let url = item as? NSURL else {
+                    continue
+                }
+                guard let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey]) else {
+                    continue
+                }
+                if let value = resourceValues[.isDirectoryKey] as? Bool, value {
+                    continue
+                }
+                if let file = url.path {
+                    if file.contains("\(callId)") {
+                        foundLog = file
+                        break
+                    }
+                }
+            }
+            if let foundLog = foundLog {
+                items.append(ContextSeparatorItem())
+                items.append(.init(L10n.shareCallLogs, handler: {
+                    showModal(with: ShareModalController(ShareUrlObject(context, url: foundLog)), for: context.window)
+                }))
+            }
+            
+            
+            return items
         }
     }
     

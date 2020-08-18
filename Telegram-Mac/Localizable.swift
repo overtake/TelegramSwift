@@ -19,6 +19,8 @@ internal final class L10n {
   internal static var phoneCodeInvalid: String  { return L10n.tr("Localizable", "PHONE_CODE_INVALID") }
   /// Invalid phone number
   internal static var phoneNumberInvalid: String  { return L10n.tr("Localizable", "PHONE_NUMBER_INVALID") }
+  /// Share Call Logs
+  internal static var shareCallLogs: String  { return L10n.tr("Localizable", "ShareCallLogs") }
   /// An error occurred. Please try again later
   internal static var unknownError: String  { return L10n.tr("Localizable", "UnknownError") }
   /// You
