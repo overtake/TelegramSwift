@@ -185,18 +185,18 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
      
         
-        let reference: MediaResourceReference
+        let reference: FileMediaReference
         
         if let message = parent {
-            reference = FileMediaReference.message(message: MessageReference(message), media: file).resourceReference(file.resource)
+            reference = FileMediaReference.message(message: MessageReference(message), media: file)
         } else if let stickerReference = file.stickerReference {
             if file.resource is CloudStickerPackThumbnailMediaResource {
-                reference = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
+                reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
             } else {
-                reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file).resourceReference(file.resource)
+                reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
             }
         } else {
-            reference = FileMediaReference.standalone(media: file).resourceReference(file.resource)
+            reference = FileMediaReference.standalone(media: file)
         }
         
         let data: Signal<MediaResourceData, NoError>
@@ -239,7 +239,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         if !self.thumbView.isFullyLoaded {
-            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, size: size, fetched: false), cacheImage: { [weak file] result in
+            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, size: size, fetched: false), cacheImage: { [weak file] result in
                 if let file = file {
                     cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 }
@@ -247,7 +247,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             self.thumbView.set(arguments: arguments)
         }
 
-        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(reference.media.resource)).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             

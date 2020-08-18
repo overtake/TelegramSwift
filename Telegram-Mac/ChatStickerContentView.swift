@@ -62,15 +62,17 @@ class ChatStickerContentView: ChatMediaContentView {
         
         if let file = media as? TelegramMediaFile {
             
+            let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : stickerPackFileReference(file)
+            
             let dimensions =  file.dimensions?.size.aspectFitted(size) ?? size
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             
             self.image.animatesAlphaOnFirstTransition = false
            
-            self.image.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+            self.image.setSignal(signal: cachedMedia(media: reference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
             if !self.image.isFullyLoaded {
-                self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: file, small: size.width < 120, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
+                self.image.setSignal( chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width < 120, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
                     if let media = file {
                         return cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                     }

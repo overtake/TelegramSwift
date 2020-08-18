@@ -216,7 +216,7 @@ final class StickerGridItemView: GridItemNode, ModalPreviewRowViewProtocol {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(60, 60), boundingSize: NSMakeSize(60, 60), intrinsicInsets: NSEdgeInsets())
             imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
-            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: file, small: false, scale: backingScaleFactor, fetched: true), cacheImage: { result in
+            imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: stickerPackFileReference(file), small: false, scale: backingScaleFactor, fetched: true), cacheImage: { result in
                 cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
             })
             
