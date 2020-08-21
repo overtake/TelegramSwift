@@ -98,7 +98,12 @@ final class OngoingCallVideoCapturer {
         self.impl.setIsVideoEnabled(value)
     }
 
-
+    public func enableScreenCast() {
+        self.impl.enableScreenCast()
+    }
+    public func disableScreenCast() {
+        self.impl.disableScreenCast()
+    }
 }
 
 

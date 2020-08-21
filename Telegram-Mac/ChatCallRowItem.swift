@@ -136,7 +136,10 @@ class ChatCallRowItem: ChatRowItem {
             if let foundLog = foundLog {
                 items.append(ContextSeparatorItem())
                 items.append(.init(L10n.shareCallLogs, handler: {
-                    showModal(with: ShareModalController(ShareUrlObject(context, url: foundLog)), for: context.window)
+                    
+                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: foundLog)])
+                    
+//                    showModal(with: ShareModalController(ShareUrlObject(context, url: foundLog)), for: context.window)
                 }))
             }
             

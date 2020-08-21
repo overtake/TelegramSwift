@@ -379,7 +379,7 @@ class Sender: NSObject {
             let audio = asset.tracks(withMediaType: AVMediaType.audio).first
             if let video = video {
                 var size = video.naturalSize.applying(video.preferredTransform)
-                size = NSMakeSize(abs(size.width), abs(size.height))
+                size = NSMakeSize(floor(abs(size.width)), floor(abs(size.height)))
                 attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(size), flags: []))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
                 if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024), mime.hasSuffix("mp4") {

@@ -502,6 +502,64 @@ private class PhoneCallWindowView : View {
     
     func updateState(_ state:CallState, session:PCallSession, outgoingCameraInitialized: CameraState, incomingCameraInitialized: CameraState, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         
+        
+        var incomingCameraInitialized = incomingCameraInitialized
+        var outgoingCameraInitialized = outgoingCameraInitialized
+
+        
+        
+        switch state.remoteVideoState {
+        case .active:
+            if !self.incomingVideoViewRequested {
+                self.incomingVideoViewRequested = true
+                self.incomingVideoView._cameraInitialized.set(.initializing)
+                incomingCameraInitialized = .initializing
+                session.makeIncomingVideoView(completion: { [weak self] view in
+                    if let view = view, let `self` = self {
+                        self.incomingVideoView.videoView = view
+                        self.incomingVideoView.updateAspectRatio = self.updateIncomingAspectRatio
+                        self.incomingVideoView.firstFrameHandler = { [weak self] in
+                            self?.incomingVideoView.unhideView(animated: animated)
+                        }
+                    }
+                })
+            }
+        case .inactive, .paused:
+            self.incomingVideoViewRequested = false
+            self.incomingVideoView.hideView(animated: animated)
+            self.incomingVideoView._cameraInitialized.set(.notInited)
+            incomingCameraInitialized = .notInited
+        }
+        
+        
+        switch state.videoState {
+        case let .active(possible):
+            if !self.outgoingVideoViewRequested {
+                self.outgoingVideoViewRequested = true
+                self.outgoingVideoView._cameraInitialized.set(.initializing)
+                outgoingCameraInitialized = .initializing
+                if possible {
+                    session.makeOutgoingVideoView(completion: { [weak self] view in
+                        if let view = view, let `self` = self {
+                            self.outgoingVideoView.videoView = (view, possible)
+                            self.outgoingVideoView.firstFrameHandler = { [weak self] in
+                                self?.outgoingVideoView.unhideView(animated: animated)
+                            }
+                        }
+                    })
+                } else {
+                    self.outgoingVideoView.videoView = (nil, possible)
+                }
+            }
+        case .inactive, .paused:
+            self.outgoingVideoViewRequested = false
+            self.outgoingVideoView.hideView(animated: animated)
+            self.outgoingVideoView._cameraInitialized.set(.notInited)
+            outgoingCameraInitialized = .notInited
+        default:
+            break
+        }
+        
         let inputCameraIsActive: Bool
         switch state.videoState {
         case .active:
@@ -514,7 +572,6 @@ private class PhoneCallWindowView : View {
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
         self.b_VideoCamera.isHidden = !session.isVideoPossible || !session.isVideoAvailable
-        let cameraCompitableState = outgoingCameraInitialized == .notInited || outgoingCameraInitialized == .inited
         self.b_VideoCamera.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
         self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
         
@@ -537,57 +594,7 @@ private class PhoneCallWindowView : View {
             break
         }
         
-        
-        switch state.remoteVideoState {
-        case .active:
-            if !self.incomingVideoViewRequested {
-                self.incomingVideoViewRequested = true
-                self.incomingVideoView._cameraInitialized.set(.initializing)
-                session.makeIncomingVideoView(completion: { [weak self] view in
-                    if let view = view, let `self` = self {
-                        self.incomingVideoView.videoView = view
-                        self.incomingVideoView.updateAspectRatio = self.updateIncomingAspectRatio
-                        self.incomingVideoView.firstFrameHandler = { [weak self] in
-                            self?.incomingVideoView.unhideView(animated: animated)
-                        }
-                    }
-                })
-            }
-        case .inactive, .paused:
-            self.incomingVideoViewRequested = false
-            self.incomingVideoView.hideView(animated: animated)
-            self.incomingVideoView._cameraInitialized.set(.notInited)
-            self.needsLayout = true
-        }
-        
-        
-        switch state.videoState {
-        case let .active(possible):
-            if !self.outgoingVideoViewRequested {
-                self.outgoingVideoViewRequested = true
-                self.outgoingVideoView._cameraInitialized.set(.initializing)
-                if possible {
-                    session.makeOutgoingVideoView(completion: { [weak self] view in
-                        if let view = view, let `self` = self {
-                            self.outgoingVideoView.videoView = (view, possible)
-                            self.outgoingVideoView.firstFrameHandler = { [weak self] in
-                                self?.outgoingVideoView.unhideView(animated: animated)
-                            }
-                            self.needsLayout = true
-                        }
-                    })
-                } else {
-                    self.outgoingVideoView.videoView = (nil, possible)
-                    self.needsLayout = true
-                }
-            }
-        case .inactive, .paused:
-            self.outgoingVideoViewRequested = false
-            self.outgoingVideoView.hideView(animated: animated)
-            self.outgoingVideoView._cameraInitialized.set(.notInited)
-        default:
-            break
-        }
+      
         
         switch state.state {
         case .active, .connecting, .requesting:
@@ -1042,6 +1049,13 @@ class PhoneCallWindowController {
             self.view.updateControlsVisibility()
             return .rejected
         }, with: self.view, for: .mouseExited)
+        
+        window.set(handler: { [weak self] () -> KeyHandlerResult in
+            
+            self?.session.toggleScreenCast()
+            
+            return .invoked
+        }, with: self.view, for: .S)
         
         
         window.onToggleFullScreen = { [weak self] value in

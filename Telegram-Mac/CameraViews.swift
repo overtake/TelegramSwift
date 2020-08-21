@@ -306,7 +306,7 @@ final class IncomingVideoView : Control {
                     self?.firstFrameHandler?()
                 })
             } else {
-                _cameraInitialized.set(.inited)
+                _cameraInitialized.set(.notInited)
                 self.firstFrameHandler?()
             }
             needsLayout = true

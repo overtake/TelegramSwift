@@ -306,6 +306,7 @@ class PCallSession {
     private(set) var isVideoPossible: Bool
     private(set) var isVideoAvailable: Bool
     private var videoIsForceDisabled: Bool
+    private(set) var isScreenCast: Bool
     
     private var callWasActive = false
     private var videoWasActive = false
@@ -339,6 +340,7 @@ class PCallSession {
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
 
+        self.isScreenCast = false
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
         self.isVideoPossible = isVideoPossible
@@ -863,6 +865,22 @@ class PCallSession {
         }
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
+        }
+    }
+    
+    public func enableScreenCast() {
+        self.videoCapturer?.enableScreenCast()
+    }
+    public func disableScreenCast() {
+        self.videoCapturer?.disableScreenCast()
+    }
+    
+    public func toggleScreenCast() {
+        self.isScreenCast = !self.isScreenCast
+        if self.isScreenCast {
+            self.enableScreenCast()
+        } else {
+            self.disableScreenCast()
         }
     }
     
