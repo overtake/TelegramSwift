@@ -2171,13 +2171,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        /*
+         
+         let header: String
+         let text: String
+         if peer.isChannel {
+         header = L10n.channelAdminTransferOwnershipConfirmChannelTitle
+         text = L10n.channelAdminTransferOwnershipConfirmChannelText(peer.displayTitle, admin.displayTitle)
+         } else {
+         header = L10n.channelAdminTransferOwnershipConfirmGroupTitle
+         text = L10n.channelAdminTransferOwnershipConfirmGroupText(peer.displayTitle, admin.displayTitle)
+         }
+         
+         
+ */
+        
+        
         chatInteraction.requestMessageActionCallback = { [weak self] messageId, isGame, data in
             if let strongSelf = self {
                 switch strongSelf.mode {
                 case .history:
-                    strongSelf.botCallbackAlertMessage.set(.single((L10n.chatInlineRequestLoading, false)))
-                    strongSelf.messageActionCallbackDisposable.set((requestMessageActionCallback(account: context.account, messageId: messageId, isGame:isGame, data: data) |> deliverOnMainQueue).start(next: { [weak strongSelf] (result) in
-                        
+                    let applyResult:(MessageActionCallbackResult) -> Void = { [weak strongSelf] result in
                         if let strongSelf = strongSelf {
                             switch result {
                             case .none:
@@ -2194,6 +2208,66 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                         }
+                    }
+                    strongSelf.botCallbackAlertMessage.set(.single((L10n.chatInlineRequestLoading, false)))
+                    strongSelf.messageActionCallbackDisposable.set((requestMessageActionCallback(account: context.account, messageId: messageId, isGame:isGame, password: nil, data: data?.data) |> deliverOnMainQueue).start(next: applyResult, error: { [weak strongSelf] error in
+                        
+                        strongSelf?.botCallbackAlertMessage.set(.single(("", false)))
+                        if let data = data, data.requiresPassword {
+                            var errorText: String? = nil
+                            var install2Fa = false
+                            switch error {
+                            case .invalidPassword:
+                                showModal(with: InputPasswordController(context: context, title: L10n.botTransferOwnershipPasswordTitle, desc: L10n.botTransferOwnershipPasswordDesc, checker: { pwd in
+                                    return requestMessageActionCallback(account: context.account, messageId: messageId, isGame: isGame, password: pwd, data: data.data)
+                                        |> deliverOnMainQueue
+                                        |> beforeNext { result in
+                                            applyResult(result)
+                                        }
+                                        |> ignoreValues
+                                        |> `catch` { error -> Signal<Never, InputPasswordValueError> in
+                                            switch error {
+                                            case .generic:
+                                                return .fail(.generic)
+                                            case .invalidPassword:
+                                                return .fail(.wrong)
+                                            default:
+                                                return .fail(.generic)
+                                            }
+                                    } 
+                                }), for: context.window)
+                            case .authSessionTooFresh:
+                                errorText = L10n.botTransferOwnerErrorText
+                            case .twoStepAuthMissing:
+                                errorText = L10n.botTransferOwnerErrorText
+                                install2Fa = true
+                            case .twoStepAuthTooFresh:
+                                errorText = L10n.botTransferOwnerErrorText
+                            default:
+                                break
+                            }
+                            if let errorText = errorText {
+                                confirm(for: context.window, header: L10n.botTransferOwnerErrorTitle, information: errorText, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel, thridTitle: install2Fa ? L10n.botTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                                    switch result {
+                                    case .basic:
+                                        break
+                                    case .thrid:
+                                        context.sharedContext.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
+                                            let navigation = context.sharedContext.bindings.rootNavigation()
+                                            if isRoot {
+                                                navigation.removeUntil(ChatController.self)
+                                            }
+                                            if !animated {
+                                                navigation.stackInsert(controller, at: navigation.stackCount)
+                                            } else {
+                                                navigation.push(controller)
+                                            }
+                                        }))
+                                    }
+                                })
+                            }
+                        }
+                        
                     }))
                 case .scheduled:
                     break

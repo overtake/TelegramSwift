@@ -6855,6 +6855,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var call_screen_sharing: CGImage {
+      if let image = cached.with({ $0["call_screen_sharing"] }) {
+          return image
+      } else {
+          let image = _call_screen_sharing()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_screen_sharing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var call_screen_sharing_active: CGImage {
+      if let image = cached.with({ $0["call_screen_sharing_active"] }) {
+          return image
+      } else {
+          let image = _call_screen_sharing_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_screen_sharing_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter: CGImage {
+      if let image = cached.with({ $0["search_filter"] }) {
+          return image
+      } else {
+          let image = _search_filter()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7383,6 +7422,9 @@ final class TelegramIconsTheme {
   private let _call_tooltip_battery_low: ()->CGImage
   private let _call_tooltip_camera_off: ()->CGImage
   private let _call_tooltip_micro_off: ()->CGImage
+  private let _call_screen_sharing: ()->CGImage
+  private let _call_screen_sharing_active: ()->CGImage
+  private let _search_filter: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7911,7 +7953,10 @@ final class TelegramIconsTheme {
       inline_audio_volume_off: @escaping()->CGImage,
       call_tooltip_battery_low: @escaping()->CGImage,
       call_tooltip_camera_off: @escaping()->CGImage,
-      call_tooltip_micro_off: @escaping()->CGImage
+      call_tooltip_micro_off: @escaping()->CGImage,
+      call_screen_sharing: @escaping()->CGImage,
+      call_screen_sharing_active: @escaping()->CGImage,
+      search_filter: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8440,5 +8485,8 @@ final class TelegramIconsTheme {
       self._call_tooltip_battery_low = call_tooltip_battery_low
       self._call_tooltip_camera_off = call_tooltip_camera_off
       self._call_tooltip_micro_off = call_tooltip_micro_off
+      self._call_screen_sharing = call_screen_sharing
+      self._call_screen_sharing_active = call_screen_sharing_active
+      self._search_filter = search_filter
   }
 }

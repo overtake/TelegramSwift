@@ -178,11 +178,23 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     var hasInstantPage: Bool {
         if let webpage = message.media.first as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
-                if let _ = content.instantPage {
-                    if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram"  {
+                if let instantPage = content.instantPage {
+                    let hasInstantPage:()->Bool = {
+                        if instantPage.blocks.count == 3 {
+                            switch instantPage.blocks[2] {
+                            case let .collage(_, caption), let .slideshow(_, caption):
+                                return !attributedStringForRichText(caption.text, styleStack: InstantPageTextStyleStack()).string.isEmpty
+                            default:
+                                break
+                            }
+                        }
+                        return true
+                    }
+                    
+                    if content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram" || content.type == "telegram_album"  {
                         return false
                     }
-                    return true
+                    return hasInstantPage()
                 }
             }
         }

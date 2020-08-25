@@ -475,7 +475,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
-        if chatInteraction.peer?.largeProfileImage?.resource.id.uniqueId == stableId.base as? String {
+        if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.uniqueId == stableId.base as? String {
             return avatarControl
         }
         return nil
@@ -511,8 +511,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let point = convert(event.locationInWindow, from: nil)
         
         
-        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled {
-           let signal = peerPhotos(account: chatInteraction.context.account, peerId: chatInteraction.chatLocation.peerId) |> deliverOnMainQueue
+        if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, let peer = chatInteraction.presentation.mainPeer {
+           let signal = peerPhotos(account: chatInteraction.context.account, peerId: peer.id) |> deliverOnMainQueue
             videoAvatarDisposable.set(signal.start(next: { [weak self] photos in
                 self?.applyVideoAvatarIfNeeded(photos.first)
             }))
@@ -576,8 +576,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         
         if NSPointInRect(point, avatarControl.frame), chatInteraction.mode != .scheduled, chatInteraction.peerId != chatInteraction.context.peerId {
-            if let peer = chatInteraction.peer, let large = peer.largeProfileImage {
-                showPhotosGallery(context: chatInteraction.context, peerId: chatInteraction.peerId, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
+            if let peer = chatInteraction.presentation.mainPeer, let large = peer.largeProfileImage {
+                showPhotosGallery(context: chatInteraction.context, peerId: peer.id, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
                 return
             }
         }
@@ -664,7 +664,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             if self.currentRepresentations != representations {
                 applyVideoAvatarIfNeeded(nil)
-                videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: chatInteraction.peerId, force: true).start())
+                videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: peer.id, force: true).start())
                 
                 
                 if let peerReference = PeerReference(peer) {

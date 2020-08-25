@@ -55,6 +55,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var scamForwardButton: ImageButton? = nil
     
     private var psaButton: ImageButton? = nil
+    
+    private var hasBeenLayout: Bool = false
 
     let rowView: View
 
@@ -717,6 +719,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func layout() {
     //    super.layout()
         if let item = item as? ChatRowItem {
+            
+            hasBeenLayout = true
+            
             bubbleView.frame = bubbleFrame
             contentView.frame = contentFrameModifier
             
@@ -1295,12 +1300,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let item = self.item as? ChatRowItem {
             item.chatInteraction.remove(observer: self)
         }
+    
+        
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
         }
         
-        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false)
+        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout
         
         if let item = item as? ChatRowItem {
             
@@ -1311,6 +1318,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
         }
+        
         
         super.set(item: item, animated: animated)
         

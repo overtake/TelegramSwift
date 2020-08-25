@@ -45,20 +45,27 @@ public final class OngoingCallContextVideoView {
     public let view: NSView
     public let setOnFirstFrameReceived: (((Float) -> Void)?) -> Void
     public let getOrientation: () -> OngoingCallVideoOrientation
-    public let setOnOrientationUpdated: (((OngoingCallVideoOrientation) -> Void)?) -> Void
+    public let getAspect: () -> CGFloat
+    public let setOnOrientationUpdated: (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void
     public let setVideoContentMode: (CALayerContentsGravity) -> Void
+    public let setForceMirrored: (Bool) -> Void
+
     public init(
         view: NSView,
         setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
         getOrientation: @escaping () -> OngoingCallVideoOrientation,
-        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation) -> Void)?) -> Void,
-        setVideoContentMode: @escaping(CALayerContentsGravity) -> Void
+        getAspect: @escaping () -> CGFloat,
+        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void,
+        setVideoContentMode: @escaping(CALayerContentsGravity) -> Void,
+        setForceMirrored: @escaping(Bool) -> Void
         ) {
         self.view = view
         self.setOnFirstFrameReceived = setOnFirstFrameReceived
         self.getOrientation = getOrientation
+        self.getAspect = getAspect
         self.setOnOrientationUpdated = setOnOrientationUpdated
         self.setVideoContentMode = setVideoContentMode
+        self.setForceMirrored = setForceMirrored
     }
 }
 
@@ -67,12 +74,8 @@ public final class OngoingCallContextVideoView {
 final class OngoingCallVideoCapturer {
     fileprivate let impl: OngoingCallThreadLocalContextVideoCapturer
     
-    public init() {
-        self.impl = OngoingCallThreadLocalContextVideoCapturer()
-    }
-    
-    public func switchCamera() {
-        self.impl.switchVideoCamera()
+    public init(_ deviceId: String = "") {
+        self.impl = OngoingCallThreadLocalContextVideoCapturer(deviceId: deviceId)
     }
     
     public func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
@@ -83,9 +86,22 @@ final class OngoingCallVideoCapturer {
                         view?.setOnFirstFrameReceived(f)
                     }, getOrientation: {
                         return .rotation90
-                    }, setOnOrientationUpdated: { _ in
-                    }, setVideoContentMode: { [weak view] mode in
+                    },
+                    getAspect: { [weak view] in
+                        if let view = view {
+                            return view.aspect
+                        } else {
+                            return 0.0
+                        }
+                    },
+                    setOnOrientationUpdated: { [weak view] f in
+                        
+                    },
+                    setVideoContentMode: { [weak view] mode in
                         view?.setVideoContentMode(mode)
+                    },
+                    setForceMirrored: { [weak view] mirrored in
+                        view?.setForceMirrored(mirrored)
                     }
                 ))
             } else {
@@ -98,11 +114,11 @@ final class OngoingCallVideoCapturer {
         self.impl.setIsVideoEnabled(value)
     }
 
-    public func enableScreenCast() {
-        self.impl.enableScreenCast()
+    public func enableScreenCapture() {
+        self.impl.switchVideoInput("screen_capture")
     }
-    public func disableScreenCast() {
-        self.impl.disableScreenCast()
+    public func disableScreenCapture() {
+        self.impl.switchVideoInput("")
     }
 }
 
@@ -335,14 +351,15 @@ private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeSetIsMuted(_ value: Bool)
     func nativeSetIsLowBatteryLevel(_ value: Bool)
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer)
+    func nativeSetRequestedVideoAspect(_ aspect: Float)
     func nativeDisableVideo()
     func nativeStop(_ completion: @escaping (String?, Int64, Int64, Int64, Int64) -> Void)
     func nativeBeginTermination()
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
-
 }
+
 
 private final class OngoingCallThreadLocalContextHolder {
     let context: OngoingCallThreadLocalContextProtocol
@@ -374,6 +391,9 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     }
     
     func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
+    }
+    func nativeSetRequestedVideoAspect(_ aspect: Float) {
+        
     }
     
     func nativeSetIsLowBatteryLevel(_ value: Bool) {
@@ -421,6 +441,9 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
         self.requestVideo(capturer.impl)
+    }
+    func nativeSetRequestedVideoAspect(_ aspect: Float) {
+        self.setRequestedVideoAspect(aspect)
     }
     
     func nativeDisableVideo() {
@@ -541,6 +564,9 @@ final class OngoingCallContext {
     private let audioSessionDisposable = MetaDisposable()
     private var networkTypeDisposable: Disposable?
     
+    private let tempLogFile: TempBoxFile
+    private let tempStatsLogFile: TempBoxFile
+    
     static var maxLayer: Int32 {
         return max(OngoingCallThreadLocalContext.maxLayer(), OngoingCallThreadLocalContextWebrtc.maxLayer())
     }
@@ -556,7 +582,7 @@ final class OngoingCallContext {
     }
 
     
-    init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, auxiliaryServers: [AuxiliaryServer], initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, video: OngoingCallVideoCapturer?, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, enableHighBitrateVideoCalls: Bool, logName: String) {
+    init(account: Account, callSessionManager: CallSessionManager, internalId: CallSessionInternalId, proxyServer: ProxyServerSettings?, initialNetworkType: NetworkType, updatedNetworkType: Signal<NetworkType, NoError>, serializedData: String?, dataSaving: VoiceCallDataSaving, derivedState: VoipDerivedState, key: Data, isOutgoing: Bool, video: OngoingCallVideoCapturer?, connections: CallSessionConnectionSet, maxLayer: Int32, version: String, allowP2P: Bool, enableTCP: Bool, enableStunMarking: Bool, logName: String, preferredVideoCodec: String?) {
         let _ = setupLogs
         OngoingCallThreadLocalContext.applyServerConfig(serializedData)
         OngoingCallThreadLocalContextWebrtc.applyServerConfig(serializedData)
@@ -566,7 +592,14 @@ final class OngoingCallContext {
         self.callSessionManager = callSessionManager
         self.logPath = logName.isEmpty ? "" : callLogsPath(account: self.account) + "/" + logName + ".log"
         let logPath = self.logPath
+        self.tempLogFile = TempBox.shared.tempFile(fileName: "CallLog.txt")
+        let tempLogPath = self.tempLogFile.path
         
+        
+        self.tempStatsLogFile = TempBox.shared.tempFile(fileName: "CallStats.json")
+        let tempStatsLogPath = self.tempStatsLogFile.path
+
+
         let queue = self.queue
         
         cleanupCallLogs(account: account)
@@ -599,9 +632,10 @@ final class OngoingCallContext {
                     }
                 }
                 
-                let context = OngoingCallThreadLocalContextWebrtc(version: version, queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, connections: filteredConnections, maxLayer: maxLayer, allowP2P: allowP2P, logPath: logPath, sendSignalingData: { [weak callSessionManager] data in
+                let context = OngoingCallThreadLocalContextWebrtc(version: version, queue: OngoingCallThreadLocalContextQueueImpl(queue: queue), proxy: voipProxyServer, networkType: ongoingNetworkTypeForTypeWebrtc(initialNetworkType), dataSaving: ongoingDataSavingForTypeWebrtc(dataSaving), derivedState: derivedState.data, key: key, isOutgoing: isOutgoing, connections: filteredConnections, maxLayer: maxLayer, allowP2P: allowP2P, allowTCP: enableTCP, enableStunMarking: enableStunMarking, logPath: tempLogPath, statsLogPath: tempStatsLogPath, sendSignalingData: { [weak callSessionManager] data in
                     callSessionManager?.sendSignalingData(internalId: internalId, data: data)
-                    }, videoCapturer: video?.impl, preferredAspectRatio: Float(System.cameraAspectRatio), enableHighBitrateVideoCalls: enableHighBitrateVideoCalls)
+                    }, videoCapturer: video?.impl, preferredVideoCodec: preferredVideoCodec)
+                
                 
                 self.contextRef = Unmanaged.passRetained(OngoingCallThreadLocalContextHolder(context))
                 context.stateChanged = { [weak self, weak callSessionManager] state, videoState, remoteVideoState, remoteAudioState, remoteBatteryLevel, remotePreferredAspectRatio in
@@ -786,6 +820,12 @@ final class OngoingCallContext {
         }
     }
     
+    public func setRequestedVideoAspect(_ aspect: Float) {
+        self.withContext { context in
+            context.nativeSetRequestedVideoAspect(aspect)
+        }
+    }
+    
     public func disableVideo() {
         self.withContext { context in
             context.nativeDisableVideo()
@@ -823,12 +863,21 @@ final class OngoingCallContext {
                                     return .rotation0
                                 }
                             },
+                            getAspect: { [weak view] in
+                                if let view = view {
+                                    return view.aspect
+                                } else {
+                                    return 0.0
+                                }
+                            },
                             setOnOrientationUpdated: { [weak view] f in
-                                view?.setOnOrientationUpdated { value in
-                                    f?(OngoingCallVideoOrientation(value))
+                                view?.setOnOrientationUpdated { value, aspect in
+                                    f?(OngoingCallVideoOrientation(value), aspect)
                                 }
                             }, setVideoContentMode: { [weak view] mode in
                                 view?.setVideoContentMode(mode)
+                            }, setForceMirrored: { [weak view] mirrored in
+                                view?.setForceMirrored(mirrored)
                             }
                         ))
                     } else {

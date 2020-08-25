@@ -466,7 +466,7 @@ class ChatInputActionsView: View, Notifable {
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
         let handler:(Control)->Void = { [weak chatInteraction] control in
-            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer, !peer.isSecretChat {
+            if let chatInteraction = chatInteraction, let peer = chatInteraction.peer {
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                     return
@@ -483,11 +483,13 @@ class ChatInputActionsView: View, Notifable {
                 }
                 switch chatInteraction.mode {
                 case .history:
-                    items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak chatInteraction] date in
-                            chatInteraction?.sendMessage(false, date)
-                        }), for: context.window)
-                    }))
+                    if !peer.isSecretChat {
+                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                            showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak chatInteraction] date in
+                                chatInteraction?.sendMessage(false, date)
+                            }), for: context.window)
+                        }))
+                    }
                 case .scheduled:
                     break
                 }

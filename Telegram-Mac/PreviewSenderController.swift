@@ -225,7 +225,7 @@ fileprivate class PreviewSenderView : Control {
         }, for: .SingleClick)
         
         let handler:(Control)->Void = { [weak self] control in
-            if let controller = self?.controller, let peer = controller.chatInteraction.peer, !peer.isSecretChat {
+            if let controller = self?.controller, let peer = controller.chatInteraction.peer {
                 
                 let chatInteraction = controller.chatInteraction
                 let context = chatInteraction.context
@@ -242,11 +242,13 @@ fileprivate class PreviewSenderView : Control {
                 }
                 switch chatInteraction.mode {
                 case .history:
-                    items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak controller] date in
-                            controller?.send(false, atDate: date)
-                        }), for: context.window)
-                    }))
+                    if !peer.isSecretChat {
+                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                            showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak controller] date in
+                                controller?.send(false, atDate: date)
+                            }), for: context.window)
+                        }))
+                    }
                 case .scheduled:
                     break
                 }

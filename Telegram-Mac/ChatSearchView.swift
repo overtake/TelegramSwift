@@ -88,7 +88,7 @@ class ChatSearchView: SearchView {
         }
     }
     
-    func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+    override func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(deleteBackward(_:)) {
             if query.isEmpty {
                 switch tokenState {

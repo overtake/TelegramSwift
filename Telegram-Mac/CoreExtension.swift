@@ -2628,6 +2628,20 @@ func requestMicrophonePermission() -> Signal<Bool, NoError> {
 func requestCameraPermission() -> Signal<Bool, NoError> {
     return requestMediaPermission(.video)
 }
+func requestScreenCapturPermission() -> Signal<Bool, NoError> {
+    return Signal { subscriber in
+        subscriber.putNext(screenCaptureAvailable())
+        subscriber.putCompletion()
+        return EmptyDisposable
+    } |> runOn(.mainQueue())
+}
+
+func screenCaptureAvailable() -> Bool {
+    let stream = CGDisplayStream(dispatchQueueDisplay: CGMainDisplayID(), outputWidth: 1, outputHeight: 1, pixelFormat: Int32(kCVPixelFormatType_32BGRA), properties: nil, queue: DispatchQueue.main, handler: { _, _, _, _ in
+    })
+    let result = stream != nil
+    return result
+}
 
 
 func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, NoError> {
@@ -2669,6 +2683,7 @@ enum SystemSettingsCategory : String {
     case microphone = "Privacy_Microphone"
     case camera = "Privacy_Camera"
     case storage = "Storage"
+    case sharing = "Privacy_ScreenCapture"
     case none = ""
 }
 
@@ -2679,7 +2694,7 @@ func openSystemSettings(_ category: SystemSettingsCategory) {
             NSWorkspace.shared.launchApplication("/System/Applications/Utilities/System Information.app")
            // [[NSWorkspace sharedWorkspace] launchApplication:@"/Applications/Safari.app"];
        // }
-    case .microphone, .camera:
+    case .microphone, .camera, .sharing:
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
             NSWorkspace.shared.open(url)
         }

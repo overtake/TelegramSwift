@@ -97,7 +97,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
-    var requestMessageActionCallback:(MessageId, Bool, MemoryBuffer?) -> Void = {_,_,_  in}
+    var requestMessageActionCallback:(MessageId, Bool, (requiresPassword: Bool, data: MemoryBuffer)?) -> Void = {_,_,_  in}
     var inlineAudioPlayer:(APController) -> Void = {_ in} 
     var movePeerToInput:(Peer) -> Void = {_ in}
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}

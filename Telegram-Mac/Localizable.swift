@@ -481,6 +481,16 @@ internal final class L10n {
   internal static func botInlineAuthOptionLogin(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Bot.InlineAuth.Option.Login", p1, p2)
   }
+  /// Enable 2-Step Verification.
+  internal static var botTransferOwnerErrorEnable2FA: String  { return L10n.tr("Localizable", "Bot.TransferOwner.Error.Enable2FA") }
+  /// Ownership transfers are only available if:\n\n• 2-Step Verification was enabled for your account more than 7 days ago.\n\n• You have logged in on this device more than 24 hours ago.\n\nPlease come back later.
+  internal static var botTransferOwnerErrorText: String  { return L10n.tr("Localizable", "Bot.TransferOwner.Error.Text") }
+  /// Security Check
+  internal static var botTransferOwnerErrorTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwner.Error.Title") }
+  /// Please enter your 2-Step verification password to complete the transfer.
+  internal static var botTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Desc") }
+  /// Two-Step Verification
+  internal static var botTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Title") }
   /// Hide Telegram
   internal static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
   /// Accept
@@ -503,8 +513,10 @@ internal final class L10n {
   internal static func callPrivacyErrorMessage(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.PrivacyErrorMessage", p1)
   }
-  /// Recall
+  /// Redial
   internal static var callRecall: String  { return L10n.tr("Localizable", "Call.Recall") }
+  /// Screen
+  internal static var callScreen: String  { return L10n.tr("Localizable", "Call.Screen") }
   /// %d
   internal static func callShortMinutesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Call.ShortMinutes_countable", p1)
@@ -599,8 +611,10 @@ internal final class L10n {
   internal static var callRecentMissed: String  { return L10n.tr("Localizable", "Call.Recent.Missed") }
   /// Outgoing
   internal static var callRecentOutgoing: String  { return L10n.tr("Localizable", "Call.Recent.Outgoing") }
-  /// Sorry, you can’t make a call on the same device.
+  /// Sorry, you can’t make a call between two accounts on the same device.
   internal static var callSameDeviceError: String  { return L10n.tr("Localizable", "Call.SameDevice.Error") }
+  /// Telegram needs access for Screen Sharing.
+  internal static var callScreenError: String  { return L10n.tr("Localizable", "Call.Screen.Error") }
   /// %@'s camera is off
   internal static func callToastCameraOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.CameraOff", p1)
