@@ -15,7 +15,7 @@ import SwiftSignalKit
 import TgVoipWebrtc
 
 
-private let defaultWindowSize = NSMakeSize(385, 550)
+private let defaultWindowSize = NSMakeSize(720, 560)
 
 extension CallState {
     func videoIsAvailable(_ isVideo: Bool) -> Bool {
@@ -98,6 +98,7 @@ private class PhoneCallWindowView : View {
     
     let b_Mute:CallControl = CallControl(frame: .zero)
     let b_VideoCamera:CallControl = CallControl(frame: .zero)
+    let b_ScreenShare:CallControl = CallControl(frame: .zero)
 
     let muteControl:ImageButton = ImageButton()
     private var textNameView: NSTextField = NSTextField()
@@ -189,6 +190,7 @@ private class PhoneCallWindowView : View {
         
         
         basicControls.addSubview(b_VideoCamera)
+        basicControls.addSubview(b_ScreenShare)
         basicControls.addSubview(b_Mute)
         
         
@@ -291,26 +293,26 @@ private class PhoneCallWindowView : View {
         
     }
     
-    func updateOutgoingAspectRatio(_ aspectRatio: CGFloat, animated: Bool) {
-        if aspectRatio > 0, !outgoingVideoView.isEventLess, self.outgoingAspectRatio != aspectRatio {
-            var rect = outgoingVideoView.frame
-            let closest: CGFloat = 150
-            rect.size = NSMakeSize(floor(closest * aspectRatio), closest)
-            
-            let dif = outgoingVideoView.frame.size - rect.size
-            
-            rect.origin = rect.origin.offsetBy(dx: dif.width / 2, dy: dif.height / 2)
-            
-            if !outgoingVideoView.isMoved {
-                let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
-                rect.origin = NSMakePoint(frame.width - rect.width - 20, frame.height - 140 - rect.height - addition)
-            }
-            
-            outgoingVideoView.updateFrame(rect, animated: animated)
-        }
-        self.outgoingAspectRatio = aspectRatio
-    }
-    
+//    func updateOutgoingAspectRatio(_ aspectRatio: CGFloat, animated: Bool) {
+//        if aspectRatio > 0, !outgoingVideoView.isEventLess, self.outgoingAspectRatio != aspectRatio {
+//            var rect = outgoingVideoView.frame
+//            let closest: CGFloat = 150
+//            rect.size = NSMakeSize(floor(closest * aspectRatio), closest)
+//
+//            let dif = outgoingVideoView.frame.size - rect.size
+//
+//            rect.origin = rect.origin.offsetBy(dx: dif.width / 2, dy: dif.height / 2)
+//
+//            if !outgoingVideoView.isMoved {
+//                let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
+//                rect.origin = NSMakePoint(frame.width - rect.width - 20, frame.height - 140 - rect.height - addition)
+//            }
+//
+//            outgoingVideoView.updateFrame(rect, animated: animated)
+//        }
+//        self.outgoingAspectRatio = aspectRatio
+//    }
+//
     
     private func mainControlY(_ control: NSView) -> CGFloat {
         return controls.frame.height - control.frame.height - 40
@@ -383,7 +385,7 @@ private class PhoneCallWindowView : View {
                 x += activeView.size.width + 45
             }
         case .terminating:
-            acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
+            acceptControl.setFrameOrigin(frame.midX + 45,  mainControlY(acceptControl))
         case let .terminated(_, reason, _):
             if let reason = reason, reason.recall {
                 
@@ -394,8 +396,9 @@ private class PhoneCallWindowView : View {
                     activeView.setFrameOrigin(NSMakePoint(x, 0))
                     x += activeView.size.width + 45
                 }
-                acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
-                declineControl.setFrameOrigin(80,  mainControlY(acceptControl))
+                
+                acceptControl.setFrameOrigin(frame.midX + 25,  mainControlY(acceptControl))
+                declineControl.setFrameOrigin(frame.midX - 25 - declineControl.frame.width,  mainControlY(acceptControl))
             } else {
                 let activeViews = self.allActiveControlsViews
                 let restWidth = self.allControlRestWidth
@@ -406,8 +409,8 @@ private class PhoneCallWindowView : View {
                 }
             }
         case .ringing:
-            declineControl.setFrameOrigin(80, mainControlY(declineControl))
-            acceptControl.setFrameOrigin(frame.width - acceptControl.frame.width - 80,  mainControlY(acceptControl))
+            declineControl.setFrameOrigin(frame.midX - 25 - declineControl.frame.width, mainControlY(declineControl))
+            acceptControl.setFrameOrigin(frame.midX + 25,  mainControlY(acceptControl))
             
             let activeViews = self.activeControlsViews
             
@@ -538,18 +541,14 @@ private class PhoneCallWindowView : View {
                 self.outgoingVideoViewRequested = true
                 self.outgoingVideoView._cameraInitialized.set(.initializing)
                 outgoingCameraInitialized = .initializing
-                if possible {
-                    session.makeOutgoingVideoView(completion: { [weak self] view in
-                        if let view = view, let `self` = self {
-                            self.outgoingVideoView.videoView = (view, possible)
-                            self.outgoingVideoView.firstFrameHandler = { [weak self] in
-                                self?.outgoingVideoView.unhideView(animated: animated)
-                            }
+                session.makeOutgoingVideoView(completion: { [weak self] view in
+                    if let view = view, let `self` = self {
+                        self.outgoingVideoView.videoView = (view, possible)
+                        self.outgoingVideoView.firstFrameHandler = { [weak self] in
+                            self?.outgoingVideoView.unhideView(animated: animated)
                         }
-                    })
-                } else {
-                    self.outgoingVideoView.videoView = (nil, possible)
-                }
+                    }
+                })
             }
         case .inactive, .paused:
             self.outgoingVideoViewRequested = false
@@ -559,24 +558,43 @@ private class PhoneCallWindowView : View {
         default:
             break
         }
-        
+        self.outgoingVideoView.videoView?.0?.setForceMirrored(!state.isScreenCapture)
+
         let inputCameraIsActive: Bool
         switch state.videoState {
-        case .active:
-            inputCameraIsActive = !state.isOutgoingVideoPaused
+        case let .active(possible):
+            inputCameraIsActive = !state.isOutgoingVideoPaused && possible
         default:
             inputCameraIsActive = false
         }
+        
+        if outgoingCameraInitialized == .initializing {
+            self.b_VideoCamera.updateEnabled(false, animated: animated)
+            self.b_ScreenShare.updateEnabled(false, animated: animated)
+        } else {
+            self.b_VideoCamera.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
+            self.b_ScreenShare.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
+        }
+        
         self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, isVisualEffect: !inputCameraIsActive, icon: inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
         self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         
-        self.b_VideoCamera.isHidden = !session.isVideoPossible || !session.isVideoAvailable
-        self.b_VideoCamera.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
         self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
         
-        self.b_VideoCamera.updateLoading(outgoingCameraInitialized == .initializing, animated: animated)
+        self.b_VideoCamera.updateLoading(outgoingCameraInitialized == .initializing && !state.isScreenCapture, animated: animated)
+        self.b_VideoCamera.isHidden = !session.isVideoPossible
 
+        
+        self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, isVisualEffect: !state.isScreenCapture, icon: state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        self.b_ScreenShare.updateLoading(outgoingCameraInitialized == .initializing && state.isScreenCapture, animated: animated)
+        
+        self.b_ScreenShare.isHidden = !session.isVideoPossible
+
+
+       
+
+        
         self.state = state
         self.statusView.status = state.state.statusText(accountPeer, state.videoState)
         
@@ -626,8 +644,8 @@ private class PhoneCallWindowView : View {
                 declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: animated)
 
 
-                acceptControl.change(pos: NSMakePoint(frame.width - acceptControl.frame.width - 80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
-                declineControl.change(pos: NSMakePoint(80, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
+                acceptControl.change(pos: NSMakePoint(frame.midX + 25, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
+                declineControl.change(pos: NSMakePoint(frame.midX - 25 - declineControl.frame.width, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
                 
                 _ = activeControlsViews.map {
                     $0.updateEnabled(false, animated: animated)
@@ -930,14 +948,14 @@ class PhoneCallWindowController {
                 strongSelf.applyState(state, session: strongSelf.session!, outgoingCameraInitialized: outgoingCameraInitialized, incomingCameraInitialized: incomingCameraInitialized, accountPeer: accountPeer, peer: peer, animated: !strongSelf.first)
                 strongSelf.first = false
                 
-                strongSelf.updateOutgoingAspectRatio(state.remoteAspectRatio)
+//                strongSelf.updateOutgoingAspectRatio(state.remoteAspectRatio)
             }
         }))
         
-        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
-            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
-            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
-        }
+//        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
+//            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
+//            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
+//        }
     }
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
@@ -962,7 +980,7 @@ class PhoneCallWindowController {
         let size = defaultWindowSize
         if let screen = NSScreen.main {
             self.window = Window(contentRect: NSMakeRect(floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2), floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2), size.width, size.height), styleMask: [.fullSizeContentView, .borderless, .resizable, .miniaturizable, .titled], backing: .buffered, defer: true, screen: screen)
-            self.window.minSize = size
+            self.window.minSize = NSMakeSize(400, 580)
             self.window.isOpaque = true
             self.window.backgroundColor = .black
         } else {
@@ -992,12 +1010,37 @@ class PhoneCallWindowController {
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
             if let `self` = self, let callState = self.state {
                 switch callState.videoState {
-                case .active, .paused:
-                    self.session.disableVideo()
-                case .inactive:
-                    self.session.requestVideo()
+                case .active, .paused, .inactive(true):
+                    if callState.isOutgoingVideoPaused || callState.isScreenCapture {
+                        self.session.requestVideo()
+                    } else {
+                        self.session.disableVideo()
+                    }
                 case .notAvailable:
                     break
+                default:
+                    break
+                }
+            }
+        }, for: .Click)
+        
+        self.view.b_ScreenShare.set(handler: { [weak self] _ in
+            guard let window = self?.window else {
+                return
+            }
+            let result = self?.session.toggleScreenCapture()
+            
+            if let result = result {
+                switch result {
+                case .permission:
+                    confirm(for: window, information: L10n.callScreenError, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            openSystemSettings(.sharing)
+                        default:
+                            break
+                        }
+                    })
                 }
             }
         }, for: .Click)
@@ -1014,13 +1057,13 @@ class PhoneCallWindowController {
                 switch state.state {
                 case let .terminated(_, reason, _):
                     if let reason = reason, reason.recall {
-                        closeCall()
+                        self?.session.setToRemovableState()
                     }
                 default:
                     self?.session.hangUpCurrentCall()
                 }
             } else {
-                closeCall()
+                self?.session.setToRemovableState()
             }
         }, for: .Click)
         
@@ -1050,20 +1093,10 @@ class PhoneCallWindowController {
             return .rejected
         }, with: self.view, for: .mouseExited)
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
-            
-            self?.session.toggleScreenCast()
-            
-            return .invoked
-        }, with: self.view, for: .S)
         
         
         window.onToggleFullScreen = { [weak self] value in
-            if value {
-                self?.view.incomingVideoView.videoView?.setVideoContentMode(.resizeAspect)
-            } else {
-                self?.view.incomingVideoView.videoView?.setVideoContentMode(.resizeAspectFill)
-            }
+            self?.view.incomingVideoView.videoView?.setVideoContentMode(.resizeAspect)
         }
         
         
@@ -1072,7 +1105,7 @@ class PhoneCallWindowController {
         }, for: .Click)
 
         window.animationBehavior = .utilityWindow
-        updateIncomingAspectRatio(0.7)
+       // updateIncomingAspectRatio(Float(System.cameraAspectRatio))
     }
     
     private func recall() {
@@ -1113,13 +1146,13 @@ class PhoneCallWindowController {
         }
     }
     
-    private var outgoingAspectRatio: Float = 0
-    private func updateOutgoingAspectRatio(_ aspectRatio: Float) {
-        if aspectRatio > 0 && self.outgoingAspectRatio != aspectRatio {
-            self.outgoingAspectRatio = aspectRatio
-            self.view.updateOutgoingAspectRatio(CGFloat(aspectRatio), animated: true)
-        }
-    }
+//    private var outgoingAspectRatio: Float = 0
+//    private func updateOutgoingAspectRatio(_ aspectRatio: Float) {
+//        if aspectRatio > 0 && self.outgoingAspectRatio != aspectRatio {
+//            self.outgoingAspectRatio = aspectRatio
+//            self.view.updateOutgoingAspectRatio(CGFloat(aspectRatio), animated: true)
+//        }
+//    }
     
     
     @objc open func windowDidBecomeKey() {
@@ -1164,13 +1197,13 @@ class PhoneCallWindowController {
                 disposable.set((session.account.postbox.loadedPeerWithId(session.peerId) |> deliverOnMainQueue).start(next: { peer in
                     switch error {
                     case .privacyRestricted:
-                        alert(for: mainWindow, info: L10n.callPrivacyErrorMessage(peer.compactDisplayTitle))
+                        alert(for: self.window, info: L10n.callPrivacyErrorMessage(peer.compactDisplayTitle))
                     case .notSupportedByPeer:
-                        alert(for: mainWindow, info: L10n.callParticipantVersionOutdatedError(peer.compactDisplayTitle))
+                        alert(for: self.window, info: L10n.callParticipantVersionOutdatedError(peer.compactDisplayTitle))
                     case .serverProvided(let serverError):
-                        alert(for: mainWindow, info: serverError)
+                        alert(for: self.window, info: serverError)
                     case .generic:
-                        alert(for: mainWindow, info: L10n.callUndefinedError)
+                        alert(for: self.window, info: L10n.callUndefinedError)
                     default:
                         break
                     }
@@ -1185,6 +1218,17 @@ class PhoneCallWindowController {
         }
         self.ready.set(.single(true))
 
+        switch state.state {
+        case .terminating, .terminated:
+            self.window.styleMask.insert(.closable)
+            self.window.closeInterceptor = { [weak self] in
+                self?.session.setToRemovableState()
+                return true
+            }
+        default:
+            self.window.styleMask.remove(.closable)
+        }
+       
     }
     
     deinit {
@@ -1220,6 +1264,7 @@ class PhoneCallWindowController {
                 let fullReady: Signal<Bool, NoError>
                 if self.session.isVideo {
                     fullReady = self.view.outgoingVideoView.cameraInitialized
+                        |> timeout(5.0, queue: .mainQueue(), alternate: .single(.inited))
                         |> map { $0 == .inited }
                         |> filter { $0 }
                         |> take(1)

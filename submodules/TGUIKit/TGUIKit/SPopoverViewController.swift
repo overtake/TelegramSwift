@@ -128,6 +128,10 @@ public class SPopoverViewController: GenericViewController<TableView> {
     }
     
     
+    public override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
     public override func viewWillAppear(_ animated: Bool) {
         
     }

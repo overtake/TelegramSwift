@@ -565,7 +565,12 @@ func initialize() -> [String] {
     array.append("call_tooltip_battery_low")
     array.append("call_tooltip_camera_off")
     array.append("call_tooltip_micro_off")
+    
+    array.append("call_screen_sharing")
+    array.append("call_screen_sharing_active")
 
+    
+    array.append("search_filter")
     
     return array
 }

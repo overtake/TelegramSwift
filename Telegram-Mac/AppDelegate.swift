@@ -102,7 +102,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
-              
+        
+
+        
         initializeSelectManager()
         startLottieCacheCleaner()
         
@@ -116,6 +118,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
         
         self.containerUrl = containerUrl.path
+        
+        TempBox.initializeShared(basePath: self.containerUrl, processType: "app", launchSpecificId: arc4random64())
+        
 
         let v = View()
         v.flip = false

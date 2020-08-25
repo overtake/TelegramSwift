@@ -2264,7 +2264,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                inline_audio_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
                                                call_tooltip_battery_low: { NSImage(named: "Icon_Call_BatteryLow")!.precomposed(.white) },
                                                call_tooltip_camera_off: { NSImage(named: "Icon_Call_CameraOff")!.precomposed(.white) },
-                                               call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) }
+                                               call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) },
+                                               call_screen_sharing: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.white) },
+                                               call_screen_sharing_active: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.grayIcon) },
+                                               search_filter: { NSImage(named: "Icon_SearchFilter")!.precomposed(palette.grayIcon) }
 
     )
 

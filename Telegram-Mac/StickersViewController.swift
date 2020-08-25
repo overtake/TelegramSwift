@@ -732,8 +732,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let peer = value.peer, let oldPeer = oldValue.peer {
-            if permissionText(from: peer, for: .banSendStickers) != permissionText(from: oldPeer, for: .banSendStickers) {
+        if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
+            if let peer = value.peer, let oldPeer = oldValue.peer {
+                if permissionText(from: peer, for: .banSendStickers) != permissionText(from: oldPeer, for: .banSendStickers) {
+                    genericView.updateRestricion(peer)
+                }
+            } else if (oldValue.peer != nil) != (value.peer != nil), let peer = value.peer {
                 genericView.updateRestricion(peer)
             }
         }

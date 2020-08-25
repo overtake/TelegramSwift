@@ -10,6 +10,7 @@ import Cocoa
 import SwiftSignalKit
 
 
+
 public class SearchTextField: NSTextView {
     
     @available(OSX 10.12.2, *)
@@ -67,18 +68,91 @@ public final class SearchInteractions {
     }
 }
 
+public final class CustomSearchController {
+    
+    fileprivate var clickHandlerIdentifier: UInt32 = 0
+    fileprivate let icon: CGImage
+    public let clickHandler:(Control, @escaping(String?)->Void)->Void
+    fileprivate let dropFilter:()->Void
+    public init(clickHandler:@escaping(Control, @escaping(String?)->Void)->Void, dropFilter:@escaping()->Void, icon: CGImage) {
+        self.clickHandler = clickHandler
+        self.icon = icon
+        self.dropFilter = dropFilter
+    }
+    
+}
+
 open class SearchView: OverlayControl, NSTextViewDelegate {
     
     public private(set) var state:SearchFieldState = .None
     
+    
+    private func updateFilterTitle(_ title: String?) {
+        if let filterButton = self.filterButton {
+            self.filterButton = nil
+            filterButton.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak filterButton] _ in
+                filterButton?.removeFromSuperview()
+            })
+        }
+        if let title = title {
+            let filterButton = TitleButton()
+            filterButton.animates = false
+            filterButton.set(font: .normal(12), for: .Normal)
+            filterButton.set(color: presentation.colors.underSelectedColor, for: .Normal)
+            filterButton.set(background: presentation.colors.accent.withAlphaComponent(0.9), for: .Normal)
+            filterButton.set(text: title, for: .Normal)
+            
+            filterButton.set(background: presentation.colors.accent, for: .Highlight)
+
+            
+            filterButton.set(handler: { control in
+                control.isSelected = !control.isSelected
+            }, for: .Click)
+            
+            
+            _ = filterButton.sizeToFit(NSMakeSize(6, 6), thatFit: false)
+            filterButton.layer?.cornerRadius = 6
+            addSubview(filterButton)
+            filterButton.centerY(x: 35)
+            self.filterButton = filterButton
+            filterButton.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+        }
+        
+        inputContainer._change(pos: NSMakePoint(placeholderTextInset + 8, inputContainer.frame.minY), animated: true)
+        
+        let pHidden = !input.string.isEmpty || filterButton != nil
+        if placeholder.isHidden != pHidden {
+            placeholder.isHidden = pHidden
+        }
+    }
+    
+    public var customSearchControl: CustomSearchController? {
+        didSet {
+            if let oldValue = oldValue {
+                search.removeHandler(oldValue.clickHandlerIdentifier)
+                search.set(image: presentation.search.searchImage, for: .Normal)
+                updateFilterTitle(nil)
+            }
+            if let customSearchControl = customSearchControl {
+                customSearchControl.clickHandlerIdentifier = search.set(handler: { [weak customSearchControl, weak self] control in
+                    customSearchControl?.clickHandler(control, { title in
+                        self?.updateFilterTitle(title)
+                    })
+                }, for: .Click)
+                search.set(image: customSearchControl.icon, for: .Normal)
+            }
+        }
+    }
     
 
     private(set) public var input:NSTextView = SearchTextField()
     
     private var lock:Bool = false
     
+    private var filterButton: TitleButton?
+    
     private let clear:ImageButton = ImageButton()
-    private let search:ImageView = ImageView()
+    private let search:ImageButton = ImageButton()
     private let progressIndicator:ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
     private let placeholder:TextViewLabel = TextViewLabel()
     
@@ -118,8 +192,14 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
         placeholder.sizeToFit()
-        search.frame = NSMakeRect(0, 0, presentation.search.searchImage.backingSize.width, presentation.search.searchImage.backingSize.height)
-        search.image = presentation.search.searchImage
+        search.frame = NSMakeRect(0, 0, 20, 20)
+        
+        if let custom = customSearchControl {
+            search.set(image: custom.icon, for: .Normal)
+        } else {
+            search.set(image: presentation.search.searchImage, for: .Normal)
+        }
+        
         animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(21, search.frame.height)))
         
         clear.set(image: presentation.search.clearImage, for: .Normal)
@@ -138,13 +218,17 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open var placeholderTextInset: CGFloat {
-        return startTextInset
+        if let filterButton = filterButton {
+            return startTextInset + filterButton.frame.width + 5
+        } else {
+            return startTextInset
+        }
     }
     
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.backgroundColor = .grayBackground
-        self.layer?.cornerRadius = 10
+        self.layer?.cornerRadius = 6
         if #available(OSX 10.12.2, *) {
             input.allowsCharacterPickerTouchBarItem = false
         } 
@@ -189,6 +273,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.centerY(x: NSWidth(search.frame) + inset / 2, addition: -1)
         search.centerY(addition: -1)
         
+        search.animates = false
+        search.isEventLess = true
+        
         inputContainer.addSubview(input)
         addSubview(animateContainer)
         addSubview(inputContainer)
@@ -229,8 +316,14 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     open func cancelSearch() {
         if self.query.isEmpty {
-            self.change(state: .None, true)
+            if filterButton != nil {
+                updateFilterTitle(nil)
+                customSearchControl?.dropFilter()
+            } else {
+                self.change(state: .None, true)
+            }
         } else {
+            
             self.setString("")
         }
     }
@@ -260,7 +353,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         _searchValue.set(value)
         
 
-        let pHidden = !input.string.isEmpty
+        let pHidden = !input.string.isEmpty || filterButton != nil
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
@@ -269,9 +362,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         let iHidden = !(state == .Focus && !input.string.isEmpty)
         if input.isHidden != iHidden {
-          //  input.isHidden = iHidden
             window?.makeFirstResponder(input)
         }
+        
+        filterButton?.isSelected = false
     }
     
     open override func mouseUp(with event: NSEvent) {
@@ -287,6 +381,21 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
+    open func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        if commandSelector == #selector(deleteBackward(_:)) {
+            if query.isEmpty, let filterButton = filterButton {
+                if filterButton.isSelected {
+                    updateFilterTitle(nil)
+                    customSearchControl?.dropFilter()
+                } else {
+                    filterButton.isSelected = true
+                }
+                return true
+            }
+        }
+        
+        return false
+    }
     
     public func textViewDidChangeSelection(_ notification: Notification) {
         if let storage = input.textStorage {
@@ -396,6 +505,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         if state != self.state && !lock {
             self.state = state
             
+            search.isEventLess = state != .Focus
+            search.userInteractionEnabled = state == .Focus
+            
             let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
             let value = SearchState(state: state, request: state == .None ? nil : text, responder: self.input == window?.firstResponder)
             searchInteractions?.stateModified(value, animated)
@@ -413,7 +525,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
 
-                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - inputInset - inset - clear.frame.width - 6, animateContainer.frame.height)
+                //NSMakeSize(
+                
+                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - (inset * 3) - (clear.frame.width * 2) - (filterButton != nil ? filterButton!.frame.width + 10 : 0), animateContainer.frame.height)
                 input.frame = inputContainer.bounds
                 
                 input.isHidden = false
@@ -528,7 +642,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.centerY(addition: -1)
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
-        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2), inputContainer.frame.height))
+        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2) - (filterButton != nil ? filterButton!.frame.width + 10 : 0), inputContainer.frame.height))
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
         search.centerY(addition: -1)
     }

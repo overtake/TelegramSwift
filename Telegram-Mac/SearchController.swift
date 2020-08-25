@@ -439,6 +439,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     private let isRevealed: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     
+    private let globalTagsValue: ValuePromise<MessageTags?> = ValuePromise(nil, ignoreRepeated: true)
+    
     var pinnedItems:[PinnedItemId] = [] {
         didSet {
             pinnedPromise.set(pinnedItems)
@@ -447,6 +449,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     let isLoading = Promise<Bool>(false)
     
+    
+    public func updateSearchTags(_ globalTags: MessageTags?) {
+        self.globalTagsValue.set(globalTags)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -471,8 +477,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         let atomicSize = self.atomicSize
         let previousSearchItems = Atomic<[AppearanceWrapperEntry<ChatListSearchEntry>]>(value: [])
         let groupId: PeerGroupId = self.groupId
-        let searchItems = searchQuery.get() |> mapToSignal { query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
-            if let query = query, !query.isEmpty {
+        let searchItems = combineLatest(globalTagsValue.get(), searchQuery.get()) |> mapToSignal { globalTags, query -> Signal<([ChatListSearchEntry], Bool, Bool, SearchMessagesState?), NoError> in
+            let query = query ?? ""
+            if !query.isEmpty || globalTags != nil {
                 
 
                 var ids:[PeerId:PeerId] = [:]
@@ -514,7 +521,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }
                 
                 
-                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
+                let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = query.hasPrefix("#") || !options.contains(.chats) || globalTags != nil ? .single([]) : combineLatest(localPeers, context.account.postbox.loadedPeerWithId(context.peerId), foundQueryPeers.get())
                     |> map { peers, accountPeer, inLinkPeer -> [ChatListSearchEntry] in
                         var entries: [ChatListSearchEntry] = []
                         
@@ -559,11 +566,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     location = .group(groupId)
                     foundRemotePeers = .single(([], [], false))
                 } else if query.hasPrefix("#") || !options.contains(.chats) {
-                    location = .general
+                    location = .general(tags: globalTags)
                     foundRemotePeers = .single(([], [], false))
                 } else {
-                    location = .general
-                    foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
+                    location = .general(tags: globalTags)
+                    if globalTags == nil {
+                        foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
                             |> delay(0.2, queue: prepareQueue)
                             |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                 
@@ -610,6 +618,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 }
                                 return (local, remote, false)
                             })
+                    } else {
+                        foundRemotePeers = .single(([], [], false))
+                    }
                 }
                 
                 searchMessagesState.set(nil)

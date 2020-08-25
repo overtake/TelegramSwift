@@ -727,7 +727,6 @@ class ChannelAdminController: TableModalViewController {
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0)
                         }
                     }), for: context.window)
-                    
                 }
                 
                 let transfer:(PeerId, Bool, Bool)->Void = { _peerId, isGroup, convert in
@@ -741,15 +740,15 @@ class ChannelAdminController: TableModalViewController {
                             errorText = L10n.inviteChannelsTooMuch
                         case .authSessionTooFresh:
                             errorText = L10n.channelTransferOwnerErrorText
-                        case .invalidPassword:
-                            preconditionFailure()
-                        case .requestPassword:
-                            errorText = nil
                         case .twoStepAuthMissing:
                             errorText = L10n.channelTransferOwnerErrorText
                             install2Fa = true
                         case .twoStepAuthTooFresh:
                             errorText = L10n.channelTransferOwnerErrorText
+                        case .invalidPassword:
+                            preconditionFailure()
+                        case .requestPassword:
+                            errorText = nil
                         case .restricted, .userBlocked:
                             errorText = isGroup ? L10n.groupTransferOwnerErrorPrivacyRestricted : L10n.channelTransferOwnerErrorPrivacyRestricted
                         case .adminsTooMuch:

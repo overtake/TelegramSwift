@@ -21,7 +21,6 @@
 		D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E024A5001300C7D03A /* CoreMedia.framework */; };
 		D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E224A5001800C7D03A /* AVFoundation.framework */; };
 		D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */; };
-		D0D4CD8124EC6CF80017D48D /* DesktopCapturer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */; };
 		D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */; };
 		D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D751A324BE372F0037D73A /* AppKit.framework */; };
@@ -364,7 +363,6 @@
 				D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
-				D0D4CD8124EC6CF80017D48D /* DesktopCapturer.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,

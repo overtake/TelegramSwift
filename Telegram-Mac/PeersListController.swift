@@ -295,6 +295,8 @@ class PeerListContainerView : View {
         addSubview(backgroundView)
         backgroundView.isHidden = true
         
+
+        
         tableView.getBackgroundColor = {
             .clear
         }
@@ -322,11 +324,57 @@ class PeerListContainerView : View {
         needsLayout = true
     }
     
-    func searchStateChanged(_ state: SearchFieldState, animated: Bool) {
+    
+    func searchStateChanged(_ state: SearchFieldState, animated: Bool, updateSearchTags: @escaping(MessageTags?)->Void) {
         self.searchState = state
         searchView.change(size: NSMakeSize(state == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
+        
+        var currentTag: MessageTags?
+
+        
+        switch state {
+        case .Focus:
+            searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
+                
+                
+                var items: [SPopoverItem] = []
+
+                let tags:[(MessageTags?, String)] = [(nil, "Clear Filter"),
+                                                    (.photo, "Photos"),
+                                                    (.video, "Videos"),
+                                                    (.webPage, "Links"),
+                                                    (.music, "Music"),
+                                                    (.gif, "GIFs"),
+                                                    (.file, "Files")]
+                
+                for tag in tags {
+                    var append: Bool = false
+                    if currentTag != tag.0 {
+                        append = true
+                    }
+                    if append {
+                        items.append(SPopoverItem(tag.1, {
+                            currentTag = tag.0
+                            updateSearchTags(currentTag)
+                            if tag.0 == nil {
+                                updateTitle(nil)
+                            } else {
+                                updateTitle(tag.1)
+                            }
+                        }))
+                    }
+                }
+                
+                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
+            }, dropFilter: {
+                currentTag = nil
+                updateSearchTags(currentTag)
+            }, icon: theme.icons.search_filter)
+        case .None:
+            searchView.customSearchControl = nil
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -616,7 +664,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
             guard let `self` = self else {return}
-            self.genericView.searchStateChanged(state.state, animated: animated)
             switch state.state {
             case .Focus:
                 assert(self.searchController == nil)
@@ -625,7 +672,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             case .None:
                 self.hideSearchController(animated: animated)
             }
-            
+            self.genericView.searchStateChanged(state.state, animated: animated, updateSearchTags: { [weak self] tags in
+                self?.searchController?.updateSearchTags(tags)
+            })
+
         }, { [weak self] state in
             guard let `self` = self else {return}
             self.searchController?.request(with: state.request)

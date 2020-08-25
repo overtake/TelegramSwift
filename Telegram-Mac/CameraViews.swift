@@ -36,57 +36,40 @@ final class OutgoingVideoView : Control {
     var videoView: (OngoingCallContextVideoView?, Bool)? {
         didSet {
             self._cameraInitialized.set(.initializing)
-            if videoView?.1 == false {
-                self.backgroundColor = .black
-                if notAvailableView == nil {
-                    let current = TextView()
-                    self.notAvailableView = current
-                    let text = L10n.callCameraUnavailable
-                    let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(13), textColor: .white), bold: MarkdownAttributeSet(font: .bold(13), textColor: .white), link: MarkdownAttributeSet(font: .normal(13), textColor: .link), linkAttribute: { contents in
-                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in
-                            openSystemSettings(.camera)
-                        }))
-                    })).mutableCopy() as! NSMutableAttributedString
-                    
-                    let layout = TextViewLayout(attributedText, maximumNumberOfLines: 2, alignment: .center)
-                    layout.interactions = globalLinkExecutor
-                    current.isSelectable = false
-                    current.update(layout)
-                    
-                    self.notAvailableView = current
-                    addSubview(current, positioned: .below, relativeTo: overlay)
+            if let value = videoView, let videoView = value.0 {
+                
+                videoView.setVideoContentMode(.resizeAspectFill)
+                
+                addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
+                videoView.view.frame = self.bounds
+                videoView.view.layer?.cornerRadius = .cornerRadius
+                
+                let oldView = oldValue?.0?.view
+                
+                videoView.setOnFirstFrameReceived({ [weak self, weak oldView] aspectRatio in
+                    guard let `self` = self else {
+                        return
+                    }
                     self._cameraInitialized.set(.inited)
+                    if !self._hidden {
+                        self.backgroundColor = .clear
+                        oldView?.removeFromSuperview()
+                        if let progressIndicator = self.progressIndicator {
+                            self.progressIndicator = nil
+                            progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
+                                progressIndicator?.removeFromSuperview()
+                            })
+                        }
+                        self.updateAspectRatio?(aspectRatio)
+                    }
                     self.firstFrameHandler?()
+                })
+                
+                if !value.1 {
+                    self._cameraInitialized.set(.inited)
                 }
             } else {
-                if let videoView = videoView?.0 {
-                    addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
-                    videoView.view.frame = self.bounds
-                    videoView.view.layer?.cornerRadius = .cornerRadius
-                    
-                    let oldView = oldValue?.0?.view
-                    
-                    videoView.setOnFirstFrameReceived({ [weak self, weak oldView] aspectRatio in
-                        guard let `self` = self else {
-                            return
-                        }
-                        self._cameraInitialized.set(.inited)
-                        if !self._hidden {
-                            self.backgroundColor = .clear
-                            oldView?.removeFromSuperview()
-                            if let progressIndicator = self.progressIndicator {
-                                self.progressIndicator = nil
-                                progressIndicator.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressIndicator] _ in
-                                    progressIndicator?.removeFromSuperview()
-                                })
-                            }
-                            self.updateAspectRatio?(aspectRatio)
-                        }
-                        self.firstFrameHandler?()
-                    })
-                } else {
-                    self._cameraInitialized.set(.notInited)
-                }
+                self._cameraInitialized.set(.notInited)
             }
             
             
@@ -290,8 +273,7 @@ final class IncomingVideoView : Control {
             _cameraInitialized.set(.initializing)
             
             if let videoView = videoView {
-                let isFullScreen = self.kitWindow?.isFullScreen ?? false
-                videoView.setVideoContentMode(isFullScreen ? .resizeAspect : .resizeAspectFill)
+                videoView.setVideoContentMode(.resizeAspect)
                 
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
                 videoView.view.background = .clear
