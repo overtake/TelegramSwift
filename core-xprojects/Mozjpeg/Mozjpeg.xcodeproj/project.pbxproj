@@ -99,11 +99,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0A51CFA24F7CF9200D75641 /* Build configuration list for PBXNativeTarget "Mozjpeg" */;
 			buildPhases = (
+				D0A51D0824F7DCFD00D75641 /* Build Script */,
 				D0A51CE424F7CF9200D75641 /* Headers */,
 				D0A51CE524F7CF9200D75641 /* Sources */,
 				D0A51CE624F7CF9200D75641 /* Frameworks */,
 				D0A51CE724F7CF9200D75641 /* Resources */,
-				D0A51D0824F7DCFD00D75641 /* Build Script */,
 			);
 			buildRules = (
 			);
