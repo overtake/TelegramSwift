@@ -37,9 +37,9 @@ final class ImageRenderData {
 
 private let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
-    (400, [2]),
-    (600, [4, 5]),
-    (Int(Int32.max), [4, 5, 8, 9])
+    (400, [1]),
+    (600, [2, 3]),
+    (Int(Int32.max), [2, 3, 4])
 ]
 
 func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
@@ -81,7 +81,7 @@ public func representationFetchRangeForDisplayAtSize(representation: TelegramMed
 
 func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false) -> Signal<ImageRenderData, NoError> {
     
-    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count == 10 {
+    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count >= 5 {
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int)
