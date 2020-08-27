@@ -15,10 +15,14 @@ import Postbox
 
 final class InputSources: NSObject {
     
-    private let _inputSource: ValuePromise<[String]> = ValuePromise(["en"], ignoreRepeated: true)
+    private let _inputSource: Promise<[String]> = Promise(["en"])
     
     var value: Signal<[String], NoError> {
-        _inputSource.set(currentAppInputSource().uniqueElements)
+        _inputSource.set(Signal { subscriber in
+            subscriber.putNext(currentAppInputSource().uniqueElements)
+            subscriber.putCompletion()
+            return EmptyDisposable
+        } |> runOn(.mainQueue()))
         return _inputSource.get() |> distinctUntilChanged(isEqual: { $0 == $1 })
     }
     
@@ -55,6 +59,6 @@ final class InputSources: NSObject {
     }
     
     @objc private func inputSourceChanged() {
-       _inputSource.set(currentAppInputSource().uniqueElements)
+        _inputSource.set(.single(currentAppInputSource().uniqueElements))
     }
 }
