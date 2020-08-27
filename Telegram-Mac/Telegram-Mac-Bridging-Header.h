@@ -25,10 +25,6 @@
 #ifndef SHARE
 #import "ffmpeg/include/libavcodec/avcodec.h"
 #import "ffmpeg/include/libavformat/avformat.h"
-#import "libjpeg-turbo/jpeglib.h"
-#import "libjpeg-turbo/jerror.h"
-#import "libjpeg-turbo/turbojpeg.h"
-#import "libjpeg-turbo/jmorecfg.h"
 #import "FFMpegRemuxer.h"
 #import "FFMpegGlobals.h"
 #import "FFMpegAVFormatContext.h"

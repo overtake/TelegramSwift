@@ -3,3 +3,4 @@ fastlane/report.xml
 xcuserdata
 xcuserstate
 .DS_Store
+core-xprojects/Mozjpeg/build

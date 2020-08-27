@@ -151,7 +151,6 @@
 		9FC4DA9A21DD0BE6003E2A62 /* CachedChannelAdmins.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9921DD0BE6003E2A62 /* CachedChannelAdmins.swift */; };
 		9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9B21DD187C003E2A62 /* SearchPeerMembers.swift */; };
 		9FC4DA9E21DD1C6C003E2A62 /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
-		9FC4DAA621DD1D6C003E2A62 /* libturbojpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9FC4DAA221DD1D6C003E2A62 /* libturbojpeg.a */; };
 		9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DAA721DE0626003E2A62 /* ChannelPermissionsController.swift */; };
 		9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */; };
 		9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */; };
@@ -880,6 +879,7 @@
 		D09D9DF4229C289F00378796 /* GZip.m in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF3229C289F00378796 /* GZip.m */; };
 		D0A2764E249C9D6B005E3C77 /* PeerPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */; };
 		D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */; };
+		D0A51D3624F7EC2100D75641 /* Mozjpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */; };
 		D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */; };
 		D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */; };
 		D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */; };
@@ -1063,10 +1063,6 @@
 		9F291C9F2264E57F00C66267 /* BuildConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BuildConfig.m; sourceTree = "<group>"; };
 		9F291CA02264E57F00C66267 /* BuildConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BuildConfig.h; sourceTree = "<group>"; };
 		9F354E9B2270630A006F1D42 /* HapticEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticEngine.swift; sourceTree = "<group>"; };
-		9F354E9D2270757E006F1D42 /* Lottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Lottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F354E9F227076A6006F1D42 /* libLottie.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libLottie.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F354EA1227076EF006F1D42 /* Lottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Lottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9F354EA3227077BD006F1D42 /* Lottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Lottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9F3D5F6222044D8700CB0CAA /* AppUpdateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateViewController.swift; sourceTree = "<group>"; };
 		9F3D5F8522085B2000CB0CAA /* UpdaterNotifySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterNotifySettings.swift; sourceTree = "<group>"; };
 		9F3EAB3A20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkUsageStatsController.swift; sourceTree = "<group>"; };
@@ -1300,7 +1296,6 @@
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
 		A72D7AE823C471A7005BAC59 /* PollResultController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultController.swift; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
-		A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SVGKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A7393D342407CAE100CE44CA /* ChatMediaDice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaDice.swift; sourceTree = "<group>"; };
 		A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDiceContentView.swift; sourceTree = "<group>"; };
@@ -1327,7 +1322,6 @@
 		A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-incorrect.mp3"; sourceTree = "<group>"; };
 		A778DC3223C8988300DD307B /* quiz-correct.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "quiz-correct.mp3"; sourceTree = "<group>"; };
 		A778DC4123CD9F3C00DD307B /* SearchSettingsEmptyItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchSettingsEmptyItem.swift; sourceTree = "<group>"; };
-		A7831B172403CB420056AEAC /* Graph.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Graph.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7831B1B2403CFDD0056AEAC /* ChannelStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStatsViewController.swift; sourceTree = "<group>"; };
 		A7831B2924040B6B0056AEAC /* StatisticRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticRowItem.swift; sourceTree = "<group>"; };
 		A789E08323E05EAE00AEB34A /* ChatListFiltersListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFiltersListController.swift; sourceTree = "<group>"; };
@@ -1352,7 +1346,6 @@
 		A7D28208236C3C150000A9BF /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D2820A236C3C1B0000A9BF /* MtProtoKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MtProtoKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D28210236C3D390000A9BF /* SyncCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SyncCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7D28213236C3DAE0000A9BF /* WalletCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = WalletCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D2822A236C51A50000A9BF /* OpenSSLEncryption.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenSSLEncryption.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D2822C236C51F10000A9BF /* OpenSSLEncryption.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpenSSLEncryption.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoreExtension.swift; sourceTree = "<group>"; };
@@ -2052,6 +2045,7 @@
 		D09D9DF3229C289F00378796 /* GZip.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GZip.m; sourceTree = "<group>"; };
 		D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotos.swift; sourceTree = "<group>"; };
 		D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsStatsController.swift; sourceTree = "<group>"; };
+		D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Mozjpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasController.swift; sourceTree = "<group>"; };
 		D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasColorPicker.swift; sourceTree = "<group>"; };
 		D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasControls.swift; sourceTree = "<group>"; };
@@ -2107,6 +2101,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0A51D3624F7EC2100D75641 /* Mozjpeg.framework in Frameworks */,
 				D09D836E24A6205500120F73 /* libtgvoip.framework in Frameworks */,
 				A7D2822B236C51A50000A9BF /* OpenSSLEncryption.framework in Frameworks */,
 				D06E38A124A51FE000C7D03A /* TgVoipWebrtc.framework in Frameworks */,
@@ -2148,7 +2143,6 @@
 				C209C3881F262D48009231FE /* libstdc++.tbd in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
-				9FC4DAA621DD1D6C003E2A62 /* libturbojpeg.a in Frameworks */,
 				C24DAB931E0828B6005EE404 /* JavaScriptCore.framework in Frameworks */,
 				9F21F65D20B5A9C900332C85 /* MapKit.framework in Frameworks */,
 				C250B0351DB78A0A004E9FBE /* Quartz.framework in Frameworks */,
@@ -4795,6 +4789,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */,
 				D09D837124A62A5B00120F73 /* libssl.a */,
 				D09D836D24A6205500120F73 /* libtgvoip.framework */,
 				D06E38AB24A5F3B700C7D03A /* Metal.framework */,
@@ -4804,9 +4799,7 @@
 				A7919134240D0869002011CA /* MurMurHash32.framework */,
 				A7918DB324093505002011CA /* GraphUI.framework */,
 				A7393D382407D0F100CE44CA /* GraphCore.framework */,
-				A7831B172403CB420056AEAC /* Graph.framework */,
 				A7377E5B23B5E99500AD3ADD /* libxml2.tbd */,
-				A7377E2023B5DCBA00AD3ADD /* SVGKit.framework */,
 				A71DC82A23858311000EEDE2 /* CoreSpotlight.framework */,
 				A74EB06F237961A1005F55AE /* AppCenter.framework */,
 				A74EB070237961A1005F55AE /* AppCenterCrashes.framework */,
@@ -4816,16 +4809,11 @@
 				A7D28231236C57DD0000A9BF /* libphonenumber.framework */,
 				A7D2822C236C51F10000A9BF /* OpenSSLEncryption.framework */,
 				A7D2822A236C51A50000A9BF /* OpenSSLEncryption.framework */,
-				A7D28213236C3DAE0000A9BF /* WalletCore.framework */,
 				A7D28210236C3D390000A9BF /* SyncCore.framework */,
 				A7D2820A236C3C1B0000A9BF /* MtProtoKit.framework */,
 				A7D28208236C3C150000A9BF /* TelegramCore.framework */,
 				A7D28206236C3C0F0000A9BF /* SwiftSignalKit.framework */,
 				A7D28204236C3C0B0000A9BF /* Postbox.framework */,
-				9F354EA3227077BD006F1D42 /* Lottie.framework */,
-				9F354EA1227076EF006F1D42 /* Lottie.framework */,
-				9F354E9F227076A6006F1D42 /* libLottie.a */,
-				9F354E9D2270757E006F1D42 /* Lottie.framework */,
 				9F6FF3212248E298004364FE /* UserNotifications.framework */,
 				9F4EEF8321D4F59C002C3B33 /* Accelerate.framework */,
 				D0675D6A217E20B9004900A7 /* Zip.framework */,
