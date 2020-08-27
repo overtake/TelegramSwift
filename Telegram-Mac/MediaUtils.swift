@@ -35,6 +35,12 @@ final class ImageRenderData {
     }
 }
 
+private let progressiveRangeMap: [(Int, [Int])] = [
+    (100, [0]),
+    (400, [2]),
+    (600, [4, 5]),
+    (Int(Int32.max), [4, 5, 8, 9])
+]
 
 func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
     if let _ = file.resource as? LocalFileReferenceMediaResource {
@@ -59,9 +65,99 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
     return representation.first
 }
 
+public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int) -> Range<Int>? {
+    if representation.progressiveSizes.count > 1 {
+        var largestByteSize = Int(representation.progressiveSizes[0])
+        for (maxDimension, byteSizes) in progressiveRangeMap {
+            largestByteSize = Int(representation.progressiveSizes[byteSizes.last!])
+            if maxDimension >= dimension {
+                break
+            }
+        }
+        return 0 ..< largestByteSize
+    }
+    return nil
+}
 
-//
-func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil) -> Signal<ImageRenderData, NoError> {
+func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false) -> Signal<ImageRenderData, NoError> {
+    
+    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count == 10 {
+        enum SizeSource {
+            case miniThumbnail(data: Data)
+            case image(size: Int)
+        }
+        
+        var sources: [SizeSource] = []
+        if let miniThumbnail = imageReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
+            sources.append(.miniThumbnail(data: miniThumbnail))
+        }
+        let thumbnailByteSize = Int(progressiveRepresentation.progressiveSizes[0])
+        var largestByteSize = Int(progressiveRepresentation.progressiveSizes[0])
+        for (maxDimension, byteSizes) in progressiveRangeMap {
+            if Int(fullRepresentationSize.width) > 100 && maxDimension <= 100 {
+                continue
+            }
+            sources.append(contentsOf: byteSizes.map { sizeIndex -> SizeSource in
+                return .image(size: Int(progressiveRepresentation.progressiveSizes[sizeIndex]))
+            })
+            largestByteSize = Int(progressiveRepresentation.progressiveSizes[byteSizes.last!])
+            if maxDimension >= Int(fullRepresentationSize.width) {
+                break
+            }
+        }
+        
+        return Signal { subscriber in
+            let signals: [Signal<(SizeSource, Data?), NoError>] = sources.map { source -> Signal<(SizeSource, Data?), NoError> in
+                switch source {
+                case let .miniThumbnail(data):
+                    return .single((source, data))
+                case let .image(size):
+                    return postbox.mediaBox.resourceData(progressiveRepresentation.resource, size: Int(progressiveRepresentation.progressiveSizes.last!), in: 0 ..< size, mode: .incremental, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
+                    |> map { (data, _) -> (SizeSource, Data?) in
+                        return (source, data)
+                    }
+                }
+            }
+            
+            let dataDisposable = combineLatest(signals).start(next: { results in
+                var foundData = false
+                loop: for i in (0 ..< results.count).reversed() {
+                    let isLastSize = i == results.count - 1
+                    switch results[i].0 {
+                    case .image:
+                        if let data = results[i].1, data.count != 0 {
+                            subscriber.putNext(ImageRenderData(nil, data, isLastSize))
+                            foundData = true
+                            if isLastSize {
+                                subscriber.putCompletion()
+                            }
+                            break loop
+                        }
+                    case let .miniThumbnail(thumbnailData):
+                        subscriber.putNext(ImageRenderData(thumbnailData, nil, false))
+                        foundData = true
+                        break loop
+                    }
+                }
+                if !foundData {
+                    subscriber.putNext(ImageRenderData(nil, nil, false))
+                }
+            })
+            var fetchDisposable: Disposable?
+            if autoFetchFullSize {
+                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< largestByteSize, .default), statsCategory: .image).start()
+            } else if useMiniThumbnailIfAvailable {
+                fetchDisposable = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: imageReference.resourceReference(progressiveRepresentation.resource), range: (0 ..< thumbnailByteSize, .default), statsCategory: .image).start()
+            }
+            
+            return ActionDisposable {
+                dataDisposable.dispose()
+                fetchDisposable?.dispose()
+            }
+        }
+    }
+
+    
     if let smallestRepresentation = smallestImageRepresentation(imageReference.media.representations), let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(fullRepresentationSize)) {
         
         
