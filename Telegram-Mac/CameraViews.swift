@@ -114,7 +114,7 @@ final class OutgoingVideoView : Control {
         }
     }
     
-    static var defaultSize: NSSize = NSMakeSize(floor(100 * System.cameraAspectRatio), 100)
+    static var defaultSize: NSSize = NSMakeSize(floor(100 * System.aspectRatio), 100)
     
     enum ResizeDirection {
         case topLeft

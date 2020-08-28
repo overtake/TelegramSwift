@@ -304,7 +304,7 @@ class ShareObject {
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
                     options.setValue(1280 as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
                     options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
-
+                    
                     if let imageSource = CGImageSourceCreateWithData(data as CFData, nil) {
                         let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options)
                         if let image = image, let data = NSImage(cgImage: image, size: image.backingSize).tiffRepresentation(using: .jpeg, factor: 0.83) {

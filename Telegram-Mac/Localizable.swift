@@ -597,6 +597,8 @@ internal final class L10n {
   internal static func callVideoPaused(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.VideoPaused", p1)
   }
+  /// Telegram needs access to camera for Video Call.
+  internal static var callCameraError: String  { return L10n.tr("Localizable", "Call.Camera.Error") }
   /// Finish the call with %@ and start a new one with %@?
   internal static func callConfirmDiscardCurrentDescription(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description", p1, p2)

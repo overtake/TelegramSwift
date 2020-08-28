@@ -248,11 +248,11 @@ class StickerSetTableRowView : TableRowView, ViewDisplayDelegate {
                 
                 if let thumbnail = item.info.thumbnail {
                     thumbnailItem = thumbnail
-                    resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
+                    resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .name(item.info.shortName), resource: thumbnail.resource)
                 } else if let topItem = item.topItem {
                     let dimensions = topItem.file.dimensions?.size ?? NSMakeSize(35, 35)
                     thumbnailItem = TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimensions), resource: topItem.file.resource, progressiveSizes: [])
-                    resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: StickerPackReference.id(id: item.info.id.id, accessHash: item.info.accessHash), media: topItem.file), resource: topItem.file.resource)
+                    resourceReference = MediaResourceReference.media(media: .stickerPack(stickerPack: .name(item.info.shortName), media: topItem.file), resource: topItem.file.resource)
                 }
                 if let thumbnailItem = thumbnailItem {
                     imageView.setSignal(chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false))

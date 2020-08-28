@@ -12,6 +12,7 @@ import SyncCore
 import SwiftSignalKit
 import Postbox
 import TGUIKit
+
 class InputPasteboardParser: NSObject {
 
     
@@ -26,7 +27,24 @@ class InputPasteboardParser: NSObject {
                 if let path = path, let url = URL(string: path) {
                     files.append(url)
                 }
-                
+                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
+                   let attributed = NSAttributedString(html: data, documentAttributes: nil)
+                   if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
+                       
+                       if let fileName = attachment.fileWrapper?.preferredFilename {
+                           if let data = attachment.fileWrapper?.regularFileContents {
+                               let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
+                               do {
+                                   try data.write(to: url)
+                                   files.append(url)
+                               } catch {
+                                   
+                               }
+                               
+                           }
+                       }
+                   }
+               }
             }
             
             var image:NSImage? = nil
@@ -125,6 +143,24 @@ class InputPasteboardParser: NSObject {
                 if let path = path, let url = URL(string: path) {
                     files.append(url)
                 }
+                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
+                    let attributed = NSAttributedString(html: data, documentAttributes: nil)
+                    if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
+                        
+                        if let fileName = attachment.fileWrapper?.preferredFilename {
+                            if let data = attachment.fileWrapper?.regularFileContents {
+                                let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
+                                do {
+                                    try data.write(to: url)
+                                    files.append(url)
+                                } catch {
+                                    
+                                }
+                                
+                            }
+                        }
+                    }
+                }
                 
             }
             
@@ -141,6 +177,13 @@ class InputPasteboardParser: NSObject {
                         files.append(url)
                         image = nil
                     } else {
+                        if let rep = images[0].representations.first as? NSBitmapImageRep {
+                            let frames = rep.value(forProperty: .frameCount) as? Int
+                            if let frames = frames, frames > 1 {
+                                var bp:Int = 0
+                                bp += 1
+                            }
+                        }
                         image = images[0]
                     }
                 }
