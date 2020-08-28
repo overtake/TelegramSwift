@@ -1243,6 +1243,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
         
+        var applyHoleMessageIndex: MessageIndex?
+        
         let applyHole:() -> Void = { [weak self] in
             guard let `self` = self else { return }
             
@@ -1254,13 +1256,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 }
             }
-            
-            if let messageIndex = messageIndex {
-                self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper))
-            } else if let location = self.locationValue {
-                self.setLocation(location)
+            if applyHoleMessageIndex != messageIndex {
+                if let messageIndex = messageIndex {
+                    self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper))
+                } else if let location = self.locationValue {
+                    self.setLocation(location)
+                }
             }
-        
+            applyHoleMessageIndex = messageIndex
         }
         
         let clearHistoryUndoSignal = context.chatUndoManager.status(for: chatInteraction.peerId, type: .clearHistory)
@@ -1300,7 +1303,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case let .Generic(type: type):
                 switch type {
                 case .FillHole:
-                    Queue.mainQueue().async {
+                    DispatchQueue.main.async {
                          applyHole()
                     }
                     return .complete()
