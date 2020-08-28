@@ -275,7 +275,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         search.animates = false
         search.isEventLess = true
-        
+        search.userInteractionEnabled = false
         inputContainer.addSubview(input)
         addSubview(animateContainer)
         addSubview(inputContainer)

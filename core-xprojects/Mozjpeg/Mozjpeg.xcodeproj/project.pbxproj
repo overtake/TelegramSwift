@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		D0A51CF924F7CF9200D75641 /* Mozjpeg.h in Headers */ = {isa = PBXBuildFile; fileRef = D0A51CEB24F7CF9200D75641 /* Mozjpeg.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0A51D3724F7F48400D75641 /* Mozjpeg.m in Sources */ = {isa = PBXBuildFile; fileRef = D0A51CDD24F7CF6800D75641 /* Mozjpeg.m */; };
-		D0A51D3B24F7F62C00D75641 /* libturbojpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3924F7F62C00D75641 /* libturbojpeg.a */; };
 		D0A51D3C24F7F62C00D75641 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3A24F7F62C00D75641 /* libjpeg.a */; };
 /* End PBXBuildFile section */
 
@@ -28,7 +27,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0A51D3B24F7F62C00D75641 /* libturbojpeg.a in Frameworks */,
 				D0A51D3C24F7F62C00D75641 /* libjpeg.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

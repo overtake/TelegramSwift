@@ -310,7 +310,7 @@ class PCallSession {
     let isOutgoing: Bool
     private(set) var isVideo: Bool
     private(set) var isVideoPossible: Bool
-    private(set) var isVideoAvailable: Bool
+    private let isVideoAvailable: Bool
     private var videoIsForceDisabled: Bool
     private(set) var isScreenCapture: Bool
     private var didSetScreenCaptureAvailable: Bool? = nil
@@ -380,7 +380,6 @@ class PCallSession {
         } else {
             isVideoAvailable = true
         }
-        
         
         self.isVideoAvailable = isVideoAvailable 
         
@@ -881,6 +880,7 @@ class PCallSession {
             if let state = self.sessionState {
                 self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
             }
+//            setRequestedVideoAspect(Float(System.cameraAspectRatio))
         }
     }
     
@@ -902,6 +902,8 @@ class PCallSession {
         if !requestVideo {
             self.videoCapturer?.enableScreenCapture()
         }
+//        setRequestedVideoAspect(Float(System.aspectRatio))
+        
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
         }
@@ -915,7 +917,7 @@ class PCallSession {
         }
         self.isOutgoingVideoPaused = true
         self.isScreenCapture = false
-
+        
         if let state = self.sessionState {
             self.updateSessionState(sessionState: state, callContextState: self.callContextState, reception: self.reception)
         }

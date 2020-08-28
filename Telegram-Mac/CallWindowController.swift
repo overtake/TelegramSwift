@@ -1010,14 +1010,23 @@ class PhoneCallWindowController {
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
             if let `self` = self, let callState = self.state {
                 switch callState.videoState {
-                case .active, .paused, .inactive(true):
-                    if callState.isOutgoingVideoPaused || callState.isScreenCapture {
-                        self.session.requestVideo()
+                case let .active(available), let .paused(available), let .inactive(available):
+                    if available {
+                        if callState.isOutgoingVideoPaused || callState.isScreenCapture {
+                            self.session.requestVideo()
+                        } else {
+                            self.session.disableVideo()
+                        }
                     } else {
-                        self.session.disableVideo()
+                        confirm(for: self.window, information: L10n.callCameraError, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                             switch result {
+                             case .thrid:
+                                openSystemSettings(.camera)
+                             default:
+                                break
+                             }
+                        })
                     }
-                case .notAvailable:
-                    break
                 default:
                     break
                 }

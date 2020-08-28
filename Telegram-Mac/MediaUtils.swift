@@ -2319,38 +2319,13 @@ private func imageFromAJpeg(data: Data) -> (CGImage, CGImage)? {
 public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, NoError> {
     return Signal { (subscriber) in
 
-        
-     //   let data:Data? = image.tiffRepresentation(using: .jpeg, factor: compress ? 0.83 : 1)
-        if let data = image.tiffRepresentation(using: compress ? .jpeg : .none, factor: compress ? 0.83 : 1.0) {
+        if let data = compressImageToJPEG(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, quality: compress ? 0.83 : 1.0) {
             let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
-            if compress {
-                let imageRep = NSBitmapImageRep(data: data)
-                try? imageRep?.representation(using: .jpeg, properties: [:])?.write(to: URL(fileURLWithPath: path))
-            } else {
-               // try? data.write(to: URL(fileURLWithPath: path))
-                
-                
-                let options = NSMutableDictionary()
-                
-                let mutableData: CFMutableData = NSMutableData() as CFMutableData
-                
-                if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) {
-                    CGImageDestinationAddImage(colorDestination, image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, options as CFDictionary)
-                    if CGImageDestinationFinalize(colorDestination) {
-                        try? (mutableData as Data).write(to: URL(fileURLWithPath: path))
-                    }
-                }
-
-            }
-           
-
-            
+            try? data.write(to: URL(fileURLWithPath: path))
 
             subscriber.putNext(path)
         }
         
-        
-
         
         subscriber.putCompletion()
         

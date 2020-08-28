@@ -304,12 +304,10 @@ class Sender: NSObject {
                             if size.width / 10 > size.height || size.height < 40 {
                                 makeFileMedia(true)
                             } else {
-                                let data = NSImage(cgImage: image, size: image.size).tiffRepresentation(using: .jpeg, factor: 0.83)
+                                let data = compressImageToJPEG(image, quality: 0.83)
                                 let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
-                                
                                 if let data = data {
-                                    let imageRep = NSBitmapImageRep(data: data)
-                                    try? imageRep?.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])?.write(to: URL(fileURLWithPath: path))
+                                    try? data.write(to: URL(fileURLWithPath: path))
                                 }
                                 
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
