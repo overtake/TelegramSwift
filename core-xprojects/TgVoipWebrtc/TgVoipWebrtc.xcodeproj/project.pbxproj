@@ -740,6 +740,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 			};
 			name = DebugHockeyapp;
@@ -862,6 +863,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_VERSION = 5.0;
 			};
 			name = HockeyappMacAlpha;
