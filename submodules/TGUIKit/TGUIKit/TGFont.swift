@@ -73,19 +73,19 @@ public extension NSFont {
     }
     
     static func avatar(_ size: FontSize) -> NSFont {
-        if #available(OSX 10.15, *) {
-            if let descriptor = NSFont.boldSystemFont(ofSize: size).fontDescriptor.withDesign(.rounded), let font = NSFont(descriptor: descriptor, size: size) {
-                return font
-            } else {
-                return .systemFont(ofSize: size, weight: .heavy)
-            }
-        } else {
+//        if #available(OSX 10.15, *) {
+//            if let descriptor = NSFont.boldSystemFont(ofSize: size).fontDescriptor.withDesign(.rounded), let font = NSFont(descriptor: descriptor, size: size) {
+//                return font
+//            } else {
+//                return .systemFont(ofSize: size, weight: .heavy)
+//            }
+//        } else {
            if let font = NSFont(name: ".SFCompactRounded-Semibold", size: size) {
                 return font
             } else {
                 return .systemFont(ofSize: size, weight: .heavy)
             }
-        }
+//        }
     }
     
     static func medium(_ size:FontSize) ->NSFont {

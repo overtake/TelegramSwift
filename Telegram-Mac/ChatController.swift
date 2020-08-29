@@ -1299,20 +1299,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 scrollPosition = searchStateUpdated ? nil : values.scrollPosition
             }
             
-//            switch updateType {
-//            case let .Generic(type: type):
-//                switch type {
-//                case .FillHole:
-//                    Queue.mainQueue().async {
-//                         applyHole()
-//                    }
-//                    return .complete()
-//                default:
-//                    break
-//                }
-//            default:
-//                break
-//            }
+            switch updateType {
+            case let .Generic(type: type):
+                switch type {
+                case .FillHole:
+                    Queue.mainQueue().async(applyHole)
+                    return .complete()
+                default:
+                    break
+                }
+            default:
+                break
+            }
             
             
             let pAppearance = previousAppearance.swap(appearance)

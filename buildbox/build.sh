@@ -4,7 +4,7 @@ set -e
 
 
 MACOS_VERSION="10.15"
-XCODE_VERSION="11.6"
+XCODE_VERSION="10.3"
 GUEST_SHELL="bash"
 
 VM_BASE_NAME="macos$(echo $MACOS_VERSION | sed -e 's/\.'/_/g)_Xcode$(echo $XCODE_VERSION | sed -e 's/\.'/_/g)"
