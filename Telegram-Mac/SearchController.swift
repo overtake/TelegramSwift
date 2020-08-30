@@ -566,10 +566,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     location = .group(groupId)
                     foundRemotePeers = .single(([], [], false))
                 } else if query.hasPrefix("#") || !options.contains(.chats) {
-                    location = .general(tags: globalTags)
+                    location = .general
                     foundRemotePeers = .single(([], [], false))
                 } else {
-                    location = .general(tags: globalTags)
+                    location = .general
                     if globalTags == nil {
                         foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
                             |> delay(0.2, queue: prepareQueue)

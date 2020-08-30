@@ -221,7 +221,6 @@
 		D08CAA811ED80ED20000FDA8 /* SuggestedLocalizationEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08CAA7F1ED80ED20000FDA8 /* SuggestedLocalizationEntry.swift */; };
 		D08CAA881ED81DD40000FDA8 /* LocalizationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08CAA861ED81DD40000FDA8 /* LocalizationInfo.swift */; };
 		D08CAA8D1ED81EDF0000FDA8 /* Localizations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08CAA8B1ED81EDF0000FDA8 /* Localizations.swift */; };
-		D08EAEAC24EFE494000AE1A3 /* Countries.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08EAEAB24EFE494000AE1A3 /* Countries.swift */; };
 		D08F4A6A1E79CECB00A2AA15 /* ManagedSynchronizeInstalledStickerPacksOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08F4A681E79CECB00A2AA15 /* ManagedSynchronizeInstalledStickerPacksOperations.swift */; };
 		D093D7EF206413F600BC3599 /* SecureIdDataTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093D7ED206413F600BC3599 /* SecureIdDataTypes.swift */; };
 		D093D7F620641A4900BC3599 /* SecureIdPhoneValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093D7F420641A4900BC3599 /* SecureIdPhoneValue.swift */; };
@@ -1586,7 +1585,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D08EAEAC24EFE494000AE1A3 /* Countries.swift in Sources */,
 				A7919136240D08A6002011CA /* TogglePeerChatPinned.swift in Sources */,
 				D03413F3231325B300B555F3 /* Themes.swift in Sources */,
 				D03413F1231323CE00B555F3 /* Theme.swift in Sources */,

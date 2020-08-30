@@ -378,7 +378,7 @@ final class ChatInteraction : InterfaceObserver  {
                     case .openWebApp:
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, true, nil)
                     case let .callback(data):
-                        strongSelf.requestMessageActionCallback(keyboardMessage.id, false, data)
+                        strongSelf.requestMessageActionCallback(keyboardMessage.id, false, (requiresPassword: false, data))
                     case let .switchInline(samePeer: same, query: query):
                         let text = "@\(keyboardMessage.inlinePeer?.username ?? keyboardMessage.author?.username ?? "") \(query)"
                         if same {

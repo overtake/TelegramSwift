@@ -333,48 +333,48 @@ class PeerListContainerView : View {
         
         var currentTag: MessageTags?
 
-        
-        switch state {
-        case .Focus:
-            searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
-                
-                
-                var items: [SPopoverItem] = []
-
-                let tags:[(MessageTags?, String)] = [(nil, "Clear Filter"),
-                                                    (.photo, "Photos"),
-                                                    (.video, "Videos"),
-                                                    (.webPage, "Links"),
-                                                    (.music, "Music"),
-                                                    (.gif, "GIFs"),
-                                                    (.file, "Files")]
-                
-                for tag in tags {
-                    var append: Bool = false
-                    if currentTag != tag.0 {
-                        append = true
-                    }
-                    if append {
-                        items.append(SPopoverItem(tag.1, {
-                            currentTag = tag.0
-                            updateSearchTags(currentTag)
-                            if tag.0 == nil {
-                                updateTitle(nil)
-                            } else {
-                                updateTitle(tag.1)
-                            }
-                        }))
-                    }
-                }
-                
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
-            }, dropFilter: {
-                currentTag = nil
-                updateSearchTags(currentTag)
-            }, icon: theme.icons.search_filter)
-        case .None:
-            searchView.customSearchControl = nil
-        }
+//        
+//        switch state {
+//        case .Focus:
+//            searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
+//                
+//                
+//                var items: [SPopoverItem] = []
+//
+//                let tags:[(MessageTags?, String)] = [(nil, "Clear Filter"),
+//                                                    (.photo, "Photos"),
+//                                                    (.video, "Videos"),
+//                                                    (.webPage, "Links"),
+//                                                    (.music, "Music"),
+//                                                    (.gif, "GIFs"),
+//                                                    (.file, "Files")]
+//                
+//                for tag in tags {
+//                    var append: Bool = false
+//                    if currentTag != tag.0 {
+//                        append = true
+//                    }
+//                    if append {
+//                        items.append(SPopoverItem(tag.1, {
+//                            currentTag = tag.0
+//                            updateSearchTags(currentTag)
+//                            if tag.0 == nil {
+//                                updateTitle(nil)
+//                            } else {
+//                                updateTitle(tag.1)
+//                            }
+//                        }))
+//                    }
+//                }
+//                
+//                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
+//            }, dropFilter: {
+//                currentTag = nil
+//                updateSearchTags(currentTag)
+//            }, icon: theme.icons.search_filter)
+//        case .None:
+//            searchView.customSearchControl = nil
+//        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
