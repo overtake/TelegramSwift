@@ -155,7 +155,7 @@ func GlobalSearchModalController(context: AccountContext) -> ViewController {
                     state.searchState = nil
                     return state
                 }
-                let signal = searchMessages(account: context.account, location: .general(tags: nil), query: "#g c:ru minviews:100 \(searchState.request)", state: stateValue.with { $0.searchState }, limit: 100) |> deliverOnMainQueue
+                let signal = searchMessages(account: context.account, location: .general, query: "#g c:ru minviews:100 \(searchState.request)", state: stateValue.with { $0.searchState }, limit: 100) |> deliverOnMainQueue
                 
                 searchDisposable.set(signal.start(next: { searchResult, searchState in
                     updateState { state in
