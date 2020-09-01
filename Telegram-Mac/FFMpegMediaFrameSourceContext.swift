@@ -429,7 +429,6 @@ final class FFMpegMediaFrameSourceContext: NSObject {
             if codec == nil {
                 codec = FFMpegAVCodec.find(forId: codecId)
             }
-            
             if let codec = codec {
                 let codecContext = FFMpegAVCodecContext(codec: codec)
                 if avFormatContext.codecParams(atStreamIndex: streamIndex, to: codecContext) {
