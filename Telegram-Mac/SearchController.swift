@@ -827,6 +827,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if let item = item {
                             _ = self.genericView.select(item: item, notify: false, byClick: false)
                         }
+                    case .replyThread:
+                        break
                     }
                 }
             } else {

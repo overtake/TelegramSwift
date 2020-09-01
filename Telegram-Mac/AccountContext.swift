@@ -15,6 +15,11 @@ import TGUIKit
 //import WalletCore
 import SyncCore
 
+enum ChatLocation: Equatable {
+    case peer(PeerId)
+    case replyThread(MessageId)
+}
+
 
 
 struct TemporaryPasswordContainer {

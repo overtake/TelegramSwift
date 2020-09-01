@@ -92,6 +92,12 @@ class ChatRowItem: TableRowItem {
     private(set) var channelViews:(TextNodeLayout,TextNode)?
     private(set) var channelViewsAttributed:NSAttributedString?
     
+    private(set) var replyCountNode:TextNode?
+    private(set) var replyCount:(TextNodeLayout,TextNode)?
+    private(set) var replyCountAttributed:NSAttributedString?
+
+    
+    
     private(set) var postAuthorNode:TextNode?
     private(set) var postAuthor:(TextNodeLayout,TextNode)?
     private(set) var postAuthorAttributed:NSAttributedString?
@@ -228,6 +234,9 @@ class ChatRowItem: TableRowItem {
         
         if let channelViews = channelViews {
             size.width += channelViews.0.size.width + 8 + 16
+        }
+        if let replyCount = replyCount {
+            size.width += replyCount.0.size.width + 8 + 16
         }
         if let likes = likes {
             size.width += likes.0.size.width + 18
@@ -410,9 +419,8 @@ class ChatRowItem: TableRowItem {
             }
         } else {
             if case .Full = itemType, let message = message, let peer = message.peers[message.id.peerId] {
-                
                 switch chatInteraction.chatLocation {
-                case .peer:
+                case .peer, .replyThread:
                     if isIncoming && message.id.peerId == context.peerId {
                         return true
                     }
@@ -742,7 +750,7 @@ class ChatRowItem: TableRowItem {
     private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
         var canFillAuthorName: Bool = true
         switch chatInteraction.chatLocation {
-        case .peer:
+        case .peer, .replyThread:
             if renderType == .bubble, let peer = messageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId)
                 if let media = message.media.first {
@@ -1337,6 +1345,9 @@ class ChatRowItem: TableRowItem {
                         fullDate = "\(author)\(fullDate)"
                     }
                 }
+                if let attribute = attribute as? ReplyThreadMessageAttribute {
+                    replyCountAttributed = .initialize(string: max(1, Int(attribute.count)).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                }
                 
 //                if FastSettings.isTestLiked(message.id) {
 //                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
@@ -1504,6 +1515,10 @@ class ChatRowItem: TableRowItem {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
         
+        if let replyCountAttributed = replyCountAttributed {
+            replyCount = TextNode.layoutText(maybeNode: replyCountNode, replyCountAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
+        }
+        
         if let likesAttributed = likesAttributed {
             likes = TextNode.layoutText(maybeNode: likesNode, likesAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
         }
@@ -1610,8 +1625,14 @@ class ChatRowItem: TableRowItem {
                 adminWidth = adminBadge.layoutSize.width
             }
             
-            let channelOffset = (channelViews != nil ? channelViews!.0.size.width + 20 : 0)
-            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + channelOffset : 0) - rightSize.width)
+            var supplyOffset: CGFloat = 0
+            if let channelViews = channelViews {
+                supplyOffset += channelViews.0.size.width + 20
+            }
+            if let replyCount = replyCount {
+                supplyOffset += replyCount.0.size.width + 20
+            }
+            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + supplyOffset : 0) - rightSize.width)
 
             
             
@@ -1786,7 +1807,7 @@ class ChatRowItem: TableRowItem {
     
     func openInfo() {
         switch chatInteraction.chatLocation {
-        case .peer:
+        case .peer, .replyThread:
             if let peer = peer {
                 let messageId: MessageId?
                 if chatInteraction.isGlobalSearchMessage {
@@ -1922,6 +1943,19 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
+    }
+    for attr in message.attributes {
+        
+        if let attr = attr as? ReplyThreadMessageAttribute, attr.count > 0 {
+            items.append(ContextMenuItem("View Replies", handler: {
+                chatInteraction.openReplyThread(message.id, message.id)
+            }))
+        }
+        if let attr = attr as? ReplyMessageAttribute, let threadId = attr.threadMessageId, threadId != message.id {
+            items.append(ContextMenuItem("View Thread", handler: {
+                chatInteraction.openReplyThread(threadId, message.id)
+            }))
+        }
     }
     
     if let file = message.media.first as? TelegramMediaFile, file.isEmojiAnimatedSticker {

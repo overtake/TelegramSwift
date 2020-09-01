@@ -392,6 +392,9 @@ final class TelegramChatColors {
     func channelViewsIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chatChannelViewsOverlayServiceBubble : item.presentation.icons.chatChannelViewsOverlayBubble : item.hasBubble ? item.isIncoming ? item.presentation.icons.chatChannelViewsInBubble_incoming : item.presentation.icons.chatChannelViewsInBubble_outgoing : item.presentation.icons.chatChannelViewsOutBubble
     }
+    func repliesCountIcon(_ item: ChatRowItem) -> CGImage {
+        return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_reply_count_overlay_service_bubble : item.presentation.icons.chat_reply_count_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_reply_count_bubble_incoming : item.presentation.icons.chat_reply_count_bubble_outgoing : item.presentation.icons.chat_reply_count
+    }
     func likedIcon(_ item: ChatRowItem) -> CGImage {
         if item.isLiked {
             return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_like_inside_bubble_service : item.presentation.icons.chat_like_inside_bubble_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_like_inside_bubble_incoming : item.presentation.icons.chat_like_inside_bubble_outgoing : item.presentation.icons.chat_like_inside

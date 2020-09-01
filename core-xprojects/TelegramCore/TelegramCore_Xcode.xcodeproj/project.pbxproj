@@ -155,6 +155,7 @@
 		D0467D0C20D7F1E60055C28F /* SynchronizeMarkAllUnseenPersonalMessagesOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0467D0A20D7F1E60055C28F /* SynchronizeMarkAllUnseenPersonalMessagesOperation.swift */; };
 		D0467D1620D7F2C90055C28F /* ManagedSynchronizeMarkAllUnseenPersonalMessagesOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0467D1420D7F2C90055C28F /* ManagedSynchronizeMarkAllUnseenPersonalMessagesOperations.swift */; };
 		D048B4AD20A5DA4300C79D31 /* ManagedProxyInfoUpdates.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048B4AB20A5DA4300C79D31 /* ManagedProxyInfoUpdates.swift */; };
+		D048EDD724FD5C3C00977606 /* ReplyThreadHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDD624FD5C3C00977606 /* ReplyThreadHistory.swift */; };
 		D049EAD91E43DAD200A2CD3A /* ManagedRecentStickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D049EAD71E43DAD200A2CD3A /* ManagedRecentStickers.swift */; };
 		D049EAEC1E44B71B00A2CD3A /* RecentlySearchedPeerIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = D049EAEA1E44B71B00A2CD3A /* RecentlySearchedPeerIds.swift */; };
 		D049EAF61E44DF3300A2CD3A /* AccountState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D049EAF41E44DF3300A2CD3A /* AccountState.swift */; };
@@ -551,6 +552,7 @@
 		D0467D0A20D7F1E60055C28F /* SynchronizeMarkAllUnseenPersonalMessagesOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizeMarkAllUnseenPersonalMessagesOperation.swift; sourceTree = "<group>"; };
 		D0467D1420D7F2C90055C28F /* ManagedSynchronizeMarkAllUnseenPersonalMessagesOperations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedSynchronizeMarkAllUnseenPersonalMessagesOperations.swift; sourceTree = "<group>"; };
 		D048B4AB20A5DA4300C79D31 /* ManagedProxyInfoUpdates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedProxyInfoUpdates.swift; sourceTree = "<group>"; };
+		D048EDD624FD5C3C00977606 /* ReplyThreadHistory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyThreadHistory.swift; sourceTree = "<group>"; };
 		D049EAD41E43D98500A2CD3A /* RecentMediaItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentMediaItem.swift; sourceTree = "<group>"; };
 		D049EAD71E43DAD200A2CD3A /* ManagedRecentStickers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedRecentStickers.swift; sourceTree = "<group>"; };
 		D049EAE71E44B67100A2CD3A /* RecentPeerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentPeerItem.swift; sourceTree = "<group>"; };
@@ -1144,6 +1146,7 @@
 		D03B0D6E1D631AA900955575 /* Messages */ = {
 			isa = PBXGroup;
 			children = (
+				D048EDD624FD5C3C00977606 /* ReplyThreadHistory.swift */,
 				D0D3CE4323BB3FD200864F3C /* ChatUpdatingMessageMedia.swift */,
 				D0D3CE3F23BB3F1100864F3C /* PendingUpdateMessageManager.swift */,
 				D03B0D711D631ABA00955575 /* SearchMessages.swift */,
@@ -1817,6 +1820,7 @@
 				D0FA35061EA6135D00E56FFA /* CacheStorageSettings.swift in Sources */,
 				D05A32E81E6F0B5C002760B4 /* RecentAccountSession.swift in Sources */,
 				D0F7B1E31E045C7B007EB8A5 /* RichText.swift in Sources */,
+				D048EDD724FD5C3C00977606 /* ReplyThreadHistory.swift in Sources */,
 				D0575C2E22B922DF00A71A0E /* DeleteAccount.swift in Sources */,
 				D072F358231542740009E66F /* MessageReactionList.swift in Sources */,
 				D0FA8BB11E1FEC7E001E855B /* SecretChatEncryptionConfig.swift in Sources */,

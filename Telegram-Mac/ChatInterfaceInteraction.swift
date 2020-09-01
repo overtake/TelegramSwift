@@ -30,10 +30,7 @@ final class ChatInteraction : InterfaceObserver  {
     let chatLocation: ChatLocation
     let mode: ChatMode
     var peerId : PeerId {
-        switch chatLocation {
-        case let .peer(peerId):
-            return peerId
-        }
+        return chatLocation.peerId
     }
     
     var peer: Peer? {
@@ -145,6 +142,10 @@ final class ChatInteraction : InterfaceObserver  {
     var openScheduledMessages: ()->Void = {}
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    
+    var openReplyThread:(MessageId, MessageId?)->Void = {  _, _ in }
+
+    
     
     var unarchive: ()->Void = { }
 
