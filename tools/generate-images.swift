@@ -572,6 +572,12 @@ func initialize() -> [String] {
     
     array.append("search_filter")
     
+    
+    array.append("chat_reply_count_bubble_incoming")
+    array.append("chat_reply_count_bubble_outgoing")
+    array.append("chat_reply_count")
+    array.append("chat_reply_count_overlay")
+    
     return array
 }
 //swift ./tools/generate-images.swift

@@ -1538,6 +1538,18 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    
+    private var _chat_reply_count_overlay_service_bubble: CGImage?
+    var chat_reply_count_overlay_service_bubble: CGImage {
+        if let icon = _chat_reply_count_overlay_service_bubble {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_ChatRepliesCount")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            _chat_reply_count_overlay_service_bubble = new
+            return new
+        }
+    }
+    
     private var _chat_like_inside_bubble_service: CGImage?
     var chat_like_inside_bubble_service: CGImage {
         if let icon = _chat_like_inside_bubble_service {
@@ -2267,7 +2279,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) },
                                                call_screen_sharing: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.white) },
                                                call_screen_sharing_active: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.grayIcon) },
-                                               search_filter: { NSImage(named: "Icon_SearchFilter")!.precomposed(palette.grayIcon) }
+                                               search_filter: { NSImage(named: "Icon_SearchFilter")!.precomposed(palette.grayIcon) },
+                                               chat_reply_count_bubble_incoming: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
+                                               chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
+                                               chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon, flipVertical: true) },
+                                               chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white, flipVertical: true) }
 
     )
 

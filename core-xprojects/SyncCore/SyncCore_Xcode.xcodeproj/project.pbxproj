@@ -155,6 +155,7 @@
 		A754972623A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */; };
 		A7D28201236C379D0000A9BF /* PixelDimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28200236C379D0000A9BF /* PixelDimensions.swift */; };
 		D006030724D0172D00206226 /* ForwardCountMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */; };
+		D048EDD524FCFBEC00977606 /* ReplyThreadMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -310,6 +311,7 @@
 		A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedMediaStickersMessageAttribute.swift; sourceTree = "<group>"; };
 		A7D28200236C379D0000A9BF /* PixelDimensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelDimensions.swift; sourceTree = "<group>"; };
 		D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardCountMessageAttribute.swift; sourceTree = "<group>"; };
+		D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyThreadMessageAttribute.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -355,6 +357,7 @@
 		A701F7C8236B2A11002ABF81 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */,
 				D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */,
 				A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */,
 				A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */,
@@ -721,6 +724,7 @@
 				A701F8D2236B2A12002ABF81 /* CachedStickerPack.swift in Sources */,
 				A701F8B5236B2A12002ABF81 /* PeerStatusSettings.swift in Sources */,
 				A701F87E236B2A11002ABF81 /* TelegramMediaWebFile.swift in Sources */,
+				D048EDD524FCFBEC00977606 /* ReplyThreadMessageAttribute.swift in Sources */,
 				A701F8AF236B2A12002ABF81 /* TelegramChatAdminRights.swift in Sources */,
 				A701F8A8236B2A12002ABF81 /* OutgoingChatContextResultMessageAttribute.swift in Sources */,
 				A701F87F236B2A11002ABF81 /* FeaturedStickerPack.swift in Sources */,

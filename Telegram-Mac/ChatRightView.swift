@@ -18,7 +18,6 @@ class ChatRightView: View {
     private var stateView:ImageView?
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
-    private var channelsViewsImage:ImageView?
 
     private weak var item:ChatRowItem?
     
@@ -177,6 +176,11 @@ class ChatRightView: View {
                     postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
                 
+            }
+            if let replyCount = item.replyCount {
+                let icon = item.presentation.chat.repliesCountIcon(item)
+                ctx.draw(icon, in: NSMakeRect(replyCount.0.size.width + 2 + item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
+                replyCount.1.draw(NSMakeRect(item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, replyCount.0.size.width, replyCount.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
         }

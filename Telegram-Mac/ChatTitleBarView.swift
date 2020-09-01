@@ -591,6 +591,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                         switch chatInteraction.chatLocation {
                         case let .peer(peerId):
                             chatInteraction.openInfo(peerId, false, nil, nil)
+                        case let .replyThread(messageId):
+                            chatInteraction.openInfo(messageId.peerId, false, nil, nil)
                         }
                     }
                 }
@@ -605,6 +607,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 switch chatInteraction.chatLocation {
                 case let .peer(peerId):
                     chatInteraction.openInfo(peerId, false, nil, nil)
+                case .replyThread:
+                    break
                 }
             }
         }
@@ -695,6 +699,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     callButton.isHidden = true
                 }
             case .scheduled:
+                callButton.isHidden = true
+            case .replyThread:
                 callButton.isHidden = true
             }
             

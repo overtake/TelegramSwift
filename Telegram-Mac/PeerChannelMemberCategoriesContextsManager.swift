@@ -40,7 +40,8 @@ private final class PeerChannelMembersOnlineContext {
 private final class PeerChannelMemberCategoriesContextsManagerImpl {
     fileprivate var contexts: [PeerId: PeerChannelMemberCategoriesContext] = [:]
     fileprivate var onlineContexts: [PeerId: PeerChannelMembersOnlineContext] = [:]
-    
+    fileprivate var replyThreadHistoryContexts: [MessageId: ReplyThreadHistoryContext] = [:]
+
 
     func getContext(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl) {
         if let current = self.contexts[peerId] {
@@ -127,6 +128,16 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
         }
     }
     
+    func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {
+           let context: ReplyThreadHistoryContext
+           if let current = self.replyThreadHistoryContexts[messageId] {
+               context = current
+           } else {
+               context = ReplyThreadHistoryContext(account: account, peerId: messageId.peerId, threadMessageId: messageId)
+               self.replyThreadHistoryContexts[messageId] = context
+           }
+           return context.state
+       }
 
     
     func loadMore(peerId: PeerId, control: PeerChannelMemberCategoryControl) {
@@ -387,23 +398,24 @@ final class PeerChannelMemberCategoriesContextsManager {
             |> mapToSignal { _ -> Signal<Void, AddChannelMemberError> in
                 return .complete()
         }
-        
-        /*return addChannelMembers(account: account, peerId: peerId, memberIds: memberIds)
-         |> deliverOnMainQueue
-         |> beforeNext { [weak self] result in
-         if let strongSelf = self {
-         strongSelf.impl.with { impl in
-         for (contextPeerId, context) in impl.contexts {
-         if peerId == contextPeerId {
-         context.reset(.recent)
-         }
-         }
-         }
-         }
-         }
-         |> mapToSignal { _ -> Signal<Void, AddChannelMemberError> in
-         return .single(Void())
-         }*/
     }
+    
+    func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {
+        return Signal { [weak self] subscriber in
+            guard let strongSelf = self else {
+                subscriber.putCompletion()
+                return EmptyDisposable
+            }
+            let disposable = MetaDisposable()
+            strongSelf.impl.with { impl in
+                disposable.set(impl.replyThread(account: account, messageId: messageId).start(next: { state in
+                    subscriber.putNext(state)
+                }))
+            }
+            return disposable
+        }
+        |> runOn(Queue.mainQueue())
+    }
+
 
 }

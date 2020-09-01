@@ -293,7 +293,7 @@ class PeerMediaPhotosController: TableViewController {
         }
         
         let history = location.get() |> mapToSignal { location in
-            return chatHistoryViewForLocation(location, account: context.account, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags)
+            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags)
         }
         
         historyDisposable.set(history.start(next: { update in

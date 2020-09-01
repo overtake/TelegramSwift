@@ -492,6 +492,8 @@ class ChatInputActionsView: View, Notifable {
                     }
                 case .scheduled:
                     break
+                case .replyThread:
+                    break
                 }
                 
                 if !items.isEmpty {

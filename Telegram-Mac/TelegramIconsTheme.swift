@@ -6894,6 +6894,58 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_reply_count_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_reply_count_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_reply_count_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reply_count_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_reply_count_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_reply_count_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_reply_count_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reply_count_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_reply_count: CGImage {
+      if let image = cached.with({ $0["chat_reply_count"] }) {
+          return image
+      } else {
+          let image = _chat_reply_count()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reply_count"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_reply_count_overlay: CGImage {
+      if let image = cached.with({ $0["chat_reply_count_overlay"] }) {
+          return image
+      } else {
+          let image = _chat_reply_count_overlay()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reply_count_overlay"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7425,6 +7477,10 @@ final class TelegramIconsTheme {
   private let _call_screen_sharing: ()->CGImage
   private let _call_screen_sharing_active: ()->CGImage
   private let _search_filter: ()->CGImage
+  private let _chat_reply_count_bubble_incoming: ()->CGImage
+  private let _chat_reply_count_bubble_outgoing: ()->CGImage
+  private let _chat_reply_count: ()->CGImage
+  private let _chat_reply_count_overlay: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7956,7 +8012,11 @@ final class TelegramIconsTheme {
       call_tooltip_micro_off: @escaping()->CGImage,
       call_screen_sharing: @escaping()->CGImage,
       call_screen_sharing_active: @escaping()->CGImage,
-      search_filter: @escaping()->CGImage
+      search_filter: @escaping()->CGImage,
+      chat_reply_count_bubble_incoming: @escaping()->CGImage,
+      chat_reply_count_bubble_outgoing: @escaping()->CGImage,
+      chat_reply_count: @escaping()->CGImage,
+      chat_reply_count_overlay: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8488,5 +8548,9 @@ final class TelegramIconsTheme {
       self._call_screen_sharing = call_screen_sharing
       self._call_screen_sharing_active = call_screen_sharing_active
       self._search_filter = search_filter
+      self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming
+      self._chat_reply_count_bubble_outgoing = chat_reply_count_bubble_outgoing
+      self._chat_reply_count = chat_reply_count
+      self._chat_reply_count_overlay = chat_reply_count_overlay
   }
 }

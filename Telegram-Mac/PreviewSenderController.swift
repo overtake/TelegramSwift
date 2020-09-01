@@ -251,6 +251,8 @@ fileprivate class PreviewSenderView : Control {
                     }
                 case .scheduled:
                     break
+                case .replyThread:
+                    break
                 }
                 if !items.isEmpty {
                     showPopover(for: control, with: SPopoverViewController(items: items))
@@ -843,7 +845,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self?.sendCurrentMedia?(silent, date)
                 }), for: context.window)
             }
-        case .history:
+        case .history, .replyThread:
             sendCurrentMedia?(silent, atDate)
         }
     }
