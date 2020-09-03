@@ -891,6 +891,36 @@ internal final class L10n {
   }
   /// Leave a Comment
   internal static var channelCommentsLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.LeaveComment") }
+  /// %d
+  internal static func channelCommentsShortCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_countable", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsShortCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_few", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsShortCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_many", p1)
+  }
+  /// %d Comment
+  internal static func channelCommentsShortCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_one", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsShortCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_other", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsShortCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_two", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsShortCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Short.Count_zero", p1)
+  }
+  /// Comment
+  internal static var channelCommentsShortLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.Short.LeaveComment") }
   /// Add Members
   internal static var channelEditAdminPermissionInviteMembers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteMembers") }
   /// Add Subscribers

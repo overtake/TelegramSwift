@@ -54,7 +54,7 @@ class MGalleryPhotoItem: MGalleryItem {
             fatalError("photo item not supported entry type")
         }
         
-        self.representation = media.representations.last!
+        self.representation = media.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280)))!
         super.init(context, entry, pagerSize)
     }
     

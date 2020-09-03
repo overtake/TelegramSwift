@@ -299,8 +299,8 @@ class ChatRowItem: TableRowItem {
                 height = max(48, height)
             }
             
-            if let _ = commentsData, hasBubble {
-                height += ChatRowItem.channelCommentsHeight
+            if let _ = commentsBubbleData, hasBubble {
+                height += ChatRowItem.channelCommentsBubbleHeight
             }
         }
         
@@ -877,13 +877,16 @@ class ChatRowItem: TableRowItem {
         }
     }
     
-    static var channelCommentsHeight: CGFloat {
+    static var channelCommentsBubbleHeight: CGFloat {
         return 38
     }
-    private var _commentsData: ChannelCommentsRenderData?
-    var commentsData: ChannelCommentsRenderData? {
-        if let commentsData = _commentsData {
-            return commentsData
+    static var channelCommentsHeight: CGFloat {
+        return 16
+    }
+    private var _commentsBubbleData: ChannelCommentsRenderData?
+    var commentsBubbleData: ChannelCommentsRenderData? {
+        if let commentsBubbleData = _commentsBubbleData {
+            return commentsBubbleData
         }
         if !hasBubble || isStateOverlayLayout {
             return nil
@@ -901,6 +904,7 @@ class ChatRowItem: TableRowItem {
                             latestPeers = message.peers.filter { peerId, _ -> Bool in
                                 return attribute.latestUsers.contains(peerId)
                             }.map { $0.1 }
+                            break
                         }
                     }
                     
@@ -911,7 +915,43 @@ class ChatRowItem: TableRowItem {
                         title = L10n.channelCommentsCountCountable(Int(count))
                     }
                     
-                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, backgroundColor: .clear, highlightColor: presentation.colors.accent.withAlphaComponent(0.08), handler: { [weak self] in
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, backgroundColor: .clear, highlightColor: presentation.colors.accent.withAlphaComponent(0.08), handler: { [weak self] in
+                        self?.chatInteraction.openReplyThread(message.id, nil)
+                    })
+                }
+            default:
+                break
+            }
+        }
+        return _commentsBubbleData
+    }
+    
+    private var _commentsData: ChannelCommentsRenderData?
+    var commentsData: ChannelCommentsRenderData? {
+        if let commentsData = _commentsData {
+            return commentsData
+        }
+        if isBubbled {
+            return nil
+        }
+        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+            switch peer.info {
+            case let .broadcast(info):
+                if info.flags.contains(.hasDiscussionGroup) {
+                    var count: Int32 = 0
+                    for attr in message.attributes {
+                        if let attribute = attr as? ReplyThreadMessageAttribute {
+                            count = attribute.count
+                            break
+                        }
+                    }
+                    let title: String
+                    if count == 0 {
+                        title = L10n.channelCommentsShortLeaveComment
+                    } else {
+                        title = L10n.channelCommentsShortCountCountable(Int(count))
+                    }
+                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], backgroundColor: presentation.colors.chatBackground, highlightColor: presentation.colors.chatBackground, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, nil)
                     })
                 }
@@ -1557,6 +1597,7 @@ class ChatRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
         
+        commentsBubbleData?.makeSize()
         commentsData?.makeSize()
         
         captionLayout?.dropLayoutSize()
@@ -1682,9 +1723,15 @@ class ChatRowItem: TableRowItem {
             if let replyCount = replyCount {
                 supplyOffset += replyCount.0.size.width + 16
             }
-            authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + supplyOffset : 0) - rightSize.width)
-
             
+            if let _ = postAuthorAttributed {
+                supplyOffset += 50
+            }
+            if let commentsData = commentsData {
+                supplyOffset += commentsData.size(false).width
+            }
+            
+            authorText?.measure(width: widthForContent - adminWidth - rightSize.width - supplyOffset)
             
         }
       
@@ -1835,10 +1882,12 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.size.width, forwardWidth + bubbleDefaultInnerInset)
         
-        if let commentsData = commentsData {
-            rect.size.width = max(rect.size.width, commentsData.size.width)
+        if let commentsBubbleData = commentsBubbleData {
+            rect.size.width = max(rect.size.width, commentsBubbleData.size(true).width)
         }
-        
+        if let commentsData = commentsData {
+            rect.size.width = max(rect.size.width, commentsData.size(false).width)
+        }
         return rect
     }
     
