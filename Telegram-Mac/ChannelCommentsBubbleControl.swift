@@ -11,6 +11,8 @@ import TGUIKit
 import SyncCore
 import Postbox
 import SwiftSignalKit
+
+
 final class ChannelCommentsRenderData {
     let _title: NSAttributedString
     let peers:[Peer]
@@ -40,18 +42,25 @@ final class ChannelCommentsRenderData {
         self.title = TextNode.layoutText(maybeNode: titleNode, _title, .clear, 1, .end, NSMakeSize(200, 20), nil, false, .left)
     }
     
-    var size: NSSize {
+    func size(_ bubbled: Bool) -> NSSize {
         if let title = self.title {
             var width: CGFloat = 0
-            width += title.0.size.width
-            width += (6 * 4) + 13
-            if peers.isEmpty {
-                width += theme.icons.channel_comments_bubble.backingSize.width
+            if bubbled {
+                width += title.0.size.width
+                width += (6 * 4) + 13
+                if peers.isEmpty {
+                    width += theme.icons.channel_comments_bubble.backingSize.width
+                } else {
+                    width += 19 * CGFloat(peers.count)
+                }
+                width += theme.icons.channel_comments_bubble_next.backingSize.width
             } else {
-                width += 19 * CGFloat(peers.count)
+                width += title.0.size.width
+                width += 6
+                width += theme.icons.channel_comments_list.backingSize.width
             }
-            width += theme.icons.channel_comments_bubble_next.backingSize.width
-            return NSMakeSize(width, ChatRowItem.channelCommentsHeight)
+            
+            return NSMakeSize(width, bubbled ? ChatRowItem.channelCommentsBubbleHeight: ChatRowItem.channelCommentsHeight)
         }
         return .zero
     }
@@ -141,6 +150,63 @@ class ChannelCommentsBubbleControl: Control {
     override func layout() {
         super.layout()
         self.mergedAvatarsView?.centerY(x: 13 + 6)
+    }
+    
+}
+
+
+
+
+class ChannelCommentsControl: Control {
+    private var renderData: ChannelCommentsRenderData?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        
+        if let render = renderData, let title = render.title {
+                        
+            var rect: CGRect = .zero
+            
+            var f = focus(title.0.size)
+            f.origin.x = 0
+            rect = f
+            title.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+            
+            f = focus(theme.icons.channel_comments_list.backingSize)
+            f.origin.x = rect.maxX + 6
+            rect = f
+            ctx.draw(theme.icons.channel_comments_list, in: rect)
+            
+          
+            
+        }
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(data: ChannelCommentsRenderData) {
+        self.renderData = data
+        self.set(background: data.backgroundColor, for: .Normal)
+        
+        self.removeAllHandlers()
+        
+        
+        self.set(handler: { [weak data] _ in
+            data?.handler()
+        }, for: .Click)
+        
+        needsDisplay = true
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
     }
     
 }

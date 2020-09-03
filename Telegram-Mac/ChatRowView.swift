@@ -38,7 +38,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private(set) var captionView:TextView?
     private var shareView:ImageButton?
     private var likeView:ImageButton?
-    private var channelCommentsControl: ChannelCommentsBubbleControl?
+    private var channelCommentsBubbleControl: ChannelCommentsBubbleControl?
+    private var channelCommentsControl: ChannelCommentsControl?
 
     private var nameView:TextView?
     private var adminBadge: TextView?
@@ -526,8 +527,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rect.origin.y = contentFrame.maxY + item.defaultContentTopOffset
             }
             
-            if item.hasBubble, let _ = item.commentsData {
-                rect.origin.y -= ChatRowItem.channelCommentsHeight
+            if item.hasBubble, let _ = item.commentsBubbleData {
+                rect.origin.y -= ChatRowItem.channelCommentsBubbleHeight
             }
         }
         
@@ -765,8 +766,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             animatedView?.frame = bounds
             
+            channelCommentsBubbleControl?.frame = channelCommentsBubbleFrame
             channelCommentsControl?.frame = channelCommentsFrame
-            
 
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
@@ -942,22 +943,52 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    var channelCommentsFrame: CGRect {
-        guard let item = item as? ChatRowItem else {
+    var channelCommentsBubbleFrame: CGRect {
+        guard let item = item as? ChatRowItem, let _ = item.commentsBubbleData else {
             return .zero
         }
-        return NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsHeight)
+        return NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight)
+    }
+    var channelCommentsFrame: CGRect {
+        guard let item = item as? ChatRowItem, let commentsData = item.commentsData else {
+            return .zero
+        }
+        let rightFrame = self.rightFrame
+        let size = commentsData.size(false)
+        return CGRect(origin: CGPoint(x: rightFrame.minX - size.width - 4, y: rightFrame.minY), size: size)
     }
     
     func fillChannelComments(_ item: ChatRowItem, animated: Bool) {
-        if let commentsData = item.commentsData {
+        if let commentsBubbleData = item.commentsBubbleData {
             let current: ChannelCommentsBubbleControl
+            if let channelCommentsBubbleControl = self.channelCommentsBubbleControl {
+                current = channelCommentsBubbleControl
+            } else {
+                current = ChannelCommentsBubbleControl(frame: NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight))
+                self.channelCommentsBubbleControl = current
+                bubbleView.addSubview(current)
+            }
+            current.update(data: commentsBubbleData)
+        } else {
+            if let channelCommentsBubbleControl = self.channelCommentsBubbleControl {
+                self.channelCommentsBubbleControl = nil
+                if animated {
+                    channelCommentsBubbleControl.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak channelCommentsBubbleControl] _ in
+                        channelCommentsBubbleControl?.removeFromSuperview()
+                    })
+                } else {
+                    channelCommentsBubbleControl.removeFromSuperview()
+                }
+            }
+        }
+        if let commentsData = item.commentsData {
+            let current: ChannelCommentsControl
             if let channelCommentsControl = self.channelCommentsControl {
                 current = channelCommentsControl
             } else {
-                current = ChannelCommentsBubbleControl(frame: NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsHeight))
+                current = ChannelCommentsControl(frame: NSMakeRect(0, 0, commentsData.size(false).width, ChatRowItem.channelCommentsBubbleHeight))
                 self.channelCommentsControl = current
-                bubbleView.addSubview(current)
+                rowView.addSubview(current)
             }
             current.update(data: commentsData)
         } else {
@@ -971,6 +1002,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     channelCommentsControl.removeFromSuperview()
                 }
             }
+            
         }
     }
     
