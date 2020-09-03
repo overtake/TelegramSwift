@@ -16,8 +16,6 @@ import SwiftSignalKit
 final class ChannelCommentsRenderData {
     let _title: NSAttributedString
     let peers:[Peer]
-    let backgroundColor: NSColor
-    let highlightColor: NSColor
     
     let context: AccountContext
     let message: Message?
@@ -28,13 +26,11 @@ final class ChannelCommentsRenderData {
 
     fileprivate let handler: ()->Void
     
-    init(context: AccountContext, message: Message?, title: NSAttributedString, peers: [Peer], backgroundColor: NSColor, highlightColor: NSColor, handler: @escaping()->Void = {}) {
+    init(context: AccountContext, message: Message?, title: NSAttributedString, peers: [Peer], handler: @escaping()->Void = {}) {
         self.context = context
         self.message = message
         self._title = title
         self.peers = peers
-        self.backgroundColor = backgroundColor
-        self.highlightColor = highlightColor
         self.handler = handler
     }
     
@@ -97,11 +93,12 @@ class ChannelCommentsBubbleControl: Control {
             
             var f = focus(title.0.size)
             f.origin.x = rect.maxX + 6
+            f.origin.y -= 1
             rect = f
             title.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
             
             f = focus(theme.icons.channel_comments_bubble_next.backingSize)
-            f.origin.x = rect.maxX + 6
+            f.origin.x = frame.width - 6 - f.width
             rect = f
             ctx.draw(theme.icons.channel_comments_bubble_next, in: rect)
         }
@@ -116,10 +113,6 @@ class ChannelCommentsBubbleControl: Control {
     
     func update(data: ChannelCommentsRenderData) {
         self.renderData = data
-        self.set(background: data.backgroundColor, for: .Normal)
-        self.set(background: data.highlightColor, for: .Hover)
-        self.set(background: data.highlightColor.withAlphaComponent(0.16), for: .Highlight)
-        
         self.removeAllHandlers()
         
         
@@ -192,10 +185,8 @@ class ChannelCommentsControl: Control {
     
     func update(data: ChannelCommentsRenderData) {
         self.renderData = data
-        self.set(background: data.backgroundColor, for: .Normal)
         
         self.removeAllHandlers()
-        
         
         self.set(handler: { [weak data] _ in
             data?.handler()
