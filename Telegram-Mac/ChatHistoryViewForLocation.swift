@@ -123,20 +123,13 @@ enum ChatHistoryViewUpdate {
 }
 
 
-func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = []) -> Signal<ChatHistoryViewUpdate, NoError> {
+func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = [], contextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil)) -> Signal<ChatHistoryViewUpdate, NoError> {
     
     
     let account = context.account
     
-    let chatLocation: ChatLocationInput
-    switch _chatLocation {
-    case let .peer(peerId):
-        chatLocation = .peer(peerId)
-    case let .replyThread(messageId):
-        chatLocation = .external(messageId.peerId, context.peerChannelMemberCategoriesContextsManager.replyThread(account: context.account, messageId: messageId))
-    }
+    let chatLocation = context.chatLocationInput(for: _chatLocation, contextHolder: contextHolder)
     
-
     
     switch location {
     case let .Initial(count):

@@ -128,16 +128,6 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
         }
     }
     
-    func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {
-           let context: ReplyThreadHistoryContext
-           if let current = self.replyThreadHistoryContexts[messageId] {
-               context = current
-           } else {
-               context = ReplyThreadHistoryContext(account: account, peerId: messageId.peerId, threadMessageId: messageId)
-               self.replyThreadHistoryContexts[messageId] = context
-           }
-           return context.state
-       }
 
     
     func loadMore(peerId: PeerId, control: PeerChannelMemberCategoryControl) {
@@ -401,20 +391,7 @@ final class PeerChannelMemberCategoriesContextsManager {
     }
     
     func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {
-        return Signal { [weak self] subscriber in
-            guard let strongSelf = self else {
-                subscriber.putCompletion()
-                return EmptyDisposable
-            }
-            let disposable = MetaDisposable()
-            strongSelf.impl.with { impl in
-                disposable.set(impl.replyThread(account: account, messageId: messageId).start(next: { state in
-                    subscriber.putNext(state)
-                }))
-            }
-            return disposable
-        }
-        |> runOn(Queue.mainQueue())
+        return .complete()
     }
 
 

@@ -121,7 +121,9 @@ open class Control: View {
     
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        apply(state: self.controlState)
+        if window == nil {
+            self.controlState = .Normal
+        }
         updateTrackingAreas()
     }
     

@@ -654,7 +654,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId):
+        case let .replyThread(messageId, _):
             return .peer(messageId.peerId)
         }
     }
@@ -663,7 +663,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
-        case let .replyThread(messageId):
+        case let .replyThread(messageId, _):
             return .peer(peerId: messageId.peerId, components: [])
         }
     }
@@ -672,7 +672,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId):
+        case let .replyThread(messageId, _):
             return .peer(messageId.peerId)
         }
     }
@@ -681,7 +681,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return peerId
-        case let .replyThread(messageId):
+        case let .replyThread(messageId, _):
             return messageId.peerId
         }
     }
@@ -689,14 +689,18 @@ extension ChatLocation {
 
 extension ChatLocation : Hashable {
 
-    public var hashValue: Int {
+    func hash(into hasher: inout Hasher) {
         switch self {
         case let .peer(peerId):
-            return peerId.hashValue
-        case let .replyThread(messageId):
-            return messageId.hashValue
+            hasher.combine(peerId.hashValue)
+        case let .replyThread(threadMessageId, maxReadMessageId):
+            hasher.combine(threadMessageId.hashValue)
+            if let maxReadMessageId = maxReadMessageId {
+                hasher.combine(maxReadMessageId.hashValue)
+            }
         }
     }
+   
 }
 
 extension SuggestedLocalizationInfo {

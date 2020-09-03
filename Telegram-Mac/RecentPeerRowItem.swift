@@ -15,12 +15,14 @@ import SwiftSignalKit
 
 class RecentPeerRowItem: ShortPeerRowItem {
 
-    fileprivate let removeAction:()->Void
+    fileprivate let controlAction:()->Void
     fileprivate let canRemoveFromRecent:Bool
     fileprivate let badge: BadgeNode?
-    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, removeAction:@escaping()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, unreadBadge: UnreadSearchBadge = .none) {
+    fileprivate let canAddAsTag: Bool
+    init(_ initialSize:NSSize, peer: Peer, account:Account, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font:.medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, action:@escaping ()->Void = {}, canRemoveFromRecent: Bool = false, controlAction:@escaping()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, unreadBadge: UnreadSearchBadge = .none, canAddAsTag: Bool = false) {
         self.canRemoveFromRecent = canRemoveFromRecent
-        self.removeAction = removeAction
+        self.controlAction = controlAction
+        self.canAddAsTag = canAddAsTag
         switch unreadBadge {
         case let .muted(count):
             badge = BadgeNode(.initialize(string: "\(count)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
@@ -45,18 +47,18 @@ class RecentPeerRowItem: ShortPeerRowItem {
 
 class RecentPeerRowView : ShortPeerRowView {
     private var trackingArea:NSTrackingArea?
-    private let removeControl:ImageButton = ImageButton()
+    private let control:ImageButton = ImageButton()
     private var badgeView:View?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        //removeControl.autohighlight = false
+        //control.autohighlight = false
         layerContentsRedrawPolicy = .onSetNeedsDisplay
-        removeControl.isHidden = true
+        control.isHidden = true
         
-        removeControl.set(handler: { [weak self] _ in
+        control.set(handler: { [weak self] _ in
             if let item = self?.item as? RecentPeerRowItem {
-                item.removeAction()
+                item.controlAction()
             }
         }, for: .Click)
     }
@@ -106,24 +108,32 @@ class RecentPeerRowView : ShortPeerRowView {
     }
     
     override func updateMouse() {
-        if mouseInside(), removeControl.superview != nil {
-            removeControl.isHidden = false
+        if mouseInside(), control.superview != nil {
+            control.isHidden = false
             badgeView?.isHidden = true
         } else {
-            removeControl.isHidden = true
+            control.isHidden = true
             badgeView?.isHidden = false
         }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
-        removeControl.set(image: isSelect ? theme.icons.recentDismissActive : theme.icons.recentDismiss, for: .Normal)
-        _ = removeControl.sizeToFit()
+        
         if let item = item as? RecentPeerRowItem {
-            if item.canRemoveFromRecent {
-                addSubview(removeControl)
+            
+            
+            if item.canAddAsTag {
+                control.set(image: isSelect ? theme.icons.search_filter_add_peer_active : theme.icons.search_filter_add_peer, for: .Normal)
             } else {
-                removeControl.removeFromSuperview()
+                control.set(image: isSelect ? theme.icons.recentDismissActive : theme.icons.recentDismiss, for: .Normal)
+            }
+            _ = control.sizeToFit()
+            
+            if item.canRemoveFromRecent || item.canAddAsTag {
+                addSubview(control)
+            } else {
+                control.removeFromSuperview()
             }
             
             if let badgeNode = item.badge {
@@ -139,6 +149,7 @@ class RecentPeerRowView : ShortPeerRowView {
                 badgeView = nil
             }
         }
+        updateMouse()
         needsLayout = true
     }
     
@@ -152,7 +163,9 @@ class RecentPeerRowView : ShortPeerRowView {
     
     override func layout() {
         super.layout()
-        removeControl.centerY(x: frame.width - removeControl.frame.width - 13)
+        
+        
+        control.centerY(x: frame.width - control.frame.width - 10)
         if let badgeView = badgeView {
             badgeView.centerY(x: frame.width - badgeView.frame.width - 10)
         }

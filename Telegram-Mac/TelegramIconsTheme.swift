@@ -6894,6 +6894,84 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var search_filter_media: CGImage {
+      if let image = cached.with({ $0["search_filter_media"] }) {
+          return image
+      } else {
+          let image = _search_filter_media()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_media"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter_files: CGImage {
+      if let image = cached.with({ $0["search_filter_files"] }) {
+          return image
+      } else {
+          let image = _search_filter_files()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_files"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter_links: CGImage {
+      if let image = cached.with({ $0["search_filter_links"] }) {
+          return image
+      } else {
+          let image = _search_filter_links()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_links"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter_music: CGImage {
+      if let image = cached.with({ $0["search_filter_music"] }) {
+          return image
+      } else {
+          let image = _search_filter_music()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_music"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter_add_peer: CGImage {
+      if let image = cached.with({ $0["search_filter_add_peer"] }) {
+          return image
+      } else {
+          let image = _search_filter_add_peer()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_add_peer"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var search_filter_add_peer_active: CGImage {
+      if let image = cached.with({ $0["search_filter_add_peer_active"] }) {
+          return image
+      } else {
+          let image = _search_filter_add_peer_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_add_peer_active"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chat_reply_count_bubble_incoming: CGImage {
       if let image = cached.with({ $0["chat_reply_count_bubble_incoming"] }) {
           return image
@@ -6941,6 +7019,45 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chat_reply_count_overlay"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_comments_bubble: CGImage {
+      if let image = cached.with({ $0["channel_comments_bubble"] }) {
+          return image
+      } else {
+          let image = _channel_comments_bubble()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_comments_bubble"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_comments_bubble_next: CGImage {
+      if let image = cached.with({ $0["channel_comments_bubble_next"] }) {
+          return image
+      } else {
+          let image = _channel_comments_bubble_next()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_comments_bubble_next"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var channel_comments_list: CGImage {
+      if let image = cached.with({ $0["channel_comments_list"] }) {
+          return image
+      } else {
+          let image = _channel_comments_list()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_comments_list"] = image
               return current
           }
           return image
@@ -7477,10 +7594,19 @@ final class TelegramIconsTheme {
   private let _call_screen_sharing: ()->CGImage
   private let _call_screen_sharing_active: ()->CGImage
   private let _search_filter: ()->CGImage
+  private let _search_filter_media: ()->CGImage
+  private let _search_filter_files: ()->CGImage
+  private let _search_filter_links: ()->CGImage
+  private let _search_filter_music: ()->CGImage
+  private let _search_filter_add_peer: ()->CGImage
+  private let _search_filter_add_peer_active: ()->CGImage
   private let _chat_reply_count_bubble_incoming: ()->CGImage
   private let _chat_reply_count_bubble_outgoing: ()->CGImage
   private let _chat_reply_count: ()->CGImage
   private let _chat_reply_count_overlay: ()->CGImage
+  private let _channel_comments_bubble: ()->CGImage
+  private let _channel_comments_bubble_next: ()->CGImage
+  private let _channel_comments_list: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8013,10 +8139,19 @@ final class TelegramIconsTheme {
       call_screen_sharing: @escaping()->CGImage,
       call_screen_sharing_active: @escaping()->CGImage,
       search_filter: @escaping()->CGImage,
+      search_filter_media: @escaping()->CGImage,
+      search_filter_files: @escaping()->CGImage,
+      search_filter_links: @escaping()->CGImage,
+      search_filter_music: @escaping()->CGImage,
+      search_filter_add_peer: @escaping()->CGImage,
+      search_filter_add_peer_active: @escaping()->CGImage,
       chat_reply_count_bubble_incoming: @escaping()->CGImage,
       chat_reply_count_bubble_outgoing: @escaping()->CGImage,
       chat_reply_count: @escaping()->CGImage,
-      chat_reply_count_overlay: @escaping()->CGImage
+      chat_reply_count_overlay: @escaping()->CGImage,
+      channel_comments_bubble: @escaping()->CGImage,
+      channel_comments_bubble_next: @escaping()->CGImage,
+      channel_comments_list: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8548,9 +8683,18 @@ final class TelegramIconsTheme {
       self._call_screen_sharing = call_screen_sharing
       self._call_screen_sharing_active = call_screen_sharing_active
       self._search_filter = search_filter
+      self._search_filter_media = search_filter_media
+      self._search_filter_files = search_filter_files
+      self._search_filter_links = search_filter_links
+      self._search_filter_music = search_filter_music
+      self._search_filter_add_peer = search_filter_add_peer
+      self._search_filter_add_peer_active = search_filter_add_peer_active
       self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming
       self._chat_reply_count_bubble_outgoing = chat_reply_count_bubble_outgoing
       self._chat_reply_count = chat_reply_count
       self._chat_reply_count_overlay = chat_reply_count_overlay
+      self._channel_comments_bubble = channel_comments_bubble
+      self._channel_comments_bubble_next = channel_comments_bubble_next
+      self._channel_comments_list = channel_comments_list
   }
 }

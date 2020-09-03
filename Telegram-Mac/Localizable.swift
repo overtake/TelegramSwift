@@ -861,6 +861,36 @@ internal final class L10n {
   internal static var channelBlockUserCanSendMessages: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendMessages") }
   /// Can Send Stickers & GIFs
   internal static var channelBlockUserCanSendStickers: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendStickers") }
+  /// %d
+  internal static func channelCommentsCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_countable", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_few", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_many", p1)
+  }
+  /// %d Comment
+  internal static func channelCommentsCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_one", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_other", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_two", p1)
+  }
+  /// %d Comments
+  internal static func channelCommentsCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.Comments.Count_zero", p1)
+  }
+  /// Leave a Comment
+  internal static var channelCommentsLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.LeaveComment") }
   /// Add Members
   internal static var channelEditAdminPermissionInviteMembers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteMembers") }
   /// Add Subscribers
@@ -1923,6 +1953,8 @@ internal final class L10n {
   }
   /// Reminder
   internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
+  /// Replies
+  internal static var chatTitleReplies: String  { return L10n.tr("Localizable", "Chat.Title.Replies") }
   /// Scheduled Messages
   internal static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
@@ -3833,6 +3865,10 @@ internal final class L10n {
   internal static var messageContextShare: String  { return L10n.tr("Localizable", "Message.Context.Share") }
   /// Unpin
   internal static var messageContextUnpin: String  { return L10n.tr("Localizable", "Message.Context.Unpin") }
+  /// View Replies
+  internal static var messageContextViewReplies: String  { return L10n.tr("Localizable", "Message.Context.ViewReplies") }
+  /// View Thread
+  internal static var messageContextViewThread: String  { return L10n.tr("Localizable", "Message.Context.ViewThread") }
   /// Notify all members
   internal static var messageContextConfirmNotifyPin: String  { return L10n.tr("Localizable", "Message.Context.Confirm.NotifyPin") }
   /// Would you like to pin this message?
@@ -3895,6 +3931,8 @@ internal final class L10n {
   internal static var messagesFileStateRemote: String  { return L10n.tr("Localizable", "Messages.File.State.Remote") }
   /// Broadcast...
   internal static var messagesPlaceholderBroadcast: String  { return L10n.tr("Localizable", "Messages.Placeholder.Broadcast") }
+  /// Reply
+  internal static var messagesPlaceholderReply: String  { return L10n.tr("Localizable", "Messages.Placeholder.Reply") }
   /// Write a message...
   internal static var messagesPlaceholderSentMessage: String  { return L10n.tr("Localizable", "Messages.Placeholder.SentMessage") }
   /// Silent Broadcast...
@@ -5489,6 +5527,20 @@ internal final class L10n {
   internal static var scheduleControllerTitle: String  { return L10n.tr("Localizable", "ScheduleController.Title") }
   /// Are you sure you want to clear your search history?
   internal static var searchConfirmClearHistory: String  { return L10n.tr("Localizable", "Search.Confirm.ClearHistory") }
+  /// Clear Filter
+  internal static var searchFilterClearFilter: String  { return L10n.tr("Localizable", "Search.Filter.ClearFilter") }
+  /// Files
+  internal static var searchFilterFiles: String  { return L10n.tr("Localizable", "Search.Filter.Files") }
+  /// GIFs
+  internal static var searchFilterGIFs: String  { return L10n.tr("Localizable", "Search.Filter.GIFs") }
+  /// Links
+  internal static var searchFilterLinks: String  { return L10n.tr("Localizable", "Search.Filter.Links") }
+  /// Music
+  internal static var searchFilterMusic: String  { return L10n.tr("Localizable", "Search.Filter.Music") }
+  /// Photos
+  internal static var searchFilterPhotos: String  { return L10n.tr("Localizable", "Search.Filter.Photos") }
+  /// Videos
+  internal static var searchFilterVideos: String  { return L10n.tr("Localizable", "Search.Filter.Videos") }
   /// %@ %d
   internal static func searchGlobalChannel1Countable(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Search.Global.Channel1_countable", p1, p2)

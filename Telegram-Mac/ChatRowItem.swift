@@ -299,14 +299,9 @@ class ChatRowItem: TableRowItem {
                 height = max(48, height)
             }
             
-//            if self is ChatMessageItem {
-//                height += 4
-//            } else {
-//                height += 2
-//            }
-            //height = max(height, 40)
-            
-            //height = max(height, 48)
+            if let _ = commentsData, hasBubble {
+                height += ChatRowItem.channelCommentsHeight
+            }
         }
         
 
@@ -882,6 +877,51 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    static var channelCommentsHeight: CGFloat {
+        return 38
+    }
+    private var _commentsData: ChannelCommentsRenderData?
+    var commentsData: ChannelCommentsRenderData? {
+        if let commentsData = _commentsData {
+            return commentsData
+        }
+        if !hasBubble || isStateOverlayLayout {
+            return nil
+        }
+        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+            switch peer.info {
+            case let .broadcast(info):
+                if info.flags.contains(.hasDiscussionGroup) {
+                    
+                    var latestPeers:[Peer] = []
+                    var count: Int32 = 0
+                    for attr in message.attributes {
+                        if let attribute = attr as? ReplyThreadMessageAttribute {
+                            count = attribute.count
+                            latestPeers = message.peers.filter { peerId, _ -> Bool in
+                                return attribute.latestUsers.contains(peerId)
+                            }.map { $0.1 }
+                        }
+                    }
+                    
+                    let title: String
+                    if count == 0 {
+                        title = L10n.channelCommentsLeaveComment
+                    } else {
+                        title = L10n.channelCommentsCountCountable(Int(count))
+                    }
+                    
+                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, backgroundColor: .clear, highlightColor: presentation.colors.accent.withAlphaComponent(0.08), handler: { [weak self] in
+                        self?.chatInteraction.openReplyThread(message.id, nil)
+                    })
+                }
+            default:
+                break
+            }
+        }
+        return _commentsData
+    }
+    
     var forceBackgroundColor: NSColor? = nil
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
@@ -1314,8 +1354,16 @@ class ChatRowItem: TableRowItem {
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
+            var threadId: MessageId?
+            switch chatInteraction.mode {
+            case let .replyThread(messageId):
+                threadId = messageId
+            default:
+                threadId = nil
+            }
+            
             for attribute in message.attributes {
-                if let attribute = attribute as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[attribute.messageId]  {
+                if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
                     self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
@@ -1345,8 +1393,8 @@ class ChatRowItem: TableRowItem {
                         fullDate = "\(author)\(fullDate)"
                     }
                 }
-                if let attribute = attribute as? ReplyThreadMessageAttribute {
-                    replyCountAttributed = .initialize(string: max(1, Int(attribute.count)).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0, threadId == nil, let peer = peer, !peer.isChannel {
+                    replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 }
                 
 //                if FastSettings.isTestLiked(message.id) {
@@ -1509,6 +1557,8 @@ class ChatRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
         
+        commentsData?.makeSize()
+        
         captionLayout?.dropLayoutSize()
         
         if let channelViewsAttributed = channelViewsAttributed {
@@ -1627,10 +1677,10 @@ class ChatRowItem: TableRowItem {
             
             var supplyOffset: CGFloat = 0
             if let channelViews = channelViews {
-                supplyOffset += channelViews.0.size.width + 20
+                supplyOffset += channelViews.0.size.width + 16
             }
             if let replyCount = replyCount {
-                supplyOffset += replyCount.0.size.width + 20
+                supplyOffset += replyCount.0.size.width + 16
             }
             authorText?.measure(width: widthForContent - adminWidth - (postAuthorAttributed != nil ? 50 + supplyOffset : 0) - rightSize.width)
 
@@ -1701,6 +1751,7 @@ class ChatRowItem: TableRowItem {
                  replyMarkupModel?.measureSize(_contentSize.width)
             }
         }
+        
         
         return result
     }
@@ -1783,6 +1834,10 @@ class ChatRowItem: TableRowItem {
         rect.size.width = max(rect.size.width, replyWidth + bubbleDefaultInnerInset)
         
         rect.size.width = max(rect.size.width, forwardWidth + bubbleDefaultInnerInset)
+        
+        if let commentsData = commentsData {
+            rect.size.width = max(rect.size.width, commentsData.size.width)
+        }
         
         return rect
     }
@@ -1944,17 +1999,18 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
-    for attr in message.attributes {
-        
-        if let attr = attr as? ReplyThreadMessageAttribute, attr.count > 0 {
-            items.append(ContextMenuItem("View Replies", handler: {
-                chatInteraction.openReplyThread(message.id, message.id)
-            }))
-        }
-        if let attr = attr as? ReplyMessageAttribute, let threadId = attr.threadMessageId, threadId != message.id {
-            items.append(ContextMenuItem("View Thread", handler: {
-                chatInteraction.openReplyThread(threadId, message.id)
-            }))
+    if chatInteraction.mode.threadId == nil {
+        for attr in message.attributes {
+            if let attr = attr as? ReplyThreadMessageAttribute, attr.count > 0 {
+                items.append(ContextMenuItem(L10n.messageContextViewReplies, handler: {
+                    chatInteraction.openReplyThread(message.id, message.id)
+                }))
+            }
+            if let attr = attr as? ReplyMessageAttribute, let threadId = attr.threadMessageId, threadId != message.id {
+                items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
+                    chatInteraction.openReplyThread(threadId, message.id)
+                }))
+            }
         }
     }
     
