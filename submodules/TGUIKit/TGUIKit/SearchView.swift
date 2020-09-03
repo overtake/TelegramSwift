@@ -72,12 +72,12 @@ public final class CustomSearchController {
     
     fileprivate var clickHandlerIdentifier: UInt32 = 0
     fileprivate let icon: CGImage
-    public let clickHandler:(Control, @escaping(String?)->Void)->Void
-    fileprivate let dropFilter:()->Void
-    public init(clickHandler:@escaping(Control, @escaping(String?)->Void)->Void, dropFilter:@escaping()->Void, icon: CGImage) {
+    public let clickHandler:(Control, @escaping([String], CGImage)->Void)->Void
+    fileprivate let dropLastTag:()->Void
+    public init(clickHandler:@escaping(Control, @escaping([String], CGImage)->Void)->Void, dropLastTag:@escaping()->Void, icon: CGImage) {
         self.clickHandler = clickHandler
         self.icon = icon
-        self.dropFilter = dropFilter
+        self.dropLastTag = dropLastTag
     }
     
 }
@@ -87,56 +87,60 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public private(set) var state:SearchFieldState = .None
     
     
-    private func updateFilterTitle(_ title: String?) {
-        if let filterButton = self.filterButton {
-            self.filterButton = nil
-            filterButton.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak filterButton] _ in
-                filterButton?.removeFromSuperview()
-            })
+    public func updateTags(_ tags: [String], _ image: CGImage) {
+        
+        for tag in self.tags {
+            tag.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak tag] _ in
+                  tag?.removeFromSuperview()
+             })
         }
-        if let title = title {
-            let filterButton = TitleButton()
-            filterButton.animates = false
-            filterButton.set(font: .normal(12), for: .Normal)
-            filterButton.set(color: presentation.colors.underSelectedColor, for: .Normal)
-            filterButton.set(background: presentation.colors.accent.withAlphaComponent(0.9), for: .Normal)
-            filterButton.set(text: title, for: .Normal)
-            
-            filterButton.set(background: presentation.colors.accent, for: .Highlight)
+        self.tags.removeAll()
 
+        var x: CGFloat = 35
+        
+        for title in tags {
+            let tagView = TitleButton()
+            tagView.animates = false
+            tagView.set(font: .normal(12), for: .Normal)
+            tagView.set(color: presentation.colors.underSelectedColor, for: .Normal)
+            tagView.set(background: presentation.colors.accent.withAlphaComponent(0.9), for: .Normal)
+            tagView.set(text: title, for: .Normal)
             
-            filterButton.set(handler: { control in
+            tagView.set(background: presentation.colors.accent, for: .Highlight)
+            
+            tagView.set(handler: { control in
                 control.isSelected = !control.isSelected
             }, for: .Click)
             
+            _ = tagView.sizeToFit(NSMakeSize(6, 6), thatFit: false)
+            tagView.layer?.cornerRadius = 6
+            addSubview(tagView)
+            tagView.centerY(x: x)
+            tagView.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+            self.tags.append(tagView)
             
-            _ = filterButton.sizeToFit(NSMakeSize(6, 6), thatFit: false)
-            filterButton.layer?.cornerRadius = 6
-            addSubview(filterButton)
-            filterButton.centerY(x: 35)
-            self.filterButton = filterButton
-            filterButton.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+            x += tagView.frame.width + 5
         }
         
         inputContainer._change(pos: NSMakePoint(placeholderTextInset + 8, inputContainer.frame.minY), animated: true)
         
-        let pHidden = !input.string.isEmpty || filterButton != nil
+        let pHidden = !input.string.isEmpty || !tags.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
+        search.set(image: image, for: .Normal)
     }
     
     public var customSearchControl: CustomSearchController? {
         didSet {
             if let oldValue = oldValue {
                 search.removeHandler(oldValue.clickHandlerIdentifier)
-                search.set(image: presentation.search.searchImage, for: .Normal)
-                updateFilterTitle(nil)
+                updateTags([], presentation.search.searchImage)
             }
             if let customSearchControl = customSearchControl {
                 customSearchControl.clickHandlerIdentifier = search.set(handler: { [weak customSearchControl, weak self] control in
-                    customSearchControl?.clickHandler(control, { title in
-                        self?.updateFilterTitle(title)
+                    customSearchControl?.clickHandler(control, { titles, image  in
+                        self?.updateTags(titles, image)
                     })
                 }, for: .Click)
                 search.set(image: customSearchControl.icon, for: .Normal)
@@ -149,7 +153,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     private var lock:Bool = false
     
-    private var filterButton: TitleButton?
+    private var tags: [TitleButton] = []
     
     private let clear:ImageButton = ImageButton()
     private let search:ImageButton = ImageButton()
@@ -218,8 +222,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     open var placeholderTextInset: CGFloat {
-        if let filterButton = filterButton {
-            return startTextInset + filterButton.frame.width + 5
+        if !tags.isEmpty {
+            let width: CGFloat = tags.reduce(0, { current, value in
+                return current + value.frame.width + 5
+            })
+            return startTextInset + width
         } else {
             return startTextInset
         }
@@ -316,9 +323,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     open func cancelSearch() {
         if self.query.isEmpty {
-            if filterButton != nil {
-                updateFilterTitle(nil)
-                customSearchControl?.dropFilter()
+            if !tags.isEmpty {
+                customSearchControl?.dropLastTag()
             } else {
                 self.change(state: .None, true)
             }
@@ -353,7 +359,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         _searchValue.set(value)
         
 
-        let pHidden = !input.string.isEmpty || filterButton != nil
+        let pHidden = !input.string.isEmpty || !tags.isEmpty
         if placeholder.isHidden != pHidden {
             placeholder.isHidden = pHidden
         }
@@ -365,7 +371,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             window?.makeFirstResponder(input)
         }
         
-        filterButton?.isSelected = false
+        for tag in tags {
+            tag.isSelected = false
+        }
     }
     
     open override func mouseUp(with event: NSEvent) {
@@ -383,12 +391,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     open func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(deleteBackward(_:)) {
-            if query.isEmpty, let filterButton = filterButton {
-                if filterButton.isSelected {
-                    updateFilterTitle(nil)
-                    customSearchControl?.dropFilter()
+            if query.isEmpty, let tag = tags.last {
+                if tag.isSelected {
+                    customSearchControl?.dropLastTag()
                 } else {
-                    filterButton.isSelected = true
+                    tag.isSelected = true
                 }
                 return true
             }
@@ -524,10 +531,12 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 
                 let fromX:CGFloat = animateContainer.frame.minX
                 animateContainer.centerY(x: leftInset)
-
-                //NSMakeSize(
                 
-                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - (inset * 3) - (clear.frame.width * 2) - (filterButton != nil ? filterButton!.frame.width + 10 : 0), animateContainer.frame.height)
+                let tagsWidth: CGFloat = tags.reduce(0, { current, value in
+                    return current + value.frame.width + 10
+                })
+                
+                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, animateContainer.frame.height)
                 input.frame = inputContainer.bounds
                 
                 input.isHidden = false
@@ -642,7 +651,12 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         placeholder.centerY(addition: -1)
         clear.centerY(x: frame.width - inset - clear.frame.width)
         progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
-        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2) - (filterButton != nil ? filterButton!.frame.width + 10 : 0), inputContainer.frame.height))
+        
+        let tagsWidth: CGFloat = tags.reduce(0, { current, value in
+            return current + value.frame.width + 10
+        })
+        
+        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, inputContainer.frame.height))
         inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
         search.centerY(addition: -1)
     }

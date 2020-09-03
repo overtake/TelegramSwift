@@ -325,14 +325,43 @@ class PeerListContainerView : View {
     }
     
     
-    func searchStateChanged(_ state: SearchFieldState, animated: Bool, updateSearchTags: @escaping(MessageTags?)->Void) {
+    func searchStateChanged(_ state: SearchFieldState, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void) {
         self.searchState = state
         searchView.change(size: NSMakeSize(state == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
         compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
         
         var currentTag: MessageTags?
+        var currentPeerTag: Peer?
+        
 
+        let tags:[(MessageTags?, String, CGImage)] = [(nil, L10n.searchFilterClearFilter, theme.icons.search_filter),
+                                            (.photo, L10n.searchFilterPhotos, theme.icons.search_filter_media),
+                                            (.video, L10n.searchFilterVideos, theme.icons.search_filter_media),
+                                            (.webPage, L10n.searchFilterLinks, theme.icons.search_filter_links),
+                                            (.music, L10n.searchFilterMusic, theme.icons.search_filter_music),
+                                            (.gif, L10n.searchFilterGIFs, theme.icons.search_filter_media),
+                                            (.file, L10n.searchFilterFiles, theme.icons.search_filter_files)]
+        
+        let collectTags: ()-> ([String], CGImage) = {
+            var values: [String] = []
+            let image: CGImage
+
+            if let tag = currentPeerTag {
+                values.append(tag.compactDisplayTitle.prefix(10))
+            }
+            if let tag = currentTag {
+                if let found = tags.first(where: { $0.0 == tag }) {
+                    values.append(found.1)
+                    image = found.2
+                } else {
+                    image = theme.icons.search_filter
+                }
+            } else {
+                image = theme.icons.search_filter
+            }
+            return (values, image)
+        }
         
         switch state {
         case .Focus:
@@ -341,13 +370,6 @@ class PeerListContainerView : View {
                 
                 var items: [SPopoverItem] = []
 
-                let tags:[(MessageTags?, String)] = [(nil, "Clear Filter"),
-                                                    (.photo, "Photos"),
-                                                    (.video, "Videos"),
-                                                    (.webPage, "Links"),
-                                                    (.music, "Music"),
-                                                    (.gif, "GIFs"),
-                                                    (.file, "Files")]
                 
                 for tag in tags {
                     var append: Bool = false
@@ -357,21 +379,33 @@ class PeerListContainerView : View {
                     if append {
                         items.append(SPopoverItem(tag.1, {
                             currentTag = tag.0
-                            updateSearchTags(currentTag)
-                            if tag.0 == nil {
-                                updateTitle(nil)
-                            } else {
-                                updateTitle(tag.1)
-                            }
+                            updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                            let collected = collectTags()
+                            updateTitle(collected.0, collected.1)
                         }))
                     }
                 }
                 
                 showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
-            }, dropFilter: {
-                currentTag = nil
-                updateSearchTags(currentTag)
+            }, dropLastTag: { [weak self] in
+                if currentTag != nil {
+                    currentTag = nil
+                } else if currentPeerTag != nil {
+                    currentPeerTag = nil
+                }
+                updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                let collected = collectTags()
+                self?.searchView.updateTags(collected.0, collected.1)
             }, icon: theme.icons.search_filter)
+            
+            updatePeerTag( { [weak self] updatedPeerTag in
+                currentPeerTag = updatedPeerTag
+                updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                self?.searchView.setString("")
+                let collected = collectTags()
+                self?.searchView.updateTags(collected.0, collected.1)
+            })
+            
         case .None:
             searchView.customSearchControl = nil
         }
@@ -674,6 +708,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             self.genericView.searchStateChanged(state.state, animated: animated, updateSearchTags: { [weak self] tags in
                 self?.searchController?.updateSearchTags(tags)
+            }, updatePeerTag: { [weak self] f in
+                self?.searchController?.setPeerAsTag = f
             })
 
         }, { [weak self] state in
@@ -720,7 +756,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     } else {
                         self?.genericView.searchView.cancel(true)
                     }
-                    }, options: self.searchOptions, frame:NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height))
+                }, options: self.searchOptions, frame:NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height))
                 
                 searchController.pinnedItems = self.collectPinnedItems
                 

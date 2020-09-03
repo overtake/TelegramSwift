@@ -146,6 +146,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     private var textPlaceholder: String {
+        if case .replyThread = chatInteraction.mode {
+            return L10n.messagesPlaceholderReply
+        }
         if let peer = chatInteraction.presentation.peer {
             if peer.isChannel {
                 if textView.frame.width < 150 {

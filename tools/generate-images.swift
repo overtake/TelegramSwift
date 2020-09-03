@@ -571,12 +571,24 @@ func initialize() -> [String] {
 
     
     array.append("search_filter")
-    
+    array.append("search_filter_media")
+    array.append("search_filter_files")
+    array.append("search_filter_links")
+    array.append("search_filter_music")
+    array.append("search_filter_add_peer")
+    array.append("search_filter_add_peer_active")
+
     
     array.append("chat_reply_count_bubble_incoming")
     array.append("chat_reply_count_bubble_outgoing")
     array.append("chat_reply_count")
     array.append("chat_reply_count_overlay")
+    
+    array.append("channel_comments_bubble")
+    array.append("channel_comments_bubble_next")
+    array.append("channel_comments_list")
+
+    
     
     return array
 }

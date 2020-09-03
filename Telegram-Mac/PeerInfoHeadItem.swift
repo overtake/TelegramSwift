@@ -219,7 +219,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if cachedData.statsDatacenterId > 0 {
+            if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
@@ -246,7 +246,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if cachedData.statsDatacenterId > 0 {
+            if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))

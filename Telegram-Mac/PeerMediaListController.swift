@@ -402,7 +402,7 @@ class PeerMediaListController: TableViewController {
                     }
                 } else {
                     let searchMessagesLocation: SearchMessagesLocation
-                    searchMessagesLocation = .peer(peerId: strongSelf.chatLocation.peerId, fromId: nil, tags: tagMask)
+                    searchMessagesLocation = .peer(peerId: strongSelf.chatLocation.peerId, fromId: nil, tags: tagMask, topMsgId: nil)
                     
                     let signal = searchMessages(account: strongSelf.context.account, location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil, searchState: searchState)

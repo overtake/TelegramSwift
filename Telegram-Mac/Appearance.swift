@@ -1929,8 +1929,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerInfoVerifyProfile: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed() },
                                                peerInfoCall: { #imageLiteral(resourceName: "Icon_ProfileCall").precomposed(palette.accent) },
                                                callOutgoing: { #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true) },
-                                               recentDismiss: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon) },
-                                               recentDismissActive: { #imageLiteral(resourceName: "Icon_SearchClear").precomposed(.white) },
+                                               recentDismiss: { NSImage(named: "Icon_Search_RemoveRecent")!.precomposed(palette.grayIcon) },
+                                               recentDismissActive: { NSImage(named: "Icon_Search_RemoveRecent")!.precomposed(palette.underSelectedColor) },
                                                webgameShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                chatSearchCancel: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                chatSearchFrom: { #imageLiteral(resourceName: "Icon_ChatSearchFrom").precomposed(palette.accentIcon) },
@@ -2280,10 +2280,19 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                call_screen_sharing: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.white) },
                                                call_screen_sharing_active: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.grayIcon) },
                                                search_filter: { NSImage(named: "Icon_SearchFilter")!.precomposed(palette.grayIcon) },
+                                               search_filter_media: { NSImage(named: "Icon_SearchFilter_Media")!.precomposed(palette.grayIcon) },
+                                               search_filter_files: { NSImage(named: "Icon_SearchFilter_Files")!.precomposed(palette.grayIcon) },
+                                               search_filter_links: { NSImage(named: "Icon_SearchFilter_Links")!.precomposed(palette.grayIcon) },
+                                               search_filter_music: { NSImage(named: "Icon_SearchFilter_Music")!.precomposed(palette.grayIcon) },
+                                               search_filter_add_peer: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.grayIcon) },
+                                               search_filter_add_peer_active: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.underSelectedColor) }, 
                                                chat_reply_count_bubble_incoming: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
                                                chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
                                                chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon, flipVertical: true) },
-                                               chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white, flipVertical: true) }
+                                               chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white, flipVertical: true) },
+                                               channel_comments_bubble: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.accentIconBubble_incoming, flipVertical: true) },
+                                               channel_comments_bubble_next: { NSImage(named: "Icon_ChannelComments_Next")!.precomposed(palette.accentIconBubble_incoming, flipVertical: true) },
+                                               channel_comments_list: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.accent, flipVertical: true) }
 
     )
 

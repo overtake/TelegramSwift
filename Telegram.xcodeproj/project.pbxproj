@@ -800,6 +800,7 @@
 		D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */; };
 		D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */; };
 		D0439A2023410D5400C1E6F9 /* WalletUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0439A1F23410D5400C1E6F9 /* WalletUtils.swift */; };
+		D048EDDE24FFEC5600977606 /* ChannelCommentsBubbleControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */; };
 		D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */; };
 		D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
 		D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
@@ -911,6 +912,7 @@
 		D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */; };
 		D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
+		D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */; };
 		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
@@ -1964,6 +1966,7 @@
 		D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerFramePreview.swift; sourceTree = "<group>"; };
 		D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSoftwareVideoSource.swift; sourceTree = "<group>"; };
 		D0439A1F23410D5400C1E6F9 /* WalletUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletUtils.swift; sourceTree = "<group>"; };
+		D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelCommentsBubbleControl.swift; sourceTree = "<group>"; };
 		D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccentColorModalController.swift; sourceTree = "<group>"; };
 		D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramIconsTheme.swift; sourceTree = "<group>"; };
 		D050518F2342BA6700D93176 /* WalletSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSettingsController.swift; sourceTree = "<group>"; };
@@ -2078,6 +2081,7 @@
 		D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageCleanProgressRowItem.swift; sourceTree = "<group>"; };
 		D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCallsConfiguration.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
+		D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergedAvatarsView.swift; sourceTree = "<group>"; };
 		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
 		D0FFCEBD215A7CB700995AFE /* emoji14.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji14.txt; sourceTree = "<group>"; };
@@ -2823,6 +2827,8 @@
 				C2E8694C1F43500D00BDD0A2 /* ChatNavigationMention.swift */,
 				A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */,
 				A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */,
+				D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */,
+				D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5294,6 +5300,7 @@
 				D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
+				D048EDDE24FFEC5600977606 /* ChannelCommentsBubbleControl.swift in Sources */,
 				9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */,
 				C2E0646B1ECF137300387BB8 /* ChatInvoiceItem.swift in Sources */,
 				C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */,
@@ -5795,6 +5802,7 @@
 				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
+				D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */,
 				C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */,
 				9F1962D82101458C00FFF048 /* VCardLocationRowItem.swift in Sources */,
 				9FC8ADA42063B6450094F7B4 /* PassportTwoStepVerificationIntroItem.swift in Sources */,

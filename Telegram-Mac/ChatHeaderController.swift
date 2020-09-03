@@ -311,13 +311,17 @@ class ChatPinnedView : Control {
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
     init(_ messageId:MessageId, chatInteraction:ChatInteraction) {
-        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true)
+        
+        
+        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true, headerAsName: chatInteraction.mode.threadId == messageId)
         self.chatInteraction = chatInteraction
         super.init()
         
         dismiss.disableActions()
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         _ = self.dismiss.sizeToFit()
+        
+        self.dismiss.isHidden = chatInteraction.mode.threadId == messageId
         
         self.set(handler: { [weak self] _ in
             self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
@@ -357,8 +361,8 @@ class ChatPinnedView : Control {
     
  
     override func layout() {
-        node.measureSize(frame.width - 70)
-        container.setFrameSize(frame.width - 70, node.size.height)
+        node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
+        container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
         container.centerY(x: 20)
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         node.setNeedDisplay()

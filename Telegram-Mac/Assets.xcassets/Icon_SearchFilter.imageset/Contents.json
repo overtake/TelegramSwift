@@ -1,13 +1,13 @@
 {
   "images" : [
     {
+      "filename" : "ic_search_all.png",
       "idiom" : "universal",
-      "filename" : "ic_searchmenu.png",
       "scale" : "1x"
     },
     {
+      "filename" : "ic_search_all@2x.png",
       "idiom" : "universal",
-      "filename" : "ic_searchmenu@2x.png",
       "scale" : "2x"
     },
     {
@@ -16,7 +16,7 @@
     }
   ],
   "info" : {
-    "version" : 1,
-    "author" : "xcode"
+    "author" : "xcode",
+    "version" : 1
   }
 }

@@ -12,12 +12,16 @@ import Postbox
 import TelegramCore
 import SyncCore
 import TGUIKit
-//import WalletCore
 import SyncCore
+
+protocol ChatLocationContextHolder: class {
+}
+
+
 
 enum ChatLocation: Equatable {
     case peer(PeerId)
-    case replyThread(MessageId)
+    case replyThread(threadMessageId: MessageId, maxReadMessageId: MessageId?)
 }
 
 
@@ -30,152 +34,6 @@ struct TemporaryPasswordContainer {
         return date + 15 * 60 > Date().timeIntervalSince1970
     }
 }
-//
-//private final class TonInstanceData {
-//    var config: String?
-//    var blockchainName: String?
-//    var instance: TonInstance?
-//}
-//
-//private final class TonNetworkProxyImpl: TonNetworkProxy {
-//    private let network: Network
-//
-//    init(network: Network) {
-//        self.network = network
-//    }
-//
-//    func request(data: Data, timeout timeoutValue: Double, completion: @escaping (TonNetworkProxyResult) -> Void) -> Disposable {
-//        return (walletProxyRequest(network: self.network, data: data)
-//            |> timeout(timeoutValue, queue: .concurrentDefaultQueue(), alternate: .fail(.generic(500, "Local Timeout")))).start(next: { data in
-//                completion(.reponse(data))
-//            }, error: { error in
-//                switch error {
-//                case let .generic(_, text):
-//                    completion(.error(text))
-//                }
-//            })
-//    }
-//}
-//
-//final class WalletStorageInterfaceImpl: WalletStorageInterface {
-//    private let postbox: Postbox
-//
-//    init(postbox: Postbox) {
-//        self.postbox = postbox
-//    }
-//
-//    func watchWalletRecords() -> Signal<[WalletStateRecord], NoError> {
-//        return self.postbox.preferencesView(keys: [PreferencesKeys.walletCollection])
-//            |> map { view -> [WalletStateRecord] in
-//                guard let walletCollection = view.values[PreferencesKeys.walletCollection] as? WalletCollection else {
-//                    return []
-//                }
-//                return walletCollection.wallets.compactMap { item -> WalletStateRecord? in
-//                    do {
-//                        return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
-//                    } catch {
-//                        return nil
-//                    }
-//                }
-//        }
-//    }
-//
-//    func getWalletRecords() -> Signal<[WalletStateRecord], NoError> {
-//        return self.postbox.transaction { transaction -> [WalletStateRecord] in
-//            guard let walletCollection = transaction.getPreferencesEntry(key: PreferencesKeys.walletCollection) as? WalletCollection else {
-//                return []
-//            }
-//            return walletCollection.wallets.compactMap { item -> WalletStateRecord? in
-//                do {
-//                    return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
-//                } catch {
-//                    return nil
-//                }
-//            }
-//        }
-//    }
-//
-//    func updateWalletRecords(_ f: @escaping ([WalletStateRecord]) -> [WalletStateRecord]) -> Signal<[WalletStateRecord], NoError> {
-//        return self.postbox.transaction { transaction -> [WalletStateRecord] in
-//            let updatedRecords: [WalletStateRecord] = []
-//            transaction.updatePreferencesEntry(key: PreferencesKeys.walletCollection, { current in
-//                var walletCollection = (current as? WalletCollection) ?? WalletCollection(wallets: [])
-//                let updatedItems = f(walletCollection.wallets.compactMap { item -> WalletStateRecord? in
-//                    do {
-//                        return WalletStateRecord(info: try JSONDecoder().decode(WalletInfo.self, from: item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap { try? JSONDecoder().decode(CombinedWalletState.self, from: $0) })
-//                    } catch {
-//                        return nil
-//                    }
-//                })
-//                walletCollection.wallets = updatedItems.compactMap { item in
-//                    do {
-//                        return WalletCollectionItem(info: try JSONEncoder().encode(item.info), exportCompleted: item.exportCompleted, state: item.state.flatMap {
-//                            try? JSONEncoder().encode($0)
-//                        })
-//                    } catch {
-//                        return nil
-//                    }
-//                }
-//                return walletCollection
-//            })
-//            return updatedRecords
-//        }
-//    }
-//
-//    func localWalletConfiguration() -> Signal<LocalWalletConfiguration, NoError> {
-//        return .single(LocalWalletConfiguration(source: .string(""), blockchainName: ""))
-//    }
-//
-//    func updateLocalWalletConfiguration(_ f: @escaping (LocalWalletConfiguration) -> LocalWalletConfiguration) -> Signal<Never, NoError> {
-//        return .complete()
-//    }
-//}
-//
-//final class StoredTonContext {
-//    private let basePath: String
-//    private let postbox: Postbox
-//    private let network: Network
-//    let keychain: TonKeychain
-//    private let currentInstance = Atomic<TonInstanceData>(value: TonInstanceData())
-//
-//    init(basePath: String, postbox: Postbox, network: Network, keychain: TonKeychain) {
-//        self.basePath = basePath
-//        self.postbox = postbox
-//        self.network = network
-//        self.keychain = keychain
-//    }
-//
-//    func context(config: String, blockchainName: String, enableProxy: Bool) -> TonContext {
-//        return self.currentInstance.with { data -> TonContext in
-//            if let instance = data.instance, data.config == config, data.blockchainName == blockchainName {
-//                return TonContext(instance: instance, keychain: self.keychain, storage: WalletStorageInterfaceImpl(postbox: self.postbox))
-//            } else {
-//                data.config = config
-//                let tonNetwork: TonNetworkProxy?
-//                if enableProxy {
-//                    tonNetwork = TonNetworkProxyImpl(network: self.network)
-//                } else {
-//                    tonNetwork = nil
-//                }
-//                let instance = TonInstance(basePath: self.basePath, config: config, blockchainName: blockchainName, proxy: tonNetwork)
-//                data.instance = instance
-//                return TonContext(instance: instance, keychain: self.keychain, storage: WalletStorageInterfaceImpl(postbox: self.postbox))
-//            }
-//        }
-//    }
-//}
-//
-////struct TonContext {
-////    let instance: TonInstance
-////    let keychain: TonKeychain
-////    let storage: WalletStorageInterfaceImpl
-////    init(instance: TonInstance, keychain: TonKeychain, storage: WalletStorageInterfaceImpl) {
-////        self.instance = instance
-////        self.keychain = keychain
-////        self.storage = storage
-////    }
-////}
-
 
 enum ApplyThemeUpdate {
     case local(ColorPalette)
@@ -548,6 +406,26 @@ final class AccountContext {
         }
     }
     
+    func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
+        switch location {
+        case let .peer(peerId):
+            return .peer(peerId)
+        case let .replyThread(messageId, maxReadMessageId):
+            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+            return .external(messageId.peerId, context.state)
+        }
+    }
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
+        switch location {
+        case .peer:
+            let _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: messageIndex).start()
+        case let .replyThread(messageId, maxReadMessageId):
+            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+            context.applyMaxReadIndex(messageIndex: messageIndex)
+        }
+    }
+
     
     #if !SHARE
     func composeCreateGroup() {
@@ -791,4 +669,24 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
     }
 }
 
+
+
+private func chatLocationContext(holder: Atomic<ChatLocationContextHolder?>, account: Account, messageId: MessageId, maxReadMessageId: MessageId?) -> ReplyThreadHistoryContext {
+    let holder = holder.modify { current in
+        if let current = current as? ChatLocationContextHolderImpl {
+            return current
+        } else {
+            return ChatLocationContextHolderImpl(account: account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+        }
+    } as! ChatLocationContextHolderImpl
+    return holder.context
+}
+
+private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
+    let context: ReplyThreadHistoryContext
+    
+    init(account: Account, messageId: MessageId, maxReadMessageId: MessageId?) {
+        self.context = ReplyThreadHistoryContext(account: account, peerId: messageId.peerId, threadMessageId: messageId, maxReadMessageId: maxReadMessageId)
+    }
+}
 

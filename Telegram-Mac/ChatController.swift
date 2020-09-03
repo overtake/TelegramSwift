@@ -14,10 +14,19 @@ import Postbox
 import SwiftSignalKit
 
 
-enum ChatMode {
+enum ChatMode : Equatable {
     case history
     case scheduled
-    case replyThread
+    case replyThread(MessageId)
+    
+    var threadId: MessageId? {
+        switch self {
+        case let .replyThread(messageId):
+            return messageId
+        default:
+            return nil
+        }
+    }
 }
 
 extension ChatHistoryLocation {
@@ -198,9 +207,9 @@ class ChatControllerView : View, ChatInputDelegate {
             let location: SearchMessagesLocation
             switch chatInteraction.chatLocation {
             case let .peer(peerId):
-                location = .peer(peerId: peerId, fromId: fromId, tags: nil)
-            case let .replyThread(messageId):
-                location = .peer(peerId: messageId.peerId, fromId: fromId, tags: nil)
+                location = .peer(peerId: peerId, fromId: fromId, tags: nil, topMsgId: nil)
+            case let .replyThread(messageId, _):
+                location = .peer(peerId: messageId.peerId, fromId: fromId, tags: nil, topMsgId: nil)
             }
             return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
         })
@@ -1008,6 +1017,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
     private let readHistoryDisposable = MetaDisposable()
     
+    private let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+
     
     private let initialDataHandler:Promise<ChatHistoryCombinedInitialData> = Promise()
 
@@ -1163,7 +1174,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case let .peer(peerId):
             self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = checkPeerChatServiceActions(postbox: context.account.postbox, peerId: peerId).start()
-        case let .replyThread(messageId):
+        case let .replyThread(messageId, _):
             self.peerView.set(context.account.viewTracker.peerView(messageId.peerId, updateData: true) |> map {Optional($0)})
         }
         
@@ -1186,6 +1197,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let maxReadIndex:ValuePromise<MessageIndex?> = ValuePromise()
         var didSetReadIndex: Bool = false
+        
+        var chatLocationContextHolder = self.chatLocationContextHolder
 
         let historyViewUpdate1 = location.get() |> deliverOnMainQueue
             |> mapToSignal { [weak self] location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
@@ -1208,13 +1221,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     additionalData.append(.peerIsContact(peerId))
                 }
                 switch self.chatLocation {
-                case let .replyThread(messageId):
+                case let .replyThread(messageId, _):
                     additionalData.append(.message(messageId))
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
                 }
                 
-                return chatHistoryViewForLocation(location, context: context, chatLocation: self.chatLocation, fixedCombinedReadStates: { nil }, tagMask: nil, mode: self.mode, additionalData: additionalData) |> beforeNext { viewUpdate in
+                return chatHistoryViewForLocation(location, context: context, chatLocation: self.chatLocation, fixedCombinedReadStates: { nil }, tagMask: nil, mode: self.mode, additionalData: additionalData, contextHolder: chatLocationContextHolder) |> beforeNext { viewUpdate in
                     switch viewUpdate {
                     case let .HistoryView(view, _, _, _):
                         if !didSetReadIndex {
@@ -1251,9 +1264,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
-        
-        var applyHoleMessageIndex: MessageIndex?
-        
+                
         let applyHole:() -> Void = { [weak self] in
             guard let `self` = self else { return }
             
@@ -1265,14 +1276,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     break
                 }
             }
-            if applyHoleMessageIndex != messageIndex {
-                if let messageIndex = messageIndex {
-                    self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper))
-                } else if let location = self.locationValue {
-                    self.setLocation(location)
-                }
+            if let messageIndex = messageIndex {
+                self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper))
+            } else if let location = self.locationValue {
+                self.setLocation(location)
             }
-            applyHoleMessageIndex = messageIndex
         }
         
         let clearHistoryUndoSignal = context.chatUndoManager.status(for: chatInteraction.peerId, type: .clearHistory)
@@ -1410,7 +1418,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
         chatInteraction.setupReplyMessage = { [weak self] messageId in
-            guard let `self` = self, self.mode == .history else { return }
+            guard let `self` = self else { return }
+            
+            switch self.mode {
+            case .scheduled:
+                return
+            case .history:
+                break
+            case .replyThread:
+                break
+            }
             
             self.chatInteraction.focusInputField()
             let signal:Signal<Message?, NoError> = messageId == nil ? .single(nil) : self.chatInteraction.context.account.postbox.messageAtId(messageId!)
@@ -1613,7 +1630,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 let presentation = strongSelf.chatInteraction.presentation
                 let peerId = strongSelf.chatInteraction.peerId
-                
+                let threadId = strongSelf.chatInteraction.mode.threadId
                 if presentation.abilityToSend {
                     func apply(_ controller: ChatController, atDate: Date?) {
                         var invokeSignal:Signal<Never, NoError> = .complete()
@@ -1624,7 +1641,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
-                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1) |> deliverOnMainQueue |> ignoreValues
+                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1) |> deliverOnMainQueue |> ignoreValues
                             
                         }
                         
@@ -2295,6 +2312,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             if let strongSelf = self {
                 
+                if toId == strongSelf.mode.threadId {
+                    let controller = strongSelf.navigationController?.previousController as? ChatController
+                    if let controller = controller, case .peer(toId.peerId) = controller.chatLocation {
+                        strongSelf.navigationController?.back()
+                        controller.chatInteraction.focusMessageId(fromId, toId, state)
+                    } else {
+                        strongSelf.navigationController?.push(ChatController.init(context: strongSelf.context, chatLocation: .peer(toId.peerId), mode: .history, messageId: toId, initialAction: nil))
+                    }
+                    return
+                }
+                
                 switch strongSelf.mode {
                 case .history, .replyThread:
                     if let fromId = fromId {
@@ -2311,9 +2339,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     if let fromIndex = fromIndex {
-                        //                    if let message = strongSelf.messageInCurrentHistoryView(toId) {
-                        //                        strongSelf.genericView.tableView.scroll(to: state.swap(to: ChatHistoryEntryId.message(message)))
-                        //                    } else {
                         let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toId), count: strongSelf.requestCount), context: context, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: nil, additionalData: [])
                         
                         struct FindSearchMessage {
@@ -2917,7 +2942,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.openReplyThread = { [weak self] threadMessageId, fromMessageId in
-            self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .replyThread(threadMessageId), mode: .replyThread, messageId: fromMessageId, initialAction: nil))
+            _ = showModalProgress(signal: fetchChannelReplyThreadMessage(account: context.account, messageId: threadMessageId), for: context.window).start(next: { result in
+                if let result = result {
+                    self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: .replyThread(threadMessageId: result.messageId, maxReadMessageId: result.maxReadMessageId), mode: .replyThread(result.messageId), messageId: fromMessageId, initialAction: nil))
+                }
+            })
+            
         }
         
         chatInteraction.closeAfterPeek = { [weak self] peek in
@@ -2947,7 +2977,42 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.update(animated:false,{$0.updatedInterfaceState({_ in return interfaceState})})
                     }
                     switch self.chatInteraction.mode {
-                    case .history, .replyThread:
+                    case let .replyThread(threadId):
+                        self.chatInteraction.update(animated:false, { present in
+                            var present = present
+                            present = present
+                                .withUpdatedPinnedMessageId(threadId)
+                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
+                                if let peer = present.peer as? TelegramChannel {
+                                    switch peer.info {
+                                    case let .group(info):
+                                        if info.flags.contains(.slowModeEnabled), peer.adminRights == nil && !peer.flags.contains(.isCreator) {
+                                            present = present
+                                                .updateSlowMode({ value in
+                                                    var value = value ?? SlowMode()
+                                                    value = value
+                                                        .withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
+                                                    if let timeout = cachedData.slowModeValidUntilTimestamp {
+                                                        if timeout > context.timestamp {
+                                                            value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                        }
+                                                    }
+                                                return value
+                                            })
+                                        } else {
+                                            present = present.updateSlowMode { _ in return nil }
+                                        }
+                                    default:
+                                        present = present.updateSlowMode { _ in return nil }
+                                    }
+                                }
+                            }
+                            if let messageId = present.pinnedMessageId {
+                                present = present.withUpdatedCachedPinnedMessage(combinedInitialData.cachedDataMessages?[messageId])
+                            }
+                            return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
+                        })
+                    case .history:
                         self.chatInteraction.update(animated:false,{ present in
                             var present = present
                             if let cachedData = combinedInitialData.cachedData as? CachedUserData {
@@ -3026,7 +3091,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
                 
                 switch self.chatLocation {
-                case .peer:
+                case .peer, .replyThread:
                     let peerView = postboxView as? PeerView
                     
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
@@ -3170,8 +3235,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
                         })
                     }
-                case .replyThread:
-                    break
                 }
                 
                 
@@ -3221,33 +3284,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         connectionStatusDisposable.set((connectionStatus).start())
         
         
-        var beginPendingTime:CFAbsoluteTime?
-        
-        
-        self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
-            
-            if FastSettings.inAppSounds {
-                let afterSentSound:NSSound? = {
-                    
-                    let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                    var sound:NSSound?
-                    if let p = p {
-                        sound = NSSound(contentsOfFile: p, byReference: true)
-                        sound?.volume = 1.0
-                    }
-                    
-                    return sound
-                }()
-                
-                if let beginPendingTime = beginPendingTime {
-                    if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
-                        return
-                    }
-                }
-                beginPendingTime = CFAbsoluteTimeGetCurrent()
-                afterSentSound?.play()
-            }
-        }))
+       
         
         botCallbackAlertMessageDisposable = (self.botCallbackAlertMessage.get()
             |> deliverOnMainQueue).start(next: { [weak self] (message, isAlert) in
@@ -3904,7 +3941,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             break
                         }
                     case .replyThread:
-                        break
+                         items.append(SPopoverItem(L10n.chatContextEdit1,  { [weak self] in
+                            self?.changeState()
+                         }, theme.icons.chatActionEdit))
                     }
                     if !items.isEmpty {
                         if let popover = button.popover {
@@ -4087,7 +4126,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        
+        sentMessageEventsDisposable.set(nil)
         peekDisposable.set(nil)
         
         genericView.inputContextHelper.viewWillRemove()
@@ -4305,7 +4344,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
       
         
         self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self else {return .rejected}
+            guard let `self` = self, self.mode != .scheduled else {return .rejected}
             if !self.chatInteraction.presentation.isSearchMode.0 {
                 self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
             } else {
@@ -4441,6 +4480,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         _ = context.window.makeFirstResponder(genericView.inputView.textView.inputView)
+        
+        var beginPendingTime:CFAbsoluteTime?
+        
+       self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: self.chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
+           
+           if FastSettings.inAppSounds {
+               let afterSentSound:NSSound? = {
+                   
+                   let p = Bundle.main.path(forResource: "sent", ofType: "caf")
+                   var sound:NSSound?
+                   if let p = p {
+                       sound = NSSound(contentsOfFile: p, byReference: true)
+                       sound?.volume = 1.0
+                   }
+                   
+                   return sound
+               }()
+               
+               if let beginPendingTime = beginPendingTime {
+                   if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
+                       return
+                   }
+               }
+               beginPendingTime = CFAbsoluteTimeGetCurrent()
+               afterSentSound?.play()
+           }
+       }))
         
     }
     

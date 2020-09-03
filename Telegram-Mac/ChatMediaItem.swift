@@ -339,7 +339,7 @@ class ChatMediaItem: ChatRowItem {
             } else if message.containsSecretMedia {
                 type = .secret
             }
-            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
+            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode)
             
             }, showMessage: { [weak self] message in
                 self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
