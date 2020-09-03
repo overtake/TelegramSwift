@@ -915,7 +915,7 @@ class ChatRowItem: TableRowItem {
                         title = L10n.channelCommentsCountCountable(Int(count))
                     }
                     
-                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, backgroundColor: .clear, highlightColor: presentation.colors.accent.withAlphaComponent(0.08), handler: { [weak self] in
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, nil)
                     })
                 }
@@ -951,7 +951,7 @@ class ChatRowItem: TableRowItem {
                     } else {
                         title = L10n.channelCommentsShortCountCountable(Int(count))
                     }
-                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], backgroundColor: presentation.colors.chatBackground, highlightColor: presentation.colors.chatBackground, handler: { [weak self] in
+                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, nil)
                     })
                 }

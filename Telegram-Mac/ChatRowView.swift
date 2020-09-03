@@ -158,6 +158,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             if !item.isBubbled {
                 rightView.change(pos: NSMakePoint(defRight, rightView.frame.minY), animated: animated)
+                if let control = channelCommentsControl {
+                    let x = defRight - control.frame.width - 4
+                    control.change(pos: NSMakePoint(x, control.frame.minY), animated: animated)
+                }
             } else {
                 if rowView.frame.origin != rowPoint {
                     rowView.change(pos: rowPoint, animated: animated)
@@ -277,6 +281,17 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         replyMarkupView?.backgroundColor = backdorColor
         bubbleView.background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
 
+        if let control = channelCommentsControl {
+            control.set(background: contentColor, for: .Normal)
+        }
+        if let control = channelCommentsBubbleControl {
+            let background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
+            control.set(background: background, for: .Normal)
+            control.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
+            control.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
+        }
+
+        
         for view in contentView.subviews {
             if let view = view as? View {
                 view.backgroundColor = contentColor
@@ -1002,7 +1017,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     channelCommentsControl.removeFromSuperview()
                 }
             }
-            
         }
     }
     
