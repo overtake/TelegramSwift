@@ -542,7 +542,7 @@ class SelectGroupMembersBehavior : SelectPeersBehavior {
                                 
                                 switch participant {
                                 case .creator:
-                                    rendered = RenderedChannelParticipant(participant: .creator(id: peer.id, rank: nil), peer: peer)
+                                    rendered = RenderedChannelParticipant(participant: .creator(id: peer.id, adminInfo: nil, rank: nil), peer: peer)
                                 case .admin:
                                     var peers: [PeerId: Peer] = [:]
                                     peers[creator.id] = creator
