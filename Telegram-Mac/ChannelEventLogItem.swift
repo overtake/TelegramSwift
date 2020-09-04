@@ -382,7 +382,7 @@ class ServiceEventLogItem: TableRowItem {
                             self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
                             
                         }
-                    case let .creator(memberId, _):
+                    case let .creator(memberId, _, _):
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                             
@@ -399,9 +399,9 @@ class ServiceEventLogItem: TableRowItem {
                             
                         }
                     }
-                case let .creator(id, prevRank):
+                case let .creator(id, prevInfo, prevRank):
                     switch new.participant {
-                    case .creator(id, let newRank):
+                    case .creator(id, let newInfo, let newRank):
                         if prevRank != newRank, let memberPeer = result.peers[id] {
                             
                             let message = NSMutableAttributedString()

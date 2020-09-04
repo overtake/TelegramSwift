@@ -23,8 +23,8 @@ extension RenderedChannelParticipant {
         switch participant {
         case let.member(id, invitedAt, adminInfo, _, rank):
             updated = ChannelParticipant.member(id: id, invitedAt: invitedAt, adminInfo: adminInfo, banInfo: info, rank: rank)
-        case let .creator(id, rank):
-            updated = ChannelParticipant.creator(id: id, rank: rank)
+        case let .creator(id, info, rank):
+            updated = ChannelParticipant.creator(id: id, adminInfo: info, rank: rank)
         }
         return RenderedChannelParticipant(participant: updated, peer: peer, presences: presences)
     }

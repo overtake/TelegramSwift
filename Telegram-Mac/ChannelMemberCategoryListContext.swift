@@ -46,7 +46,7 @@ extension ChannelParticipant {
 private extension CachedChannelAdminRank {
     init(participant: ChannelParticipant) {
         switch participant {
-        case let .creator(_, rank):
+        case let .creator(_, _, rank):
             if let rank = rank {
                 self = .custom(rank)
             } else {

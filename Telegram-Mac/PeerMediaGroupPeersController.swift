@@ -305,7 +305,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 let memberStatus: GroupInfoMemberStatus
                 if access.highlightAdmins {
                     switch sortedParticipants[i].participant {
-                    case let .creator(_, rank):
+                    case let .creator(_, _, rank):
                         memberStatus = .admin(rank: rank ?? L10n.chatOwnerBadge)
                     case let .member(_, _, adminRights, _, rank):
                         memberStatus = adminRights != nil ? .admin(rank: rank ?? L10n.chatAdminBadge) : .member
