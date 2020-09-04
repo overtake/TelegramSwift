@@ -2492,8 +2492,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     } else {
                         y = nrect.minY - visible.1
                     }
+                    contentView.layer?.removeAllAnimations()
+                    self.layer?.removeAllAnimations()
                     self.clipView.scroll(to: NSMakePoint(0, y), animated: false)
-
                     //reflectScrolledClipView(clipView)
 //                    tile()
                     //self.contentView.bounds = NSMakeRect(0, y, 0, contentView.bounds.height)
@@ -2925,6 +2926,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
 //                self?.removeScroll(listener: scrollListener)
 //            })
+            contentView.layer?.removeAllAnimations()
+            self.layer?.removeAllAnimations()
             
             if abs(bounds.minY - clipView.bounds.minY) < height || ignoreLayerAnimation {
                 if animate {

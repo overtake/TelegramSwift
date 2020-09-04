@@ -671,6 +671,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 switch type {
                 case .Generic:
                     scrollToItem = .none(animationInterface)
+                case .InitialUnread:
+                    break
                 default:
                     break
                 }
@@ -870,7 +872,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                             item = makeItem(entries[i])
                             insertions.append((i, item))
                         }
-                        
                     }
                     subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
                     subscriber.putCompletion()
@@ -1250,7 +1251,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let visibleRows = self.genericView.tableView.visibleRows()
             var messageIndex: MessageIndex?
             for i in stride(from: visibleRows.max - 1, to: -1, by: -1) {
-                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, let message = item.message  {
+                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, let message = item.message, item.canBeAnchor  {
                     messageIndex = MessageIndex(message)
                     break
                 }
@@ -1364,39 +1365,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.historyDisposable.set(appliedTransition.start())
         
-        let previousMaxIncomingMessageIdByNamespace = Atomic<[MessageId.Namespace: MessageIndex]>(value: [:])
-        let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), self.isKeyWindow.get())
-            |> map { [weak self] messageIndex, canRead in
-                guard let `self` = self else {return}
-                if canRead {
-                    var apply = false
-                    let _ = previousMaxIncomingMessageIdByNamespace.modify { dict in
-                        let previousIndex = dict[messageIndex.id.namespace]
-                        if previousIndex == nil || previousIndex! < messageIndex {
-                            apply = true
-                            var dict = dict
-                            dict[messageIndex.id.namespace] = messageIndex
-                            return dict
-                        }
-                        return dict
-                    }
-                    if apply {
-                        switch self.chatLocation {
-                        case let .peer(peerId):
-                            if !hasModals() {
-                                clearNotifies(peerId, maxId: messageIndex.id)
-                                let signal = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex)
-                                self.applyMaxReadIndexDisposable.set(signal.start())
-                            }
-                        }
-                    }
-                }
-        }
-        
-        self.readHistoryDisposable.set(readHistory.start())
-        
-        
-
         
         chatInteraction.setupReplyMessage = { [weak self] messageId in
             guard let `self` = self, self.mode == .history else { return }
@@ -3144,36 +3112,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         connectionStatusDisposable.set((connectionStatus).start())
         
         
-        var beginPendingTime:CFAbsoluteTime?
-        
+
         
         switch chatLocation {
         case let .peer(peerId):
-            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
-                
-                if FastSettings.inAppSounds {
-                    let afterSentSound:NSSound? = {
-                        
-                        let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                        var sound:NSSound?
-                        if let p = p {
-                            sound = NSSound(contentsOfFile: p, byReference: true)
-                            sound?.volume = 1.0
-                        }
-                        
-                        return sound
-                    }()
-                    
-                    if let beginPendingTime = beginPendingTime {
-                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
-                            return
-                        }
-                    }
-                    beginPendingTime = CFAbsoluteTimeGetCurrent()
-                    afterSentSound?.play()
-                }
-            }))
-            
             botCallbackAlertMessageDisposable = (self.botCallbackAlertMessage.get()
                 |> deliverOnMainQueue).start(next: { [weak self] (message, isAlert) in
                    
@@ -3543,6 +3485,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     func applyTransition(_ transition:TableUpdateTransition, view: MessageHistoryView?, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
         
+        
+        
+        switch transition.state {
+        case .none:
+            break
+        default:
+            break
+        }
+        
         let wasEmpty = genericView.tableView.isEmpty
 
         initialDataHandler.set(.single(initialData))
@@ -3555,6 +3506,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
       
         genericView.tableView.merge(with: transition)
+
         
         let _ = nextTransaction.execute()
 
@@ -4017,6 +3969,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         peekDisposable.set(nil)
+        self.readHistoryDisposable.set(nil)
+        self.sentMessageEventsDisposable.set(nil)
         
         genericView.inputContextHelper.viewWillRemove()
         self.chatInteraction.remove(observer: self)
@@ -4369,6 +4323,66 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         _ = context.window.makeFirstResponder(genericView.inputView.textView.inputView)
+        
+        
+        let previousMaxIncomingMessageIdByNamespace = Atomic<[MessageId.Namespace: MessageIndex]>(value: [:])
+        let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), self.isKeyWindow.get())
+            |> map { [weak self] messageIndex, canRead in
+                guard let `self` = self else {return}
+                if canRead {
+                    var apply = false
+                    let _ = previousMaxIncomingMessageIdByNamespace.modify { dict in
+                        let previousIndex = dict[messageIndex.id.namespace]
+                        if previousIndex == nil || previousIndex! < messageIndex {
+                            apply = true
+                            var dict = dict
+                            dict[messageIndex.id.namespace] = messageIndex
+                            return dict
+                        }
+                        return dict
+                    }
+                    if apply {
+                        switch self.chatLocation {
+                        case let .peer(peerId):
+                            if !hasModals() {
+                                clearNotifies(peerId, maxId: messageIndex.id)
+                                let signal = applyMaxReadIndexInteractively(postbox: context.account.postbox, stateManager: context.account.stateManager, index: messageIndex)
+                                self.applyMaxReadIndexDisposable.set(signal.start())
+                            }
+                        }
+                    }
+                }
+        }
+        
+        self.readHistoryDisposable.set(readHistory.start())
+        
+        var beginPendingTime:CFAbsoluteTime?
+
+
+        self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
+            
+            if FastSettings.inAppSounds {
+                let afterSentSound:NSSound? = {
+                    
+                    let p = Bundle.main.path(forResource: "sent", ofType: "caf")
+                    var sound:NSSound?
+                    if let p = p {
+                        sound = NSSound(contentsOfFile: p, byReference: true)
+                        sound?.volume = 1.0
+                    }
+                    
+                    return sound
+                }()
+                
+                if let beginPendingTime = beginPendingTime {
+                    if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
+                        return
+                    }
+                }
+                beginPendingTime = CFAbsoluteTimeGetCurrent()
+                afterSentSound?.play()
+            }
+        }))
         
     }
     
