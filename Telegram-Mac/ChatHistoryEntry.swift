@@ -411,10 +411,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         if message.media.isEmpty {
-            if message.text.length <= 6 {
+            if message.text.length <= 7 {
                 let original = message.text.fixed
                 let unmodified = original.emojiUnmodified
-                if let item = animatedEmojiStickers[unmodified] {
+                if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
                     var file = item.file
                     var attributes = file.attributes
                     attributes.removeAll { attr in
