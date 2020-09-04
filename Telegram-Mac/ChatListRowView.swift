@@ -181,7 +181,7 @@ private final class ChatListMediaPreviewView: View {
                 }
             }
         }
-        
+
         self.imageView.frame = CGRect(origin: CGPoint(), size: size)
         //self.playIcon.center()
         self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
@@ -217,7 +217,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
-    private var mediaPreviewViews: [MediaId: ChatListMediaPreviewView] = [:]
+    private var mediaPreviewViews: [MessageId: ChatListMediaPreviewView] = [:]
 
     
     private var revealActionInvoked: Bool = false {
@@ -260,11 +260,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             
-            for (_, media, _) in self.currentMediaPreviewSpecs {
-                guard let mediaId = media.id else {
-                    continue
-                }
-                if let previewView = self.mediaPreviewViews[mediaId] {
+            for (message, media, _) in self.currentMediaPreviewSpecs {
+                if let previewView = self.mediaPreviewViews[message.id] {
                     previewView.isHidden = inputActivities != nil && !inputActivities!.1.isEmpty
                 }
             }
@@ -582,31 +579,31 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             self.currentMediaPreviewSpecs = item.contentImageSpecs
             
-            var validMediaIds: [MediaId] = []
+            var validMediaIds: [MessageId] = []
             for (message, media, mediaSize) in item.contentImageSpecs {
-                guard let mediaId = media.id, item.context.sharedContext.layout != .minimisize else {
+                guard item.context.sharedContext.layout != .minimisize else {
                     continue
                 }
-                validMediaIds.append(mediaId)
+                validMediaIds.append(message.id)
                 let previewView: ChatListMediaPreviewView
-                if let current = self.mediaPreviewViews[mediaId] {
+                if let current = self.mediaPreviewViews[message.id] {
                     previewView = current
                 } else {
                     previewView = ChatListMediaPreviewView(context: item.context, message: message, media: media)
-                    self.mediaPreviewViews[mediaId] = previewView
+                    self.mediaPreviewViews[message.id] = previewView
                     self.containerView.addSubview(previewView)
                 }
                 previewView.updateLayout(size: mediaSize)
             }
-            var removeMediaIds: [MediaId] = []
-            for (mediaId, itemView) in self.mediaPreviewViews {
-                if !validMediaIds.contains(mediaId) {
-                    removeMediaIds.append(mediaId)
+            var removeMessageIds: [MessageId] = []
+            for (messageId, itemView) in self.mediaPreviewViews {
+                if !validMediaIds.contains(messageId) {
+                    removeMessageIds.append(messageId)
                     itemView.removeFromSuperview()
                 }
             }
-            for mediaId in removeMediaIds {
-                self.mediaPreviewViews.removeValue(forKey: mediaId)
+            for messageId in removeMessageIds {
+                self.mediaPreviewViews.removeValue(forKey: messageId)
             }
 
             
@@ -1409,11 +1406,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
-                for (_, media, mediaSize) in self.currentMediaPreviewSpecs {
-                    guard let mediaId = media.id else {
-                        continue
-                    }
-                    if let previewView = self.mediaPreviewViews[mediaId] {
+                for (message, media, mediaSize) in self.currentMediaPreviewSpecs {
+                    if let previewView = self.mediaPreviewViews[message.id] {
                         previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
                     }
                     mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
