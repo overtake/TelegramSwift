@@ -560,9 +560,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                             if animated {
                                 subview.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false)
                                 subview.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2, removeOnCompletion: false, completion: { [weak subview] completed in
-                                    if completed {
-                                        subview?.removeFromSuperview()
-                                    }
+                                    subview?.removeFromSuperview()
                                 })
                             }
                             break
@@ -931,9 +929,7 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     animation.fillMode = .forwards
                     
                     animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
-                        if completed {
-                            self?.selectionBackground.removeFromSuperview()
-                        }
+                        self?.selectionBackground.removeFromSuperview()
                     })
                     animation.isAdditive = false
                     
