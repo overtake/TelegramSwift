@@ -562,8 +562,9 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                                 subview.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2, removeOnCompletion: false, completion: { [weak subview] completed in
                                     subview?.removeFromSuperview()
                                 })
+                            } else {
+                                subview.removeFromSuperview()
                             }
-                            break
                         }
                     }
                 }
