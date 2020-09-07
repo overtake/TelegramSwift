@@ -3443,7 +3443,7 @@ func prepareTextAttachments(_ attachments: [NSTextAttachment]) -> Signal<[URL], 
                     subscriber.putCompletion()
                     return
                 }
-                if let fileWrapper = attachment.fileWrapper {
+                if let fileWrapper = attachment.fileWrapper, fileWrapper.isRegularFile {
                     if let data = fileWrapper.regularFileContents {
                         if let fileName = fileWrapper.filename {
                             let path = NSTemporaryDirectory() + fileName
