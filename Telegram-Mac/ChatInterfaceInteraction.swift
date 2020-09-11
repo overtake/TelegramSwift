@@ -55,7 +55,7 @@ final class ChatInteraction : InterfaceObserver  {
         self.disableSelectAbility = disableSelectAbility
         self.isLogInteraction = isLogInteraction
         self.isGlobalSearchMessage = isGlobalSearchMessage
-        self.presentation = ChatPresentationInterfaceState(chatLocation)
+        self.presentation = ChatPresentationInterfaceState(chatLocation: chatLocation, chatMode: mode)
         self.mode = mode
         super.init()
         
@@ -143,7 +143,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     
-    var openReplyThread:(MessageId, MessageId?)->Void = {  _, _ in }
+    var openReplyThread:(MessageId, MessageId?, ReplyThreadMode)->Void = {  _, _, _ in }
 
     
     

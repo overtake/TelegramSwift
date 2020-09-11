@@ -73,11 +73,11 @@ public final class CustomSearchController {
     fileprivate var clickHandlerIdentifier: UInt32 = 0
     fileprivate let icon: CGImage
     public let clickHandler:(Control, @escaping([String], CGImage)->Void)->Void
-    fileprivate let dropLastTag:()->Void
-    public init(clickHandler:@escaping(Control, @escaping([String], CGImage)->Void)->Void, dropLastTag:@escaping()->Void, icon: CGImage) {
+    fileprivate let deleteTag:(Int)->Void
+    public init(clickHandler:@escaping(Control, @escaping([String], CGImage)->Void)->Void, deleteTag:@escaping(Int)->Void, icon: CGImage) {
         self.clickHandler = clickHandler
         self.icon = icon
-        self.dropLastTag = dropLastTag
+        self.deleteTag = deleteTag
     }
     
 }
@@ -108,8 +108,17 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             
             tagView.set(background: presentation.colors.accent, for: .Highlight)
             
-            tagView.set(handler: { control in
-                control.isSelected = !control.isSelected
+            tagView.set(handler: { [weak self] control in
+                guard let `self` = self else {
+                    return
+                }
+                for tag in self.tags {
+                    if tag == control {
+                        tag.isSelected = !tag.isSelected
+                    } else {
+                        tag.isSelected = false
+                    }
+                }
             }, for: .Click)
             
             _ = tagView.sizeToFit(NSMakeSize(6, 6), thatFit: false)
@@ -172,6 +181,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public var searchValue: Signal<SearchState, NoError> {
         return _searchValue.get()
     }
+    
     public var shouldUpdateTouchBarItemIdentifiers: (()->[Any])?
     
     
@@ -324,7 +334,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     open func cancelSearch() {
         if self.query.isEmpty {
             if !tags.isEmpty {
-                customSearchControl?.dropLastTag()
+                customSearchControl?.deleteTag(tags.count - 1)
             } else {
                 self.change(state: .None, true)
             }
@@ -391,11 +401,16 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     open func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(deleteBackward(_:)) {
-            if query.isEmpty, let tag = tags.last {
-                if tag.isSelected {
-                    customSearchControl?.dropLastTag()
-                } else {
-                    tag.isSelected = true
+            if query.isEmpty {
+                var removed: Bool = false
+                for (i, tag) in tags.enumerated() {
+                    if tag.isSelected {
+                        customSearchControl?.deleteTag(i)
+                        removed = true
+                    }
+                }
+                if !removed, let last = tags.last {
+                    last.isSelected = true
                 }
                 return true
             }
@@ -457,7 +472,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         let value = SearchState(state: state, request: self.query, responder: false)
         searchInteractions?.responderModified(value)
         _searchValue.set(value)
-        if isEmpty {
+        if isEmpty && tags.isEmpty {
             change(state: .None, true)
         }
         

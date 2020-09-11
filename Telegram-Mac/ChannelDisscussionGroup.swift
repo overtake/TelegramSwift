@@ -428,7 +428,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         updateState { current in
             var current = current
             let peer = peerViewMainPeer(peerView)
-            if let cachedData = peerView.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
+            if let cachedData = peerView.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId {
                 current = current.withUpdatedassociatedPeer(peerView.peers[linkedDiscussionPeerId])
             } else {
                 current = current.withUpdatedassociatedPeer(nil)

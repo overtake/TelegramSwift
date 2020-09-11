@@ -330,10 +330,34 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
         }
     }
+    
+    private var rootRepliesCount: Int = 0 {
+        didSet {
+            updateTitle()
+        }
+    }
    
     var postboxView:PostboxView? {
         didSet {
            updateStatus()
+            switch chatInteraction.mode {
+            case let .replyThread(threadId, _):
+                let answersCount = chatInteraction.context.account.postbox.messageView(threadId)
+                    |> map {
+                        $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+                    }
+                    |> map {
+                        Int($0?.count ?? 0)
+                    }
+                    |> deliverOnMainQueue
+                
+                answersCountDisposable.set(answersCount.start(next: { [weak self] count in
+                    self?.rootRepliesCount = count
+                }))
+            default:
+                answersCountDisposable.set(nil)
+            }
+            
         }
     }
     
@@ -494,7 +518,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     private let videoAvatarDisposable = MetaDisposable()
-    
+    private let answersCountDisposable = MetaDisposable()
     
     override func mouseEntered(with event: NSEvent) {
         super.mouseEntered(with: event)
@@ -618,6 +642,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         disposable.dispose()
         fetchPeerAvatar.dispose()
         videoAvatarDisposable.dispose()
+        answersCountDisposable.dispose()
     }
     
     
@@ -686,7 +711,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
 
     func updateStatus(_ force:Bool = false) {
-        var shouldUpdateLayout = false
         if let peerView = self.postboxView as? PeerView {
             
             checkPhoto(peerViewMainPeer(peerView))
@@ -728,6 +752,13 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 titleImage = nil
             }
             
+            updateTitle(force)
+        } 
+    }
+    
+    private func updateTitle(_ force: Bool = false) {
+        var shouldUpdateLayout = false
+        if let peerView = self.postboxView as? PeerView {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
             if chatInteraction.context.peerId == peerView.peerId  {
@@ -738,11 +769,14 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(L10n.chatTitleScheduledMessages)
-            } else if case .replyThread = chatInteraction.mode {
-                result = result.withUpdatedTitle(L10n.chatTitleReplies)
+            } else if case let .replyThread(_, mode) = chatInteraction.mode {
+                switch mode {
+                case .comments:
+                    result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
+                case .replies:
+                    result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
+                }
             }
-                       
-            
             
             if chatInteraction.context.peerId == peerView.peerId {
                 status = nil
@@ -755,14 +789,14 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 text = result.title
                 shouldUpdateLayout = true
             }
-            
             if let presence = result.presence {
                 self.presenceManager?.reset(presence: presence, timeDifference: Int32(chatInteraction.context.timeDifference))
             }
-            if shouldUpdateLayout {
-                self.setNeedsDisplay()
-            }
-        } 
+        }
+        
+        if shouldUpdateLayout {
+            setNeedsDisplay()
+        }
     }
     
     

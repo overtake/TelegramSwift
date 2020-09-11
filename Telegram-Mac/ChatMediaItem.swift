@@ -305,7 +305,7 @@ class ChatMediaItem: ChatRowItem {
     
 
     override var isBubbleFullFilled: Bool {
-        return (media.isInteractiveMedia || isSticker) && isBubbled 
+        return (media.isInteractiveMedia || isSticker) && isBubbled
     }
     
     var positionFlags: LayoutPositionFlags? = nil
@@ -425,16 +425,11 @@ class ChatMediaItem: ChatRowItem {
                     }
                 }
             }
-            
-
         }
-        
-        
-
         
         if isBubbleFullFilled  {
             var positionFlags: LayoutPositionFlags = []
-            if captionLayout == nil {
+            if captionLayout == nil && commentsBubbleData == nil {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)

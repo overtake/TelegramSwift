@@ -800,7 +800,7 @@
 		D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */; };
 		D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */; };
 		D0439A2023410D5400C1E6F9 /* WalletUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0439A1F23410D5400C1E6F9 /* WalletUtils.swift */; };
-		D048EDDE24FFEC5600977606 /* ChannelCommentsBubbleControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */; };
+		D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */; };
 		D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */; };
 		D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
 		D04D2145230DB57300609388 /* TelegramIconsTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */; };
@@ -1966,7 +1966,7 @@
 		D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerFramePreview.swift; sourceTree = "<group>"; };
 		D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSoftwareVideoSource.swift; sourceTree = "<group>"; };
 		D0439A1F23410D5400C1E6F9 /* WalletUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletUtils.swift; sourceTree = "<group>"; };
-		D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelCommentsBubbleControl.swift; sourceTree = "<group>"; };
+		D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelCommentsControls.swift; sourceTree = "<group>"; };
 		D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccentColorModalController.swift; sourceTree = "<group>"; };
 		D04D2143230DB55B00609388 /* TelegramIconsTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramIconsTheme.swift; sourceTree = "<group>"; };
 		D050518F2342BA6700D93176 /* WalletSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSettingsController.swift; sourceTree = "<group>"; };
@@ -2828,7 +2828,7 @@
 				A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */,
 				A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */,
 				D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */,
-				D048EDDD24FFEC5600977606 /* ChannelCommentsBubbleControl.swift */,
+				D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5300,7 +5300,7 @@
 				D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
-				D048EDDE24FFEC5600977606 /* ChannelCommentsBubbleControl.swift in Sources */,
+				D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */,
 				9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */,
 				C2E0646B1ECF137300387BB8 /* ChatInvoiceItem.swift in Sources */,
 				C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */,

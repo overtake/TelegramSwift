@@ -34,6 +34,10 @@ class VolumeControllerPopover: GenericViewController<HorizontalSliderControl> {
         readyOnce()
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
     var value:CGFloat = 0 {
         didSet {
             genericView.value = value

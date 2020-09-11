@@ -1572,6 +1572,17 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    private var _chat_comments_overlay: CGImage?
+    var chat_comments_overlay: CGImage {
+        if let icon = _chat_comments_overlay {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_ChannelComments_Overlay")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            _chat_comments_overlay = new
+            return new
+        }
+    }
+    
     private var _chatServiceItemColor: NSColor?
     var chatServiceItemColor: NSColor {
         if let value = _chatServiceItemColor {

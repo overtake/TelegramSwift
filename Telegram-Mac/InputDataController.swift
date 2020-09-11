@@ -356,7 +356,6 @@ class InputDataController: GenericViewController<InputDataView> {
     private let searchKeyInvocation:() -> InputDataDeleteResult
     var getBackgroundColor: ()->NSColor
     let identifier: String
-    var onDeinit:(()->Void)?
     var ignoreRightBarHandler: Bool = false
     
     var contextOject: Any?

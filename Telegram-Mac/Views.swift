@@ -158,11 +158,11 @@ class SearchTitleBarView : TitledBarView {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    func updateSearchVisibility(_ visible: Bool) {
+    func updateSearchVisibility(_ visible: Bool, animated: Bool = true) {
         if visible {
             self.search.isHidden = false
         }
-        search.change(opacity: visible ? 1 : 0, animated: true, completion: { [weak self] _ in
+        search.change(opacity: visible ? 1 : 0, animated: animated, completion: { [weak self] _ in
             self?.search.isHidden = !visible
         })
     }

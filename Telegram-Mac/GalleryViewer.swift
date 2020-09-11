@@ -64,11 +64,12 @@ private func tagsForMessage(_ message: Message) -> MessageTags? {
 }
 
 
-enum GalleryAppearType {
+enum GalleryAppearType : Equatable {
     case alone
     case history
     case profile(PeerId)
     case secret
+    case messages([Message])
 }
 
 private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
@@ -563,7 +564,7 @@ class GalleryViewer: NSResponder {
                 switch mode {
                 case .history:
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
-                case let .replyThread(threadId):
+                case let .replyThread(threadId, _):
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.external(message.id.peerId, context.peerChannelMemberCategoriesContextsManager.replyThread(account: context.account, messageId: threadId)), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
@@ -631,6 +632,22 @@ class GalleryViewer: NSResponder {
                     }
                 case .profile:
                     return .complete()
+                case let .messages(messages):
+                    let messages = messages.map {
+                        MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
+                    }
+                    let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false).filter { entry -> Bool in
+                        switch entry {
+                        case let .MessageEntry(message, _, _, _, _, _, _):
+                            return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                        default:
+                            return true
+                        }
+                    }
+                    let previous = previous.with {$0}
+                    return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> deliverOnMainQueue |> map { transition in
+                        return (transition,previous, entries)
+                    }
                 }
               
             }  |> deliverOnMainQueue

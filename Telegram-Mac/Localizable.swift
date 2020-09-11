@@ -895,32 +895,34 @@ internal final class L10n {
   internal static func channelCommentsShortCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_countable", p1)
   }
-  /// %d Comments
+  /// %d
   internal static func channelCommentsShortCountFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_few", p1)
   }
-  /// %d Comments
+  /// %d
   internal static func channelCommentsShortCountMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_many", p1)
   }
-  /// %d Comment
+  /// %d
   internal static func channelCommentsShortCountOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_one", p1)
   }
-  /// %d Comments
+  /// %d
   internal static func channelCommentsShortCountOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_other", p1)
   }
-  /// %d Comments
+  /// %d
   internal static func channelCommentsShortCountTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_two", p1)
   }
-  /// %d Comments
+  /// %d
   internal static func channelCommentsShortCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Short.Count_zero", p1)
   }
   /// Comment
   internal static var channelCommentsShortLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.Short.LeaveComment") }
+  /// Remain Anonymous
+  internal static var channelEditAdminPermissionAnonymous: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionAnonymous") }
   /// Add Members
   internal static var channelEditAdminPermissionInviteMembers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteMembers") }
   /// Add Subscribers
@@ -1343,6 +1345,8 @@ internal final class L10n {
   internal static var chatCallOutgoing: String  { return L10n.tr("Localizable", "Chat.Call.Outgoing") }
   /// Sorry, this channel is not accessible.
   internal static var chatChannelUnaccessible: String  { return L10n.tr("Localizable", "Chat.Channel.Unaccessible") }
+  /// You have been blocked to posting comments.
+  internal static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
   /// This action can't be undone
   internal static var chatConfirmActionUndonable: String  { return L10n.tr("Localizable", "Chat.Confirm.ActionUndonable") }
   /// %d
@@ -1471,8 +1475,12 @@ internal final class L10n {
   }
   /// Send a dice emoji to roll a die.
   internal static var chatEmojiDiceResultNew: String  { return L10n.tr("Localizable", "Chat.Emoji.Dice.ResultNew") }
+  /// No comments here yet
+  internal static var chatEmptyComments: String  { return L10n.tr("Localizable", "Chat.Empty.Comments") }
   /// Link Preview
   internal static var chatEmptyLinkPreview: String  { return L10n.tr("Localizable", "Chat.Empty.LinkPreview") }
+  /// No replies here yet
+  internal static var chatEmptyReplies: String  { return L10n.tr("Localizable", "Chat.Empty.Replies") }
   /// Sorry, this group is not accessible.
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// Pinned message
@@ -1981,10 +1989,64 @@ internal final class L10n {
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
+  /// Comments
+  internal static var chatTitleComments: String  { return L10n.tr("Localizable", "Chat.Title.Comments") }
+  /// %d
+  internal static func chatTitleCommentsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
+  }
+  /// %d Comments
+  internal static func chatTitleCommentsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_few", p1)
+  }
+  /// %d Comments
+  internal static func chatTitleCommentsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_many", p1)
+  }
+  /// %d Comment
+  internal static func chatTitleCommentsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_one", p1)
+  }
+  /// %d Comments
+  internal static func chatTitleCommentsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_other", p1)
+  }
+  /// %d Comments
+  internal static func chatTitleCommentsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_two", p1)
+  }
+  /// Comments
+  internal static var chatTitleCommentsZero: String  { return L10n.tr("Localizable", "Chat.Title.Comments_zero") }
   /// Reminder
   internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
   /// Replies
   internal static var chatTitleReplies: String  { return L10n.tr("Localizable", "Chat.Title.Replies") }
+  /// %d
+  internal static func chatTitleRepliesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_countable", p1)
+  }
+  /// %d Replies
+  internal static func chatTitleRepliesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_few", p1)
+  }
+  /// %d Replies
+  internal static func chatTitleRepliesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_many", p1)
+  }
+  /// %d Reply
+  internal static func chatTitleRepliesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_one", p1)
+  }
+  /// %d Replies
+  internal static func chatTitleRepliesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_other", p1)
+  }
+  /// %d Replies
+  internal static func chatTitleRepliesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_two", p1)
+  }
+  /// Replies
+  internal static var chatTitleRepliesZero: String  { return L10n.tr("Localizable", "Chat.Title.Replies_zero") }
   /// Scheduled Messages
   internal static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
@@ -3959,9 +4021,13 @@ internal final class L10n {
   internal static var messagesFileStateLocal: String  { return L10n.tr("Localizable", "Messages.File.State.Local") }
   /// Download
   internal static var messagesFileStateRemote: String  { return L10n.tr("Localizable", "Messages.File.State.Remote") }
+  /// Send Anonymously...
+  internal static var messagesPlaceholderAnonymous: String  { return L10n.tr("Localizable", "Messages.Placeholder.Anonymous") }
   /// Broadcast...
   internal static var messagesPlaceholderBroadcast: String  { return L10n.tr("Localizable", "Messages.Placeholder.Broadcast") }
-  /// Reply
+  /// Comment...
+  internal static var messagesPlaceholderComment: String  { return L10n.tr("Localizable", "Messages.Placeholder.Comment") }
+  /// Reply...
   internal static var messagesPlaceholderReply: String  { return L10n.tr("Localizable", "Messages.Placeholder.Reply") }
   /// Write a message...
   internal static var messagesPlaceholderSentMessage: String  { return L10n.tr("Localizable", "Messages.Placeholder.SentMessage") }
@@ -4915,6 +4981,188 @@ internal final class L10n {
   internal static var peerMediaPopoverSharedLinks: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedLinks") }
   /// Shared Media
   internal static var peerMediaPopoverSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.Popover.SharedMedia") }
+  /// %d
+  internal static func peerMediaTitleSearchFilesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_countable", p1)
+  }
+  /// %d Files
+  internal static func peerMediaTitleSearchFilesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_few", p1)
+  }
+  /// %d Files
+  internal static func peerMediaTitleSearchFilesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_many", p1)
+  }
+  /// %d File
+  internal static func peerMediaTitleSearchFilesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_one", p1)
+  }
+  /// %d Files
+  internal static func peerMediaTitleSearchFilesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_other", p1)
+  }
+  /// %d Files
+  internal static func peerMediaTitleSearchFilesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_two", p1)
+  }
+  /// 0 Files
+  internal static var peerMediaTitleSearchFilesZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchGIFsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_countable", p1)
+  }
+  /// %d GIFs
+  internal static func peerMediaTitleSearchGIFsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_few", p1)
+  }
+  /// %d GIFs
+  internal static func peerMediaTitleSearchGIFsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_many", p1)
+  }
+  /// %d GIF
+  internal static func peerMediaTitleSearchGIFsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_one", p1)
+  }
+  /// %d GIFs
+  internal static func peerMediaTitleSearchGIFsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_other", p1)
+  }
+  /// %d GIFs
+  internal static func peerMediaTitleSearchGIFsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_two", p1)
+  }
+  /// 0 GIFs
+  internal static var peerMediaTitleSearchGIFsZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchLinksCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_countable", p1)
+  }
+  /// %d Links
+  internal static func peerMediaTitleSearchLinksFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_few", p1)
+  }
+  /// %d Links
+  internal static func peerMediaTitleSearchLinksMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_many", p1)
+  }
+  /// %d Link
+  internal static func peerMediaTitleSearchLinksOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_one", p1)
+  }
+  /// %d Links
+  internal static func peerMediaTitleSearchLinksOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_other", p1)
+  }
+  /// %d Links
+  internal static func peerMediaTitleSearchLinksTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_two", p1)
+  }
+  /// 0 Links
+  internal static var peerMediaTitleSearchLinksZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchMediaCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_countable", p1)
+  }
+  /// %d Medias
+  internal static func peerMediaTitleSearchMediaFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_few", p1)
+  }
+  /// %d Medias
+  internal static func peerMediaTitleSearchMediaMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_many", p1)
+  }
+  /// %d Media
+  internal static func peerMediaTitleSearchMediaOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_one", p1)
+  }
+  /// %d Medias
+  internal static func peerMediaTitleSearchMediaOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_other", p1)
+  }
+  /// %d Medias
+  internal static func peerMediaTitleSearchMediaTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_two", p1)
+  }
+  /// 0 Media
+  internal static var peerMediaTitleSearchMediaZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchMusicCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_countable", p1)
+  }
+  /// %d Tracks
+  internal static func peerMediaTitleSearchMusicFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_few", p1)
+  }
+  /// %d Tracks
+  internal static func peerMediaTitleSearchMusicMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_many", p1)
+  }
+  /// %d Track
+  internal static func peerMediaTitleSearchMusicOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_one", p1)
+  }
+  /// %d Tracks
+  internal static func peerMediaTitleSearchMusicOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_other", p1)
+  }
+  /// %d Tracks
+  internal static func peerMediaTitleSearchMusicTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_two", p1)
+  }
+  /// 0 Tracks
+  internal static var peerMediaTitleSearchMusicZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchPhotosCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_countable", p1)
+  }
+  /// %d Photos
+  internal static func peerMediaTitleSearchPhotosFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_few", p1)
+  }
+  /// %d Photos
+  internal static func peerMediaTitleSearchPhotosMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_many", p1)
+  }
+  /// %d Photo
+  internal static func peerMediaTitleSearchPhotosOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_one", p1)
+  }
+  /// %d Photos
+  internal static func peerMediaTitleSearchPhotosOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_other", p1)
+  }
+  /// %d Photos
+  internal static func peerMediaTitleSearchPhotosTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_two", p1)
+  }
+  /// 0 Photos
+  internal static var peerMediaTitleSearchPhotosZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_zero") }
+  /// %d
+  internal static func peerMediaTitleSearchVideosCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_countable", p1)
+  }
+  /// %d Videos
+  internal static func peerMediaTitleSearchVideosFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_few", p1)
+  }
+  /// %d Videos
+  internal static func peerMediaTitleSearchVideosMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_many", p1)
+  }
+  /// %d Video
+  internal static func peerMediaTitleSearchVideosOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_one", p1)
+  }
+  /// %d Videos
+  internal static func peerMediaTitleSearchVideosOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_other", p1)
+  }
+  /// %d Videos
+  internal static func peerMediaTitleSearchVideosTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_two", p1)
+  }
+  /// 0 Videos
+  internal static var peerMediaTitleSearchVideosZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_zero") }
   /// Invite to Group via Link
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.

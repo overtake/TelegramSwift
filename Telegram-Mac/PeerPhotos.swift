@@ -76,11 +76,12 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
             image = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.CloudImage, id: 0), representations: representations, videoRepresentations: videoRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         }
         
+        
         let firstEntry: GalleryEntry = .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0)
         
         var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser && !photos.isEmpty
         var currentIndex: Int = 0
-
+        var foundMessage: Message? = nil
         var photosDate:[TimeInterval] = []
         for i in 0 ..< photos.count {
             let photo = photos[i]
@@ -92,6 +93,7 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
                     if photo.image.id == updated?.id {
                         currentIndex = i
                         foundIndex = true
+                        foundMessage = message
                     }
                 default:
                     break
@@ -104,9 +106,9 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
         }
         for i in 0 ..< photos.count {
             if currentIndex == i && foundIndex {
-                let image = TelegramMediaImage.init(imageId: photos[i].image.imageId, representations: image!.representations, videoRepresentations: photos[i].image.videoRepresentations, immediateThumbnailData: photos[i].image.immediateThumbnailData, reference: photos[i].image.reference, partialReference: photos[i].image.partialReference, flags: photos[i].image.flags)
+                let image = TelegramMediaImage(imageId: photos[i].image.imageId, representations: image!.representations, videoRepresentations: photos[i].image.videoRepresentations, immediateThumbnailData: photos[i].image.immediateThumbnailData, reference: photos[i].image.reference, partialReference: photos[i].image.partialReference, flags: photos[i].image.flags)
                 
-                entries.append(.photo(index: photos[i].index, stableId: firstStableId, photo: image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]))
+                entries.append(.photo(index: photos[i].index, stableId: firstStableId, photo: image, reference: photos[i].reference, peer: peer, message: foundMessage, date: photosDate[i]))
             } else {
                 entries.append(.photo(index: photos[i].index, stableId: photos[i].image.imageId, photo: photos[i].image, reference: photos[i].reference, peer: peer, message: nil, date: photosDate[i]))
             }

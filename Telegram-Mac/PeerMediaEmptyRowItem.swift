@@ -75,7 +75,7 @@ class PeerMediaEmptyRowView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? PeerMediaEmptyRowItem {
-            imageView.centerX(y: bounds.midY - imageView.frame.height - 40)
+            imageView.centerX(y: bounds.midY - imageView.frame.height)
             item.textLayout.measure(width: frame.width - 60)
             textView.update(item.textLayout)
             textView.centerX(y: imageView.frame.maxY + 16)

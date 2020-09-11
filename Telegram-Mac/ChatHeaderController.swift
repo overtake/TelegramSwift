@@ -313,7 +313,7 @@ class ChatPinnedView : Control {
     init(_ messageId:MessageId, chatInteraction:ChatInteraction) {
         
         
-        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true, headerAsName: chatInteraction.mode.threadId == messageId)
+        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil)
         self.chatInteraction = chatInteraction
         super.init()
         

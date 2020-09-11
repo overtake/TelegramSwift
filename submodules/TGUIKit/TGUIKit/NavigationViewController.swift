@@ -919,8 +919,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         if !isLocked, let last = stack.last, last.invokeNavigationBack() {
             if stackCount > 1 {
                 let controller = stack[stackCount - 2]
-                last.didRemovedFromStack()
                 stack.removeLast()
+                last.didRemovedFromStack()
                 show(controller, animated || forceAnimated ? animationStyle : .none)
             } else {
                 doSomethingOnEmptyBack?()
@@ -940,10 +940,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             } else {
                 let controller = stack[index]
                 let range = min(max(1, index + 1), stackCount) ..< stackCount
-                for i in range.lowerBound ..< range.upperBound {
-                    stack[i].didRemovedFromStack()
-                }
+                let copy = stack[range]
                 stack.removeSubrange(range)
+                for controller in copy {
+                    controller.didRemovedFromStack()
+                }
                 show(controller, .none)
             }
         }
@@ -952,10 +953,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public func gotoEmpty(_ animated:Bool = true) -> Void {
         if controller != empty {
             let range = 1 ..< stackCount - 1
-            for i in range.lowerBound ..< range.upperBound {
-                stack[i].didRemovedFromStack()
-            }
+            let copy = stack[range]
             stack.removeSubrange(1 ..< stackCount - 1)
+            for controller in copy {
+                controller.didRemovedFromStack()
+            }
             show(empty, animated ? .pop : .none)
         }
     }
@@ -980,6 +982,32 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             actionView.frame = bounds
             view.addSubview(actionView)
         }  
+    }
+    
+    public func removeImmediately(_ controller: ViewController) {
+        if let index = self.stack.firstIndex(where: { $0.internalId == controller.internalId }) {
+            if index == self.stack.count - 1 {
+                if self.stack.count > index {
+                    show(self.stack[index - 1], .none)
+                } else {
+                    show(self.empty, .none)
+                }
+            }
+            self.stack.remove(at: index)
+            controller.didRemovedFromStack()
+        }
+    }
+    
+    private let depencyReadyDisposable = MetaDisposable()
+    
+    public func removeImmediately(_ controller: ViewController, depencyReady: ViewController) {
+        let ready = depencyReady.ready.get() |> take(1) |> deliverOnMainQueue
+        depencyReadyDisposable.set(ready.start(completed: { [weak controller, weak self] in
+            guard let controller = controller else {
+                return
+            }
+            self?.removeImmediately(controller)
+        }))
     }
     
     public func removeUntil(_ controllerType: ViewController.Type) {

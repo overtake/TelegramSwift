@@ -14,50 +14,15 @@
  import Postbox
  
  
-//
-// private class PeerMediaTitleBarView : TitledBarView {
-//    private var search:ImageButton = ImageButton()
-//    fileprivate let context: AccountContext
-//    fileprivate let peerId: PeerId
-//    init(controller: ViewController, context: AccountContext, peerId: PeerId, title:NSAttributedString, handler:@escaping() ->Void) {
-//        super.init(controller: controller, title)
-//        search.set(handler: { _ in
-//            handler()
-//        }, for: .Click)
-//        addSubview(search)
-//        self.context = context
-//        self.peerId = peerId
-//        updateLocalizationAndTheme(theme: theme)
-//    }
-//
-//    func updateSearchVisibility(_ visible: Bool) {
-//        search.isHidden = !visible
-//    }
-//
-//    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-//        super.updateLocalizationAndTheme(theme: theme)
-//        let theme = (theme as! TelegramPresentationTheme)
-//        search.set(image: theme.icons.chatSearch, for: .Normal)
-//        _ = search.sizeToFit()
-//        backgroundColor = theme.colors.background
-//        needsLayout = true
-//    }
-//
-//    override func layout() {
-//        super.layout()
-//        search.centerY(x: frame.width - search.frame.width)
-//    }
-//
-//
-//    required init(frame frameRect: NSRect) {
-//        fatalError("init(frame:) has not been implemented")
-//    }
-//
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-// }
  
+ 
+ protocol PeerMediaSearchable : ViewController {
+    func toggleSearch()
+    func setSearchValue(_ value: Signal<SearchState, NoError>)
+    func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping()->Void)
+    var mediaSearchValue:Signal<MediaSearchState, NoError> { get }
+ }
+
  private final class SearchContainerView : View {
     fileprivate let searchView: SearchView = SearchView(frame: NSMakeRect(0, 0, 200, 30))
     fileprivate let close: ImageButton = ImageButton()
@@ -130,8 +95,8 @@
     private let separator:View = View()
     
     fileprivate let view: PeerMediaControllerView
-    required init(frame frameRect: NSRect) {
-        view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, min(600, frameRect.width - sectionOffset * 2), frameRect.height - sectionOffset))
+    init(frame frameRect: NSRect, isSegmentHidden: Bool) {
+        view = PeerMediaControllerView(frame: NSMakeRect(0, sectionOffset, min(600, frameRect.width - sectionOffset * 2), frameRect.height - sectionOffset), isSegmentHidden: isSegmentHidden)
         super.init(frame: frameRect)
         addSubview(view)
         addSubview(actionsPanelView)
@@ -151,6 +116,10 @@
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
     
     override func layout() {
@@ -248,10 +217,11 @@
     fileprivate var isSelectionState:Bool = false
     private var chatInteraction:ChatInteraction?
     private var searchState: SearchState?
-    required init(frame frameRect:NSRect) {
+    init(frame frameRect:NSRect, isSegmentHidden: Bool) {
         segmentPanelView = SegmentContainerView(frame: NSMakeRect(0, 0, frameRect.width, 50))
         super.init(frame: frameRect)
         addSubview(topPanelView)
+        topPanelView.isHidden = isSegmentHidden
         topPanelView.addSubview(topPanelSeparatorView)
         topPanelView.addSubview(segmentPanelView)
         updateLocalizationAndTheme(theme: theme)
@@ -379,13 +349,17 @@
         } else {
             segmentPanelView.frame = NSMakeRect(0, 0, topPanelView.frame.width, 50)
         }
-        mainView?.frame = NSMakeRect(0, 50, frame.width, frame.height - inset - 50)
+        mainView?.frame = NSMakeRect(0, topPanelView.isHidden ? 0 : topPanelView.frame.height, frame.width, frame.height - inset - (topPanelView.isHidden ? 0 : topPanelView.frame.height))
         
 
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
  }
  
@@ -416,6 +390,35 @@
             return L10n.peerMediaGifs
         }
         return ""
+    }
+ }
+ 
+ struct PeerMediaExternalSearchData {
+    let searchResult: Signal<ExternalSearchMessages?, NoError>
+    let loadMore:()->Void
+    let initialTags: MessageTags
+    init(initialTags: MessageTags, searchResult: Signal<ExternalSearchMessages?, NoError>, loadMore: @escaping()->Void) {
+        self.searchResult = searchResult
+        self.loadMore = loadMore
+        self.initialTags = initialTags
+    }
+    
+    
+    var initialMode: PeerMediaCollectionMode {
+        if initialTags == .photo || initialTags == .video || initialTags == .photoOrVideo {
+            return .photoOrVideo
+        } else if initialTags == .gif {
+            return .gifs
+        } else if initialTags == .file {
+            return .file
+        } else if initialTags == .voiceOrInstantVideo {
+            return .voice
+        } else if initialTags == .webPage {
+            return .webpage
+        } else if initialTags == .music {
+            return .music
+        }
+        preconditionFailure("not supported")
     }
  }
  
@@ -489,9 +492,9 @@
     private let searchValueDisposable = MetaDisposable()
     private let onlineMemberCountDisposable = MetaDisposable()
     private var searchController: PeerMediaListController?
-    
+    private let externalSearchData: PeerMediaExternalSearchData?
     private let toggleDisposable = MetaDisposable()
-    
+    private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
     
     
@@ -517,11 +520,24 @@
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, isProfileIntended:Bool = false) {
+    init(context: AccountContext, peerId:PeerId, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil) {
+        self.externalSearchData = externalSearchData
         self.peerId = peerId
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .photoOrVideo)
+        
+        var updateTitle:((ExternalSearchMessages)->Void)? = nil
+        
+        if let external = externalSearchData {
+            modeValue.set(external.initialMode)
+            let signal = external.searchResult |> deliverOnMainQueue
+            externalDisposable.set(signal.start(next: { result in
+                if let result = result {
+                    updateTitle?(result)
+                }
+            }))
+        }
         
         var listControllers: [PeerMediaListController] = []
         for _ in tagsList.filter ({ !$0.tagsValue.isEmpty }) {
@@ -533,20 +549,14 @@
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .gif)
         super.init(context)
+        
+        updateTitle = { [weak self] result in
+            if let title = result.title {
+                self?.setCenterTitle(title)
+            }
+        }
     }
-//
-//    private var temporaryTouchBar: Any?
-//
-//    @available(OSX 10.12.2, *)
-//    override func makeTouchBar() -> NSTouchBar? {
-//        if temporaryTouchBar == nil {
-//            temporaryTouchBar = PeerMediaTouchBar(chatInteraction: interactions, currentMode: tabsSignal.get() |> map { $0.selected }, toggleMode: { [weak self] value in
-//                self?.modeValue.set(value)
-//            })
-//        }
-//        return temporaryTouchBar as? NSTouchBar
-//    }
-    
+
     var unableToHide: Bool {
         return self.genericView.activePanel is SearchContainerView || self.state != .Normal
     }
@@ -561,7 +571,7 @@
         
         
         window?.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .photoOrVideo, self.mode != .commonGroups else {
+            guard let `self` = self, self.mode != .commonGroups, self.externalSearchData == nil else {
                 return .rejected
             }
             if self.mode == .members {
@@ -599,8 +609,8 @@
         if let mode = mode {
             let controller = self.controller(for: mode)
             controller.viewDidDisappear(animated)
-            if let controller = controller as? PeerMediaListController {
-                controller.searchState.set(.init(state: .None, request: nil))
+            if let controller = controller as? PeerMediaSearchable {
+                controller.setSearchValue(.single(.init(state: .None, request: nil)))
             }
         }
         
@@ -674,6 +684,11 @@
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.updateInteraction(interactions)
+        
+        if externalSearchData != nil {
+            centerBar.updateSearchVisibility(false, animated: false)
+        }
+
         
         let tagsList = self.tagsList
         
@@ -776,6 +791,9 @@
                     }
                 case .photoOrVideo:
                     if !self.mediaGrid.isLoaded() {
+                        if let externalSearchData = self.externalSearchData {
+                            self.mediaGrid.setExternalSearch(externalSearchData.searchResult, externalSearchData.loadMore)
+                        }
                         self.mediaGrid.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.mediaGrid.ready.get() |> map { _ in
@@ -783,6 +801,9 @@
                     }
                 case .gifs:
                     if !self.gifs.isLoaded() {
+                        if let externalSearchData = self.externalSearchData {
+                            self.gifs.setExternalSearch(externalSearchData.searchResult, externalSearchData.loadMore)
+                        }
                         self.gifs.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.gifs.ready.get() |> map { ready in
@@ -790,6 +811,9 @@
                     }
                 default:
                     if !self.listControllers[Int(selected.rawValue)].isLoaded() {
+                        if let externalSearchData = self.externalSearchData {
+                            self.listControllers[Int(selected.rawValue)].setExternalSearch(externalSearchData.searchResult, externalSearchData.loadMore)
+                        }
                         self.listControllers[Int(selected.rawValue)].loadViewIfNeeded(self.genericView.view.bounds)
                         self.listControllers[Int(selected.rawValue)].load(with: selected.tagsValue)
                     }
@@ -1039,17 +1063,22 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .photoOrVideo && mode != .commonGroups && mode != .gifs && mode != .voice)
+        centerBar.updateSearchVisibility(mode != .commonGroups && mode != .voice && externalSearchData == nil)
         
         
-        if let controller = controller as? PeerMediaListController {
-            searchValueDisposable.set(self.listControllers[currentTagListIndex].mediaSearchValue.start(next: { [weak self, weak controller] state in
-                self?.genericView.updateSearchState(state, updateSearchState: { searchState in
-                    controller?.searchState.set(searchState)
-                }, toggle: {
-                    controller?.toggleSearch()
-                })
-            }))
+        if let controller = controller as? PeerMediaSearchable {
+            
+            if let externalSearchData = self.externalSearchData {
+                controller.setExternalSearch(externalSearchData.searchResult, externalSearchData.loadMore)
+            } else {
+                searchValueDisposable.set(controller.mediaSearchValue.start(next: { [weak self, weak controller] state in
+                    self?.genericView.updateSearchState(state, updateSearchState: { searchState in
+                        controller?.setSearchValue(.single(searchState))
+                    }, toggle: {
+                        controller?.toggleSearch()
+                    })
+                }))
+            }
         }
         
         var firstUpdate: Bool = true
@@ -1101,6 +1130,7 @@
         tabsDisposable.dispose()
         toggleDisposable.dispose()
         onlineMemberCountDisposable.dispose()
+        externalDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1152,41 +1182,40 @@
                 switch mode {
                 case .members:
                     self.searchGroupUsers()
-                case .photoOrVideo, .commonGroups:
+                case .commonGroups:
                     break
+                case .photoOrVideo:
+                    (self.controller(for: mode) as? PeerMediaPhotosController)?.toggleSearch()
                 default:
                     (self.controller(for: mode) as? PeerMediaListController)?.toggleSearch()
                 }
             }
         })
     }
-    
-//    override func getCenterBarViewOnce() -> TitledBarView {
-//
-//
-//
-//
-//        return PeerMediaTitleBarView(controller: self, context: context, peerId: self.peerId, title: .initialize(string: self.defaultBarTitle, color: theme.colors.text, font: .medium(.title)), handler: { [weak self] in
-//            guard let `self` = self else {
-//                return
-//            }
-//            if let mode = self.mode {
-//                let controller = self.controller(for: mode)
-//                if let controller = controller as? PeerMediaListController {
-//                    controller.toggleSearch()
-//                } else if controller is PeerMediaGroupPeersController {
-//
-//                }
-//            }
-//        })
-//    }
-//
     override func becomeFirstResponder() -> Bool? {
         return true
     }
     
     override func firstResponder() -> NSResponder? {
         return genericView.searchPanelView?.searchView.input
+    }
+    
+    override var defaultBarTitle: String {
+        return super.defaultBarTitle
+    }
+    
+    override func backSettings() -> (String, CGImage?) {
+        return super.backSettings()
+    }
+    
+    override func didRemovedFromStack() {
+        super.didRemovedFromStack()
+    }
+    
+    
+    
+    override func initializer() -> PeerMediaContainerView {
+        return PeerMediaContainerView(frame: initializationRect, isSegmentHidden: self.externalSearchData != nil)
     }
     
     override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {

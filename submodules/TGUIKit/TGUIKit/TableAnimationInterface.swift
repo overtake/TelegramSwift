@@ -18,7 +18,7 @@ open class TableAnimationInterface: NSObject {
         self.saveIfAbove = saveIfAbove
     }
 
-    public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem]) -> Void {
+    public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
         
         var height:CGFloat = 0
         
@@ -62,6 +62,10 @@ open class TableAnimationInterface: NSObject {
         
         for item in removed {
             height -= item.height
+        }
+        
+        if previousRange.length == 0  {
+            return
         }
         
         range = table.visibleRows(height)

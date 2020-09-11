@@ -19,7 +19,7 @@ extension Message : Equatable {
 }
 
 private enum PeerMediaMonthEntry : TableItemListNodeEntry {
-    case month(index: MessageIndex, items: [Message], viewType: GeneralViewType)
+    case month(index: MessageIndex, items: [Message], galleryType: GalleryAppearType, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
         
@@ -31,7 +31,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy";
         switch self {
-        case let .month(index, _, _):
+        case let .month(index, _, _, _):
             let date = Date(timeIntervalSince1970: TimeInterval(index.timestamp))
             return "items: \(formatter.string(from: date))"
         case let .date(index):
@@ -45,8 +45,8 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     func item(_ arguments: PeerMediaPhotosArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .month(_, items, viewType):
-            return PeerPhotosMonthItem(initialSize, stableId: stableId, viewType: viewType, context: arguments.context, chatInteraction: arguments.chatInteraction, gallerySupplyment: arguments.gallerySupplyment, items: items)
+        case let .month(_, items, galleryType, viewType):
+            return PeerPhotosMonthItem(initialSize, stableId: stableId, viewType: viewType, context: arguments.context, chatInteraction: arguments.chatInteraction, gallerySupplyment: arguments.gallerySupplyment, items: items, galleryType: galleryType)
         case .date:
             return PeerMediaDateItem(initialSize, index: index, stableId: stableId)
         case .section:
@@ -60,7 +60,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _):
+        case let .month(index, _, _, _):
             return index
         case let .date(index):
             return index
@@ -86,25 +86,37 @@ private final class PeerMediaPhotosArguments {
 private struct PeerMediaPhotosState : Equatable {
     let isLoading: Bool
     let messages:[Message]
-    init(isLoading: Bool, messages: [Message]) {
+    let searchState: SearchState
+    init(isLoading: Bool, messages: [Message], searchState: SearchState) {
         self.isLoading = isLoading
         self.messages = messages.reversed()
+        self.searchState = searchState
     }
     func withAppendMessages(_ collection: [Message]) -> PeerMediaPhotosState {
         var messages = self.messages
         messages.append(contentsOf: collection)
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: messages)
+        return PeerMediaPhotosState(isLoading: self.isLoading, messages: messages, searchState: self.searchState)
     }
     func withUpdatedMessages(_ collection: [Message]) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: collection)
+        return PeerMediaPhotosState(isLoading: self.isLoading, messages: collection, searchState: self.searchState)
     }
     func withUpdatedLoading(_ isLoading: Bool) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages)
+        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: self.searchState)
+    }
+    func withUpdatedSeachState(_ searchState: SearchState) -> PeerMediaPhotosState {
+        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: searchState)
     }
 }
 
-private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhotosArguments) -> [PeerMediaMonthEntry] {
+private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhotosArguments, isExternalSearch: Bool) -> [PeerMediaMonthEntry] {
     var entries:[PeerMediaMonthEntry] = []
+    
+    let galleryType: GalleryAppearType
+    if isExternalSearch {
+        galleryType = .messages(state.messages)
+    } else {
+        galleryType = .history
+    }
 
     let timeDifference = Int32(arguments.context.timeDifference)
     var temp:[Message] = []
@@ -124,9 +136,11 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                     entries.append(.section(index: index.successor()))
                     entries.append(.date(index: index))
                 } else {
-                    viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                    if !isExternalSearch {
+                        viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                    }
                 }
-                entries.append(.month(index: index.predecessor(), items: temp, viewType: viewType))
+                entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: viewType))
                 temp.removeAll()
             }
         } else {
@@ -135,22 +149,24 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
             
             if !entries.isEmpty {
                 switch entries[entries.count - 1] {
-                case let .month(prevIndex, items, viewType):
+                case let .month(prevIndex, items, galleryType, viewType):
                     let prevDateId = mediaDateId(for: prevIndex.timestamp)
                     if prevDateId != dateId {
                         entries.append(.section(index: index.successor()))
                         entries.append(.date(index: index))
-                        entries.append(.month(index: index.predecessor(), items: temp, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                        entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                     } else {
-                        entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, viewType: viewType)
+                        entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
                 default:
                     assertionFailure()
                 }
             } else {
-                //entries.append(.section(index: index.successor()))
-                //entries.append(.date(index: index))
-                entries.append(.month(index: index.predecessor(), items: temp, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                if isExternalSearch {
+                    entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                } else {
+                    entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                }
             }
             
         }
@@ -225,13 +241,14 @@ private final class PeerMediaSupplyment : InteractionContentViewProtocol {
     }
 }
 
-class PeerMediaPhotosController: TableViewController {
+class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private let peerId: PeerId
     private let disposable = MetaDisposable()
     private let historyDisposable = MetaDisposable()
     private let chatInteraction: ChatInteraction
     private let previous: Atomic<[AppearanceWrapperEntry<PeerMediaMonthEntry>]> = Atomic(value: [])
     private let tags: MessageTags
+    private var isExternalSearch: Bool = false
     init(_ context: AccountContext, chatInteraction: ChatInteraction, peerId: PeerId, tags: MessageTags) {
         self.peerId = peerId
         self.chatInteraction = chatInteraction
@@ -246,14 +263,14 @@ class PeerMediaPhotosController: TableViewController {
         let peerId = self.peerId
         let initialSize = self.atomicSize
         let tags = self.tags
-        
+        let isExternalSearch = self.isExternalSearch
 
         self.genericView.set(stickClass: PeerMediaDateItem.self, handler: { item in
             
         })
         
         self.genericView.needUpdateVisibleAfterScroll = true
-        
+        self.searchState.set(.single(SearchState(state: .None, request: nil)))
         self.genericView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: self.tags)
         
         let perPageCount:()->Int = {
@@ -276,7 +293,7 @@ class PeerMediaPhotosController: TableViewController {
         
         let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
         
-        let initialState = PeerMediaPhotosState(isLoading: false, messages: [])
+        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil))
         let state: ValuePromise<PeerMediaPhotosState> = ValuePromise()
         let stateValue: Atomic<PeerMediaPhotosState> = Atomic(value: initialState)
         let updateState:((PeerMediaPhotosState)->PeerMediaPhotosState) -> Void = { f in
@@ -292,60 +309,94 @@ class PeerMediaPhotosController: TableViewController {
             location.set(.Initial(count: requestCount))
         }
         
-        let history = location.get() |> mapToSignal { location in
-            return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags)
+        struct SearchResult {
+            let result: [Message]?
+        }
+        
+        let history: Signal<(ChatHistoryViewUpdate?, SearchResult?, SearchState), NoError> = combineLatest(searchState.get(), location.get(), externalSearch.get()) |> mapToSignal { search, location, externalSearch in
+            if let externalSearch = externalSearch {
+                return .single((nil, SearchResult(result: externalSearch.messages), search))
+            } else if !search.request.isEmpty {
+                return .single((nil, SearchResult(result: nil), search)) |> then(searchMessages(account: context.account, location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil) |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search) })
+            } else {
+                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags) |> map { ($0, nil, search) }
+            }
         }
         
         historyDisposable.set(history.start(next: { update in
             
-            let isLoading: Bool
-            let view: MessageHistoryView?
-            let updateType: ChatHistoryViewUpdateType
-            switch update {
-            case let .Loading(_, ut):
-                view = nil
-                isLoading = true
-                updateType = ut
-            case let .HistoryView(values):
-                view = values.view
-                isLoading = values.view.isLoading
-                updateType = values.type
-            }
-            
-            switch updateType {
-            case let .Generic(type: type):
-                switch type {
-                case .FillHole:
-                    DispatchQueue.main.async(execute: applyHole)
+            var messages:[Message]? = nil
+            var isLoading: Bool = false
+            if let update = update.0 {
+                let view: MessageHistoryView?
+                let updateType: ChatHistoryViewUpdateType
+                switch update {
+                case let .Loading(_, ut):
+                    view = nil
+                    isLoading = true
+                    updateType = ut
+                case let .HistoryView(values):
+                    view = values.view
+                    isLoading = values.view.isLoading
+                    updateType = values.type
+                }
+                
+                switch updateType {
+                case let .Generic(type: type):
+                    switch type {
+                    case .FillHole:
+                        DispatchQueue.main.async(execute: applyHole)
+                    default:
+                        break
+                    }
                 default:
                     break
                 }
-            default:
-                break
+                messages = view?.entries.map { value in
+                    return value.message
+                } ?? []
+            } else if let update = update.1 {
+                if let search = update.result {
+                    messages = search
+                } else {
+                    isLoading = true
+                }
             }
-            let messages = view?.entries.map { value in
-                return value.message
-            } ?? []
             
-            updateState {
-                $0.withUpdatedMessages(messages).withUpdatedLoading(false).withUpdatedLoading(isLoading)
+            updateState { state in
+                var state = state
+                state = state.withUpdatedLoading(isLoading)
+                if let messages = messages {
+                    state = state.withUpdatedMessages(messages)
+                }
+                state = state.withUpdatedSeachState(update.2)
+                return state
             }
         }))
         
         let previous = self.previous
         
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, state.get(), appearanceSignal) |> mapToSignal { state, appearance in
-            let entries = mediaEntires(state: state, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
-            return .single(prepareTransition(left: previous.swap(entries), right: entries, animated: true, initialSize: initialSize.with { $0 }, arguments: arguments))
+        let transition: Signal<(TableUpdateTransition, PeerMediaPhotosState), NoError> = combineLatest(queue: prepareQueue, state.get(), appearanceSignal) |> map { state, appearance in
+            let entries = mediaEntires(state: state, arguments: arguments, isExternalSearch: isExternalSearch).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            return (prepareTransition(left: previous.swap(entries), right: entries, animated: true, initialSize: initialSize.with { $0 }, arguments: arguments), state)
         } |> deliverOnMainQueue
         
         
+        var previousSearch: SearchState = SearchState(state: .None, request: nil)
         
-        disposable.set(transition.start(next: { [weak self] transition in
+        disposable.set(transition.start(next: { [weak self] transition, state in
             guard let `self` = self else {
                 return
             }
+            
+            if previousSearch != state.searchState {
+                self.scrollup()
+            }
+            previousSearch = state.searchState
+            
             self.genericView.merge(with: transition)
+            let state = MediaSearchState(state: state.searchState, animated: transition.animated, isLoading: state.isLoading)
+            self.mediaSearchState.set(state)
             self.readyOnce()
         }))
         
@@ -358,6 +409,37 @@ class PeerMediaPhotosController: TableViewController {
                 break
             }
         }
+    }
+    
+    private let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
+    private let searchState:Promise<SearchState> = Promise()
+    
+    func setSearchValue(_ value: Signal<SearchState, NoError>) {
+        searchState.set(value)
+    }
+    
+    private let externalSearch:Promise<ExternalSearchMessages?> = Promise(nil)
+    
+    func setExternalSearch(_ value: Signal<ExternalSearchMessages?, NoError>, _ loadMore: @escaping () -> Void) {
+        externalSearch.set(value)
+        self.isExternalSearch = true
+    }
+    
+    var mediaSearchValue:Signal<MediaSearchState, NoError> {
+        return mediaSearchState.get()
+    }
+    private var isSearch: Bool = false {
+        didSet {
+            if isSearch {
+                searchState.set(.single(.init(state: .Focus, request: nil)))
+            } else {
+                searchState.set(.single(.init(state: .None, request: nil)))
+            }
+        }
+    }
+    func toggleSearch() {
+        let old = self.isSearch
+        self.isSearch = !old
     }
     
     deinit {

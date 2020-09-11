@@ -473,6 +473,15 @@ public extension Message {
         return nil
     }
     
+    var textEntities: TextEntitiesMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? TextEntitiesMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     func isCrosspostFromChannel(account: Account) -> Bool {
         
         var sourceReference: SourceReferenceMessageAttribute?
@@ -3005,3 +3014,13 @@ extension Wallpaper {
 }
 
 //
+extension CachedChannelData.LinkedDiscussionPeerId {
+    var peerId: PeerId? {
+        switch self {
+        case let .known(peerId):
+            return peerId
+        case .unknown:
+            return nil
+        }
+    }
+}
