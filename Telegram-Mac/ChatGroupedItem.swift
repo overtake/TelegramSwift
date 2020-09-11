@@ -142,7 +142,7 @@ class ChatGroupedItem: ChatRowItem {
     
     override var hasBubble: Bool {
         get {
-            return isBubbled && (captionLayout != nil || message?.replyAttribute != nil || forwardNameLayout != nil || layout.messages.count == 1)
+            return isBubbled && (captionLayout != nil || message?.replyAttribute != nil || forwardNameLayout != nil || layout.messages.count == 1 || commentsBubbleData != nil)
         }
         set {
             super.hasBubble = newValue

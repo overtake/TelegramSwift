@@ -39,6 +39,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var shareView:ImageButton?
     private var likeView:ImageButton?
     private var channelCommentsBubbleControl: ChannelCommentsBubbleControl?
+    private var channelCommentsBubbleSmallControl: ChannelCommentsSmallControl?
     private var channelCommentsControl: ChannelCommentsControl?
 
     private var nameView:TextView?
@@ -783,6 +784,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             channelCommentsBubbleControl?.frame = channelCommentsBubbleFrame
             channelCommentsControl?.frame = channelCommentsFrame
+            channelCommentsBubbleSmallControl?.frame = channelCommentsOverlayFrame
 
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
@@ -964,6 +966,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         return NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight)
     }
+    var channelCommentsOverlayFrame: CGRect {
+        guard let item = item as? ChatRowItem, let commentsData = item.commentsBubbleDataOverlay else {
+            return .zero
+        }
+        let size = commentsData.size(false, true)
+        return NSMakeRect(contentFrame.maxX + 10, rightFrame.minY - size.height - 10, size.width, size.height)
+    }
     var channelCommentsFrame: CGRect {
         guard let item = item as? ChatRowItem, let commentsData = item.commentsData else {
             return .zero
@@ -980,6 +989,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 current = channelCommentsBubbleControl
             } else {
                 current = ChannelCommentsBubbleControl(frame: NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight))
+                
+                let background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
+                current.set(background: background, for: .Normal)
+                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
+                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
+                
                 self.channelCommentsBubbleControl = current
                 bubbleView.addSubview(current)
             }
@@ -996,12 +1011,40 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
+        if let data = item.commentsBubbleDataOverlay {
+            let current: ChannelCommentsSmallControl
+            if let channelCommentsBubbleSmallControl = self.channelCommentsBubbleSmallControl {
+                current = channelCommentsBubbleSmallControl
+            } else {
+                current = ChannelCommentsSmallControl(frame: CGRect(origin: .zero, size: data.size(false, true)))
+                
+                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
+                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
+                
+                self.channelCommentsBubbleSmallControl = current
+                rowView.addSubview(current)
+            }
+            current.update(data: data)
+        } else {
+            if let channelCommentsBubbleSmallControl = self.channelCommentsBubbleSmallControl {
+                self.channelCommentsBubbleSmallControl = nil
+                if animated {
+                    channelCommentsBubbleSmallControl.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak channelCommentsBubbleSmallControl] _ in
+                        channelCommentsBubbleSmallControl?.removeFromSuperview()
+                    })
+                } else {
+                    channelCommentsBubbleSmallControl.removeFromSuperview()
+                }
+            }
+        }
         if let commentsData = item.commentsData {
             let current: ChannelCommentsControl
             if let channelCommentsControl = self.channelCommentsControl {
                 current = channelCommentsControl
             } else {
                 current = ChannelCommentsControl(frame: NSMakeRect(0, 0, commentsData.size(false).width, ChatRowItem.channelCommentsBubbleHeight))
+                current.set(background: contentColor, for: .Normal)
+
                 self.channelCommentsControl = current
                 rowView.addSubview(current)
             }
@@ -1018,6 +1061,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
+        
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {

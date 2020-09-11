@@ -186,16 +186,18 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
                         let removeAnimateFlag = strongSelf.stackCount == 2 && isMajorController && !strongSelf.alwaysAnimate
                         
                         if isMajorController {
-                            for controller in strongSelf.stack {
+                            let stack = strongSelf.stack
+                            strongSelf.stack.removeAll()
+                            for controller in stack {
                                 controller.didRemovedFromStack()
                             }
-                            strongSelf.stack.removeAll()
                             
                             strongSelf.stack.append(strongSelf.empty)
                         }
                         
                         if let index = strongSelf.stack.firstIndex(of: controller) {
                             strongSelf.stack.remove(at: index)
+                            
                         }
                         
                         strongSelf.stack.append(controller)
@@ -226,9 +228,8 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             if stackCount > 1 {
                 let ncontroller = stack[stackCount - 2]
                 let removeAnimateFlag = ((ncontroller == defaultEmpty || !animated) && !alwaysAnimate) && !forceAnimated
-                last.didRemovedFromStack()
                 stack.removeLast()
-                
+                last.didRemovedFromStack()
                 show(ncontroller, removeAnimateFlag ? .none : animationStyle)
             } else {
                 doSomethingOnEmptyBack?()

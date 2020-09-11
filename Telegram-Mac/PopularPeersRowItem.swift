@@ -219,7 +219,7 @@ class PopularPeersRowItem: GeneralRowItem {
     fileprivate let unread: [PeerId : UnreadSearchBadge]
     fileprivate let online: [PeerId: Bool]
     init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, selfPeer: Peer, articlesEnabled: Bool, unreadArticles: Int32, peers:[Peer], unread: [PeerId : UnreadSearchBadge], online: [PeerId: Bool], action: @escaping(PopularItemType)->Void) {
-        self.peers = peers
+        self.peers = Array(peers.prefix(15))
         self.account = account
         self.unread = unread
         self.online = online

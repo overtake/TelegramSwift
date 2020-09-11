@@ -234,7 +234,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                     } else {
                         let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
                         
-                        if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId, let peer = peer as? TelegramChannel {
+                        if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId, let peer = peer as? TelegramChannel {
                             confirm(for: context.window, information: L10n.preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
                                 if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
                                     alert(for: context.window, info: L10n.channelErrorDontHavePermissions)

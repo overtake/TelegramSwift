@@ -133,7 +133,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
-        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(interaction.chatLocation), false)
+        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), false)
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
         textView.delegate = self
@@ -146,10 +146,20 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     private var textPlaceholder: String {
-        if case .replyThread = chatInteraction.mode {
-            return L10n.messagesPlaceholderReply
+        if case let .replyThread(_, mode) = chatInteraction.mode {
+            switch mode {
+            case .replies:
+                return L10n.messagesPlaceholderReply
+            case .comments:
+                return L10n.messagesPlaceholderComment
+            }
         }
         if let peer = chatInteraction.presentation.peer {
+            if let peer = peer as? TelegramChannel {
+                if peer.hasPermission(.canBeAnonymous) {
+                    return L10n.messagesPlaceholderAnonymous
+                }
+            }
             if peer.isChannel {
                 if textView.frame.width < 150 {
                     return L10n.messagesPlaceholderBroadcastSmall

@@ -927,7 +927,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     entries.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .firstItem))
                 }
                 let group: Peer?
-                if let cachedData = view.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId {
+                if let cachedData = view.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId {
                     group = view.peers[linkedDiscussionPeerId]
                 } else {
                     group = nil

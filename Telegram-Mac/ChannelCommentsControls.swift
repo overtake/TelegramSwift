@@ -16,32 +16,41 @@ import SwiftSignalKit
 final class ChannelCommentsRenderData {
     let _title: NSAttributedString
     let peers:[Peer]
-    
+    let drawBorder: Bool
     let context: AccountContext
     let message: Message?
     
     fileprivate var titleNode:TextNode?
     fileprivate var title:(TextNodeLayout,TextNode)?
     fileprivate var titleAttributed:NSAttributedString?
-
     fileprivate let handler: ()->Void
     
-    init(context: AccountContext, message: Message?, title: NSAttributedString, peers: [Peer], handler: @escaping()->Void = {}) {
+    init(context: AccountContext, message: Message?, title: NSAttributedString, peers: [Peer], drawBorder: Bool, handler: @escaping()->Void = {}) {
         self.context = context
         self.message = message
         self._title = title
         self.peers = peers
+        self.drawBorder = drawBorder
         self.handler = handler
     }
     
     func makeSize() {
-        self.title = TextNode.layoutText(maybeNode: titleNode, _title, .clear, 1, .end, NSMakeSize(200, 20), nil, false, .left)
+        if self._title.string != "0" {
+            self.title = TextNode.layoutText(maybeNode: titleNode, _title, .clear, 1, .end, NSMakeSize(200, 20), nil, false, .left)
+        }
     }
     
-    func size(_ bubbled: Bool) -> NSSize {
+    func size(_ bubbled: Bool, _ isOverlay: Bool = false) -> NSSize {
         if let title = self.title {
             var width: CGFloat = 0
-            if bubbled {
+            var height: CGFloat = 0
+            if isOverlay {
+                let iconSize = theme.chat_comments_overlay.backingSize
+                width += title.0.size.width
+                width += 10
+                width = max(width, iconSize.width + 10)
+                height = max(self._title.string == "0" ? iconSize.height + 10 : iconSize.height + title.0.size.height + 10, width)
+            } else if bubbled {
                 width += title.0.size.width
                 width += (6 * 4) + 13
                 if peers.isEmpty {
@@ -50,13 +59,15 @@ final class ChannelCommentsRenderData {
                     width += 19 * CGFloat(peers.count)
                 }
                 width += theme.icons.channel_comments_bubble_next.backingSize.width
+                height = ChatRowItem.channelCommentsBubbleHeight
             } else {
                 width += title.0.size.width
                 width += 6
                 width += theme.icons.channel_comments_list.backingSize.width
+                height = ChatRowItem.channelCommentsHeight
             }
             
-            return NSMakeSize(width, bubbled ? ChatRowItem.channelCommentsBubbleHeight: ChatRowItem.channelCommentsHeight)
+            return NSMakeSize(width, height)
         }
         return .zero
     }
@@ -76,8 +87,10 @@ class ChannelCommentsBubbleControl: Control {
 
         if let render = renderData, let title = render.title {
             
-            ctx.setFillColor(theme.colors.border.cgColor)
-            ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
+            if render.drawBorder {
+                ctx.setFillColor(theme.colors.chatBackground.cgColor)
+                ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
+            }
             
             var rect: CGRect = .zero
             
@@ -134,6 +147,7 @@ class ChannelCommentsBubbleControl: Control {
             }
             current.setFrameSize(NSMakeSize(current.mergedImageSpacing * CGFloat(data.peers.count) + 2, current.mergedImageSize))
             current.update(context: data.context, peers: data.peers, message: data.message, synchronousLoad: false)
+            current.userInteractionEnabled = false
         }
         
         needsDisplay = true
@@ -200,4 +214,50 @@ class ChannelCommentsControl: Control {
         super.layout()
     }
     
+}
+
+
+final class ChannelCommentsSmallControl : Control {
+    private var renderData: ChannelCommentsRenderData?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        
+        if let renderData = renderData {
+            let size = theme.chat_comments_overlay.backingSize
+            var iconFrame = focus(size)
+            iconFrame.origin.y = 5
+            ctx.draw(theme.chat_comments_overlay, in: iconFrame)
+            
+            if let title = renderData.title {
+                var titleFrame = focus(title.0.size)
+                titleFrame.origin.y = iconFrame.maxY
+                title.1.draw(titleFrame, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+            }
+        }
+        
+    }
+    
+    func update(data renderData: ChannelCommentsRenderData) {
+        self.renderData = renderData
+        
+        self.removeAllHandlers()
+        
+        
+        self.set(handler: { [weak renderData] _ in
+            renderData?.handler()
+        }, for: .Click)
+        
+        layer?.cornerRadius = min(bounds.height, bounds.width) / 2
+        layer?.borderWidth = .borderSize
+        layer?.borderColor = theme.chatServiceItemTextColor.cgColor
+        needsDisplay = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

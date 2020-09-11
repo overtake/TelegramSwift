@@ -266,6 +266,8 @@ open class ViewController : NSObject {
     
     public var atomicSize:Atomic<NSSize> = Atomic(value:NSZeroSize)
     
+    public var onDeinit: (()->Void)? = nil
+    
     weak open var navigationController:NavigationViewController? {
         didSet {
             if navigationController != oldValue {
@@ -556,9 +558,10 @@ open class ViewController : NSObject {
     
     deinit {
         self.window?.removeObserver(for: self)
-        window?.removeAllHandlers(for: self)
+        self.window?.removeAllHandlers(for: self)
         NotificationCenter.default.removeObserver(self)
         assertOnMainThread()
+        self.onDeinit?()
     }
     
     
@@ -833,12 +836,15 @@ open class GenericViewController<T> : ViewController where T:NSView {
         viewDidLoad()
     }
     
+    public var initializationRect: NSRect {
+        return NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)
+    }
     
 
     open func initializer() -> T {
         let vz = T.self as NSView.Type
         //controller.bar.height
-        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)) as! T
+        return vz.init(frame: initializationRect) as! T
     }
     
 }

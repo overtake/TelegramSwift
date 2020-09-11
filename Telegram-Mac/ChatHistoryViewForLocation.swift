@@ -384,6 +384,10 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 if case .peer(peerIdValue) = chatLocation {
                     cachedDataMessages = value
                 }
+            case let .message(_, message):
+                if let message = message {
+                    cachedDataMessages = [message.id : message]
+                }
             case let .preferencesEntry(key, value):
                 if key == PreferencesKeys.limitsConfiguration {
                     limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue

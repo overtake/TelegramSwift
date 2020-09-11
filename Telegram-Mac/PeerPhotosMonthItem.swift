@@ -34,11 +34,13 @@ class PeerPhotosMonthItem: GeneralRowItem {
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let gallerySupplyment: InteractionContentViewProtocol
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, chatInteraction: ChatInteraction, gallerySupplyment: InteractionContentViewProtocol, items: [Message]) {
+    fileprivate let galleryType: GalleryAppearType
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, chatInteraction: ChatInteraction, gallerySupplyment: InteractionContentViewProtocol, items: [Message], galleryType: GalleryAppearType) {
         self.items = items
         self.context = context
         self.gallerySupplyment = gallerySupplyment
         self.chatInteraction = chatInteraction
+        self.galleryType = galleryType
         
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
@@ -775,7 +777,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                         case .gallery:
                             showChatGallery(context: item.context, message: layoutItem.message, item.gallerySupplyment, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { message in
                                 layoutItem.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
-                            }, isWebpage: false, media: layoutItem.message.media.first!, automaticDownload: true), reversed: true)
+                            }, isWebpage: false, media: layoutItem.message.media.first!, automaticDownload: true), type: item.galleryType, reversed: true)
                         case .nothing:
                             break
                         }

@@ -395,7 +395,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             })
         case let .accountRecord(_, info):
             return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left:16), action: {
-                arguments.context.sharedContext.switchToAccount(id: info.account.id, action: .settings)
+                arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
                 return .single([ContextMenuItem(L10n.accountSettingsDeleteAccount, handler: {
                     confirm(for: arguments.context.window, information: L10n.accountConfirmLogoutText, successHandler: { _ in

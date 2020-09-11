@@ -269,6 +269,8 @@ private func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, 
         return L10n.channelEditAdminPermissionPinMessages
     } else if right.contains(.canAddAdmins) {
         return L10n.channelEditAdminPermissionAddNewAdmins
+    } else if right.contains(.canBeAnonymous) {
+        return L10n.channelEditAdminPermissionAnonymous
     } else {
         return ""
     }
@@ -365,6 +367,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 .canBanUsers,
                 .canInviteUsers,
                 .canPinMessages,
+                .canBeAnonymous,
                 .canAddAdmins
             ]
         }
@@ -389,9 +392,12 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             sectionId += 1
             
            
-            if !isCreator || channel.isChannel {
-                entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
-                descId += 1
+            if (channel.isSupergroup) || channel.isChannel {
+                if !isCreator || channel.isChannel {
+                    entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
+                    descId += 1
+                }
+               
                 
                 let accountUserRightsFlags: TelegramChatAdminRightsFlags
                 if channel.flags.contains(.isCreator) {
@@ -408,7 +414,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                     currentRightsFlags = adminRights.rights.flags
                 } else {
-                    currentRightsFlags = accountUserRightsFlags.subtracting(.canAddAdmins)
+                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
                 }
                 
                 if accountUserRightsFlags.contains(.canAddAdmins) {
@@ -420,16 +426,24 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 
                 let list = rightsOrder.filter {
                     accountUserRightsFlags.contains($0)
+                }.filter { right in
+                    if channel.isSupergroup && isCreator {
+                        return right == .canBeAnonymous
+                    }
+                    return true
                 }
+                
+                
                 
                 for (i, right) in list.enumerated() {
                     entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, currentRightsFlags, currentRightsFlags.contains(right), !state.updating, bestGeneralViewType(list, for: i)))
                     index += 1
                 }
-                entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
-                descId += 1
-                
-                if channel.flags.contains(.isCreator), !admin.isBot {
+                if !isCreator || channel.isChannel {
+                    entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
+                    descId += 1
+                }
+                if channel.flags.contains(.isCreator) && channel.isChannel, !admin.isBot {
                     if currentRightsFlags.contains(maskRightsFlags) {
                         entries.append(.section(sectionId))
                         sectionId += 1
@@ -521,6 +535,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 .canBanUsers,
                 .canInviteUsers,
                 .canPinMessages,
+                .canBeAnonymous,
                 .canAddAdmins
             ]
             
