@@ -170,7 +170,6 @@
 		D03878A02332503300DB441C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D038789F2332503300DB441C /* Security.framework */; };
 		D03878A22332503E00DB441C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D03878A12332503E00DB441C /* SystemConfiguration.framework */; };
 		D03878A42332504600DB441C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D03878A32332504600DB441C /* CFNetwork.framework */; };
-		D079AB9C1AF39B8000076F59 /* MtProtoKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D079AB9B1AF39B8000076F59 /* MtProtoKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0B4187B1D7E04CF004562A4 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D0B4187A1D7E04CF004562A4 /* libz.tbd */; };
 /* End PBXBuildFile section */
 
@@ -381,7 +380,6 @@
 		D05A831718AFB3F9007F1076 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D063A2F918B14AB500C65116 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/usr/lib/libcrypto.dylib; sourceTree = DEVELOPER_DIR; };
 		D079AB971AF39B8000076F59 /* MtProtoKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MtProtoKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D079AB9B1AF39B8000076F59 /* MtProtoKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MtProtoKit.h; sourceTree = "<group>"; };
 		D0B4187A1D7E04CF004562A4 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		D0CAF2EB1D75F4520011F558 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		D0CAF2EE1D75F4E20011F558 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -697,7 +695,6 @@
 			isa = PBXGroup;
 			children = (
 				A7D281E5236C26400000A9BF /* Info.plist */,
-				D079AB9B1AF39B8000076F59 /* MtProtoKit.h */,
 			);
 			path = MtProtoKit;
 			sourceTree = "<group>";
@@ -711,7 +708,6 @@
 			files = (
 				D0179F30250BCB7700599140 /* MTBag.h in Headers */,
 				D0179F4A250BCB7700599140 /* MTDatacenterAddress.h in Headers */,
-				D079AB9C1AF39B8000076F59 /* MtProtoKit.h in Headers */,
 				D0179F37250BCB7700599140 /* MTTransportTransaction.h in Headers */,
 				D0179F1F250BCB7700599140 /* MTSerialization.h in Headers */,
 				D0179F29250BCB7700599140 /* MTProxyConnectivity.h in Headers */,
