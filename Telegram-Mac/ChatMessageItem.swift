@@ -455,13 +455,16 @@ class ChatMessageItem: ChatRowItem {
                                 let pb = NSPasteboard.general
                                 pb.clearContents()
                                 pb.declareTypes([.string], owner: strongSelf)
-                                var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange)
-                                let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                if let attribute = attribute as? inAppLink {
-                                    pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                } else {
-                                    pb.setString(selectedText.string, forType: .string)
+                                let layout = strongSelf.textLayout
+                                var effectiveRange = layout.selectedRange.range
+                                if layout.attributedString.range.intersection(effectiveRange) != nil {
+                                    let selectedText = layout.attributedString.attributedSubstring(from: effectiveRange)
+                                    let attribute = layout.attributedString.attribute(NSAttributedString.Key.link, at: layout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                    if let attribute = attribute as? inAppLink {
+                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                    } else {
+                                        pb.setString(selectedText.string, forType: .string)
+                                    }
                                 }
                             }
                         }))

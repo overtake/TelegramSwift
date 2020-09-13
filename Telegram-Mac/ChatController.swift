@@ -3184,13 +3184,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return nil
                                 }.updatedMainPeer(peerViewMainPeer(peerView))
                             
-                            var discussionGroupId:PeerId? = nil
-                            if let cachedData = peerView.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId {
+                            var discussionGroupId:CachedChannelData.LinkedDiscussionPeerId = .unknown
+                            if let cachedData = peerView.cachedData as? CachedChannelData {
                                 if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                                     switch peer.info {
                                     case let .broadcast(info):
                                         if info.flags.contains(.hasDiscussionGroup) {
-                                            discussionGroupId = linkedDiscussionPeerId
+                                            discussionGroupId = cachedData.linkedDiscussionPeerId
                                         }
                                     default:
                                         break

@@ -11,7 +11,7 @@
 #import "Mozjpeg.h"
 #import "turbojpeg.h"
 #import "jpeglib.h"
-
+#import <AppKit/AppKit.h>
 
 static NSData *getHeaderPattern() {
     static NSData *value = nil;
@@ -90,6 +90,9 @@ NSData * _Nullable compressJPEGData(CGImageRef _Nonnull sourceImage) {
     
     
     CGColorSpaceRelease(colorSpace);
+    
+    CGContextSetFillColorWithColor(targetContext, [NSColor whiteColor].CGColor);
+    CGContextFillRect(targetContext, CGRectMake(0, 0, width, height));
     
     CGContextDrawImage(targetContext, CGRectMake(0, 0, width, height), sourceImage);
     

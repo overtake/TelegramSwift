@@ -589,7 +589,7 @@ private class PhoneCallWindowView : View {
         self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, isVisualEffect: !state.isScreenCapture, icon: state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
         self.b_ScreenShare.updateLoading(outgoingCameraInitialized == .initializing && state.isScreenCapture, animated: animated)
         
-        self.b_ScreenShare.isHidden = !session.isVideoPossible
+        self.b_ScreenShare.isHidden = true//!session.isVideoPossible
 
 
        

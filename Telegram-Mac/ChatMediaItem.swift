@@ -449,7 +449,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
-        let size = ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false)
+        let size = ChatLayoutUtils.contentSize(for: media, with: width, hasText: message?.text.isEmpty == false || commentsBubbleData != nil)
         return size
     }
     

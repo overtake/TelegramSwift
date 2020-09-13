@@ -548,8 +548,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let updateStatusSignal = updatedStatusSignal {
             self.statusDisposable.set(updateStatusSignal.start(next: { [weak self] (status, authentic) in
                 
-                
-                
                 if let strongSelf = self {
                     
                     strongSelf.authenticFetchStatus = authentic
@@ -692,7 +690,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     
                     switch progressStatus {
                     case let .Fetching(_, progress):
-                        strongSelf.progressView?.state = parent == nil ? .ImpossibleFetching(progress: progress, force: false) : (progress == 1.0 && strongSelf.parent?.groupingKey != nil ? .Success : .Fetching(progress: progress, force: false))
+                        
+                        let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                        
+                        strongSelf.progressView?.state = parent == nil ? .ImpossibleFetching(progress: progress, force: false) : (progress == 1.0 && sentGrouped ? .Success : .Fetching(progress: progress, force: false))
                     case .Local:
                         var state: RadialProgressState = .None
                         if containsSecretMedia {

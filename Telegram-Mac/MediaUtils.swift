@@ -2319,12 +2319,31 @@ private func imageFromAJpeg(data: Data) -> (CGImage, CGImage)? {
 public func putToTemp(image:NSImage, compress: Bool = true) -> Signal<String, NoError> {
     return Signal { (subscriber) in
 
-        if let data = compressImageToJPEG(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, quality: compress ? 0.83 : 1.0) {
-            let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
-            try? data.write(to: URL(fileURLWithPath: path))
-
-            subscriber.putNext(path)
+        
+        let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
+        if compress {
+            if let data = compressImageToJPEG(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, quality: compress ? 0.83 : 1.0) {
+                let path = NSTemporaryDirectory() + "tg_image_\(arc4random()).jpeg"
+                try? data.write(to: URL(fileURLWithPath: path))
+                subscriber.putNext(path)
+            }
+        } else {
+            let options = NSMutableDictionary()
+            let mutableData: CFMutableData = NSMutableData() as CFMutableData
+            if let colorDestination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) {
+                CGImageDestinationAddImage(colorDestination, image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, options as CFDictionary)
+                if CGImageDestinationFinalize(colorDestination) {
+                    try? (mutableData as Data).write(to: URL(fileURLWithPath: path))
+                    subscriber.putNext(path)
+                }
+            }
         }
+        
+       
+            
+
+        
+        
         
         
         subscriber.putCompletion()
@@ -3424,7 +3443,7 @@ func prepareTextAttachments(_ attachments: [NSTextAttachment]) -> Signal<[URL], 
                     subscriber.putCompletion()
                     return
                 }
-                if let fileWrapper = attachment.fileWrapper {
+                if let fileWrapper = attachment.fileWrapper, fileWrapper.isRegularFile {
                     if let data = fileWrapper.regularFileContents {
                         if let fileName = fileWrapper.filename {
                             let path = NSTemporaryDirectory() + fileName

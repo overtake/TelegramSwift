@@ -155,6 +155,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
 
             
             if preloaded {
+                //NSLog("entriescount: \(view.entries.count)")
                 return .HistoryView(view: view, type: .Generic(type: updateType), scrollPosition: nil, initialData: combinedInitialData)
             } else {
                 var scrollPosition: ChatHistoryViewScrollPosition?
