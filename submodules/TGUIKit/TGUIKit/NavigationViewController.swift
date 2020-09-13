@@ -984,9 +984,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }  
     }
     
-    public func removeImmediately(_ controller: ViewController) {
+    public func removeImmediately(_ controller: ViewController, upNext: Bool = true) {
         if let index = self.stack.firstIndex(where: { $0.internalId == controller.internalId }) {
-            if index == self.stack.count - 1 {
+            if index == self.stack.count - 1, upNext {
                 if self.stack.count > index {
                     show(self.stack[index - 1], .none)
                 } else {

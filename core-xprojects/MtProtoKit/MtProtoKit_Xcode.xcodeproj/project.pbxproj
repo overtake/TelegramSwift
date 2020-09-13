@@ -9,189 +9,163 @@
 /* Begin PBXBuildFile section */
 		A790A319236B0F6C000451B5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A318236B0F6C000451B5 /* Foundation.framework */; };
 		A790A31B236B1199000451B5 /* EncryptionProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A31A236B1199000451B5 /* EncryptionProvider.framework */; };
-		A7918EE8240CF48A002011CA /* MTOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E6B240CF482002011CA /* MTOutputStream.m */; };
-		A7918EE9240CF48A002011CA /* MTServerDhInnerDataMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E6C240CF483002011CA /* MTServerDhInnerDataMessage.m */; };
-		A7918EEA240CF48A002011CA /* MTMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E6D240CF483002011CA /* MTMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EEB240CF48A002011CA /* MTDiscoverDatacenterAddressAction.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E6E240CF483002011CA /* MTDiscoverDatacenterAddressAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EEC240CF48A002011CA /* MTTimeFixContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E6F240CF483002011CA /* MTTimeFixContext.m */; };
-		A7918EED240CF48A002011CA /* MTDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E70240CF483002011CA /* MTDisposable.m */; };
-		A7918EEE240CF48A002011CA /* MTDropRpcResultMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E71240CF483002011CA /* MTDropRpcResultMessage.m */; };
-		A7918EEF240CF48A002011CA /* PingFoundation.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E72240CF483002011CA /* PingFoundation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EF0240CF48A002011CA /* MTGzip.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E73240CF483002011CA /* MTGzip.m */; };
-		A7918EF1240CF48A002011CA /* MTPingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E74240CF483002011CA /* MTPingMessage.m */; };
-		A7918EF2240CF48A002011CA /* MTMsgResendReqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E75240CF483002011CA /* MTMsgResendReqMessage.m */; };
-		A7918EF3240CF48A002011CA /* MTSetClientDhParamsResponseMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E76240CF483002011CA /* MTSetClientDhParamsResponseMessage.m */; };
-		A7918EF4240CF48A002011CA /* PingFoundation.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E77240CF483002011CA /* PingFoundation.m */; };
-		A7918EF5240CF48A002011CA /* MTResPqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E78240CF483002011CA /* MTResPqMessage.m */; };
-		A7918EF6240CF48A002011CA /* MTInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E79240CF483002011CA /* MTInputStream.m */; };
-		A7918EF7240CF48A002011CA /* MTOutgoingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E7A240CF483002011CA /* MTOutgoingMessage.m */; };
-		A7918EF8240CF48A002011CA /* MTBufferReader.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E7B240CF483002011CA /* MTBufferReader.m */; };
-		A7918EF9240CF48A002011CA /* MTTransportSchemeStats.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E7C240CF483002011CA /* MTTransportSchemeStats.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EFA240CF48A002011CA /* MTTcpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E7D240CF484002011CA /* MTTcpConnection.m */; };
-		A7918EFB240CF48A002011CA /* MTTransportSchemeStats.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E7E240CF484002011CA /* MTTransportSchemeStats.m */; };
-		A7918EFC240CF48A002011CA /* MTRpcError.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E7F240CF484002011CA /* MTRpcError.m */; };
-		A7918EFD240CF48A002011CA /* MTSetClientDhParamsResponseMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E80240CF484002011CA /* MTSetClientDhParamsResponseMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EFE240CF48A002011CA /* MTTcpConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E81240CF484002011CA /* MTTcpConnection.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918EFF240CF48A002011CA /* MTDatacenterTransferAuthAction.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E82240CF484002011CA /* MTDatacenterTransferAuthAction.m */; };
-		A7918F00240CF48A002011CA /* MTMsgResendReqMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E83240CF484002011CA /* MTMsgResendReqMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F01240CF48A002011CA /* MTDatacenterAuthInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E84240CF484002011CA /* MTDatacenterAuthInfo.m */; };
-		A7918F02240CF48A002011CA /* MTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E85240CF484002011CA /* MTTransport.m */; };
-		A7918F03240CF48A002011CA /* MTServerDhParamsMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E86240CF484002011CA /* MTServerDhParamsMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F04240CF48A002011CA /* MTPongMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E87240CF484002011CA /* MTPongMessage.m */; };
-		A7918F05240CF48A002011CA /* MTDiscoverDatacenterAddressAction.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E88240CF484002011CA /* MTDiscoverDatacenterAddressAction.m */; };
-		A7918F06240CF48A002011CA /* MTDropRpcResultMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E89240CF484002011CA /* MTDropRpcResultMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F07240CF48A002011CA /* MTBufferReader.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E8A240CF485002011CA /* MTBufferReader.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F08240CF48A002011CA /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E8B240CF485002011CA /* GCDAsyncSocket.m */; };
-		A7918F09240CF48A002011CA /* MTBag.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E8C240CF485002011CA /* MTBag.m */; };
-		A7918F0A240CF48A002011CA /* MTRpcResultMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E8D240CF485002011CA /* MTRpcResultMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F0B240CF48A002011CA /* MTTime.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E8E240CF485002011CA /* MTTime.m */; };
-		A7918F0C240CF48A002011CA /* MTRequestErrorContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E8F240CF485002011CA /* MTRequestErrorContext.m */; };
-		A7918F0D240CF48A002011CA /* MTBackupAddressSignals.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E90240CF485002011CA /* MTBackupAddressSignals.m */; };
-		A7918F0E240CF48A002011CA /* MTDiscoverConnectionSignals.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E91240CF485002011CA /* MTDiscoverConnectionSignals.m */; };
-		A7918F0F240CF48A002011CA /* MTMsgAllInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E92240CF485002011CA /* MTMsgAllInfoMessage.m */; };
-		A7918F10240CF48A002011CA /* MTConnectionProbing.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E93240CF485002011CA /* MTConnectionProbing.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F11240CF48A002011CA /* MTPingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E94240CF485002011CA /* MTPingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F12240CF48A002011CA /* MTBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E95240CF485002011CA /* MTBuffer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F13240CF48A002011CA /* MTFutureSaltsMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E96240CF485002011CA /* MTFutureSaltsMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F14240CF48A002011CA /* MTTimeSyncMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E97240CF485002011CA /* MTTimeSyncMessageService.m */; };
-		A7918F15240CF48A002011CA /* MTContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E98240CF485002011CA /* MTContext.m */; };
-		A7918F16240CF48A002011CA /* MTSubscriber.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E99240CF485002011CA /* MTSubscriber.m */; };
-		A7918F17240CF48A002011CA /* MTDatacenterAuthAction.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E9A240CF485002011CA /* MTDatacenterAuthAction.m */; };
-		A7918F18240CF48A002011CA /* AFURLConnectionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E9B240CF486002011CA /* AFURLConnectionOperation.m */; };
-		A7918F19240CF48A002011CA /* MTResPqMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918E9C240CF486002011CA /* MTResPqMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F1A240CF48A002011CA /* MTEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E9D240CF486002011CA /* MTEncryption.m */; };
-		A7918F1B240CF48A002011CA /* MTMsgsStateReqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E9E240CF486002011CA /* MTMsgsStateReqMessage.m */; };
-		A7918F1C240CF48A002011CA /* MTRpcResultMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918E9F240CF486002011CA /* MTRpcResultMessage.m */; };
-		A7918F1D240CF48A002011CA /* MTBindingTempAuthKeyContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EA0240CF486002011CA /* MTBindingTempAuthKeyContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F1E240CF48A002011CA /* MTNewSessionCreatedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA1240CF486002011CA /* MTNewSessionCreatedMessage.m */; };
-		A7918F1F240CF48A002011CA /* MTMessageTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA2240CF486002011CA /* MTMessageTransaction.m */; };
-		A7918F20240CF48A002011CA /* MTRsa.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA3240CF486002011CA /* MTRsa.m */; };
-		A7918F21240CF48A002011CA /* MTExportedAuthorizationData.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA4240CF486002011CA /* MTExportedAuthorizationData.m */; };
-		A7918F22240CF48A002011CA /* MTPongMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EA5240CF486002011CA /* MTPongMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F23240CF48A002011CA /* MTInternalMessageParser.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EA6240CF486002011CA /* MTInternalMessageParser.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F24240CF48A002011CA /* MTTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA7240CF486002011CA /* MTTimer.m */; };
-		A7918F25240CF48A002011CA /* MTIncomingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EA8240CF486002011CA /* MTIncomingMessage.m */; };
-		A7918F26240CF48A002011CA /* MTMsgAllInfoMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EA9240CF486002011CA /* MTMsgAllInfoMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F27240CF48A002011CA /* MTHttpRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EAA240CF486002011CA /* MTHttpRequestOperation.m */; };
-		A7918F28240CF48A002011CA /* MTProxyConnectivity.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EAB240CF487002011CA /* MTProxyConnectivity.m */; };
-		A7918F29240CF48A002011CA /* MTTransportTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EAC240CF487002011CA /* MTTransportTransaction.m */; };
-		A7918F2A240CF48A002011CA /* AFHTTPRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EAD240CF487002011CA /* AFHTTPRequestOperation.m */; };
-		A7918F2B240CF48A002011CA /* MTMsgsStateReqMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EAE240CF487002011CA /* MTMsgsStateReqMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F2C240CF48A002011CA /* MTDestroySessionResponseMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EAF240CF487002011CA /* MTDestroySessionResponseMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F2D240CF48A002011CA /* MTRequestContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB0240CF487002011CA /* MTRequestContext.m */; };
-		A7918F2E240CF48A002011CA /* MTBadMsgNotificationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB1240CF487002011CA /* MTBadMsgNotificationMessage.m */; };
-		A7918F2F240CF48A002011CA /* MTApiEnvironment.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB2240CF487002011CA /* MTApiEnvironment.m */; };
-		A7918F30240CF48A002011CA /* MTTcpConnectionBehaviour.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB3240CF487002011CA /* MTTcpConnectionBehaviour.m */; };
-		A7918F31240CF48A002011CA /* MTMessageEncryptionKey.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB4240CF487002011CA /* MTMessageEncryptionKey.m */; };
-		A7918F32240CF48A002011CA /* MTTcpTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB5240CF487002011CA /* MTTcpTransport.m */; };
-		A7918F33240CF48A002011CA /* MTDatacenterAuthMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB6240CF487002011CA /* MTDatacenterAuthMessageService.m */; };
-		A7918F34240CF48A002011CA /* MTFutureSaltsMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EB7240CF487002011CA /* MTFutureSaltsMessage.m */; };
-		A7918F35240CF48A002011CA /* MTMsgContainerMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EB8240CF487002011CA /* MTMsgContainerMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F36240CF48A002011CA /* MTMsgDetailedInfoMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EB9240CF487002011CA /* MTMsgDetailedInfoMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F37240CF48A002011CA /* MTServerDhInnerDataMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EBA240CF487002011CA /* MTServerDhInnerDataMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F38240CF48A002011CA /* MTInternalMessageParser.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EBB240CF487002011CA /* MTInternalMessageParser.m */; };
-		A7918F39240CF48A002011CA /* MTLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EBC240CF487002011CA /* MTLogging.m */; };
-		A7918F3A240CF48A002011CA /* MTBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EBD240CF488002011CA /* MTBuffer.m */; };
-		A7918F3B240CF48A002011CA /* MTRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EBE240CF488002011CA /* MTRequest.m */; };
-		A7918F3C240CF48A002011CA /* MTRequestMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EBF240CF488002011CA /* MTRequestMessageService.m */; };
-		A7918F3D240CF48A002011CA /* MTDatacenterAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC0240CF488002011CA /* MTDatacenterAddress.m */; };
-		A7918F3E240CF48A002011CA /* MTBadMsgNotificationMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EC1240CF488002011CA /* MTBadMsgNotificationMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F3F240CF48A002011CA /* MTNetworkUsageCalculationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC2240CF488002011CA /* MTNetworkUsageCalculationInfo.m */; };
-		A7918F40240CF48A002011CA /* MTNetworkUsageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC3240CF488002011CA /* MTNetworkUsageManager.m */; };
-		A7918F41240CF48A002011CA /* MTConnectionProbing.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC4240CF488002011CA /* MTConnectionProbing.m */; };
-		A7918F42240CF48A002011CA /* MTDatacenterVerificationData.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC5240CF488002011CA /* MTDatacenterVerificationData.m */; };
-		A7918F43240CF48A002011CA /* MTDestroySessionResponseMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC6240CF488002011CA /* MTDestroySessionResponseMessage.m */; };
-		A7918F44240CF48A002011CA /* MTBindingTempAuthKeyContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC7240CF488002011CA /* MTBindingTempAuthKeyContext.m */; };
-		A7918F45240CF48A002011CA /* MTQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC8240CF488002011CA /* MTQueue.m */; };
-		A7918F46240CF48A002011CA /* MTServerDhParamsMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EC9240CF488002011CA /* MTServerDhParamsMessage.m */; };
-		A7918F47240CF48A002011CA /* MTMsgsStateInfoMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918ECA240CF488002011CA /* MTMsgsStateInfoMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F48240CF48A002011CA /* MTMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ECB240CF488002011CA /* MTMessage.m */; };
-		A7918F49240CF48A002011CA /* MTDatacenterAddressSet.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ECC240CF488002011CA /* MTDatacenterAddressSet.m */; };
-		A7918F4A240CF48A002011CA /* MTMsgsStateInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ECD240CF488002011CA /* MTMsgsStateInfoMessage.m */; };
-		A7918F4B240CF48A002011CA /* MTSessionInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ECE240CF489002011CA /* MTSessionInfo.m */; };
-		A7918F4C240CF48A002011CA /* MTDNS.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ECF240CF489002011CA /* MTDNS.m */; };
-		A7918F4D240CF48A002011CA /* MTMsgsAckMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED0240CF489002011CA /* MTMsgsAckMessage.m */; };
-		A7918F4E240CF48A002011CA /* MTTransportScheme.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED1240CF489002011CA /* MTTransportScheme.m */; };
-		A7918F4F240CF48A002011CA /* MTNetworkAvailability.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED2240CF489002011CA /* MTNetworkAvailability.m */; };
-		A7918F50240CF48A002011CA /* MTDropResponseContext.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED3240CF489002011CA /* MTDropResponseContext.m */; };
-		A7918F51240CF48A002011CA /* MTAes.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918ED4240CF489002011CA /* MTAes.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F52240CF48A002011CA /* MTKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED5240CF489002011CA /* MTKeychain.m */; };
-		A7918F53240CF48A002011CA /* MTDatacenterSaltInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED6240CF489002011CA /* MTDatacenterSaltInfo.m */; };
-		A7918F54240CF48A002011CA /* MTDNS.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918ED7240CF489002011CA /* MTDNS.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F55240CF48A002011CA /* MTMsgContainerMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED8240CF489002011CA /* MTMsgContainerMessage.m */; };
-		A7918F56240CF48A002011CA /* MTAtomic.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918ED9240CF489002011CA /* MTAtomic.m */; };
-		A7918F57240CF48A002011CA /* MTDiscoverConnectionSignals.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EDA240CF489002011CA /* MTDiscoverConnectionSignals.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F58240CF48A002011CA /* MTNewSessionCreatedMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EDB240CF489002011CA /* MTNewSessionCreatedMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F59240CF48A002011CA /* MTResendMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EDC240CF489002011CA /* MTResendMessageService.m */; };
-		A7918F5A240CF48A002011CA /* MTMsgDetailedInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EDD240CF489002011CA /* MTMsgDetailedInfoMessage.m */; };
-		A7918F5B240CF48A002011CA /* GCDAsyncSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EDE240CF489002011CA /* GCDAsyncSocket.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F5C240CF48A002011CA /* MTFileBasedKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EDF240CF48A002011CA /* MTFileBasedKeychain.m */; };
-		A7918F5D240CF48A002011CA /* MTAes.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EE0240CF48A002011CA /* MTAes.m */; };
-		A7918F5E240CF48A002011CA /* MTTcpConnectionBehaviour.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EE1240CF48A002011CA /* MTTcpConnectionBehaviour.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F5F240CF48A002011CA /* MTSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EE2240CF48A002011CA /* MTSignal.m */; };
-		A7918F60240CF48A002011CA /* MTRsa.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EE3240CF48A002011CA /* MTRsa.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F61240CF48A002011CA /* MTPreparedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EE4240CF48A002011CA /* MTPreparedMessage.m */; };
-		A7918F62240CF48A002011CA /* MTDatacenterAddressListData.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EE5240CF48A002011CA /* MTDatacenterAddressListData.m */; };
-		A7918F63240CF48A002011CA /* MTMsgsAckMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918EE6240CF48A002011CA /* MTMsgsAckMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918F64240CF48A002011CA /* MTProto.m in Sources */ = {isa = PBXBuildFile; fileRef = A7918EE7240CF48A002011CA /* MTProto.m */; };
-		A7918FA1240CF4AE002011CA /* MTDatacenterAuthInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F66240CF4AB002011CA /* MTDatacenterAuthInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA2240CF4AE002011CA /* MTSessionInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F67240CF4AB002011CA /* MTSessionInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA3240CF4AE002011CA /* MTMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F68240CF4AB002011CA /* MTMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA4240CF4AE002011CA /* MTLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F69240CF4AB002011CA /* MTLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA5240CF4AE002011CA /* MTDatacenterAddressSet.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6A240CF4AB002011CA /* MTDatacenterAddressSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA6240CF4AE002011CA /* MTHttpRequestOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6B240CF4AB002011CA /* MTHttpRequestOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA7240CF4AE002011CA /* MTDatacenterAuthAction.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6C240CF4AB002011CA /* MTDatacenterAuthAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA8240CF4AE002011CA /* MTNetworkUsageCalculationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6D240CF4AB002011CA /* MTNetworkUsageCalculationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FA9240CF4AE002011CA /* MTSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6E240CF4AB002011CA /* MTSubscriber.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAA240CF4AE002011CA /* MTTimeSyncMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F6F240CF4AB002011CA /* MTTimeSyncMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAB240CF4AE002011CA /* MTDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F70240CF4AB002011CA /* MTDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAC240CF4AE002011CA /* MTBackupAddressSignals.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F71240CF4AB002011CA /* MTBackupAddressSignals.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAD240CF4AE002011CA /* MTEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F72240CF4AB002011CA /* MTEncryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAE240CF4AE002011CA /* MTTransportScheme.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F73240CF4AB002011CA /* MTTransportScheme.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FAF240CF4AE002011CA /* MTAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F74240CF4AB002011CA /* MTAtomic.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB0240CF4AE002011CA /* MTNetworkUsageManager.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F75240CF4AB002011CA /* MTNetworkUsageManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB1240CF4AE002011CA /* MTRequestMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F76240CF4AC002011CA /* MTRequestMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB2240CF4AE002011CA /* MTIncomingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F77240CF4AC002011CA /* MTIncomingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB3240CF4AE002011CA /* MTSerialization.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F78240CF4AC002011CA /* MTSerialization.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB4240CF4AE002011CA /* MTRequestContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F79240CF4AC002011CA /* MTRequestContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB5240CF4AE002011CA /* MTDatacenterAddressListData.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7A240CF4AC002011CA /* MTDatacenterAddressListData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB6240CF4AE002011CA /* MTApiEnvironment.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7B240CF4AC002011CA /* MTApiEnvironment.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB7240CF4AE002011CA /* MTKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7C240CF4AC002011CA /* MTKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB8240CF4AE002011CA /* MTDatacenterAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7D240CF4AC002011CA /* MTDatacenterAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FB9240CF4AE002011CA /* AFHTTPRequestOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7E240CF4AC002011CA /* AFHTTPRequestOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBA240CF4AF002011CA /* MTSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F7F240CF4AC002011CA /* MTSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBB240CF4AF002011CA /* MTProto.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F80240CF4AC002011CA /* MTProto.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBC240CF4AF002011CA /* MTTcpTransport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F81240CF4AC002011CA /* MTTcpTransport.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBD240CF4AF002011CA /* MTDatacenterTransferAuthAction.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F82240CF4AC002011CA /* MTDatacenterTransferAuthAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBE240CF4AF002011CA /* MTTransport.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F83240CF4AC002011CA /* MTTransport.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FBF240CF4AF002011CA /* MTFileBasedKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F84240CF4AD002011CA /* MTFileBasedKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC0240CF4AF002011CA /* MTContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F85240CF4AD002011CA /* MTContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC1240CF4AF002011CA /* MTBag.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F86240CF4AD002011CA /* MTBag.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC2240CF4AF002011CA /* MTTransportTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F87240CF4AD002011CA /* MTTransportTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC3240CF4AF002011CA /* MTTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F88240CF4AD002011CA /* MTTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC4240CF4AF002011CA /* MTMessageEncryptionKey.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F89240CF4AD002011CA /* MTMessageEncryptionKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC5240CF4AF002011CA /* MTInternalId.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8A240CF4AD002011CA /* MTInternalId.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC6240CF4AF002011CA /* MTProxyConnectivity.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8B240CF4AD002011CA /* MTProxyConnectivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC7240CF4AF002011CA /* MTQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8C240CF4AD002011CA /* MTQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC8240CF4AF002011CA /* AFURLConnectionOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8D240CF4AD002011CA /* AFURLConnectionOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FC9240CF4AF002011CA /* MTRequestErrorContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8E240CF4AD002011CA /* MTRequestErrorContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCA240CF4AF002011CA /* MTDatacenterSaltInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F8F240CF4AD002011CA /* MTDatacenterSaltInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCB240CF4AF002011CA /* MTOutgoingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F90240CF4AD002011CA /* MTOutgoingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCC240CF4AF002011CA /* MTTimeFixContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F91240CF4AE002011CA /* MTTimeFixContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCD240CF4AF002011CA /* MTOutputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F92240CF4AE002011CA /* MTOutputStream.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCE240CF4AF002011CA /* MTMessageTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F93240CF4AE002011CA /* MTMessageTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FCF240CF4AF002011CA /* MTGzip.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F94240CF4AE002011CA /* MTGzip.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD1240CF4AF002011CA /* MTRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F96240CF4AE002011CA /* MTRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD2240CF4AF002011CA /* MTTime.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F97240CF4AE002011CA /* MTTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD3240CF4AF002011CA /* MTPreparedMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F98240CF4AE002011CA /* MTPreparedMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD4240CF4AF002011CA /* MTNetworkAvailability.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F99240CF4AE002011CA /* MTNetworkAvailability.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD5240CF4AF002011CA /* MTRpcError.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9A240CF4AE002011CA /* MTRpcError.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD6240CF4AF002011CA /* MTResendMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9B240CF4AE002011CA /* MTResendMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD7240CF4AF002011CA /* MTDropResponseContext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9C240CF4AE002011CA /* MTDropResponseContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD8240CF4AF002011CA /* MTDatacenterAuthMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9D240CF4AE002011CA /* MTDatacenterAuthMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FD9240CF4AF002011CA /* MTDatacenterVerificationData.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9E240CF4AE002011CA /* MTDatacenterVerificationData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FDA240CF4AF002011CA /* MTExportedAuthorizationData.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918F9F240CF4AE002011CA /* MTExportedAuthorizationData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918FDB240CF4AF002011CA /* MTInputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918FA0240CF4AE002011CA /* MTInputStream.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179DC6250BC54600599140 /* MTPreparedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D43250BC54600599140 /* MTPreparedMessage.m */; };
+		D0179DC7250BC54600599140 /* MTGzip.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D44250BC54600599140 /* MTGzip.m */; };
+		D0179DC8250BC54600599140 /* MTTime.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D45250BC54600599140 /* MTTime.m */; };
+		D0179DC9250BC54600599140 /* MTBag.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D46250BC54600599140 /* MTBag.m */; };
+		D0179DCA250BC54600599140 /* MTBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D47250BC54600599140 /* MTBuffer.m */; };
+		D0179DCB250BC54600599140 /* MTBackupAddressSignals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D48250BC54600599140 /* MTBackupAddressSignals.m */; };
+		D0179DCD250BC54600599140 /* MTPongMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D4A250BC54600599140 /* MTPongMessage.m */; };
+		D0179DCE250BC54600599140 /* MTIncomingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D4B250BC54600599140 /* MTIncomingMessage.m */; };
+		D0179DD0250BC54600599140 /* MTBindKeyMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D4D250BC54600599140 /* MTBindKeyMessageService.m */; };
+		D0179DD2250BC54600599140 /* MTDatacenterAuthAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D4F250BC54600599140 /* MTDatacenterAuthAction.m */; };
+		D0179DD3250BC54600599140 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D50250BC54600599140 /* GCDAsyncSocket.m */; };
+		D0179DD4250BC54600599140 /* MTTransportTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D51250BC54600599140 /* MTTransportTransaction.m */; };
+		D0179DD6250BC54600599140 /* MTRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D53250BC54600599140 /* MTRequest.m */; };
+		D0179DD9250BC54600599140 /* MTResPqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D56250BC54600599140 /* MTResPqMessage.m */; };
+		D0179DDC250BC54600599140 /* MTQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D59250BC54600599140 /* MTQueue.m */; };
+		D0179DDD250BC54600599140 /* MTOutgoingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5A250BC54600599140 /* MTOutgoingMessage.m */; };
+		D0179DDE250BC54600599140 /* MTConnectionProbing.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5B250BC54600599140 /* MTConnectionProbing.m */; };
+		D0179DDF250BC54600599140 /* MTDestroySessionResponseMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5C250BC54600599140 /* MTDestroySessionResponseMessage.m */; };
+		D0179DE0250BC54600599140 /* MTBindingTempAuthKeyContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5D250BC54600599140 /* MTBindingTempAuthKeyContext.m */; };
+		D0179DE1250BC54600599140 /* MTMsgResendReqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5E250BC54600599140 /* MTMsgResendReqMessage.m */; };
+		D0179DE2250BC54600599140 /* MTTcpTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D5F250BC54600599140 /* MTTcpTransport.m */; };
+		D0179DE3250BC54600599140 /* MTNetworkUsageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D60250BC54600599140 /* MTNetworkUsageManager.m */; };
+		D0179DE4250BC54600599140 /* MTMessageEncryptionKey.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D61250BC54600599140 /* MTMessageEncryptionKey.m */; };
+		D0179DE5250BC54600599140 /* MTEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D62250BC54600599140 /* MTEncryption.m */; };
+		D0179DE6250BC54600599140 /* MTHttpRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D63250BC54600599140 /* MTHttpRequestOperation.m */; };
+		D0179DE7250BC54600599140 /* MTTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D64250BC54600599140 /* MTTimer.m */; };
+		D0179DE8250BC54600599140 /* MTTcpConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D65250BC54600599140 /* MTTcpConnection.m */; };
+		D0179DE9250BC54600599140 /* MTDatacenterSaltInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D66250BC54600599140 /* MTDatacenterSaltInfo.m */; };
+		D0179DEC250BC54600599140 /* MTTimeFixContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D69250BC54600599140 /* MTTimeFixContext.m */; };
+		D0179DEE250BC54600599140 /* MTMsgAllInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D6B250BC54600599140 /* MTMsgAllInfoMessage.m */; };
+		D0179DEF250BC54600599140 /* MTServerDhInnerDataMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D6C250BC54600599140 /* MTServerDhInnerDataMessage.m */; };
+		D0179DF0250BC54600599140 /* MTDatacenterVerificationData.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D6D250BC54600599140 /* MTDatacenterVerificationData.m */; };
+		D0179DF2250BC54600599140 /* MTDatacenterAuthInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D6F250BC54600599140 /* MTDatacenterAuthInfo.m */; };
+		D0179DF3250BC54600599140 /* MTRequestContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D70250BC54600599140 /* MTRequestContext.m */; };
+		D0179DF4250BC54600599140 /* MTExportedAuthorizationData.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D71250BC54600599140 /* MTExportedAuthorizationData.m */; };
+		D0179DF5250BC54600599140 /* MTRequestErrorContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D72250BC54600599140 /* MTRequestErrorContext.m */; };
+		D0179DF6250BC54600599140 /* MTSessionInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D73250BC54600599140 /* MTSessionInfo.m */; };
+		D0179DF7250BC54600599140 /* MTMsgsAckMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D74250BC54600599140 /* MTMsgsAckMessage.m */; };
+		D0179DFA250BC54600599140 /* MTDatacenterAddressSet.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D77250BC54600599140 /* MTDatacenterAddressSet.m */; };
+		D0179DFB250BC54600599140 /* MTInternalMessageParser.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D78250BC54600599140 /* MTInternalMessageParser.m */; };
+		D0179DFD250BC54600599140 /* MTInputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D7A250BC54600599140 /* MTInputStream.m */; };
+		D0179DFF250BC54600599140 /* MTDatacenterAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D7C250BC54600599140 /* MTDatacenterAddress.m */; };
+		D0179E00250BC54600599140 /* MTTransportSchemeStats.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D7D250BC54600599140 /* MTTransportSchemeStats.m */; };
+		D0179E03250BC54600599140 /* MTTransportScheme.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D80250BC54600599140 /* MTTransportScheme.m */; };
+		D0179E04250BC54600599140 /* MTQueueLocalObject.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D82250BC54600599140 /* MTQueueLocalObject.m */; };
+		D0179E07250BC54600599140 /* MTFileBasedKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D85250BC54600599140 /* MTFileBasedKeychain.m */; };
+		D0179E08250BC54600599140 /* MTAtomic.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D86250BC54600599140 /* MTAtomic.m */; };
+		D0179E0A250BC54600599140 /* MTTcpConnectionBehaviour.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D88250BC54600599140 /* MTTcpConnectionBehaviour.m */; };
+		D0179E0B250BC54600599140 /* MTTimeSyncMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D89250BC54600599140 /* MTTimeSyncMessageService.m */; };
+		D0179E0C250BC54600599140 /* AFURLConnectionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D8A250BC54600599140 /* AFURLConnectionOperation.m */; };
+		D0179E0D250BC54600599140 /* MTFutureSaltsMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D8B250BC54600599140 /* MTFutureSaltsMessage.m */; };
+		D0179E0E250BC54600599140 /* MTServerDhParamsMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D8C250BC54600599140 /* MTServerDhParamsMessage.m */; };
+		D0179E10250BC54600599140 /* MTSubscriber.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D8E250BC54600599140 /* MTSubscriber.m */; };
+		D0179E11250BC54600599140 /* AFHTTPRequestOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D8F250BC54600599140 /* AFHTTPRequestOperation.m */; };
+		D0179E13250BC54600599140 /* PingFoundation.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D91250BC54600599140 /* PingFoundation.m */; };
+		D0179E14250BC54600599140 /* MTDisposable.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D92250BC54600599140 /* MTDisposable.m */; };
+		D0179E15250BC54600599140 /* MTRequestMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D93250BC54600599140 /* MTRequestMessageService.m */; };
+		D0179E16250BC54600599140 /* MTDropResponseContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D94250BC54600599140 /* MTDropResponseContext.m */; };
+		D0179E18250BC54600599140 /* MTProtoInstance.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D96250BC54600599140 /* MTProtoInstance.m */; };
+		D0179E1A250BC54600599140 /* MTRpcError.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D98250BC54600599140 /* MTRpcError.m */; };
+		D0179E1B250BC54600599140 /* MTResendMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D99250BC54600599140 /* MTResendMessageService.m */; };
+		D0179E1C250BC54600599140 /* MTMsgDetailedInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D9A250BC54600599140 /* MTMsgDetailedInfoMessage.m */; };
+		D0179E1D250BC54600599140 /* MTDiscoverDatacenterAddressAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D9B250BC54600599140 /* MTDiscoverDatacenterAddressAction.m */; };
+		D0179E1F250BC54600599140 /* MTBadMsgNotificationMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D9D250BC54600599140 /* MTBadMsgNotificationMessage.m */; };
+		D0179E20250BC54600599140 /* MTAes.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D9E250BC54600599140 /* MTAes.m */; };
+		D0179E21250BC54600599140 /* MTNewSessionCreatedMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179D9F250BC54600599140 /* MTNewSessionCreatedMessage.m */; };
+		D0179E22250BC54600599140 /* MTDatacenterAddressListData.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA0250BC54600599140 /* MTDatacenterAddressListData.m */; };
+		D0179E23250BC54600599140 /* MTNetworkUsageCalculationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA1250BC54600599140 /* MTNetworkUsageCalculationInfo.m */; };
+		D0179E25250BC54600599140 /* MTKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA3250BC54600599140 /* MTKeychain.m */; };
+		D0179E26250BC54600599140 /* MTApiEnvironment.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA4250BC54600599140 /* MTApiEnvironment.m */; };
+		D0179E28250BC54600599140 /* MTContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA6250BC54600599140 /* MTContext.m */; };
+		D0179E29250BC54600599140 /* MTPingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA7250BC54600599140 /* MTPingMessage.m */; };
+		D0179E2B250BC54600599140 /* MTDiscoverConnectionSignals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DA9250BC54600599140 /* MTDiscoverConnectionSignals.m */; };
+		D0179E2D250BC54600599140 /* MTSetClientDhParamsResponseMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DAB250BC54600599140 /* MTSetClientDhParamsResponseMessage.m */; };
+		D0179E2E250BC54600599140 /* MTDropRpcResultMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DAC250BC54600599140 /* MTDropRpcResultMessage.m */; };
+		D0179E30250BC54600599140 /* MTOutputStream.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DAE250BC54600599140 /* MTOutputStream.m */; };
+		D0179E31250BC54600599140 /* MTNetworkAvailability.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DAF250BC54600599140 /* MTNetworkAvailability.m */; };
+		D0179E32250BC54600599140 /* MTSignal.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB0250BC54600599140 /* MTSignal.m */; };
+		D0179E35250BC54600599140 /* MTRpcResultMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB3250BC54600599140 /* MTRpcResultMessage.m */; };
+		D0179E36250BC54600599140 /* MTProtoEngine.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB4250BC54600599140 /* MTProtoEngine.m */; };
+		D0179E37250BC54600599140 /* MTProxyConnectivity.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB5250BC54600599140 /* MTProxyConnectivity.m */; };
+		D0179E38250BC54600599140 /* MTProto.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB6250BC54600599140 /* MTProto.m */; };
+		D0179E39250BC54600599140 /* MTMsgsStateInfoMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB7250BC54600599140 /* MTMsgsStateInfoMessage.m */; };
+		D0179E3A250BC54600599140 /* MTDatacenterTransferAuthAction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB8250BC54600599140 /* MTDatacenterTransferAuthAction.m */; };
+		D0179E3B250BC54600599140 /* MTTransport.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DB9250BC54600599140 /* MTTransport.m */; };
+		D0179E3C250BC54600599140 /* MTMessageTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DBA250BC54600599140 /* MTMessageTransaction.m */; };
+		D0179E3D250BC54600599140 /* MTDatacenterAuthMessageService.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DBB250BC54600599140 /* MTDatacenterAuthMessageService.m */; };
+		D0179E3E250BC54600599140 /* MTMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DBC250BC54600599140 /* MTMessage.m */; };
+		D0179E3F250BC54600599140 /* MTDNS.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DBD250BC54600599140 /* MTDNS.m */; };
+		D0179E41250BC54600599140 /* MTBufferReader.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DBF250BC54600599140 /* MTBufferReader.m */; };
+		D0179E42250BC54600599140 /* MTLogging.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DC0250BC54600599140 /* MTLogging.m */; };
+		D0179E43250BC54600599140 /* MTMsgsStateReqMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DC1250BC54600599140 /* MTMsgsStateReqMessage.m */; };
+		D0179E45250BC54600599140 /* MTRsa.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DC3250BC54600599140 /* MTRsa.m */; };
+		D0179E46250BC54600599140 /* MTMsgContainerMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = D0179DC4250BC54600599140 /* MTMsgContainerMessage.m */; };
+		D0179F0E250BCB7700599140 /* MTDisposable.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ECF250BCB7600599140 /* MTDisposable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F0F250BCB7700599140 /* MTRequestMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED0250BCB7600599140 /* MTRequestMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F10250BCB7700599140 /* MtProtoKit.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED1250BCB7600599140 /* MtProtoKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F11250BCB7700599140 /* AFHTTPRequestOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED2250BCB7600599140 /* AFHTTPRequestOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F12250BCB7700599140 /* MTSubscriber.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED3250BCB7600599140 /* MTSubscriber.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F13250BCB7700599140 /* AFURLConnectionOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED4250BCB7600599140 /* AFURLConnectionOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F14250BCB7700599140 /* MTTimeSyncMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED5250BCB7600599140 /* MTTimeSyncMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F15250BCB7700599140 /* MTNetworkUsageCalculationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED6250BCB7600599140 /* MTNetworkUsageCalculationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F16250BCB7700599140 /* MTDatacenterAddressListData.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED7250BCB7600599140 /* MTDatacenterAddressListData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F17250BCB7700599140 /* MTResendMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED8250BCB7600599140 /* MTResendMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F18250BCB7700599140 /* MTProtoInstance.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179ED9250BCB7600599140 /* MTProtoInstance.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F19250BCB7700599140 /* MTRpcError.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDA250BCB7600599140 /* MTRpcError.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1A250BCB7700599140 /* MTDropResponseContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDB250BCB7600599140 /* MTDropResponseContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1B250BCB7700599140 /* MTSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDC250BCB7600599140 /* MTSignal.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1C250BCB7700599140 /* MTNetworkAvailability.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDD250BCB7600599140 /* MTNetworkAvailability.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1D250BCB7700599140 /* MTProtoPersistenceInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDE250BCB7600599140 /* MTProtoPersistenceInterface.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1E250BCB7700599140 /* MTOutputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EDF250BCB7600599140 /* MTOutputStream.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F1F250BCB7700599140 /* MTSerialization.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE0250BCB7600599140 /* MTSerialization.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F20250BCB7700599140 /* MTContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE1250BCB7600599140 /* MTContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F21250BCB7700599140 /* MTApiEnvironment.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE2250BCB7600599140 /* MTApiEnvironment.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F22250BCB7700599140 /* MTKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE3250BCB7600599140 /* MTKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F23250BCB7700599140 /* MTLogging.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE4250BCB7600599140 /* MTLogging.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F24250BCB7700599140 /* MTMessageTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE5250BCB7600599140 /* MTMessageTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F25250BCB7700599140 /* MTDatacenterAuthMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE6250BCB7600599140 /* MTDatacenterAuthMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F26250BCB7700599140 /* MTTransport.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE7250BCB7600599140 /* MTTransport.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F27250BCB7700599140 /* MTDatacenterTransferAuthAction.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE8250BCB7600599140 /* MTDatacenterTransferAuthAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F28250BCB7700599140 /* MTProto.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EE9250BCB7600599140 /* MTProto.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F29250BCB7700599140 /* MTProxyConnectivity.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EEA250BCB7600599140 /* MTProxyConnectivity.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2A250BCB7700599140 /* MTProtoEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EEB250BCB7600599140 /* MTProtoEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2B250BCB7700599140 /* MTDatacenterAuthAction.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EEC250BCB7600599140 /* MTDatacenterAuthAction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2C250BCB7700599140 /* MTBindKeyMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EED250BCB7600599140 /* MTBindKeyMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2D250BCB7700599140 /* MTIncomingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EEE250BCB7600599140 /* MTIncomingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2E250BCB7700599140 /* MTBackupAddressSignals.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EEF250BCB7600599140 /* MTBackupAddressSignals.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F2F250BCB7700599140 /* MTTime.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF0250BCB7600599140 /* MTTime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F30250BCB7700599140 /* MTBag.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF1250BCB7600599140 /* MTBag.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F31250BCB7700599140 /* MTMessageService.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF2250BCB7600599140 /* MTMessageService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F32250BCB7700599140 /* MTGzip.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF3250BCB7600599140 /* MTGzip.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F33250BCB7700599140 /* MTPreparedMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF4250BCB7600599140 /* MTPreparedMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F34250BCB7700599140 /* MTOutgoingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF5250BCB7600599140 /* MTOutgoingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F35250BCB7700599140 /* MTQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF6250BCB7600599140 /* MTQueue.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F36250BCB7700599140 /* MTRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF7250BCB7600599140 /* MTRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F37250BCB7700599140 /* MTTransportTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF8250BCB7600599140 /* MTTransportTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F38250BCB7700599140 /* MTSessionInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EF9250BCB7600599140 /* MTSessionInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F39250BCB7700599140 /* MTRequestErrorContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFA250BCB7600599140 /* MTRequestErrorContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3A250BCB7700599140 /* MTExportedAuthorizationData.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFB250BCB7600599140 /* MTExportedAuthorizationData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3B250BCB7700599140 /* MTDatacenterVerificationData.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFC250BCB7600599140 /* MTDatacenterVerificationData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3C250BCB7700599140 /* MTDatacenterAuthInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFD250BCB7600599140 /* MTDatacenterAuthInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3D250BCB7700599140 /* MTRequestContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFE250BCB7600599140 /* MTRequestContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3E250BCB7700599140 /* MTInternalId.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179EFF250BCB7600599140 /* MTInternalId.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F3F250BCB7700599140 /* MTDatacenterSaltInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F00250BCB7600599140 /* MTDatacenterSaltInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F40250BCB7700599140 /* MTTimeFixContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F01250BCB7600599140 /* MTTimeFixContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F41250BCB7700599140 /* MTTimer.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F02250BCB7600599140 /* MTTimer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F42250BCB7700599140 /* MTHttpRequestOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F03250BCB7600599140 /* MTHttpRequestOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F43250BCB7700599140 /* MTMessageEncryptionKey.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F04250BCB7600599140 /* MTMessageEncryptionKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F44250BCB7700599140 /* MTEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F05250BCB7600599140 /* MTEncryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F45250BCB7700599140 /* MTNetworkUsageManager.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F06250BCB7600599140 /* MTNetworkUsageManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F46250BCB7700599140 /* MTTcpTransport.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F07250BCB7600599140 /* MTTcpTransport.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F47250BCB7700599140 /* MTAtomic.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F08250BCB7600599140 /* MTAtomic.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F48250BCB7700599140 /* MTFileBasedKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F09250BCB7600599140 /* MTFileBasedKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F49250BCB7700599140 /* MTTransportScheme.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F0A250BCB7600599140 /* MTTransportScheme.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F4A250BCB7700599140 /* MTDatacenterAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F0B250BCB7600599140 /* MTDatacenterAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F4B250BCB7700599140 /* MTInputStream.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F0C250BCB7600599140 /* MTInputStream.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0179F4C250BCB7700599140 /* MTDatacenterAddressSet.h in Headers */ = {isa = PBXBuildFile; fileRef = D0179F0D250BCB7600599140 /* MTDatacenterAddressSet.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D038789E2332500A00DB441C /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D038789D2332500A00DB441C /* libc++.tbd */; };
 		D03878A02332503300DB441C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D038789F2332503300DB441C /* Security.framework */; };
 		D03878A22332503E00DB441C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D03878A12332503E00DB441C /* SystemConfiguration.framework */; };
@@ -204,192 +178,202 @@
 		A790A318236B0F6C000451B5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		A790A31A236B1199000451B5 /* EncryptionProvider.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = EncryptionProvider.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7918DD6240CEF8A002011CA /* MurMurHash32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MurMurHash32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7918E6B240CF482002011CA /* MTOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTOutputStream.m; path = ../Sources/MTOutputStream.m; sourceTree = "<group>"; };
-		A7918E6C240CF483002011CA /* MTServerDhInnerDataMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTServerDhInnerDataMessage.m; path = ../Sources/MTServerDhInnerDataMessage.m; sourceTree = "<group>"; };
-		A7918E6D240CF483002011CA /* MTMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMessage.h; path = ../Sources/MTMessage.h; sourceTree = "<group>"; };
-		A7918E6E240CF483002011CA /* MTDiscoverDatacenterAddressAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDiscoverDatacenterAddressAction.h; path = ../Sources/MTDiscoverDatacenterAddressAction.h; sourceTree = "<group>"; };
-		A7918E6F240CF483002011CA /* MTTimeFixContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTimeFixContext.m; path = ../Sources/MTTimeFixContext.m; sourceTree = "<group>"; };
-		A7918E70240CF483002011CA /* MTDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDisposable.m; path = ../Sources/MTDisposable.m; sourceTree = "<group>"; };
-		A7918E71240CF483002011CA /* MTDropRpcResultMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDropRpcResultMessage.m; path = ../Sources/MTDropRpcResultMessage.m; sourceTree = "<group>"; };
-		A7918E72240CF483002011CA /* PingFoundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PingFoundation.h; path = ../Sources/PingFoundation.h; sourceTree = "<group>"; };
-		A7918E73240CF483002011CA /* MTGzip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTGzip.m; path = ../Sources/MTGzip.m; sourceTree = "<group>"; };
-		A7918E74240CF483002011CA /* MTPingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTPingMessage.m; path = ../Sources/MTPingMessage.m; sourceTree = "<group>"; };
-		A7918E75240CF483002011CA /* MTMsgResendReqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgResendReqMessage.m; path = ../Sources/MTMsgResendReqMessage.m; sourceTree = "<group>"; };
-		A7918E76240CF483002011CA /* MTSetClientDhParamsResponseMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTSetClientDhParamsResponseMessage.m; path = ../Sources/MTSetClientDhParamsResponseMessage.m; sourceTree = "<group>"; };
-		A7918E77240CF483002011CA /* PingFoundation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PingFoundation.m; path = ../Sources/PingFoundation.m; sourceTree = "<group>"; };
-		A7918E78240CF483002011CA /* MTResPqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTResPqMessage.m; path = ../Sources/MTResPqMessage.m; sourceTree = "<group>"; };
-		A7918E79240CF483002011CA /* MTInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTInputStream.m; path = ../Sources/MTInputStream.m; sourceTree = "<group>"; };
-		A7918E7A240CF483002011CA /* MTOutgoingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTOutgoingMessage.m; path = ../Sources/MTOutgoingMessage.m; sourceTree = "<group>"; };
-		A7918E7B240CF483002011CA /* MTBufferReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBufferReader.m; path = ../Sources/MTBufferReader.m; sourceTree = "<group>"; };
-		A7918E7C240CF483002011CA /* MTTransportSchemeStats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTransportSchemeStats.h; path = ../Sources/MTTransportSchemeStats.h; sourceTree = "<group>"; };
-		A7918E7D240CF484002011CA /* MTTcpConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTcpConnection.m; path = ../Sources/MTTcpConnection.m; sourceTree = "<group>"; };
-		A7918E7E240CF484002011CA /* MTTransportSchemeStats.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTransportSchemeStats.m; path = ../Sources/MTTransportSchemeStats.m; sourceTree = "<group>"; };
-		A7918E7F240CF484002011CA /* MTRpcError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRpcError.m; path = ../Sources/MTRpcError.m; sourceTree = "<group>"; };
-		A7918E80240CF484002011CA /* MTSetClientDhParamsResponseMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTSetClientDhParamsResponseMessage.h; path = ../Sources/MTSetClientDhParamsResponseMessage.h; sourceTree = "<group>"; };
-		A7918E81240CF484002011CA /* MTTcpConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTcpConnection.h; path = ../Sources/MTTcpConnection.h; sourceTree = "<group>"; };
-		A7918E82240CF484002011CA /* MTDatacenterTransferAuthAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterTransferAuthAction.m; path = ../Sources/MTDatacenterTransferAuthAction.m; sourceTree = "<group>"; };
-		A7918E83240CF484002011CA /* MTMsgResendReqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgResendReqMessage.h; path = ../Sources/MTMsgResendReqMessage.h; sourceTree = "<group>"; };
-		A7918E84240CF484002011CA /* MTDatacenterAuthInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAuthInfo.m; path = ../Sources/MTDatacenterAuthInfo.m; sourceTree = "<group>"; };
-		A7918E85240CF484002011CA /* MTTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTransport.m; path = ../Sources/MTTransport.m; sourceTree = "<group>"; };
-		A7918E86240CF484002011CA /* MTServerDhParamsMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTServerDhParamsMessage.h; path = ../Sources/MTServerDhParamsMessage.h; sourceTree = "<group>"; };
-		A7918E87240CF484002011CA /* MTPongMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTPongMessage.m; path = ../Sources/MTPongMessage.m; sourceTree = "<group>"; };
-		A7918E88240CF484002011CA /* MTDiscoverDatacenterAddressAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDiscoverDatacenterAddressAction.m; path = ../Sources/MTDiscoverDatacenterAddressAction.m; sourceTree = "<group>"; };
-		A7918E89240CF484002011CA /* MTDropRpcResultMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDropRpcResultMessage.h; path = ../Sources/MTDropRpcResultMessage.h; sourceTree = "<group>"; };
-		A7918E8A240CF485002011CA /* MTBufferReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBufferReader.h; path = ../Sources/MTBufferReader.h; sourceTree = "<group>"; };
-		A7918E8B240CF485002011CA /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = ../Sources/GCDAsyncSocket.m; sourceTree = "<group>"; };
-		A7918E8C240CF485002011CA /* MTBag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBag.m; path = ../Sources/MTBag.m; sourceTree = "<group>"; };
-		A7918E8D240CF485002011CA /* MTRpcResultMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRpcResultMessage.h; path = ../Sources/MTRpcResultMessage.h; sourceTree = "<group>"; };
-		A7918E8E240CF485002011CA /* MTTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTime.m; path = ../Sources/MTTime.m; sourceTree = "<group>"; };
-		A7918E8F240CF485002011CA /* MTRequestErrorContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRequestErrorContext.m; path = ../Sources/MTRequestErrorContext.m; sourceTree = "<group>"; };
-		A7918E90240CF485002011CA /* MTBackupAddressSignals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBackupAddressSignals.m; path = ../Sources/MTBackupAddressSignals.m; sourceTree = "<group>"; };
-		A7918E91240CF485002011CA /* MTDiscoverConnectionSignals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDiscoverConnectionSignals.m; path = ../Sources/MTDiscoverConnectionSignals.m; sourceTree = "<group>"; };
-		A7918E92240CF485002011CA /* MTMsgAllInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgAllInfoMessage.m; path = ../Sources/MTMsgAllInfoMessage.m; sourceTree = "<group>"; };
-		A7918E93240CF485002011CA /* MTConnectionProbing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTConnectionProbing.h; path = ../Sources/MTConnectionProbing.h; sourceTree = "<group>"; };
-		A7918E94240CF485002011CA /* MTPingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTPingMessage.h; path = ../Sources/MTPingMessage.h; sourceTree = "<group>"; };
-		A7918E95240CF485002011CA /* MTBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBuffer.h; path = ../Sources/MTBuffer.h; sourceTree = "<group>"; };
-		A7918E96240CF485002011CA /* MTFutureSaltsMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTFutureSaltsMessage.h; path = ../Sources/MTFutureSaltsMessage.h; sourceTree = "<group>"; };
-		A7918E97240CF485002011CA /* MTTimeSyncMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTimeSyncMessageService.m; path = ../Sources/MTTimeSyncMessageService.m; sourceTree = "<group>"; };
-		A7918E98240CF485002011CA /* MTContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTContext.m; path = ../Sources/MTContext.m; sourceTree = "<group>"; };
-		A7918E99240CF485002011CA /* MTSubscriber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTSubscriber.m; path = ../Sources/MTSubscriber.m; sourceTree = "<group>"; };
-		A7918E9A240CF485002011CA /* MTDatacenterAuthAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAuthAction.m; path = ../Sources/MTDatacenterAuthAction.m; sourceTree = "<group>"; };
-		A7918E9B240CF486002011CA /* AFURLConnectionOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFURLConnectionOperation.m; path = ../Sources/AFURLConnectionOperation.m; sourceTree = "<group>"; };
-		A7918E9C240CF486002011CA /* MTResPqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTResPqMessage.h; path = ../Sources/MTResPqMessage.h; sourceTree = "<group>"; };
-		A7918E9D240CF486002011CA /* MTEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTEncryption.m; path = ../Sources/MTEncryption.m; sourceTree = "<group>"; };
-		A7918E9E240CF486002011CA /* MTMsgsStateReqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgsStateReqMessage.m; path = ../Sources/MTMsgsStateReqMessage.m; sourceTree = "<group>"; };
-		A7918E9F240CF486002011CA /* MTRpcResultMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRpcResultMessage.m; path = ../Sources/MTRpcResultMessage.m; sourceTree = "<group>"; };
-		A7918EA0240CF486002011CA /* MTBindingTempAuthKeyContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBindingTempAuthKeyContext.h; path = ../Sources/MTBindingTempAuthKeyContext.h; sourceTree = "<group>"; };
-		A7918EA1240CF486002011CA /* MTNewSessionCreatedMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTNewSessionCreatedMessage.m; path = ../Sources/MTNewSessionCreatedMessage.m; sourceTree = "<group>"; };
-		A7918EA2240CF486002011CA /* MTMessageTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMessageTransaction.m; path = ../Sources/MTMessageTransaction.m; sourceTree = "<group>"; };
-		A7918EA3240CF486002011CA /* MTRsa.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRsa.m; path = ../Sources/MTRsa.m; sourceTree = "<group>"; };
-		A7918EA4240CF486002011CA /* MTExportedAuthorizationData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTExportedAuthorizationData.m; path = ../Sources/MTExportedAuthorizationData.m; sourceTree = "<group>"; };
-		A7918EA5240CF486002011CA /* MTPongMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTPongMessage.h; path = ../Sources/MTPongMessage.h; sourceTree = "<group>"; };
-		A7918EA6240CF486002011CA /* MTInternalMessageParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTInternalMessageParser.h; path = ../Sources/MTInternalMessageParser.h; sourceTree = "<group>"; };
-		A7918EA7240CF486002011CA /* MTTimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTimer.m; path = ../Sources/MTTimer.m; sourceTree = "<group>"; };
-		A7918EA8240CF486002011CA /* MTIncomingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTIncomingMessage.m; path = ../Sources/MTIncomingMessage.m; sourceTree = "<group>"; };
-		A7918EA9240CF486002011CA /* MTMsgAllInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgAllInfoMessage.h; path = ../Sources/MTMsgAllInfoMessage.h; sourceTree = "<group>"; };
-		A7918EAA240CF486002011CA /* MTHttpRequestOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTHttpRequestOperation.m; path = ../Sources/MTHttpRequestOperation.m; sourceTree = "<group>"; };
-		A7918EAB240CF487002011CA /* MTProxyConnectivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTProxyConnectivity.m; path = ../Sources/MTProxyConnectivity.m; sourceTree = "<group>"; };
-		A7918EAC240CF487002011CA /* MTTransportTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTransportTransaction.m; path = ../Sources/MTTransportTransaction.m; sourceTree = "<group>"; };
-		A7918EAD240CF487002011CA /* AFHTTPRequestOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFHTTPRequestOperation.m; path = ../Sources/AFHTTPRequestOperation.m; sourceTree = "<group>"; };
-		A7918EAE240CF487002011CA /* MTMsgsStateReqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgsStateReqMessage.h; path = ../Sources/MTMsgsStateReqMessage.h; sourceTree = "<group>"; };
-		A7918EAF240CF487002011CA /* MTDestroySessionResponseMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDestroySessionResponseMessage.h; path = ../Sources/MTDestroySessionResponseMessage.h; sourceTree = "<group>"; };
-		A7918EB0240CF487002011CA /* MTRequestContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRequestContext.m; path = ../Sources/MTRequestContext.m; sourceTree = "<group>"; };
-		A7918EB1240CF487002011CA /* MTBadMsgNotificationMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBadMsgNotificationMessage.m; path = ../Sources/MTBadMsgNotificationMessage.m; sourceTree = "<group>"; };
-		A7918EB2240CF487002011CA /* MTApiEnvironment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTApiEnvironment.m; path = ../Sources/MTApiEnvironment.m; sourceTree = "<group>"; };
-		A7918EB3240CF487002011CA /* MTTcpConnectionBehaviour.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTcpConnectionBehaviour.m; path = ../Sources/MTTcpConnectionBehaviour.m; sourceTree = "<group>"; };
-		A7918EB4240CF487002011CA /* MTMessageEncryptionKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMessageEncryptionKey.m; path = ../Sources/MTMessageEncryptionKey.m; sourceTree = "<group>"; };
-		A7918EB5240CF487002011CA /* MTTcpTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTcpTransport.m; path = ../Sources/MTTcpTransport.m; sourceTree = "<group>"; };
-		A7918EB6240CF487002011CA /* MTDatacenterAuthMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAuthMessageService.m; path = ../Sources/MTDatacenterAuthMessageService.m; sourceTree = "<group>"; };
-		A7918EB7240CF487002011CA /* MTFutureSaltsMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTFutureSaltsMessage.m; path = ../Sources/MTFutureSaltsMessage.m; sourceTree = "<group>"; };
-		A7918EB8240CF487002011CA /* MTMsgContainerMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgContainerMessage.h; path = ../Sources/MTMsgContainerMessage.h; sourceTree = "<group>"; };
-		A7918EB9240CF487002011CA /* MTMsgDetailedInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgDetailedInfoMessage.h; path = ../Sources/MTMsgDetailedInfoMessage.h; sourceTree = "<group>"; };
-		A7918EBA240CF487002011CA /* MTServerDhInnerDataMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTServerDhInnerDataMessage.h; path = ../Sources/MTServerDhInnerDataMessage.h; sourceTree = "<group>"; };
-		A7918EBB240CF487002011CA /* MTInternalMessageParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTInternalMessageParser.m; path = ../Sources/MTInternalMessageParser.m; sourceTree = "<group>"; };
-		A7918EBC240CF487002011CA /* MTLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTLogging.m; path = ../Sources/MTLogging.m; sourceTree = "<group>"; };
-		A7918EBD240CF488002011CA /* MTBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBuffer.m; path = ../Sources/MTBuffer.m; sourceTree = "<group>"; };
-		A7918EBE240CF488002011CA /* MTRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRequest.m; path = ../Sources/MTRequest.m; sourceTree = "<group>"; };
-		A7918EBF240CF488002011CA /* MTRequestMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTRequestMessageService.m; path = ../Sources/MTRequestMessageService.m; sourceTree = "<group>"; };
-		A7918EC0240CF488002011CA /* MTDatacenterAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAddress.m; path = ../Sources/MTDatacenterAddress.m; sourceTree = "<group>"; };
-		A7918EC1240CF488002011CA /* MTBadMsgNotificationMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBadMsgNotificationMessage.h; path = ../Sources/MTBadMsgNotificationMessage.h; sourceTree = "<group>"; };
-		A7918EC2240CF488002011CA /* MTNetworkUsageCalculationInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTNetworkUsageCalculationInfo.m; path = ../Sources/MTNetworkUsageCalculationInfo.m; sourceTree = "<group>"; };
-		A7918EC3240CF488002011CA /* MTNetworkUsageManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTNetworkUsageManager.m; path = ../Sources/MTNetworkUsageManager.m; sourceTree = "<group>"; };
-		A7918EC4240CF488002011CA /* MTConnectionProbing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTConnectionProbing.m; path = ../Sources/MTConnectionProbing.m; sourceTree = "<group>"; };
-		A7918EC5240CF488002011CA /* MTDatacenterVerificationData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterVerificationData.m; path = ../Sources/MTDatacenterVerificationData.m; sourceTree = "<group>"; };
-		A7918EC6240CF488002011CA /* MTDestroySessionResponseMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDestroySessionResponseMessage.m; path = ../Sources/MTDestroySessionResponseMessage.m; sourceTree = "<group>"; };
-		A7918EC7240CF488002011CA /* MTBindingTempAuthKeyContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTBindingTempAuthKeyContext.m; path = ../Sources/MTBindingTempAuthKeyContext.m; sourceTree = "<group>"; };
-		A7918EC8240CF488002011CA /* MTQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTQueue.m; path = ../Sources/MTQueue.m; sourceTree = "<group>"; };
-		A7918EC9240CF488002011CA /* MTServerDhParamsMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTServerDhParamsMessage.m; path = ../Sources/MTServerDhParamsMessage.m; sourceTree = "<group>"; };
-		A7918ECA240CF488002011CA /* MTMsgsStateInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgsStateInfoMessage.h; path = ../Sources/MTMsgsStateInfoMessage.h; sourceTree = "<group>"; };
-		A7918ECB240CF488002011CA /* MTMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMessage.m; path = ../Sources/MTMessage.m; sourceTree = "<group>"; };
-		A7918ECC240CF488002011CA /* MTDatacenterAddressSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAddressSet.m; path = ../Sources/MTDatacenterAddressSet.m; sourceTree = "<group>"; };
-		A7918ECD240CF488002011CA /* MTMsgsStateInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgsStateInfoMessage.m; path = ../Sources/MTMsgsStateInfoMessage.m; sourceTree = "<group>"; };
-		A7918ECE240CF489002011CA /* MTSessionInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTSessionInfo.m; path = ../Sources/MTSessionInfo.m; sourceTree = "<group>"; };
-		A7918ECF240CF489002011CA /* MTDNS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDNS.m; path = ../Sources/MTDNS.m; sourceTree = "<group>"; };
-		A7918ED0240CF489002011CA /* MTMsgsAckMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgsAckMessage.m; path = ../Sources/MTMsgsAckMessage.m; sourceTree = "<group>"; };
-		A7918ED1240CF489002011CA /* MTTransportScheme.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTTransportScheme.m; path = ../Sources/MTTransportScheme.m; sourceTree = "<group>"; };
-		A7918ED2240CF489002011CA /* MTNetworkAvailability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTNetworkAvailability.m; path = ../Sources/MTNetworkAvailability.m; sourceTree = "<group>"; };
-		A7918ED3240CF489002011CA /* MTDropResponseContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDropResponseContext.m; path = ../Sources/MTDropResponseContext.m; sourceTree = "<group>"; };
-		A7918ED4240CF489002011CA /* MTAes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTAes.h; path = ../Sources/MTAes.h; sourceTree = "<group>"; };
-		A7918ED5240CF489002011CA /* MTKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTKeychain.m; path = ../Sources/MTKeychain.m; sourceTree = "<group>"; };
-		A7918ED6240CF489002011CA /* MTDatacenterSaltInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterSaltInfo.m; path = ../Sources/MTDatacenterSaltInfo.m; sourceTree = "<group>"; };
-		A7918ED7240CF489002011CA /* MTDNS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDNS.h; path = ../Sources/MTDNS.h; sourceTree = "<group>"; };
-		A7918ED8240CF489002011CA /* MTMsgContainerMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgContainerMessage.m; path = ../Sources/MTMsgContainerMessage.m; sourceTree = "<group>"; };
-		A7918ED9240CF489002011CA /* MTAtomic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTAtomic.m; path = ../Sources/MTAtomic.m; sourceTree = "<group>"; };
-		A7918EDA240CF489002011CA /* MTDiscoverConnectionSignals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDiscoverConnectionSignals.h; path = ../Sources/MTDiscoverConnectionSignals.h; sourceTree = "<group>"; };
-		A7918EDB240CF489002011CA /* MTNewSessionCreatedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTNewSessionCreatedMessage.h; path = ../Sources/MTNewSessionCreatedMessage.h; sourceTree = "<group>"; };
-		A7918EDC240CF489002011CA /* MTResendMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTResendMessageService.m; path = ../Sources/MTResendMessageService.m; sourceTree = "<group>"; };
-		A7918EDD240CF489002011CA /* MTMsgDetailedInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTMsgDetailedInfoMessage.m; path = ../Sources/MTMsgDetailedInfoMessage.m; sourceTree = "<group>"; };
-		A7918EDE240CF489002011CA /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = ../Sources/GCDAsyncSocket.h; sourceTree = "<group>"; };
-		A7918EDF240CF48A002011CA /* MTFileBasedKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTFileBasedKeychain.m; path = ../Sources/MTFileBasedKeychain.m; sourceTree = "<group>"; };
-		A7918EE0240CF48A002011CA /* MTAes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTAes.m; path = ../Sources/MTAes.m; sourceTree = "<group>"; };
-		A7918EE1240CF48A002011CA /* MTTcpConnectionBehaviour.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTcpConnectionBehaviour.h; path = ../Sources/MTTcpConnectionBehaviour.h; sourceTree = "<group>"; };
-		A7918EE2240CF48A002011CA /* MTSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTSignal.m; path = ../Sources/MTSignal.m; sourceTree = "<group>"; };
-		A7918EE3240CF48A002011CA /* MTRsa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRsa.h; path = ../Sources/MTRsa.h; sourceTree = "<group>"; };
-		A7918EE4240CF48A002011CA /* MTPreparedMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTPreparedMessage.m; path = ../Sources/MTPreparedMessage.m; sourceTree = "<group>"; };
-		A7918EE5240CF48A002011CA /* MTDatacenterAddressListData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTDatacenterAddressListData.m; path = ../Sources/MTDatacenterAddressListData.m; sourceTree = "<group>"; };
-		A7918EE6240CF48A002011CA /* MTMsgsAckMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMsgsAckMessage.h; path = ../Sources/MTMsgsAckMessage.h; sourceTree = "<group>"; };
-		A7918EE7240CF48A002011CA /* MTProto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MTProto.m; path = ../Sources/MTProto.m; sourceTree = "<group>"; };
-		A7918F66240CF4AB002011CA /* MTDatacenterAuthInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAuthInfo.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAuthInfo.h; sourceTree = "<group>"; };
-		A7918F67240CF4AB002011CA /* MTSessionInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTSessionInfo.h; path = ../PublicHeaders/MtProtoKit/MTSessionInfo.h; sourceTree = "<group>"; };
-		A7918F68240CF4AB002011CA /* MTMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMessageService.h; path = ../PublicHeaders/MtProtoKit/MTMessageService.h; sourceTree = "<group>"; };
-		A7918F69240CF4AB002011CA /* MTLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTLogging.h; path = ../PublicHeaders/MtProtoKit/MTLogging.h; sourceTree = "<group>"; };
-		A7918F6A240CF4AB002011CA /* MTDatacenterAddressSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAddressSet.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAddressSet.h; sourceTree = "<group>"; };
-		A7918F6B240CF4AB002011CA /* MTHttpRequestOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTHttpRequestOperation.h; path = ../PublicHeaders/MtProtoKit/MTHttpRequestOperation.h; sourceTree = "<group>"; };
-		A7918F6C240CF4AB002011CA /* MTDatacenterAuthAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAuthAction.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAuthAction.h; sourceTree = "<group>"; };
-		A7918F6D240CF4AB002011CA /* MTNetworkUsageCalculationInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTNetworkUsageCalculationInfo.h; path = ../PublicHeaders/MtProtoKit/MTNetworkUsageCalculationInfo.h; sourceTree = "<group>"; };
-		A7918F6E240CF4AB002011CA /* MTSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTSubscriber.h; path = ../PublicHeaders/MtProtoKit/MTSubscriber.h; sourceTree = "<group>"; };
-		A7918F6F240CF4AB002011CA /* MTTimeSyncMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTimeSyncMessageService.h; path = ../PublicHeaders/MtProtoKit/MTTimeSyncMessageService.h; sourceTree = "<group>"; };
-		A7918F70240CF4AB002011CA /* MTDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDisposable.h; path = ../PublicHeaders/MtProtoKit/MTDisposable.h; sourceTree = "<group>"; };
-		A7918F71240CF4AB002011CA /* MTBackupAddressSignals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBackupAddressSignals.h; path = ../PublicHeaders/MtProtoKit/MTBackupAddressSignals.h; sourceTree = "<group>"; };
-		A7918F72240CF4AB002011CA /* MTEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTEncryption.h; path = ../PublicHeaders/MtProtoKit/MTEncryption.h; sourceTree = "<group>"; };
-		A7918F73240CF4AB002011CA /* MTTransportScheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTransportScheme.h; path = ../PublicHeaders/MtProtoKit/MTTransportScheme.h; sourceTree = "<group>"; };
-		A7918F74240CF4AB002011CA /* MTAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTAtomic.h; path = ../PublicHeaders/MtProtoKit/MTAtomic.h; sourceTree = "<group>"; };
-		A7918F75240CF4AB002011CA /* MTNetworkUsageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTNetworkUsageManager.h; path = ../PublicHeaders/MtProtoKit/MTNetworkUsageManager.h; sourceTree = "<group>"; };
-		A7918F76240CF4AC002011CA /* MTRequestMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRequestMessageService.h; path = ../PublicHeaders/MtProtoKit/MTRequestMessageService.h; sourceTree = "<group>"; };
-		A7918F77240CF4AC002011CA /* MTIncomingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTIncomingMessage.h; path = ../PublicHeaders/MtProtoKit/MTIncomingMessage.h; sourceTree = "<group>"; };
-		A7918F78240CF4AC002011CA /* MTSerialization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTSerialization.h; path = ../PublicHeaders/MtProtoKit/MTSerialization.h; sourceTree = "<group>"; };
-		A7918F79240CF4AC002011CA /* MTRequestContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRequestContext.h; path = ../PublicHeaders/MtProtoKit/MTRequestContext.h; sourceTree = "<group>"; };
-		A7918F7A240CF4AC002011CA /* MTDatacenterAddressListData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAddressListData.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAddressListData.h; sourceTree = "<group>"; };
-		A7918F7B240CF4AC002011CA /* MTApiEnvironment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTApiEnvironment.h; path = ../PublicHeaders/MtProtoKit/MTApiEnvironment.h; sourceTree = "<group>"; };
-		A7918F7C240CF4AC002011CA /* MTKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTKeychain.h; path = ../PublicHeaders/MtProtoKit/MTKeychain.h; sourceTree = "<group>"; };
-		A7918F7D240CF4AC002011CA /* MTDatacenterAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAddress.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAddress.h; sourceTree = "<group>"; };
-		A7918F7E240CF4AC002011CA /* AFHTTPRequestOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFHTTPRequestOperation.h; path = ../PublicHeaders/MtProtoKit/AFHTTPRequestOperation.h; sourceTree = "<group>"; };
-		A7918F7F240CF4AC002011CA /* MTSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTSignal.h; path = ../PublicHeaders/MtProtoKit/MTSignal.h; sourceTree = "<group>"; };
-		A7918F80240CF4AC002011CA /* MTProto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTProto.h; path = ../PublicHeaders/MtProtoKit/MTProto.h; sourceTree = "<group>"; };
-		A7918F81240CF4AC002011CA /* MTTcpTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTcpTransport.h; path = ../PublicHeaders/MtProtoKit/MTTcpTransport.h; sourceTree = "<group>"; };
-		A7918F82240CF4AC002011CA /* MTDatacenterTransferAuthAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterTransferAuthAction.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterTransferAuthAction.h; sourceTree = "<group>"; };
-		A7918F83240CF4AC002011CA /* MTTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTransport.h; path = ../PublicHeaders/MtProtoKit/MTTransport.h; sourceTree = "<group>"; };
-		A7918F84240CF4AD002011CA /* MTFileBasedKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTFileBasedKeychain.h; path = ../PublicHeaders/MtProtoKit/MTFileBasedKeychain.h; sourceTree = "<group>"; };
-		A7918F85240CF4AD002011CA /* MTContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTContext.h; path = ../PublicHeaders/MtProtoKit/MTContext.h; sourceTree = "<group>"; };
-		A7918F86240CF4AD002011CA /* MTBag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTBag.h; path = ../PublicHeaders/MtProtoKit/MTBag.h; sourceTree = "<group>"; };
-		A7918F87240CF4AD002011CA /* MTTransportTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTransportTransaction.h; path = ../PublicHeaders/MtProtoKit/MTTransportTransaction.h; sourceTree = "<group>"; };
-		A7918F88240CF4AD002011CA /* MTTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTimer.h; path = ../PublicHeaders/MtProtoKit/MTTimer.h; sourceTree = "<group>"; };
-		A7918F89240CF4AD002011CA /* MTMessageEncryptionKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMessageEncryptionKey.h; path = ../PublicHeaders/MtProtoKit/MTMessageEncryptionKey.h; sourceTree = "<group>"; };
-		A7918F8A240CF4AD002011CA /* MTInternalId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTInternalId.h; path = ../PublicHeaders/MtProtoKit/MTInternalId.h; sourceTree = "<group>"; };
-		A7918F8B240CF4AD002011CA /* MTProxyConnectivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTProxyConnectivity.h; path = ../PublicHeaders/MtProtoKit/MTProxyConnectivity.h; sourceTree = "<group>"; };
-		A7918F8C240CF4AD002011CA /* MTQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTQueue.h; path = ../PublicHeaders/MtProtoKit/MTQueue.h; sourceTree = "<group>"; };
-		A7918F8D240CF4AD002011CA /* AFURLConnectionOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFURLConnectionOperation.h; path = ../PublicHeaders/MtProtoKit/AFURLConnectionOperation.h; sourceTree = "<group>"; };
-		A7918F8E240CF4AD002011CA /* MTRequestErrorContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRequestErrorContext.h; path = ../PublicHeaders/MtProtoKit/MTRequestErrorContext.h; sourceTree = "<group>"; };
-		A7918F8F240CF4AD002011CA /* MTDatacenterSaltInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterSaltInfo.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterSaltInfo.h; sourceTree = "<group>"; };
-		A7918F90240CF4AD002011CA /* MTOutgoingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTOutgoingMessage.h; path = ../PublicHeaders/MtProtoKit/MTOutgoingMessage.h; sourceTree = "<group>"; };
-		A7918F91240CF4AE002011CA /* MTTimeFixContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTimeFixContext.h; path = ../PublicHeaders/MtProtoKit/MTTimeFixContext.h; sourceTree = "<group>"; };
-		A7918F92240CF4AE002011CA /* MTOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTOutputStream.h; path = ../PublicHeaders/MtProtoKit/MTOutputStream.h; sourceTree = "<group>"; };
-		A7918F93240CF4AE002011CA /* MTMessageTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTMessageTransaction.h; path = ../PublicHeaders/MtProtoKit/MTMessageTransaction.h; sourceTree = "<group>"; };
-		A7918F94240CF4AE002011CA /* MTGzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTGzip.h; path = ../PublicHeaders/MtProtoKit/MTGzip.h; sourceTree = "<group>"; };
-		A7918F96240CF4AE002011CA /* MTRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRequest.h; path = ../PublicHeaders/MtProtoKit/MTRequest.h; sourceTree = "<group>"; };
-		A7918F97240CF4AE002011CA /* MTTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTTime.h; path = ../PublicHeaders/MtProtoKit/MTTime.h; sourceTree = "<group>"; };
-		A7918F98240CF4AE002011CA /* MTPreparedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTPreparedMessage.h; path = ../PublicHeaders/MtProtoKit/MTPreparedMessage.h; sourceTree = "<group>"; };
-		A7918F99240CF4AE002011CA /* MTNetworkAvailability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTNetworkAvailability.h; path = ../PublicHeaders/MtProtoKit/MTNetworkAvailability.h; sourceTree = "<group>"; };
-		A7918F9A240CF4AE002011CA /* MTRpcError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTRpcError.h; path = ../PublicHeaders/MtProtoKit/MTRpcError.h; sourceTree = "<group>"; };
-		A7918F9B240CF4AE002011CA /* MTResendMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTResendMessageService.h; path = ../PublicHeaders/MtProtoKit/MTResendMessageService.h; sourceTree = "<group>"; };
-		A7918F9C240CF4AE002011CA /* MTDropResponseContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDropResponseContext.h; path = ../PublicHeaders/MtProtoKit/MTDropResponseContext.h; sourceTree = "<group>"; };
-		A7918F9D240CF4AE002011CA /* MTDatacenterAuthMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterAuthMessageService.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterAuthMessageService.h; sourceTree = "<group>"; };
-		A7918F9E240CF4AE002011CA /* MTDatacenterVerificationData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTDatacenterVerificationData.h; path = ../PublicHeaders/MtProtoKit/MTDatacenterVerificationData.h; sourceTree = "<group>"; };
-		A7918F9F240CF4AE002011CA /* MTExportedAuthorizationData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTExportedAuthorizationData.h; path = ../PublicHeaders/MtProtoKit/MTExportedAuthorizationData.h; sourceTree = "<group>"; };
-		A7918FA0240CF4AE002011CA /* MTInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MTInputStream.h; path = ../PublicHeaders/MtProtoKit/MTInputStream.h; sourceTree = "<group>"; };
 		A7D281E5236C26400000A9BF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D00354711C173CD0006610DA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		D00354731C173CD9006610DA /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		D0179D42250BC54600599140 /* PingFoundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PingFoundation.h; sourceTree = "<group>"; };
+		D0179D43250BC54600599140 /* MTPreparedMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTPreparedMessage.m; sourceTree = "<group>"; };
+		D0179D44250BC54600599140 /* MTGzip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTGzip.m; sourceTree = "<group>"; };
+		D0179D45250BC54600599140 /* MTTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTime.m; sourceTree = "<group>"; };
+		D0179D46250BC54600599140 /* MTBag.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBag.m; sourceTree = "<group>"; };
+		D0179D47250BC54600599140 /* MTBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBuffer.m; sourceTree = "<group>"; };
+		D0179D48250BC54600599140 /* MTBackupAddressSignals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBackupAddressSignals.m; sourceTree = "<group>"; };
+		D0179D49250BC54600599140 /* MTServerDhParamsMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTServerDhParamsMessage.h; sourceTree = "<group>"; };
+		D0179D4A250BC54600599140 /* MTPongMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTPongMessage.m; sourceTree = "<group>"; };
+		D0179D4B250BC54600599140 /* MTIncomingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTIncomingMessage.m; sourceTree = "<group>"; };
+		D0179D4C250BC54600599140 /* MTFutureSaltsMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFutureSaltsMessage.h; sourceTree = "<group>"; };
+		D0179D4D250BC54600599140 /* MTBindKeyMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBindKeyMessageService.m; sourceTree = "<group>"; };
+		D0179D4E250BC54600599140 /* MTTcpConnectionBehaviour.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTcpConnectionBehaviour.h; sourceTree = "<group>"; };
+		D0179D4F250BC54600599140 /* MTDatacenterAuthAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAuthAction.m; sourceTree = "<group>"; };
+		D0179D50250BC54600599140 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
+		D0179D51250BC54600599140 /* MTTransportTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTransportTransaction.m; sourceTree = "<group>"; };
+		D0179D52250BC54600599140 /* MTNewSessionCreatedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTNewSessionCreatedMessage.h; sourceTree = "<group>"; };
+		D0179D53250BC54600599140 /* MTRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRequest.m; sourceTree = "<group>"; };
+		D0179D54250BC54600599140 /* MTBadMsgNotificationMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBadMsgNotificationMessage.h; sourceTree = "<group>"; };
+		D0179D55250BC54600599140 /* MTAes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTAes.h; sourceTree = "<group>"; };
+		D0179D56250BC54600599140 /* MTResPqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTResPqMessage.m; sourceTree = "<group>"; };
+		D0179D57250BC54600599140 /* MTDiscoverDatacenterAddressAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDiscoverDatacenterAddressAction.h; sourceTree = "<group>"; };
+		D0179D58250BC54600599140 /* MTMsgDetailedInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgDetailedInfoMessage.h; sourceTree = "<group>"; };
+		D0179D59250BC54600599140 /* MTQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTQueue.m; sourceTree = "<group>"; };
+		D0179D5A250BC54600599140 /* MTOutgoingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTOutgoingMessage.m; sourceTree = "<group>"; };
+		D0179D5B250BC54600599140 /* MTConnectionProbing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTConnectionProbing.m; sourceTree = "<group>"; };
+		D0179D5C250BC54600599140 /* MTDestroySessionResponseMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDestroySessionResponseMessage.m; sourceTree = "<group>"; };
+		D0179D5D250BC54600599140 /* MTBindingTempAuthKeyContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBindingTempAuthKeyContext.m; sourceTree = "<group>"; };
+		D0179D5E250BC54600599140 /* MTMsgResendReqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgResendReqMessage.m; sourceTree = "<group>"; };
+		D0179D5F250BC54600599140 /* MTTcpTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTcpTransport.m; sourceTree = "<group>"; };
+		D0179D60250BC54600599140 /* MTNetworkUsageManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTNetworkUsageManager.m; sourceTree = "<group>"; };
+		D0179D61250BC54600599140 /* MTMessageEncryptionKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMessageEncryptionKey.m; sourceTree = "<group>"; };
+		D0179D62250BC54600599140 /* MTEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTEncryption.m; sourceTree = "<group>"; };
+		D0179D63250BC54600599140 /* MTHttpRequestOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTHttpRequestOperation.m; sourceTree = "<group>"; };
+		D0179D64250BC54600599140 /* MTTimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTimer.m; sourceTree = "<group>"; };
+		D0179D65250BC54600599140 /* MTTcpConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTcpConnection.m; sourceTree = "<group>"; };
+		D0179D66250BC54600599140 /* MTDatacenterSaltInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterSaltInfo.m; sourceTree = "<group>"; };
+		D0179D67250BC54600599140 /* MTSetClientDhParamsResponseMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTSetClientDhParamsResponseMessage.h; sourceTree = "<group>"; };
+		D0179D68250BC54600599140 /* MTDropRpcResultMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDropRpcResultMessage.h; sourceTree = "<group>"; };
+		D0179D69250BC54600599140 /* MTTimeFixContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTimeFixContext.m; sourceTree = "<group>"; };
+		D0179D6A250BC54600599140 /* MTDiscoverConnectionSignals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDiscoverConnectionSignals.h; sourceTree = "<group>"; };
+		D0179D6B250BC54600599140 /* MTMsgAllInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgAllInfoMessage.m; sourceTree = "<group>"; };
+		D0179D6C250BC54600599140 /* MTServerDhInnerDataMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTServerDhInnerDataMessage.m; sourceTree = "<group>"; };
+		D0179D6D250BC54600599140 /* MTDatacenterVerificationData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterVerificationData.m; sourceTree = "<group>"; };
+		D0179D6E250BC54600599140 /* MTPingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTPingMessage.h; sourceTree = "<group>"; };
+		D0179D6F250BC54600599140 /* MTDatacenterAuthInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAuthInfo.m; sourceTree = "<group>"; };
+		D0179D70250BC54600599140 /* MTRequestContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRequestContext.m; sourceTree = "<group>"; };
+		D0179D71250BC54600599140 /* MTExportedAuthorizationData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTExportedAuthorizationData.m; sourceTree = "<group>"; };
+		D0179D72250BC54600599140 /* MTRequestErrorContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRequestErrorContext.m; sourceTree = "<group>"; };
+		D0179D73250BC54600599140 /* MTSessionInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTSessionInfo.m; sourceTree = "<group>"; };
+		D0179D74250BC54600599140 /* MTMsgsAckMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgsAckMessage.m; sourceTree = "<group>"; };
+		D0179D75250BC54600599140 /* MTRsa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRsa.h; sourceTree = "<group>"; };
+		D0179D76250BC54600599140 /* MTMsgContainerMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgContainerMessage.h; sourceTree = "<group>"; };
+		D0179D77250BC54600599140 /* MTDatacenterAddressSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAddressSet.m; sourceTree = "<group>"; };
+		D0179D78250BC54600599140 /* MTInternalMessageParser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInternalMessageParser.m; sourceTree = "<group>"; };
+		D0179D79250BC54600599140 /* MTMsgsStateReqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgsStateReqMessage.h; sourceTree = "<group>"; };
+		D0179D7A250BC54600599140 /* MTInputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTInputStream.m; sourceTree = "<group>"; };
+		D0179D7B250BC54600599140 /* MTBufferReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBufferReader.h; sourceTree = "<group>"; };
+		D0179D7C250BC54600599140 /* MTDatacenterAddress.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAddress.m; sourceTree = "<group>"; };
+		D0179D7D250BC54600599140 /* MTTransportSchemeStats.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTransportSchemeStats.m; sourceTree = "<group>"; };
+		D0179D7E250BC54600599140 /* MTDNS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDNS.h; sourceTree = "<group>"; };
+		D0179D7F250BC54600599140 /* MTMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMessage.h; sourceTree = "<group>"; };
+		D0179D80250BC54600599140 /* MTTransportScheme.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTransportScheme.m; sourceTree = "<group>"; };
+		D0179D82250BC54600599140 /* MTQueueLocalObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTQueueLocalObject.m; sourceTree = "<group>"; };
+		D0179D83250BC54600599140 /* MTQueueLocalObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTQueueLocalObject.h; sourceTree = "<group>"; };
+		D0179D84250BC54600599140 /* MTMsgsStateInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgsStateInfoMessage.h; sourceTree = "<group>"; };
+		D0179D85250BC54600599140 /* MTFileBasedKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFileBasedKeychain.m; sourceTree = "<group>"; };
+		D0179D86250BC54600599140 /* MTAtomic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTAtomic.m; sourceTree = "<group>"; };
+		D0179D87250BC54600599140 /* MTRpcResultMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRpcResultMessage.h; sourceTree = "<group>"; };
+		D0179D88250BC54600599140 /* MTTcpConnectionBehaviour.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTcpConnectionBehaviour.m; sourceTree = "<group>"; };
+		D0179D89250BC54600599140 /* MTTimeSyncMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTimeSyncMessageService.m; sourceTree = "<group>"; };
+		D0179D8A250BC54600599140 /* AFURLConnectionOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFURLConnectionOperation.m; sourceTree = "<group>"; };
+		D0179D8B250BC54600599140 /* MTFutureSaltsMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTFutureSaltsMessage.m; sourceTree = "<group>"; };
+		D0179D8C250BC54600599140 /* MTServerDhParamsMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTServerDhParamsMessage.m; sourceTree = "<group>"; };
+		D0179D8D250BC54600599140 /* MTPongMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTPongMessage.h; sourceTree = "<group>"; };
+		D0179D8E250BC54600599140 /* MTSubscriber.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTSubscriber.m; sourceTree = "<group>"; };
+		D0179D8F250BC54600599140 /* AFHTTPRequestOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFHTTPRequestOperation.m; sourceTree = "<group>"; };
+		D0179D90250BC54600599140 /* MTBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBuffer.h; sourceTree = "<group>"; };
+		D0179D91250BC54600599140 /* PingFoundation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PingFoundation.m; sourceTree = "<group>"; };
+		D0179D92250BC54600599140 /* MTDisposable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDisposable.m; sourceTree = "<group>"; };
+		D0179D93250BC54600599140 /* MTRequestMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRequestMessageService.m; sourceTree = "<group>"; };
+		D0179D94250BC54600599140 /* MTDropResponseContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDropResponseContext.m; sourceTree = "<group>"; };
+		D0179D95250BC54600599140 /* MTDestroySessionResponseMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDestroySessionResponseMessage.h; sourceTree = "<group>"; };
+		D0179D96250BC54600599140 /* MTProtoInstance.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTProtoInstance.m; sourceTree = "<group>"; };
+		D0179D97250BC54600599140 /* MTConnectionProbing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTConnectionProbing.h; sourceTree = "<group>"; };
+		D0179D98250BC54600599140 /* MTRpcError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRpcError.m; sourceTree = "<group>"; };
+		D0179D99250BC54600599140 /* MTResendMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTResendMessageService.m; sourceTree = "<group>"; };
+		D0179D9A250BC54600599140 /* MTMsgDetailedInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgDetailedInfoMessage.m; sourceTree = "<group>"; };
+		D0179D9B250BC54600599140 /* MTDiscoverDatacenterAddressAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDiscoverDatacenterAddressAction.m; sourceTree = "<group>"; };
+		D0179D9C250BC54600599140 /* MTResPqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTResPqMessage.h; sourceTree = "<group>"; };
+		D0179D9D250BC54600599140 /* MTBadMsgNotificationMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBadMsgNotificationMessage.m; sourceTree = "<group>"; };
+		D0179D9E250BC54600599140 /* MTAes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTAes.m; sourceTree = "<group>"; };
+		D0179D9F250BC54600599140 /* MTNewSessionCreatedMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTNewSessionCreatedMessage.m; sourceTree = "<group>"; };
+		D0179DA0250BC54600599140 /* MTDatacenterAddressListData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAddressListData.m; sourceTree = "<group>"; };
+		D0179DA1250BC54600599140 /* MTNetworkUsageCalculationInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTNetworkUsageCalculationInfo.m; sourceTree = "<group>"; };
+		D0179DA2250BC54600599140 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
+		D0179DA3250BC54600599140 /* MTKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTKeychain.m; sourceTree = "<group>"; };
+		D0179DA4250BC54600599140 /* MTApiEnvironment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTApiEnvironment.m; sourceTree = "<group>"; };
+		D0179DA5250BC54600599140 /* MTMsgsAckMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgsAckMessage.h; sourceTree = "<group>"; };
+		D0179DA6250BC54600599140 /* MTContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTContext.m; sourceTree = "<group>"; };
+		D0179DA7250BC54600599140 /* MTPingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTPingMessage.m; sourceTree = "<group>"; };
+		D0179DA8250BC54600599140 /* MTServerDhInnerDataMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTServerDhInnerDataMessage.h; sourceTree = "<group>"; };
+		D0179DA9250BC54600599140 /* MTDiscoverConnectionSignals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDiscoverConnectionSignals.m; sourceTree = "<group>"; };
+		D0179DAA250BC54600599140 /* MTMsgAllInfoMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgAllInfoMessage.h; sourceTree = "<group>"; };
+		D0179DAB250BC54600599140 /* MTSetClientDhParamsResponseMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTSetClientDhParamsResponseMessage.m; sourceTree = "<group>"; };
+		D0179DAC250BC54600599140 /* MTDropRpcResultMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDropRpcResultMessage.m; sourceTree = "<group>"; };
+		D0179DAD250BC54600599140 /* MTTcpConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTcpConnection.h; sourceTree = "<group>"; };
+		D0179DAE250BC54600599140 /* MTOutputStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTOutputStream.m; sourceTree = "<group>"; };
+		D0179DAF250BC54600599140 /* MTNetworkAvailability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTNetworkAvailability.m; sourceTree = "<group>"; };
+		D0179DB0250BC54600599140 /* MTSignal.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTSignal.m; sourceTree = "<group>"; };
+		D0179DB1250BC54600599140 /* MTBindingTempAuthKeyContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBindingTempAuthKeyContext.h; sourceTree = "<group>"; };
+		D0179DB2250BC54600599140 /* MTMsgResendReqMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMsgResendReqMessage.h; sourceTree = "<group>"; };
+		D0179DB3250BC54600599140 /* MTRpcResultMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRpcResultMessage.m; sourceTree = "<group>"; };
+		D0179DB4250BC54600599140 /* MTProtoEngine.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTProtoEngine.m; sourceTree = "<group>"; };
+		D0179DB5250BC54600599140 /* MTProxyConnectivity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTProxyConnectivity.m; sourceTree = "<group>"; };
+		D0179DB6250BC54600599140 /* MTProto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTProto.m; sourceTree = "<group>"; };
+		D0179DB7250BC54600599140 /* MTMsgsStateInfoMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgsStateInfoMessage.m; sourceTree = "<group>"; };
+		D0179DB8250BC54600599140 /* MTDatacenterTransferAuthAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterTransferAuthAction.m; sourceTree = "<group>"; };
+		D0179DB9250BC54600599140 /* MTTransport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTTransport.m; sourceTree = "<group>"; };
+		D0179DBA250BC54600599140 /* MTMessageTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMessageTransaction.m; sourceTree = "<group>"; };
+		D0179DBB250BC54600599140 /* MTDatacenterAuthMessageService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDatacenterAuthMessageService.m; sourceTree = "<group>"; };
+		D0179DBC250BC54600599140 /* MTMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMessage.m; sourceTree = "<group>"; };
+		D0179DBD250BC54600599140 /* MTDNS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTDNS.m; sourceTree = "<group>"; };
+		D0179DBE250BC54600599140 /* MTTransportSchemeStats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTransportSchemeStats.h; sourceTree = "<group>"; };
+		D0179DBF250BC54600599140 /* MTBufferReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTBufferReader.m; sourceTree = "<group>"; };
+		D0179DC0250BC54600599140 /* MTLogging.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTLogging.m; sourceTree = "<group>"; };
+		D0179DC1250BC54600599140 /* MTMsgsStateReqMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgsStateReqMessage.m; sourceTree = "<group>"; };
+		D0179DC2250BC54600599140 /* MTInternalMessageParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTInternalMessageParser.h; sourceTree = "<group>"; };
+		D0179DC3250BC54600599140 /* MTRsa.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTRsa.m; sourceTree = "<group>"; };
+		D0179DC4250BC54600599140 /* MTMsgContainerMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MTMsgContainerMessage.m; sourceTree = "<group>"; };
+		D0179ECF250BCB7600599140 /* MTDisposable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDisposable.h; sourceTree = "<group>"; };
+		D0179ED0250BCB7600599140 /* MTRequestMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRequestMessageService.h; sourceTree = "<group>"; };
+		D0179ED1250BCB7600599140 /* MtProtoKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MtProtoKit.h; sourceTree = "<group>"; };
+		D0179ED2250BCB7600599140 /* AFHTTPRequestOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFHTTPRequestOperation.h; sourceTree = "<group>"; };
+		D0179ED3250BCB7600599140 /* MTSubscriber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTSubscriber.h; sourceTree = "<group>"; };
+		D0179ED4250BCB7600599140 /* AFURLConnectionOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFURLConnectionOperation.h; sourceTree = "<group>"; };
+		D0179ED5250BCB7600599140 /* MTTimeSyncMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTimeSyncMessageService.h; sourceTree = "<group>"; };
+		D0179ED6250BCB7600599140 /* MTNetworkUsageCalculationInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTNetworkUsageCalculationInfo.h; sourceTree = "<group>"; };
+		D0179ED7250BCB7600599140 /* MTDatacenterAddressListData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAddressListData.h; sourceTree = "<group>"; };
+		D0179ED8250BCB7600599140 /* MTResendMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTResendMessageService.h; sourceTree = "<group>"; };
+		D0179ED9250BCB7600599140 /* MTProtoInstance.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTProtoInstance.h; sourceTree = "<group>"; };
+		D0179EDA250BCB7600599140 /* MTRpcError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRpcError.h; sourceTree = "<group>"; };
+		D0179EDB250BCB7600599140 /* MTDropResponseContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDropResponseContext.h; sourceTree = "<group>"; };
+		D0179EDC250BCB7600599140 /* MTSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTSignal.h; sourceTree = "<group>"; };
+		D0179EDD250BCB7600599140 /* MTNetworkAvailability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTNetworkAvailability.h; sourceTree = "<group>"; };
+		D0179EDE250BCB7600599140 /* MTProtoPersistenceInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTProtoPersistenceInterface.h; sourceTree = "<group>"; };
+		D0179EDF250BCB7600599140 /* MTOutputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTOutputStream.h; sourceTree = "<group>"; };
+		D0179EE0250BCB7600599140 /* MTSerialization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTSerialization.h; sourceTree = "<group>"; };
+		D0179EE1250BCB7600599140 /* MTContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTContext.h; sourceTree = "<group>"; };
+		D0179EE2250BCB7600599140 /* MTApiEnvironment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTApiEnvironment.h; sourceTree = "<group>"; };
+		D0179EE3250BCB7600599140 /* MTKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTKeychain.h; sourceTree = "<group>"; };
+		D0179EE4250BCB7600599140 /* MTLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTLogging.h; sourceTree = "<group>"; };
+		D0179EE5250BCB7600599140 /* MTMessageTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMessageTransaction.h; sourceTree = "<group>"; };
+		D0179EE6250BCB7600599140 /* MTDatacenterAuthMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAuthMessageService.h; sourceTree = "<group>"; };
+		D0179EE7250BCB7600599140 /* MTTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTransport.h; sourceTree = "<group>"; };
+		D0179EE8250BCB7600599140 /* MTDatacenterTransferAuthAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterTransferAuthAction.h; sourceTree = "<group>"; };
+		D0179EE9250BCB7600599140 /* MTProto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTProto.h; sourceTree = "<group>"; };
+		D0179EEA250BCB7600599140 /* MTProxyConnectivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTProxyConnectivity.h; sourceTree = "<group>"; };
+		D0179EEB250BCB7600599140 /* MTProtoEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTProtoEngine.h; sourceTree = "<group>"; };
+		D0179EEC250BCB7600599140 /* MTDatacenterAuthAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAuthAction.h; sourceTree = "<group>"; };
+		D0179EED250BCB7600599140 /* MTBindKeyMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBindKeyMessageService.h; sourceTree = "<group>"; };
+		D0179EEE250BCB7600599140 /* MTIncomingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTIncomingMessage.h; sourceTree = "<group>"; };
+		D0179EEF250BCB7600599140 /* MTBackupAddressSignals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBackupAddressSignals.h; sourceTree = "<group>"; };
+		D0179EF0250BCB7600599140 /* MTTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTime.h; sourceTree = "<group>"; };
+		D0179EF1250BCB7600599140 /* MTBag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTBag.h; sourceTree = "<group>"; };
+		D0179EF2250BCB7600599140 /* MTMessageService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMessageService.h; sourceTree = "<group>"; };
+		D0179EF3250BCB7600599140 /* MTGzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTGzip.h; sourceTree = "<group>"; };
+		D0179EF4250BCB7600599140 /* MTPreparedMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTPreparedMessage.h; sourceTree = "<group>"; };
+		D0179EF5250BCB7600599140 /* MTOutgoingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTOutgoingMessage.h; sourceTree = "<group>"; };
+		D0179EF6250BCB7600599140 /* MTQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTQueue.h; sourceTree = "<group>"; };
+		D0179EF7250BCB7600599140 /* MTRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRequest.h; sourceTree = "<group>"; };
+		D0179EF8250BCB7600599140 /* MTTransportTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTransportTransaction.h; sourceTree = "<group>"; };
+		D0179EF9250BCB7600599140 /* MTSessionInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTSessionInfo.h; sourceTree = "<group>"; };
+		D0179EFA250BCB7600599140 /* MTRequestErrorContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRequestErrorContext.h; sourceTree = "<group>"; };
+		D0179EFB250BCB7600599140 /* MTExportedAuthorizationData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTExportedAuthorizationData.h; sourceTree = "<group>"; };
+		D0179EFC250BCB7600599140 /* MTDatacenterVerificationData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterVerificationData.h; sourceTree = "<group>"; };
+		D0179EFD250BCB7600599140 /* MTDatacenterAuthInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAuthInfo.h; sourceTree = "<group>"; };
+		D0179EFE250BCB7600599140 /* MTRequestContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTRequestContext.h; sourceTree = "<group>"; };
+		D0179EFF250BCB7600599140 /* MTInternalId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTInternalId.h; sourceTree = "<group>"; };
+		D0179F00250BCB7600599140 /* MTDatacenterSaltInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterSaltInfo.h; sourceTree = "<group>"; };
+		D0179F01250BCB7600599140 /* MTTimeFixContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTimeFixContext.h; sourceTree = "<group>"; };
+		D0179F02250BCB7600599140 /* MTTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTimer.h; sourceTree = "<group>"; };
+		D0179F03250BCB7600599140 /* MTHttpRequestOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTHttpRequestOperation.h; sourceTree = "<group>"; };
+		D0179F04250BCB7600599140 /* MTMessageEncryptionKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTMessageEncryptionKey.h; sourceTree = "<group>"; };
+		D0179F05250BCB7600599140 /* MTEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTEncryption.h; sourceTree = "<group>"; };
+		D0179F06250BCB7600599140 /* MTNetworkUsageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTNetworkUsageManager.h; sourceTree = "<group>"; };
+		D0179F07250BCB7600599140 /* MTTcpTransport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTcpTransport.h; sourceTree = "<group>"; };
+		D0179F08250BCB7600599140 /* MTAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTAtomic.h; sourceTree = "<group>"; };
+		D0179F09250BCB7600599140 /* MTFileBasedKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTFileBasedKeychain.h; sourceTree = "<group>"; };
+		D0179F0A250BCB7600599140 /* MTTransportScheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTTransportScheme.h; sourceTree = "<group>"; };
+		D0179F0B250BCB7600599140 /* MTDatacenterAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAddress.h; sourceTree = "<group>"; };
+		D0179F0C250BCB7600599140 /* MTInputStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTInputStream.h; sourceTree = "<group>"; };
+		D0179F0D250BCB7600599140 /* MTDatacenterAddressSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MTDatacenterAddressSet.h; sourceTree = "<group>"; };
 		D038789D2332500A00DB441C /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		D038789F2332503300DB441C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		D03878A12332503E00DB441C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
@@ -424,206 +408,234 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A7918E6A240CF467002011CA /* Source */ = {
+		D0179D41250BC54600599140 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				A7918EAD240CF487002011CA /* AFHTTPRequestOperation.m */,
-				A7918E9B240CF486002011CA /* AFURLConnectionOperation.m */,
-				A7918EDE240CF489002011CA /* GCDAsyncSocket.h */,
-				A7918E8B240CF485002011CA /* GCDAsyncSocket.m */,
-				A7918ED4240CF489002011CA /* MTAes.h */,
-				A7918EE0240CF48A002011CA /* MTAes.m */,
-				A7918EB2240CF487002011CA /* MTApiEnvironment.m */,
-				A7918ED9240CF489002011CA /* MTAtomic.m */,
-				A7918E90240CF485002011CA /* MTBackupAddressSignals.m */,
-				A7918EC1240CF488002011CA /* MTBadMsgNotificationMessage.h */,
-				A7918EB1240CF487002011CA /* MTBadMsgNotificationMessage.m */,
-				A7918E8C240CF485002011CA /* MTBag.m */,
-				A7918EA0240CF486002011CA /* MTBindingTempAuthKeyContext.h */,
-				A7918EC7240CF488002011CA /* MTBindingTempAuthKeyContext.m */,
-				A7918E95240CF485002011CA /* MTBuffer.h */,
-				A7918EBD240CF488002011CA /* MTBuffer.m */,
-				A7918E8A240CF485002011CA /* MTBufferReader.h */,
-				A7918E7B240CF483002011CA /* MTBufferReader.m */,
-				A7918E93240CF485002011CA /* MTConnectionProbing.h */,
-				A7918EC4240CF488002011CA /* MTConnectionProbing.m */,
-				A7918E98240CF485002011CA /* MTContext.m */,
-				A7918EC0240CF488002011CA /* MTDatacenterAddress.m */,
-				A7918EE5240CF48A002011CA /* MTDatacenterAddressListData.m */,
-				A7918ECC240CF488002011CA /* MTDatacenterAddressSet.m */,
-				A7918E9A240CF485002011CA /* MTDatacenterAuthAction.m */,
-				A7918E84240CF484002011CA /* MTDatacenterAuthInfo.m */,
-				A7918EB6240CF487002011CA /* MTDatacenterAuthMessageService.m */,
-				A7918ED6240CF489002011CA /* MTDatacenterSaltInfo.m */,
-				A7918E82240CF484002011CA /* MTDatacenterTransferAuthAction.m */,
-				A7918EC5240CF488002011CA /* MTDatacenterVerificationData.m */,
-				A7918EAF240CF487002011CA /* MTDestroySessionResponseMessage.h */,
-				A7918EC6240CF488002011CA /* MTDestroySessionResponseMessage.m */,
-				A7918EDA240CF489002011CA /* MTDiscoverConnectionSignals.h */,
-				A7918E91240CF485002011CA /* MTDiscoverConnectionSignals.m */,
-				A7918E6E240CF483002011CA /* MTDiscoverDatacenterAddressAction.h */,
-				A7918E88240CF484002011CA /* MTDiscoverDatacenterAddressAction.m */,
-				A7918E70240CF483002011CA /* MTDisposable.m */,
-				A7918ED7240CF489002011CA /* MTDNS.h */,
-				A7918ECF240CF489002011CA /* MTDNS.m */,
-				A7918ED3240CF489002011CA /* MTDropResponseContext.m */,
-				A7918E89240CF484002011CA /* MTDropRpcResultMessage.h */,
-				A7918E71240CF483002011CA /* MTDropRpcResultMessage.m */,
-				A7918E9D240CF486002011CA /* MTEncryption.m */,
-				A7918EA4240CF486002011CA /* MTExportedAuthorizationData.m */,
-				A7918EDF240CF48A002011CA /* MTFileBasedKeychain.m */,
-				A7918E96240CF485002011CA /* MTFutureSaltsMessage.h */,
-				A7918EB7240CF487002011CA /* MTFutureSaltsMessage.m */,
-				A7918E73240CF483002011CA /* MTGzip.m */,
-				A7918EAA240CF486002011CA /* MTHttpRequestOperation.m */,
-				A7918EA8240CF486002011CA /* MTIncomingMessage.m */,
-				A7918E79240CF483002011CA /* MTInputStream.m */,
-				A7918EA6240CF486002011CA /* MTInternalMessageParser.h */,
-				A7918EBB240CF487002011CA /* MTInternalMessageParser.m */,
-				A7918ED5240CF489002011CA /* MTKeychain.m */,
-				A7918EBC240CF487002011CA /* MTLogging.m */,
-				A7918E6D240CF483002011CA /* MTMessage.h */,
-				A7918ECB240CF488002011CA /* MTMessage.m */,
-				A7918EB4240CF487002011CA /* MTMessageEncryptionKey.m */,
-				A7918EA2240CF486002011CA /* MTMessageTransaction.m */,
-				A7918EA9240CF486002011CA /* MTMsgAllInfoMessage.h */,
-				A7918E92240CF485002011CA /* MTMsgAllInfoMessage.m */,
-				A7918EB8240CF487002011CA /* MTMsgContainerMessage.h */,
-				A7918ED8240CF489002011CA /* MTMsgContainerMessage.m */,
-				A7918EB9240CF487002011CA /* MTMsgDetailedInfoMessage.h */,
-				A7918EDD240CF489002011CA /* MTMsgDetailedInfoMessage.m */,
-				A7918E83240CF484002011CA /* MTMsgResendReqMessage.h */,
-				A7918E75240CF483002011CA /* MTMsgResendReqMessage.m */,
-				A7918EE6240CF48A002011CA /* MTMsgsAckMessage.h */,
-				A7918ED0240CF489002011CA /* MTMsgsAckMessage.m */,
-				A7918ECA240CF488002011CA /* MTMsgsStateInfoMessage.h */,
-				A7918ECD240CF488002011CA /* MTMsgsStateInfoMessage.m */,
-				A7918EAE240CF487002011CA /* MTMsgsStateReqMessage.h */,
-				A7918E9E240CF486002011CA /* MTMsgsStateReqMessage.m */,
-				A7918ED2240CF489002011CA /* MTNetworkAvailability.m */,
-				A7918EC2240CF488002011CA /* MTNetworkUsageCalculationInfo.m */,
-				A7918EC3240CF488002011CA /* MTNetworkUsageManager.m */,
-				A7918EDB240CF489002011CA /* MTNewSessionCreatedMessage.h */,
-				A7918EA1240CF486002011CA /* MTNewSessionCreatedMessage.m */,
-				A7918E7A240CF483002011CA /* MTOutgoingMessage.m */,
-				A7918E6B240CF482002011CA /* MTOutputStream.m */,
-				A7918E94240CF485002011CA /* MTPingMessage.h */,
-				A7918E74240CF483002011CA /* MTPingMessage.m */,
-				A7918EA5240CF486002011CA /* MTPongMessage.h */,
-				A7918E87240CF484002011CA /* MTPongMessage.m */,
-				A7918EE4240CF48A002011CA /* MTPreparedMessage.m */,
-				A7918EE7240CF48A002011CA /* MTProto.m */,
-				A7918EAB240CF487002011CA /* MTProxyConnectivity.m */,
-				A7918EC8240CF488002011CA /* MTQueue.m */,
-				A7918EBE240CF488002011CA /* MTRequest.m */,
-				A7918EB0240CF487002011CA /* MTRequestContext.m */,
-				A7918E8F240CF485002011CA /* MTRequestErrorContext.m */,
-				A7918EBF240CF488002011CA /* MTRequestMessageService.m */,
-				A7918EDC240CF489002011CA /* MTResendMessageService.m */,
-				A7918E9C240CF486002011CA /* MTResPqMessage.h */,
-				A7918E78240CF483002011CA /* MTResPqMessage.m */,
-				A7918E7F240CF484002011CA /* MTRpcError.m */,
-				A7918E8D240CF485002011CA /* MTRpcResultMessage.h */,
-				A7918E9F240CF486002011CA /* MTRpcResultMessage.m */,
-				A7918EE3240CF48A002011CA /* MTRsa.h */,
-				A7918EA3240CF486002011CA /* MTRsa.m */,
-				A7918EBA240CF487002011CA /* MTServerDhInnerDataMessage.h */,
-				A7918E6C240CF483002011CA /* MTServerDhInnerDataMessage.m */,
-				A7918E86240CF484002011CA /* MTServerDhParamsMessage.h */,
-				A7918EC9240CF488002011CA /* MTServerDhParamsMessage.m */,
-				A7918ECE240CF489002011CA /* MTSessionInfo.m */,
-				A7918E80240CF484002011CA /* MTSetClientDhParamsResponseMessage.h */,
-				A7918E76240CF483002011CA /* MTSetClientDhParamsResponseMessage.m */,
-				A7918EE2240CF48A002011CA /* MTSignal.m */,
-				A7918E99240CF485002011CA /* MTSubscriber.m */,
-				A7918E81240CF484002011CA /* MTTcpConnection.h */,
-				A7918E7D240CF484002011CA /* MTTcpConnection.m */,
-				A7918EE1240CF48A002011CA /* MTTcpConnectionBehaviour.h */,
-				A7918EB3240CF487002011CA /* MTTcpConnectionBehaviour.m */,
-				A7918EB5240CF487002011CA /* MTTcpTransport.m */,
-				A7918E8E240CF485002011CA /* MTTime.m */,
-				A7918E6F240CF483002011CA /* MTTimeFixContext.m */,
-				A7918EA7240CF486002011CA /* MTTimer.m */,
-				A7918E97240CF485002011CA /* MTTimeSyncMessageService.m */,
-				A7918E85240CF484002011CA /* MTTransport.m */,
-				A7918ED1240CF489002011CA /* MTTransportScheme.m */,
-				A7918E7C240CF483002011CA /* MTTransportSchemeStats.h */,
-				A7918E7E240CF484002011CA /* MTTransportSchemeStats.m */,
-				A7918EAC240CF487002011CA /* MTTransportTransaction.m */,
-				A7918E72240CF483002011CA /* PingFoundation.h */,
-				A7918E77240CF483002011CA /* PingFoundation.m */,
+				D0179D42250BC54600599140 /* PingFoundation.h */,
+				D0179D43250BC54600599140 /* MTPreparedMessage.m */,
+				D0179D44250BC54600599140 /* MTGzip.m */,
+				D0179D45250BC54600599140 /* MTTime.m */,
+				D0179D46250BC54600599140 /* MTBag.m */,
+				D0179D47250BC54600599140 /* MTBuffer.m */,
+				D0179D48250BC54600599140 /* MTBackupAddressSignals.m */,
+				D0179D49250BC54600599140 /* MTServerDhParamsMessage.h */,
+				D0179D4A250BC54600599140 /* MTPongMessage.m */,
+				D0179D4B250BC54600599140 /* MTIncomingMessage.m */,
+				D0179D4C250BC54600599140 /* MTFutureSaltsMessage.h */,
+				D0179D4D250BC54600599140 /* MTBindKeyMessageService.m */,
+				D0179D4E250BC54600599140 /* MTTcpConnectionBehaviour.h */,
+				D0179D4F250BC54600599140 /* MTDatacenterAuthAction.m */,
+				D0179D50250BC54600599140 /* GCDAsyncSocket.m */,
+				D0179D51250BC54600599140 /* MTTransportTransaction.m */,
+				D0179D52250BC54600599140 /* MTNewSessionCreatedMessage.h */,
+				D0179D53250BC54600599140 /* MTRequest.m */,
+				D0179D54250BC54600599140 /* MTBadMsgNotificationMessage.h */,
+				D0179D55250BC54600599140 /* MTAes.h */,
+				D0179D56250BC54600599140 /* MTResPqMessage.m */,
+				D0179D57250BC54600599140 /* MTDiscoverDatacenterAddressAction.h */,
+				D0179D58250BC54600599140 /* MTMsgDetailedInfoMessage.h */,
+				D0179D59250BC54600599140 /* MTQueue.m */,
+				D0179D5A250BC54600599140 /* MTOutgoingMessage.m */,
+				D0179D5B250BC54600599140 /* MTConnectionProbing.m */,
+				D0179D5C250BC54600599140 /* MTDestroySessionResponseMessage.m */,
+				D0179D5D250BC54600599140 /* MTBindingTempAuthKeyContext.m */,
+				D0179D5E250BC54600599140 /* MTMsgResendReqMessage.m */,
+				D0179D5F250BC54600599140 /* MTTcpTransport.m */,
+				D0179D60250BC54600599140 /* MTNetworkUsageManager.m */,
+				D0179D61250BC54600599140 /* MTMessageEncryptionKey.m */,
+				D0179D62250BC54600599140 /* MTEncryption.m */,
+				D0179D63250BC54600599140 /* MTHttpRequestOperation.m */,
+				D0179D64250BC54600599140 /* MTTimer.m */,
+				D0179D65250BC54600599140 /* MTTcpConnection.m */,
+				D0179D66250BC54600599140 /* MTDatacenterSaltInfo.m */,
+				D0179D67250BC54600599140 /* MTSetClientDhParamsResponseMessage.h */,
+				D0179D68250BC54600599140 /* MTDropRpcResultMessage.h */,
+				D0179D69250BC54600599140 /* MTTimeFixContext.m */,
+				D0179D6A250BC54600599140 /* MTDiscoverConnectionSignals.h */,
+				D0179D6B250BC54600599140 /* MTMsgAllInfoMessage.m */,
+				D0179D6C250BC54600599140 /* MTServerDhInnerDataMessage.m */,
+				D0179D6D250BC54600599140 /* MTDatacenterVerificationData.m */,
+				D0179D6E250BC54600599140 /* MTPingMessage.h */,
+				D0179D6F250BC54600599140 /* MTDatacenterAuthInfo.m */,
+				D0179D70250BC54600599140 /* MTRequestContext.m */,
+				D0179D71250BC54600599140 /* MTExportedAuthorizationData.m */,
+				D0179D72250BC54600599140 /* MTRequestErrorContext.m */,
+				D0179D73250BC54600599140 /* MTSessionInfo.m */,
+				D0179D74250BC54600599140 /* MTMsgsAckMessage.m */,
+				D0179D75250BC54600599140 /* MTRsa.h */,
+				D0179D76250BC54600599140 /* MTMsgContainerMessage.h */,
+				D0179D77250BC54600599140 /* MTDatacenterAddressSet.m */,
+				D0179D78250BC54600599140 /* MTInternalMessageParser.m */,
+				D0179D79250BC54600599140 /* MTMsgsStateReqMessage.h */,
+				D0179D7A250BC54600599140 /* MTInputStream.m */,
+				D0179D7B250BC54600599140 /* MTBufferReader.h */,
+				D0179D7C250BC54600599140 /* MTDatacenterAddress.m */,
+				D0179D7D250BC54600599140 /* MTTransportSchemeStats.m */,
+				D0179D7E250BC54600599140 /* MTDNS.h */,
+				D0179D7F250BC54600599140 /* MTMessage.h */,
+				D0179D80250BC54600599140 /* MTTransportScheme.m */,
+				D0179D81250BC54600599140 /* Utils */,
+				D0179D84250BC54600599140 /* MTMsgsStateInfoMessage.h */,
+				D0179D85250BC54600599140 /* MTFileBasedKeychain.m */,
+				D0179D86250BC54600599140 /* MTAtomic.m */,
+				D0179D87250BC54600599140 /* MTRpcResultMessage.h */,
+				D0179D88250BC54600599140 /* MTTcpConnectionBehaviour.m */,
+				D0179D89250BC54600599140 /* MTTimeSyncMessageService.m */,
+				D0179D8A250BC54600599140 /* AFURLConnectionOperation.m */,
+				D0179D8B250BC54600599140 /* MTFutureSaltsMessage.m */,
+				D0179D8C250BC54600599140 /* MTServerDhParamsMessage.m */,
+				D0179D8D250BC54600599140 /* MTPongMessage.h */,
+				D0179D8E250BC54600599140 /* MTSubscriber.m */,
+				D0179D8F250BC54600599140 /* AFHTTPRequestOperation.m */,
+				D0179D90250BC54600599140 /* MTBuffer.h */,
+				D0179D91250BC54600599140 /* PingFoundation.m */,
+				D0179D92250BC54600599140 /* MTDisposable.m */,
+				D0179D93250BC54600599140 /* MTRequestMessageService.m */,
+				D0179D94250BC54600599140 /* MTDropResponseContext.m */,
+				D0179D95250BC54600599140 /* MTDestroySessionResponseMessage.h */,
+				D0179D96250BC54600599140 /* MTProtoInstance.m */,
+				D0179D97250BC54600599140 /* MTConnectionProbing.h */,
+				D0179D98250BC54600599140 /* MTRpcError.m */,
+				D0179D99250BC54600599140 /* MTResendMessageService.m */,
+				D0179D9A250BC54600599140 /* MTMsgDetailedInfoMessage.m */,
+				D0179D9B250BC54600599140 /* MTDiscoverDatacenterAddressAction.m */,
+				D0179D9C250BC54600599140 /* MTResPqMessage.h */,
+				D0179D9D250BC54600599140 /* MTBadMsgNotificationMessage.m */,
+				D0179D9E250BC54600599140 /* MTAes.m */,
+				D0179D9F250BC54600599140 /* MTNewSessionCreatedMessage.m */,
+				D0179DA0250BC54600599140 /* MTDatacenterAddressListData.m */,
+				D0179DA1250BC54600599140 /* MTNetworkUsageCalculationInfo.m */,
+				D0179DA2250BC54600599140 /* GCDAsyncSocket.h */,
+				D0179DA3250BC54600599140 /* MTKeychain.m */,
+				D0179DA4250BC54600599140 /* MTApiEnvironment.m */,
+				D0179DA5250BC54600599140 /* MTMsgsAckMessage.h */,
+				D0179DA6250BC54600599140 /* MTContext.m */,
+				D0179DA7250BC54600599140 /* MTPingMessage.m */,
+				D0179DA8250BC54600599140 /* MTServerDhInnerDataMessage.h */,
+				D0179DA9250BC54600599140 /* MTDiscoverConnectionSignals.m */,
+				D0179DAA250BC54600599140 /* MTMsgAllInfoMessage.h */,
+				D0179DAB250BC54600599140 /* MTSetClientDhParamsResponseMessage.m */,
+				D0179DAC250BC54600599140 /* MTDropRpcResultMessage.m */,
+				D0179DAD250BC54600599140 /* MTTcpConnection.h */,
+				D0179DAE250BC54600599140 /* MTOutputStream.m */,
+				D0179DAF250BC54600599140 /* MTNetworkAvailability.m */,
+				D0179DB0250BC54600599140 /* MTSignal.m */,
+				D0179DB1250BC54600599140 /* MTBindingTempAuthKeyContext.h */,
+				D0179DB2250BC54600599140 /* MTMsgResendReqMessage.h */,
+				D0179DB3250BC54600599140 /* MTRpcResultMessage.m */,
+				D0179DB4250BC54600599140 /* MTProtoEngine.m */,
+				D0179DB5250BC54600599140 /* MTProxyConnectivity.m */,
+				D0179DB6250BC54600599140 /* MTProto.m */,
+				D0179DB7250BC54600599140 /* MTMsgsStateInfoMessage.m */,
+				D0179DB8250BC54600599140 /* MTDatacenterTransferAuthAction.m */,
+				D0179DB9250BC54600599140 /* MTTransport.m */,
+				D0179DBA250BC54600599140 /* MTMessageTransaction.m */,
+				D0179DBB250BC54600599140 /* MTDatacenterAuthMessageService.m */,
+				D0179DBC250BC54600599140 /* MTMessage.m */,
+				D0179DBD250BC54600599140 /* MTDNS.m */,
+				D0179DBE250BC54600599140 /* MTTransportSchemeStats.h */,
+				D0179DBF250BC54600599140 /* MTBufferReader.m */,
+				D0179DC0250BC54600599140 /* MTLogging.m */,
+				D0179DC1250BC54600599140 /* MTMsgsStateReqMessage.m */,
+				D0179DC2250BC54600599140 /* MTInternalMessageParser.h */,
+				D0179DC3250BC54600599140 /* MTRsa.m */,
+				D0179DC4250BC54600599140 /* MTMsgContainerMessage.m */,
 			);
-			path = Source;
+			path = Sources;
 			sourceTree = "<group>";
 		};
-		A7918F65240CF48F002011CA /* Headers */ = {
+		D0179D81250BC54600599140 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				A7918F7E240CF4AC002011CA /* AFHTTPRequestOperation.h */,
-				A7918F8D240CF4AD002011CA /* AFURLConnectionOperation.h */,
-				A7918F7B240CF4AC002011CA /* MTApiEnvironment.h */,
-				A7918F74240CF4AB002011CA /* MTAtomic.h */,
-				A7918F71240CF4AB002011CA /* MTBackupAddressSignals.h */,
-				A7918F86240CF4AD002011CA /* MTBag.h */,
-				A7918F85240CF4AD002011CA /* MTContext.h */,
-				A7918F7D240CF4AC002011CA /* MTDatacenterAddress.h */,
-				A7918F7A240CF4AC002011CA /* MTDatacenterAddressListData.h */,
-				A7918F6A240CF4AB002011CA /* MTDatacenterAddressSet.h */,
-				A7918F6C240CF4AB002011CA /* MTDatacenterAuthAction.h */,
-				A7918F66240CF4AB002011CA /* MTDatacenterAuthInfo.h */,
-				A7918F9D240CF4AE002011CA /* MTDatacenterAuthMessageService.h */,
-				A7918F8F240CF4AD002011CA /* MTDatacenterSaltInfo.h */,
-				A7918F82240CF4AC002011CA /* MTDatacenterTransferAuthAction.h */,
-				A7918F9E240CF4AE002011CA /* MTDatacenterVerificationData.h */,
-				A7918F70240CF4AB002011CA /* MTDisposable.h */,
-				A7918F9C240CF4AE002011CA /* MTDropResponseContext.h */,
-				A7918F72240CF4AB002011CA /* MTEncryption.h */,
-				A7918F9F240CF4AE002011CA /* MTExportedAuthorizationData.h */,
-				A7918F84240CF4AD002011CA /* MTFileBasedKeychain.h */,
-				A7918F94240CF4AE002011CA /* MTGzip.h */,
-				A7918F6B240CF4AB002011CA /* MTHttpRequestOperation.h */,
-				A7918F77240CF4AC002011CA /* MTIncomingMessage.h */,
-				A7918FA0240CF4AE002011CA /* MTInputStream.h */,
-				A7918F8A240CF4AD002011CA /* MTInternalId.h */,
-				A7918F7C240CF4AC002011CA /* MTKeychain.h */,
-				A7918F69240CF4AB002011CA /* MTLogging.h */,
-				A7918F89240CF4AD002011CA /* MTMessageEncryptionKey.h */,
-				A7918F68240CF4AB002011CA /* MTMessageService.h */,
-				A7918F93240CF4AE002011CA /* MTMessageTransaction.h */,
-				A7918F99240CF4AE002011CA /* MTNetworkAvailability.h */,
-				A7918F6D240CF4AB002011CA /* MTNetworkUsageCalculationInfo.h */,
-				A7918F75240CF4AB002011CA /* MTNetworkUsageManager.h */,
-				A7918F90240CF4AD002011CA /* MTOutgoingMessage.h */,
-				A7918F92240CF4AE002011CA /* MTOutputStream.h */,
-				A7918F98240CF4AE002011CA /* MTPreparedMessage.h */,
-				A7918F80240CF4AC002011CA /* MTProto.h */,
-				A7918F8B240CF4AD002011CA /* MTProxyConnectivity.h */,
-				A7918F8C240CF4AD002011CA /* MTQueue.h */,
-				A7918F96240CF4AE002011CA /* MTRequest.h */,
-				A7918F79240CF4AC002011CA /* MTRequestContext.h */,
-				A7918F8E240CF4AD002011CA /* MTRequestErrorContext.h */,
-				A7918F76240CF4AC002011CA /* MTRequestMessageService.h */,
-				A7918F9B240CF4AE002011CA /* MTResendMessageService.h */,
-				A7918F9A240CF4AE002011CA /* MTRpcError.h */,
-				A7918F78240CF4AC002011CA /* MTSerialization.h */,
-				A7918F67240CF4AB002011CA /* MTSessionInfo.h */,
-				A7918F7F240CF4AC002011CA /* MTSignal.h */,
-				A7918F6E240CF4AB002011CA /* MTSubscriber.h */,
-				A7918F81240CF4AC002011CA /* MTTcpTransport.h */,
-				A7918F97240CF4AE002011CA /* MTTime.h */,
-				A7918F91240CF4AE002011CA /* MTTimeFixContext.h */,
-				A7918F88240CF4AD002011CA /* MTTimer.h */,
-				A7918F6F240CF4AB002011CA /* MTTimeSyncMessageService.h */,
-				A7918F83240CF4AC002011CA /* MTTransport.h */,
-				A7918F73240CF4AB002011CA /* MTTransportScheme.h */,
-				A7918F87240CF4AD002011CA /* MTTransportTransaction.h */,
+				D0179D82250BC54600599140 /* MTQueueLocalObject.m */,
+				D0179D83250BC54600599140 /* MTQueueLocalObject.h */,
 			);
-			path = Headers;
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		D0179ECD250BCB7600599140 /* PublicHeaders */ = {
+			isa = PBXGroup;
+			children = (
+				D0179ECE250BCB7600599140 /* MtProtoKit */,
+			);
+			name = PublicHeaders;
+			path = "../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
+			sourceTree = "<group>";
+		};
+		D0179ECE250BCB7600599140 /* MtProtoKit */ = {
+			isa = PBXGroup;
+			children = (
+				D0179ECF250BCB7600599140 /* MTDisposable.h */,
+				D0179ED0250BCB7600599140 /* MTRequestMessageService.h */,
+				D0179ED1250BCB7600599140 /* MtProtoKit.h */,
+				D0179ED2250BCB7600599140 /* AFHTTPRequestOperation.h */,
+				D0179ED3250BCB7600599140 /* MTSubscriber.h */,
+				D0179ED4250BCB7600599140 /* AFURLConnectionOperation.h */,
+				D0179ED5250BCB7600599140 /* MTTimeSyncMessageService.h */,
+				D0179ED6250BCB7600599140 /* MTNetworkUsageCalculationInfo.h */,
+				D0179ED7250BCB7600599140 /* MTDatacenterAddressListData.h */,
+				D0179ED8250BCB7600599140 /* MTResendMessageService.h */,
+				D0179ED9250BCB7600599140 /* MTProtoInstance.h */,
+				D0179EDA250BCB7600599140 /* MTRpcError.h */,
+				D0179EDB250BCB7600599140 /* MTDropResponseContext.h */,
+				D0179EDC250BCB7600599140 /* MTSignal.h */,
+				D0179EDD250BCB7600599140 /* MTNetworkAvailability.h */,
+				D0179EDE250BCB7600599140 /* MTProtoPersistenceInterface.h */,
+				D0179EDF250BCB7600599140 /* MTOutputStream.h */,
+				D0179EE0250BCB7600599140 /* MTSerialization.h */,
+				D0179EE1250BCB7600599140 /* MTContext.h */,
+				D0179EE2250BCB7600599140 /* MTApiEnvironment.h */,
+				D0179EE3250BCB7600599140 /* MTKeychain.h */,
+				D0179EE4250BCB7600599140 /* MTLogging.h */,
+				D0179EE5250BCB7600599140 /* MTMessageTransaction.h */,
+				D0179EE6250BCB7600599140 /* MTDatacenterAuthMessageService.h */,
+				D0179EE7250BCB7600599140 /* MTTransport.h */,
+				D0179EE8250BCB7600599140 /* MTDatacenterTransferAuthAction.h */,
+				D0179EE9250BCB7600599140 /* MTProto.h */,
+				D0179EEA250BCB7600599140 /* MTProxyConnectivity.h */,
+				D0179EEB250BCB7600599140 /* MTProtoEngine.h */,
+				D0179EEC250BCB7600599140 /* MTDatacenterAuthAction.h */,
+				D0179EED250BCB7600599140 /* MTBindKeyMessageService.h */,
+				D0179EEE250BCB7600599140 /* MTIncomingMessage.h */,
+				D0179EEF250BCB7600599140 /* MTBackupAddressSignals.h */,
+				D0179EF0250BCB7600599140 /* MTTime.h */,
+				D0179EF1250BCB7600599140 /* MTBag.h */,
+				D0179EF2250BCB7600599140 /* MTMessageService.h */,
+				D0179EF3250BCB7600599140 /* MTGzip.h */,
+				D0179EF4250BCB7600599140 /* MTPreparedMessage.h */,
+				D0179EF5250BCB7600599140 /* MTOutgoingMessage.h */,
+				D0179EF6250BCB7600599140 /* MTQueue.h */,
+				D0179EF7250BCB7600599140 /* MTRequest.h */,
+				D0179EF8250BCB7600599140 /* MTTransportTransaction.h */,
+				D0179EF9250BCB7600599140 /* MTSessionInfo.h */,
+				D0179EFA250BCB7600599140 /* MTRequestErrorContext.h */,
+				D0179EFB250BCB7600599140 /* MTExportedAuthorizationData.h */,
+				D0179EFC250BCB7600599140 /* MTDatacenterVerificationData.h */,
+				D0179EFD250BCB7600599140 /* MTDatacenterAuthInfo.h */,
+				D0179EFE250BCB7600599140 /* MTRequestContext.h */,
+				D0179EFF250BCB7600599140 /* MTInternalId.h */,
+				D0179F00250BCB7600599140 /* MTDatacenterSaltInfo.h */,
+				D0179F01250BCB7600599140 /* MTTimeFixContext.h */,
+				D0179F02250BCB7600599140 /* MTTimer.h */,
+				D0179F03250BCB7600599140 /* MTHttpRequestOperation.h */,
+				D0179F04250BCB7600599140 /* MTMessageEncryptionKey.h */,
+				D0179F05250BCB7600599140 /* MTEncryption.h */,
+				D0179F06250BCB7600599140 /* MTNetworkUsageManager.h */,
+				D0179F07250BCB7600599140 /* MTTcpTransport.h */,
+				D0179F08250BCB7600599140 /* MTAtomic.h */,
+				D0179F09250BCB7600599140 /* MTFileBasedKeychain.h */,
+				D0179F0A250BCB7600599140 /* MTTransportScheme.h */,
+				D0179F0B250BCB7600599140 /* MTDatacenterAddress.h */,
+				D0179F0C250BCB7600599140 /* MTInputStream.h */,
+				D0179F0D250BCB7600599140 /* MTDatacenterAddressSet.h */,
+			);
+			path = MtProtoKit;
 			sourceTree = "<group>";
 		};
 		D05A830918AFB3F9007F1076 = {
 			isa = PBXGroup;
 			children = (
+				D0179ECD250BCB7600599140 /* PublicHeaders */,
 				D05A84E718AFF0EE007F1076 /* Third Party */,
 				D05A849B18AFCA3D007F1076 /* MtProtoKit */,
 				D079AB981AF39B8000076F59 /* MtProtoKit */,
@@ -667,8 +679,7 @@
 		D05A849B18AFCA3D007F1076 /* MtProtoKit */ = {
 			isa = PBXGroup;
 			children = (
-				A7918F65240CF48F002011CA /* Headers */,
-				A7918E6A240CF467002011CA /* Source */,
+				D0179D41250BC54600599140 /* Sources */,
 			);
 			name = MtProtoKit;
 			path = "../../submodules/telegram-ios/submodules/MtProtoKit";
@@ -698,100 +709,70 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7918FA7240CF4AE002011CA /* MTDatacenterAuthAction.h in Headers */,
-				A7918F2B240CF48A002011CA /* MTMsgsStateReqMessage.h in Headers */,
-				A7918F37240CF48A002011CA /* MTServerDhInnerDataMessage.h in Headers */,
-				A7918FCB240CF4AF002011CA /* MTOutgoingMessage.h in Headers */,
-				A7918F22240CF48A002011CA /* MTPongMessage.h in Headers */,
-				A7918F60240CF48A002011CA /* MTRsa.h in Headers */,
-				A7918F12240CF48A002011CA /* MTBuffer.h in Headers */,
-				A7918FA9240CF4AE002011CA /* MTSubscriber.h in Headers */,
-				A7918FD8240CF4AF002011CA /* MTDatacenterAuthMessageService.h in Headers */,
-				A7918F0A240CF48A002011CA /* MTRpcResultMessage.h in Headers */,
-				A7918F5E240CF48A002011CA /* MTTcpConnectionBehaviour.h in Headers */,
-				A7918F26240CF48A002011CA /* MTMsgAllInfoMessage.h in Headers */,
-				A7918FB1240CF4AE002011CA /* MTRequestMessageService.h in Headers */,
-				A7918FC8240CF4AF002011CA /* AFURLConnectionOperation.h in Headers */,
-				A7918FD7240CF4AF002011CA /* MTDropResponseContext.h in Headers */,
-				A7918FBA240CF4AF002011CA /* MTSignal.h in Headers */,
-				A7918FCE240CF4AF002011CA /* MTMessageTransaction.h in Headers */,
-				A7918FBF240CF4AF002011CA /* MTFileBasedKeychain.h in Headers */,
-				A7918FAD240CF4AE002011CA /* MTEncryption.h in Headers */,
-				A7918F36240CF48A002011CA /* MTMsgDetailedInfoMessage.h in Headers */,
-				A7918FAE240CF4AE002011CA /* MTTransportScheme.h in Headers */,
-				A7918FA6240CF4AE002011CA /* MTHttpRequestOperation.h in Headers */,
-				A7918FC6240CF4AF002011CA /* MTProxyConnectivity.h in Headers */,
-				A7918FAC240CF4AE002011CA /* MTBackupAddressSignals.h in Headers */,
-				A7918FC9240CF4AF002011CA /* MTRequestErrorContext.h in Headers */,
-				A7918FC1240CF4AF002011CA /* MTBag.h in Headers */,
-				A7918FAB240CF4AE002011CA /* MTDisposable.h in Headers */,
-				A7918F23240CF48A002011CA /* MTInternalMessageParser.h in Headers */,
+				D0179F30250BCB7700599140 /* MTBag.h in Headers */,
+				D0179F4A250BCB7700599140 /* MTDatacenterAddress.h in Headers */,
 				D079AB9C1AF39B8000076F59 /* MtProtoKit.h in Headers */,
-				A7918F54240CF48A002011CA /* MTDNS.h in Headers */,
-				A7918EEA240CF48A002011CA /* MTMessage.h in Headers */,
-				A7918F13240CF48A002011CA /* MTFutureSaltsMessage.h in Headers */,
-				A7918F1D240CF48A002011CA /* MTBindingTempAuthKeyContext.h in Headers */,
-				A7918FB2240CF4AE002011CA /* MTIncomingMessage.h in Headers */,
-				A7918FB9240CF4AE002011CA /* AFHTTPRequestOperation.h in Headers */,
-				A7918FD2240CF4AF002011CA /* MTTime.h in Headers */,
-				A7918F63240CF48A002011CA /* MTMsgsAckMessage.h in Headers */,
-				A7918FB7240CF4AE002011CA /* MTKeychain.h in Headers */,
-				A7918FB5240CF4AE002011CA /* MTDatacenterAddressListData.h in Headers */,
-				A7918FB6240CF4AE002011CA /* MTApiEnvironment.h in Headers */,
-				A7918FCC240CF4AF002011CA /* MTTimeFixContext.h in Headers */,
-				A7918FCF240CF4AF002011CA /* MTGzip.h in Headers */,
-				A7918F11240CF48A002011CA /* MTPingMessage.h in Headers */,
-				A7918FD6240CF4AF002011CA /* MTResendMessageService.h in Headers */,
-				A7918F5B240CF48A002011CA /* GCDAsyncSocket.h in Headers */,
-				A7918FD4240CF4AF002011CA /* MTNetworkAvailability.h in Headers */,
-				A7918FC2240CF4AF002011CA /* MTTransportTransaction.h in Headers */,
-				A7918FA2240CF4AE002011CA /* MTSessionInfo.h in Headers */,
-				A7918EEB240CF48A002011CA /* MTDiscoverDatacenterAddressAction.h in Headers */,
-				A7918FC3240CF4AF002011CA /* MTTimer.h in Headers */,
-				A7918FC5240CF4AF002011CA /* MTInternalId.h in Headers */,
-				A7918FD1240CF4AF002011CA /* MTRequest.h in Headers */,
-				A7918FD5240CF4AF002011CA /* MTRpcError.h in Headers */,
-				A7918FBB240CF4AF002011CA /* MTProto.h in Headers */,
-				A7918FBE240CF4AF002011CA /* MTTransport.h in Headers */,
-				A7918F10240CF48A002011CA /* MTConnectionProbing.h in Headers */,
-				A7918FB8240CF4AE002011CA /* MTDatacenterAddress.h in Headers */,
-				A7918FBD240CF4AF002011CA /* MTDatacenterTransferAuthAction.h in Headers */,
-				A7918FB0240CF4AE002011CA /* MTNetworkUsageManager.h in Headers */,
-				A7918F47240CF48A002011CA /* MTMsgsStateInfoMessage.h in Headers */,
-				A7918FD3240CF4AF002011CA /* MTPreparedMessage.h in Headers */,
-				A7918F57240CF48A002011CA /* MTDiscoverConnectionSignals.h in Headers */,
-				A7918FC0240CF4AF002011CA /* MTContext.h in Headers */,
-				A7918F35240CF48A002011CA /* MTMsgContainerMessage.h in Headers */,
-				A7918FC4240CF4AF002011CA /* MTMessageEncryptionKey.h in Headers */,
-				A7918F2C240CF48A002011CA /* MTDestroySessionResponseMessage.h in Headers */,
-				A7918F3E240CF48A002011CA /* MTBadMsgNotificationMessage.h in Headers */,
-				A7918F00240CF48A002011CA /* MTMsgResendReqMessage.h in Headers */,
-				A7918EFE240CF48A002011CA /* MTTcpConnection.h in Headers */,
-				A7918FC7240CF4AF002011CA /* MTQueue.h in Headers */,
-				A7918F51240CF48A002011CA /* MTAes.h in Headers */,
-				A7918FA3240CF4AE002011CA /* MTMessageService.h in Headers */,
-				A7918FA8240CF4AE002011CA /* MTNetworkUsageCalculationInfo.h in Headers */,
-				A7918F03240CF48A002011CA /* MTServerDhParamsMessage.h in Headers */,
-				A7918FD9240CF4AF002011CA /* MTDatacenterVerificationData.h in Headers */,
-				A7918EF9240CF48A002011CA /* MTTransportSchemeStats.h in Headers */,
-				A7918F06240CF48A002011CA /* MTDropRpcResultMessage.h in Headers */,
-				A7918FDA240CF4AF002011CA /* MTExportedAuthorizationData.h in Headers */,
-				A7918FA4240CF4AE002011CA /* MTLogging.h in Headers */,
-				A7918FAF240CF4AE002011CA /* MTAtomic.h in Headers */,
-				A7918FCA240CF4AF002011CA /* MTDatacenterSaltInfo.h in Headers */,
-				A7918FB3240CF4AE002011CA /* MTSerialization.h in Headers */,
-				A7918F07240CF48A002011CA /* MTBufferReader.h in Headers */,
-				A7918FDB240CF4AF002011CA /* MTInputStream.h in Headers */,
-				A7918FA5240CF4AE002011CA /* MTDatacenterAddressSet.h in Headers */,
-				A7918EFD240CF48A002011CA /* MTSetClientDhParamsResponseMessage.h in Headers */,
-				A7918EEF240CF48A002011CA /* PingFoundation.h in Headers */,
-				A7918F58240CF48A002011CA /* MTNewSessionCreatedMessage.h in Headers */,
-				A7918FBC240CF4AF002011CA /* MTTcpTransport.h in Headers */,
-				A7918FCD240CF4AF002011CA /* MTOutputStream.h in Headers */,
-				A7918FA1240CF4AE002011CA /* MTDatacenterAuthInfo.h in Headers */,
-				A7918F19240CF48A002011CA /* MTResPqMessage.h in Headers */,
-				A7918FAA240CF4AE002011CA /* MTTimeSyncMessageService.h in Headers */,
-				A7918FB4240CF4AE002011CA /* MTRequestContext.h in Headers */,
+				D0179F37250BCB7700599140 /* MTTransportTransaction.h in Headers */,
+				D0179F1F250BCB7700599140 /* MTSerialization.h in Headers */,
+				D0179F29250BCB7700599140 /* MTProxyConnectivity.h in Headers */,
+				D0179F0F250BCB7700599140 /* MTRequestMessageService.h in Headers */,
+				D0179F1D250BCB7700599140 /* MTProtoPersistenceInterface.h in Headers */,
+				D0179F11250BCB7700599140 /* AFHTTPRequestOperation.h in Headers */,
+				D0179F2E250BCB7700599140 /* MTBackupAddressSignals.h in Headers */,
+				D0179F21250BCB7700599140 /* MTApiEnvironment.h in Headers */,
+				D0179F27250BCB7700599140 /* MTDatacenterTransferAuthAction.h in Headers */,
+				D0179F2A250BCB7700599140 /* MTProtoEngine.h in Headers */,
+				D0179F34250BCB7700599140 /* MTOutgoingMessage.h in Headers */,
+				D0179F45250BCB7700599140 /* MTNetworkUsageManager.h in Headers */,
+				D0179F1E250BCB7700599140 /* MTOutputStream.h in Headers */,
+				D0179F48250BCB7700599140 /* MTFileBasedKeychain.h in Headers */,
+				D0179F3A250BCB7700599140 /* MTExportedAuthorizationData.h in Headers */,
+				D0179F41250BCB7700599140 /* MTTimer.h in Headers */,
+				D0179F26250BCB7700599140 /* MTTransport.h in Headers */,
+				D0179F43250BCB7700599140 /* MTMessageEncryptionKey.h in Headers */,
+				D0179F22250BCB7700599140 /* MTKeychain.h in Headers */,
+				D0179F2F250BCB7700599140 /* MTTime.h in Headers */,
+				D0179F2C250BCB7700599140 /* MTBindKeyMessageService.h in Headers */,
+				D0179F1C250BCB7700599140 /* MTNetworkAvailability.h in Headers */,
+				D0179F23250BCB7700599140 /* MTLogging.h in Headers */,
+				D0179F14250BCB7700599140 /* MTTimeSyncMessageService.h in Headers */,
+				D0179F44250BCB7700599140 /* MTEncryption.h in Headers */,
+				D0179F13250BCB7700599140 /* AFURLConnectionOperation.h in Headers */,
+				D0179F38250BCB7700599140 /* MTSessionInfo.h in Headers */,
+				D0179F18250BCB7700599140 /* MTProtoInstance.h in Headers */,
+				D0179F17250BCB7700599140 /* MTResendMessageService.h in Headers */,
+				D0179F12250BCB7700599140 /* MTSubscriber.h in Headers */,
+				D0179F3E250BCB7700599140 /* MTInternalId.h in Headers */,
+				D0179F19250BCB7700599140 /* MTRpcError.h in Headers */,
+				D0179F36250BCB7700599140 /* MTRequest.h in Headers */,
+				D0179F25250BCB7700599140 /* MTDatacenterAuthMessageService.h in Headers */,
+				D0179F24250BCB7700599140 /* MTMessageTransaction.h in Headers */,
+				D0179F28250BCB7700599140 /* MTProto.h in Headers */,
+				D0179F3F250BCB7700599140 /* MTDatacenterSaltInfo.h in Headers */,
+				D0179F39250BCB7700599140 /* MTRequestErrorContext.h in Headers */,
+				D0179F4B250BCB7700599140 /* MTInputStream.h in Headers */,
+				D0179F1B250BCB7700599140 /* MTSignal.h in Headers */,
+				D0179F0E250BCB7700599140 /* MTDisposable.h in Headers */,
+				D0179F20250BCB7700599140 /* MTContext.h in Headers */,
+				D0179F42250BCB7700599140 /* MTHttpRequestOperation.h in Headers */,
+				D0179F10250BCB7700599140 /* MtProtoKit.h in Headers */,
+				D0179F15250BCB7700599140 /* MTNetworkUsageCalculationInfo.h in Headers */,
+				D0179F40250BCB7700599140 /* MTTimeFixContext.h in Headers */,
+				D0179F3C250BCB7700599140 /* MTDatacenterAuthInfo.h in Headers */,
+				D0179F31250BCB7700599140 /* MTMessageService.h in Headers */,
+				D0179F16250BCB7700599140 /* MTDatacenterAddressListData.h in Headers */,
+				D0179F46250BCB7700599140 /* MTTcpTransport.h in Headers */,
+				D0179F2B250BCB7700599140 /* MTDatacenterAuthAction.h in Headers */,
+				D0179F33250BCB7700599140 /* MTPreparedMessage.h in Headers */,
+				D0179F32250BCB7700599140 /* MTGzip.h in Headers */,
+				D0179F35250BCB7700599140 /* MTQueue.h in Headers */,
+				D0179F49250BCB7700599140 /* MTTransportScheme.h in Headers */,
+				D0179F1A250BCB7700599140 /* MTDropResponseContext.h in Headers */,
+				D0179F47250BCB7700599140 /* MTAtomic.h in Headers */,
+				D0179F4C250BCB7700599140 /* MTDatacenterAddressSet.h in Headers */,
+				D0179F3B250BCB7700599140 /* MTDatacenterVerificationData.h in Headers */,
+				D0179F2D250BCB7700599140 /* MTIncomingMessage.h in Headers */,
+				D0179F3D250BCB7700599140 /* MTRequestContext.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -864,96 +845,100 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7918F5D240CF48A002011CA /* MTAes.m in Sources */,
-				A7918F3D240CF48A002011CA /* MTDatacenterAddress.m in Sources */,
-				A7918EF5240CF48A002011CA /* MTResPqMessage.m in Sources */,
-				A7918F4C240CF48A002011CA /* MTDNS.m in Sources */,
-				A7918EF8240CF48A002011CA /* MTBufferReader.m in Sources */,
-				A7918F27240CF48A002011CA /* MTHttpRequestOperation.m in Sources */,
-				A7918F1F240CF48A002011CA /* MTMessageTransaction.m in Sources */,
-				A7918F32240CF48A002011CA /* MTTcpTransport.m in Sources */,
-				A7918EF2240CF48A002011CA /* MTMsgResendReqMessage.m in Sources */,
-				A7918F31240CF48A002011CA /* MTMessageEncryptionKey.m in Sources */,
-				A7918F4E240CF48A002011CA /* MTTransportScheme.m in Sources */,
-				A7918F0B240CF48A002011CA /* MTTime.m in Sources */,
-				A7918F3A240CF48A002011CA /* MTBuffer.m in Sources */,
-				A7918EED240CF48A002011CA /* MTDisposable.m in Sources */,
-				A7918F0E240CF48A002011CA /* MTDiscoverConnectionSignals.m in Sources */,
-				A7918EFA240CF48A002011CA /* MTTcpConnection.m in Sources */,
-				A7918F2F240CF48A002011CA /* MTApiEnvironment.m in Sources */,
-				A7918F1C240CF48A002011CA /* MTRpcResultMessage.m in Sources */,
-				A7918F1A240CF48A002011CA /* MTEncryption.m in Sources */,
-				A7918F24240CF48A002011CA /* MTTimer.m in Sources */,
-				A7918EFB240CF48A002011CA /* MTTransportSchemeStats.m in Sources */,
-				A7918F2A240CF48A002011CA /* AFHTTPRequestOperation.m in Sources */,
-				A7918F02240CF48A002011CA /* MTTransport.m in Sources */,
-				A7918F1E240CF48A002011CA /* MTNewSessionCreatedMessage.m in Sources */,
-				A7918F59240CF48A002011CA /* MTResendMessageService.m in Sources */,
-				A7918EFC240CF48A002011CA /* MTRpcError.m in Sources */,
-				A7918F5C240CF48A002011CA /* MTFileBasedKeychain.m in Sources */,
-				A7918EF3240CF48A002011CA /* MTSetClientDhParamsResponseMessage.m in Sources */,
-				A7918F05240CF48A002011CA /* MTDiscoverDatacenterAddressAction.m in Sources */,
-				A7918F4A240CF48A002011CA /* MTMsgsStateInfoMessage.m in Sources */,
-				A7918EF7240CF48A002011CA /* MTOutgoingMessage.m in Sources */,
-				A7918F28240CF48A002011CA /* MTProxyConnectivity.m in Sources */,
-				A7918EEC240CF48A002011CA /* MTTimeFixContext.m in Sources */,
-				A7918F01240CF48A002011CA /* MTDatacenterAuthInfo.m in Sources */,
-				A7918F08240CF48A002011CA /* GCDAsyncSocket.m in Sources */,
-				A7918F25240CF48A002011CA /* MTIncomingMessage.m in Sources */,
-				A7918EEE240CF48A002011CA /* MTDropRpcResultMessage.m in Sources */,
-				A7918F15240CF48A002011CA /* MTContext.m in Sources */,
-				A7918F49240CF48A002011CA /* MTDatacenterAddressSet.m in Sources */,
-				A7918F0D240CF48A002011CA /* MTBackupAddressSignals.m in Sources */,
-				A7918F39240CF48A002011CA /* MTLogging.m in Sources */,
-				A7918F2D240CF48A002011CA /* MTRequestContext.m in Sources */,
-				A7918F46240CF48A002011CA /* MTServerDhParamsMessage.m in Sources */,
-				A7918F50240CF48A002011CA /* MTDropResponseContext.m in Sources */,
-				A7918F48240CF48A002011CA /* MTMessage.m in Sources */,
-				A7918F04240CF48A002011CA /* MTPongMessage.m in Sources */,
-				A7918F56240CF48A002011CA /* MTAtomic.m in Sources */,
-				A7918F61240CF48A002011CA /* MTPreparedMessage.m in Sources */,
-				A7918F17240CF48A002011CA /* MTDatacenterAuthAction.m in Sources */,
-				A7918EE9240CF48A002011CA /* MTServerDhInnerDataMessage.m in Sources */,
-				A7918F5F240CF48A002011CA /* MTSignal.m in Sources */,
-				A7918F4F240CF48A002011CA /* MTNetworkAvailability.m in Sources */,
-				A7918EF0240CF48A002011CA /* MTGzip.m in Sources */,
-				A7918EE8240CF48A002011CA /* MTOutputStream.m in Sources */,
-				A7918F5A240CF48A002011CA /* MTMsgDetailedInfoMessage.m in Sources */,
-				A7918F14240CF48A002011CA /* MTTimeSyncMessageService.m in Sources */,
-				A7918F21240CF48A002011CA /* MTExportedAuthorizationData.m in Sources */,
-				A7918EF4240CF48A002011CA /* PingFoundation.m in Sources */,
-				A7918F33240CF48A002011CA /* MTDatacenterAuthMessageService.m in Sources */,
-				A7918F52240CF48A002011CA /* MTKeychain.m in Sources */,
-				A7918F4D240CF48A002011CA /* MTMsgsAckMessage.m in Sources */,
-				A7918F64240CF48A002011CA /* MTProto.m in Sources */,
-				A7918F18240CF48A002011CA /* AFURLConnectionOperation.m in Sources */,
-				A7918F0C240CF48A002011CA /* MTRequestErrorContext.m in Sources */,
-				A7918F40240CF48A002011CA /* MTNetworkUsageManager.m in Sources */,
-				A7918F44240CF48A002011CA /* MTBindingTempAuthKeyContext.m in Sources */,
-				A7918F62240CF48A002011CA /* MTDatacenterAddressListData.m in Sources */,
-				A7918F29240CF48A002011CA /* MTTransportTransaction.m in Sources */,
-				A7918F38240CF48A002011CA /* MTInternalMessageParser.m in Sources */,
-				A7918F0F240CF48A002011CA /* MTMsgAllInfoMessage.m in Sources */,
-				A7918F53240CF48A002011CA /* MTDatacenterSaltInfo.m in Sources */,
-				A7918F41240CF48A002011CA /* MTConnectionProbing.m in Sources */,
-				A7918F2E240CF48A002011CA /* MTBadMsgNotificationMessage.m in Sources */,
-				A7918F55240CF48A002011CA /* MTMsgContainerMessage.m in Sources */,
-				A7918F20240CF48A002011CA /* MTRsa.m in Sources */,
-				A7918EF1240CF48A002011CA /* MTPingMessage.m in Sources */,
-				A7918F09240CF48A002011CA /* MTBag.m in Sources */,
-				A7918F42240CF48A002011CA /* MTDatacenterVerificationData.m in Sources */,
-				A7918F4B240CF48A002011CA /* MTSessionInfo.m in Sources */,
-				A7918F3C240CF48A002011CA /* MTRequestMessageService.m in Sources */,
-				A7918F45240CF48A002011CA /* MTQueue.m in Sources */,
-				A7918F43240CF48A002011CA /* MTDestroySessionResponseMessage.m in Sources */,
-				A7918F3B240CF48A002011CA /* MTRequest.m in Sources */,
-				A7918F3F240CF48A002011CA /* MTNetworkUsageCalculationInfo.m in Sources */,
-				A7918EFF240CF48A002011CA /* MTDatacenterTransferAuthAction.m in Sources */,
-				A7918F30240CF48A002011CA /* MTTcpConnectionBehaviour.m in Sources */,
-				A7918F16240CF48A002011CA /* MTSubscriber.m in Sources */,
-				A7918EF6240CF48A002011CA /* MTInputStream.m in Sources */,
-				A7918F1B240CF48A002011CA /* MTMsgsStateReqMessage.m in Sources */,
-				A7918F34240CF48A002011CA /* MTFutureSaltsMessage.m in Sources */,
+				D0179E45250BC54600599140 /* MTRsa.m in Sources */,
+				D0179E11250BC54600599140 /* AFHTTPRequestOperation.m in Sources */,
+				D0179E3B250BC54600599140 /* MTTransport.m in Sources */,
+				D0179DDD250BC54600599140 /* MTOutgoingMessage.m in Sources */,
+				D0179DCE250BC54600599140 /* MTIncomingMessage.m in Sources */,
+				D0179E0A250BC54600599140 /* MTTcpConnectionBehaviour.m in Sources */,
+				D0179DCA250BC54600599140 /* MTBuffer.m in Sources */,
+				D0179E20250BC54600599140 /* MTAes.m in Sources */,
+				D0179E0C250BC54600599140 /* AFURLConnectionOperation.m in Sources */,
+				D0179DF4250BC54600599140 /* MTExportedAuthorizationData.m in Sources */,
+				D0179E46250BC54600599140 /* MTMsgContainerMessage.m in Sources */,
+				D0179DCB250BC54600599140 /* MTBackupAddressSignals.m in Sources */,
+				D0179DF3250BC54600599140 /* MTRequestContext.m in Sources */,
+				D0179DE1250BC54600599140 /* MTMsgResendReqMessage.m in Sources */,
+				D0179E00250BC54600599140 /* MTTransportSchemeStats.m in Sources */,
+				D0179DF5250BC54600599140 /* MTRequestErrorContext.m in Sources */,
+				D0179DE9250BC54600599140 /* MTDatacenterSaltInfo.m in Sources */,
+				D0179DE5250BC54600599140 /* MTEncryption.m in Sources */,
+				D0179E0E250BC54600599140 /* MTServerDhParamsMessage.m in Sources */,
+				D0179E3A250BC54600599140 /* MTDatacenterTransferAuthAction.m in Sources */,
+				D0179E35250BC54600599140 /* MTRpcResultMessage.m in Sources */,
+				D0179E39250BC54600599140 /* MTMsgsStateInfoMessage.m in Sources */,
+				D0179DD4250BC54600599140 /* MTTransportTransaction.m in Sources */,
+				D0179DD9250BC54600599140 /* MTResPqMessage.m in Sources */,
+				D0179E37250BC54600599140 /* MTProxyConnectivity.m in Sources */,
+				D0179DDE250BC54600599140 /* MTConnectionProbing.m in Sources */,
+				D0179E28250BC54600599140 /* MTContext.m in Sources */,
+				D0179DE2250BC54600599140 /* MTTcpTransport.m in Sources */,
+				D0179E08250BC54600599140 /* MTAtomic.m in Sources */,
+				D0179DD2250BC54600599140 /* MTDatacenterAuthAction.m in Sources */,
+				D0179E18250BC54600599140 /* MTProtoInstance.m in Sources */,
+				D0179DC7250BC54600599140 /* MTGzip.m in Sources */,
+				D0179E03250BC54600599140 /* MTTransportScheme.m in Sources */,
+				D0179DFA250BC54600599140 /* MTDatacenterAddressSet.m in Sources */,
+				D0179E22250BC54600599140 /* MTDatacenterAddressListData.m in Sources */,
+				D0179DF7250BC54600599140 /* MTMsgsAckMessage.m in Sources */,
+				D0179DF6250BC54600599140 /* MTSessionInfo.m in Sources */,
+				D0179E29250BC54600599140 /* MTPingMessage.m in Sources */,
+				D0179E26250BC54600599140 /* MTApiEnvironment.m in Sources */,
+				D0179E42250BC54600599140 /* MTLogging.m in Sources */,
+				D0179DD0250BC54600599140 /* MTBindKeyMessageService.m in Sources */,
+				D0179DE0250BC54600599140 /* MTBindingTempAuthKeyContext.m in Sources */,
+				D0179DFD250BC54600599140 /* MTInputStream.m in Sources */,
+				D0179DE4250BC54600599140 /* MTMessageEncryptionKey.m in Sources */,
+				D0179E1A250BC54600599140 /* MTRpcError.m in Sources */,
+				D0179DC9250BC54600599140 /* MTBag.m in Sources */,
+				D0179E0B250BC54600599140 /* MTTimeSyncMessageService.m in Sources */,
+				D0179E14250BC54600599140 /* MTDisposable.m in Sources */,
+				D0179E2B250BC54600599140 /* MTDiscoverConnectionSignals.m in Sources */,
+				D0179DD6250BC54600599140 /* MTRequest.m in Sources */,
+				D0179DF2250BC54600599140 /* MTDatacenterAuthInfo.m in Sources */,
+				D0179DF0250BC54600599140 /* MTDatacenterVerificationData.m in Sources */,
+				D0179E31250BC54600599140 /* MTNetworkAvailability.m in Sources */,
+				D0179DE3250BC54600599140 /* MTNetworkUsageManager.m in Sources */,
+				D0179E07250BC54600599140 /* MTFileBasedKeychain.m in Sources */,
+				D0179E3E250BC54600599140 /* MTMessage.m in Sources */,
+				D0179E16250BC54600599140 /* MTDropResponseContext.m in Sources */,
+				D0179E3C250BC54600599140 /* MTMessageTransaction.m in Sources */,
+				D0179E25250BC54600599140 /* MTKeychain.m in Sources */,
+				D0179DEF250BC54600599140 /* MTServerDhInnerDataMessage.m in Sources */,
+				D0179E13250BC54600599140 /* PingFoundation.m in Sources */,
+				D0179DFB250BC54600599140 /* MTInternalMessageParser.m in Sources */,
+				D0179E36250BC54600599140 /* MTProtoEngine.m in Sources */,
+				D0179DDC250BC54600599140 /* MTQueue.m in Sources */,
+				D0179DC8250BC54600599140 /* MTTime.m in Sources */,
+				D0179DEC250BC54600599140 /* MTTimeFixContext.m in Sources */,
+				D0179E23250BC54600599140 /* MTNetworkUsageCalculationInfo.m in Sources */,
+				D0179E10250BC54600599140 /* MTSubscriber.m in Sources */,
+				D0179DE6250BC54600599140 /* MTHttpRequestOperation.m in Sources */,
+				D0179E30250BC54600599140 /* MTOutputStream.m in Sources */,
+				D0179DC6250BC54600599140 /* MTPreparedMessage.m in Sources */,
+				D0179E3D250BC54600599140 /* MTDatacenterAuthMessageService.m in Sources */,
+				D0179E1C250BC54600599140 /* MTMsgDetailedInfoMessage.m in Sources */,
+				D0179E1F250BC54600599140 /* MTBadMsgNotificationMessage.m in Sources */,
+				D0179DEE250BC54600599140 /* MTMsgAllInfoMessage.m in Sources */,
+				D0179E1B250BC54600599140 /* MTResendMessageService.m in Sources */,
+				D0179E1D250BC54600599140 /* MTDiscoverDatacenterAddressAction.m in Sources */,
+				D0179DFF250BC54600599140 /* MTDatacenterAddress.m in Sources */,
+				D0179E15250BC54600599140 /* MTRequestMessageService.m in Sources */,
+				D0179DE8250BC54600599140 /* MTTcpConnection.m in Sources */,
+				D0179E04250BC54600599140 /* MTQueueLocalObject.m in Sources */,
+				D0179E2E250BC54600599140 /* MTDropRpcResultMessage.m in Sources */,
+				D0179E32250BC54600599140 /* MTSignal.m in Sources */,
+				D0179E2D250BC54600599140 /* MTSetClientDhParamsResponseMessage.m in Sources */,
+				D0179DDF250BC54600599140 /* MTDestroySessionResponseMessage.m in Sources */,
+				D0179E43250BC54600599140 /* MTMsgsStateReqMessage.m in Sources */,
+				D0179DD3250BC54600599140 /* GCDAsyncSocket.m in Sources */,
+				D0179E3F250BC54600599140 /* MTDNS.m in Sources */,
+				D0179E0D250BC54600599140 /* MTFutureSaltsMessage.m in Sources */,
+				D0179DE7250BC54600599140 /* MTTimer.m in Sources */,
+				D0179DCD250BC54600599140 /* MTPongMessage.m in Sources */,
+				D0179E21250BC54600599140 /* MTNewSessionCreatedMessage.m in Sources */,
+				D0179E38250BC54600599140 /* MTProto.m in Sources */,
+				D0179E41250BC54600599140 /* MTBufferReader.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1028,7 +1013,7 @@
 					"$(inherited)",
 					"BETA=1",
 				);
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1118,7 +1103,7 @@
 					"$(inherited)",
 					"BETA=1",
 				);
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1208,7 +1193,7 @@
 					"$(inherited)",
 					"BETA=1",
 				);
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1287,7 +1272,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = APPSTORE;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1365,7 +1350,7 @@
 				FRAMEWORK_VERSION = A;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = STABLE;
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
@@ -1452,7 +1437,7 @@
 					"DEBUG=1",
 					"BETA=1",
 				);
-				HEADER_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "$PROJECT_DIR/../../submodules/telegram-ios/submodules/MtProtoKit/PublicHeaders";
 				INFOPLIST_FILE = MtProtoKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";

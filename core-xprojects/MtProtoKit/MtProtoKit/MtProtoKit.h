@@ -20,7 +20,7 @@ FOUNDATION_EXPORT const unsigned char MtProtoKitVersionString[];
 
 #import <MtProtoKit/MTTime.h>
 #import <MtProtoKit/MTTimer.h>
-#import <MtProtoKit/MTLogging.h>
+#import <MtProtoKit/MtLogging.h>
 #import <MtProtoKit/MTEncryption.h>
 #import <MtProtoKit/MTInternalId.h>
 #import <MtProtoKit/MTQueue.h>

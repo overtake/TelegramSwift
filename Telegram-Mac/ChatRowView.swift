@@ -210,6 +210,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                restoreHierarchyInteraction()
             }
+            
+            self.channelCommentsControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
+            self.channelCommentsBubbleSmallControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
+            self.channelCommentsBubbleControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
 
         }
     }
@@ -286,10 +290,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             control.set(background: contentColor, for: .Normal)
         }
         if let control = channelCommentsBubbleControl {
-            let background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
-            control.set(background: background, for: .Normal)
+            control.set(background: .clear, for: .Normal)
             control.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
             control.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
+        }
+        if let control = channelCommentsBubbleSmallControl {
+            control.set(background: item.presentation.chatServiceItemColor, for: .Normal)
         }
 
         
@@ -464,6 +470,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func updateMouse() {
         if let shareView = self.shareView, let item = item as? ChatRowItem {
             shareView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
+        }
+        if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
+            commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
         }
         if let likeControl = self.likeView, let item = item as? ChatRowItem {
             likeControl.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
@@ -799,7 +808,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return .zero
         }
         if item.isBubbled {
-            return NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, item.isStateOverlayLayout ? rightFrame.width + 10 : 0) : bubbleFrame.minX - shareView.frame.width - 10, bubbleFrame.maxY - (shareView.frame.height - 2) - (item.isVideoOrBigEmoji ? rightFrame.height + 14 : 0))
+            return NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - shareView.frame.width - 10, bubbleFrame.maxY - (shareView.frame.height))
         } else {
             return NSMakePoint(frame.width - 20.0 - shareView.frame.width, rightView.frame.maxY)
         }
@@ -971,7 +980,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return .zero
         }
         let size = commentsData.size(false, true)
-        return NSMakeRect(contentFrame.maxX + 10, rightFrame.minY - size.height - 10, size.width, size.height)
+        if item.isInstantVideo {
+            return NSMakeRect(rightFrame.maxX + 12, rightFrame.minY - size.height - 23, size.width, size.height)
+        }
+        return NSMakeRect(rightFrame.maxX + 19, rightFrame.minY - size.height - 15, size.width, size.height)
     }
     var channelCommentsFrame: CGRect {
         guard let item = item as? ChatRowItem, let commentsData = item.commentsData else {
@@ -990,8 +1002,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                 current = ChannelCommentsBubbleControl(frame: NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight))
                 
-                let background = item.presentation.chat.bubbleBackgroundColor(item.isIncoming, item.hasBubble)
-                current.set(background: background, for: .Normal)
+                current.set(background: .clear, for: .Normal)
                 current.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
                 current.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
                 
@@ -1017,10 +1028,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 current = channelCommentsBubbleSmallControl
             } else {
                 current = ChannelCommentsSmallControl(frame: CGRect(origin: .zero, size: data.size(false, true)))
-                
-                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
-                current.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
-                
+                current.set(background: item.presentation.chatServiceItemColor, for: .Normal)
+                current.change(opacity: 0, animated: animated)
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
             }
@@ -1061,7 +1070,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
-        
+
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {

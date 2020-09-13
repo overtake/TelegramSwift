@@ -623,9 +623,9 @@ final class ChatPollItemView : ChatRowView {
     
     override var contentFrameModifier: NSRect {
         guard let item = item as? ChatRowItem else {return NSZeroRect}
-        
         if item.isBubbled {
             var frame = bubbleFrame
+            frame.size.height = self.contentFrame.height
             frame.size.width -= item.additionBubbleInset
             frame.origin.y = super.contentFrameModifier.minY
             if item.isIncoming {

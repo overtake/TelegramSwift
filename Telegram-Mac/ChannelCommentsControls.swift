@@ -41,35 +41,36 @@ final class ChannelCommentsRenderData {
     }
     
     func size(_ bubbled: Bool, _ isOverlay: Bool = false) -> NSSize {
-        if let title = self.title {
-            var width: CGFloat = 0
-            var height: CGFloat = 0
-            if isOverlay {
-                let iconSize = theme.chat_comments_overlay.backingSize
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+        if isOverlay {
+            let iconSize = theme.chat_comments_overlay.backingSize
+            if let title = title {
                 width += title.0.size.width
                 width += 10
-                width = max(width, iconSize.width + 10)
-                height = max(self._title.string == "0" ? iconSize.height + 10 : iconSize.height + title.0.size.height + 10, width)
-            } else if bubbled {
-                width += title.0.size.width
-                width += (6 * 4) + 13
-                if peers.isEmpty {
-                    width += theme.icons.channel_comments_bubble.backingSize.width
-                } else {
-                    width += 19 * CGFloat(peers.count)
-                }
-                width += theme.icons.channel_comments_bubble_next.backingSize.width
-                height = ChatRowItem.channelCommentsBubbleHeight
+                width = max(width, 31)
+                height = max(iconSize.height + title.0.size.height + 10, width)
             } else {
-                width += title.0.size.width
-                width += 6
-                width += theme.icons.channel_comments_list.backingSize.width
-                height = ChatRowItem.channelCommentsHeight
+                width = 31
+                height = 31
             }
-            
-            return NSMakeSize(width, height)
+        } else if bubbled, let title = title {
+            width += title.0.size.width
+            width += (6 * 4) + 13
+            if peers.isEmpty {
+                width += theme.icons.channel_comments_bubble.backingSize.width
+            } else {
+                width += 19 * CGFloat(peers.count)
+            }
+            width += theme.icons.channel_comments_bubble_next.backingSize.width
+            height = ChatRowItem.channelCommentsBubbleHeight
+        } else if let title = title {
+            width += title.0.size.width
+            width += 6
+            width += theme.icons.channel_comments_list.backingSize.width
+            height = ChatRowItem.channelCommentsHeight
         }
-        return .zero
+        return NSMakeSize(width, height)
     }
 }
 
@@ -88,7 +89,7 @@ class ChannelCommentsBubbleControl: Control {
         if let render = renderData, let title = render.title {
             
             if render.drawBorder {
-                ctx.setFillColor(theme.colors.chatBackground.cgColor)
+                ctx.setFillColor(theme.colors.border.withAlphaComponent(0.4).cgColor)
                 ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
             }
             
@@ -228,14 +229,16 @@ final class ChannelCommentsSmallControl : Control {
         
         if let renderData = renderData {
             let size = theme.chat_comments_overlay.backingSize
-            var iconFrame = focus(size)
-            iconFrame.origin.y = 5
-            ctx.draw(theme.chat_comments_overlay, in: iconFrame)
-            
             if let title = renderData.title {
+                var iconFrame = focus(size)
+                iconFrame.origin.y = 5
+                ctx.draw(theme.chat_comments_overlay, in: iconFrame)
                 var titleFrame = focus(title.0.size)
                 titleFrame.origin.y = iconFrame.maxY
                 title.1.draw(titleFrame, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+            } else {
+                let iconFrame = focus(size)
+                ctx.draw(theme.chat_comments_overlay, in: iconFrame)
             }
         }
         
@@ -252,8 +255,6 @@ final class ChannelCommentsSmallControl : Control {
         }, for: .Click)
         
         layer?.cornerRadius = min(bounds.height, bounds.width) / 2
-        layer?.borderWidth = .borderSize
-        layer?.borderColor = theme.chatServiceItemTextColor.cgColor
         needsDisplay = true
     }
     

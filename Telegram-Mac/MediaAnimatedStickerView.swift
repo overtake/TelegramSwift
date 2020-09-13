@@ -186,17 +186,21 @@ class MediaAnimatedStickerView: ChatMediaContentView {
      
         
         let reference: FileMediaReference
-        
+        let mediaResource: MediaResourceReference
         if let message = parent {
             reference = FileMediaReference.message(message: MessageReference(message), media: file)
+            mediaResource = reference.resourceReference(file.resource)
         } else if let stickerReference = file.stickerReference {
             if file.resource is CloudStickerPackThumbnailMediaResource {
                 reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
             } else {
                 reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                mediaResource = reference.resourceReference(file.resource)
             }
         } else {
             reference = FileMediaReference.standalone(media: file)
+            mediaResource = reference.resourceReference(file.resource)
         }
         
         let data: Signal<MediaResourceData, NoError>
@@ -247,7 +251,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             self.thumbView.set(arguments: arguments)
         }
 
-        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(reference.media.resource)).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             

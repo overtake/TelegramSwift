@@ -724,6 +724,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             genericView.tableView.layer?.animateScaleSpring(from: 0.95, to: 1.00, duration: 0.4, removeOnCompletion: false, bounce: false)
 
         }
+        if let controller = mediaSearchController {
+            context.sharedContext.bindings.rootNavigation().removeImmediately(controller, upNext: false)
+        }
     }
     
     override func focusSearch(animated: Bool) {

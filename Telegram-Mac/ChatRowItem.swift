@@ -887,18 +887,50 @@ class ChatRowItem: TableRowItem {
         return 16
     }
     
+    var effectiveCommentMessage: Message? {
+        switch entry {
+        case let .MessageEntry(message, _, _, _, _, _, _):
+            return message
+        case let .groupedPhotos(entries, groupInfo: _):
+            return entries.first?.message
+        default:
+            return nil
+        }
+    }
     
     var channelHasCommentButton: Bool {
-        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if chatInteraction.mode == .scheduled {
+            return false
+        }
+        if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
             switch peer.info {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
-                    return true
+                    if message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
+                        switch chatInteraction.presentation.discussionGroupId {
+                        case .unknown:
+                            return false
+                        case .known:
+                            return true
+                        }
+                    }
+                    for attr in message.attributes {
+                        if let attr = attr as? ReplyThreadMessageAttribute {
+                            switch chatInteraction.presentation.discussionGroupId {
+                            case .unknown:
+                                return true
+                            case let .known(peerId):
+                                return attr.commentsPeerId == peerId
+                            }
+                        }
+                    }
+                    
                 }
             default:
                 break
             }
         }
+        
         return false
     }
     
@@ -909,10 +941,10 @@ class ChatRowItem: TableRowItem {
         if let commentsBubbleDataOverlay = _commentsBubbleDataOverlay {
             return commentsBubbleDataOverlay
         }
-        if !isStateOverlayLayout || hasBubble || chatInteraction.mode == .scheduled {
+        if !isStateOverlayLayout || hasBubble || !channelHasCommentButton {
             return nil
         }
-        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
             switch peer.info {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
@@ -939,13 +971,13 @@ class ChatRowItem: TableRowItem {
         if let commentsBubbleData = _commentsBubbleData {
             return commentsBubbleData
         }
-        if !isBubbled || chatInteraction.mode == .scheduled {
+        if !isBubbled || !channelHasCommentButton {
             return nil
         }
-        if isStateOverlayLayout, let media = message?.media.first, !media.isInteractiveMedia {
+        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia || (self is ChatVideoMessageItem) {
             return nil
         }
-        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
             switch peer.info {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
@@ -985,10 +1017,10 @@ class ChatRowItem: TableRowItem {
         if let commentsData = _commentsData {
             return commentsData
         }
-        if isBubbled || chatInteraction.mode == .scheduled {
+        if isBubbled || !channelHasCommentButton {
             return nil
         }
-        if let message = message, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
             switch peer.info {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
@@ -1482,8 +1514,10 @@ class ChatRowItem: TableRowItem {
                         fullDate = "\(author)\(fullDate)"
                     }
                 }
-                if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0, threadId == nil, let peer = peer, !peer.isChannel {
-                    replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
+                    if let peer = chatInteraction.peer, peer.isSupergroup {
+                        replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    }
                 }
                 
 //                if FastSettings.isTestLiked(message.id) {
@@ -1933,7 +1967,7 @@ class ChatRowItem: TableRowItem {
         rect.size.width = max(rect.size.width, forwardWidth + bubbleDefaultInnerInset)
         
         if let commentsBubbleData = commentsBubbleData {
-            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, isStateOverlayLayout).width)
+            rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)
         }
         return rect
     }

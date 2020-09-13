@@ -582,6 +582,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
             
             if state == .None {
+                updateTags([], presentation.search.searchImage)
                 
                 self.kitWindow?.removeAllHandlers(for: self)
                 self.kitWindow?.removeObserver(for: self)
