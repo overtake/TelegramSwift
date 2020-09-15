@@ -7063,6 +7063,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var channel_comments_overlay: CGImage {
+      if let image = cached.with({ $0["channel_comments_overlay"] }) {
+          return image
+      } else {
+          let image = _channel_comments_overlay()
+          _ = cached.modify { current in 
+              var current = current
+              current["channel_comments_overlay"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_replies_avatar: CGImage {
+      if let image = cached.with({ $0["chat_replies_avatar"] }) {
+          return image
+      } else {
+          let image = _chat_replies_avatar()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_replies_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7607,6 +7633,8 @@ final class TelegramIconsTheme {
   private let _channel_comments_bubble: ()->CGImage
   private let _channel_comments_bubble_next: ()->CGImage
   private let _channel_comments_list: ()->CGImage
+  private let _channel_comments_overlay: ()->CGImage
+  private let _chat_replies_avatar: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8151,7 +8179,9 @@ final class TelegramIconsTheme {
       chat_reply_count_overlay: @escaping()->CGImage,
       channel_comments_bubble: @escaping()->CGImage,
       channel_comments_bubble_next: @escaping()->CGImage,
-      channel_comments_list: @escaping()->CGImage
+      channel_comments_list: @escaping()->CGImage,
+      channel_comments_overlay: @escaping()->CGImage,
+      chat_replies_avatar: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8696,5 +8726,7 @@ final class TelegramIconsTheme {
       self._channel_comments_bubble = channel_comments_bubble
       self._channel_comments_bubble_next = channel_comments_bubble_next
       self._channel_comments_list = channel_comments_list
+      self._channel_comments_overlay = channel_comments_overlay
+      self._chat_replies_avatar = chat_replies_avatar
   }
 }

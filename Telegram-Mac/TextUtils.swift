@@ -47,6 +47,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 messageText = L10n.chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring
             } else if fileMedia.isVoice {
                 messageText = L10n.chatListVoice.nsstring
+                if !message.text.fixed.isEmpty {
+                    messageText = ("🎤" + " " + message.text.fixed).nsstring
+                }
             } else if fileMedia.isMusic  {
                 messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
             } else if fileMedia.isInstantVideo {
@@ -473,7 +476,9 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
             if user.phone == "42777" || user.phone == "42470" || user.phone == "4240004" {
                 return PeerStatusStringResult(title, .initialize(string: L10n.peerServiceNotifications,  color: theme.statusColor, font: theme.statusFont))
             }
-            if user.flags.contains(.isSupport) {
+            if user.id == repliesPeerId {
+                return PeerStatusStringResult(title, .initialize(string: L10n.peerRepliesNotifications,  color: theme.statusColor, font: theme.statusFont))
+            } else if user.flags.contains(.isSupport) {
                 return PeerStatusStringResult(title, .initialize(string: L10n.presenceSupport,  color: theme.statusColor, font: theme.statusFont))
             } else if let _ = user.botInfo {
                 return PeerStatusStringResult(title, .initialize(string: L10n.presenceBot,  color: theme.statusColor, font: theme.statusFont))

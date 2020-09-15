@@ -378,7 +378,7 @@
             return L10n.peerMediaLinks
         }
         if self.tagsValue == .music {
-            return L10n.peerMediaAudio
+            return L10n.peerMediaMusic
         }
         if self == .voice {
             return L10n.peerMediaVoice
@@ -1063,7 +1063,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .commonGroups && mode != .voice && externalSearchData == nil)
+        centerBar.updateSearchVisibility(mode != .commonGroups && externalSearchData == nil)
         
         
         if let controller = controller as? PeerMediaSearchable {
@@ -1166,7 +1166,7 @@
     }
     
     private func searchGroupUsers() {
-        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior.init(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }

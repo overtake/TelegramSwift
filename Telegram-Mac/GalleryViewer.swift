@@ -435,7 +435,7 @@ class GalleryViewer: NSResponder {
         
         disposable.set(transaction.start(next: { [weak self] transaction, selected in
             _ = self?.pager.merge(with: transaction, afterTransaction: {
-                self?.controls.update(self?.pager.selectedItem?.entry)
+                self?.controls.update(self?.pager.selectedItem)
             })
             self?.pager.selectedIndex.set(selected)
             self?.pager.set(index: selected, animated: false)
@@ -445,7 +445,7 @@ class GalleryViewer: NSResponder {
    
         self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
             guard let `self` = self else {return}
-            self.controls.update(self.pager.selectedItem?.entry)
+            self.controls.update(self.pager.selectedItem)
         }))
     }
     
@@ -480,14 +480,14 @@ class GalleryViewer: NSResponder {
             
             //self?.controls.index.set(.single((firstIndex + 1, totalCount)))
             self.pager.set(index: firstIndex, animated: false)
-            self.controls.update(self.pager.selectedItem?.entry)
+            self.controls.update(self.pager.selectedItem)
             return true
             
         })
         
         self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
             guard let `self` = self else {return}
-            self.controls.update(self.pager.selectedItem?.entry)
+            self.controls.update(self.pager.selectedItem)
         }))
         
         
@@ -513,21 +513,21 @@ class GalleryViewer: NSResponder {
             _ = self.pager.merge(with: UpdateTransition(deleted: [], inserted: inserted, updated: []))
             
             self.pager.set(index: firstIndex, animated: false)
-            self.controls.update(self.pager.selectedItem?.entry)
+            self.controls.update(self.pager.selectedItem)
             return true
             
             })
         
         self.indexDisposable.set((pager.selectedIndex.get() |> deliverOnMainQueue).start(next: { [weak self] selectedIndex in
             guard let `self` = self else {return}
-            self.controls.update(self.pager.selectedItem?.entry)
+            self.controls.update(self.pager.selectedItem)
         }))
         
         
     }
    
     
-    fileprivate convenience init(context: AccountContext, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false, chatMode: ChatMode? = nil) {
+    fileprivate convenience init(context: AccountContext, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, item: MGalleryItem? = nil, reversed: Bool = false, chatMode: ChatMode? = nil, contextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil)) {
         
         self.init(context: context, delegate, contentInteractions, type: type, reversed: reversed, chatMode: chatMode)
 
@@ -557,7 +557,6 @@ class GalleryViewer: NSResponder {
                 if tags == nil {
                    type = .alone
                 }
-                
                 let mode: ChatMode = chatMode ?? .history
                 
                 let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
@@ -565,7 +564,11 @@ class GalleryViewer: NSResponder {
                 case .history:
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                 case let .replyThread(threadId, _):
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.external(message.id.peerId, context.peerChannelMemberCategoriesContextsManager.replyThread(account: context.account, messageId: threadId)), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                    if threadId == message.id {
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                    } else {
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(threadMessageId: threadId, maxReadMessageId: nil), contextHolder: contextHolder), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                    }
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
                 }
@@ -714,9 +717,9 @@ class GalleryViewer: NSResponder {
             if let location = current.location {
                 let total = location.count
                 let current = reversed ? total - location.index : location.index
-                self.controls.update(self.pager.selectedItem?.entry)
+                self.controls.update(self.pager.selectedItem)
             } else  {
-                 self.controls.update(self.pager.selectedItem?.entry)
+                self.controls.update(self.pager.selectedItem)
             }
             
             
@@ -1267,10 +1270,10 @@ func closeGalleryViewer(_ animated: Bool) {
     viewer?.close(animated)
 }
 
-func showChatGallery(context: AccountContext, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false, chatMode: ChatMode? = nil) {
+func showChatGallery(context: AccountContext, message:Message, _ delegate:InteractionContentViewProtocol? = nil, _ contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType = .history, reversed: Bool = false, chatMode: ChatMode? = nil, contextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil)) {
     if viewer == nil {
         viewer?.clean()
-        let gallery = GalleryViewer(context: context, message: message, delegate, contentInteractions, type: type, reversed: reversed, chatMode: chatMode)
+        let gallery = GalleryViewer(context: context, message: message, delegate, contentInteractions, type: type, reversed: reversed, chatMode: chatMode, contextHolder: contextHolder)
         gallery.show()
     }
 }

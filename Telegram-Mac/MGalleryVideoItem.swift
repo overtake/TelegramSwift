@@ -55,8 +55,7 @@ class MGalleryVideoItem: MGalleryItem {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+        updateMagnifyDisposable.dispose()
     }
         
     override func singleView() -> NSView {
@@ -64,6 +63,7 @@ class MGalleryVideoItem: MGalleryItem {
         
     }
     private var isPausedGlobalPlayer: Bool = false
+    private let updateMagnifyDisposable = MetaDisposable()
     
     override func appear(for view: NSView?) {
         super.appear(for: view)
@@ -77,6 +77,15 @@ class MGalleryVideoItem: MGalleryItem {
         controller.play(startTime)
         controller.viewDidAppear(false)
         self.startTime = 0
+        
+        
+        updateMagnifyDisposable.set((magnify.get() |> deliverOnMainQueue).start(next: { [weak self] value in
+            if value < 1.0 {
+                _ = self?.hideControls(forceHidden: true)
+            } else {
+                _ = self?.unhideControls(forceUnhidden: true)
+            }
+        }))
     }
     
     override var maxMagnify: CGFloat {
@@ -92,6 +101,7 @@ class MGalleryVideoItem: MGalleryItem {
             controller.pause()
         }
         controller.viewDidDisappear(false)
+        updateMagnifyDisposable.set(nil)
         playAfter = false
     }
     
@@ -176,8 +186,11 @@ class MGalleryVideoItem: MGalleryItem {
         return pagerSize
     }
     
-    func hideControls() -> Bool {
-        return controller.hideControlsIfNeeded()
+    func hideControls(forceHidden: Bool = false) -> Bool {
+        return controller.hideControlsIfNeeded(forceHidden)
+    }
+    func unhideControls(forceUnhidden: Bool = true) -> Bool {
+        return controller.unhideControlsIfNeeded(forceUnhidden)
     }
     
     override func toggleFullScreen() {

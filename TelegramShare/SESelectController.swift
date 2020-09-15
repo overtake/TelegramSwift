@@ -531,7 +531,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                             case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
-                                        if peer.canSendMessage {
+                                        if peer.canSendMessage(false) {
                                             entries.append(.plain(peer,id))
                                             contains[peer.id] = peer
                                         }
@@ -604,7 +604,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                    
                     
                     for peer in peers {
-                        if peer.canSendMessage, !contains.contains(peer.id) {
+                        if peer.canSendMessage(false), !contains.contains(peer.id) {
                             let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
                             entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
                             contains.insert(peer.id)

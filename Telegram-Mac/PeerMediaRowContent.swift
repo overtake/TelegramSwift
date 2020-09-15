@@ -34,7 +34,7 @@ class PeerMediaRowItem: GeneralRowItem {
     init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         self.entry = object
         self.interface = interface
-        if case let .messageEntry(message, automaticDownload, _) = object {
+        if case let .messageEntry(message, _, automaticDownload, _) = object {
             self.message = message
             self.automaticDownload = automaticDownload
         } else {

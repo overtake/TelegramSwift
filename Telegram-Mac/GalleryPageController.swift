@@ -31,6 +31,10 @@ fileprivate class GMagnifyView : MagnifyView  {
         return true
     }
     
+    override func scrollWheel(with event: NSEvent) {
+        superview?.scrollWheel(with: event)
+    }
+    
     func updateStatus(_ status: Signal<MediaResourceStatus, NoError>) {
         statusDisposable.set((status |> deliverOnMainQueue).start(next: { [weak self] status in
             self?.updateProgress(status)
@@ -169,6 +173,10 @@ private final class PageController : NSPageController {
         var bp:Int = 0
         bp += 1
     }
+    
+    override func scrollWheel(with event: NSEvent) {
+        super.scrollWheel(with: event)
+    }
 }
 
 class GalleryPageController : NSObject, NSPageControllerDelegate {
@@ -238,7 +246,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         _prev.set(background: .clear, for: .Normal)
         _next.set(background: .clear, for: .Normal)
 
-       
         
         _prev.frame = NSMakeRect(0, 0, 60, frame.height)
         _next.frame = NSMakeRect(frame.width - 60, 0, 60, frame.height)

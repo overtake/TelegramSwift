@@ -304,6 +304,9 @@ class ChatListRowItem: TableRowItem {
     var isSavedMessage: Bool {
         return peer?.id == context.peerId
     }
+    var isRepliesChat: Bool {
+        return peer?.id == repliesPeerId
+    }
     
     
     
@@ -615,7 +618,7 @@ class ChatListRowItem: TableRowItem {
             self.mentionsCount = nil
         }
         
-        if let peer = peer, peer.id != context.peerId {
+        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
             self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil)
         } else {
             self.photo = .Empty

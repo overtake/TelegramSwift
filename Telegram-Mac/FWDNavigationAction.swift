@@ -26,7 +26,7 @@ class FWDNavigationAction: NavigationModalAction {
     
     override func isInvokable(for value:Any) -> Bool {
         if let value = value as? Peer {
-            return value.canSendMessage
+            return value.canSendMessage(false)
         }
         return true
     }

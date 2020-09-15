@@ -19,10 +19,6 @@ enum PeerMediaSharedEntryStableId : Hashable {
     case emptySearch
     case date(MessageIndex)
     case sectionId(MessageIndex)
-    var hashValue: Int {
-        return 0
-    }
-    
 }
 
 private func bestGeneralViewType(_ array:[PeerMediaSharedEntry], for item: PeerMediaSharedEntry) -> GeneralViewType {
@@ -41,13 +37,13 @@ private func bestGeneralViewType(_ array:[PeerMediaSharedEntry], for item: PeerM
 }
 
 enum PeerMediaSharedEntry : Comparable, Identifiable {
-    case messageEntry(Message, AutomaticMediaDownloadSettings, GeneralViewType)
+    case messageEntry(Message, [Message], AutomaticMediaDownloadSettings, GeneralViewType)
     case emptySearchEntry(Bool)
     case date(MessageIndex)
     case sectionId(MessageIndex)
     var stableId: AnyHashable {
         switch self {
-        case let .messageEntry(message, _, _):
+        case let .messageEntry(message, _, _, _):
             return PeerMediaSharedEntryStableId.messageId(message.id)
         case let .date(index):
             return PeerMediaSharedEntryStableId.date(index)
@@ -64,7 +60,7 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
             return index
         case let .sectionId(index):
             return index
-        case let .messageEntry(message, _, _):
+        case let .messageEntry(message, _, _, _):
             return MessageIndex(message).predecessor()
         case .emptySearchEntry:
             return MessageIndex.absoluteLowerBound()
@@ -73,7 +69,7 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
     
     var message:Message? {
         switch self {
-        case let .messageEntry(message, _, _):
+        case let .messageEntry(message, _, _, _):
             return message
         default:
             return nil
@@ -130,7 +126,7 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
             let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
             tempItems.append((.date(index), .sectionId(index.successor())))
         }
-        tempItems.append((.messageEntry(message, update.automaticDownload, .singleItem), nil))
+        tempItems.append((.messageEntry(message, isExternalSearch ? update.messages : [], update.automaticDownload, .singleItem), nil))
 
     }
     
@@ -170,7 +166,7 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
         
         for item in group.items {
             switch item {
-            case let .messageEntry(message, settings, _):
+            case let .messageEntry(message, messages, settings, _):
                 var viewType = bestGeneralViewType(group.items, for: item)
                 
                 if i == 0, item == group.items.first {
@@ -183,7 +179,7 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
                     }
                 }
                 
-                converted.append(.messageEntry(message, settings, viewType))
+                converted.append(.messageEntry(message, messages, settings, viewType))
             default:
                 fatalError()
             }
@@ -216,7 +212,7 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
     let (removed,inserted,updated) = proccessEntries(fromView, right: toView, { entry -> TableRowItem in
         
         switch entry.entry {
-        case let .messageEntry(message, _, viewType):
+        case let .messageEntry(message, _, _, viewType):
             if tags == .file, message.media.first is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, entry.entry, viewType: viewType)
             } else if tags == .webPage {

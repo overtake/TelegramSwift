@@ -22,7 +22,7 @@ class ShareInlineResultNavigationAction: NavigationModalAction {
     }
     
     override func isInvokable(for value:Any) -> Bool {
-        if let value = value as? Peer, value.canSendMessage {
+        if let value = value as? Peer, value.canSendMessage(false) {
             return true
         }
         return false

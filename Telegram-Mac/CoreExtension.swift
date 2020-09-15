@@ -482,6 +482,15 @@ public extension Message {
         return nil
     }
     
+    var replyThread: ReplyThreadMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ReplyThreadMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     func isCrosspostFromChannel(account: Account) -> Bool {
         
         var sourceReference: SourceReferenceMessageAttribute?
@@ -636,7 +645,7 @@ public extension Message {
     }
     
     func possibilityForwardTo(_ peer:Peer) -> Bool {
-        if !peer.canSendMessage {
+        if !peer.canSendMessage(false) {
             return false
         } else if let peer = peer as? TelegramChannel {
             if let media = media.first, !(media is TelegramMediaWebpage) {
@@ -858,13 +867,29 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
     return false
 }
 
-func canReplyMessage(_ message: Message, peerId: PeerId) -> Bool {
+func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool {
     if let peer = messageMainPeer(message) {
         if message.isScheduledMessage {
             return false
         }
-        if peer.canSendMessage, peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
-            return true
+        if peerId == message.id.peerId, !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) && (message.id.namespace != Namespaces.Message.Local || message.id.peerId.namespace == Namespaces.Peer.SecretChat) {
+            
+            switch mode {
+            case .history:
+                return peer.canSendMessage(false)
+            case .scheduled:
+                return false
+            case let .replyThread(threadId, mode):
+                switch mode {
+                case .comments:
+                    if message.id == threadId {
+                        return false
+                    }
+                    return peer.canSendMessage(true)
+                case .replies:
+                    return peer.canSendMessage(true)
+                }
+            }
         }
     }
     return false
@@ -3024,3 +3049,5 @@ extension CachedChannelData.LinkedDiscussionPeerId {
         }
     }
 }
+
+

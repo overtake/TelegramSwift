@@ -1029,6 +1029,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                 current = ChannelCommentsSmallControl(frame: CGRect(origin: .zero, size: data.size(false, true)))
                 current.set(background: item.presentation.chatServiceItemColor, for: .Normal)
+                
                 current.change(opacity: 0, animated: animated)
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
@@ -1100,10 +1101,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer  {
+            if item.isBubbled && item.presentation.backgroundMode.hasWallpaper  {
                 
                 control.set(image: item.isStorage ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
-                _ = control.sizeToFit()
+                control.setFrameSize(NSMakeSize(29, 29))
                 let size = NSMakeSize(control.frame.width, control.frame.height)
                 control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
                 control.set(additionBackgroundColor: item.presentation.chatServiceItemColor, for: .Normal)
@@ -1112,7 +1113,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.set(cornerRadius: .half, for: .Normal)
             } else {
                 control.set(image: item.isStorage ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
-                _ = control.sizeToFit()
+                control.setFrameSize(NSMakeSize(29, 29))
                 control.background = .clear
             }
             
@@ -1174,7 +1175,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
             let isLiked = item.isLiked
             
-            if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer  {
+            if item.isBubbled && item.presentation.backgroundMode.hasWallpaper  {
                 control.set(image: likeImage(item), for: .Normal)
                 
                 _ = control.sizeToFit()
@@ -1517,7 +1518,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if NSPointInRect(location, bubbleFrame), item.isBubbled {
                     return
                 }
-                if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId) {
+                if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
                     item.chatInteraction.setupReplyMessage(item.message?.id)
                 }
             }
@@ -1633,7 +1634,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         control.disableActions()
         
         
-        if item.isBubbled && item.presentation.backgroundMode.hasWallpapaer {
+        if item.isBubbled && item.presentation.backgroundMode.hasWallpaper {
             control.set(image: item.presentation.chat.chat_reply_swipe_bubble(theme: item.presentation), for: .Normal)
             control.autohighlight = false
             _ = control.sizeToFit()

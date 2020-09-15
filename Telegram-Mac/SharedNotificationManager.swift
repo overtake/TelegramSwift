@@ -301,7 +301,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let peer = message.peers[message.id.peerId] {
                                 if peer.isSupergroup || peer.isGroup {
                                     title = peer.displayTitle
-                                    hasReplyButton = peer.canSendMessage
+                                    hasReplyButton = peer.canSendMessage(false)
                                 } else if peer.isChannel {
                                     hasReplyButton = false
                                 }

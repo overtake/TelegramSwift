@@ -42,9 +42,12 @@ private let progressiveRangeMap: [(Int, [Int])] = [
     (Int(Int32.max), [2, 3, 4])
 ]
 
-func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
+func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximateSynchronousValue: Bool = false, useVideoThumb: Bool = false) -> Signal<MediaResourceStatus, NoError> {
     if let _ = file.resource as? LocalFileReferenceMediaResource {
         return .single(.Local)
+    }
+    if useVideoThumb, let videoThumb = file.videoThumbnails.first {
+        return account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)
     }
     return account.postbox.mediaBox.resourceStatus(file.resource, approximateSynchronousValue: approximateSynchronousValue)
 }
@@ -862,8 +865,7 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
         |> take(1)
         |> mapToSignal { maybeData in
             if maybeData.complete {
-                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
-                
+                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [.mappedIfSafe])
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
                 let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier), complete: true)
@@ -1020,6 +1022,9 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                     c.interpolationQuality = .medium
                     
                     c.draw(cgImage, in: fittedRect)
+                    
+                   // c.setFillColor(NSColor.random.cgColor)
+                   // c.fill(fittedRect)
                 }
             })
             

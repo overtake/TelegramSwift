@@ -377,7 +377,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var minMagnify:CGFloat {
-        return 1.0
+        return 0.25
     }
     
     var maxMagnify:CGFloat {

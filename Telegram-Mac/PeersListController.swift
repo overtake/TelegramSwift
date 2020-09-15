@@ -182,6 +182,7 @@ class PeerListContainerView : View {
                                             (.video, L10n.searchFilterVideos, theme.icons.search_filter_media),
                                             (.webPage, L10n.searchFilterLinks, theme.icons.search_filter_links),
                                             (.music, L10n.searchFilterMusic, theme.icons.search_filter_music),
+                                            (.voiceOrInstantVideo, L10n.searchFilterVoice, theme.icons.search_filter_music),
                                             (.gif, L10n.searchFilterGIFs, theme.icons.search_filter_media),
                                             (.file, L10n.searchFilterFiles, theme.icons.search_filter_files)]
         

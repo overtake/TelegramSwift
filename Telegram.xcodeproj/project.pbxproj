@@ -894,6 +894,7 @@
 		D0BEB99A216D10920055B718 /* MediaPreviewEditControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */; };
 		D0C39EC3233A5D9B003CD402 /* WalletTransactionPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C39EC2233A5D9B003CD402 /* WalletTransactionPreviewController.swift */; };
 		D0C39EC5233A6077003CD402 /* GeneralBlockTextRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C39EC4233A6077003CD402 /* GeneralBlockTextRowItem.swift */; };
+		D0C550C4251127DA00B64966 /* ChatCommentsHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C550C3251127DA00B64966 /* ChatCommentsHeaderItem.swift */; };
 		D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */; };
 		D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */; };
 		D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD3094221970F8005D23DD /* FFMpegRemuxer.m */; };
@@ -2062,6 +2063,7 @@
 		D0BEB999216D10920055B718 /* MediaPreviewEditControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPreviewEditControl.swift; sourceTree = "<group>"; };
 		D0C39EC2233A5D9B003CD402 /* WalletTransactionPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletTransactionPreviewController.swift; sourceTree = "<group>"; };
 		D0C39EC4233A6077003CD402 /* GeneralBlockTextRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralBlockTextRowItem.swift; sourceTree = "<group>"; };
+		D0C550C3251127DA00B64966 /* ChatCommentsHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCommentsHeaderItem.swift; sourceTree = "<group>"; };
 		D0CBB0F42492974F00620C65 /* VideoAvatarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAvatarModalController.swift; sourceTree = "<group>"; };
 		D0CC4ADD22BA5C930088F36D /* LottieBufferCompressor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LottieBufferCompressor.swift; sourceTree = "<group>"; };
 		D0CD3093221970F8005D23DD /* FFMpegRemuxer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegRemuxer.h; sourceTree = "<group>"; };
@@ -2858,6 +2860,7 @@
 				D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */,
 				A7393D342407CAE100CE44CA /* ChatMediaDice.swift */,
 				D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */,
+				D0C550C3251127DA00B64966 /* ChatCommentsHeaderItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -5910,6 +5913,7 @@
 				C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */,
 				C29C3E711E43881500193A7E /* ModalPreviewViews.swift in Sources */,
 				9F7B74032227F492006610E4 /* ManageSharedAccountInfo.swift in Sources */,
+				D0C550C4251127DA00B64966 /* ChatCommentsHeaderItem.swift in Sources */,
 				D0CD3095221970F8005D23DD /* FFMpegRemuxer.m in Sources */,
 				A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */,
 				9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */,

@@ -117,7 +117,7 @@ public class TitleButton: ImageButton {
         }
     }
     
-    public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
+    @discardableResult public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
         _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
         var font:NSFont?

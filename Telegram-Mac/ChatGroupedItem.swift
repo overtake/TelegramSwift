@@ -344,8 +344,8 @@ class ChatGroupedItem: ChatRowItem {
             }))
         }
         
-        if let message = layout.messages.first, let peer = peer, peer.canSendMessage, chatInteraction.peerId == message.id.peerId, chatInteraction.mode == .history {
-            items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: { [weak self] in
+        if let message = layout.messages.first, let peer = peer, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
+            items.append(ContextMenuItem(L10n.messageContextReply1, handler: { [weak self] in
                 self?.chatInteraction.setupReplyMessage(message.id)
             }))
         }

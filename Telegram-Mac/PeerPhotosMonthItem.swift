@@ -544,7 +544,6 @@ private final class MediaVideoCell : MediaCell {
     
     override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
         super.update(layout: layout, context: context, table: table)
-        
         let file = layout.message.media.first as! TelegramMediaFile
         
          let updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
@@ -560,24 +559,24 @@ private final class MediaVideoCell : MediaCell {
            guard let `self` = self else {return}
            
             self.updateVideoAccessory(authentic, mediaPlayerStatus: self.videoView?.status, file: file, animated: !first)
-           first = false
-           self.status = status
-           self.authenticStatus = authentic
-           let progressStatus: MediaResourceStatus
-           switch authentic {
-           case .Fetching:
-               progressStatus = authentic
-           default:
-               progressStatus = status
-           }
-           switch progressStatus {
-           case let .Fetching(_, progress):
-               self.progressView.state = .Fetching(progress: progress, force: false)
-           case .Remote:
-               self.progressView.state = .Remote
-           case .Local:
-               self.progressView.state = .Play
-           }
+            first = false
+            self.status = status
+            self.authenticStatus = authentic
+            let progressStatus: MediaResourceStatus
+            switch authentic {
+            case .Fetching:
+                progressStatus = authentic
+            default:
+                progressStatus = status
+            }
+            switch progressStatus {
+            case let .Fetching(_, progress):
+                self.progressView.state = .Fetching(progress: progress, force: false)
+            case .Remote:
+                self.progressView.state = .Remote
+            case .Local:
+                self.progressView.state = .Play
+            }
         }))
         partDisposable.set(nil)
         self.preloadStreamblePart()
@@ -888,7 +887,9 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                 } else {
                     view = self.contentViews[i]!
                 }
-                view.update(layout: layout, context: item.context, table: item.table)
+                if view.layoutItem != layout {
+                    view.update(layout: layout, context: item.context, table: item.table)
+                }
 
                 view.frame = layout.frame
             } else {
@@ -972,6 +973,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         while self.contentViews.count < item.layoutItems.count {
             self.contentViews.append(nil)
         }
+        
         
         layoutVisibleItems(animated: animated)
     }

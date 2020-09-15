@@ -20,21 +20,10 @@ enum ChatHistoryEntryId : Hashable {
     case date(MessageIndex)
     case undefined
     case maybeId(AnyHashable)
-    var hashValue: Int {
-        switch self {
-        case .message(let message):
-            return message.stableId.hashValue
-        case .unread:
-            return 2 << 1
-        case .date(let index):
-            return index.hashValue
-        case .groupedPhotos(let info):
-            return Int(info.stableId)
-        case .undefined:
-            return 3 << 1
-        case .maybeId(let id):
-            return id.hashValue
-        }
+    case commentsHeader
+    
+    func hash(into hasher: inout Hasher) {
+        
     }
     
     static func ==(lhs:ChatHistoryEntryId, rhs: ChatHistoryEntryId) -> Bool {
@@ -75,6 +64,12 @@ enum ChatHistoryEntryId : Hashable {
             } else {
                 return false
             }
+        case .commentsHeader:
+            if case .commentsHeader = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -92,6 +87,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(5) << 40
         case .maybeId:
             return UInt64(6) << 40
+        case .commentsHeader:
+            return UInt64(7) << 40
         }
     }
 
@@ -144,6 +141,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case UnreadEntry(MessageIndex, ChatItemRenderType)
     case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
+    case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     var message:Message? {
         switch self {
         case let .MessageEntry(message,_, _,_,_,_,_):
@@ -176,6 +174,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return renderType
         case .bottom:
             return .list
+        case let .commentsHeader(_, _, renderType):
+            return renderType
         }
     }
     
@@ -210,6 +210,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .unread
         case .bottom:
             return .undefined
+        case .commentsHeader:
+            return .commentsHeader
         }
     }
     
@@ -225,6 +227,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
+        case let .commentsHeader(_, index, _):
+            return index
         }
     }
     
@@ -241,6 +245,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
+        case let .commentsHeader(_, index, _):
+            return index
         }
     }
     
@@ -363,6 +369,13 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
+    case let .commentsHeader(empty, index, type):
+        switch rhs {
+        case .commentsHeader(empty, index, type):
+            return true
+        default:
+            return false
+        }
     }
     
 }
@@ -378,16 +391,24 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:]) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
     var groupedPhotos:[ChatHistoryEntry] = []
     var groupInfo: MessageGroupInfo?
     
+    var messagesEntries = messagesEntries
+    var topMessageIndex: Int? = nil
+    if let topMessages = topFixedMessages, !topMessages.isEmpty {
+        messagesEntries.insert(contentsOf: topMessages.map { MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: .init(authorIsContact: false))}, at: 0)
+        topMessageIndex = topMessages.count - 1
+    }
     
     for (i, entry) in messagesEntries.enumerated() {
         var message = entry.message
+        
+        
         if message.media.isEmpty, let server = proxySettings(from: message.text).0 {
             var textInfo = ""
             let name: String
@@ -699,6 +720,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: INT_MAX), timestamp: Int32(nextDateId))
                 entries.append(.DateEntry(index, renderType))
             }
+        }
+        if let topMessageIndex = topMessageIndex, topMessageIndex == i {
+            let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
+
+            entries.append(.commentsHeader(i == messagesEntries.count - 1, MessageIndex(id: message.id, timestamp: timestamp).successor(), renderType))
         }
     }
     

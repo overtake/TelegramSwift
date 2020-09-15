@@ -128,12 +128,16 @@ enum LocalAnimatedSticker {
             playPolicy = .once
         case .folder:
             playPolicy = .once
+            hidePlayer = false
         case .new_folder:
             playPolicy = .loop
+            hidePlayer = false
         case .folder_empty:
             playPolicy = .once
+            hidePlayer = false
         case .graph_loading:
             playPolicy = .loop
+            hidePlayer = false
         case .dart_idle:
             playPolicy = .once
         }

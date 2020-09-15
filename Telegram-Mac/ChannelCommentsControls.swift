@@ -232,13 +232,21 @@ final class ChannelCommentsSmallControl : Control {
             if let title = renderData.title {
                 var iconFrame = focus(size)
                 iconFrame.origin.y = 5
-                ctx.draw(theme.chat_comments_overlay, in: iconFrame)
+                if theme.bubbled && theme.backgroundMode.hasWallpaper {
+                    ctx.draw(theme.chat_comments_overlay, in: iconFrame)
+                } else {
+                    ctx.draw(theme.icons.channel_comments_overlay, in: iconFrame)
+                }
                 var titleFrame = focus(title.0.size)
                 titleFrame.origin.y = iconFrame.maxY
                 title.1.draw(titleFrame, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
             } else {
                 let iconFrame = focus(size)
-                ctx.draw(theme.chat_comments_overlay, in: iconFrame)
+                if theme.bubbled && theme.backgroundMode.hasWallpaper {
+                    ctx.draw(theme.chat_comments_overlay, in: iconFrame)
+                } else {
+                    ctx.draw(theme.icons.channel_comments_overlay, in: iconFrame)
+                }
             }
         }
         

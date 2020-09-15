@@ -609,7 +609,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if isSingleLayout {
             if point.x > 20 {
                 if chatInteraction.mode == .history {
-                    if chatInteraction.peerId == chatInteraction.context.peerId {
+                    if chatInteraction.peerId == repliesPeerId {
+                        
+                    } else if chatInteraction.peerId == chatInteraction.context.peerId {
                         chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
                     } else {
                         switch chatInteraction.chatLocation {
@@ -625,7 +627,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 chatInteraction.context.sharedContext.bindings.rootNavigation().back()
             }
         } else {
-            if chatInteraction.peerId == chatInteraction.context.peerId {
+            if chatInteraction.peerId == repliesPeerId {
+                
+            } else if chatInteraction.peerId == chatInteraction.context.peerId {
                 chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
             } else {
                 switch chatInteraction.chatLocation {
@@ -730,7 +734,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             
             if let peer = peerViewMainPeer(peerView) {
-                if peer.id == chatInteraction.context.peerId {
+                if peer.id == repliesPeerId {
+                    let icon = theme.icons.chat_replies_avatar
+                    avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 17, avatarControl.frame.size.height - 17)), cornerRadius: nil)) |> map {($0, false)})
+                } else if peer.id == chatInteraction.context.peerId {
                     let icon = theme.icons.searchSaved
                     avatarControl.setSignal(generateEmptyPhoto(avatarControl.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(avatarControl.frame.size.width - 15, avatarControl.frame.size.height - 15)), cornerRadius: nil)) |> map {($0, false)})
                 } else {

@@ -25,7 +25,7 @@ class ChatServiceItem: ChatRowItem {
         
         
         
-        let linkColor: NSColor = theme.controllerBackgroundMode.hasWallpapaer ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
+        let linkColor: NSColor = theme.controllerBackgroundMode.hasWallpaper ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
         let grayTextColor: NSColor = theme.chatServiceItemTextColor
 
         let authorId:PeerId? = message.author?.id
@@ -39,7 +39,7 @@ class ChatServiceItem: ChatRowItem {
         
         let nameColor:(PeerId) -> NSColor = { peerId in
             
-            if theme.controllerBackgroundMode.hasWallpapaer {
+            if theme.controllerBackgroundMode.hasWallpaper {
                 return theme.chatServiceItemTextColor
             }
             
@@ -363,13 +363,13 @@ class ChatServiceItem: ChatRowItem {
         if chatInteraction.presentation.state != .selecting {
             
             if let message = message, let peer = messageMainPeer(message) {
-                if peer.canSendMessage, !message.containsSecretMedia, canReplyMessage(message, peerId: peer.id) {
-                    items.append(ContextMenuItem(tr(L10n.messageContextReply1), handler: {
+                if !message.containsSecretMedia, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
+                    items.append(ContextMenuItem(L10n.messageContextReply1, handler: {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }
                 if canDeleteMessage(message, account: context.account) {
-                    items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
+                    items.append(ContextMenuItem(L10n.messageContextDelete, handler: {
                         chatInteraction.deleteMessages([message.id])
                     }))
                 }

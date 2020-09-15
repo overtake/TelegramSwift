@@ -1347,6 +1347,10 @@ internal final class L10n {
   internal static var chatChannelUnaccessible: String  { return L10n.tr("Localizable", "Chat.Channel.Unaccessible") }
   /// You have been blocked to posting comments.
   internal static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
+  /// No comments here yet...
+  internal static var chatCommentsHeaderEmpty: String  { return L10n.tr("Localizable", "Chat.CommentsHeader.Empty") }
+  /// Discussion started
+  internal static var chatCommentsHeaderFull: String  { return L10n.tr("Localizable", "Chat.CommentsHeader.Full") }
   /// This action can't be undone
   internal static var chatConfirmActionUndonable: String  { return L10n.tr("Localizable", "Chat.Confirm.ActionUndonable") }
   /// %d
@@ -4449,6 +4453,8 @@ internal final class L10n {
   internal static var paymentsUnsupported: String  { return L10n.tr("Localizable", "Payments.Unsupported") }
   /// Deleted Account
   internal static var peerDeletedUser: String  { return L10n.tr("Localizable", "Peer.DeletedUser") }
+  /// Replies Notifications
+  internal static var peerRepliesNotifications: String  { return L10n.tr("Localizable", "Peer.RepliesNotifications") }
   /// Saved Messages
   internal static var peerSavedMessages: String  { return L10n.tr("Localizable", "Peer.SavedMessages") }
   /// Service Notifications
@@ -4969,6 +4975,8 @@ internal final class L10n {
   internal static var peerMediaMedia: String  { return L10n.tr("Localizable", "PeerMedia.Media") }
   /// Members
   internal static var peerMediaMembers: String  { return L10n.tr("Localizable", "PeerMedia.Members") }
+  /// Music
+  internal static var peerMediaMusic: String  { return L10n.tr("Localizable", "PeerMedia.Music") }
   /// Shared Media
   internal static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
   /// Voicemessages
@@ -5005,8 +5013,10 @@ internal final class L10n {
   internal static func peerMediaTitleSearchFilesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_two", p1)
   }
-  /// 0 Files
-  internal static var peerMediaTitleSearchFilesZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_zero") }
+  /// %d Files
+  internal static func peerMediaTitleSearchFilesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Files_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchGIFsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_countable", p1)
@@ -5031,8 +5041,10 @@ internal final class L10n {
   internal static func peerMediaTitleSearchGIFsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_two", p1)
   }
-  /// 0 GIFs
-  internal static var peerMediaTitleSearchGIFsZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_zero") }
+  /// %d GIFs
+  internal static func peerMediaTitleSearchGIFsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.GIFs_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchLinksCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_countable", p1)
@@ -5057,8 +5069,10 @@ internal final class L10n {
   internal static func peerMediaTitleSearchLinksTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_two", p1)
   }
-  /// 0 Links
-  internal static var peerMediaTitleSearchLinksZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_zero") }
+  /// %d Links
+  internal static func peerMediaTitleSearchLinksZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Links_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchMediaCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_countable", p1)
@@ -5083,34 +5097,38 @@ internal final class L10n {
   internal static func peerMediaTitleSearchMediaTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_two", p1)
   }
-  /// 0 Media
-  internal static var peerMediaTitleSearchMediaZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_zero") }
+  /// %d Media
+  internal static func peerMediaTitleSearchMediaZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Media_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchMusicCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_countable", p1)
   }
-  /// %d Tracks
+  /// %d Audios
   internal static func peerMediaTitleSearchMusicFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_few", p1)
   }
-  /// %d Tracks
+  /// %d Audios
   internal static func peerMediaTitleSearchMusicMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_many", p1)
   }
-  /// %d Track
+  /// %d Audio
   internal static func peerMediaTitleSearchMusicOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_one", p1)
   }
-  /// %d Tracks
+  /// %d Audios
   internal static func peerMediaTitleSearchMusicOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_other", p1)
   }
-  /// %d Tracks
+  /// %d Audios
   internal static func peerMediaTitleSearchMusicTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_two", p1)
   }
-  /// 0 Tracks
-  internal static var peerMediaTitleSearchMusicZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_zero") }
+  /// %d Audios
+  internal static func peerMediaTitleSearchMusicZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Music_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchPhotosCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_countable", p1)
@@ -5135,8 +5153,10 @@ internal final class L10n {
   internal static func peerMediaTitleSearchPhotosTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_two", p1)
   }
-  /// 0 Photos
-  internal static var peerMediaTitleSearchPhotosZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_zero") }
+  /// %d Photos
+  internal static func peerMediaTitleSearchPhotosZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Photos_zero", p1)
+  }
   /// %d
   internal static func peerMediaTitleSearchVideosCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_countable", p1)
@@ -5161,8 +5181,10 @@ internal final class L10n {
   internal static func peerMediaTitleSearchVideosTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_two", p1)
   }
-  /// 0 Videos
-  internal static var peerMediaTitleSearchVideosZero: String  { return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_zero") }
+  /// %d Videos
+  internal static func peerMediaTitleSearchVideosZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerMedia.Title.Search.Videos_zero", p1)
+  }
   /// Invite to Group via Link
   internal static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
   /// Sorry, public polls can’t be forwarded to channels.
@@ -5819,6 +5841,8 @@ internal final class L10n {
   internal static var searchFilterPhotos: String  { return L10n.tr("Localizable", "Search.Filter.Photos") }
   /// Videos
   internal static var searchFilterVideos: String  { return L10n.tr("Localizable", "Search.Filter.Videos") }
+  /// Voice
+  internal static var searchFilterVoice: String  { return L10n.tr("Localizable", "Search.Filter.Voice") }
   /// %@ %d
   internal static func searchGlobalChannel1Countable(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Search.Global.Channel1_countable", p1, p2)
