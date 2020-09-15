@@ -43,10 +43,23 @@ private final class SearchCacheData {
     func cacheRemotePeers(_ peers:[ChatListSearchEntry], for key: String) -> Void {
         self.remotePeers[key] = peers
         previousRemotePeers = peers
+        
+        var stableIds:Set<ChatListSearchEntryStableId> = Set()
+        for peer in peers {
+            assert(!stableIds.contains(peer.stableId))
+            stableIds.insert(peer.stableId)
+        }
+        
     }
     func cacheLocalPeers(_ peers:[ChatListSearchEntry], for key: String) -> Void {
         self.localPeers[key] = peers
         previousLocalPeers = peers
+        
+        var stableIds:Set<ChatListSearchEntryStableId> = Set()
+        for peer in peers {
+            assert(!stableIds.contains(peer.stableId))
+            stableIds.insert(peer.stableId)
+        }
         
     }
     func cachedMessages(for key: MessageCacheKey) -> [ChatListSearchEntry] {
@@ -693,7 +706,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } else {
                     location = globalTags.location
                     if globalTags.isEmpty {
-                        foundRemotePeers = .single((cachedData.with { $0.cachedLocalPeers(for: query) }, cachedData.with { $0.cachedRemotePeers(for: query) }, true)) |> then(searchPeers(account: context.account, query: query)
+                        foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
                             |> delay(0.2, queue: prepareQueue)
                             |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                 
@@ -701,10 +714,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     let first = ids[found.peer.id] == nil
                                     ids[found.peer.id] = found.peer.id
                                     return first
-                                    }, founds.1.filter { found -> Bool in
-                                        let first = ids[found.peer.id] == nil
-                                        ids[found.peer.id] = found.peer.id
-                                        return first
+                                }, founds.1.filter { found -> Bool in
+                                    let first = ids[found.peer.id] == nil
+                                    ids[found.peer.id] = found.peer.id
+                                    return first
                                 })
                                 
                             }
@@ -763,9 +776,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             return (entries, false, result.1, result.0)
                     }
                 }
+                //cachedData.with { $0.cachedMessages(for: .key(query: query, tags: globalTags)) }
                 
-                
-                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single((cachedData.with { $0.cachedMessages(for: .key(query: query, tags: globalTags)) }, true, nil, nil)) |> then(remoteSearch)
+                let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
                 
                 return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed)
                     |> map { localPeers, remotePeers, remoteMessages, isRevealed -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in

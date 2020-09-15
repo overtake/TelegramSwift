@@ -59,7 +59,7 @@ private class ChatListDraggingContainerView : View {
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if let item = item, let peer = item.peer, peer.canSendMessage, mouseInside() {
+        if let item = item, let peer = item.peer, peer.canSendMessage(false), mouseInside() {
             activeDragging = true
             needsDisplay = true
         }
@@ -704,6 +704,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let icon = theme.icons.searchSaved
                 photo.setState(account: item.context.account, state: .Empty)
                 photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 20, photo.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
+            } else if item.isRepliesChat {
+                self.archivedPhoto?.removeFromSuperview()
+                self.archivedPhoto = nil
+                let icon = theme.icons.chat_replies_avatar
+                photo.setState(account: item.context.account, state: .Empty)
+                photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 22, photo.frame.size.height - 22)), cornerRadius: nil)) |> map {($0, false)})
             } else if case .ArchivedChats = item.photo {
                 if self.archivedPhoto == nil {
                     self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), offset: NSMakeSize(0, 0))

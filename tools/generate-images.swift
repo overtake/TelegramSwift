@@ -587,6 +587,10 @@ func initialize() -> [String] {
     array.append("channel_comments_bubble")
     array.append("channel_comments_bubble_next")
     array.append("channel_comments_list")
+    array.append("channel_comments_overlay")
+    
+    
+    array.append("chat_replies_avatar")
     
     return array
 }

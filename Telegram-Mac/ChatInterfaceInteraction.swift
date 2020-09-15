@@ -142,8 +142,9 @@ final class ChatInteraction : InterfaceObserver  {
     var openScheduledMessages: ()->Void = {}
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
-    var openReplyThread:(MessageId, MessageId?, ReplyThreadMode)->Void = {  _, _, _ in }
+    var openReplyThread:(MessageId?, MessageId?, ReplyThreadMode)->Void = {  _, _, _ in }
 
     
     
@@ -436,6 +437,13 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil) {
         
+        var scrollState = scrollState
+        switch mode {
+        case .replyThread:
+            scrollState = nil
+        default:
+            break
+        }
         
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)

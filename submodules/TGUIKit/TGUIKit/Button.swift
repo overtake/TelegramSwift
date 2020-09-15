@@ -71,7 +71,7 @@ open class Button: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
+    @discardableResult public func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
         self._thatFit = thatFit
         return true
     }

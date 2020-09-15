@@ -50,7 +50,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     var togglePictureInPictureImpl:((Bool, PictureInPictureControl)->Void)?
     
     private var isPaused: Bool = true
-    
+    private var forceHiddenControls: Bool = false
     private var _videoFramePreview: MediaPlayerFramePreview?
     private var videoFramePreview: MediaPlayerFramePreview {
         if let videoFramePreview = _videoFramePreview {
@@ -140,9 +140,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     NSCursor.hide()
                 }
             }
-            hideControls.set(hide)
+            hideControls.set(hide || forceHiddenControls)
         } else {
-            hideControls.set(false)
+            hideControls.set(forceHiddenControls)
         }
     }
     
@@ -154,7 +154,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         
         let mouseInsidePlayer = genericView.mediaPlayer.mouseInside()
         
-        hideControls.set(!mouseInsidePlayer)
+        hideControls.set(!mouseInsidePlayer || forceHiddenControls)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
             if let window = self?.genericView.window, let contentView = window.contentView {
@@ -257,9 +257,20 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     }
     
     
-    func hideControlsIfNeeded() -> Bool {
+    func hideControlsIfNeeded(_ forceHideControls: Bool = false) -> Bool {
+        self.forceHiddenControls = forceHideControls
         if !controlsIsHidden {
             hideControls.set(true)
+            return true
+        }
+        
+        return false
+    }
+    
+    func unhideControlsIfNeeded(_ forceUnhideControls: Bool = true) -> Bool {
+        forceHiddenControls = !forceUnhideControls
+        if controlsIsHidden {
+            hideControls.set(forceUnhideControls)
             return true
         }
         return false

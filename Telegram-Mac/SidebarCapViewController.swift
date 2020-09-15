@@ -52,6 +52,10 @@ class SidebarCapView : View {
     }
     
     
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+    }
+    
     override func scrollWheel(with event: NSEvent) {
         
     }
@@ -99,9 +103,17 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         
         globalPeerDisposable.set((context.globalPeerHandler.get() |> mapToSignal { value -> Signal<Bool, NoError> in
             if let value = value {
-                return postbox.peerView(id: value.peerId) |> map {
-                    return peerViewMainPeer($0)?.canSendMessage ?? false
+                switch value {
+                case .peer:
+                    return postbox.peerView(id: value.peerId) |> map {
+                        return peerViewMainPeer($0)?.canSendMessage(false) ?? false
+                    }
+                case .replyThread:
+                    return postbox.peerView(id: value.peerId) |> map {
+                        return peerViewMainPeer($0)?.canSendMessage(true) ?? false
+                    }
                 }
+               
             } else {
                 return .single(false)
             }
@@ -115,6 +127,11 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         
     }
     
+    override func viewDidChangedNavigationLayout(_ state: SplitViewState) {
+        super.viewDidChangedNavigationLayout(state)
+        navigationWillChangeController()
+    }
+    
 
     override func navigationWillChangeController() {
         
@@ -123,7 +140,9 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         
         self.view.setFrameSize(context.sharedContext.bindings.entertainment().frame.size)
         
-        if context.sharedContext.bindings.rootNavigation().controller is ChatController, inChatAbility {
+        if let controller = navigationController as? MajorNavigationController, controller.genericView.state != .dual {
+            view.removeFromSuperview()
+        } else if context.sharedContext.bindings.rootNavigation().controller is ChatController, inChatAbility {
             view.removeFromSuperview()
         } else {
             context.sharedContext.bindings.entertainment().addSubview(view)

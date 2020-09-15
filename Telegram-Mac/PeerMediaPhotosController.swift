@@ -367,7 +367,11 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 var state = state
                 state = state.withUpdatedLoading(isLoading)
                 if let messages = messages {
-                    state = state.withUpdatedMessages(messages)
+                    if !isExternalSearch {
+                        state = state.withUpdatedMessages(messages.reversed())
+                    } else {
+                        state = state.withUpdatedMessages(messages)
+                    }
                 }
                 state = state.withUpdatedSeachState(update.2)
                 return state

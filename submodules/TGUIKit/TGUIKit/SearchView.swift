@@ -90,6 +90,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public func updateTags(_ tags: [String], _ image: CGImage) {
         
         for tag in self.tags {
+            tag.layer?.animateScaleSpring(from: 1.0, to: 0.3, duration: 0.2)
             tag.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak tag] _ in
                   tag?.removeFromSuperview()
              })
@@ -103,10 +104,10 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             tagView.animates = false
             tagView.set(font: .normal(12), for: .Normal)
             tagView.set(color: presentation.colors.underSelectedColor, for: .Normal)
-            tagView.set(background: presentation.colors.accent.withAlphaComponent(0.9), for: .Normal)
+            tagView.set(background: presentation.colors.accent.darker(), for: .Normal)
             tagView.set(text: title, for: .Normal)
             
-            tagView.set(background: presentation.colors.accent, for: .Highlight)
+            tagView.set(background: presentation.colors.accent.lighter(), for: .Highlight)
             
             tagView.set(handler: { [weak self] control in
                 guard let `self` = self else {
@@ -126,6 +127,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             addSubview(tagView)
             tagView.centerY(x: x)
             tagView.layer?.animateAlpha(from: 0, to: 1.0, duration: 0.2)
+           // tagView.layer?.animateScaleSpring(from: 0.6, to: 1.0, duration: 0.2)
             self.tags.append(tagView)
             
             x += tagView.frame.width + 5
@@ -138,6 +140,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             placeholder.isHidden = pHidden
         }
         search.set(image: image, for: .Normal)
+//        _ = search.sizeToFit()
     }
     
     public var customSearchControl: CustomSearchController? {

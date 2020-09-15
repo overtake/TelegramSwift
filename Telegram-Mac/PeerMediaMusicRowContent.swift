@@ -19,10 +19,19 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let thumbResource: ExternalMusicAlbumArtResource
     fileprivate let isCompactPlayer: Bool
+    fileprivate let messages: [Message]
     init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, viewType: GeneralViewType = .legacy) {
         self.isCompactPlayer = isCompactPlayer
         
         file = object.message!.media[0] as! TelegramMediaFile
+        
+        switch object {
+        case let .messageEntry(_, messages, _, _):
+            self.messages = messages
+        default:
+            self.messages = []
+        }
+        
         let music = file.musicText
         self.textLayout = TextViewLayout(.initialize(string: music.0, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
 
@@ -168,7 +177,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     func checkState() {
         if let item = item as? PeerMediaMusicRowItem {
             if let controller = globalAudio, let song = controller.currentSong {
-                if song.entry.isEqual(to: item.message) {
+                if song.entry.isEqual(to: item.message.id) {
                     if playAnimationView == nil {
                         playAnimationView = PeerMediaPlayerAnimationView()
                         addSubview(playAnimationView!)
@@ -247,7 +256,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
                 controller.playOrPause()
             } else {
-                let controller = APChatMusicController(context: item.interface.context, peerId: item.message.id.peerId, index: MessageIndex(item.message))
+                let controller = APChatMusicController(context: item.interface.context, peerId: item.message.id.peerId, index: MessageIndex(item.message), messages: item.messages)
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
             }

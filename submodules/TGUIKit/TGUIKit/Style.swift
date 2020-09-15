@@ -20,9 +20,7 @@ public struct ControlStyle: Equatable {
     }
     
     public func highlight(image:CGImage) -> CGImage {
-        
         let context = DrawingContext(size:image.backingSize, scale:2.0, clear:true)
-        
         context.withContext { ctx in
             ctx.clear(NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height))
             let imageRect = NSMakeRect(0, 0, image.backingSize.width, image.backingSize.height)
@@ -34,9 +32,7 @@ public struct ControlStyle: Equatable {
             ctx.setFillColor(highlightColor.cgColor)
             ctx.fill(imageRect)
         }
-        
         return context.generateImage() ?? image
-        
     }
     
     public init(font:NSFont? = nil, foregroundColor:NSColor? = nil,backgroundColor:NSColor? = nil, highlightColor:NSColor? = nil) {

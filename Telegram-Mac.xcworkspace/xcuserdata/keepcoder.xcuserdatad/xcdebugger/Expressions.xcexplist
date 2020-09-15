@@ -221,6 +221,14 @@
          contextName = "applyPaints(_:for:imageSize:):EditImageCanvasController.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #5 in SearchController.viewDidLoad():SearchController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "cachedData">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in closure #5 in EditThemeController(context:telegramTheme:presentation:):EditThemeController.swift">
          <PersistentStrings>
             <PersistentString

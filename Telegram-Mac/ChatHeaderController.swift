@@ -458,7 +458,7 @@ class ChatReportView : Control {
         dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
         
         
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
         
         
         var buttons:[Control] = []

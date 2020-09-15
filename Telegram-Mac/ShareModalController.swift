@@ -331,7 +331,7 @@ class ShareObject {
     }
     
     func possibilityPerformTo(_ peer:Peer) -> Bool {
-        return peer.canSendMessage && !self.excludePeerIds.contains(peer.id)
+        return peer.canSendMessage(false) && !self.excludePeerIds.contains(peer.id)
     }
     
     

@@ -24,7 +24,7 @@ class ReplyMarkupButtonLayout {
     init(button:ReplyMarkupButton, style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text), isInput: Bool) {
         self.button = button
         self.style = style
-        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.controllerBackgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
     }
     
     func measure(_ width:CGFloat) {
@@ -140,7 +140,7 @@ class ReplyMarkupNode: Node {
                 }
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let button:View? = view?.subviews[i] as? View
-                button?.backgroundColor = theme.controllerBackgroundMode.hasWallpapaer && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
+                button?.backgroundColor = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
                 if let button = button {
                     button.frame = rect
                     button.setNeedsDisplayLayer()

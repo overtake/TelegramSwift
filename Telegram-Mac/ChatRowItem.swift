@@ -236,7 +236,7 @@ class ChatRowItem: TableRowItem {
             size.width += channelViews.0.size.width + 8 + 16
         }
         if let replyCount = replyCount {
-            size.width += replyCount.0.size.width + 8 + 16
+            size.width += replyCount.0.size.width + 18
         }
         if let likes = likes {
             size.width += likes.0.size.width + 18
@@ -518,7 +518,7 @@ class ChatRowItem: TableRowItem {
                     if authorIsChannel {
                         return true
                     }
-                    return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId)
+                    return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId) || message.id.peerId == repliesPeerId
                 }
             }
             
@@ -538,7 +538,12 @@ class ChatRowItem: TableRowItem {
         if let message = message {
             for attr in message.attributes {
                 if let attr = attr as? SourceReferenceMessageAttribute {
-                    chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                    if message.id.peerId == repliesPeerId {
+                        //chatInteraction.openReplyThread(nil, attr.messageId, .comments(origin: attr.messageId))
+                        chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                    } else {
+                        chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                    }
                 }
             }
         }
@@ -956,7 +961,8 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                     let title: String = "\(count)"
-                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.chatServiceItemTextColor, font: .normal(.short)), peers: [], drawBorder: true, handler: { [weak self] in
+                    let textColor = isBubbled && presentation.backgroundMode.hasWallpaper ? presentation.chatServiceItemTextColor : presentation.colors.accent
+                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: textColor, font: .normal(.short)), peers: [], drawBorder: true, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, nil, .comments(origin: message.id))
                     })
                 }
@@ -1611,6 +1617,8 @@ class ChatRowItem: TableRowItem {
             return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
         case .bottom:
             return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
+        case .commentsHeader:
+            return ChatCommentsHeaderItem(initialSize, entry, interaction: interaction, theme: theme)
         default:
             break
         }
@@ -1814,8 +1822,11 @@ class ChatRowItem: TableRowItem {
             if let commentsData = commentsData {
                 supplyOffset += commentsData.size(false).width
             }
+            if !isBubbled {
+                supplyOffset += rightSize.width
+            }
             
-            authorText?.measure(width: widthForContent - adminWidth - rightSize.width - supplyOffset)
+            authorText?.measure(width: widthForContent - adminWidth - supplyOffset)
             
         }
       
@@ -2128,8 +2139,8 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         items.append(ContextSeparatorItem())
     }
     
-    if canReplyMessage(message, peerId: chatInteraction.peerId) && !message.isScheduledMessage  {
-        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(tr(L10n.messageContextReplyHelp)))" : ""), handler: {
+    if canReplyMessage(message, peerId: chatInteraction.peerId, mode: chatInteraction.mode)  {
+        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(L10n.messageContextReplyHelp))" : ""), handler: {
             chatInteraction.setupReplyMessage(message.id)
         }))
     }

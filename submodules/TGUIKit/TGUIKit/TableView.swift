@@ -57,7 +57,7 @@ public enum TableBackgroundMode {
     case background(image: NSImage)
     case tiled(image: NSImage)
     
-    public var hasWallpapaer: Bool {
+    public var hasWallpaper: Bool {
         switch self {
         case .plain:
             return false
@@ -2892,11 +2892,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
                 if let item = item, !applied {
-                    if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                        applied = true
-                        if focus.focus {
-                            view.focusAnimation(innerId)
-                            focus.action?(view.interactableView)
+                    DispatchQueue.main.async {
+                        if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                            applied = true
+                            if focus.focus {
+                                view.focusAnimation(innerId)
+                                focus.action?(view.interactableView)
+                            }
                         }
                     }
                 }
@@ -2946,6 +2948,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.contentView.scroll(to: bounds.origin)
                     reflectScrolledClipView(clipView)
                     removeScroll(listener: scrollListener)
+                    scrollListener.handler(self.scrollPosition().current)
                 }
                
             } else {

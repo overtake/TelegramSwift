@@ -129,7 +129,9 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         default:
             break
         }
-        controller.viewDidChangedNavigationLayout(state)
+        for listener in listeners {
+            listener.value?.viewDidChangedNavigationLayout(state)
+        }
         viewDidResized(self.frame.size)
     }
     

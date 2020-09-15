@@ -609,21 +609,33 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
         let settings = self.settings
         let loadDisposable = self.loadDisposable
         let previousSearch = Atomic<String?>(value: nil)
-        return search |> map { SearchState(state: .Focus, request: $0.request) } |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
+        return search |> mapToSignal { query -> Signal<SearchState, NoError> in
+            if query.request.isEmpty {
+                return .single(query)
+            } else {
+                return .single(query) |> delay(0.2, queue: .mainQueue())
+            }
+        } |> map { SearchState(state: .Focus, request: $0.request) } |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             let participantsPromise: Promise<[RenderedChannelParticipant]> = Promise()
             
             var isListLoading: Bool = false
             
             let value = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, requestUpdate: true, updated: { state in
-                participantsPromise.set(.single(state.list))
+                
+                let applyList: Bool
                 
                 if case .loading = state.loadingState {
                     isListLoading = true
+                    applyList = search.request.isEmpty
                 } else {
+                    applyList = true
                     isListLoading = false
                 }
-                _ = _renderedResult.swap(state.list.toDictionary(with: {$0.peer.id}))
+                if applyList {
+                    participantsPromise.set(.single(state.list))
+                    _ = _renderedResult.swap(state.list.toDictionary(with: {$0.peer.id}))
+                }
             })
 
             
@@ -631,7 +643,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
 
             let foundLocalPeers = context.account.postbox.searchContacts(query: search.request.lowercased())
             
-            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = .single(([], [], true)) |> then ( searchPeers(account: context.account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} )
+            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = searchPeers(account: context.account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)}
             
             
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), NoError>
@@ -764,7 +776,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                     for entry in value.0.entries.reversed() {
                         switch entry {
                         case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage, peer.canInviteUsers, peer.isSupergroup || peer.isGroup {
+                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage(false), peer.canInviteUsers, peer.isSupergroup || peer.isGroup {
                                 entries.append(peer)
                             }
                         default:

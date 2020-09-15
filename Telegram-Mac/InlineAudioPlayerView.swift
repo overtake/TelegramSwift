@@ -175,10 +175,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         guard let window = kitWindow, let context = self.context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if NSPointInRect(point, textView.frame) {
-            if let controller = controller, let song = controller.currentSong, controller is APChatMusicController {
+            if let controller = controller as? APChatMusicController, let song = controller.currentSong {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message)), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
                 default:
                     break
                 }

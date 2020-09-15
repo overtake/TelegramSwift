@@ -235,7 +235,7 @@ class ChatGIFContentView: ChatMediaContentView {
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue, useVideoThumb: true)
             }
             
             if let updatedStatusSignal = updatedStatusSignal {

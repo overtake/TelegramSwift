@@ -461,7 +461,7 @@ class Sender: NSObject {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
         }
         
-        let replyId = chatInteraction.mode.threadId ?? chatInteraction.presentation.interfaceState.replyMessageId
+        let replyId = chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId
 
         
         for path in media {
@@ -506,7 +506,7 @@ class Sender: NSObject {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
         }
         
-        let replyId = chatInteraction.mode.threadId ?? chatInteraction.presentation.interfaceState.replyMessageId
+        let replyId = chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId
         
         let localGroupingKey = isCollage ? arc4random64() : nil
         
