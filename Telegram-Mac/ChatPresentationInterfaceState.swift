@@ -462,6 +462,10 @@ struct ChatPresentationInterfaceState: Equatable {
                 return .editing
             }
             
+            if let recordingState = recordingState {
+                return .recording(recordingState)
+            }
+            
             if let peer = peer as? TelegramChannel {
                 #if APP_STORE
                 if let restrictionInfo = restrictionInfo {
@@ -559,9 +563,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 return .editing
             }
             
-            if let recordingState = recordingState {
-                return .recording(recordingState)
-            }
+           
 
             if let initialAction = initialAction, case .start(_) = initialAction  {
                 return .action(tr(L10n.chatInputStartBot), { chatInteraction in
