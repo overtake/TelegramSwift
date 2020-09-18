@@ -16,7 +16,7 @@ import SwiftSignalKit
 private var nextClientId: Int32 = 1
 
 
-enum ReplyThreadMode : Equatable {
+enum isThreadMode : Equatable {
     case replies(origin: MessageId)
     case comments(origin: MessageId)
     
@@ -30,7 +30,7 @@ enum ReplyThreadMode : Equatable {
 enum ChatMode : Equatable {
     case history
     case scheduled
-    case replyThread(topMsgId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, mode: ReplyThreadMode)
+    case replyThread(topMsgId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, mode: isThreadMode)
     
     var threadId: MessageId? {
         switch self {
@@ -41,7 +41,15 @@ enum ChatMode : Equatable {
         }
     }
     
-    var replyThreadMode: Bool {
+    var threadId64: Int64? {
+        if let threadId = threadId {
+            return makeMessageThreadId(threadId)
+        } else {
+            return nil
+        }
+    }
+    
+    var isThreadMode: Bool {
         switch self {
         case .replyThread:
             return true
@@ -242,7 +250,7 @@ class ChatControllerView : View, ChatInputDelegate {
             switch chatInteraction.chatLocation {
             case let .peer(peerId):
                 location = .peer(peerId: peerId, fromId: fromId, tags: nil, topMsgId: chatInteraction.mode.threadId, minDate: nil, maxDate: nil)
-            case let .replyThread(messageId, _, _):
+            case let .replyThread(messageId, _, _, _):
                 location = .peer(peerId: messageId.peerId, fromId: fromId, tags: nil, topMsgId: messageId, minDate: nil, maxDate: nil)
             }
             return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
@@ -480,7 +488,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 state = .none
             }
         } else if let pinnedMessageId = interfaceState.pinnedMessageId, pinnedMessageId != interfaceState.interfaceState.dismissedPinnedMessageId, !interfaceState.hidePinnedMessage {
-            state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.replyThreadMode)
+            state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
            state = .none
         } else {
@@ -1209,7 +1217,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case let .peer(peerId):
             self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = checkPeerChatServiceActions(postbox: context.account.postbox, peerId: peerId).start()
-        case let .replyThread(messageId, _, _):
+        case let .replyThread(messageId, _, _, _):
             self.peerView.set(context.account.viewTracker.peerView(messageId.peerId, updateData: true) |> map {Optional($0)})
         }
         
@@ -1254,7 +1262,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     additionalData.append(.peerIsContact(peerId))
                 }
                 switch self.chatLocation {
-                case let .replyThread(messageId, _, _):
+                case let .replyThread(messageId, _, _, _):
                     additionalData.append(.message(messageId))
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
@@ -1306,6 +1314,65 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
 
         
+        let customChannelDiscussionReadState: Signal<MessageId?, NoError>
+        if case let .peer(peerId) = chatLocation, peerId.namespace == Namespaces.Peer.CloudChannel {
+            let cachedDataKey = PostboxViewKey.cachedPeerData(peerId: chatLocation.peerId)
+            let peerKey = PostboxViewKey.basicPeer(peerId)
+            customChannelDiscussionReadState = context.account.postbox.combinedView(keys: [cachedDataKey, peerKey])
+                |> mapToSignal { views -> Signal<PeerId?, NoError> in
+                    guard let view = views.views[cachedDataKey] as? CachedPeerDataView else {
+                        return .single(nil)
+                    }
+                    guard let peer = (views.views[peerKey] as? BasicPeerView)?.peer as? TelegramChannel, case .broadcast = peer.info else {
+                        return .single(nil)
+                    }
+                    guard let cachedData = view.cachedPeerData as? CachedChannelData else {
+                        return .single(nil)
+                    }
+                    guard case let .known(value) = cachedData.linkedDiscussionPeerId else {
+                        return .single(nil)
+                    }
+                    return .single(value)
+                }
+                |> distinctUntilChanged
+                |> mapToSignal { discussionPeerId -> Signal<MessageId?, NoError> in
+                    guard let discussionPeerId = discussionPeerId else {
+                        return .single(nil)
+                    }
+                    let key = PostboxViewKey.combinedReadState(peerId: discussionPeerId)
+                    return context.account.postbox.combinedView(keys: [key])
+                        |> map { views -> MessageId? in
+                            guard let view = views.views[key] as? CombinedReadStateView else {
+                                return nil
+                            }
+                            guard let state = view.state else {
+                                return nil
+                            }
+                            for (namespace, namespaceState) in state.states {
+                                if namespace == Namespaces.Message.Cloud {
+                                    switch namespaceState {
+                                    case let .idBased(maxIncomingReadId, _, _, _, _):
+                                        return MessageId(peerId: discussionPeerId, namespace: Namespaces.Message.Cloud, id: maxIncomingReadId)
+                                    default:
+                                        break
+                                    }
+                                }
+                            }
+                            return nil
+                        }
+                        |> distinctUntilChanged
+            }
+        } else {
+            customChannelDiscussionReadState = .single(nil)
+        }
+        
+        let customThreadOutgoingReadState: Signal<MessageId?, NoError>
+        if case .replyThread = chatLocation {
+            customThreadOutgoingReadState = context.chatLocationOutgoingReadState(for: chatLocation, contextHolder: chatLocationContextHolder)
+        } else {
+            customThreadOutgoingReadState = .single(nil)
+        }
+
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
@@ -1332,7 +1399,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let _searchState: Atomic<SearchMessagesResultState> = Atomic(value: SearchMessagesResultState("", []))
         
-        let historyViewTransition = combineLatest(queue: messagesViewQueue, historyViewUpdate, appearanceSignal, combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue, pollAnswersLoadingSignal), clearHistoryUndoSignal, searchState.get(), animatedEmojiStickers) |> mapToQueue { update, appearance, readIndexAndPollAnswers, clearHistoryStatus, searchState, animatedEmojiStickers -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+        let historyViewTransition = combineLatest(queue: messagesViewQueue,
+                                                  historyViewUpdate,
+                                                  appearanceSignal,
+                                                  combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue,
+                                                                pollAnswersLoadingSignal),
+                                                                clearHistoryUndoSignal,
+                                                                searchState.get(),
+                                                  animatedEmojiStickers,
+                                                  customChannelDiscussionReadState,
+                                                  customThreadOutgoingReadState
+) |> mapToQueue { update, appearance, readIndexAndPollAnswers, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
             
             //NSLog("get history")
             
@@ -1411,7 +1488,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     var msgEntries = view.entries
                     let topMessages: [Message]?
                     switch chatInteraction.chatLocation {
-                    case let .replyThread(messageId, _, _):
+                    case let .replyThread(messageId, _, _, _):
                         if view.earlierId == nil {
                             topMessages = initialData.cachedDataMessages?[messageId]
                         } else {
@@ -1421,7 +1498,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -1908,7 +1985,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendPlainText = { [weak self] text in
-            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 let _ = (Sender.enqueue(input: ChatTextInputState(inputText: text), context: context, peerId: strongSelf.chatInteraction.peerId, replyId: strongSelf.chatInteraction.presentation.interfaceState.replyMessageId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
             }
         }
@@ -2510,7 +2587,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         chatInteraction.sendMedia = { [weak self] media in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 
                 switch strongSelf.mode {
                 case .scheduled:
@@ -2608,7 +2685,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendAppFile = { [weak self] file, silent in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
@@ -2627,7 +2704,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
@@ -2655,7 +2732,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.shareSelfContact = { [weak self] replyId in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 strongSelf.shareContactDisposable.set((context.account.viewTracker.peerView(context.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
                         _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil), context: context, peerId: strongSelf.chatInteraction.peerId).start()
@@ -2674,7 +2751,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendCommand = { [weak self] command in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     var commandText = "/" + command.command.text
                     if controller.chatInteraction.peerId.namespace != Namespaces.Peer.CloudUser {
@@ -2723,7 +2800,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.setSecretChatMessageAutoremoveTimeout = { [weak self] seconds in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: strongSelf.chatInteraction.peerId, timeout:seconds).start()
             }
             scrollAfterSend()
@@ -2838,7 +2915,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.shareContact = { [weak self] peer in
-            if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage(strongSelf.mode.replyThreadMode) {
+            if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage(strongSelf.mode.isThreadMode) {
                 _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, contact: peer).start()
             }
         }
@@ -3008,7 +3085,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
                 if let result = result {
-                    let chatLocation: ChatLocation = .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadMessageId: result.message.maxReadMessageId)
+                    let chatLocation: ChatLocation = .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadIncomingMessageId: result.message.maxReadIncomingMessageId, maxReadOutgoingMessageId: result.message.maxReadOutgoingMessageId) 
                     
 
                     self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .replyThread(topMsgId: result.message.messageId, maxMessage: result.message.maxMessage, mode: mode), messageId: isChannelPost ? nil : mode.originId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
@@ -3420,7 +3497,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
         
         let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
-        self.peerInputActivitiesDisposable.set((context.account.peerInputActivities(peerId: peerId)
+        self.peerInputActivitiesDisposable.set((context.account.peerInputActivities(peerId: .init(peerId: peerId, threadId: mode.threadId64))
             |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
                 var foundAllPeers = true
                 var cachedResult: [(Peer, PeerInputActivity)] = []
@@ -4004,7 +4081,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }, theme.icons.chatArchive))
                                 }
                                 
-                                if peer.canSendMessage(self.mode.replyThreadMode), peerView.peerId.namespace != Namespaces.Peer.SecretChat {
+                                if peer.canSendMessage(self.mode.isThreadMode), peerView.peerId.namespace != Namespaces.Peer.SecretChat {
                                     let text: String
                                     if peer.id != context.peerId {
                                         text = L10n.chatRightContextScheduledMessages
@@ -5017,7 +5094,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             
-            if let list = list, list.count > 0, let peer = chatInteraction.peer, peer.canSendMessage(chatInteraction.mode.replyThreadMode) {
+            if let list = list, list.count > 0, let peer = chatInteraction.peer, peer.canSendMessage(chatInteraction.mode.isThreadMode) {
                 
                 if let text = permissionText(from: peer, for: .banSendMedia) {
                     return [DragItem(title: "", desc: text, handler: {

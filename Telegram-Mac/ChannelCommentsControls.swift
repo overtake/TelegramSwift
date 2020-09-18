@@ -121,6 +121,7 @@ class ChannelCommentsBubbleControl: Control {
                 let size = NSMakeSize(6, 6)
                 var f = focus(size)
                 f.origin.x = rect.maxX + 6
+                f.origin.y += 1
                 ctx.fillEllipse(in: f)
             }
             

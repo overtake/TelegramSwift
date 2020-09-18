@@ -12,7 +12,11 @@ import SyncCore
 import Postbox
 import SyncCore
 
-let repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
+let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
+let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 708513)
+
+
+var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
 
 
 extension ChatListFilterPeerCategories {
@@ -141,7 +145,7 @@ extension Peer {
     
     
     
-    func canSendMessage(_ isReplyThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isisThreadMode: Bool = false) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
@@ -153,7 +157,7 @@ extension Peer {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)
                 case .left:
-                    if isReplyThreadMode {
+                    if isisThreadMode {
                         return !channel.hasBannedRights(.banSendMessages)
                     }
                     return false

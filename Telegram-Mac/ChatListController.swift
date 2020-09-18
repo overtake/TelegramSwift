@@ -378,7 +378,7 @@ class ChatListController : PeersListController {
                                 foundAllPeers = false
                                 break
                             }
-                            cachedResult[chatPeerId] = cachedChatResult
+                            cachedResult[chatPeerId.peerId] = cachedChatResult
                         }
                     }
                 }
@@ -398,7 +398,7 @@ class ChatListController : PeersListController {
                                 }
                             }
                             
-                            result[chatPeerId] = chatResult
+                            result[chatPeerId.peerId] = chatResult
                         }
                         let _ = previousPeerCache.swap(peerCache)
                         return result

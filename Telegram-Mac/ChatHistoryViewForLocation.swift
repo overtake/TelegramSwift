@@ -457,12 +457,9 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThrea
     case let .channelPost(messageId):
         message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId)
     case let .groupMessage(messageId):
-        message = .single(ChatReplyThreadMessage(
-            messageId: messageId,
-            maxMessage: .unknown,
-            maxReadMessageId: nil
-        ))
+        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId)
     }
+
     
     return message
         |> mapToSignal { message -> Signal<ReplyThreadInfo?, NoError> in
@@ -486,7 +483,9 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThrea
                 chatLocation: .replyThread(
                     threadMessageId: message.messageId,
                     maxMessage: message.maxMessage,
-                    maxReadMessageId: message.maxReadMessageId
+                    maxReadIncomingMessageId: message.maxReadIncomingMessageId,
+                    maxReadOutgoingMessageId: message.maxReadOutgoingMessageId
+
                 ),
                 chatLocationContextHolder: chatLocationContextHolder,
                 tagMask: nil,

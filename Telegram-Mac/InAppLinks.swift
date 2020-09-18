@@ -354,7 +354,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         current.chatInteraction.focusMessageId(nil, commentMessageId, .CenterEmpty)
                     }
                 } else {
-                    let mode: ReplyThreadMode
+                    let mode: isThreadMode
                     if peer.isChannel {
                         mode = .comments(origin: threadMessageId)
                     } else {
@@ -364,7 +364,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     if let commentId = commentId {
                         commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                     }
-                    navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadMessageId: result.message.maxReadMessageId), mode: .replyThread(topMsgId: result.message.messageId, maxMessage: result.message.maxMessage, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                    navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadIncomingMessageId: result.message.maxReadIncomingMessageId, maxReadOutgoingMessageId: result.message.maxReadOutgoingMessageId), mode: .replyThread(topMsgId: result.message.messageId, maxMessage: result.message.maxMessage, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
                 }
                 
             }

@@ -680,7 +680,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _, _):
+        case let .replyThread(messageId, _, _, _):
             return .peer(messageId.peerId)
         }
     }
@@ -689,7 +689,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
-        case let .replyThread(messageId, _, _):
+        case let .replyThread(messageId, _, _, _):
             return .peer(peerId: messageId.peerId, components: [])
         }
     }
@@ -698,7 +698,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _, _):
+        case let .replyThread(messageId, _, _, _):
             return .peer(messageId.peerId)
         }
     }
@@ -707,7 +707,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return peerId
-        case let .replyThread(messageId, _, _):
+        case let .replyThread(messageId, _, _, _):
             return messageId.peerId
         }
     }
@@ -719,10 +719,13 @@ extension ChatLocation : Hashable {
         switch self {
         case let .peer(peerId):
             hasher.combine(peerId.hashValue)
-        case let .replyThread(threadMessageId, _, maxReadMessageId):
+        case let .replyThread(threadMessageId, _, maxReadIncoming, maxReadOutgoing):
             hasher.combine(threadMessageId.hashValue)
-            if let maxReadMessageId = maxReadMessageId {
-                hasher.combine(maxReadMessageId.hashValue)
+            if let maxReadIncoming = maxReadIncoming {
+                hasher.combine(maxReadIncoming.hashValue)
+            }
+            if let maxReadOutgoing = maxReadOutgoing {
+                hasher.combine(maxReadOutgoing.hashValue)
             }
         }
     }
