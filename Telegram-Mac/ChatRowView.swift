@@ -504,7 +504,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             replyView?.set(handler: { [weak item, weak reply] _ in
                 item?.chatInteraction.focusInputField()
                 if let replyMessage = reply?.replyMessage, let fromMessage = item?.message {
-                    item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                    item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .CenterEmpty)
                 }
                 
             }, for: .Click)
@@ -549,7 +549,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rect.origin.y += 3
             }
             if let item = item as? ChatMessageItem, item.containsBigEmoji {
-                rect.origin.y = contentFrame.maxY + item.defaultContentTopOffset
+                rect.origin.y = bubbleFrame.maxY - rightSize.height
             }
             
             if item.hasBubble, let _ = item.commentsBubbleData {
@@ -606,6 +606,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 frame.origin.x = contentFrame.maxX + 10
             } else {
                 frame.origin.x = contentFrame.minX - reply.size.width - 10
+            }
+            if item.isSharable || item.isStorage || item.commentsBubbleDataOverlay != nil {
+                if item.isIncoming {
+                    frame.origin.x += 46
+                } else {
+                    frame.origin.x -= 46
+                }
             }
         }
         return frame
@@ -807,11 +814,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let shareView = self.shareView else {
             return .zero
         }
+        var point: NSPoint
         if item.isBubbled {
-            return NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - shareView.frame.width - 10, bubbleFrame.maxY - (shareView.frame.height))
+            point = NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - shareView.frame.width - 10, bubbleFrame.maxY - (shareView.frame.height))
         } else {
-            return NSMakePoint(frame.width - 20.0 - shareView.frame.width, rightView.frame.maxY)
+            point = NSMakePoint(frame.width - 20.0 - shareView.frame.width, rightFrame.maxY)
         }
+        return point
     }
     
     func likeViewPoint(_ item: ChatRowItem) -> NSPoint {
@@ -980,10 +989,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return .zero
         }
         let size = commentsData.size(false, true)
+        var rect = NSMakeRect(rightFrame.maxX + 19, rightFrame.minY - size.height - 15, size.width, size.height)
         if item.isInstantVideo {
-            return NSMakeRect(rightFrame.maxX + 12, rightFrame.minY - size.height - 23, size.width, size.height)
+            rect = NSMakeRect(rightFrame.maxX + 12, rightFrame.minY - size.height - 23, size.width, size.height)
+        } else if let item = item as? ChatMessageItem, item.containsBigEmoji {
+            rect.origin.x -= 8
+            rect.origin.y -= 8
         }
-        return NSMakeRect(rightFrame.maxX + 19, rightFrame.minY - size.height - 15, size.width, size.height)
+        return rect
     }
     var channelCommentsFrame: CGRect {
         guard let item = item as? ChatRowItem, let commentsData = item.commentsData else {

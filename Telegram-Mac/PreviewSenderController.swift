@@ -235,7 +235,7 @@ fileprivate class PreviewSenderView : Control {
                 
                 var items:[SPopoverItem] = []
                 
-                if peer.id != chatInteraction.context.account.peerId && !peer.isSecretChat {
+                if peer.id != chatInteraction.context.account.peerId {
                     items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
                         controller?.send(true)
                     }))

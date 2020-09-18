@@ -99,6 +99,7 @@ class PlayerListController: TableViewController {
         self.chatInteraction = ChatInteraction(chatLocation: .peer(messageIndex.id.peerId), context: context)
         self.messageIndex = messageIndex
         self.audioPlayer = audioPlayer
+        
         self.messages = messages
         super.init(context)
         
@@ -114,7 +115,7 @@ class PlayerListController: TableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        let chatLocationInput = (self.audioPlayer.controller as? APChatController)?.chatLocationInput
         genericView.getBackgroundColor = {
             return theme.colors.background
         }
@@ -126,7 +127,7 @@ class PlayerListController: TableViewController {
                 
                 guard let `self` = self else {return .complete()}
                 
-                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: []) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
+                return chatHistoryViewForLocation(location, context: self.chatInteraction.context, chatLocation: self.chatInteraction.chatLocation, fixedCombinedReadStates: nil, tagMask: [.music], additionalData: [], chatLocationInput: chatLocationInput) |> mapToQueue { view -> Signal<(PeerMediaUpdate, TableScrollState?), NoError> in
                     switch view {
                     case .Loading:
                         return .single((PeerMediaUpdate(), nil))

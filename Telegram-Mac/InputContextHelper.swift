@@ -459,7 +459,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 chatInteraction.sendAppFile(selectedItem.result.results[index].file, false)
                 chatInteraction.clearInput()
             } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
-                chatInteraction.focusMessageId(nil, selectedItem.message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                chatInteraction.focusMessageId(nil, selectedItem.message.id, .CenterEmpty)
             }
             return .invoked
         }

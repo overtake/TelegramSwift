@@ -951,15 +951,17 @@ class APController : NSResponder {
 
 class APChatController : APController {
 
-    private let peerId:PeerId
+    let chatLocationInput:ChatLocationInput
     private let index:MessageIndex?
     let messages: [Message]
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, messages: [Message] = []) {
-        self.peerId = peerId
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, messages: [Message] = []) {
+        self.chatLocationInput = chatLocationInput
         self.index = index
         self.messages = messages
         super.init(context: context, streamable: streamable, baseRate: baseRate)
     }
+    
+    
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -971,16 +973,16 @@ class APChatController : APController {
         let list = self.entries
         let items = self.items
         let account = self.context.account
-        let peerId = self.peerId
+        let chatLocationInput = self.chatLocationInput
         let index = self.index
         let apply: Signal<APTransition, NoError>
         if messages.isEmpty {
             apply = history.get() |> distinctUntilChanged |> mapToSignal { location -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError> in
                 switch location {
                 case .initial:
-                    return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                    return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
                 case let .index(index):
-                    return account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
+                    return account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: 100, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: [], additionalData: [])
                 }
                 
                 } |> map { view -> (APHistory?,APHistory) in
@@ -1039,8 +1041,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0, messages: [Message] = []) {
-        super.init(context: context, peerId: peerId, index: index, streamable: true, baseRate: baseRate, messages: messages)
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, index: MessageIndex?, baseRate: Double = 1.0, messages: [Message] = []) {
+        super.init(context: context, chatLocationInput: chatLocationInput, index: index, streamable: true, baseRate: baseRate, messages: messages)
     }
 
     required init?(coder: NSCoder) {
@@ -1054,8 +1056,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(context: AccountContext, peerId: PeerId, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(context: context, peerId: peerId, index:index, streamable: false, baseRate: baseRate)
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, index: MessageIndex?, baseRate: Double = 1.0) {
+        super.init(context: context, chatLocationInput: chatLocationInput, index:index, streamable: false, baseRate: baseRate)
     }
 
     required init?(coder: NSCoder) {

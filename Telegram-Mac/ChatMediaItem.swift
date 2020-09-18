@@ -18,6 +18,8 @@ class ChatMediaLayoutParameters : Equatable {
     var showMedia:(Message)->Void = {_ in }
     var showMessage:(Message)->Void = {_ in }
     
+    var chatLocationInput:()->ChatLocationInput = { fatalError() }
+    
     let presentation: ChatMediaPresentation
     let media: Media
     
@@ -184,7 +186,11 @@ class ChatMediaItem: ChatRowItem {
     let media:Media
 
     
-    var parameters:ChatMediaLayoutParameters?
+    var parameters:ChatMediaLayoutParameters? {
+        didSet {
+            parameters?.chatLocationInput = chatInteraction.chatLocationInput
+        }
+    }
     
   
     
@@ -342,7 +348,7 @@ class ChatMediaItem: ChatRowItem {
             showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
             
             }, showMessage: { [weak self] message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
             }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
         
         

@@ -1415,6 +1415,10 @@ internal final class L10n {
   internal static var chatContextAddFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.AddFavoriteSticker") }
   /// Archive
   internal static var chatContextArchive: String  { return L10n.tr("Localizable", "Chat.Context.Archive") }
+  /// Block Group
+  internal static var chatContextBlockGroup: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup") }
+  /// Block User
+  internal static var chatContextBlockUser: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser") }
   /// Clear Chat History
   internal static var chatContextClearHistory: String  { return L10n.tr("Localizable", "Chat.Context.ClearHistory") }
   /// Clear All
@@ -1441,6 +1445,30 @@ internal final class L10n {
   internal static var chatContextSharedMedia: String  { return L10n.tr("Localizable", "Chat.Context.SharedMedia") }
   /// Unarchive
   internal static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
+  /// Cancel
+  internal static var chatContextBlockGroupCancel: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.Cancel") }
+  /// Block Group
+  internal static var chatContextBlockGroupHeader: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.Header") }
+  /// Do you want to block messages from %@
+  internal static func chatContextBlockGroupInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.BlockGroup.Info", p1)
+  }
+  /// Block
+  internal static var chatContextBlockGroupOK: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.OK") }
+  /// Report Spam
+  internal static var chatContextBlockGroupThird: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.Third") }
+  /// Cancel
+  internal static var chatContextBlockUserCancel: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.Cancel") }
+  /// Block User
+  internal static var chatContextBlockUserHeader: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.Header") }
+  /// Do you want to block messages from %@
+  internal static func chatContextBlockUserInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.BlockUser.Info", p1)
+  }
+  /// Block
+  internal static var chatContextBlockUserOK: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.OK") }
+  /// Report Spam
+  internal static var chatContextBlockUserThird: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser.Third") }
   /// Scheduled Messages
   internal static var chatContextClearScheduledConfirmHeader: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Header") }
   /// Are you sure you want to delete all scheduled messages?
@@ -1993,8 +2021,6 @@ internal final class L10n {
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
-  /// Comments
-  internal static var chatTitleComments: String  { return L10n.tr("Localizable", "Chat.Title.Comments") }
   /// %d
   internal static func chatTitleCommentsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
@@ -2023,8 +2049,6 @@ internal final class L10n {
   internal static var chatTitleCommentsZero: String  { return L10n.tr("Localizable", "Chat.Title.Comments_zero") }
   /// Reminder
   internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
-  /// Replies
-  internal static var chatTitleReplies: String  { return L10n.tr("Localizable", "Chat.Title.Replies") }
   /// %d
   internal static func chatTitleRepliesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Replies_countable", p1)
@@ -3961,8 +3985,62 @@ internal final class L10n {
   internal static var messageContextShare: String  { return L10n.tr("Localizable", "Message.Context.Share") }
   /// Unpin
   internal static var messageContextUnpin: String  { return L10n.tr("Localizable", "Message.Context.Unpin") }
-  /// View Replies
-  internal static var messageContextViewReplies: String  { return L10n.tr("Localizable", "Message.Context.ViewReplies") }
+  /// %d
+  internal static func messageContextViewCommentsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_countable", p1)
+  }
+  /// View %d Comments
+  internal static func messageContextViewCommentsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_few", p1)
+  }
+  /// View %d Comments
+  internal static func messageContextViewCommentsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_many", p1)
+  }
+  /// View %d Comment
+  internal static func messageContextViewCommentsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_one", p1)
+  }
+  /// View %d Comments
+  internal static func messageContextViewCommentsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_other", p1)
+  }
+  /// View %d Comments
+  internal static func messageContextViewCommentsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_two", p1)
+  }
+  /// View %d Comments
+  internal static func messageContextViewCommentsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewComments_zero", p1)
+  }
+  /// %d
+  internal static func messageContextViewRepliesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_countable", p1)
+  }
+  /// View %d Replies
+  internal static func messageContextViewRepliesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_few", p1)
+  }
+  /// View %d Replies
+  internal static func messageContextViewRepliesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_many", p1)
+  }
+  /// View %d Reply
+  internal static func messageContextViewRepliesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_one", p1)
+  }
+  /// View %d Replies
+  internal static func messageContextViewRepliesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_other", p1)
+  }
+  /// View %d Replies
+  internal static func messageContextViewRepliesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_two", p1)
+  }
+  /// View %d Replies
+  internal static func messageContextViewRepliesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Message.Context.ViewReplies_zero", p1)
+  }
   /// View Thread
   internal static var messageContextViewThread: String  { return L10n.tr("Localizable", "Message.Context.ViewThread") }
   /// Notify all members

@@ -482,6 +482,14 @@ public extension Message {
         return nil
     }
     
+    var isAnonymousMessage: Bool {
+        if let author = self.author as? TelegramChannel, sourceReference == nil, self.id.peerId == author.id {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     var replyThread: ReplyThreadMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyThreadMessageAttribute {
@@ -563,7 +571,7 @@ public extension Message {
         for attr in attributes {
             if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
-                    if let peer = peers[source.messageId.peerId], peer is TelegramChannel, accountPeerId != id.peerId {
+                    if let peer = peers[source.messageId.peerId], peer is TelegramChannel, accountPeerId != id.peerId, repliesPeerId != id.peerId {
                         _peer = peer
                     } else {
                         _peer = info.author
@@ -672,7 +680,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _):
+        case let .replyThread(messageId, _, _):
             return .peer(messageId.peerId)
         }
     }
@@ -681,7 +689,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
-        case let .replyThread(messageId, _):
+        case let .replyThread(messageId, _, _):
             return .peer(peerId: messageId.peerId, components: [])
         }
     }
@@ -690,7 +698,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _):
+        case let .replyThread(messageId, _, _):
             return .peer(messageId.peerId)
         }
     }
@@ -699,7 +707,7 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return peerId
-        case let .replyThread(messageId, _):
+        case let .replyThread(messageId, _, _):
             return messageId.peerId
         }
     }
@@ -711,7 +719,7 @@ extension ChatLocation : Hashable {
         switch self {
         case let .peer(peerId):
             hasher.combine(peerId.hashValue)
-        case let .replyThread(threadMessageId, maxReadMessageId):
+        case let .replyThread(threadMessageId, _, maxReadMessageId):
             hasher.combine(threadMessageId.hashValue)
             if let maxReadMessageId = maxReadMessageId {
                 hasher.combine(maxReadMessageId.hashValue)
@@ -828,6 +836,9 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
+        if message.id.peerId == repliesPeerId {
+            return false
+        }
         if context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser {
             
             if message.media.first is TelegramMediaDice, message.peers[message.id.peerId] is TelegramUser {
@@ -879,7 +890,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 return peer.canSendMessage(false)
             case .scheduled:
                 return false
-            case let .replyThread(threadId, mode):
+            case let .replyThread(threadId, _, mode):
                 switch mode {
                 case .comments:
                     if message.id == threadId {

@@ -96,7 +96,7 @@ class ChatEmptyPeerItem: TableRowItem {
         case .scheduled:
             lineSpacing = nil
             _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
-        case let .replyThread(_, mode):
+        case let .replyThread(_, _, mode):
             lineSpacing = nil
             switch mode {
             case .comments:

@@ -84,7 +84,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 if parameters.isWebpage {
                     controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
                 } else {
-                    controller = APChatMusicController(context: context, peerId: parent.id.peerId, index: MessageIndex(parent))
+                    controller = APChatMusicController(context: context, chatLocationInput: parameters.chatLocationInput(), index: MessageIndex(parent))
                 }
                 parameters.showPlayer(controller)
                 controller.start()

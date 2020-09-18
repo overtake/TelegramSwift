@@ -93,7 +93,7 @@ class WPArticleLayout: WPLayout {
                     showInstantViewGallery(context: context, medias: instantMedias, firstIndex: i, firstStableId: ChatHistoryEntryId.message(parent), parent: parent, self.table, weakParameters)
                     
                 }, showMessage: { [weak chatInteraction] _ in
-                    chatInteraction?.focusMessageId(nil, parent.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                    chatInteraction?.focusMessageId(nil, parent.id, .CenterEmpty)
                 }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: presentation.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: autoplayMedia)
                 
                 weakParameters = parameters

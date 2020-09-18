@@ -416,7 +416,7 @@ class ChatRowItem: TableRowItem {
             if case .Full = itemType, let message = message, let peer = message.peers[message.id.peerId] {
                 switch chatInteraction.chatLocation {
                 case .peer, .replyThread:
-                    if isIncoming && message.id.peerId == context.peerId {
+                    if (isIncoming && message.id.peerId == context.peerId) || message.id.peerId == repliesPeerId {
                         return true
                     }
                     if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
@@ -496,7 +496,11 @@ class ChatRowItem: TableRowItem {
             left += leftContentInset
         }
         
-        
+        if let item = self as? ChatMessageItem, item.containsBigEmoji {
+            if commentsBubbleDataOverlay != nil || isSharable || isStorage {
+                top += 20
+            }
+        }
         
         return NSMakePoint(left, top)
     }
@@ -538,11 +542,15 @@ class ChatRowItem: TableRowItem {
         if let message = message {
             for attr in message.attributes {
                 if let attr = attr as? SourceReferenceMessageAttribute {
-                    if message.id.peerId == repliesPeerId {
-                        //chatInteraction.openReplyThread(nil, attr.messageId, .comments(origin: attr.messageId))
-                        chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                    if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
+                        chatInteraction.openReplyThread(threadMessageId, false, .comments(origin: attr.messageId))
                     } else {
-                        chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                        switch chatInteraction.mode {
+                        case .replyThread:
+                            chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
+                        default:
+                            chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                        }
                     }
                 }
             }
@@ -758,7 +766,9 @@ class ChatRowItem: TableRowItem {
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
                     canFillAuthorName = false
                 }
-                
+                if message.isAnonymousMessage, !isIncoming {
+                    canFillAuthorName = true
+                }
             }
         }
         return canFillAuthorName
@@ -954,16 +964,20 @@ class ChatRowItem: TableRowItem {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
                     var count: Int32 = 0
+                    var hasUnread: Bool = false
                     for attr in message.attributes {
                         if let attribute = attr as? ReplyThreadMessageAttribute {
                             count = attribute.count
+                            if let maxMessageId = attribute.maxMessageId, let maxReadMessageId = attribute.maxReadMessageId {
+                                hasUnread = maxReadMessageId < maxMessageId
+                            }
                             break
                         }
                     }
                     let title: String = "\(count)"
                     let textColor = isBubbled && presentation.backgroundMode.hasWallpaper ? presentation.chatServiceItemTextColor : presentation.colors.accent
-                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: textColor, font: .normal(.short)), peers: [], drawBorder: true, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, nil, .comments(origin: message.id))
+                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: textColor, font: .normal(.short)), peers: [], drawBorder: true, handler: { [weak self] in
+                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
             default:
@@ -984,15 +998,28 @@ class ChatRowItem: TableRowItem {
             return nil
         }
         if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
+            
+            if let messageItem = self as? ChatMessageItem, messageItem.containsBigEmoji  {
+                return nil
+            }
+            
             switch peer.info {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
                     
                     var latestPeers:[Peer] = []
                     var count: Int32 = 0
+                    var hasUnread = false
                     for attr in message.attributes {
                         if let attribute = attr as? ReplyThreadMessageAttribute {
                             count = attribute.count
+                            if let maxMessageId = attribute.maxMessageId {
+                                if let maxReadMessageId = attribute.maxReadMessageId {
+                                    hasUnread = maxReadMessageId < maxMessageId
+                                } else {
+                                    hasUnread = count > 0
+                                }
+                            }
                             latestPeers = message.peers.filter { peerId, _ -> Bool in
                                 return attribute.latestUsers.contains(peerId)
                             }.map { $0.1 }
@@ -1007,8 +1034,8 @@ class ChatRowItem: TableRowItem {
                         title = L10n.channelCommentsCountCountable(Int(count))
                     }
                     
-                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, nil, .comments(origin: message.id))
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, handler: { [weak self] in
+                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
             default:
@@ -1031,9 +1058,13 @@ class ChatRowItem: TableRowItem {
             case let .broadcast(info):
                 if info.flags.contains(.hasDiscussionGroup) {
                     var count: Int32 = 0
+                    var hasUnread: Bool = false
                     for attr in message.attributes {
                         if let attribute = attr as? ReplyThreadMessageAttribute {
                             count = attribute.count
+                            if let maxMessageId = attribute.maxMessageId, let maxReadMessageId = attribute.maxReadMessageId {
+                                hasUnread = maxReadMessageId < maxMessageId
+                            }
                             break
                         }
                     }
@@ -1043,8 +1074,8 @@ class ChatRowItem: TableRowItem {
                     } else {
                         title = L10n.channelCommentsShortCountCountable(Int(count))
                     }
-                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], drawBorder: false, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, nil, .comments(origin: message.id))
+                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], drawBorder: false, handler: { [weak self] in
+                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
             default:
@@ -1397,8 +1428,12 @@ class ChatRowItem: TableRowItem {
                         if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                             nameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                         } else if context.peerId != peer.id {
-                            let value = abs(Int(peer.id.id) % 7)
-                            nameColor = presentation.chat.peerName(value)
+                            if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
+                                nameColor = presentation.colors.accentIconBubble_outgoing
+                            } else {
+                                let value = abs(Int(peer.id.id) % 7)
+                                nameColor = presentation.chat.peerName(value)
+                            }
                         }
                     }
                     
@@ -1488,6 +1523,16 @@ class ChatRowItem: TableRowItem {
             
             let threadId: MessageId? = chatInteraction.mode.threadId
             
+            if let message = effectiveCommentMessage {
+                for attribute in message.attributes {
+                    if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
+                        if let peer = chatInteraction.peer, peer.isSupergroup {
+                            replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                        }
+                        break
+                    }
+                }
+            }
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
@@ -1520,12 +1565,7 @@ class ChatRowItem: TableRowItem {
                         fullDate = "\(author)\(fullDate)"
                     }
                 }
-                if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
-                    if let peer = chatInteraction.peer, peer.isSupergroup {
-                        replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
-                    }
-                }
-                
+               
 //                if FastSettings.isTestLiked(message.id) {
 //                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
 //                }
@@ -2121,6 +2161,33 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     var items:[ContextMenuItem] = []
     
+    
+    if message.id.peerId == repliesPeerId, let author = message.chatPeer(context.peerId), author.id != context.peerId {
+        
+        let text = author.isUser ? L10n.chatContextBlockUser : L10n.chatContextBlockGroup
+        
+        items.append(ContextMenuItem(text, handler: {
+
+            let header = author.isUser ? L10n.chatContextBlockUserHeader : L10n.chatContextBlockGroupHeader
+            let info = author.isUser ? L10n.chatContextBlockUserInfo(author.displayTitle) : L10n.chatContextBlockGroupInfo(author.displayTitle)
+            let third = author.isUser ? L10n.chatContextBlockUserThird : L10n.chatContextBlockGroupThird
+            let ok = author.isUser ? L10n.chatContextBlockUserOK : L10n.chatContextBlockGroupOK
+            let cancel = author.isUser ? L10n.chatContextBlockUserCancel : L10n.chatContextBlockGroupCancel
+
+            modernConfirm(for: context.window, account: account, peerId: author.id, header: header, information: info, okTitle: ok, cancelTitle: cancel, thridTitle: third, thridAutoOn: true, successHandler: { result in
+                switch result {
+                case .thrid:
+                    let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
+                    
+                    _ = showModalProgress(signal: combineLatest(reportPeer(account: account, peerId: author.id), block), for: context.window).start()
+                case .basic:
+                    _ = showModalProgress(signal: context.blockedPeersContext.add(peerId: author.id), for: context.window).start()
+                }
+                
+            })
+        }))
+        items.append(ContextSeparatorItem())
+    }
 
     
     if message.isScheduledMessage, let peer = peer {
@@ -2144,18 +2211,27 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
-    if chatInteraction.mode.threadId == nil {
-        for attr in message.attributes {
-            if let attr = attr as? ReplyThreadMessageAttribute, attr.count > 0 {
-                items.append(ContextMenuItem(L10n.messageContextViewReplies, handler: {
-                    chatInteraction.openReplyThread(message.id, message.id, .replies(origin: message.id))
-                }))
+    if chatInteraction.mode.threadId == nil, let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.isSupergroup {
+        if let attr = message.replyThread, attr.count > 0 {
+            var messageId: MessageId = message.id
+            var modeIsReplies = true
+            if let source = message.sourceReference {
+                messageId = source.messageId
+                if let peer = message.peers[source.messageId.peerId] {
+                    if peer.isChannel {
+                        modeIsReplies = false
+                    }
+                }
             }
-            if let attr = attr as? ReplyMessageAttribute, let threadId = attr.threadMessageId, threadId != message.id {
-                items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
-                    chatInteraction.openReplyThread(threadId, message.id, .replies(origin: message.id))
-                }))
-            }
+            
+            items.append(ContextMenuItem(modeIsReplies ? L10n.messageContextViewRepliesCountable(Int(attr.count)) : L10n.messageContextViewCommentsCountable(Int(attr.count)), handler: {
+                chatInteraction.openReplyThread(messageId, !modeIsReplies, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
+            }))
+        }
+        if let attr = message.replyAttribute, let threadId = attr.threadMessageId, threadId != message.id {
+            items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
+                chatInteraction.openReplyThread(threadId, false, .replies(origin: message.id))
+            }))
         }
     }
     
@@ -2168,7 +2244,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
-                _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
+                _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id, isThread: chatInteraction.mode.threadId != nil), for: context.window).start(next: { link in
                     if let link = link {
                         copyToClipboard(link)
                     }

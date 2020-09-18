@@ -563,11 +563,11 @@ class GalleryViewer: NSResponder {
                 switch mode {
                 case .history:
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
-                case let .replyThread(threadId, _):
+                case let .replyThread(threadId, maxMessage, _):
                     if threadId == message.id {
                         signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     } else {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(threadMessageId: threadId, maxReadMessageId: nil), contextHolder: contextHolder), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(threadMessageId: threadId, maxMessage: maxMessage, maxReadMessageId: nil), contextHolder: contextHolder), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
@@ -792,14 +792,18 @@ class GalleryViewer: NSResponder {
         
         if let _ = self.contentInteractions, chatMode == .history {
             if let message = pager.selectedItem?.entry.message {
-                items.append(SPopoverItem(L10n.galleryContextShowMessage, {[weak self] in
-                    self?.showMessage()
-                }))
-                items.append(SPopoverItem(L10n.galleryContextShowGallery, {[weak self] in
-                    self?.showSharedMedia()
-                }))
+                if self.type == .history {
+                    items.append(SPopoverItem(L10n.galleryContextShowMessage, { [weak self] in
+                        self?.showMessage()
+                    }))
+                }
+                if chatMode == .history && message.id.peerId != repliesPeerId && self.type == .history {
+                    items.append(SPopoverItem(L10n.galleryContextShowGallery, { [weak self] in
+                        self?.showSharedMedia()
+                    }))
+                }
                 if canDeleteMessage(message, account: context.account) {
-                    items.append(SPopoverItem(L10n.galleryContextDeletePhoto, {[weak self] in
+                    items.append(SPopoverItem(L10n.galleryContextDeletePhoto, { [weak self] in
                         self?.deleteMessage(control)
                     }))
                 }

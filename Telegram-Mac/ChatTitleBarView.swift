@@ -341,7 +341,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         didSet {
            updateStatus()
             switch chatInteraction.mode {
-            case let .replyThread(threadId, _):
+            case let .replyThread(threadId, _, _):
                 let answersCount = chatInteraction.context.account.postbox.messageView(threadId)
                     |> map {
                         $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
@@ -776,12 +776,14 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(L10n.chatTitleScheduledMessages)
-            } else if case let .replyThread(_, mode) = chatInteraction.mode {
-                switch mode {
-                case .comments:
-                    result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
-                case .replies:
-                    result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
+            } else if case .replyThread = chatInteraction.mode {
+                let message = chatInteraction.presentation.cachedPinnedMessage
+                if let message = message {
+                    if message.sourceReference != nil {
+                        result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
+                    } else {
+                        result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
+                    }
                 }
             }
             

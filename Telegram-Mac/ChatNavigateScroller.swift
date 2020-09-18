@@ -20,29 +20,34 @@ class ChatNavigateScroller: ImageButton {
     private var badge:BadgeNode?
     private var badgeView:View = View()
     private let context:AccountContext
-    init(_ context: AccountContext, _ chatLocation: ChatLocation) {
+    init(_ context: AccountContext, chatLocation: ChatLocation, mode: ChatMode) {
         self.context = context
         super.init()
         autohighlight = false
         set(image: theme.icons.chatScrollUp, for: .Normal)
         set(image: theme.icons.chatScrollUpActive, for: .Highlight)
         self.setFrameSize(60,60)
-        
-        self.disposable.set((context.account.postbox.unreadMessageCountsView(items: [chatLocation.unreadMessageCountsItem]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
-            if let strongSelf = self {
-                let count = unreadView.count(for: chatLocation.unreadMessageCountsItem) ?? 0
-                if count > 0 {
-                    strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: theme.colors.underSelectedColor, font: .bold(.small)), theme.colors.accent)
-                    strongSelf.badge!.view = strongSelf.badgeView
-                    strongSelf.badgeView.setFrameSize(strongSelf.badge!.size)
-                    strongSelf.addSubview(strongSelf.badgeView)
-                } else {
-                    strongSelf.badgeView.removeFromSuperview()
+        switch mode {
+        case .history:
+            self.disposable.set((context.account.postbox.unreadMessageCountsView(items: [chatLocation.unreadMessageCountsItem]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
+                if let strongSelf = self {
+                    let count = unreadView.count(for: chatLocation.unreadMessageCountsItem) ?? 0
+                    if count > 0 {
+                        strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: theme.colors.underSelectedColor, font: .bold(.small)), theme.colors.accent)
+                        strongSelf.badge!.view = strongSelf.badgeView
+                        strongSelf.badgeView.setFrameSize(strongSelf.badge!.size)
+                        strongSelf.addSubview(strongSelf.badgeView)
+                    } else {
+                        strongSelf.badgeView.removeFromSuperview()
+                    }
+                    strongSelf.needsLayout = true
+                    
                 }
-                strongSelf.needsLayout = true
-
-            }
-        }))
+            }))
+        default:
+            break
+        }
+        
         
        updateLocalizationAndTheme(theme: theme)
     }

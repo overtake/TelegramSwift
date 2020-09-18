@@ -47,7 +47,15 @@ func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximat
         return .single(.Local)
     }
     if useVideoThumb, let videoThumb = file.videoThumbnails.first {
-        return account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)
+        return combineLatest(account.postbox.mediaBox.resourceStatus(file.resource, approximateSynchronousValue: approximateSynchronousValue), account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)) |> map { file, thumb in
+            switch thumb {
+            case .Local, .Fetching:
+                return thumb
+            default:
+                return file
+            }
+        }
+      //  return account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)
     }
     return account.postbox.mediaBox.resourceStatus(file.resource, approximateSynchronousValue: approximateSynchronousValue)
 }
