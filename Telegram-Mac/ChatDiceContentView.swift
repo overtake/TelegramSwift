@@ -146,7 +146,7 @@ class ChatDiceContentView: ChatMediaContentView {
         if let media = media, let message = self.parent {
             let item = self.table?.item(stableId: ChatHistoryEntryId.message(message))
             
-            if let item = item as? ChatRowItem, let peer = item.peer, peer.canSendMessage(item.chatInteraction.mode.replyThreadMode) {
+            if let item = item as? ChatRowItem, let peer = item.peer, peer.canSendMessage(item.chatInteraction.mode.isThreadMode) {
                 let text: String
                 
                 switch media.emoji {

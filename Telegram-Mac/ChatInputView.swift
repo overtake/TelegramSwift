@@ -529,7 +529,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
-                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: false)
+                
+                chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64), activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
             }
             
@@ -612,7 +613,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
                 if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
-                    chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.peerId, activity: .typingText, isPresent: isPresent)
+                    chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, threadId: chatInteraction.mode.threadId64), activity: .typingText, isPresent: isPresent)
                 }
             }))
         }

@@ -332,7 +332,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
         mediaController.loadViewIfNeeded()
         
-        let inputActivity = context.account.peerInputActivities(peerId: peerId)
+        let inputActivity = context.account.peerInputActivities(peerId: .init(peerId: peerId, threadId: nil))
             |> map { activities -> [PeerId : PeerInputActivity] in
                 return activities.reduce([:], { (current, activity) -> [PeerId : PeerInputActivity] in
                     var current = current

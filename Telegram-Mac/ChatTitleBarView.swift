@@ -371,12 +371,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
-            if let inputActivities = inputActivities, self.chatInteraction.mode == .history  {
+            if let inputActivities = inputActivities, self.chatInteraction.mode != .scheduled  {
                 activities.update(with: inputActivities, for: max(frame.width - 80, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
                     guard let `self` = self else { return }
                     self.needsLayout = true
                     self.hiddenStatus = show
                     self.setNeedsDisplay()
+                    
+                    
+                    
                     if let view = self.activities.view {
                         if self.animates {
                             if show {
@@ -662,7 +665,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         avatarControl.centerY(x: additionInset)
         searchButton.centerY(x:frame.width - searchButton.frame.width)
         callButton.centerY(x: searchButton.isHidden ? frame.width - callButton.frame.width : searchButton.frame.minX - callButton.frame.width - 20)
-        activities.view?.setFrameOrigin(avatarControl.frame.maxX + 8, 25)
+        if !avatarControl.isHidden {
+            activities.view?.setFrameOrigin(avatarControl.frame.maxX + 8, 25)
+        } else {
+            activities.view?.setFrameOrigin(24, 25)
+        }
         badgeNode.view!.setFrameOrigin(6,4)
         
         closeButton.centerY()
@@ -784,6 +791,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     } else {
                         result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
                     }
+                    status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
+                    
+                    result = result.withUpdatedTitle("Discussion")
                 }
             }
             

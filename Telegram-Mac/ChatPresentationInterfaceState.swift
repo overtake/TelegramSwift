@@ -502,7 +502,7 @@ struct ChatPresentationInterfaceState: Equatable {
                     })
                 } else if let permissionText = permissionText(from: peer, for: .banSendMessages) {
                     return .restricted(permissionText)
-                } else if !peer.canSendMessage(chatMode.replyThreadMode), let notificationSettings = notificationSettings {
+                } else if !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings {
                     return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                         chatInteraction.toggleNotifications(nil)
                     })
@@ -531,7 +531,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 }
             }
             
-            if let peer = peer, !peer.canSendMessage(chatMode.replyThreadMode), let notificationSettings = notificationSettings {
+            if let peer = peer, !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings {
                 return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                     chatInteraction.toggleNotifications(nil)
                 })
@@ -599,7 +599,7 @@ struct ChatPresentationInterfaceState: Equatable {
     
     var isShowSidebar: Bool {
         if let sidebarEnabled = sidebarEnabled, let peer = peer, let sidebarShown = sidebarShown, let layout = layout {
-            return sidebarEnabled && peer.canSendMessage(chatMode.replyThreadMode) && sidebarShown && layout == .dual
+            return sidebarEnabled && peer.canSendMessage(chatMode.isThreadMode) && sidebarShown && layout == .dual
         }
         return false
     }

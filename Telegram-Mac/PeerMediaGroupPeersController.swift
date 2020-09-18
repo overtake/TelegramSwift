@@ -416,7 +416,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
     
     let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
     
-    let inputActivity = context.account.peerInputActivities(peerId: peerId)
+    let inputActivity = context.account.peerInputActivities(peerId: .init(peerId: peerId, threadId: nil))
         |> map { activities -> [PeerId : PeerInputActivity] in
             return activities.reduce([:], { (current, activity) -> [PeerId : PeerInputActivity] in
                 var current = current

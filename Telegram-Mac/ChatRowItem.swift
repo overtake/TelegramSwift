@@ -1027,11 +1027,12 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                     
-                    let title: String
+                    var title: String
                     if count == 0 {
                         title = L10n.channelCommentsLeaveComment
                     } else {
                         title = L10n.channelCommentsCountCountable(Int(count))
+                        title = title.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
                     }
                     
                     _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, handler: { [weak self] in
@@ -1068,11 +1069,12 @@ class ChatRowItem: TableRowItem {
                             break
                         }
                     }
-                    let title: String
+                    var title: String
                     if count == 0 {
                         title = L10n.channelCommentsShortLeaveComment
                     } else {
                         title = L10n.channelCommentsShortCountCountable(Int(count))
+                        title = title.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
                     }
                     _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], drawBorder: false, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
