@@ -476,7 +476,7 @@ class ChatInputActionsView: View, Notifable {
                 }
                 var items:[SPopoverItem] = []
                 
-                if peer.id != chatInteraction.context.account.peerId && !peer.isSecretChat {
+                if peer.id != chatInteraction.context.account.peerId {
                     items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
                         chatInteraction?.sendMessage(true, nil)
                     }))

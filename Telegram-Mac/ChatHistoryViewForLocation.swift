@@ -97,7 +97,7 @@ public struct ChatHistoryCombinedInitialData {
     let initialData: InitialMessageHistoryData?
     let buttonKeyboardMessage: Message?
     let cachedData: CachedPeerData?
-    let cachedDataMessages:[MessageId: Message]?
+    let cachedDataMessages:[MessageId: [Message]]?
     let readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?
     let limitsConfiguration: LimitsConfiguration
     let autoplayMedia: AutoplayMediaPreferences
@@ -123,12 +123,12 @@ enum ChatHistoryViewUpdate {
 }
 
 
-func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = [], contextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil)) -> Signal<ChatHistoryViewUpdate, NoError> {
+func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation _chatLocation: ChatLocation, fixedCombinedReadStates: (()->MessageHistoryViewReadState?)?, tagMask: MessageTags?, mode: ChatMode = .history, additionalData: [AdditionalMessageHistoryViewData] = [], orderStatistics: MessageHistoryViewOrderStatistics = [], chatLocationContextHolder: Atomic<ChatLocationContextHolder?> = Atomic(value: nil), chatLocationInput: ChatLocationInput? = nil) -> Signal<ChatHistoryViewUpdate, NoError> {
     
     
     let account = context.account
     
-    let chatLocation = context.chatLocationInput(for: _chatLocation, contextHolder: contextHolder)
+    let chatLocation = chatLocationInput ?? context.chatLocationInput(for: _chatLocation, contextHolder: chatLocationContextHolder)
     
     
     switch location {
@@ -350,14 +350,14 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
 
 private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatLocationInput) -> (
     cachedData: CachedPeerData?,
-    cachedDataMessages: [MessageId: Message]?,
+    cachedDataMessages: [MessageId: [Message]]?,
     readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?,
     limitsConfiguration: LimitsConfiguration,
     autoplayMedia: AutoplayMediaPreferences,
     autodownloadSettings: AutomaticMediaDownloadSettings
     ) {
         var cachedData: CachedPeerData?
-        var cachedDataMessages: [MessageId: Message]?
+        var cachedDataMessages: [MessageId: [Message]]?
         var readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData] = [:]
         var notificationSettings: PeerNotificationSettings?
         var limitsConfiguration: LimitsConfiguration = LimitsConfiguration.defaultValue
@@ -383,12 +383,10 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 }
             case let .cachedPeerDataMessages(peerIdValue, value):
                 if case .peer(peerIdValue) = chatLocation {
-                    cachedDataMessages = value
+                    cachedDataMessages = value?.mapValues { [$0] }
                 }
-            case let .message(_, message):
-                if let message = message {
-                    cachedDataMessages = [message.id : message]
-                }
+            case let .message(messageId, messages):
+                cachedDataMessages = [messageId : messages]
             case let .preferencesEntry(key, value):
                 if key == PreferencesKeys.limitsConfiguration {
                     limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue
@@ -402,7 +400,6 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                     autodownloadSettings = value as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
                 }
             case let .totalUnreadState(unreadState):
-                
                 if let combinedReadStates = view.fixedReadStates {
                     if case let .peer(peerId) = chatLocation, case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId] {
                         readStateData[peerId] = ChatHistoryCombinedInitialReadStateData(unreadCount: readState.count, totalUnreadCount: 0, notificationSettings: notificationSettings)
@@ -417,4 +414,108 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
 
         
         return (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings)
+}
+
+
+func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, context: AccountContext, chatLocation: ChatLocation, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>, tagMask: MessageTags?, additionalData: [AdditionalMessageHistoryViewData]) -> Signal<ChatHistoryViewUpdate, NoError> {
+    return (chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder)
+        |> castError(Bool.self)
+        |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
+            switch update {
+            case let .Loading(value):
+                if case .Generic(.FillHole) = value.type {
+                    return .fail(true)
+                }
+            case let .HistoryView(value):
+                if case .Generic(.FillHole) = value.type {
+                    return .fail(true)
+                }
+            }
+            return .single(update)
+        })
+        |> restartIfError
+}
+
+
+
+
+struct ReplyThreadInfo {
+    var message: ChatReplyThreadMessage
+    var isChannelPost: Bool
+    var isEmpty: Bool
+    var contextHolder: Atomic<ChatLocationContextHolder?>
+}
+
+enum ReplyThreadSubject {
+    case channelPost(MessageId)
+    case groupMessage(MessageId)
+}
+
+func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThreadSubject) -> Signal<ReplyThreadInfo?, NoError> {
+    let message: Signal<ChatReplyThreadMessage?, NoError>
+    switch subject {
+    case let .channelPost(messageId):
+        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId)
+    case let .groupMessage(messageId):
+        message = .single(ChatReplyThreadMessage(
+            messageId: messageId,
+            maxMessage: .unknown,
+            maxReadMessageId: nil
+        ))
+    }
+    
+    return message
+        |> mapToSignal { message -> Signal<ReplyThreadInfo?, NoError> in
+            guard let message = message else {
+                return .single(nil)
+            }
+            
+            let isChannelPost: Bool
+            switch subject {
+            case .channelPost:
+                isChannelPost = true
+            case .groupMessage:
+                isChannelPost = false
+            }
+            
+            let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+            
+            let preloadSignal = preloadedChatHistoryViewForLocation(
+                .Initial(count: 60),
+                context: context,
+                chatLocation: .replyThread(
+                    threadMessageId: message.messageId,
+                    maxMessage: message.maxMessage,
+                    maxReadMessageId: message.maxReadMessageId
+                ),
+                chatLocationContextHolder: chatLocationContextHolder,
+                tagMask: nil,
+                additionalData: []
+            )
+            return preloadSignal
+                |> map { historyView -> Bool? in
+                    switch historyView {
+                    case .Loading:
+                        return nil
+                    case let .HistoryView(values):
+                        return values.view.entries.isEmpty
+                    }
+                }
+                |> mapToSignal { value -> Signal<Bool, NoError> in
+                    if let value = value {
+                        return .single(value)
+                    } else {
+                        return .complete()
+                    }
+                }
+                |> take(1)
+                |> map { isEmpty -> ReplyThreadInfo? in
+                    return ReplyThreadInfo(
+                        message: message,
+                        isChannelPost: isChannelPost,
+                        isEmpty: isEmpty,
+                        contextHolder: chatLocationContextHolder
+                    )
+            }
+    }
 }

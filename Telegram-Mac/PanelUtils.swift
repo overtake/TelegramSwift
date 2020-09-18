@@ -285,7 +285,7 @@ func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header
     
     _ = signal.start(next: { peer in
         if let peer = peer, let account = account {
-            alert.messageText = account.peerId == peer.id ? L10n.peerSavedMessages : peer.displayTitle
+            alert.messageText = header.isEmpty || header == appName ? (account.peerId == peer.id ? L10n.peerSavedMessages : peer.displayTitle) : header
             alert.icon = nil
             if peerId == account.peerId {
                 let icon = theme.icons.searchSaved

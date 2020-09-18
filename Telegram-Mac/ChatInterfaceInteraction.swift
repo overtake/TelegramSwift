@@ -143,10 +143,12 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
-    
-    var openReplyThread:(MessageId?, MessageId?, ReplyThreadMode)->Void = {  _, _, _ in }
 
-    
+    var openReplyThread:(MessageId, Bool, ReplyThreadMode)->Void = {  _, _, _ in }
+
+    func chatLocationInput() -> ChatLocationInput {
+        return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
+    }
     
     var unarchive: ()->Void = { }
 

@@ -21,7 +21,7 @@ protocol ChatLocationContextHolder: class {
 
 enum ChatLocation: Equatable {
     case peer(PeerId)
-    case replyThread(threadMessageId: MessageId, maxReadMessageId: MessageId?)
+    case replyThread(threadMessageId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, maxReadMessageId: MessageId?)
 }
 
 
@@ -406,25 +406,26 @@ final class AccountContext {
         }
     }
     
-    func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
+    public func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
         switch location {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, maxReadMessageId):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+        case let .replyThread(messageId, maxMessage, maxReadMessageId):
+            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxMessage: maxMessage, maxReadMessageId: maxReadMessageId)
             return .external(messageId.peerId, context.state)
         }
     }
     
-    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
+    public func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
         switch location {
         case .peer:
             let _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: messageIndex).start()
-        case let .replyThread(messageId, maxReadMessageId):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+        case let .replyThread(messageId, maxMessage, maxReadMessageId):
+            let context = chatLocationContext(holder: contextHolder, account: self.account, messageId: messageId, maxMessage: maxMessage, maxReadMessageId: maxReadMessageId)
             context.applyMaxReadIndex(messageIndex: messageIndex)
         }
     }
+
 
     
     #if !SHARE
@@ -671,22 +672,21 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
 
 
 
-private func chatLocationContext(holder: Atomic<ChatLocationContextHolder?>, account: Account, messageId: MessageId, maxReadMessageId: MessageId?) -> ReplyThreadHistoryContext {
+private func chatLocationContext(holder: Atomic<ChatLocationContextHolder?>, account: Account, messageId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, maxReadMessageId: MessageId?) -> ReplyThreadHistoryContext {
     let holder = holder.modify { current in
         if let current = current as? ChatLocationContextHolderImpl {
             return current
         } else {
-            return ChatLocationContextHolderImpl(account: account, messageId: messageId, maxReadMessageId: maxReadMessageId)
+            return ChatLocationContextHolderImpl(account: account, messageId: messageId, maxMessage: maxMessage, maxReadMessageId: maxReadMessageId)
         }
-    } as! ChatLocationContextHolderImpl
+        } as! ChatLocationContextHolderImpl
     return holder.context
 }
 
 private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     let context: ReplyThreadHistoryContext
     
-    init(account: Account, messageId: MessageId, maxReadMessageId: MessageId?) {
-        self.context = ReplyThreadHistoryContext(account: account, peerId: messageId.peerId, threadMessageId: messageId, maxReadMessageId: maxReadMessageId)
+    init(account: Account, messageId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, maxReadMessageId: MessageId?) {
+        self.context = ReplyThreadHistoryContext(account: account, peerId: messageId.peerId, threadMessageId: messageId, maxMessage: maxMessage,  maxReadMessageId: maxReadMessageId)
     }
 }
-

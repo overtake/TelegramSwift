@@ -172,7 +172,7 @@ class ChatServiceItem: ChatRowItem {
                     if pinnedRange.location != NSNotFound {
                         attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
                             if let pinnedId = pinnedId {
-                                chatInteraction?.focusMessageId(nil, pinnedId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+                                chatInteraction?.focusMessageId(nil, pinnedId, .CenterEmpty)
                             }
                         }), for: pinnedRange, color: grayTextColor)
                         attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: pinnedRange)

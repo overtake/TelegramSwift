@@ -274,6 +274,10 @@ public enum TableScrollState :Equatable {
     case down(Bool);
     case up(Bool);
     case upOffset(Bool, CGFloat);
+    
+    public static var CenterEmpty: TableScrollState {
+        return .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0)
+    }
 }
 
 public extension TableScrollState {
@@ -1171,8 +1175,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private let stickTimeoutDisposable = MetaDisposable()
     private var previousStickMinY: CGFloat? = nil
+    
+    private var stickTopInset: CGFloat = 0
+    public func updateStickInset(_ inset: CGFloat, animated: Bool) {
+        if stickTopInset != inset {
+            stickTopInset = inset
+            updateStickAfterScroll(animated)
+        }
+    }
+    
     public func updateStickAfterScroll(_ animated: Bool) -> Void {
-        let range = self.visibleRows()
+        let visibleRect = self.tableView.visibleRect
+        let range = self.tableView.rows(in: NSMakeRect(visibleRect.minX, visibleRect.minY, visibleRect.width, visibleRect.height - stickTopInset))
         
         if let stickClass = stickClass, !updating {
          //   if documentSize.height > frame.height {
@@ -1184,7 +1198,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             
                 
-                let scrollInset = self.documentOffset.y + (flipped ? 0 : frame.height)
+                let scrollInset = self.documentOffset.y - stickTopInset + (flipped ? 0 : frame.height)
                 var item:TableRowItem? = optionalItem(at: index)
                 
                 if !flipped {
@@ -1280,9 +1294,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         if scrollInset <= 0, item.singletonItem {
                             yTopOffset = abs(scrollInset)
                         }
-                        stickView.change(pos: NSMakePoint(0, yTopOffset), animated: animated)
+                        
+                        let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset)
+                        if stickView.frame.origin != updatedPoint {
+                            stickView.change(pos: updatedPoint, animated: animated)
+                        }
                         stickView.header = abs(dif) <= item.heightValue
-
+                        
                         if !firstTime {
                             let rows:[Int] = [tableView.row(at: NSMakePoint(0, min(scrollInset - stickView.frame.height, documentSize.height - stickView.frame.height))), tableView.row(at: NSMakePoint(0, scrollInset))]
                             var applied: Bool = false

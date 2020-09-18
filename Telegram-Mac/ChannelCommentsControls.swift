@@ -19,18 +19,19 @@ final class ChannelCommentsRenderData {
     let drawBorder: Bool
     let context: AccountContext
     let message: Message?
-    
+    let hasUnread: Bool
     fileprivate var titleNode:TextNode?
     fileprivate var title:(TextNodeLayout,TextNode)?
     fileprivate var titleAttributed:NSAttributedString?
     fileprivate let handler: ()->Void
     
-    init(context: AccountContext, message: Message?, title: NSAttributedString, peers: [Peer], drawBorder: Bool, handler: @escaping()->Void = {}) {
+    init(context: AccountContext, message: Message?, hasUnread: Bool, title: NSAttributedString, peers: [Peer], drawBorder: Bool, handler: @escaping()->Void = {}) {
         self.context = context
         self.message = message
         self._title = title
         self.peers = peers
         self.drawBorder = drawBorder
+        self.hasUnread = hasUnread
         self.handler = handler
     }
     
@@ -64,9 +65,13 @@ final class ChannelCommentsRenderData {
             }
             width += theme.icons.channel_comments_bubble_next.backingSize.width
             height = ChatRowItem.channelCommentsBubbleHeight
+            
+            if hasUnread {
+                width += 10
+            }
         } else if let title = title {
             width += title.0.size.width
-            width += 6
+            width += 3
             width += theme.icons.channel_comments_list.backingSize.width
             height = ChatRowItem.channelCommentsHeight
         }
@@ -110,6 +115,14 @@ class ChannelCommentsBubbleControl: Control {
             f.origin.y -= 1
             rect = f
             title.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
+            
+            if render.hasUnread {
+                ctx.setFillColor(theme.colors.accentIconBubble_incoming.cgColor)
+                let size = NSMakeSize(6, 6)
+                var f = focus(size)
+                f.origin.x = rect.maxX + 6
+                ctx.fillEllipse(in: f)
+            }
             
             f = focus(theme.icons.channel_comments_bubble_next.backingSize)
             f.origin.x = frame.width - 6 - f.width
@@ -184,7 +197,7 @@ class ChannelCommentsControl: Control {
             title.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
             
             f = focus(theme.icons.channel_comments_list.backingSize)
-            f.origin.x = rect.maxX + 6
+            f.origin.x = rect.maxX + 3
             rect = f
             ctx.draw(theme.icons.channel_comments_list, in: rect)
             

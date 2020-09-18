@@ -146,12 +146,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     private var textPlaceholder: String {
-        if case let .replyThread(_, mode) = chatInteraction.mode {
-            switch mode {
-            case .replies:
-                return L10n.messagesPlaceholderReply
-            case .comments:
-                return L10n.messagesPlaceholderComment
+        if case .replyThread = chatInteraction.mode {
+            let message = chatInteraction.presentation.cachedPinnedMessage
+            if let message = message {
+                if message.sourceReference != nil {
+                    return L10n.messagesPlaceholderComment
+                } else {
+                    return L10n.messagesPlaceholderReply
+                }
             }
         }
         if let peer = chatInteraction.presentation.peer {

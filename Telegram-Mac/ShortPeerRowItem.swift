@@ -180,12 +180,16 @@ class ShortPeerRowItem: GeneralRowItem {
         self.statusStyle = statusStyle
         self.isLookSavedMessage = isLookSavedMessage
         self.highlightVerified = highlightVerified
-        let icon = theme.icons.searchSaved
 
         
         let tAttr:NSMutableAttributedString = NSMutableAttributedString()
         if isLookSavedMessage && account.peerId == peer.id {
+            let icon = theme.icons.searchSaved
             photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 15, photoSize.height - 15)), cornerRadius: nil)) |> map {($0, false)}
+        } else if isLookSavedMessage && peer.id == repliesPeerId {
+            let icon = theme.icons.chat_replies_avatar
+            photo = generateEmptyPhoto(photoSize, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photoSize.width - 17, photoSize.height - 17)), cornerRadius: nil)) |> map {($0, false)}
+
         }
         
         if let emptyAvatar = peer.emptyAvatar {

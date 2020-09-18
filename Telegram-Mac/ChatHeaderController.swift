@@ -20,7 +20,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case search(ChatSearchInteractions, Peer?, String?)
     case addContact(block: Bool, autoArchived: Bool)
     case shareInfo
-    case pinned(MessageId)
+    case pinned(MessageId, doNotChangeTable: Bool)
     case report(autoArchived: Bool)
     case promo(PromoChatListItem.Kind)
     var stableId:Int {
@@ -61,10 +61,19 @@ enum ChatHeaderState : Identifiable, Equatable {
         }
     }
     
+    var toleranceHeight: CGFloat {
+        switch self {
+        case let .pinned(_, doNotChangeTable):
+            return doNotChangeTable ? 0 : height
+        default:
+            return height
+        }
+    }
+    
     static func ==(lhs:ChatHeaderState, rhs: ChatHeaderState) -> Bool {
         switch lhs {
-        case let .pinned(pinnedId):
-            if case .pinned(pinnedId) = rhs {
+        case let .pinned(pinnedId, value):
+            if case .pinned(pinnedId, value) = rhs {
                 return true
             } else {
                 return false
@@ -135,7 +144,7 @@ class ChatHeaderController {
             view = AddContactView(chatInteraction, canBlock: block, autoArchived: autoArchived)
         case .shareInfo:
             view = ShareInfoView(chatInteraction)
-        case let .pinned(messageId):
+        case let .pinned(messageId, _):
             view = ChatPinnedView(messageId, chatInteraction: chatInteraction)
         case let .search(interactions, initialPeer, initialString):
             view = ChatSearchHeader(interactions, chatInteraction: chatInteraction, initialPeer: initialPeer, initialString: initialString)
@@ -323,8 +332,15 @@ class ChatPinnedView : Control {
         
         self.dismiss.isHidden = chatInteraction.mode.threadId == messageId
         
+        let focusMessageId: MessageId
+        if chatInteraction.mode.threadId == messageId {
+            focusMessageId = chatInteraction.presentation.cachedPinnedMessage?.sourceReference?.messageId ?? messageId
+        } else {
+            focusMessageId = messageId
+        }
+        
         self.set(handler: { [weak self] _ in
-            self?.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+            self?.chatInteraction.focusMessageId(nil, focusMessageId, .CenterEmpty)
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
@@ -810,7 +826,7 @@ class ChatSearchHeader : View, Notifable {
         self.interactions = interactions
         self.parentInteractions = chatInteraction
         self.calendarController = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, selectHandler: interactions.calendarAction)
-        self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context)
+        self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context, mode: chatInteraction.mode)
         self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
         self.inputContextHelper = InputContextHelper(chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
         
@@ -865,12 +881,12 @@ class ChatSearchHeader : View, Notifable {
     }
     
     private var calendarAbility: Bool {
-        return true
+        return chatInteraction.mode == .history
     }
     
     private var fromAbility: Bool {
         if let peer = chatInteraction.presentation.peer {
-            return peer.isSupergroup || peer.isGroup
+            return (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history
         } else {
             return false
         }

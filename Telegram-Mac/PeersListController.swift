@@ -659,7 +659,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     func changeSelection(_ location: ChatLocation?) {
         if let location = location {
-            self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, nil))
+            switch location {
+            case .peer:
+                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, nil))
+            case .replyThread:
+                self.genericView.tableView.changeSelection(stableId: nil)
+            }
         } else {
             self.genericView.tableView.changeSelection(stableId: nil)
         }

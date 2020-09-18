@@ -28,7 +28,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let containerView:Control
     private let separator:View = View()
     private let playingSpeed: ImageButton = ImageButton()
-    private var controller:APController? {
+    private(set) var controller:APController? {
         didSet {
             if let controller = controller {
                 self.bufferingStatusDisposable.set((controller.bufferingStatus

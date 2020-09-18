@@ -116,7 +116,7 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-               self?.chatInteraction.focusMessageId(nil, replyMessageId, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0))
+               self?.chatInteraction.focusMessageId(nil, replyMessageId, .CenterEmpty)
             }, for: .Click)
         }
         

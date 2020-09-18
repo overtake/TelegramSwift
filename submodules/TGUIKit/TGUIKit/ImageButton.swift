@@ -121,6 +121,7 @@ open class ImageButton: Button {
             self.imageView.image = updated
         }
         
+        self.imageView.alphaValue = isEnabled ? 1 : 0.8
         
         if let policy = self.hoverAdditionPolicy[state], previous != state {
             switch policy {
