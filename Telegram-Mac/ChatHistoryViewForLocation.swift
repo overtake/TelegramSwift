@@ -451,42 +451,24 @@ enum ReplyThreadSubject {
     case groupMessage(MessageId)
 }
 
-func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThreadSubject) -> Signal<ReplyThreadInfo?, NoError> {
-    let message: Signal<ChatReplyThreadMessage?, NoError>
+
+func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThreadSubject, atMessageId: MessageId? = nil) -> Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> {
+    let message: Signal<ChatReplyThreadMessage, FetchChannelReplyThreadMessageError>
     switch subject {
     case let .channelPost(messageId):
-        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId)
+        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId, atMessageId: atMessageId)
     case let .groupMessage(messageId):
-        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId)
+        message = fetchChannelReplyThreadMessage(account: context.account, messageId: messageId, atMessageId: atMessageId)
     }
-
     
     return message
-        |> mapToSignal { message -> Signal<ReplyThreadInfo?, NoError> in
-            guard let message = message else {
-                return .single(nil)
-            }
-            
-            let isChannelPost: Bool
-            switch subject {
-            case .channelPost:
-                isChannelPost = true
-            case .groupMessage:
-                isChannelPost = false
-            }
-            
+        |> mapToSignal { replyThreadMessage -> Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> in
             let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
             
             let preloadSignal = preloadedChatHistoryViewForLocation(
                 .Initial(count: 60),
                 context: context,
-                chatLocation: .replyThread(
-                    threadMessageId: message.messageId,
-                    maxMessage: message.maxMessage,
-                    maxReadIncomingMessageId: message.maxReadIncomingMessageId,
-                    maxReadOutgoingMessageId: message.maxReadOutgoingMessageId
-
-                ),
+                chatLocation: .replyThread(replyThreadMessage),
                 chatLocationContextHolder: chatLocationContextHolder,
                 tagMask: nil,
                 additionalData: []
@@ -508,13 +490,15 @@ func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThrea
                     }
                 }
                 |> take(1)
-                |> map { isEmpty -> ReplyThreadInfo? in
+                |> map { isEmpty -> ReplyThreadInfo in
                     return ReplyThreadInfo(
-                        message: message,
-                        isChannelPost: isChannelPost,
+                        message: replyThreadMessage,
+                        isChannelPost: replyThreadMessage.isChannelPost,
                         isEmpty: isEmpty,
                         contextHolder: chatLocationContextHolder
                     )
-            }
+                }
+                |> castError(FetchChannelReplyThreadMessageError.self)
     }
 }
+

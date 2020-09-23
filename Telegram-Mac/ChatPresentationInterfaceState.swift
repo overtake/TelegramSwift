@@ -458,13 +458,16 @@ struct ChatPresentationInterfaceState: Equatable {
     
     var state:ChatState {
         if self.selectionState == nil {
-            if self.interfaceState.editState != nil {
-                return .editing
-            }
             
             if let recordingState = recordingState {
                 return .recording(recordingState)
             }
+            
+            if self.interfaceState.editState != nil {
+                return .editing
+            }
+            
+          
             
             if let peer = peer as? TelegramChannel {
                 #if APP_STORE
@@ -559,10 +562,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 return .restricted(permissionText)
             }
             
-            if self.interfaceState.editState != nil {
-                return .editing
-            }
-            
+
            
 
             if let initialAction = initialAction, case .start(_) = initialAction  {

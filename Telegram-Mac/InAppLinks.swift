@@ -330,43 +330,44 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         
-        let signal:Signal<(ReplyThreadInfo?, Peer), Error> = peerSignal |> mapToSignal { peer in
+        let signal:Signal<(ReplyThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
             let messageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
             return fetchAndPreloadReplyThreadInfo(context: context, subject: peer.isChannel ? .channelPost(messageId) : .groupMessage(messageId))
                 |> map {
                     return ($0, peer)
-                } |> mapError { _ in
-                    return .generic
+                } |> mapError { error in
+                    switch error {
+                    case .generic:
+                        return .generic
+                    }
             }
         } |> deliverOnMainQueue
 
         
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { values in
+        _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { values in
             let (result, peer) = values
             let threadMessageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
-            if let result = result {
-                let navigation = context.sharedContext.bindings.rootNavigation()
-                let current = navigation.controller as? ChatController
-                
-                if let current = current, current.chatInteraction.mode.threadId == result.message.messageId {
-                    if let commentId = commentId {
-                        let commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
-                        current.chatInteraction.focusMessageId(nil, commentMessageId, .CenterEmpty)
-                    }
+            let navigation = context.sharedContext.bindings.rootNavigation()
+            let current = navigation.controller as? ChatController
+            
+            if let current = current, current.chatInteraction.mode.threadId == result.message.messageId {
+                if let commentId = commentId {
+                    let commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
+                    current.chatInteraction.focusMessageId(nil, commentMessageId, .CenterEmpty)
+                }
+            } else {
+                let mode: ReplyThreadMode
+                if peer.isChannel {
+                    mode = .comments(origin: threadMessageId)
                 } else {
-                    let mode: isThreadMode
-                    if peer.isChannel {
-                        mode = .comments(origin: threadMessageId)
-                    } else {
-                        mode = .replies(origin: threadMessageId)
-                    }
-                    var commentMessageId: MessageId? = nil
-                    if let commentId = commentId {
-                        commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
-                    }
-                    navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadIncomingMessageId: result.message.maxReadIncomingMessageId, maxReadOutgoingMessageId: result.message.maxReadOutgoingMessageId), mode: .replyThread(topMsgId: result.message.messageId, maxMessage: result.message.maxMessage, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                    mode = .replies(origin: threadMessageId)
+                }
+                var commentMessageId: MessageId? = nil
+                if let commentId = commentId {
+                    commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
+                navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(result.message), mode: .replyThread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {

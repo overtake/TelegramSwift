@@ -123,7 +123,7 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
 }
 
 private func generatePollIcon(_ image: NSImage, backgound: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(36 / System.backingScale, 36 / System.backingScale), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(18, 18), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         

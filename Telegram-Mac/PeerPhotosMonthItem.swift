@@ -183,7 +183,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
                     self?.chatInteraction.forwardMessages([message.id])
                 }))
             }
-            if canDeleteMessage(message, account: context.account) {
+            if canDeleteMessage(message, account: context.account, mode: .history) {
                 items.append(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction.deleteMessages([message.id])
                 }))

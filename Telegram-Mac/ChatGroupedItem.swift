@@ -296,7 +296,7 @@ class ChatGroupedItem: ChatRowItem {
         
         var canDelete = true
         for i in 0 ..< layout.count {
-            if !canDeleteMessage(layout.messages[i], account: context.account)  {
+            if !canDeleteMessage(layout.messages[i], account: context.account, mode: chatInteraction.mode)  {
                 canDelete = false
                 break
             }

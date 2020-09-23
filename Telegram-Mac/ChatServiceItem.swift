@@ -368,7 +368,7 @@ class ChatServiceItem: ChatRowItem {
                         chatInteraction.setupReplyMessage(message.id)
                     }))
                 }
-                if canDeleteMessage(message, account: context.account) {
+                if canDeleteMessage(message, account: context.account, mode: chatInteraction.mode) {
                     items.append(ContextMenuItem(L10n.messageContextDelete, handler: {
                         chatInteraction.deleteMessages([message.id])
                     }))

@@ -173,7 +173,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
         
-        self.progressView.state = .None
+      //  self.progressView.state = .None
  
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
             updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))

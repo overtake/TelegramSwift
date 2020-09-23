@@ -416,7 +416,13 @@ class ChatRowItem: TableRowItem {
             if case .Full = itemType, let message = message, let peer = message.peers[message.id.peerId] {
                 switch chatInteraction.chatLocation {
                 case .peer, .replyThread:
-                    if (isIncoming && message.id.peerId == context.peerId) || message.id.peerId == repliesPeerId {
+                    if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
+                        return false
+                    }
+                    if (isIncoming && message.id.peerId == context.peerId) {
+                        return true
+                    }
+                    if message.id.peerId == repliesPeerId && message.author?.id != context.peerId {
                         return true
                     }
                     if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
@@ -1210,8 +1216,14 @@ class ChatRowItem: TableRowItem {
             if case .bubble = renderType , hasBubble{
                 let isFull: Bool
                 if case .Full = itemType {
-                    isFull = true
-                    
+                    switch entry {
+                    case let .MessageEntry(message, _, _, _, _, _, _):
+                        isFull = chatInteraction.mode.threadId != message.id
+                    case let .groupedPhotos(entries, groupInfo: _):
+                        isFull = chatInteraction.mode.threadId != entries.first?.message?.id
+                    default:
+                        isFull = true
+                    }
                 } else {
                     isFull = false
                 }
@@ -1528,7 +1540,7 @@ class ChatRowItem: TableRowItem {
             if let message = effectiveCommentMessage {
                 for attribute in message.attributes {
                     if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
-                        if let peer = chatInteraction.peer, peer.isSupergroup {
+                        if let peer = chatInteraction.peer, peer.isSupergroup, !chatInteraction.mode.isThreadMode {
                             replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                         }
                         break
@@ -2308,7 +2320,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if canDeleteMessage(message, account: account) {
+    if canDeleteMessage(message, account: account, mode: chatInteraction.mode) {
         items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
             chatInteraction.deleteMessages([message.id])
         }))

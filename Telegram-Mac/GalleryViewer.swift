@@ -563,11 +563,11 @@ class GalleryViewer: NSResponder {
                 switch mode {
                 case .history:
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
-                case let .replyThread(threadId, maxMessage, _):
-                    if threadId == message.id {
+                case let .replyThread(data, _):
+                    if data.messageId == message.id {
                         signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     } else {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(threadMessageId: threadId, maxMessage: maxMessage, maxReadIncomingMessageId: nil, maxReadOutgoingMessageId: nil), contextHolder: contextHolder), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(data), contextHolder: contextHolder), count: 50, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
@@ -802,7 +802,7 @@ class GalleryViewer: NSResponder {
                         self?.showSharedMedia()
                     }))
                 }
-                if canDeleteMessage(message, account: context.account) {
+                if canDeleteMessage(message, account: context.account, mode: .history) {
                     items.append(SPopoverItem(L10n.galleryContextDeletePhoto, { [weak self] in
                         self?.deleteMessage(control)
                     }))
@@ -861,7 +861,7 @@ class GalleryViewer: NSResponder {
                 var otherCounter:Int32 = 0
                 var _mustDeleteForEveryoneMessage: Bool = true
                 for message in messages {
-                    if !canDeleteMessage(message, account: self.context.account) {
+                    if !canDeleteMessage(message, account: self.context.account, mode: .history) {
                         canDelete = false
                     }
                     if !mustDeleteForEveryoneMessage(message) {

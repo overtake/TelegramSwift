@@ -341,8 +341,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         didSet {
            updateStatus()
             switch chatInteraction.mode {
-            case let .replyThread(threadId, _, _):
-                let answersCount = chatInteraction.context.account.postbox.messageView(threadId)
+            case let .replyThread(data, _):
+                let answersCount = chatInteraction.context.account.postbox.messageView(data.messageId)
                     |> map {
                         $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
                     }

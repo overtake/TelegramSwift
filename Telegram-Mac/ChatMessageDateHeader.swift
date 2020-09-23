@@ -170,7 +170,7 @@ class ChatDateStickView : TableStickView {
                 } else if let chatInteraction = item.chatInteraction, chatInteraction.mode == .history {
                     if !hasPopover(chatInteraction.context.window) {
                         let controller = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
-                        showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-100, -40))
+                        showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-84, -40))
                     }
                 }
                

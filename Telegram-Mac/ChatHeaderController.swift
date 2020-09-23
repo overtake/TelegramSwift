@@ -332,15 +332,25 @@ class ChatPinnedView : Control {
         
         self.dismiss.isHidden = chatInteraction.mode.threadId == messageId
         
-        let focusMessageId: MessageId
-        if chatInteraction.mode.threadId == messageId {
-            focusMessageId = chatInteraction.presentation.cachedPinnedMessage?.sourceReference?.messageId ?? messageId
-        } else {
-            focusMessageId = messageId
-        }
-        
+//        let focusMessageId: MessageId
+//        if chatInteraction.mode.threadId == messageId {
+//          //  self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), count: requestCount, animated: true))
+//            focusMessageId = chatInteraction.presentation.cachedPinnedMessage?.sourceReference?.messageId ?? messageId
+//        } else {
+//            focusMessageId = messageId
+//        }
+//
         self.set(handler: { [weak self] _ in
-            self?.chatInteraction.focusMessageId(nil, focusMessageId, .CenterEmpty)
+            guard let `self` = self else {
+                return
+            }
+            let focusMessageId: MessageId
+            if self.chatInteraction.mode.threadId == messageId {
+                self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .up(true), count: 50, animated: true))
+            } else {
+                self.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+            }
+            
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
@@ -916,7 +926,7 @@ class ChatSearchHeader : View, Notifable {
                     needsLayout = true
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     
-                    if peer.isSupergroup || peer.isGroup {
+                    if (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history {
                         if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in

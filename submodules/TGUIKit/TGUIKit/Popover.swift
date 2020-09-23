@@ -9,7 +9,9 @@ import Cocoa
 import SwiftSignalKit
 
 class PopoverBackground: Control {
-
+    override func scrollWheel(with event: NSEvent) {
+        
+    }
 }
 
 private struct PopoverFrameValue {
