@@ -259,6 +259,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             peer = mainPeer
                         }
                     }
+                    if message.id.peerId == repliesPeerId {
+                        peer = message.chatPeer(account.peerId)
+                    }
                     if let peer = peer {
                         photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
                     }
@@ -302,6 +305,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 if peer.isSupergroup || peer.isGroup {
                                     title = peer.displayTitle
                                     hasReplyButton = peer.canSendMessage(false)
+                                } else if message.id.peerId == repliesPeerId {
+                                    if let peerId = message.sourceReference?.messageId.peerId, let sourcePeer = message.peers[peerId] {
+                                        hasReplyButton = sourcePeer.canSendMessage(true)
+                                    }
                                 } else if peer.isChannel {
                                     hasReplyButton = false
                                 }
@@ -333,6 +340,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     title = "📆 \(title)"
                                 }
                                 subText = nil
+                            }
+                            if message.id.peerId == repliesPeerId {
+                                subText = message.chatPeer(account.peerId)?.displayTitle
                             }
                             
                             
@@ -377,12 +387,19 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["wasScheduled"] = true
                             }
                             
+                            if let sourceReference = message.sourceReference {
+                                dict["message.id"] =  sourceReference.messageId.id
+                                dict["message.namespace"] =  sourceReference.messageId.namespace
+                                dict["peer.id"] =  sourceReference.messageId.peerId.id
+                                dict["peer.namespace"] =  sourceReference.messageId.peerId.namespace
+                            } else {
+                                dict["message.id"] =  message.id.id
+                                dict["message.namespace"] =  message.id.namespace
+                                dict["peer.id"] =  message.id.peerId.id
+                                dict["peer.namespace"] =  message.id.peerId.namespace
+                            }
                             
-                            
-                            dict["message.id"] =  message.id.id
-                            dict["message.namespace"] =  message.id.namespace
-                            dict["peer.id"] =  message.id.peerId.id
-                            dict["peer.namespace"] =  message.id.peerId.namespace
+                           
                             dict["groupId"] = groupId.rawValue
                             
                             if screenIsLocked {

@@ -680,8 +680,8 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _, _, _):
-            return .peer(messageId.peerId)
+        case let .replyThread(data):
+            return .peer(data.messageId.peerId)
         }
     }
     
@@ -689,8 +689,8 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId: peerId, components: [])
-        case let .replyThread(messageId, _, _, _):
-            return .peer(peerId: messageId.peerId, components: [])
+        case let .replyThread(data):
+            return .peer(peerId: data.messageId.peerId, components: [])
         }
     }
     
@@ -698,8 +698,8 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return .peer(peerId)
-        case let .replyThread(messageId, _, _, _):
-            return .peer(messageId.peerId)
+        case let .replyThread(data):
+            return .peer(data.messageId.peerId)
         }
     }
     
@@ -707,8 +707,8 @@ extension ChatLocation {
         switch self {
         case let .peer(peerId):
             return peerId
-        case let .replyThread(messageId, _, _, _):
-            return messageId.peerId
+        case let .replyThread(data):
+            return data.messageId.peerId
         }
     }
 }
@@ -716,18 +716,7 @@ extension ChatLocation {
 extension ChatLocation : Hashable {
 
     func hash(into hasher: inout Hasher) {
-        switch self {
-        case let .peer(peerId):
-            hasher.combine(peerId.hashValue)
-        case let .replyThread(threadMessageId, _, maxReadIncoming, maxReadOutgoing):
-            hasher.combine(threadMessageId.hashValue)
-            if let maxReadIncoming = maxReadIncoming {
-                hasher.combine(maxReadIncoming.hashValue)
-            }
-            if let maxReadOutgoing = maxReadOutgoing {
-                hasher.combine(maxReadOutgoing.hashValue)
-            }
-        }
+       
     }
    
 }
@@ -763,7 +752,11 @@ public extension ReplyMarkupMessageAttribute {
 
 fileprivate let edit_limit_time:Int32 = 48*60*60
 
-func canDeleteMessage(_ message:Message, account:Account) -> Bool {
+func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
+    
+    if mode.threadId == message.id {
+        return false
+    }
     
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
@@ -893,10 +886,10 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 return peer.canSendMessage(false)
             case .scheduled:
                 return false
-            case let .replyThread(threadId, _, mode):
+            case let .replyThread(data, mode):
                 switch mode {
                 case .comments:
-                    if message.id == threadId {
+                    if message.id == data.messageId {
                         return false
                     }
                     return peer.canSendMessage(true)
@@ -2225,18 +2218,20 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         
         return modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false) |> mapToSignal { result -> Signal<Bool, NoError> in
             
-            context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: type, action: { status in
-                switch status {
-                case .success:
-                    context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
-                    if peer.isBot && result == .thrid {
-                        _ = context.blockedPeersContext.add(peerId: peerId).start()
-                    }
-                default:
-                    break
-                }
-            }))
-                        
+//            context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: type, action: { status in
+//                switch status {
+//                case .success:
+//                default:
+//                    break
+//                }
+//            }))
+            
+            context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
+            if peer.isBot && result == .thrid {
+                _ = context.blockedPeersContext.add(peerId: peerId).start()
+            }
+
+            
             return .single(true)
         }
     }

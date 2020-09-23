@@ -33,7 +33,7 @@ class WPMediaLayout: WPLayout {
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
-        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width - insets.left)
+        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width - insets.left, hasText: textLayout != nil && theme.bubbled)
         self.mediaSize = contentSize
         
         textLayout?.measure(width: contentSize.width)

@@ -1307,7 +1307,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             for row in rows {
                                 let row = min(max(0, row), list.count - 1)
                                 if let dateItem = self.item(at: row) as? TableStickItem, let view = dateItem.view as? TableStickView {
-//                                    NSLog("\(yTopOffset < 0 && documentOffset.y > 0), \(yTopOffset)")
+                                    if documentOffset.y > (documentSize.height - frame.height) && !tableView.isFlipped {
+                                        yTopOffset = -1
+                                    }
                                     view.updateIsVisible(yTopOffset < 0 , animated: false)
                                     applied = true
                                 }
@@ -1336,11 +1338,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                                 firstTime = false
                             }
                         }
-                        
                         if tableView.isFlipped {
                             stickView.isHidden = documentOffset.y <= 0 && !item.singletonItem// && !stickView.isAlwaysUp
                         } else {
-                            stickView.isHidden = documentSize.height <= frame.height
+                            stickView.isHidden = documentSize.height <= frame.height || documentOffset.y > (documentSize.height - frame.height)
                         }
 
                         stickTimeoutDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(2.0, queue: Queue.mainQueue())).start(next: { [weak stickView] in

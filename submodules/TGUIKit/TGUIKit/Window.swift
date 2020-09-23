@@ -811,7 +811,7 @@ open class Window: NSWindow {
         return styleMask.contains(.fullScreen)
     }
     
-    public func initSaver() {
+    @discardableResult public func initSaver() -> Bool {
         self.initFromSaver = true
         self.saver = .find(for: self)
         if let saver = saver {
@@ -819,7 +819,9 @@ open class Window: NSWindow {
             if saver.isFullScreen {
                 toggleFullScreen(self)
             }
+            return true
         }
+        return false
     }
     
     open override func toggleFullScreen(_ sender: Any?) {

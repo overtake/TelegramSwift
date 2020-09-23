@@ -650,7 +650,7 @@
                         var canDelete:Bool = !ids.isEmpty
                         var canForward:Bool = !ids.isEmpty
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account) {
+                            if !canDeleteMessage(message, account: context.account, mode: .history) {
                                 canDelete = false
                             }
                             if !canForwardMessage(message, account: context.account) {
@@ -897,7 +897,7 @@
                         var otherCounter:Int32 = 0
                         var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account) {
+                            if !canDeleteMessage(message, account: context.account, mode: .history) {
                                 canDelete = false
                             }
                             if !mustDeleteForEveryoneMessage(message) {

@@ -883,17 +883,17 @@ class ChatListRowItem: TableRowItem {
             case .root:
                 let postbox = context.account.postbox
                 context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
-                 context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .archiveChat, action: { status in
-                    switch status {
-                    case .cancelled:
-                        break
-                        //_ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: .root).start()
-                    case .success:
-                        _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
-                    default:
-                        break
-                    }
-                 }))
+                _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
+//                 context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .archiveChat, action: { status in
+//                    switch status {
+//                    case .cancelled:
+//                        break
+//                        //_ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: .root).start()
+//                    case .success:
+//                    default:
+//                        break
+//                    }
+//                 }))
             default:
                  _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
             }
@@ -942,15 +942,18 @@ class ChatListRowItem: TableRowItem {
                     
                     modernConfirm(for: mainWindow, account: strongSelf.context.account, peerId: strongSelf.peer?.id, information: strongSelf.peer is TelegramUser ? strongSelf.peerId == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
                         
-                        context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
-                            switch status {
-                            case .success:
-                                context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-                                break
-                            default:
-                                break
-                            }
-                        }))
+                        
+                        context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+
+                        
+//                        context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
+//                            switch status {
+//                            case .success:
+//x                                break
+//                            default:
+//                                break
+//                            }
+//                        }))
                    })
                 }
             }

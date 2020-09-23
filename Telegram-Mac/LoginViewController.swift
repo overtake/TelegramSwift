@@ -472,7 +472,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
 
         
         
-        inputPassword.setFrameOrigin(0, topOffset)
+        inputPassword.setFrameOrigin(0, topOffset - 15)
     }
     
     fileprivate func update(with type:SentAuthorizationCodeType, nextType:AuthorizationCodeNextType? = nil, timeout:Int32?) {

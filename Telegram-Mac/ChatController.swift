@@ -16,7 +16,7 @@ import SwiftSignalKit
 private var nextClientId: Int32 = 1
 
 
-enum isThreadMode : Equatable {
+enum ReplyThreadMode : Equatable {
     case replies(origin: MessageId)
     case comments(origin: MessageId)
     
@@ -30,12 +30,12 @@ enum isThreadMode : Equatable {
 enum ChatMode : Equatable {
     case history
     case scheduled
-    case replyThread(topMsgId: MessageId, maxMessage: ChatReplyThreadMessage.MaxMessage, mode: isThreadMode)
+    case replyThread(data: ChatReplyThreadMessage, mode: ReplyThreadMode)
     
     var threadId: MessageId? {
         switch self {
-        case let .replyThread(messageId, _, _):
-            return messageId
+        case let .replyThread(data, _):
+            return data.messageId
         default:
             return nil
         }
@@ -60,7 +60,7 @@ enum ChatMode : Equatable {
     
     var originId: MessageId? {
         switch self {
-        case let .replyThread(_, _, mode):
+        case let .replyThread(_, mode):
             return mode.originId
         default:
             return nil
@@ -250,8 +250,8 @@ class ChatControllerView : View, ChatInputDelegate {
             switch chatInteraction.chatLocation {
             case let .peer(peerId):
                 location = .peer(peerId: peerId, fromId: fromId, tags: nil, topMsgId: chatInteraction.mode.threadId, minDate: nil, maxDate: nil)
-            case let .replyThread(messageId, _, _, _):
-                location = .peer(peerId: messageId.peerId, fromId: fromId, tags: nil, topMsgId: messageId, minDate: nil, maxDate: nil)
+            case let .replyThread(data):
+                location = .peer(peerId: data.messageId.peerId, fromId: fromId, tags: nil, topMsgId: data.messageId, minDate: nil, maxDate: nil)
             }
             return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
         })
@@ -394,40 +394,45 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
-        if let view = inputContextHelper.accessoryView {
-            (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
-        }
-        if let currentView = header.currentView {
-            (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
-            currentView.needsDisplay = true
-        }
-        
-        (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, frame.height - inputView.frame.height - header.state.toleranceHeight)
-
-        
-        (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
-        (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
-        
-        
-        (animated ? inputView.animator() : inputView).setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
-        if let indicator = progressView?.subviews.first {
-            (animated ? indicator.animator() : indicator).center()
-        }
-        
-        (animated ? progressView?.animator() : progressView)?.center()
-        
-        (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6, tableView.frame.height - 6 - scroller.frame.height))
-        
-        if let mentions = mentions {
-            (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
-        }
-        if let failed = failed {
-            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-            if let mentions = mentions {
-                offset += (mentions.frame.height + 6)
+        let tableRedrawPolicy = tableView.layerContentsRedrawPolicy
+        NSAnimationContext.runAnimationGroup({ ctx in
+            if let view = inputContextHelper.accessoryView {
+                (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
             }
-            (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
-        }
+            if let currentView = header.currentView {
+                (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
+                currentView.needsDisplay = true
+            }
+            tableView.layerContentsRedrawPolicy = .duringViewResize
+            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, frame.height - inputView.frame.height - header.state.toleranceHeight)
+            
+            (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
+            (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
+            
+            
+            (animated ? inputView.animator() : inputView).setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
+            if let indicator = progressView?.subviews.first {
+                (animated ? indicator.animator() : indicator).center()
+            }
+            
+            (animated ? progressView?.animator() : progressView)?.center()
+            
+            (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6, tableView.frame.height - 6 - scroller.frame.height))
+            
+            if let mentions = mentions {
+                (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
+            }
+            if let failed = failed {
+                var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+                if let mentions = mentions {
+                    offset += (mentions.frame.height + 6)
+                }
+                (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
+            }
+        }, completionHandler: { [weak self] in
+            self?.tableView.layerContentsRedrawPolicy = tableRedrawPolicy
+        })
+        
     }
 
     override var responder: NSResponder? {
@@ -1217,8 +1222,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         case let .peer(peerId):
             self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = checkPeerChatServiceActions(postbox: context.account.postbox, peerId: peerId).start()
-        case let .replyThread(messageId, _, _, _):
-            self.peerView.set(context.account.viewTracker.peerView(messageId.peerId, updateData: true) |> map {Optional($0)})
+        case let .replyThread(data):
+            self.peerView.set(context.account.viewTracker.peerView(data.messageId.peerId, updateData: true) |> map {Optional($0)})
         }
         
 
@@ -1262,8 +1267,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     additionalData.append(.peerIsContact(peerId))
                 }
                 switch self.chatLocation {
-                case let .replyThread(messageId, _, _, _):
-                    additionalData.append(.message(messageId))
+                case let .replyThread(data):
+                    additionalData.append(.message(data.messageId))
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
                 }
@@ -1488,9 +1493,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     var msgEntries = view.entries
                     let topMessages: [Message]?
                     switch chatInteraction.chatLocation {
-                    case let .replyThread(messageId, _, _, _):
+                    case let .replyThread(data):
                         if view.earlierId == nil {
-                            topMessages = initialData.cachedDataMessages?[messageId]
+                            topMessages = initialData.cachedDataMessages?[data.messageId]
                         } else {
                             topMessages = nil
                         }
@@ -1688,8 +1693,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 
                 switch strongSelf.mode {
-                case .history:
-                    let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, timestamp: Int32(date.timeIntervalSince1970))
+                case .history, .replyThread:
+                    let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, threadId: strongSelf.mode.threadId64, timestamp: Int32(date.timeIntervalSince1970))
                     
                     self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
                         if let messageId = messageId {
@@ -2038,7 +2043,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         let peerId = peer.id
                         var _mustDeleteForEveryoneMessage: Bool = true
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account) {
+                            if !canDeleteMessage(message, account: context.account, mode: strongSelf.chatInteraction.mode) {
                                 canDelete = false
                             }
                             if !mustDeleteForEveryoneMessage(message) {
@@ -2443,12 +2448,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.searchState.set(state)
         }
         
+        chatInteraction.setLocation = { [weak self] location in
+            self?.setLocation(location)
+        }
+        
         
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
             
             if let strongSelf = self {
                 switch strongSelf.mode {
-                case let .replyThread(threadId, _, mode):
+                case let .replyThread(data, mode):
                     if mode.originId == toId {
                         let controller = strongSelf.navigationController?.previousController as? ChatController
                         if let controller = controller, case .peer(mode.originId.peerId) = controller.chatLocation {
@@ -3081,15 +3090,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.openReplyThread = { [weak self] messageId, isChannelPost, mode in
-            let signal:Signal<ReplyThreadInfo?, NoError> = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId))
+            let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId))
             
-            _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
-                if let result = result {
-                    let chatLocation: ChatLocation = .replyThread(threadMessageId: result.message.messageId, maxMessage: result.message.maxMessage, maxReadIncomingMessageId: result.message.maxReadIncomingMessageId, maxReadOutgoingMessageId: result.message.maxReadOutgoingMessageId) 
-                    
-
-                    self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .replyThread(topMsgId: result.message.messageId, maxMessage: result.message.maxMessage, mode: mode), messageId: isChannelPost ? nil : mode.originId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+            _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { result in
+                let chatLocation: ChatLocation = .replyThread(result.message)
+                
+                let updatedMode: ReplyThreadMode
+                if result.isChannelPost {
+                    updatedMode = .comments(origin: mode.originId)
+                } else {
+                     updatedMode = .replies(origin: mode.originId)
                 }
+                self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: isChannelPost ? nil : mode.originId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+            }, error: { error in
+                
             })
             
         }
@@ -3130,10 +3144,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.update(animated:false,{$0.updatedInterfaceState({_ in return interfaceState})})
                     }
                     switch self.chatInteraction.mode {
-                    case let .replyThread(threadId, _, _):
+                    case let .replyThread(data, _):
                         self.chatInteraction.update(animated:false, { present in
                             var present = present
-                            present = present.withUpdatedPinnedMessageId(threadId).withUpdatedHidePinnedMessage(true)
+                            present = present.withUpdatedPinnedMessageId(data.messageId).withUpdatedHidePinnedMessage(true)
                             if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
@@ -4111,15 +4125,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             }
                                             
                                             modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-                                                self?.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
-                                                    switch status {
-                                                    case .success:
-                                                        context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-                                                        break
-                                                    default:
-                                                        break
-                                                    }
-                                                }))
+                                                
+                                                
+                                                context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+//
+//                                                self?.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
+//                                                    switch status {
+//                                                    case .success:
+//                                                        break
+//                                                    default:
+//                                                        break
+//                                                    }
+//                                                }))
                                             })
                                         }, theme.icons.chatActionClearHistory))
                                     }
@@ -4851,7 +4868,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
             let context = self.context
-            
+            let mode = self.chatInteraction.mode
             
             if value.selectionState != oldValue.selectionState {
                 if let selectionState = value.selectionState {
@@ -4860,7 +4877,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var canDelete:Bool = !ids.isEmpty
                         var canForward:Bool = !ids.isEmpty
                         for message in messages {
-                            if !canDeleteMessage(message, account: context.account) {
+                            if !canDeleteMessage(message, account: context.account, mode: mode) {
                                 canDelete = false
                             }
                             if !canForwardMessage(message, account: context.account) {

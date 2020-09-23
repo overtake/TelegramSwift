@@ -47,7 +47,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         didSet {
             window.delegate = self
             window.isOpaque = true
-            window.initSaver()
+            let notInitial = window.initSaver()
+            
+            if !notInitial {
+                let size = NSMakeSize(700, 550)
+                if let screen = NSScreen.main {
+                    window.setFrame(NSMakeRect((screen.frame.width - size.width) / 2, (screen.frame.height - size.height) / 2, size.width, size.height), display: true)
+                }
+            }
         }
     }
     

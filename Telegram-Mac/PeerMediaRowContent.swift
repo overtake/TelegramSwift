@@ -55,7 +55,7 @@ class PeerMediaRowItem: GeneralRowItem {
             }))
         }
         
-        if canDeleteMessage(message, account: interface.context.account) {
+        if canDeleteMessage(message, account: interface.context.account, mode: .history) {
             items.append(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.deleteMessages([strongSelf.message.id])
