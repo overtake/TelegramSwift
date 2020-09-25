@@ -698,7 +698,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 let location: SearchMessagesLocation
                 if groupId != .root {
-                    location = .group(groupId)
+                    location = .group(groupId: groupId, tags: nil, minDate: nil, maxDate: nil)
                     foundRemotePeers = .single(([], [], false))
                 } else if query.hasPrefix("#") || !options.contains(.chats) {
                     location = globalTags.location
