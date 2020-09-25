@@ -457,13 +457,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     strongSelf.isSingleLayout = true
                     strongSelf.badgeNode.view?.isHidden = false
                     strongSelf.closeButton.isHidden = false
-                    strongSelf.searchButton.isHidden = false
                     strongSelf.avatarControl.isHidden = false
                 default:
                     strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" //( is ChatAdditionController) || (strongSelf.controller is ChatSwitchInlineController) || (strongSelf.controller is ChatScheduleController)
                     strongSelf.badgeNode.view?.isHidden = true
                     strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController"
-                    strongSelf.searchButton.isHidden = strongSelf.controller is ChatScheduleController 
                     strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil
                 }
                 strongSelf.textInset = strongSelf.avatarControl.isHidden ? 24 : strongSelf.isSingleLayout ? 66 : 46
@@ -489,6 +487,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         self.continuesAction = true
         
+    }
+    
+    func updateSearchButton(hidden: Bool, animated: Bool) {
+        (animated ? searchButton.animator() : searchButton).isHidden = hidden
     }
     
     

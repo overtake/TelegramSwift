@@ -154,6 +154,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     func updateSelectingState(_ animated:Bool = false, selectingMode:Bool, item: ChatRowItem?, needUpdateColors: Bool) {
+        
+        let selectingMode = selectingMode && item?.chatInteraction.mode.threadId != item?.message?.id
+        
         if let item = item {
             let defRight = frame.width - item.rightSize.width - item.rightInset
             
@@ -501,11 +504,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
             replyView?.removeAllHandlers()
-            replyView?.set(handler: { [weak item, weak reply] _ in
+            replyView?.set(handler: { [weak item] _ in
                 item?.chatInteraction.focusInputField()
-                if let replyMessage = reply?.replyMessage, let fromMessage = item?.message {
-                    item?.chatInteraction.focusMessageId(fromMessage.id, replyMessage.id, .CenterEmpty)
-                }
+                item?.openReplyMessage()
+                
                 
             }, for: .Click)
             
@@ -520,8 +522,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var bubbleFrame: NSRect {
         guard let item = item as? ChatRowItem else {return NSZeroRect}
-        let bubbleFrame = item.bubbleFrame
-        return NSMakeRect(item.isIncoming ? bubbleFrame.minX : frame.width - bubbleFrame.width - item.leftInset, bubbleFrame.minY, bubbleFrame.width, bubbleFrame.height)
+        var bubbleFrame = item.bubbleFrame
+        bubbleFrame = NSMakeRect(item.isIncoming ? bubbleFrame.minX : frame.width - bubbleFrame.width - item.leftInset, bubbleFrame.minY, bubbleFrame.width, bubbleFrame.height)
+        
+        if item.chatInteraction.mode.isThreadMode, item.chatInteraction.mode.threadId == item.message?.id {
+            bubbleFrame.origin.x = focus(NSMakeSize(bubbleFrame.size.width + 8, bubbleFrame.size.height)).minX
+        }
+        
+        return bubbleFrame
     }
     
     var rightFrame: NSRect {
@@ -1004,7 +1012,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         let rightFrame = self.rightFrame
         let size = commentsData.size(false)
-        return CGRect(origin: CGPoint(x: rightFrame.minX - size.width - 4, y: rightFrame.minY), size: size)
+        return CGRect(origin: CGPoint(x: rightFrame.minX - size.width - 4, y: rightFrame.minY - 1), size: size)
     }
     
     func fillChannelComments(_ item: ChatRowItem, animated: Bool) {
@@ -1022,7 +1030,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleControl = current
                 bubbleView.addSubview(current)
             }
-            current.update(data: commentsBubbleData)
+            current.update(data: commentsBubbleData, size: channelCommentsBubbleFrame.size, animated: animated)
         } else {
             if let channelCommentsBubbleControl = self.channelCommentsBubbleControl {
                 self.channelCommentsBubbleControl = nil
@@ -1047,7 +1055,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
             }
-            current.update(data: data)
+            current.update(data: data, size: channelCommentsOverlayFrame.size, animated: animated)
+            current.change(pos: channelCommentsOverlayFrame.origin, animated: animated)
         } else {
             if let channelCommentsBubbleSmallControl = self.channelCommentsBubbleSmallControl {
                 self.channelCommentsBubbleSmallControl = nil
@@ -1071,7 +1080,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsControl = current
                 rowView.addSubview(current)
             }
-            current.update(data: commentsData)
+            current.update(data: commentsData, size: channelCommentsFrame.size, animated: animated)
         } else {
             if let channelCommentsControl = self.channelCommentsControl {
                 self.channelCommentsControl = nil
@@ -1084,7 +1093,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
-
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {

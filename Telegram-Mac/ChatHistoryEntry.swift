@@ -293,6 +293,42 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
         }
     }
     
+    if lhsMessage.attributes.count != rhsMessage.attributes.count {
+        return false
+    }
+    
+    for (_, lhsAttr) in lhsMessage.attributes.enumerated() {
+        if let lhsAttr = lhsAttr as? ReplyThreadMessageAttribute {
+            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+            if let rhsAttr = rhsAttr {
+                if lhsAttr.count != rhsAttr.count {
+                    return false
+                }
+                if lhsAttr.latestUsers != rhsAttr.latestUsers {
+                    return false
+                }
+                if lhsAttr.maxMessageId != rhsAttr.maxMessageId {
+                    return false
+                }
+                if lhsAttr.maxReadMessageId != rhsAttr.maxReadMessageId {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+        if let lhsAttr = lhsAttr as? ViewCountMessageAttribute {
+            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ViewCountMessageAttribute }.first
+            if let rhsAttr = rhsAttr {
+                if lhsAttr.count != rhsAttr.count {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
     if lhsMessage.associatedMessages.count != rhsMessage.associatedMessages.count {
         return false
     } else {

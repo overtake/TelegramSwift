@@ -544,6 +544,19 @@ class ChatRowItem: TableRowItem {
     }
     
     
+    func openReplyMessage() {
+        if let message = message {
+            if let replyAttribute = message.replyAttribute {
+                if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
+                    chatInteraction.openReplyThread(threadMessageId, false, .comments(origin: replyAttribute.messageId))
+                } else {
+                    chatInteraction.focusMessageId(message.id, replyAttribute.messageId, .CenterEmpty)
+                }
+            }
+        }
+        
+    }
+    
     func gotoSourceMessage() {
         if let message = message {
             for attr in message.attributes {
@@ -902,7 +915,7 @@ class ChatRowItem: TableRowItem {
     }
     
     static var channelCommentsBubbleHeight: CGFloat {
-        return 38
+        return 42
     }
     static var channelCommentsHeight: CGFloat {
         return 16
@@ -982,7 +995,13 @@ class ChatRowItem: TableRowItem {
                     }
                     let title: String = "\(count)"
                     let textColor = isBubbled && presentation.backgroundMode.hasWallpaper ? presentation.chatServiceItemTextColor : presentation.colors.accent
-                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: textColor, font: .normal(.short)), peers: [], drawBorder: true, handler: { [weak self] in
+                    
+                    var texts:[ChannelCommentsRenderData.Text] = []
+                    if count > 0 {
+                        texts.append(ChannelCommentsRenderData.Text.init(text: .initialize(string: title, color: textColor, font: .normal(.short)), animation: .numeric, index: 0))
+                    }
+                    
+                    _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: true, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
@@ -1033,15 +1052,31 @@ class ChatRowItem: TableRowItem {
                         }
                     }
                     
-                    var title: String
+                    var title: [(String, ChannelCommentsRenderData.Text.Animation, Int)] = []
                     if count == 0 {
-                        title = L10n.channelCommentsLeaveComment
+                        title = [(L10n.channelCommentsLeaveComment, .crossFade, 0)]
                     } else {
-                        title = L10n.channelCommentsCountCountable(Int(count))
-                        title = title.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
+                        var text = L10n.channelCommentsCountCountable(Int(count))
+                        let pretty = "\(Int(count).prettyNumber)"
+                        text = text.replacingOccurrences(of: "\(count)", with: pretty)
+                        
+                        let range = text.nsstring.range(of: pretty)
+                        if range.location != NSNotFound {
+                            title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
+                            title.append((text.nsstring.substring(with: range), .numeric, 1))
+                            title.append((text.nsstring.substring(from: range.upperBound), .crossFade, 2))
+                        } else {
+                            title.append((text, .crossFade, 0))
+                        }
                     }
                     
-                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accentIconBubble_incoming, font: .normal(.title)), peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, handler: { [weak self] in
+                    title = title.filter { !$0.0.isEmpty }
+                    
+                    let texts:[ChannelCommentsRenderData.Text] = title.map {
+                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.linkBubble_incoming, font: .normal(.title)), animation: $0.1, index: $0.2)
+                    }
+                    
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
@@ -1075,14 +1110,31 @@ class ChatRowItem: TableRowItem {
                             break
                         }
                     }
-                    var title: String
+                    var title: [(String, ChannelCommentsRenderData.Text.Animation, Int)] = []
                     if count == 0 {
-                        title = L10n.channelCommentsShortLeaveComment
+                        title = [(L10n.channelCommentsShortLeaveComment, .crossFade, 0)]
                     } else {
-                        title = L10n.channelCommentsShortCountCountable(Int(count))
-                        title = title.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
+                        var text = L10n.channelCommentsShortCountCountable(Int(count))
+                        let pretty = "\(Int(count).prettyNumber)"
+                        text = text.replacingOccurrences(of: "\(count)", with: pretty)
+                        
+                        let range = text.nsstring.range(of: pretty)
+                        if range.location != NSNotFound {
+                            title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
+                            title.append((text.nsstring.substring(with: range), .numeric, 1))
+                            title.append((text.nsstring.substring(from: range.upperBound), .crossFade, 2))
+                        } else {
+                            title.append((text, .crossFade, 0))
+                        }
                     }
-                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: .initialize(string: title, color: presentation.colors.accent, font: .normal(.short)), peers: [], drawBorder: false, handler: { [weak self] in
+                    
+                    title = title.filter { !$0.0.isEmpty }
+                    
+                    let texts:[ChannelCommentsRenderData.Text] = title.map {
+                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(.short)), animation: $0.1, index: $0.2)
+                    }
+                    
+                    _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: false, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
                     })
                 }
@@ -2193,7 +2245,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 case .thrid:
                     let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
                     
-                    _ = showModalProgress(signal: combineLatest(reportPeer(account: account, peerId: author.id), block), for: context.window).start()
+                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam), block), for: context.window).start()
                 case .basic:
                     _ = showModalProgress(signal: context.blockedPeersContext.add(peerId: author.id), for: context.window).start()
                 }
@@ -2326,10 +2378,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    
-    items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: {
-        chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
-    }))
+    if chatInteraction.mode.threadId != message.id {
+        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: {
+            chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
+        }))
+    }
+   
     
 
     
