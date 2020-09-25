@@ -140,7 +140,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 inlineSignal = recentlyUsedInlineBots(postbox: context.account.postbox) |> take(1)
             }
             
-            let participants = combineLatest(inlineSignal, searchPeerMembers(context: context, peerId: global.id, query: query) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+            let members: Signal<[Peer], NoError> = chatPresentationInterfaceState.chatMode.isThreadMode ? .single([]) : searchPeerMembers(context: context, peerId: global.id, query: query)
+            
+            let participants = combineLatest(inlineSignal, members |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                 return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         if entry.message.media.first is TelegramMediaAction {

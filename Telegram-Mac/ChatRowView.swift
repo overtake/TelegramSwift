@@ -1093,6 +1093,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
+        self.channelCommentsControl?.isEnabled = !item.isFailed && !item.isUnsent
+        self.channelCommentsBubbleControl?.isEnabled = !item.isFailed && !item.isUnsent
+        self.channelCommentsBubbleSmallControl?.isEnabled = !item.isFailed && !item.isUnsent
+
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {

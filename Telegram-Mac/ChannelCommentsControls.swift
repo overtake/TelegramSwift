@@ -396,6 +396,11 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
                 ctx.setFillColor(theme.colors.border.withAlphaComponent(0.4).cgColor)
                 ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
             }
+            if render.peers.isEmpty {
+                var f = focus(theme.icons.channel_comments_bubble.backingSize)
+                f.origin.x = 13 + 6
+                ctx.draw(theme.icons.channel_comments_bubble, in: f)
+            }
         }
     }
     
@@ -449,7 +454,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             control.setFrameOrigin(updatedPoint)
         }
         var index: CGFloat = 10
-        for (i, control) in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }).enumerated() {
+        for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
             control.layer?.zPosition = index
             index -= 1
         }
@@ -615,18 +620,10 @@ final class ChannelCommentsSmallControl : CommentsBasicControl {
         
         super.update(data: data, size: size, animated: animated)
         
-        if !data.titleLayout.isEmpty {
-            if theme.bubbled && theme.backgroundMode.hasWallpaper {
-                imageView.image = theme.chat_comments_overlay
-            } else {
-                imageView.image = theme.icons.channel_comments_overlay
-            }
+        if theme.bubbled && theme.backgroundMode.hasWallpaper {
+            imageView.image = theme.chat_comments_overlay
         } else {
-            if theme.bubbled && theme.backgroundMode.hasWallpaper {
-                imageView.image = theme.chat_comments_overlay
-            } else {
-                imageView.image = theme.icons.channel_comments_overlay
-            }
+            imageView.image = theme.icons.channel_comments_overlay
         }
         _ = imageView.sizeToFit()
         
