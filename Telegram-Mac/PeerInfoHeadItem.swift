@@ -245,7 +245,20 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
+        
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            
+            switch cachedData.linkedDiscussionPeerId {
+            case let .known(peerId):
+                if let peerId = peerId {
+                    items.append(ActionItem(text: L10n.peerInfoActionDiscussion, image: theme.icons.profile_message, action: { [weak arguments] in
+                        arguments?.peerChat(peerId)
+                    }))
+                }
+            default:
+                break
+            }
+            
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)

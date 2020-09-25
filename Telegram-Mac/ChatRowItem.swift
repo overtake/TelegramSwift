@@ -2334,15 +2334,17 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         let needUnpin = chatInteraction.presentation.pinnedMessageId == message.id
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                items.append(ContextMenuItem(pinText, handler: {
-                    if peer.isSupergroup, !needUnpin {
-                        modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                            chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId == message.id, result != .thrid)
-                        })
-                    } else {
-                        chatInteraction.updatePinned(message.id, needUnpin, true)
-                    }
-                }))
+                if !chatInteraction.mode.isThreadMode {
+                    items.append(ContextMenuItem(pinText, handler: {
+                        if peer.isSupergroup, !needUnpin {
+                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId == message.id, result != .thrid)
+                            })
+                        } else {
+                            chatInteraction.updatePinned(message.id, needUnpin, true)
+                        }
+                    }))
+                }
             }
         } else if message.id.peerId == account.peerId {
             items.append(ContextMenuItem(pinText, handler: {
@@ -2527,7 +2529,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     
     signal = signal |> map { items in
-        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup {
+        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, !chatInteraction.mode.isThreadMode {
             if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId {
                 var items = items
                 items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
@@ -2567,7 +2569,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     return signal |> map { items in
         var items = items
-        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, !message.isScheduledMessage {
+        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, !message.isScheduledMessage, !chatInteraction.mode.isThreadMode {
             items.append(ContextSeparatorItem())
             items.append(ContextMenuItem(L10n.chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
                 chatInteraction.searchPeerMessages(author)
