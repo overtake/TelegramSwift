@@ -388,17 +388,15 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             }
                             
                             if let sourceReference = message.sourceReference {
-                                dict["message.id"] =  sourceReference.messageId.id
-                                dict["message.namespace"] =  sourceReference.messageId.namespace
-                                dict["peer.id"] =  sourceReference.messageId.peerId.id
-                                dict["peer.namespace"] =  sourceReference.messageId.peerId.namespace
-                            } else {
-                                dict["message.id"] =  message.id.id
-                                dict["message.namespace"] =  message.id.namespace
-                                dict["peer.id"] =  message.id.peerId.id
-                                dict["peer.namespace"] =  message.id.peerId.namespace
+                                dict["source.message.id"] =  sourceReference.messageId.id
+                                dict["source.message.namespace"] =  sourceReference.messageId.namespace
+                                dict["source.peer.id"] =  sourceReference.messageId.peerId.id
+                                dict["source.peer.namespace"] =  sourceReference.messageId.peerId.namespace
                             }
-                            
+                            dict["message.id"] =  message.id.id
+                            dict["message.namespace"] =  message.id.namespace
+                            dict["peer.id"] =  message.id.peerId.id
+                            dict["peer.namespace"] =  message.id.peerId.namespace
                            
                             dict["groupId"] = groupId.rawValue
                             
@@ -477,11 +475,24 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             closeAllModals()
             
             if notification.activationType == .replied, let text = notification.response?.string, !text.isEmpty {
-                var replyToMessageId:MessageId?
-                if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
-                    replyToMessageId = messageId
+                
+                if let msgId = userInfo["source.message.id"] as? Int32, let msgNamespace = userInfo["source.message.namespace"] as? Int32, let namespace = userInfo["source.peer.namespace"] as? Int32, let id = userInfo["source.peer.id"] as? Int32 {
+                    let messageId = MessageId(peerId: PeerId(namespace: namespace, id: id), namespace: msgNamespace, id: msgId)
+                    var replyToMessageId:MessageId?
+                    if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
+                        replyToMessageId = messageId
+                    }
+                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
+
+                } else {
+                    var replyToMessageId:MessageId?
+                    if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
+                        replyToMessageId = messageId
+                    }
+                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
                 }
-                _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil)]).start()
+                
+                
             } else {
                 self.bindings.navigateToChat(account, messageId.peerId)
             }

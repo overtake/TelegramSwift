@@ -478,6 +478,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             let size = NSMakeSize(6, 6)
             var f = focus(size)
             f.origin.x = lastTextPosition.x + 6
+            f.origin.y += 1
             if self.dotView == nil {
                 let effectivePos = previousLastTextPosition != .zero ? previousLastTextPosition : f.origin
                 self.dotView = View(frame: CGRect(origin: effectivePos, size: f.size))

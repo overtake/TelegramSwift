@@ -891,7 +891,7 @@ class ChatSearchHeader : View, Notifable {
     }
     
     private var calendarAbility: Bool {
-        return chatInteraction.mode == .history
+        return chatInteraction.mode != .scheduled
     }
     
     private var fromAbility: Bool {
