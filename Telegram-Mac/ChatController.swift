@@ -229,7 +229,7 @@ class ChatControllerView : View, ChatInputDelegate {
             chatInteraction.scrollToLatest(false)
         }, for: .Click)
         scroller.forceHide()
-        tableView.addSubview(scroller)
+        addSubview(scroller)
         
         let context = chatInteraction.context
         
@@ -344,7 +344,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 view._change(pos: NSMakePoint(0, frame.height - inputView.frame.height - view.frame.height), animated: animated)
             }
             
-            scroller.change(pos: NSMakePoint(frame.width - scroller.frame.width - 6, size.height - scroller.frame.height - 6), animated: animated)
+            scroller.change(pos: NSMakePoint(frame.width - scroller.frame.width - 6, frame.height - height - scroller.frame.height - 6), animated: animated)
             
             if let mentions = mentions {
                 mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: animated )
@@ -404,7 +404,10 @@ class ChatControllerView : View, ChatInputDelegate {
                 currentView.needsDisplay = true
             }
             tableView.layerContentsRedrawPolicy = .duringViewResize
-            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, frame.height - inputView.frame.height - header.state.toleranceHeight)
+            
+            let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
+            
+            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
             
             (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
             (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
@@ -417,17 +420,17 @@ class ChatControllerView : View, ChatInputDelegate {
             
             (animated ? progressView?.animator() : progressView)?.center()
             
-            (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6, tableView.frame.height - 6 - scroller.frame.height))
+            (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6,  frame.height - inputView.frame.height - 6 - scroller.frame.height))
             
             if let mentions = mentions {
-                (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
+                (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, frame.height - inputView.frame.height - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
             }
             if let failed = failed {
                 var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
                 if let mentions = mentions {
                     offset += (mentions.frame.height + 6)
                 }
-                (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
+                (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset))
             }
         }, completionHandler: { [weak self] in
             self?.tableView.layerContentsRedrawPolicy = tableRedrawPolicy
@@ -1030,6 +1033,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let shiftSelectedDisposable = MetaDisposable()
     private let updateUrlDisposable = MetaDisposable()
     private let loadSharedMediaDisposable = MetaDisposable()
+    private let pollChannelDiscussionDisposable = MetaDisposable()
     private let peekDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
@@ -3769,9 +3773,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
-        
-       
-        
         let undoSignals = combineLatest(queue: .mainQueue(), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChannel), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChannel))
         
         chatUndoDisposable.set(undoSignals.start(next: { [weak self] statuses in
@@ -3783,6 +3784,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }))
+        
+        
+        
+        let discussion: Signal<Void, NoError> = peerView.get()
+            |> map { view -> CachedChannelData? in
+                return (view as? PeerView)?.cachedData as? CachedChannelData
+        } |> mapToSignal { value in
+            if let peerDiscussionId = value?.linkedDiscussionPeerId {
+                switch peerDiscussionId {
+                case let .known(peerId):
+                    if let peerId = peerId {
+                        return context.account.viewTracker.polledChannel(peerId: peerId)
+                    }
+                default:
+                    break
+                }
+            }
+            return .single(Void())
+        }
+        
+        pollChannelDiscussionDisposable.set(discussion.start())
         
     }
     
@@ -3878,6 +3900,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
     
+    var searchAvailable: Bool {
+        var isEmpty: Bool = genericView.tableView.isEmpty
+        if chatInteraction.mode.isThreadMode {
+            isEmpty = genericView.tableView.count == (theme.bubbled ? 4 : 3)
+        }
+        if chatInteraction.mode == .scheduled || isEmpty {
+            return false
+        } else {
+            return true
+        }
+    }
+    
     private var firstLoad: Bool = true
 
     func applyTransition(_ transition:TableUpdateTransition, view: MessageHistoryView?, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
@@ -3909,6 +3943,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.afterNextTransaction = nil
         }
         
+        
+        
+        (self.centerBarView as? ChatTitleBarView)?.updateSearchButton(hidden: !searchAvailable, animated: transition.animated)
         
         if let view = view, !view.entries.isEmpty {
             
@@ -4348,6 +4385,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
+        pollChannelDiscussionDisposable.dispose()
         peekDisposable.dispose()
         _ = previousView.swap(nil)
         
@@ -4576,7 +4614,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
       
         
         self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .scheduled else {return .rejected}
+            guard let `self` = self, self.mode != .scheduled, self.searchAvailable else {return .rejected}
             if !self.chatInteraction.presentation.isSearchMode.0 {
                 self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
             } else {
