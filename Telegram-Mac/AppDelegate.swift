@@ -446,6 +446,52 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 NSApp.activate(ignoringOtherApps: true)
                 window.deminiaturize(nil)
+            }, navigateToThread: { account, threadId, fromId in
+                if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
+                    
+                    let pushController: (ChatLocation, ChatMode, MessageId, Atomic<ChatLocationContextHolder?>, Bool) -> Void = { chatLocation, mode, messageId, contextHolder, addition in
+                        let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
+                        let controller: ChatController
+                        if addition {
+                            controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                        } else {
+                            controller = ChatController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
+                        }
+                        navigation.push(controller)
+                    }
+                    
+                    let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
+
+                    let currentInChat = navigation.controller is ChatController
+                    let controller = navigation.controller as? ChatController
+
+                    if controller?.chatInteraction.mode.threadId == threadId {
+                        controller?.scrollup()
+                    } else {
+                        
+                        let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
+                        
+                        _ = showModalProgress(signal: signal |> take(1), for: contextValue.context.window).start(next: { result in
+                            let chatLocation: ChatLocation = .replyThread(result.message)
+                            
+                            let updatedMode: ReplyThreadMode
+                            if result.isChannelPost {
+                                updatedMode = .comments(origin: fromId)
+                            } else {
+                                updatedMode = .replies(origin: fromId)
+                            }
+                            pushController(chatLocation, .replyThread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                            
+                        }, error: { error in
+                            
+                        })
+                    }
+                    
+                } else {
+                    sharedContext.switchToAccount(id: account.id, action: .thread(threadId, fromId, necessary: true))
+                }
+                NSApp.activate(ignoringOtherApps: true)
+                window.deminiaturize(nil)
             }, updateCurrectController: {
                 if let contextValue = self.contextValue {
                     contextValue.context.sharedContext.bindings.rootNavigation().controller.updateController()

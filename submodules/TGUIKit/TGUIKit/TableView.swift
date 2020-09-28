@@ -2911,9 +2911,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
                 if let item = item, !applied {
+                    applied = true
                     DispatchQueue.main.async {
                         if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                            applied = true
                             if focus.focus {
                                 view.focusAnimation(innerId)
                                 focus.action?(view.interactableView)

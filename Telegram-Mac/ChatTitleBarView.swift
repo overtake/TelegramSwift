@@ -461,7 +461,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 default:
                     strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" //( is ChatAdditionController) || (strongSelf.controller is ChatSwitchInlineController) || (strongSelf.controller is ChatScheduleController)
                     strongSelf.badgeNode.view?.isHidden = true
-                    strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController"
+                    strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController" && strongSelf.chatInteraction.mode.threadId == nil
                     strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil
                 }
                 strongSelf.textInset = strongSelf.avatarControl.isHidden ? 24 : strongSelf.isSingleLayout ? 66 : 46

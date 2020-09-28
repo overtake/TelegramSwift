@@ -346,7 +346,7 @@ class ChatPinnedView : Control {
             }
             let focusMessageId: MessageId
             if self.chatInteraction.mode.threadId == messageId {
-                self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .up(true), count: 50, animated: true))
+                self.chatInteraction.scrollToTheFirst()
             } else {
                 self.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
             }

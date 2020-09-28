@@ -773,7 +773,7 @@ class GalleryViewer: NSResponder {
         
         let context = self.context
         
-        var chatMode: ChatMode = .history
+        var chatMode: ChatMode = self.chatMode ?? .history
         if let message = pager.selectedItem?.entry.message, message.isScheduledMessage {
             chatMode = .scheduled
         }
@@ -790,7 +790,7 @@ class GalleryViewer: NSResponder {
         
        
         
-        if let _ = self.contentInteractions, chatMode == .history {
+        if let _ = self.contentInteractions {
             if let message = pager.selectedItem?.entry.message {
                 if self.type == .history {
                     items.append(SPopoverItem(L10n.galleryContextShowMessage, { [weak self] in

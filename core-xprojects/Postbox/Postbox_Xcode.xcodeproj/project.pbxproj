@@ -153,6 +153,7 @@
 		D0CCD6292232887100EE1E08 /* MessageHistoryHoleIndexTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CCD6272232887100EE1E08 /* MessageHistoryHoleIndexTable.swift */; };
 		D0CE8CF41F70249400AA2DB0 /* PostboxUpgrade_13to14.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CE8CF21F70249400AA2DB0 /* PostboxUpgrade_13to14.swift */; };
 		D0CE8CF71F703B1E00AA2DB0 /* PendingPeerNotificationSettingsIndexTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0CE8CF51F703B1E00AA2DB0 /* PendingPeerNotificationSettingsIndexTable.swift */; };
+		D0D1391D252236B9005FCF35 /* PeerChatThreadInterfaceStateTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D1391C252236B9005FCF35 /* PeerChatThreadInterfaceStateTable.swift */; };
 		D0DA1D301F70419D0034E892 /* PendingPeerNotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DA1D2E1F70419D0034E892 /* PendingPeerNotificationSettingsView.swift */; };
 		D0DA44491E4C7D1E005FDCA7 /* PostboxAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0DA44471E4C7D1E005FDCA7 /* PostboxAccess.swift */; };
 		D0E119A1229834BC008CAE3A /* MutablePeerChatInclusionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E1199F229834BC008CAE3A /* MutablePeerChatInclusionView.swift */; };
@@ -371,6 +372,7 @@
 		D0CE63F51CA1CCB2002BC462 /* MediaResource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaResource.swift; sourceTree = "<group>"; };
 		D0CE8CF21F70249400AA2DB0 /* PostboxUpgrade_13to14.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostboxUpgrade_13to14.swift; sourceTree = "<group>"; };
 		D0CE8CF51F703B1E00AA2DB0 /* PendingPeerNotificationSettingsIndexTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingPeerNotificationSettingsIndexTable.swift; sourceTree = "<group>"; };
+		D0D1391C252236B9005FCF35 /* PeerChatThreadInterfaceStateTable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerChatThreadInterfaceStateTable.swift; sourceTree = "<group>"; };
 		D0D510F31D63BA8400A97B8A /* PostboxTransaction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PostboxTransaction.swift; sourceTree = "<group>"; };
 		D0D510F51D63BBE100A97B8A /* MessageHistoryOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageHistoryOperation.swift; sourceTree = "<group>"; };
 		D0D510F81D63BCC200A97B8A /* IntermediateMessage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IntermediateMessage.swift; sourceTree = "<group>"; };
@@ -549,6 +551,7 @@
 		D0E1DE161C5EB06000C7826E /* Tables */ = {
 			isa = PBXGroup;
 			children = (
+				D0D1391C252236B9005FCF35 /* PeerChatThreadInterfaceStateTable.swift */,
 				D0A8A7F725120AF6002EA5E8 /* MessageHistoryThreadHoleIndexTable.swift */,
 				D0A8A7F525120A75002EA5E8 /* MessageHistoryHoleIndexTable.swift */,
 				D048EDD824FF9AF600977606 /* MessageHistoryThreadsTable.swift */,
@@ -945,6 +948,7 @@
 				D08775071E3E3F2100A97350 /* PreferencesView.swift in Sources */,
 				D049EAF11E44D9B900A2CD3A /* PostboxStateView.swift in Sources */,
 				D0AAD1B61E32673C00D5B9DE /* TimestampBasedMessageAttributesView.swift in Sources */,
+				D0D1391D252236B9005FCF35 /* PeerChatThreadInterfaceStateTable.swift in Sources */,
 				D0F7B1C31E045C6A007EB8A5 /* Table.swift in Sources */,
 				D06ECFC620B796DC00C576C2 /* NoticeEntryView.swift in Sources */,
 				D0F82D101E43A024007E499C /* OrderedItemListIndexTable.swift in Sources */,

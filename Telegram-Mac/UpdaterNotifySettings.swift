@@ -14,6 +14,7 @@ import SwiftSignalKit
 import SyncCore
 enum LaunchNavigation : PostboxCoding, Equatable {
     case chat(PeerId, necessary: Bool)
+    case thread(MessageId, MessageId, necessary: Bool)
     case settings
     
     func encode(_ encoder: PostboxEncoder) {
@@ -25,6 +26,20 @@ enum LaunchNavigation : PostboxCoding, Equatable {
             encoder.encodeBool(necessary, forKey: "n")
         case .settings:
             encoder.encodeInt32(1, forKey: "t")
+        case let .thread(threadId, fromId, necessary):
+            encoder.encodeInt32(2, forKey: "t")
+            
+            encoder.encodeInt32(threadId.peerId.namespace, forKey: "t.p.n")
+            encoder.encodeInt32(threadId.peerId.id, forKey: "t.p.id")
+            encoder.encodeInt32(threadId.id, forKey: "t.m.id")
+            encoder.encodeInt32(threadId.namespace, forKey: "t.m.n")
+            
+            encoder.encodeInt32(fromId.peerId.namespace, forKey: "f.p.n")
+            encoder.encodeInt32(fromId.peerId.id, forKey: "f.p.id")
+            encoder.encodeInt32(fromId.id, forKey: "f.m.id")
+            encoder.encodeInt32(fromId.namespace, forKey: "f.m.n")
+            
+            encoder.encodeBool(necessary, forKey: "n")
         }
     }
     
@@ -35,6 +50,16 @@ enum LaunchNavigation : PostboxCoding, Equatable {
             self = .chat(peerId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         case 1:
             self = .settings
+        case 2:
+            let threadPeerId = PeerId(namespace: decoder.decodeInt32ForKey("t.p.n", orElse: 0), id: decoder.decodeInt32ForKey("t.p.id", orElse: 0))
+            let threadId = MessageId(peerId: threadPeerId, namespace: decoder.decodeInt32ForKey("t.m.id", orElse: 0), id: decoder.decodeInt32ForKey("t.m.n", orElse: 0))
+            
+            
+            let fromPeerId = PeerId(namespace: decoder.decodeInt32ForKey("f.p.n", orElse: 0), id: decoder.decodeInt32ForKey("f.p.id", orElse: 0))
+            let fromId = MessageId(peerId: fromPeerId, namespace: decoder.decodeInt32ForKey("f.m.id", orElse: 0), id: decoder.decodeInt32ForKey("f.m.n", orElse: 0))
+
+            
+            self = .thread(threadId, fromId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         default:
             fatalError()
         }

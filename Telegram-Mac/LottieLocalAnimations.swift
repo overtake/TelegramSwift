@@ -34,6 +34,7 @@ enum LocalAnimatedSticker {
     case folder_empty
     case graph_loading
     case dart_idle
+    case discussion
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -81,6 +82,8 @@ enum LocalAnimatedSticker {
             resource = LocalBundleResource(name: "graph_loading", ext: "tgs")
         case .dart_idle:
             resource = LocalBundleResource(name: "dart_idle", ext: "tgs")
+        case .discussion:
+            resource = LocalBundleResource(name: "discussion", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -140,6 +143,9 @@ enum LocalAnimatedSticker {
             hidePlayer = false
         case .dart_idle:
             playPolicy = .once
+        case .discussion:
+            playPolicy = .loop
+            hidePlayer = false
         }
         return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, hidePlayer: hidePlayer, media: self.file)
     }

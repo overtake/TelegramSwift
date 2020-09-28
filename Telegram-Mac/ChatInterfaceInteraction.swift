@@ -145,7 +145,8 @@ final class ChatInteraction : InterfaceObserver  {
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
-
+    var scrollToTheFirst: () -> Void = {}
+    
     var openReplyThread:(MessageId, Bool, ReplyThreadMode)->Void = {  _, _, _ in }
 
     func chatLocationInput() -> ChatLocationInput {
@@ -441,18 +442,10 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil) {
         
-        var scrollState = scrollState
-        switch mode {
-        case .replyThread:
-            scrollState = nil
-        default:
-            break
-        }
-        
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
-        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: context.account, peerId: peerId, state: interfaceState)
+        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: context.account, peerId: peerId, threadId: mode.threadId64, state: interfaceState)
         if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())
         }
