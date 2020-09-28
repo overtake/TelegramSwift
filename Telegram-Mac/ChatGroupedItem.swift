@@ -931,7 +931,6 @@ private class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     animation.autoreverses = true
                     animation.isRemovedOnCompletion = true
                     animation.fillMode = .forwards
-                    
                     animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
                         self?.selectionBackground.removeFromSuperview()
                     })

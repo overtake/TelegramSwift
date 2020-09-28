@@ -394,48 +394,41 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
-        let tableRedrawPolicy = tableView.layerContentsRedrawPolicy
-        NSAnimationContext.runAnimationGroup({ ctx in
-            if let view = inputContextHelper.accessoryView {
-                (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
-            }
-            if let currentView = header.currentView {
-                (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
-                currentView.needsDisplay = true
-            }
-            tableView.layerContentsRedrawPolicy = .duringViewResize
-            
-            let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
-            
-            (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
-            
-            (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
-            (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
-            
-            
-            (animated ? inputView.animator() : inputView).setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
-            if let indicator = progressView?.subviews.first {
-                (animated ? indicator.animator() : indicator).center()
-            }
-            
-            (animated ? progressView?.animator() : progressView)?.center()
-            
-            (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6,  frame.height - inputView.frame.height - 6 - scroller.frame.height))
-            
-            if let mentions = mentions {
-                (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, frame.height - inputView.frame.height - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
-            }
-            if let failed = failed {
-                var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-                if let mentions = mentions {
-                    offset += (mentions.frame.height + 6)
-                }
-                (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset))
-            }
-        }, completionHandler: { [weak self] in
-            self?.tableView.layerContentsRedrawPolicy = tableRedrawPolicy
-        })
+        if let view = inputContextHelper.accessoryView {
+            (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
+        }
+        if let currentView = header.currentView {
+            (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
+            currentView.needsDisplay = true
+        }
         
+        let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
+        
+        (animated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
+        
+        (animated ? inputView.animator() : inputView).setFrameSize(NSMakeSize(frame.width, inputView.frame.height))
+        (animated ? gradientMaskView.animator() : gradientMaskView).frame = tableView.frame
+        
+        
+        (animated ? inputView.animator() : inputView).setFrameOrigin(NSMakePoint(0, tableView.frame.maxY))
+        if let indicator = progressView?.subviews.first {
+            (animated ? indicator.animator() : indicator).center()
+        }
+        
+        (animated ? progressView?.animator() : progressView)?.center()
+        
+        (animated ? scroller.animator() : scroller).setFrameOrigin(NSMakePoint(frame.width - scroller.frame.width - 6,  frame.height - inputView.frame.height - 6 - scroller.frame.height))
+        
+        if let mentions = mentions {
+            (animated ? mentions.animator() : mentions).setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, frame.height - inputView.frame.height - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
+        }
+        if let failed = failed {
+            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
+            if let mentions = mentions {
+                offset += (mentions.frame.height + 6)
+            }
+            (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset))
+        }
     }
 
     override var responder: NSResponder? {
@@ -1035,6 +1028,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let loadSharedMediaDisposable = MetaDisposable()
     private let pollChannelDiscussionDisposable = MetaDisposable()
     private let peekDisposable = MetaDisposable()
+    private let loadThreadDisposable = MetaDisposable()
+
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1043,9 +1038,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
     }
-    private func update(_ f:([MessageId : ChatPollStateData])-> [MessageId : ChatPollStateData]) -> Void {
+    private func updatePoll(_ f:([MessageId : ChatPollStateData])-> [MessageId : ChatPollStateData]) -> Void {
         pollAnswersLoading.set(pollAnswersLoadingValue.modify(f))
     }
+    
+    private let threadLoading: ValuePromise<MessageId?> = ValuePromise(nil, ignoreRepeated: true)
+    private let threadLoadingValue: Atomic<MessageId?> = Atomic(value: nil)
+
+    private var threadLoadingSignal: Signal<MessageId?, NoError> {
+        return threadLoading.get()
+    }
+    private func updateThread(_ f:(MessageId?)-> MessageId?) -> Void {
+        threadLoading.set(threadLoadingValue.modify(f))
+    }
+    
     
     var chatInteraction:ChatInteraction
     
@@ -1412,19 +1418,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   historyViewUpdate,
                                                   appearanceSignal,
                                                   combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue,
-                                                                pollAnswersLoadingSignal),
+                                                                pollAnswersLoadingSignal, threadLoadingSignal),
                                                                 clearHistoryUndoSignal,
                                                                 searchState.get(),
                                                   animatedEmojiStickers,
                                                   customChannelDiscussionReadState,
                                                   customThreadOutgoingReadState
-) |> mapToQueue { update, appearance, readIndexAndPollAnswers, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+) |> mapToQueue { update, appearance, readIndexAndOther, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
             
             //NSLog("get history")
             
-            let maxReadIndex = readIndexAndPollAnswers.0
-            let pollAnswersLoading = readIndexAndPollAnswers.1
-            
+            let maxReadIndex = readIndexAndOther.0
+            let pollAnswersLoading = readIndexAndOther.1
+            let threadLoading = readIndexAndOther.2
+
             let searchStateUpdated = _searchState.swap(searchState) != searchState
             
             let isLoading: Bool
@@ -1507,7 +1514,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -1729,8 +1736,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let previousItem = previousItem {
                         self?.genericView.tableView.scroll(to: .top(id: previousItem.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
                     }
-                case .replyThread:
-                    break
                 }
                 
                 
@@ -2456,6 +2461,45 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.setLocation(location)
         }
         
+        //               // self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .up(true), count: 50, animated: true))
+
+        
+        chatInteraction.scrollToTheFirst = { [weak self] in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            let scroll: ChatHistoryLocation = .Scroll(index: .lowerBound, anchorIndex: .lowerBound, sourceIndex: .lowerBound, scrollPosition: .up(true), count: 50, animated: true)
+            
+            let historyView = chatHistoryViewForLocation(scroll, context: context, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: nil, additionalData: [], chatLocationContextHolder: strongSelf.chatLocationContextHolder)
+            
+            struct FindSearchMessage {
+                let message:Message?
+                let loaded:Bool
+            }
+            
+            let signal = historyView
+                |> mapToSignal { historyView -> Signal<Bool, NoError> in
+                    switch historyView {
+                    case .Loading:
+                        return .single(true)
+                    case let .HistoryView(view, _, _, _):
+                        if !view.holeLater {
+                            return .single(false)
+                        }
+                        return .single(true)
+                    }
+                } |> take(until: { index in
+                    return SignalTakeAction(passthrough: !index, complete: !index)
+                })
+            
+            strongSelf.chatInteraction.loadingMessage.set(.single(true) |> delay(0.2, queue: Queue.mainQueue()))
+            strongSelf.messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak strongSelf] _ in
+                strongSelf?.setLocation(scroll)
+            }, completed: {
+                    
+            }))
+        }
         
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
             
@@ -2542,7 +2586,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.vote = { [weak self] messageId, opaqueIdentifiers, submit in
             guard let `self` = self else {return}
             
-            self.update { data -> [MessageId : ChatPollStateData] in
+            self.updatePoll { data -> [MessageId : ChatPollStateData] in
                 var data = data
                 data[messageId] = ChatPollStateData(identifiers: opaqueIdentifiers, isLoading: submit && !opaqueIdentifiers.isEmpty)
                 return data
@@ -2559,7 +2603,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 self.selectMessagePollOptionDisposables.set(signal.start(next: { [weak self] poll in
                     if let poll = poll {
-                        self?.update { data -> [MessageId : ChatPollStateData] in
+                        self?.updatePoll { data -> [MessageId : ChatPollStateData] in
                             var data = data
                             data.removeValue(forKey: messageId)
                             return data
@@ -2583,7 +2627,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .generic:
                         alert(for: context.window, info: L10n.unknownError)
                     }
-                    self?.update { data -> [MessageId : ChatPollStateData] in
+                    self?.updatePoll { data -> [MessageId : ChatPollStateData] in
                         var data = data
                         data.removeValue(forKey: messageId)
                         return data
@@ -3093,23 +3137,41 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return CGRect(origin: point, size: self.frame.size)
         }
         
+        var currentThreadId: MessageId?
+        
         chatInteraction.openReplyThread = { [weak self] messageId, isChannelPost, mode in
-            let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId))
+            let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId)) |> take(1) |> deliverOnMainQueue
             
-            _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { result in
+            currentThreadId = mode.originId
+            
+            delay(0.2, closure: {
+                if currentThreadId == mode.originId {
+                    self?.updateThread { _ in
+                        return mode.originId
+                    }
+                }
+            })
+            
+            
+            self?.loadThreadDisposable.set(signal.start(next: { [weak self] result in
                 let chatLocation: ChatLocation = .replyThread(result.message)
-                
+                self?.updateThread { _ in
+                    return nil
+                }
+                currentThreadId = nil
                 let updatedMode: ReplyThreadMode
                 if result.isChannelPost {
                     updatedMode = .comments(origin: mode.originId)
                 } else {
-                     updatedMode = .replies(origin: mode.originId)
+                    updatedMode = .replies(origin: mode.originId)
                 }
                 self?.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: isChannelPost ? nil : mode.originId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }, error: { error in
-                
-            })
-            
+                self?.updateThread { _ in
+                    return nil
+                }
+                currentThreadId = nil
+            }))
         }
         
         chatInteraction.contextHolder = { [weak self] in
@@ -4386,6 +4448,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
         pollChannelDiscussionDisposable.dispose()
+        loadThreadDisposable.dispose()
         peekDisposable.dispose()
         _ = previousView.swap(nil)
         

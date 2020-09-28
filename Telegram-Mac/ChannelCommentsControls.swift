@@ -87,6 +87,9 @@ protocol ChannelCommentRenderer {
     func update(data: ChannelCommentsRenderData, size: NSSize, animated: Bool)
     var firstTextPosition: NSPoint { get }
     var lastTextPosition: NSPoint { get }
+    var progressIndicatorPosition: NSPoint { get }
+    var progressIndicatorSize: NSSize { get }
+    var progressIndicatorColor: NSColor { get }
 }
 
 
@@ -94,10 +97,11 @@ class CommentsBasicControl : Control, ChannelCommentRenderer {
     
     fileprivate var textViews: [ChannelCommentsRenderData.Text : (TextView, ChannelCommentsRenderData.Text)] = [:]
     fileprivate var renderData: ChannelCommentsRenderData?
-
+    fileprivate var size: NSSize = .zero
+    fileprivate var progressView: ProgressIndicator?
     func update(data: ChannelCommentsRenderData, size: NSSize, animated: Bool) {
         let previousLastTextPosition = lastTextPosition
-
+        self.size = size
         self.renderData = data
         
         self.removeAllHandlers()
@@ -188,10 +192,55 @@ class CommentsBasicControl : Control, ChannelCommentRenderer {
             }
             pos.x += layout.0.layoutSize.width
         }
+        
+        if data.isLoading {
+            if progressView == nil {
+                let indicator = ProgressIndicator(frame: NSMakeRect(0, 0, progressIndicatorSize.width, progressIndicatorSize.height))
+                self.progressView = indicator
+                self.progressView?.progressColor = progressIndicatorColor
+                addSubview(indicator)
+                if animated {
+                    indicator.layer?.animateAlpha(from: 0, to: 1, duration: 0.2,  timingFunction: .spring)
+                }
+            }
+            self.progressView?.progressColor = progressIndicatorColor
+        } else {
+            if animated {
+                if let progressView = self.progressView {
+                    self.progressView = nil
+                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, timingFunction: .spring, removeOnCompletion: false, completion: { [weak progressView] _ in
+                        progressView?.removeFromSuperview()
+                    })
+                }
+            } else {
+                self.progressView?.removeFromSuperview()
+                self.progressView = nil
+            }
+        }
+        self.progressView?.setFrameOrigin(progressIndicatorPosition)
     }
     
     var firstTextPosition: NSPoint {
         return .zero
+    }
+    
+    var progressIndicatorSize: NSSize {
+        return NSMakeSize(16, 16)
+    }
+    
+    var progressIndicatorPosition: NSPoint {
+        var rect = focus(progressIndicatorSize)
+        rect.origin.x = 0
+        return rect.origin
+    }
+    
+    var progressIndicatorColor: NSColor {
+        return theme.colors.linkBubble_incoming
+    }
+    
+    override func layout() {
+        super.layout()
+        progressView?.setFrameOrigin(progressIndicatorPosition)
     }
     
     var lastTextPosition: NSPoint {
@@ -278,13 +327,15 @@ final class ChannelCommentsRenderData {
     let context: AccountContext
     let message: Message?
     let hasUnread: Bool
+    let isLoading: Bool
     fileprivate var titleLayout:[(TextViewLayout, Text)] = []
     fileprivate let handler: ()->Void
     
-    init(context: AccountContext, message: Message?, hasUnread: Bool, title: [Text], peers: [Peer], drawBorder: Bool, handler: @escaping()->Void = {}) {
+    init(context: AccountContext, message: Message?, hasUnread: Bool, title: [Text], peers: [Peer], drawBorder: Bool, isLoading: Bool, handler: @escaping()->Void = {}) {
         self.context = context
         self.message = message
         self._title = title
+        self.isLoading = isLoading
         var index: Int = 0
         self.peers = peers.map { peer in
             let avatar = Avatar(peer: peer, index: index)
@@ -387,13 +438,23 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         return rect.origin
     }
     
+    override var progressIndicatorPosition: NSPoint {
+        var rect = focus(progressIndicatorSize)
+        rect.origin.x = size.width - 6 - arrowView.frame.width
+        return rect.origin
+    }
+    
+    override var progressIndicatorColor: NSColor {
+        return theme.colors.linkBubble_incoming
+    }
+    
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
 
         if let render = renderData {
             if render.drawBorder {
-                ctx.setFillColor(theme.colors.border.withAlphaComponent(0.4).cgColor)
+                ctx.setFillColor(theme.colors.accentIconBubble_incoming.withAlphaComponent(0.15).cgColor)
                 ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
             }
             if render.peers.isEmpty {
@@ -466,13 +527,14 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             case backward
         }
         
-        
+        arrowView.isHidden = data.isLoading
         
         if animated {
             var f = focus(arrowView.frame.size)
             f.origin.x = size.width - 6 - f.width
             arrowView.layer?.animatePosition(from: arrowView.frame.origin - f.origin, to: .zero, timingFunction: .spring, additive: true)
         }
+        
         
         if data.hasUnread {
             let size = NSMakeSize(6, 6)
@@ -537,6 +599,7 @@ class ChannelCommentsControl: CommentsBasicControl {
         }
         var f = focus(render.titleSize)
         f.origin.x = 0
+        f.origin.y -= 1
         return f.origin
     }
     
@@ -559,6 +622,26 @@ class ChannelCommentsControl: CommentsBasicControl {
             
         }
         
+    }
+    
+    override var progressIndicatorPosition: NSPoint {
+        if let render = renderData {
+            var rect: CGRect = .zero
+            
+            var f = focus(render.titleSize)
+            f.origin.x = 0
+            rect = f
+            
+            f = focus(progressIndicatorSize)
+            f.origin.x = rect.maxX + 3
+            rect = f
+            return rect.origin
+        }
+        return .zero
+    }
+    
+    override var progressIndicatorColor: NSColor {
+        return theme.colors.accent
     }
     
     required init?(coder: NSCoder) {
@@ -616,10 +699,28 @@ final class ChannelCommentsSmallControl : CommentsBasicControl {
         return .zero
     }
     
+    override var progressIndicatorPosition: NSPoint {
+        return imagePosition
+    }
+    
+    override var progressIndicatorSize: NSSize {
+        return theme.chat_comments_overlay.backingSize
+    }
+    
+    override var progressIndicatorColor: NSColor {
+        if theme.bubbled && theme.backgroundMode.hasWallpaper {
+            return theme.chatServiceItemTextColor
+        } else {
+            return theme.colors.accent
+        }
+    }
     
     override func update(data: ChannelCommentsRenderData, size: NSSize, animated: Bool) {
         
         super.update(data: data, size: size, animated: animated)
+        
+        imageView.isHidden = data.isLoading
+        
         
         if theme.bubbled && theme.backgroundMode.hasWallpaper {
             imageView.image = theme.chat_comments_overlay

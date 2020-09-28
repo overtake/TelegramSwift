@@ -106,9 +106,11 @@ struct ChatPollStateData : Equatable {
 struct MessageEntryAdditionalData : Equatable {
     let pollStateData: ChatPollStateData
     let highlightFoundText: HighlightFoundText?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil) {
+    let isThreadLoading: Bool
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
+        self.isThreadLoading = isThreadLoading
     }
 }
 
@@ -427,7 +429,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -655,9 +657,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         if let data = pollAnswersLoading[message.id] {
-            additionalData = MessageEntryAdditionalData(pollStateData: data, highlightFoundText: highlightFoundText)
+            additionalData = MessageEntryAdditionalData(pollStateData: data, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id)
         } else {
-            additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText)
+            additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id)
         }
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         

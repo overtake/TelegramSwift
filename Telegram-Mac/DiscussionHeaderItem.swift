@@ -10,10 +10,10 @@ import TGUIKit
 
 
 class DiscussionHeaderItem: GeneralRowItem {
-    fileprivate let icon: CGImage
+    fileprivate let context: AccountContext
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, icon: CGImage, text: NSAttributedString) {
-        self.icon = icon
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, text: NSAttributedString) {
+        self.context = context
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
     }
@@ -28,13 +28,13 @@ class DiscussionHeaderItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return inset.top + inset.bottom + icon.backingSize.height + inset.top + textLayout.layoutSize.height
+        return inset.top + inset.bottom + 160 + inset.top + textLayout.layoutSize.height
     }
 }
 
 
 private final class DiscussionHeaderView : TableRowView {
-    private let imageView: ImageView = ImageView()
+    private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: .zero)
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -56,8 +56,10 @@ private final class DiscussionHeaderView : TableRowView {
         
         guard let item = item as? DiscussionHeaderItem else { return }
         
-        self.imageView.image = item.icon
-        self.imageView.sizeToFit()
+        imageView.update(with: LocalAnimatedSticker.discussion.file, size: NSMakeSize(160, 160), context: item.context, parent: nil, table: item.table, parameters: LocalAnimatedSticker.discussion.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        
+//        self.imageView.image = item.icon
+//        self.imageView.sizeToFit()
         
         self.textView.update(item.textLayout)
         

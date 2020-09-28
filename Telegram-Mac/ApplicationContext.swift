@@ -605,7 +605,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
             case let .chat(peerId, necessary):
-                
                 let peerSemaphore = DispatchSemaphore(value: 0)
                 var peer: Peer?
                 _ = context.account.postbox.transaction { transaction in
@@ -637,6 +636,33 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     _ready.set(leftController.chatList.ready.get())
                     self.leftController.tabController.select(index: self.leftController.chatIndex)
                 }
+            case let .thread(threadId, fromId, _):
+                self.leftController.tabController.select(index: self.leftController.chatIndex)
+                self._ready.set(self.leftController.chatList.ready.get())
+                
+                let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
+                
+                _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { [weak context] result in
+                    guard let context = context else {
+                        return
+                    }
+                    let chatLocation: ChatLocation = .replyThread(result.message)
+                    
+                    let updatedMode: ReplyThreadMode
+                    if result.isChannelPost {
+                        updatedMode = .comments(origin: fromId)
+                    } else {
+                        updatedMode = .replies(origin: fromId)
+                    }
+                    
+                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+                    
+                    context.sharedContext.bindings.rootNavigation().push(controller)
+                    
+                }, error: { error in
+                    
+                })
+                
             }
         } else {
            // self._ready.set(.single(true))
