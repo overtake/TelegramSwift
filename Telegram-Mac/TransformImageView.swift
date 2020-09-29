@@ -138,6 +138,12 @@ open class TransformImageView: NSView {
     }
     
     
+    open override var isHidden: Bool {
+        didSet {
+           
+        }
+    }
+    
     public var hasImage: Bool {
         return image != nil
     }

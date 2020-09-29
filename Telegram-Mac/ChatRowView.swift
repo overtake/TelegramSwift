@@ -1074,7 +1074,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let channelCommentsControl = self.channelCommentsControl {
                 current = channelCommentsControl
             } else {
-                current = ChannelCommentsControl(frame: NSMakeRect(0, 0, commentsData.size(false).width, ChatRowItem.channelCommentsBubbleHeight))
+                current = ChannelCommentsControl(frame: NSMakeRect(0, 0, commentsData.size(false).width, ChatRowItem.channelCommentsHeight))
                 current.set(background: contentColor, for: .Normal)
 
                 self.channelCommentsControl = current
@@ -1486,7 +1486,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         
         
-        super.set(item: item, animated: animated)
         
         if let item = item as? ChatRowItem {
             rightView.set(item:item, animated:animated)
@@ -1523,7 +1522,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 captionView?._change(pos: captionFrame.origin, animated: animated)
             }
         }
-        
+        super.set(item: item, animated: animated)
+
         rowView.needsDisplay = true
         needsLayout = true
     }
