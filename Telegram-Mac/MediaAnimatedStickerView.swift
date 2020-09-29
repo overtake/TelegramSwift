@@ -33,8 +33,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(self.thumbView)
         addSubview(self.playerView)
+        addSubview(self.thumbView)
 
     }
     
@@ -181,9 +181,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
-        
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
-     
         
         let reference: FileMediaReference
         let mediaResource: MediaResourceReference
@@ -217,7 +215,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
         
         self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
-
             if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                 return data
             }
@@ -250,12 +247,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             })
             self.thumbView.set(arguments: arguments)
         }
-
+        
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
-            
-            
             switch state {
             case .playing:
                 self.playerView.isHidden = false
@@ -273,6 +268,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 self.playerView.isHidden = false
                 self.thumbView.isHidden = false
             }
+
+            
         }))
     }
     

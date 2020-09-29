@@ -599,7 +599,6 @@ class ChannelCommentsControl: CommentsBasicControl {
         }
         var f = focus(render.titleSize)
         f.origin.x = 0
-        f.origin.y -= 1
         return f.origin
     }
     
@@ -618,8 +617,9 @@ class ChannelCommentsControl: CommentsBasicControl {
             f = focus(theme.icons.channel_comments_list.backingSize)
             f.origin.x = rect.maxX + 3
             rect = f
-            ctx.draw(theme.icons.channel_comments_list, in: rect)
-            
+            if !render.isLoading {
+                ctx.draw(theme.icons.channel_comments_list, in: rect)
+            }
         }
         
     }
