@@ -459,7 +459,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     strongSelf.closeButton.isHidden = false
                     strongSelf.avatarControl.isHidden = false
                 default:
-                    strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" //( is ChatAdditionController) || (strongSelf.controller is ChatSwitchInlineController) || (strongSelf.controller is ChatScheduleController)
+                    strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" 
                     strongSelf.badgeNode.view?.isHidden = true
                     strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController" && strongSelf.chatInteraction.mode.threadId == nil
                     strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil

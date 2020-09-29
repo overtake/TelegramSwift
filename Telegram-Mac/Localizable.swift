@@ -3109,6 +3109,8 @@ internal final class L10n {
   internal static var eventLogServicePromotePinMessages: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.PinMessages") }
   /// Post Messages
   internal static var eventLogServicePromotePostMessages: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.PostMessages") }
+  /// Remain Anonymous
+  internal static var eventLogServicePromoteRemainAnonymous: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.RemainAnonymous") }
   /// changed privileges for %@ %@:
   internal static func eventLogServicePromotedChanged(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.Promoted.Changed", p1, p2)
@@ -4905,7 +4907,7 @@ internal final class L10n {
   internal static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
   /// Call
   internal static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
-  /// Discussion
+  /// Discuss
   internal static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Leave
   internal static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }

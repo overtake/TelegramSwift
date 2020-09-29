@@ -2301,8 +2301,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
                                                chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon, flipVertical: true) },
                                                chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white, flipVertical: true) },
-                                               channel_comments_bubble: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.linkBubble_incoming, flipVertical: true) },
-                                               channel_comments_bubble_next: { NSImage(named: "Icon_ChannelComments_Next")!.precomposed(palette.linkBubble_incoming, flipVertical: true) },
+                                               channel_comments_bubble: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.accentIcon
+                                                , flipVertical: true) },
+                                               channel_comments_bubble_next: { NSImage(named: "Icon_ChannelComments_Next")!.precomposed(palette.accentIcon, flipVertical: true) },
                                                channel_comments_list: { NSImage(named: "Icon_ChannelComments")!.precomposed(palette.accent, flipVertical: true) },
                                                channel_comments_overlay: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.accent) },
                                                chat_replies_avatar: { NSImage(named: "Icon_RepliesChat")!.precomposed() }
