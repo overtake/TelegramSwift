@@ -174,6 +174,7 @@ class ChatRightView: View {
                 
                 if let postAuthor = item.postAuthor {
                     postAuthor.1.draw(NSMakeRect(icon.backingSize.width + channelViews.0.size.width + 8 + item.stateOverlayAdditionCorner + viewsOffset, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, postAuthor.0.size.width, postAuthor.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    viewsOffset += postAuthor.0.size.width + 8
                 }
                 viewsOffset += channelViews.0.size.width + 22
             }
