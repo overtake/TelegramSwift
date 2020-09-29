@@ -1073,7 +1073,7 @@ class ChatRowItem: TableRowItem {
                     title = title.filter { !$0.0.isEmpty }
                     
                     let texts:[ChannelCommentsRenderData.Text] = title.map {
-                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.linkBubble_incoming, font: .normal(.title)), animation: $0.1, index: $0.2)
+                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accentIcon, font: .normal(.title)), animation: $0.1, index: $0.2)
                     }
                     
                     _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in

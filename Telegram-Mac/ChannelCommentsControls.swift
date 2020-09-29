@@ -235,7 +235,7 @@ class CommentsBasicControl : Control, ChannelCommentRenderer {
     }
     
     var progressIndicatorColor: NSColor {
-        return theme.colors.linkBubble_incoming
+        return theme.colors.accentIcon
     }
     
     override func layout() {
@@ -376,9 +376,13 @@ final class ChannelCommentsRenderData {
             width += titleSize.width
             width += (6 * 4) + 13
             if peers.isEmpty {
-                width += theme.icons.channel_comments_bubble.backingSize.width
+                width += theme.icons.channel_comments_bubble.backingSize.width + 2
             } else {
-                width += 21 * CGFloat(peers.count)
+                if peers.count == 1 {
+                    width += 24
+                } else {
+                    width += 22 + (22 * CGFloat(peers.count - 1))
+                }
             }
             width += theme.icons.channel_comments_bubble_next.backingSize.width
             height = ChatRowItem.channelCommentsBubbleHeight
@@ -423,10 +427,14 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         
         if render.peers.isEmpty {
             var f = focus(theme.icons.channel_comments_bubble.backingSize)
-            f.origin.x = 13 + 6
+            f.origin.x = 15 + 6
             rect = f
         } else {
-            rect = focus(NSMakeSize(21 * CGFloat(render.peers.count), 22))
+            if render.peers.count == 1 {
+                rect = focus(NSMakeSize(24 * CGFloat(render.peers.count), 22))
+            } else {
+                rect = focus(NSMakeSize(22 + (22 * CGFloat(render.peers.count - 1)), 22))
+            }
             rect.origin.x = 13 + 6
         }
         
@@ -445,7 +453,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
     }
     
     override var progressIndicatorColor: NSColor {
-        return theme.colors.linkBubble_incoming
+        return theme.colors.accentIcon
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -557,7 +565,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             if animated {
                 dotView.layer?.animatePosition(from: dotView.frame.origin - f.origin, to: .zero, timingFunction: .spring, additive: true)
             }
-            dotView.backgroundColor = theme.colors.linkBubble_incoming
+            dotView.backgroundColor = theme.colors.accentIcon
         } else {
             if let dotView = dotView {
                 self.dotView = nil

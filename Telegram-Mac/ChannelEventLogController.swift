@@ -265,7 +265,9 @@ extension AdminLogEventsResult {
                     .canPostMessages,
                     .canEditMessages,
                     .canDeleteMessages,
-                    .canAddAdmins
+                    .canAddAdmins,
+                    .canBeAnonymous
+                    
                 ]
             case .group:
                 maskRightsFlags = .groupSpecific
@@ -275,7 +277,8 @@ extension AdminLogEventsResult {
                     .canBanUsers,
                     .canInviteUsers,
                     .canPinMessages,
-                    .canAddAdmins
+                    .canAddAdmins,
+                    .canBeAnonymous
                 ]
                 
             }
