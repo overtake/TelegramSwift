@@ -4944,11 +4944,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 let count = Int(round(strongSelf.view.frame.height / 28)) + 2
                 let location:ChatHistoryLocation
-                if let messageId = messageId {
-                    location = .InitialSearch(location: .id(messageId), count: count + 10)
-                } else {
-                    location = .Initial(count: count)
+                switch strongSelf.mode {
+                case let .replyThread(data, _):
+                    switch data.initialAnchor {
+                    case .automatic:
+                        if let messageId = messageId {
+                            location = .InitialSearch(location: .id(messageId), count: count + 10)
+                        } else {
+                            location = .Initial(count: count)
+                        }
+                    case let .lowerBoundMessage(index):
+                        location = ChatHistoryLocation.Navigation(index: .message(index), anchorIndex: .message(index), count: count, side: .upper)
+                    }
+                default:
+                    if let messageId = messageId {
+                        location = .InitialSearch(location: .id(messageId), count: count + 10)
+                    } else {
+                        location = .Initial(count: count)
+                    }
                 }
+               
                 
                 return location
             }
