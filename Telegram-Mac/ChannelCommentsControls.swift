@@ -28,7 +28,7 @@ private final class AvatarContentView: View {
         self.addSubview(self.unclippedView)
         self.addSubview(self.clippedView)
         
-        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(22, 22), scale: System.backingScale, font: .normal(12), genCap: true, synchronousLoad: synchronousLoad)
+        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(22, 22), scale: System.backingScale, font: .normal(10), genCap: true, synchronousLoad: synchronousLoad)
         
         let disposable = (signal
             |> deliverOnMainQueue).start(next: { [weak self] image in

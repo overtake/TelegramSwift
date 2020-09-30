@@ -40,6 +40,9 @@ private final class DiscussionHeaderView : TableRowView {
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(textView)
+        
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
     }
     
     override var backdorColor: NSColor {

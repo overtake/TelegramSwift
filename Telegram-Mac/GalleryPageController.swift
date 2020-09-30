@@ -32,7 +32,11 @@ fileprivate class GMagnifyView : MagnifyView  {
     }
     
     override func scrollWheel(with event: NSEvent) {
-        superview?.scrollWheel(with: event)
+        if magnify == 1.0 {
+            superview?.scrollWheel(with: event)
+        } else {
+            super.scrollWheel(with: event)
+        }
     }
     
     func updateStatus(_ status: Signal<MediaResourceStatus, NoError>) {

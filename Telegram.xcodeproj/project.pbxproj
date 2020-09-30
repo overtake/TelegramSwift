@@ -901,6 +901,7 @@
 		D0CD309822197E62005D23DD /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0CD309722197E62005D23DD /* FFMpegGlobals.m */; };
 		D0D087E2243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D087E1243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift */; };
 		D0D1391B2521FBD5005FCF35 /* discussion.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0D1391A2521F652005FCF35 /* discussion.tgs */; };
+		D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D139242524A31E005FCF35 /* RepliesHeaderRowItem.swift */; };
 		D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */; };
 		D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */ = {isa = PBXBuildFile; fileRef = D0D71385227ADE9400EC88B1 /* maccheck.json */; };
 		D0D7520924C03CD60037D73A /* VideoEditorThumbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D7520824C03CD60037D73A /* VideoEditorThumbs.swift */; };
@@ -2073,6 +2074,7 @@
 		D0CD309722197E62005D23DD /* FFMpegGlobals.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FFMpegGlobals.m; sourceTree = "<group>"; };
 		D0D087E1243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatlistFilterVisibilityItem.swift; sourceTree = "<group>"; };
 		D0D1391A2521F652005FCF35 /* discussion.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = discussion.tgs; sourceTree = "<group>"; };
+		D0D139242524A31E005FCF35 /* RepliesHeaderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepliesHeaderRowItem.swift; sourceTree = "<group>"; };
 		D0D3CE6B23D465FA00864F3C /* PollResultStickItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultStickItem.swift; sourceTree = "<group>"; };
 		D0D71385227ADE9400EC88B1 /* maccheck.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = maccheck.json; sourceTree = "<group>"; };
 		D0D7520824C03CD60037D73A /* VideoEditorThumbs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoEditorThumbs.swift; sourceTree = "<group>"; };
@@ -2863,6 +2865,7 @@
 				A7393D342407CAE100CE44CA /* ChatMediaDice.swift */,
 				D0D81AF7243F69AD00CB9D20 /* PollTimerView.swift */,
 				D0C550C3251127DA00B64966 /* ChatCommentsHeaderItem.swift */,
+				D0D139242524A31E005FCF35 /* RepliesHeaderRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -5687,6 +5690,7 @@
 				A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */,
 				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
+				D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
 				9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */,

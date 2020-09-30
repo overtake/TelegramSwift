@@ -179,7 +179,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
     switch state.type {
     case .channel:
         if let associatedPeer = state.associatedPeer {
-            let text = L10n.discussionControllerChannelSetHeader(associatedPeer.displayTitle)
+            let text = L10n.discussionControllerChannelSetHeader1(associatedPeer.displayTitle)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel_header, equatable: InputDataEquatable(text), item: { initialSize, stableId in
                 
                 let attributedString = NSMutableAttributedString()
@@ -215,7 +215,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             }
             
         } else {
-            let text = L10n.discussionControllerChannelEmptyHeader
+            let text = L10n.discussionControllerChannelEmptyHeader1
 
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel_header, equatable: InputDataEquatable(text), item: { initialSize, stableId in
                 

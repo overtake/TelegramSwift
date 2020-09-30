@@ -21,7 +21,7 @@ enum ChatHistoryEntryId : Hashable {
     case undefined
     case maybeId(AnyHashable)
     case commentsHeader
-    
+    case repliesHeader
     func hash(into hasher: inout Hasher) {
         
     }
@@ -70,6 +70,12 @@ enum ChatHistoryEntryId : Hashable {
             } else {
                 return false
             }
+        case .repliesHeader:
+            if case .repliesHeader = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -89,6 +95,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(6) << 40
         case .commentsHeader:
             return UInt64(7) << 40
+        case .repliesHeader:
+            return UInt64(8) << 40
         }
     }
 
@@ -144,6 +152,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case DateEntry(MessageIndex, ChatItemRenderType)
     case bottom
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
+    case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
     var message:Message? {
         switch self {
         case let .MessageEntry(message,_, _,_,_,_,_):
@@ -177,6 +186,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case .bottom:
             return .list
         case let .commentsHeader(_, _, renderType):
+            return renderType
+        case let .repliesHeader(_, _, renderType):
             return renderType
         }
     }
@@ -214,6 +225,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .undefined
         case .commentsHeader:
             return .commentsHeader
+        case .repliesHeader:
+            return .repliesHeader
         }
     }
     
@@ -230,6 +243,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case .bottom:
             return MessageIndex.absoluteUpperBound()
         case let .commentsHeader(_, index, _):
+            return index
+        case let .repliesHeader(_, index, _):
             return index
         }
     }
@@ -248,6 +263,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case .bottom:
             return MessageIndex.absoluteUpperBound()
         case let .commentsHeader(_, index, _):
+            return index
+        case let .repliesHeader(_, index, _):
             return index
         }
     }
@@ -414,6 +431,13 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
+    case let .repliesHeader(empty, index, type):
+        switch rhs {
+        case .repliesHeader(empty, index, type):
+            return true
+        default:
+            return false
+        }
     }
     
 }
@@ -429,7 +453,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -767,12 +791,14 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     
+    
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
         let timestamp = Int32(min(TimeInterval(maxReadIndex.timestamp) - timeDifference, TimeInterval(Int32.max)))
         entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(timestamp), renderType))
         hasUnread = true
     }
+    
     
     
     if includeBottom {
@@ -786,6 +812,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             entries.append(.groupedPhotos(groupedPhotos, groupInfo: key))
         }
     }
+    
+    if addRepliesHeader {
+        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound(), renderType), at: 0)
+    }
+    
     var sorted = entries.sorted()
 
     if hasUnread, sorted.count >= 2 {

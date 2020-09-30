@@ -1887,6 +1887,8 @@ internal final class L10n {
   }
   /// Are you sure you want to cancel recording?
   internal static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
+  /// This chat helps you keep track of replies to your comments in Channels.
+  internal static var chatRepliesDesc: String  { return L10n.tr("Localizable", "Chat.Replies.Desc") }
   /// Reminder
   internal static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages
@@ -2871,13 +2873,13 @@ internal final class L10n {
   internal static var discussionControllerChannelEmptyCreateGroup: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Empty.CreateGroup") }
   /// Everything you post in channel will be forwarded to this group.
   internal static var discussionControllerChannelEmptyDescription: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Empty.Description") }
-  /// Select a group chat for discussion that will be displayed in your channel.
-  internal static var discussionControllerChannelEmptyHeader: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Empty.Header") }
+  /// Select a group chat that will be used to host comments from your channel.
+  internal static var discussionControllerChannelEmptyHeader1: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Empty.Header1") }
   /// Everything you post in channel is forwarded to this group.
   internal static var discussionControllerChannelSetDescription: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Set.Description") }
-  /// a link to **%@** is shown to all subscribers in the bottom pannel.
-  internal static func discussionControllerChannelSetHeader(_ p1: String) -> String {
-    return L10n.tr("Localizable", "DiscussionController.Channel.Set.Header", p1)
+  /// **%@** is selected as the group that will be used to host comments for your channel.
+  internal static func discussionControllerChannelSetHeader1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DiscussionController.Channel.Set.Header1", p1)
   }
   /// Unlink Group
   internal static var discussionControllerChannelSetUnlinkGroup: String  { return L10n.tr("Localizable", "DiscussionController.Channel.Set.UnlinkGroup") }

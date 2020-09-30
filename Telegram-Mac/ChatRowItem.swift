@@ -543,12 +543,16 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    override var isSelectable: Bool {
+        return chatInteraction.mode.threadId != effectiveCommentMessage?.id
+    }
+    
     
     func openReplyMessage() {
         if let message = message {
             if let replyAttribute = message.replyAttribute {
                 if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
-                    chatInteraction.openReplyThread(threadMessageId, false, .comments(origin: replyAttribute.messageId))
+                    chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: replyAttribute.messageId))
                 } else {
                     chatInteraction.focusMessageId(message.id, replyAttribute.messageId, .CenterEmpty)
                 }
@@ -562,7 +566,7 @@ class ChatRowItem: TableRowItem {
             for attr in message.attributes {
                 if let attr = attr as? SourceReferenceMessageAttribute {
                     if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
-                        chatInteraction.openReplyThread(threadMessageId, false, .comments(origin: attr.messageId))
+                        chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: attr.messageId))
                     } else {
                         switch chatInteraction.mode {
                         case .replyThread:
@@ -1002,7 +1006,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     _commentsBubbleDataOverlay = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: true, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
+                        self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
             default:
@@ -1042,7 +1046,7 @@ class ChatRowItem: TableRowItem {
                                 if let maxReadMessageId = attribute.maxReadMessageId {
                                     hasUnread = maxReadMessageId < maxMessageId
                                 } else {
-                                    hasUnread = count > 0
+                                    hasUnread = false
                                 }
                             }
                             latestPeers = message.peers.filter { peerId, _ -> Bool in
@@ -1077,7 +1081,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
+                        self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
             default:
@@ -1135,7 +1139,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: false, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
-                        self?.chatInteraction.openReplyThread(message.id, true, .comments(origin: message.id))
+                        self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
             default:
@@ -1725,6 +1729,8 @@ class ChatRowItem: TableRowItem {
             return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
         case .commentsHeader:
             return ChatCommentsHeaderItem(initialSize, entry, interaction: interaction, theme: theme)
+        case .repliesHeader:
+            return RepliesHeaderRowItem(initialSize, entry: entry)
         default:
             break
         }
@@ -2141,14 +2147,14 @@ class ChatRowItem: TableRowItem {
     }
     
     func replyAction() -> Bool {
-        if chatInteraction.presentation.state == .normal {
+        if chatInteraction.presentation.state == .normal, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
             chatInteraction.setupReplyMessage(message?.id)
             return true
         }
         return false
     }
     func editAction() -> Bool {
-         if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing {
+         if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
             if let message = message, canEditMessage(message, context: context) {
                 chatInteraction.beginEditingMessage(message)
                 return true
@@ -2291,12 +2297,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             }
             
             items.append(ContextMenuItem(modeIsReplies ? L10n.messageContextViewRepliesCountable(Int(attr.count)) : L10n.messageContextViewCommentsCountable(Int(attr.count)), handler: {
-                chatInteraction.openReplyThread(messageId, !modeIsReplies, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
+                chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
             }))
         }
         if let attr = message.replyAttribute, let threadId = attr.threadMessageId, threadId != message.id {
             items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
-                chatInteraction.openReplyThread(threadId, false, .replies(origin: message.id))
+                chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
             }))
         }
     }
