@@ -1142,7 +1142,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         case .Loading:
                             return .single(true)
                         case let .HistoryView(view, _, _, _):
-                            if !view.holeLater, view.laterId == nil, !view.isLoading {
+                            if !view.holeEarlier, view.laterId == nil, !view.isLoading {
                                 return .single(false)
                             }
                             return .single(true)
@@ -1535,7 +1535,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let topMessages: [Message]?
                     switch chatInteraction.chatLocation {
                     case let .replyThread(data):
-                        if view.earlierId == nil {
+                        if view.earlierId == nil, !view.isLoading, !view.holeLater {
                             topMessages = initialData.cachedDataMessages?[data.messageId]
                         } else {
                             topMessages = nil
