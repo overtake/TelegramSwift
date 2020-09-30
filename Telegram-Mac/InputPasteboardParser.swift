@@ -27,24 +27,24 @@ class InputPasteboardParser: NSObject {
                 if let path = path, let url = URL(string: path) {
                     files.append(url)
                 }
-                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
-                   let attributed = NSAttributedString(html: data, documentAttributes: nil)
-                   if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
-                       
-                       if let fileWrapper = attachment.fileWrapper, let fileName = fileWrapper.preferredFilename, fileWrapper.isRegularFile {
-                           if let data = fileWrapper.regularFileContents {
-                               let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
-                               do {
-                                   try data.write(to: url)
-                                   files.append(url)
-                               } catch {
-                                   
-                               }
-                               
-                           }
-                       }
-                   }
-               }
+//                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
+//                   let attributed = NSAttributedString(html: data, documentAttributes: nil)
+//                   if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
+//
+//                       if let fileWrapper = attachment.fileWrapper, let fileName = fileWrapper.preferredFilename, fileWrapper.isRegularFile {
+//                           if let data = fileWrapper.regularFileContents {
+//                               let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
+//                               do {
+//                                   try data.write(to: url)
+//                                   files.append(url)
+//                               } catch {
+//
+//                               }
+//
+//                           }
+//                       }
+//                   }
+//               }
             }
             
             var image:NSImage? = nil
@@ -143,24 +143,24 @@ class InputPasteboardParser: NSObject {
                 if let path = path, let url = URL(string: path) {
                     files.append(url)
                 }
-                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
-                    let attributed = NSAttributedString(html: data, documentAttributes: nil)
-                    if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
-                        
-                        if let fileWrapper = attachment.fileWrapper, let fileName = fileWrapper.preferredFilename, fileWrapper.isRegularFile {
-                            if let data = fileWrapper.regularFileContents {
-                                let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
-                                do {
-                                    try data.write(to: url)
-                                    files.append(url)
-                                } catch {
-                                    
-                                }
-                                
-                            }
-                        }
-                    }
-                }
+//                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
+//                    let attributed = NSAttributedString(html: data, documentAttributes: nil)
+//                    if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
+//
+//                        if let fileWrapper = attachment.fileWrapper, let fileName = fileWrapper.preferredFilename, fileWrapper.isRegularFile {
+//                            if let data = fileWrapper.regularFileContents {
+//                                let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
+//                                do {
+//                                    try data.write(to: url)
+//                                    files.append(url)
+//                                } catch {
+//
+//                                }
+//
+//                            }
+//                        }
+//                    }
+//                }
                 
             }
             

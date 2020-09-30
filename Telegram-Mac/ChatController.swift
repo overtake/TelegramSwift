@@ -3399,8 +3399,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         if info.flags.contains(.hasDiscussionGroup) {
                                             discussionGroupId = cachedData.linkedDiscussionPeerId
                                         }
-                                    default:
-                                        break
+                                    case .group:
+                                        discussionGroupId = cachedData.linkedDiscussionPeerId
                                     }
                                 }
                             }

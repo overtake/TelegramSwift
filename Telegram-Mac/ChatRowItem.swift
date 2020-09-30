@@ -2301,9 +2301,16 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             }))
         }
         if let attr = message.replyAttribute, let threadId = attr.threadMessageId, threadId != message.id {
-            items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
-                chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
-            }))
+            switch chatInteraction.presentation.discussionGroupId {
+            case let .known(peerId):
+                if peerId != nil {
+                    items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
+                        chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
+                    }))
+                }
+            default:
+                break
+            }
         }
     }
     
