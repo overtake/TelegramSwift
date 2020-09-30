@@ -22,6 +22,7 @@ enum ChatHistoryEntryId : Hashable {
     case maybeId(AnyHashable)
     case commentsHeader
     case repliesHeader
+    case topThreadInset
     func hash(into hasher: inout Hasher) {
         
     }
@@ -76,6 +77,12 @@ enum ChatHistoryEntryId : Hashable {
             } else {
                 return false
             }
+        case .topThreadInset:
+            if case .topThreadInset = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
     
@@ -97,6 +104,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(7) << 40
         case .repliesHeader:
             return UInt64(8) << 40
+        case .topThreadInset:
+            return UInt64(9) << 40
         }
     }
 
@@ -153,6 +162,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case bottom
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
+    case topThreadInset(CGFloat, MessageIndex, ChatItemRenderType)
     var message:Message? {
         switch self {
         case let .MessageEntry(message,_, _,_,_,_,_):
@@ -188,6 +198,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .commentsHeader(_, _, renderType):
             return renderType
         case let .repliesHeader(_, _, renderType):
+            return renderType
+        case let .topThreadInset(_, _, renderType):
             return renderType
         }
     }
@@ -227,6 +239,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .commentsHeader
         case .repliesHeader:
             return .repliesHeader
+        case .topThreadInset:
+            return .topThreadInset
         }
     }
     
@@ -245,6 +259,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .commentsHeader(_, index, _):
             return index
         case let .repliesHeader(_, index, _):
+            return index
+        case let .topThreadInset(_, index, _):
             return index
         }
     }
@@ -265,6 +281,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .commentsHeader(_, index, _):
             return index
         case let .repliesHeader(_, index, _):
+            return index
+        case let .topThreadInset(_, index, _):
             return index
         }
     }
@@ -438,6 +456,13 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
+    case let .topThreadInset(value, index, type):
+        switch rhs {
+        case .topThreadInset(value, index, type):
+            return true
+        default:
+            return false
+        }
     }
     
 }
@@ -453,7 +478,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -814,7 +839,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     if addRepliesHeader {
-        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound(), renderType), at: 0)
+        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound().successor(), renderType), at: 0)
+    }
+    if let addTopThreadInset = addTopThreadInset {
+        entries.insert(.topThreadInset(addTopThreadInset, MessageIndex.absoluteLowerBound(), renderType), at: 0)
     }
     
     var sorted = entries.sorted()
