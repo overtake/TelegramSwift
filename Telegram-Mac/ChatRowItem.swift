@@ -1732,7 +1732,7 @@ class ChatRowItem: TableRowItem {
         case .repliesHeader:
             return RepliesHeaderRowItem(initialSize, entry: entry)
         case let .topThreadInset(height, _, _):
-            return GeneralRowItem.init(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear)
+            return GeneralRowItem(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear)
         default:
             break
         }
