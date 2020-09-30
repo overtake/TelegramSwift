@@ -429,7 +429,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 let list = rightsOrder.filter {
                     accountUserRightsFlags.contains($0)
                 }.filter { right in
-                    if channel.isSupergroup, right != .canBeAnonymous {
+                    if channel.isSupergroup, isCreator, right != .canBeAnonymous {
                         return false
                     }
                     return true
