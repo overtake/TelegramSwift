@@ -636,6 +636,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     if case .UnreadEntry = entry.appearance.entry {
                         if interaction.mode.isThreadMode {
                             offset = 44 - 6
+                        } else {
+                            offset - 6
                         }
                         scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: offset)
                         break
@@ -765,7 +767,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 height = relativeOffset
                 for k in 0 ..< entries.count {
                     if entries[k].stableId == stableId {
-                        let x:Int = Int(ceil(offset / 28))
+                        let x:Int = Int(ceil(abs(offset) / 28))
                         index = min(entries.count - 1, k + x)
                         break
                     }
