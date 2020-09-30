@@ -756,7 +756,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
                 titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if let peer = peerViewMainPeer(peerView) {
+            } else if let peer = peerViewMainPeer(peerView), chatInteraction.mode == .history {
                 if peer.isVerified {
                     titleImage = (theme.icons.verifiedImage, .right)
                 } else if peer.isScam {
