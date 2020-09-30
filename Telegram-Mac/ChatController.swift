@@ -1131,7 +1131,31 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             let laterId = previousView.with { $0?.originalView?.laterId }
             if laterId != nil {
-                setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), count: requestCount, animated: true))
+                
+                let history: ChatHistoryLocation = .Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.upperBound, scrollPosition: .down(true), count: requestCount, animated: true)
+                
+                let historyView = chatHistoryViewForLocation(history, context: context, chatLocation: chatLocation, fixedCombinedReadStates: nil, tagMask: nil, additionalData: [], chatLocationContextHolder: chatLocationContextHolder)
+
+                let signal = historyView
+                    |> mapToSignal { historyView -> Signal<Bool, NoError> in
+                        switch historyView {
+                        case .Loading:
+                            return .single(true)
+                        case let .HistoryView(view, _, _, _):
+                            if !view.holeLater, view.laterId == nil, !view.isLoading {
+                                return .single(false)
+                            }
+                            return .single(true)
+                        }
+                    } |> take(until: { index in
+                        return SignalTakeAction(passthrough: !index, complete: !index)
+                    })
+
+                messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak self] _ in
+                    self?.setLocation(history)
+                }, completed: {
+
+                }))
             } else {
                 genericView.tableView.scroll(to: .down(true))
             }
@@ -2490,7 +2514,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .Loading:
                         return .single(true)
                     case let .HistoryView(view, _, _, _):
-                        if !view.holeLater {
+                        if !view.holeLater, !view.isLoading {
                             return .single(false)
                         }
                         return .single(true)
@@ -3860,12 +3884,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }))
         
         
+        let mode = self.mode
         
         let discussion: Signal<Void, NoError> = peerView.get()
             |> map { view -> CachedChannelData? in
                 return (view as? PeerView)?.cachedData as? CachedChannelData
         } |> mapToSignal { value in
-            if let peerDiscussionId = value?.linkedDiscussionPeerId {
+            if let threadId = mode.threadId {
+                return context.account.viewTracker.polledChannel(peerId: threadId.peerId)
+            } else if let peerDiscussionId = value?.linkedDiscussionPeerId {
                 switch peerDiscussionId {
                 case let .known(peerId):
                     if let peerId = peerId {
@@ -3877,6 +3904,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             return .single(Void())
         }
+        
         
         pollChannelDiscussionDisposable.set(discussion.start())
         
