@@ -399,7 +399,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 }
                
                 
-                let accountUserRightsFlags: TelegramChatAdminRightsFlags
+                var accountUserRightsFlags: TelegramChatAdminRightsFlags
                 if channel.flags.contains(.isCreator) {
                     accountUserRightsFlags = maskRightsFlags
                 } else if let adminRights = channel.adminRights {
@@ -413,8 +413,10 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     currentRightsFlags = updatedFlags
                 } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                     currentRightsFlags = adminRights.rights.flags
+                } else if let adminRights = channel.adminRights {
+                    currentRightsFlags = adminRights.flags
                 } else {
-                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
+                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins])
                 }
                 
                 if accountUserRightsFlags.contains(.canAddAdmins) {
@@ -427,8 +429,8 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 let list = rightsOrder.filter {
                     accountUserRightsFlags.contains($0)
                 }.filter { right in
-                    if channel.isSupergroup && isCreator {
-                        return right == .canBeAnonymous
+                    if channel.isSupergroup, right != .canBeAnonymous {
+                        return false
                     }
                     return true
                 }

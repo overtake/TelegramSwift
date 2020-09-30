@@ -147,7 +147,7 @@ final class ChatInteraction : InterfaceObserver  {
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
     var scrollToTheFirst: () -> Void = {}
     
-    var openReplyThread:(MessageId, Bool, ReplyThreadMode)->Void = {  _, _, _ in }
+    var openReplyThread:(MessageId, Bool, Bool, ReplyThreadMode)->Void = {  _, _, _, _ in }
 
     func chatLocationInput() -> ChatLocationInput {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())

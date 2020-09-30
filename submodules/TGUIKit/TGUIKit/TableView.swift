@@ -1339,7 +1339,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             }
                         }
                         if tableView.isFlipped {
-                            stickView.isHidden = documentOffset.y <= 0 && !item.singletonItem// && !stickView.isAlwaysUp
+                            stickView.isHidden = (documentOffset.y <= 0 && !item.singletonItem)// && !stickView.isAlwaysUp
                         } else {
                             stickView.isHidden = documentSize.height <= frame.height || documentOffset.y > (documentSize.height - frame.height)
                         }
@@ -1365,6 +1365,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     } else {
                         stickView?.setFrameOrigin(0, 0)
                         stickView?.header = true
+                        stickView?.isHidden = true
                     }
                     
                      self.enumerateViews(with: { view in
@@ -2905,6 +2906,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
+        
         rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, 0), documentSize.height - height) + inset.top)
         if clipView.bounds.minY != rowRect.minY {
             

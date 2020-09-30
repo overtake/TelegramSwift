@@ -391,7 +391,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func forceSelectItem(_ item: ChatRowItem, onRightClick: Bool) {
-        if let message = item.message {
+        if let message = item.message, item.isSelectable {
             item.chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
         }
     }
@@ -1553,14 +1553,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func toggleSelected(_ select: Bool, in point: NSPoint) {
         guard let item = item as? ChatRowItem else { return }
         
-        item.chatInteraction.withToggledSelectedMessage({ current in
-            if let message = item.message {
-                if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
-                    return current.withToggledSelectedMessage(message.id)
+        if item.isSelectable {
+            item.chatInteraction.withToggledSelectedMessage({ current in
+                if let message = item.message {
+                    if (select && !current.isSelectedMessageId(message.id)) || (!select && current.isSelectedMessageId(message.id)) {
+                        return current.withToggledSelectedMessage(message.id)
+                    }
                 }
-            }
-            return current
-        })
+                return current
+            })
+        }        
     }
     
     override func forceClick(in location: NSPoint) {

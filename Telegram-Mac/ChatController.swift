@@ -627,14 +627,17 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         
         var scrollToItem:TableScrollState? = nil
         var animated = animated
-        
+        var offset:CGFloat = 0
         if let scrollPosition = scrollPosition {
             switch scrollPosition {
             case let .unread(unreadIndex):
                 var index = toView.filteredEntries.count - 1
                 for entry in toView.filteredEntries {
                     if case .UnreadEntry = entry.appearance.entry {
-                        scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: -6)
+                        if interaction.mode.isThreadMode {
+                            offset = 44 - 6
+                        }
+                        scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: offset)
                         break
                     }
                     index -= 1
@@ -762,7 +765,8 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 height = relativeOffset
                 for k in 0 ..< entries.count {
                     if entries[k].stableId == stableId {
-                        index = k
+                        let x:Int = Int(ceil(offset / 28))
+                        index = min(entries.count - 1, k + x)
                         break
                     }
                 }
@@ -775,7 +779,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         height += item.height
                         firstInsertion.append((index - j, item))
                         j -= 1
-                        if initialSize.height < height {
+                        if initialSize.height + offset < height {
                             success = true
                             break
                         }
@@ -786,7 +790,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                             let item = makeItem(entries[i])
                             height += item.height
                             firstInsertion.insert((0, item), at: 0)
-                            if initialSize.height < height {
+                            if initialSize.height + offset < height {
                                 success = true
                                 break
                             }
@@ -813,7 +817,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                             let item = makeItem(entries[i])
                             height += item.height
                             firstInsertion.append((i, item))
-                            if initialSize.height < height {
+                            if initialSize.height + offset < height {
                                 break
                             }
                         }
@@ -846,26 +850,26 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     
                     while !lowSuccess || !highSuccess {
                         
-                        if  (initialSize.height / 2) >= lowHeight && !lowSuccess {
+                        if  ((initialSize.height + offset) / 2) >= lowHeight && !lowSuccess {
                             let item = makeItem(entries[low])
                             lowHeight += item.height
                             firstInsertion.append((low, item))
                         }
                         
-                        if (initialSize.height / 2) >= highHeight && !highSuccess  {
+                        if ((initialSize.height + offset) / 2) >= highHeight && !highSuccess  {
                             let item = makeItem(entries[high])
                             highHeight += item.height
                             firstInsertion.append((high, item))
                         }
                         
-                        if (((initialSize.height / 2) <= lowHeight ) || low == entries.count - 1) {
+                        if ((((initialSize.height + offset) / 2) <= lowHeight ) || low == entries.count - 1) {
                             lowSuccess = true
                         } else if !lowSuccess {
                             low += 1
                         }
                         
                         
-                        if (((initialSize.height / 2) <= highHeight) || high == 0) {
+                        if ((((initialSize.height + offset) / 2) <= highHeight) || high == 0) {
                             highSuccess = true
                         } else if !highSuccess {
                             high -= 1
@@ -1514,7 +1518,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -3139,8 +3143,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         var currentThreadId: MessageId?
         
-        chatInteraction.openReplyThread = { [weak self] messageId, isChannelPost, mode in
-            let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId)) |> take(1) |> deliverOnMainQueue
+        chatInteraction.openReplyThread = { [weak self] messageId, isChannelPost, modalProgress, mode in
+            let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError>
+                
+            if modalProgress {
+                signal = showModalProgress(signal: fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId)) |> take(1) |> deliverOnMainQueue, for: context.window)
+            } else {
+                signal = fetchAndPreloadReplyThreadInfo(context: context, subject: isChannelPost ? .channelPost(messageId) : .groupMessage(messageId)) |> take(1) |> deliverOnMainQueue
+            }
             
             currentThreadId = mode.originId
             
@@ -4951,10 +4961,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let messageId = messageId {
                             location = .InitialSearch(location: .id(messageId), count: count + 10)
                         } else {
-                            location = .Initial(count: count)
+                            location = .Initial(count: count + 10)
                         }
                     case let .lowerBoundMessage(index):
-                        location = ChatHistoryLocation.Navigation(index: .message(index), anchorIndex: .message(index), count: count, side: .upper)
+                        location = .Scroll(index: .message(index), anchorIndex: .message(index), sourceIndex: .message(index), scrollPosition: .up(false), count: count + 10, animated: false)
                     }
                 default:
                     if let messageId = messageId {
