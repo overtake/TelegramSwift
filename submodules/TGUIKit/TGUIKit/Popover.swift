@@ -415,7 +415,10 @@ public func closeAllPopovers(for window: Window) {
 }
 
 public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.015, static: Bool = false ) -> Void {
-    if let _ = control.window as? Window {
+    if let window = control.window as? Window {
+        if window.inLiveSwiping {
+            return
+        }
         if let popover = controller.popover {
             if popover.isShown {
                 return
