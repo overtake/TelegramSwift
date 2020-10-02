@@ -598,7 +598,7 @@
         
         //        MTLog(@"viewC.className %@ %@", viewC.className, className);
         
-        if([viewC.className isEqualToString:className]) {
+        if([viewC respondsToSelector:@selector(className)] && [viewC.className isEqualToString:className]) {
             [array addObject:viewC];
         }
         
