@@ -449,15 +449,18 @@ func initialize() -> [String] {
     array.append("poll_quiz_unselected")
     
     array.append("poll_selected")
+    array.append("poll_selection")
     array.append("poll_selected_correct")
     array.append("poll_selected_incorrect")
 
     
     array.append("poll_selected_incoming")
+    array.append("poll_selection_incoming")
     array.append("poll_selected_correct_incoming")
     array.append("poll_selected_incorrect_incoming")
 
     array.append("poll_selected_outgoing")
+    array.append("poll_selection_outgoing")
     array.append("poll_selected_correct_outgoing")
     array.append("poll_selected_incorrect_outgoing")
     

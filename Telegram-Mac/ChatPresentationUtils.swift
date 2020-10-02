@@ -378,6 +378,9 @@ final class TelegramChatColors {
     func pollSelected(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
         return bubbled ? incoming ? icons.poll_selected_incoming : icons.poll_selected_outgoing : icons.poll_selected
     }
+    func pollSelection(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
+        return bubbled ? incoming ? icons.poll_selection_incoming : icons.poll_selection_outgoing : icons.poll_selection
+    }
     func pollSelectedCorrect(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {
         return bubbled ? incoming ? icons.poll_selected_correct_incoming : icons.poll_selected_correct_outgoing : icons.poll_selected_correct
     }

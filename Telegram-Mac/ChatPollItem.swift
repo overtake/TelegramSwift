@@ -1009,7 +1009,7 @@ private final class PollOptionView : Control {
                 }
                 selectingView?.animates = animated || (previousOption != nil && previousOption?.isMultipleSelected != option.isMultipleSelected)
                 if option.isMultipleSelected {
-                    selectingView?.image = option.presentation.chat.pollSelected(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
+                    selectingView?.image = option.presentation.chat.pollSelection(option.isIncoming, option.isBubbled, icons: option.presentation.icons)
                 } else {
                     selectingView?.image = option.presentation.chat.pollOptionUnselectedImage(option.isIncoming, option.isBubbled)
                 }

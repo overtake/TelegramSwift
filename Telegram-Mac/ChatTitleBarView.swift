@@ -795,7 +795,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     }
                     status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
                     
-                    result = result.withUpdatedTitle("Discussion")
+                    result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
                 }
             }
             

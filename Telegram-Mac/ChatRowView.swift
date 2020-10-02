@@ -806,9 +806,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             animatedView?.frame = bounds
             
-            channelCommentsBubbleControl?.frame = channelCommentsBubbleFrame
-            channelCommentsControl?.frame = channelCommentsFrame
-            channelCommentsBubbleSmallControl?.frame = channelCommentsOverlayFrame
+            channelCommentsBubbleControl?.frame = channelCommentsBubbleFrame(item)
+            channelCommentsControl?.frame = channelCommentsFrame(item)
+            channelCommentsBubbleSmallControl?.frame = channelCommentsOverlayFrame(item)
 
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
@@ -986,14 +986,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    var channelCommentsBubbleFrame: CGRect {
-        guard let item = item as? ChatRowItem, let _ = item.commentsBubbleData else {
+    func channelCommentsBubbleFrame(_ item: ChatRowItem) -> CGRect {
+        guard let _ = item.commentsBubbleData else {
             return .zero
         }
         return NSMakeRect(0, 0, item.bubbleFrame.width, ChatRowItem.channelCommentsBubbleHeight)
     }
-    var channelCommentsOverlayFrame: CGRect {
-        guard let item = item as? ChatRowItem, let commentsData = item.commentsBubbleDataOverlay else {
+    func channelCommentsOverlayFrame(_ item: ChatRowItem) -> CGRect {
+        guard let commentsData = item.commentsBubbleDataOverlay else {
             return .zero
         }
         let size = commentsData.size(false, true)
@@ -1006,8 +1006,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         return rect
     }
-    var channelCommentsFrame: CGRect {
-        guard let item = item as? ChatRowItem, let commentsData = item.commentsData else {
+    func channelCommentsFrame(_ item: ChatRowItem) -> CGRect {
+        guard let commentsData = item.commentsData else {
             return .zero
         }
         let rightFrame = self.rightFrame
@@ -1030,7 +1030,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleControl = current
                 bubbleView.addSubview(current)
             }
-            current.update(data: commentsBubbleData, size: channelCommentsBubbleFrame.size, animated: animated)
+            current.update(data: commentsBubbleData, size: channelCommentsBubbleFrame(item).size, animated: animated)
         } else {
             if let channelCommentsBubbleControl = self.channelCommentsBubbleControl {
                 self.channelCommentsBubbleControl = nil
@@ -1055,8 +1055,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
             }
-            current.update(data: data, size: channelCommentsOverlayFrame.size, animated: animated)
-            current.change(pos: channelCommentsOverlayFrame.origin, animated: animated)
+            current.update(data: data, size: channelCommentsOverlayFrame(item).size, animated: animated)
+            current.change(pos: channelCommentsOverlayFrame(item).origin, animated: animated)
         } else {
             if let channelCommentsBubbleSmallControl = self.channelCommentsBubbleSmallControl {
                 self.channelCommentsBubbleSmallControl = nil
@@ -1080,7 +1080,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsControl = current
                 rowView.addSubview(current)
             }
-            current.update(data: commentsData, size: channelCommentsFrame.size, animated: animated)
+            current.update(data: commentsData, size: channelCommentsFrame(item).size, animated: animated)
         } else {
             if let channelCommentsControl = self.channelCommentsControl {
                 self.channelCommentsControl = nil

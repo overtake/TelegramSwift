@@ -3209,6 +3209,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return nil
                 }
                 currentThreadId = nil
+                
+                switch error {
+                case .generic:
+                    alert(for: context.window, info: L10n.chatDiscussionMessageDeleted)
+                }
             }))
         }
         
@@ -3715,7 +3720,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let tableView = self.genericView.tableView
             switch self.mode {
             case .replyThread:
-                if let pinnedMessageId = self.chatInteraction.presentation.pinnedMessageId {
+                if let pinnedMessageId = self.chatInteraction.presentation.pinnedMessageId, position.visibleRows.location != NSNotFound {
                     var hidden: Bool = false
                     for row in position.visibleRows.min ..< position.visibleRows.max {
                         if let item = tableView.item(at: row) as? ChatRowItem, item.effectiveCommentMessage?.id == pinnedMessageId {

@@ -1412,9 +1412,12 @@ public extension NSColor {
 
 public extension Int {
     
-    func prettyFormatter(_ n: Int, iteration: Int) -> String {
+    func prettyFormatter(_ n: Int, iteration: Int, rounded: Bool = false) -> String {
         let keys = ["K", "M", "B", "T"]
-        let d = Double((n / 100)) / 10.0
+        var d = Double((n / 100)) / 10.0
+        if rounded {
+            d = floor(d)
+        }
         let isRound:Bool = (Int(d) * 10) % 10 == 0
         if d < 1000 {
             if d == 1 {
@@ -1428,8 +1431,15 @@ public extension Int {
             }
         }
         else {
-            return self.prettyFormatter(Int(d), iteration: iteration + 1)
+            return self.prettyFormatter(Int(d), iteration: iteration + 1, rounded: rounded)
         }
+    }
+    
+    var prettyRounded: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        return self.prettyFormatter(self, iteration: 0, rounded: true).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
     }
     
     var prettyNumber:String {

@@ -997,7 +997,7 @@ class ChatRowItem: TableRowItem {
                             break
                         }
                     }
-                    let title: String = "\(count)"
+                    let title: String = "\(Int(count).prettyRounded)"
                     let textColor = isBubbled && presentation.backgroundMode.hasWallpaper ? presentation.chatServiceItemTextColor : presentation.colors.accent
                     
                     var texts:[ChannelCommentsRenderData.Text] = []
@@ -1061,14 +1061,17 @@ class ChatRowItem: TableRowItem {
                         title = [(L10n.channelCommentsLeaveComment, .crossFade, 0)]
                     } else {
                         var text = L10n.channelCommentsCountCountable(Int(count))
-                        let pretty = "\(Int(count).prettyNumber)"
+                        let pretty = "\(Int(count).formattedWithSeparator)"
                         text = text.replacingOccurrences(of: "\(count)", with: pretty)
                         
                         let range = text.nsstring.range(of: pretty)
                         if range.location != NSNotFound {
                             title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
-                            title.append((text.nsstring.substring(with: range), .numeric, 1))
-                            title.append((text.nsstring.substring(from: range.upperBound), .crossFade, 2))
+                            for i in range.lowerBound ..< range.upperBound {
+                                let symbol = text.nsstring.substring(with: NSMakeRange(range.location + i, 1))
+                                title.append((symbol, .numeric, i + 1))
+                            }
+                            title.append((text.nsstring.substring(from: range.upperBound), .crossFade, range.length + 1))
                         } else {
                             title.append((text, .crossFade, 0))
                         }
@@ -1119,7 +1122,7 @@ class ChatRowItem: TableRowItem {
                         title = [(L10n.channelCommentsShortLeaveComment, .crossFade, 0)]
                     } else {
                         var text = L10n.channelCommentsShortCountCountable(Int(count))
-                        let pretty = "\(Int(count).prettyNumber)"
+                        let pretty = "\(Int(count).prettyRounded)"
                         text = text.replacingOccurrences(of: "\(count)", with: pretty)
                         
                         let range = text.nsstring.range(of: pretty)
@@ -1135,7 +1138,7 @@ class ChatRowItem: TableRowItem {
                     title = title.filter { !$0.0.isEmpty }
                     
                     let texts:[ChannelCommentsRenderData.Text] = title.map {
-                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(.short)), animation: $0.1, index: $0.2)
+                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(10)), animation: $0.1, index: $0.2)
                     }
                     
                     _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: false, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
@@ -1318,6 +1321,20 @@ class ChatRowItem: TableRowItem {
                     if let attr = attr as? AuthorSignatureMessageAttribute {
                         if !message.flags.contains(.Failed) {
                             postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                        }
+                        break
+                    }
+                }
+            }
+            if let peer = peer, peer.isSupergroup, message.isAnonymousMessage {
+                for attr in message.attributes {
+                    if let attr = attr as? AuthorSignatureMessageAttribute {
+                        if !message.flags.contains(.Failed) {
+                            let badge: NSAttributedString = .initialize(string: " " + attr.signature, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
+                        
+                            adminBadge = TextViewLayout(badge, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
+                            adminBadge?.mayItems = false
+                            adminBadge?.measure(width: .greatestFiniteMagnitude)
                         }
                         break
                     }
