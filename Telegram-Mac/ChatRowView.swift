@@ -1510,6 +1510,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let bubbleFrame = self.bubbleFrame
                 let contentFrameModifier = self.contentFrameModifier
                 
+                nameView?.change(pos: namePoint, animated: animated)
+                
                 bubbleView.change(pos: bubbleFrame.origin, animated: animated)
                 bubbleView.change(size: bubbleFrame.size, animated: animated)
                 contentView.change(pos: contentFrameModifier.origin, animated: animated)
