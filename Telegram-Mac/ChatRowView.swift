@@ -1502,6 +1502,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             fillReplyMarkup(item, animated: animated)
             fillCaption(item, animated: animated)
             fillChannelComments(item, animated: animated)
+            
+            super.set(item: item, animated: animated)
+
             if animated {
                 
                 let bubbleFrame = self.bubbleFrame
@@ -1522,7 +1525,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 captionView?._change(pos: captionFrame.origin, animated: animated)
             }
         }
-        super.set(item: item, animated: animated)
 
         rowView.needsDisplay = true
         needsLayout = true
