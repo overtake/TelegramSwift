@@ -5698,6 +5698,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var poll_selection: CGImage {
+      if let image = cached.with({ $0["poll_selection"] }) {
+          return image
+      } else {
+          let image = _poll_selection()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selection"] = image
+              return current
+          }
+          return image
+      }
+  }
   var poll_selected_correct: CGImage {
       if let image = cached.with({ $0["poll_selected_correct"] }) {
           return image
@@ -5737,6 +5750,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var poll_selection_incoming: CGImage {
+      if let image = cached.with({ $0["poll_selection_incoming"] }) {
+          return image
+      } else {
+          let image = _poll_selection_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selection_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
   var poll_selected_correct_incoming: CGImage {
       if let image = cached.with({ $0["poll_selected_correct_incoming"] }) {
           return image
@@ -5771,6 +5797,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["poll_selected_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var poll_selection_outgoing: CGImage {
+      if let image = cached.with({ $0["poll_selection_outgoing"] }) {
+          return image
+      } else {
+          let image = _poll_selection_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["poll_selection_outgoing"] = image
               return current
           }
           return image
@@ -7528,12 +7567,15 @@ final class TelegramIconsTheme {
   private let _chat_failed_scroller_active: ()->CGImage
   private let _poll_quiz_unselected: ()->CGImage
   private let _poll_selected: ()->CGImage
+  private let _poll_selection: ()->CGImage
   private let _poll_selected_correct: ()->CGImage
   private let _poll_selected_incorrect: ()->CGImage
   private let _poll_selected_incoming: ()->CGImage
+  private let _poll_selection_incoming: ()->CGImage
   private let _poll_selected_correct_incoming: ()->CGImage
   private let _poll_selected_incorrect_incoming: ()->CGImage
   private let _poll_selected_outgoing: ()->CGImage
+  private let _poll_selection_outgoing: ()->CGImage
   private let _poll_selected_correct_outgoing: ()->CGImage
   private let _poll_selected_incorrect_outgoing: ()->CGImage
   private let _chat_filter_edit: ()->CGImage
@@ -8075,12 +8117,15 @@ final class TelegramIconsTheme {
       chat_failed_scroller_active: @escaping()->CGImage,
       poll_quiz_unselected: @escaping()->CGImage,
       poll_selected: @escaping()->CGImage,
+      poll_selection: @escaping()->CGImage,
       poll_selected_correct: @escaping()->CGImage,
       poll_selected_incorrect: @escaping()->CGImage,
       poll_selected_incoming: @escaping()->CGImage,
+      poll_selection_incoming: @escaping()->CGImage,
       poll_selected_correct_incoming: @escaping()->CGImage,
       poll_selected_incorrect_incoming: @escaping()->CGImage,
       poll_selected_outgoing: @escaping()->CGImage,
+      poll_selection_outgoing: @escaping()->CGImage,
       poll_selected_correct_outgoing: @escaping()->CGImage,
       poll_selected_incorrect_outgoing: @escaping()->CGImage,
       chat_filter_edit: @escaping()->CGImage,
@@ -8621,12 +8666,15 @@ final class TelegramIconsTheme {
       self._chat_failed_scroller_active = chat_failed_scroller_active
       self._poll_quiz_unselected = poll_quiz_unselected
       self._poll_selected = poll_selected
+      self._poll_selection = poll_selection
       self._poll_selected_correct = poll_selected_correct
       self._poll_selected_incorrect = poll_selected_incorrect
       self._poll_selected_incoming = poll_selected_incoming
+      self._poll_selection_incoming = poll_selection_incoming
       self._poll_selected_correct_incoming = poll_selected_correct_incoming
       self._poll_selected_incorrect_incoming = poll_selected_incorrect_incoming
       self._poll_selected_outgoing = poll_selected_outgoing
+      self._poll_selection_outgoing = poll_selection_outgoing
       self._poll_selected_correct_outgoing = poll_selected_correct_outgoing
       self._poll_selected_incorrect_outgoing = poll_selected_incorrect_outgoing
       self._chat_filter_edit = chat_filter_edit
