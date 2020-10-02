@@ -219,6 +219,9 @@ class FastSettings {
     }
     
     static var isNeedCollage: Bool {
+        if UserDefaults.standard.value(forKey: kNeedCollage) == nil {
+            return true
+        }
         return UserDefaults.standard.bool(forKey: kNeedCollage)
     }
     
