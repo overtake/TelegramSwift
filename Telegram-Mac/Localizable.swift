@@ -605,6 +605,10 @@ internal final class L10n {
   }
   /// Call in Progress
   internal static var callConfirmDiscardCurrentHeader: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Header") }
+  /// Rate This Call
+  internal static var callContextRate: String  { return L10n.tr("Localizable", "Call.Context.Rate") }
+  /// Not Now
+  internal static var callRatingModalNotNow: String  { return L10n.tr("Localizable", "Call.RatingModal.NotNow") }
   /// Leave comment...
   internal static var callRatingModalPlaceholder: String  { return L10n.tr("Localizable", "Call.RatingModal.Placeholder") }
   /// Incoming
@@ -629,6 +633,38 @@ internal final class L10n {
   internal static func callToastMicroOff(_ p1: String) -> String {
     return L10n.tr("Localizable", "Call.Toast.MicroOff", p1)
   }
+  /// Add an optional comment
+  internal static var callFeedbackAddComment: String  { return L10n.tr("Localizable", "CallFeedback.AddComment") }
+  /// Include technical information
+  internal static var callFeedbackIncludeLogs: String  { return L10n.tr("Localizable", "CallFeedback.IncludeLogs") }
+  /// This won't reveal the contents of your conversation, but will help us fix the issue sooner.
+  internal static var callFeedbackIncludeLogsInfo: String  { return L10n.tr("Localizable", "CallFeedback.IncludeLogsInfo") }
+  /// Speech was distorted
+  internal static var callFeedbackReasonDistortedSpeech: String  { return L10n.tr("Localizable", "CallFeedback.ReasonDistortedSpeech") }
+  /// Call ended unexpectedly
+  internal static var callFeedbackReasonDropped: String  { return L10n.tr("Localizable", "CallFeedback.ReasonDropped") }
+  /// I heard my own voice
+  internal static var callFeedbackReasonEcho: String  { return L10n.tr("Localizable", "CallFeedback.ReasonEcho") }
+  /// The other side kept disappearing
+  internal static var callFeedbackReasonInterruption: String  { return L10n.tr("Localizable", "CallFeedback.ReasonInterruption") }
+  /// I heard background noise
+  internal static var callFeedbackReasonNoise: String  { return L10n.tr("Localizable", "CallFeedback.ReasonNoise") }
+  /// I couldn't hear the other side
+  internal static var callFeedbackReasonSilentLocal: String  { return L10n.tr("Localizable", "CallFeedback.ReasonSilentLocal") }
+  /// The other side couldn't hear me
+  internal static var callFeedbackReasonSilentRemote: String  { return L10n.tr("Localizable", "CallFeedback.ReasonSilentRemote") }
+  /// Send
+  internal static var callFeedbackSend: String  { return L10n.tr("Localizable", "CallFeedback.Send") }
+  /// Thanks for\nyour feedback
+  internal static var callFeedbackSuccess: String  { return L10n.tr("Localizable", "CallFeedback.Success") }
+  /// Call Feedback
+  internal static var callFeedbackTitle: String  { return L10n.tr("Localizable", "CallFeedback.Title") }
+  /// Video was distorted
+  internal static var callFeedbackVideoReasonDistorted: String  { return L10n.tr("Localizable", "CallFeedback.VideoReasonDistorted") }
+  /// Video was pixelated
+  internal static var callFeedbackVideoReasonLowQuality: String  { return L10n.tr("Localizable", "CallFeedback.VideoReasonLowQuality") }
+  /// WHAT WENT WRONG?
+  internal static var callFeedbackWhatWentWrong: String  { return L10n.tr("Localizable", "CallFeedback.WhatWentWrong") }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
   /// Mute other sounds during calls

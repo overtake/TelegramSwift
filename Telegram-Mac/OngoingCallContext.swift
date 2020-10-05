@@ -765,13 +765,31 @@ final class OngoingCallContext {
         }
     }
     
+    private func withContextThenDeallocate(_ f: @escaping (OngoingCallThreadLocalContextProtocol) -> Void) {
+        self.queue.async {
+            if let contextRef = self.contextRef {
+                let context = contextRef.takeUnretainedValue()
+                f(context.context)
+                
+                self.contextRef?.release()
+                self.contextRef = nil
+            }
+        }
+    }
+
+    
     func stop(callId: CallId? = nil, sendDebugLogs: Bool = false, debugLogValue: Promise<String?>) {
         let account = self.account
         let logPath = self.logPath
+        var statsLogPath = ""
+        if !logPath.isEmpty {
+            statsLogPath = logPath + ".json"
+        }
+        let tempLogPath = self.tempLogFile.path
+        let tempStatsLogPath = self.tempStatsLogFile.path
         
-        self.withContext { context in
+        self.withContextThenDeallocate { context in
             context.nativeStop { debugLog, bytesSentWifi, bytesReceivedWifi, bytesSentMobile, bytesReceivedMobile in
-                debugLogValue.set(.single(debugLog))
                 let delta = NetworkUsageStatsConnectionsEntry(
                     cellular: NetworkUsageStatsDirectionsEntry(
                         incoming: bytesReceivedMobile,
@@ -781,17 +799,22 @@ final class OngoingCallContext {
                         outgoing: bytesSentWifi))
                 updateAccountNetworkUsageStats(account: self.account, category: .call, delta: delta)
                 
-                if !logPath.isEmpty, let debugLog = debugLog {
+                if !logPath.isEmpty {
                     let logsPath = callLogsPath(account: account)
                     let _ = try? FileManager.default.createDirectory(atPath: logsPath, withIntermediateDirectories: true, attributes: nil)
-                    if let data = debugLog.data(using: .utf8) {
-                        let _ = try? data.write(to: URL(fileURLWithPath: logPath))
-                    }
+                    let _ = try? FileManager.default.moveItem(atPath: tempLogPath, toPath: logPath)
                 }
                 
-                if let callId = callId, let debugLog = debugLog {
+                if !statsLogPath.isEmpty {
+                    let logsPath = callLogsPath(account: account)
+                    let _ = try? FileManager.default.createDirectory(atPath: logsPath, withIntermediateDirectories: true, attributes: nil)
+                    let _ = try? FileManager.default.moveItem(atPath: tempStatsLogPath, toPath: statsLogPath)
+                }
+                
+                if let callId = callId, !statsLogPath.isEmpty, let data = try? Data(contentsOf: URL(fileURLWithPath: statsLogPath)), let dataString = String(data: data, encoding: .utf8) {
+                    debugLogValue.set(.single(dataString))
                     if sendDebugLogs {
-                        let _ = saveCallDebugLog(network: self.account.network, callId: callId, log: debugLog).start()
+                        let _ = saveCallDebugLog(network: self.account.network, callId: callId, log: dataString).start()
                     }
                 }
             }
@@ -800,6 +823,7 @@ final class OngoingCallContext {
                 return VoipDerivedState(data: derivedState)
             }).start()
         }
+
     }
     
     func setIsMuted(_ value: Bool) {

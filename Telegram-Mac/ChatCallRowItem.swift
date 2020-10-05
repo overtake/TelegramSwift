@@ -103,47 +103,54 @@ class ChatCallRowItem: ChatRowItem {
         
         let context = self.context
         let callId = self.callId ?? 0
-        
+        let message = self.message!
         return super.menuItems(in: location) |> map { items in
             var items = items
             
+
             
-            let logPath = callLogsPath(account: context.account)
-            
-            guard let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: logPath), includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey], options: [.skipsSubdirectoryDescendants], errorHandler: nil) else {
-                return items
-            }
-            
-            var foundLog: String? = nil
-            
-            while let item = enumerator.nextObject() {
-                guard let url = item as? NSURL else {
-                    continue
-                }
-                guard let resourceValues = try? url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey]) else {
-                    continue
-                }
-                if let value = resourceValues[.isDirectoryKey] as? Bool, value {
-                    continue
-                }
-                if let file = url.path {
-                    if file.contains("\(callId)") {
-                        foundLog = file
-                        break
+            var callId: CallId?
+            var isVideo: Bool = false
+            var logPath: String?
+            for media in message.media {
+                if let action = media as? TelegramMediaAction, case let .phoneCall(id, discardReason, _, isVideoValue) = action.action {
+                    isVideo = isVideoValue
+                    if discardReason != .busy && discardReason != .missed {
+                        if let logName = callLogNameForId(id: id, account: context.account) {
+                            let logsPath = callLogsPath(account: context.account)
+                            logPath = logsPath + "/" + logName
+                            let start = logName.index(logName.startIndex, offsetBy: "\(id)".count + 1)
+                            let end: String.Index
+                            if logName.hasSuffix(".log.json") {
+                                end = logName.index(logName.endIndex, offsetBy: -4 - 5)
+                            } else {
+                                end = logName.index(logName.endIndex, offsetBy: -4)
+                            }
+                            let accessHash = logName[start..<end]
+                            if let accessHash = Int64(accessHash) {
+                                callId = CallId(id: id, accessHash: accessHash)
+                            }
+                            
+                        }
                     }
+                    break
                 }
             }
-            if let foundLog = foundLog {
+
+            if let callId = callId, let foundLog = logPath {
                 items.append(ContextSeparatorItem())
-                items.append(.init(L10n.shareCallLogs, handler: {
-                    
-                    NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: foundLog)])
-                    
-//                    showModal(with: ShareModalController(ShareUrlObject(context, url: foundLog)), for: context.window)
+
+                items.append(.init(L10n.callContextRate, handler: {
+                    showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: true, isVideo: isVideo), for: context.window)
                 }))
+                if FileManager.default.fileExists(atPath: foundLog), let size = fs(foundLog), size > 0 {
+                    items.append(.init(L10n.shareCallLogs, handler: {
+                        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: foundLog)])
+                    }))
+                }
+               
             }
-            
-            
+           
             return items
         }
     }

@@ -775,6 +775,7 @@
 		D00CE4F82284D5E3008C1B4F /* TransformOutgoingMessageMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */; };
 		D00CE50D2289C9B7008C1B4F /* MediaAnimatedStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00CE50C2289C9B7008C1B4F /* MediaAnimatedStickerView.swift */; };
 		D00CE50F2289CE87008C1B4F /* ChatAnimatedStickerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */; };
+		D00EECD1252B47B1001EB99F /* CallFeedbackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00EECD0252B47B1001EB99F /* CallFeedbackController.swift */; };
 		D014193C22AE939F008667CB /* ModalOptionSetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014193B22AE939F008667CB /* ModalOptionSetController.swift */; };
 		D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */; };
 		D014AA242316CE0700CE5362 /* NewThemeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014AA232316CE0700CE5362 /* NewThemeController.swift */; };
@@ -1943,6 +1944,7 @@
 		D00CA6502281BB0900FFACAD /* Telegram-Sandbox.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "Telegram-Sandbox.entitlements"; sourceTree = "<group>"; };
 		D00CE50C2289C9B7008C1B4F /* MediaAnimatedStickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaAnimatedStickerView.swift; sourceTree = "<group>"; };
 		D00CE50E2289CE87008C1B4F /* ChatAnimatedStickerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAnimatedStickerItem.swift; sourceTree = "<group>"; };
+		D00EECD0252B47B1001EB99F /* CallFeedbackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallFeedbackController.swift; sourceTree = "<group>"; };
 		D014193B22AE939F008667CB /* ModalOptionSetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalOptionSetController.swift; sourceTree = "<group>"; };
 		D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLineSeparatorRowItem.swift; sourceTree = "<group>"; };
 		D014AA232316CE0700CE5362 /* NewThemeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewThemeController.swift; sourceTree = "<group>"; };
@@ -2704,6 +2706,7 @@
 				C2CFCABF1EBB9C8100843F6A /* CallAudioPlayer.swift */,
 				C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */,
 				C2F4ED1A1EC5AE1D005F2696 /* CallRatingModalViewController.swift */,
+				D00EECD0252B47B1001EB99F /* CallFeedbackController.swift */,
 				D074A56424A1DE7700E92F8A /* OngoingCallContext.swift */,
 				D074A56624A1DF5200E92F8A /* VoipDerivedState.swift */,
 				D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */,
@@ -5751,6 +5754,7 @@
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
 				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
+				D00EECD1252B47B1001EB99F /* CallFeedbackController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
