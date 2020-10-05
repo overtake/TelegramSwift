@@ -152,7 +152,7 @@ final class CallControl : Control {
         imageView.center()
         if let imageBackgroundView = imageBackgroundView {
             imageBackgroundView.centerX(y: 0)
-            textView.centerX(y: imageBackgroundView.frame.height + 5)
+            textView.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - textView.frame.width) / 2), imageBackgroundView.frame.height + 5))
         }
         
     }

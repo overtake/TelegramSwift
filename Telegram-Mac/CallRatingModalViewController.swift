@@ -17,7 +17,6 @@ import Postbox
 
 private enum CallRatingState {
     case stars
-    case feedback
 }
 
 private class CallRatingModalView: View {
@@ -27,13 +26,10 @@ private class CallRatingModalView: View {
     var state:CallRatingState = .stars {
         didSet {
             if oldValue != state {
-                feedback.setString("", animated: true)
-
                 updateState(state, animated: true)
             }
         }
     }
-    let feedback:TGModernGrowingTextView = TGModernGrowingTextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -53,46 +49,27 @@ private class CallRatingModalView: View {
                 for j in i + 1 ..< 5 {
                     (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(), for: .Normal)
                 }
-                self?.state = i < 4 ? .feedback : .stars
-                self?.starsChangeHandler?( Int32(i + 1) )
+                self?.state = .stars
+                delay(0.15, closure: {
+                    self?.starsChangeHandler?( Int32(i + 1) )
+                })
             }, for: .Click)
         }
         rating.setFrameSize(x - 10, floorToScreenPixels(backingScaleFactor, rating.subviews[0].frame.height))
         addSubview(rating)
         rating.center()
         
-        feedback.setPlaceholderAttributedString(NSAttributedString.initialize(string: tr(L10n.callRatingModalPlaceholder), color: .grayText, font: .normal(.text)), update: false)
-        
-        feedback.textFont = NSFont.normal(FontSize.text)
-        feedback.textColor = .text
-        feedback.linkColor = .link
-        feedback.max_height = 120
-        
-        feedback.setFrameSize(NSMakeSize(rating.frame.width, 34))
-        
-        addSubview(feedback)
-        
         updateState(.stars)
     }
     
     override func layout() {
         super.layout()
-        feedback.centerX(y: frame.height - feedback.frame.height - 10)
     }
     
     private func updateState(_ state:CallRatingState, animated: Bool = false) {
         switch state {
         case .stars:
             rating.change(pos: focus(rating.frame.size).origin, animated: animated)
-            feedback._change(opacity: 0, animated: animated, completion: { [weak self] completed in
-                if completed {
-                    self?.feedback.isHidden = true
-                }
-            })
-        case .feedback:
-            rating.change(pos: NSMakePoint(rating.frame.minX, 20), animated: animated)
-            feedback.isHidden = false
-            feedback._change(opacity: 1, animated: animated)
         }
     }
     
@@ -105,15 +82,18 @@ private class CallRatingModalView: View {
     }
 }
 
-class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegate {
+class CallRatingModalViewController: ModalViewController {
     
     private let context:AccountContext
-    private let report:CallId
+    private let callId:CallId
     private var starsCount:Int32? = nil
-    private var comment:String = ""
-    init(_ context: AccountContext, report:CallId) {
+    private let isVideo: Bool
+    private let userInitiated: Bool
+    init(_ context: AccountContext, callId:CallId, userInitiated: Bool, isVideo: Bool) {
         self.context = context
-        self.report = report
+        self.callId = callId
+        self.isVideo = isVideo
+        self.userInitiated = userInitiated
         super.init(frame: NSMakeRect(0, 0, 260, 100))
         bar = .init(height: 0)
     }
@@ -128,70 +108,63 @@ class CallRatingModalViewController: ModalViewController, TGModernGrowingDelegat
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
-            if let strongSelf = self, let stars = strongSelf.starsCount {
-                _ = rateCall(account: strongSelf.context.account, callId: strongSelf.report, starsCount: stars, comment: strongSelf.comment, userInitiated: false).start()
-            }
-            self?.close()
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+        return ModalInteractions(acceptTitle: L10n.callRatingModalNotNow, drawBorder: true, height: 50, singleButton: true)
     }
     
-    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        modal?.resize(with:NSMakeSize(genericView.frame.width, genericView.feedback.frame.height + genericView.rating.frame.height + 40), animated: animated)
-    }
-    
+
     override func becomeFirstResponder() -> Bool? {
         return true
     }
-    override func firstResponder() -> NSResponder? {
-        return genericView.feedback
-    }
-    
-    func textViewEnterPressed(_ event: NSEvent!) -> Bool {
-        if FastSettings.checkSendingAbility(for: event) {
-            return true
-        }
-        return false
-    }
-    
-    func textViewTextDidChange(_ string: String!) {
-        comment = string
-    }
-    
-    func textViewTextDidChangeSelectedRange(_ range: NSRange) {
-        
-    }
-    
-    func textViewDidPaste(_ pasteboard: NSPasteboard!) -> Bool {
-        return false
-    }
-    
-    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
-        return NSMakeSize(genericView.feedback.frame.width, genericView.feedback.frame.height)
-    }
-    
-    func textViewIsTypingEnabled() -> Bool {
-        return true
-    }
-    
-    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 1024
-    }
 
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        modal?.interactions?.updateEnables(false)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.feedback.delegate = self
-        textViewHeightChanged(34, animated: false)
         
         genericView.starsChangeHandler = { [weak self] stars in
-            self?.modal?.interactions?.updateEnables(true)
-            self?.starsCount = stars
+            if let stars = stars {
+                self?.saveRating(Int(stars))
+            }
         }
         readyOnce()
+    }
+    
+    private func saveRating(_ starsCount: Int) {
+        self.close()
+        if starsCount < 5 {
+            showModal(with: CallFeedbackController(context: context, callId: callId, starsCount: starsCount, userInitiated: userInitiated, isVideo: isVideo), for: context.window)
+        } else {
+            let _ = rateCallAndSendLogs(account: context.account, callId: self.callId, starsCount: starsCount, comment: "", userInitiated: userInitiated, includeLogs: false).start()
+        }
+    }
+}
+
+
+func rateCallAndSendLogs(account: Account, callId: CallId, starsCount: Int, comment: String, userInitiated: Bool, includeLogs: Bool) -> Signal<Void, NoError> {
+    let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 4244000)
+    
+    let rate = rateCall(account: account, callId: callId, starsCount: Int32(starsCount), comment: comment, userInitiated: userInitiated)
+    if includeLogs {
+        let id = arc4random64()
+        let name = "\(callId.id)_\(callId.accessHash).log.json"
+        let path = callLogsPath(account: account) + "/" + name
+        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
+        let message = EnqueueMessage.message(text: comment, attributes: [], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil)
+        return rate
+            |> then(enqueueMessages(account: account, peerId: peerId, messages: [message])
+                |> mapToSignal({ _ -> Signal<Void, NoError> in
+                    return .single(Void())
+                }))
+    } else if !comment.isEmpty {
+        return rate
+            |> then(enqueueMessages(account: account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)])
+                |> mapToSignal({ _ -> Signal<Void, NoError> in
+                    return .single(Void())
+                }))
+    } else {
+        return rate
     }
 }
