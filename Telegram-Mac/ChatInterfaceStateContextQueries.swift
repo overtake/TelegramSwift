@@ -15,16 +15,22 @@ import Postbox
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
-    if inputQuery != .none {
-        if inputQuery == currentQuery {
-            return nil
+    switch chatPresentationInterfaceState.state {
+    case .normal:
+        if inputQuery != .none {
+            if inputQuery == currentQuery {
+                return nil
+            } else {
+                return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
+                
+            }
         } else {
-            return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
-            
+            return (nil, .single({ _ in return nil }))
         }
-    } else {
+    default:
         return (nil, .single({ _ in return nil }))
     }
+    
 }
 
 private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPresentationInterfaceState: ChatPresentationInterfaceState, currentQuery: ChatPresentationInputQuery?,  context: AccountContext)  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
