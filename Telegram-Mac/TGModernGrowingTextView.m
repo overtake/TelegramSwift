@@ -755,6 +755,10 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [_placeholder setEditable:NO];
         [_placeholder setEnabled:NO];
         [_placeholder setLineBreakMode:NSLineBreakByTruncatingTail];
+        [_placeholder setMaximumNumberOfLines:0];
+        
+        [[_placeholder cell] setLineBreakMode:NSLineBreakByTruncatingTail];
+        [[_placeholder cell] setTruncatesLastVisibleLine:YES];
         
         [self addSubview:_placeholder];
         
@@ -1158,8 +1162,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     [_textView setFrame:NSMakeRect(0, 0, NSWidth(_scrollView.frame), NSHeight(_textView.frame))];
     
     
-    [_placeholder sizeToFit];
-   // [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+    NSSize size = [_placeholder.attributedStringValue size];
+    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((newSize.height - NSHeight(_placeholder.frame))/2.0)))];
 }
     
@@ -1173,13 +1177,16 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     return;
     
     
+    
     [_placeholder setAttributedStringValue:placeholderAttributedString];
     
     _placeholderAttributedString = placeholderAttributedString;
     [_placeholder setAttributedStringValue:placeholderAttributedString];
     
-    [_placeholder sizeToFit];
-   // [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10,NSWidth(_placeholder.frame)), NSHeight(_placeholder.frame))];
+    
+   // [_placeholder sizeToFit];
+    NSSize size = [_placeholder.attributedStringValue size];
+    [_placeholder setFrameSize:NSMakeSize(MIN(NSWidth(_textView.frame) - self._startXPlaceholder - 10, size.width + 10), size.height)];
     [_placeholder setFrameOrigin:self._needShowPlaceholder ? NSMakePoint(self._startXPlaceholder, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0))) : NSMakePoint(NSMinX(_placeholder.frame) + 30, fabsf(roundf((self.frame.size.height - NSHeight(_placeholder.frame))/2.0)))];
     BOOL animates = _animates;
     _animates = NO;

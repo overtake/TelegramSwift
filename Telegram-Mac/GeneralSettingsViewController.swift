@@ -34,6 +34,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case forceTouchEdit(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchForward(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchPreviewMedia(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case callSettings(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     var stableId: Int {
         switch self {
         case let .header(_, uniqueId, _):
@@ -72,6 +73,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 16
         case .cmdEnterBehavior:
             return 17
+        case .callSettings:
+            return 18
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -114,6 +117,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .forceTouchForward(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .forceTouchPreviewMedia(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .callSettings(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .section(id):
             return (id + 1) * 1000 - id
@@ -194,6 +199,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.previewMedia)
             })
+        case let .callSettings(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
+                arguments.callSettings()
+            })
         }
     }
 }
@@ -220,7 +229,8 @@ private final class GeneralSettingsArguments {
     let acceptSecretChats:(Bool)->Void
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void) {
+    let callSettings: ()->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -239,6 +249,7 @@ private final class GeneralSettingsArguments {
         self.acceptSecretChats = acceptSecretChats
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
+        self.callSettings = callSettings
     }
    
 }
@@ -312,6 +323,14 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
 
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsCallSettingsHeader))
+    headerUnique -= 1
+    
+    entries.append(.callSettings(sectionId: sectionId, enabled: true, viewType: .singleItem))
+
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
     
     return entries
 }
@@ -392,6 +411,8 @@ class GeneralSettingsViewController: TableViewController {
             
         }, openShortcuts: {
             context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+        }, callSettings: {
+            context.sharedContext.bindings.rootNavigation().push(CallSettingsController(context: context))
         })
         
         let initialSize = atomicSize

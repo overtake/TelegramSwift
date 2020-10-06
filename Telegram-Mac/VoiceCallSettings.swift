@@ -20,41 +20,45 @@ public enum VoiceCallDataSaving: Int32 {
 
 public struct VoiceCallSettings: PreferencesEntry, Equatable {
     
-    let inputDeviceId: String?
-    let outputDeviceId: String?
-    let muteSounds: Bool
-    
+    let audioInputDeviceId: String?
+    let cameraInputDeviceId: String?
+    let audioOutputDeviceId: String?
     
     public static var defaultSettings: VoiceCallSettings {
-        return VoiceCallSettings(inputDeviceId: nil, outputDeviceId: nil, muteSounds: true)
+        return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil)
     }
     
-    init(inputDeviceId: String?, outputDeviceId: String?, muteSounds: Bool) {
-        self.inputDeviceId = inputDeviceId
-        self.outputDeviceId = outputDeviceId
-        self.muteSounds = muteSounds
+    init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?) {
+        self.audioInputDeviceId = audioInputDeviceId
+        self.cameraInputDeviceId = cameraInputDeviceId
+        self.audioOutputDeviceId = audioOutputDeviceId
     }
     
     public init(decoder: PostboxDecoder) {
-        self.inputDeviceId = decoder.decodeOptionalStringForKey("i")
-        self.outputDeviceId = decoder.decodeOptionalStringForKey("o")
-        self.muteSounds = decoder.decodeInt32ForKey("m", orElse: 1) == 1
+        self.audioInputDeviceId = decoder.decodeOptionalStringForKey("ai")
+        self.cameraInputDeviceId = decoder.decodeOptionalStringForKey("ci")
+        self.audioOutputDeviceId = decoder.decodeOptionalStringForKey("ao")
     }
     
     public func encode(_ encoder: PostboxEncoder) {
-        if let inputDeviceId = inputDeviceId {
-            encoder.encodeString(inputDeviceId, forKey: "i")
+        if let audioInputDeviceId = audioInputDeviceId {
+            encoder.encodeString(audioInputDeviceId, forKey: "ai")
         } else {
-            encoder.encodeNil(forKey: "i")
+            encoder.encodeNil(forKey: "ai")
         }
         
-        if let outputDeviceId = outputDeviceId {
-            encoder.encodeString(outputDeviceId, forKey: "o")
+        if let cameraInputDeviceId = cameraInputDeviceId {
+            encoder.encodeString(cameraInputDeviceId, forKey: "ci")
         } else {
-            encoder.encodeNil(forKey: "o")
+            encoder.encodeNil(forKey: "ci")
         }
         
-        encoder.encodeInt32(muteSounds ? 1 : 0, forKey: "m")
+        if let audioOutputDeviceId = audioOutputDeviceId {
+            encoder.encodeString(audioOutputDeviceId, forKey: "ao")
+        } else {
+            encoder.encodeNil(forKey: "ao")
+        }
+        
     }
     
     public func isEqual(to: PreferencesEntry) -> Bool {
@@ -66,17 +70,16 @@ public struct VoiceCallSettings: PreferencesEntry, Equatable {
     }
     
 
-    func withUpdatedInputDeviceId(_ inputDeviceId: String?) -> VoiceCallSettings {
-        return VoiceCallSettings(inputDeviceId: inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: self.muteSounds)
+    func withUpdatedAudioInputDeviceId(_ audioInputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(audioInputDeviceId: audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId)
+    }
+    func withUpdatedCameraInputDeviceId(_ cameraInputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId)
+    }
+    func withUpdatedAudioOutputDeviceId(_ audioOutputDeviceId: String?) -> VoiceCallSettings {
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: audioOutputDeviceId)
     }
     
-    func withUpdatedOutputDeviceId(_ outputDeviceId: String?) -> VoiceCallSettings {
-        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: outputDeviceId, muteSounds: self.muteSounds)
-    }
-    
-    func withUpdatedMuteSounds(_ muteSounds: Bool) -> VoiceCallSettings {
-        return VoiceCallSettings(inputDeviceId: self.inputDeviceId, outputDeviceId: self.outputDeviceId, muteSounds: muteSounds)
-    }
 }
 
 func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {

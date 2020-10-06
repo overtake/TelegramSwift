@@ -146,6 +146,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     private var textPlaceholder: String {
+        
         if case .replyThread = chatInteraction.mode {
             let message = chatInteraction.presentation.cachedPinnedMessage
             if let message = message {
@@ -163,14 +164,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 }
             }
             if peer.isChannel {
-                if textView.frame.width < 150 {
-                    return L10n.messagesPlaceholderBroadcastSmall
-                }
                 return FastSettings.isChannelMessagesMuted(peer.id) ? L10n.messagesPlaceholderSilentBroadcast : L10n.messagesPlaceholderBroadcast
             }
-        }
-        if textView.frame.width < 150 {
-            return L10n.messagesPlaceholderSentMessageSmall
         }
         return L10n.messagesPlaceholderSentMessage
     }

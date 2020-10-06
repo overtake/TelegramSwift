@@ -611,6 +611,8 @@ internal final class L10n {
   internal static var callRatingModalNotNow: String  { return L10n.tr("Localizable", "Call.RatingModal.NotNow") }
   /// Leave comment...
   internal static var callRatingModalPlaceholder: String  { return L10n.tr("Localizable", "Call.RatingModal.Placeholder") }
+  /// Please rate the quality of your Telegram call
+  internal static var callRatingModalText: String  { return L10n.tr("Localizable", "Call.RatingModal.Text") }
   /// Incoming
   internal static var callRecentIncoming: String  { return L10n.tr("Localizable", "Call.Recent.Incoming") }
   /// Missed
@@ -667,22 +669,16 @@ internal final class L10n {
   internal static var callFeedbackWhatWentWrong: String  { return L10n.tr("Localizable", "CallFeedback.WhatWentWrong") }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
-  /// Mute other sounds during calls
-  internal static var callSettingsMuteSound: String  { return L10n.tr("Localizable", "CallSettings.MuteSound") }
-  /// Open system preferences
-  internal static var callSettingsOpenSystemPreferences: String  { return L10n.tr("Localizable", "CallSettings.OpenSystemPreferences") }
   /// Call Settings
   internal static var callSettingsTitle: String  { return L10n.tr("Localizable", "CallSettings.Title") }
+  /// CAMERA
+  internal static var callSettingsCameraTitle: String  { return L10n.tr("Localizable", "CallSettings.Camera.Title") }
+  /// Default
+  internal static var callSettingsDeviceDefault: String  { return L10n.tr("Localizable", "CallSettings.Device.Default") }
   /// Input device
   internal static var callSettingsInputText: String  { return L10n.tr("Localizable", "CallSettings.Input.Text") }
   /// MICROPHONE
   internal static var callSettingsInputTitle: String  { return L10n.tr("Localizable", "CallSettings.Input.Title") }
-  /// OTHER SETTINGS
-  internal static var callSettingsOtherSettingsTitle: String  { return L10n.tr("Localizable", "CallSettings.OtherSettings.Title") }
-  /// Output device
-  internal static var callSettingsOutputText: String  { return L10n.tr("Localizable", "CallSettings.Output.Text") }
-  /// SOUND
-  internal static var callSettingsOutputTitle: String  { return L10n.tr("Localizable", "CallSettings.Output.Title") }
   /// The deletion process was cancelled for your account %@.
   internal static func cancelResetAccountSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "CancelResetAccount.Success", p1)
@@ -3383,6 +3379,10 @@ internal final class L10n {
   internal static var generalSettingsShowCallsTab: String  { return L10n.tr("Localizable", "GeneralSettings.ShowCallsTab") }
   /// Menu Bar Item
   internal static var generalSettingsStatusBarItem: String  { return L10n.tr("Localizable", "GeneralSettings.StatusBarItem") }
+  /// CALL SETTINGS
+  internal static var generalSettingsCallSettingsHeader: String  { return L10n.tr("Localizable", "GeneralSettings.CallSettings.Header") }
+  /// Call Settings
+  internal static var generalSettingsCallSettingsText: String  { return L10n.tr("Localizable", "GeneralSettings.CallSettings.Text") }
   /// A color scheme for nighttime and dark desktops
   internal static var generalSettingsDarkModeDescription: String  { return L10n.tr("Localizable", "GeneralSettings.DarkMode.Description") }
   /// Disable

@@ -615,7 +615,7 @@ private class PhoneCallWindowView : View {
       
         
         switch state.state {
-        case .active, .connecting, .requesting:
+        case .active, .connecting, .requesting, .reconnecting, .waiting:
             self.acceptControl.isHidden = true
             let activeViews = self.allActiveControlsViews
             let restWidth = self.allControlRestWidth
@@ -1337,6 +1337,19 @@ func closeCall(minimisize: Bool = false) {
     _ = controller.modify { controller in
         if let controller = controller {
             controller.cleanup()
+            let sharedContext = controller.session.sharedContext
+            let account = controller.session.account
+            let isVideo = controller.session.isVideo
+            _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { [weak sharedContext] state in
+                switch state.state {
+                case let .terminated(callId, _, report):
+                    if report, let callId = callId, let window = sharedContext?.bindings.rootNavigation().window {
+                        showModal(with: CallRatingModalViewController(account, callId: callId, userInitiated: false, isVideo: isVideo), for: window)
+                    }
+                default:
+                    break
+                }
+            })
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {

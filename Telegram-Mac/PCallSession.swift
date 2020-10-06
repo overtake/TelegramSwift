@@ -270,6 +270,16 @@ class PCallSession {
     private let currentNetworkType: NetworkType
     private let updatedNetworkType: Signal<NetworkType, NoError>
 
+    private var voiceSettings: VoiceCallSettings {
+        didSet {
+            let cameraUpdated = devicesContext.updateCameraId(voiceSettings)
+            let microUpdated = devicesContext.updateMicroId(voiceSettings) // todo
+            if isVideoAvailable, isVideo, !isOutgoingVideoPaused, cameraUpdated {
+                self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
+            }
+            
+        }
+    }
     
     private let stateDisposable = MetaDisposable()
     private let timeoutDisposable = MetaDisposable()
@@ -338,6 +348,9 @@ class PCallSession {
     private var remoteBatteryLevel: CallState.RemoteBatteryLevel = .normal
     private var remoteAudioState: CallState.RemoteAudioState = .active
     
+    private var settingsDisposable: Disposable?
+    private var devicesContext: DevicesContext
+    
     init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
         
         Queue.mainQueue().async {
@@ -383,31 +396,25 @@ class PCallSession {
         
         self.isVideoAvailable = isVideoAvailable 
         
-        if self.isVideo {
-            self.videoCapturer = OngoingCallVideoCapturer()
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active(self.isVideoAvailable) : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
-        } else {
-            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
-        }
+       
         
         
         let semaphore = DispatchSemaphore(value: 0)
-        var data: (PreferencesView, Peer?, ProxyServerSettings?, NetworkType)!
+        var data: (PreferencesView, Peer?, VoiceCallSettings, ProxyServerSettings?, NetworkType)!
         let _ = combineLatest(
             account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration])
                 |> take(1),
             account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(peerId)
             },
+            voiceCallSettings(sharedContext.accountManager),
             proxySettings(accountManager: sharedContext.accountManager) |> take(1),
             account.networkType |> take(1)
-            ).start(next: { preferences, peer, proxy, networkType in
-                data = (preferences, peer, proxy.effectiveActiveServer, networkType)
+            ).start(next: { preferences, peer, voiceSettings, proxy, networkType in
+                data = (preferences, peer, voiceSettings, proxy.effectiveActiveServer, networkType)
                 semaphore.signal()
             })
         semaphore.wait()
-
-        
        
 
         let configuration = data.0.values[PreferencesKeys.voipConfiguration] as? VoipConfiguration ?? VoipConfiguration.defaultValue
@@ -417,12 +424,21 @@ class PCallSession {
         self.serializedData = configuration.serializedData
         self.dataSaving = .never
         self.derivedState = derivedState
-        self.proxyServer = data.2
+        self.proxyServer = data.3
         self.peer = data.1
-        self.currentNetworkType = data.3
+        self.currentNetworkType = data.4
+        self.voiceSettings = data.2
+        self.devicesContext = DevicesContext(self.voiceSettings)
         self.enableStunMarking = false
         self.enableTCP = false
         self.preferredVideoCodec = nil
+        
+        if self.isVideo {
+            self.videoCapturer = OngoingCallVideoCapturer(devicesContext.currentCameraId ?? "")
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: self.isVideoPossible ? .active(self.isVideoAvailable) : .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
+        } else {
+            self.statePromise.set(CallState(state: isOutgoing ? .waiting : .ringing, videoState: .notAvailable, remoteVideoState: .inactive, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture))
+        }
         
         
         self.auxiliaryServers = getAuxiliaryServers(appConfiguration: appConfiguration).map { server -> OngoingCallContext.AuxiliaryServer in
@@ -454,6 +470,10 @@ class PCallSession {
                 strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: strongSelf.reception)
             }
         }))
+        
+        self.settingsDisposable = combineLatest(queue: .mainQueue(), voiceCallSettings(sharedContext.accountManager), devicesContext.signal).start(next: { [weak self] settings, _ in
+            self?.voiceSettings = settings
+        })
         
     }
     
@@ -664,8 +684,8 @@ class PCallSession {
             presentationState = CallState(state: .connecting(nil), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case .dropping:
             presentationState = CallState(state: .terminating, videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
-        case let .terminated(id, reason, _):
-            presentationState = CallState(state: .terminated(id, reason, false), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
+        case let .terminated(id, reason, options):
+            presentationState = CallState(state: .terminated(id, reason, options.contains(.reportRating)), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case let .requesting(ringing):
             presentationState = CallState(state: .requesting(ringing), videoState: mappedVideoState, remoteVideoState: mappedRemoteVideoState, isMuted: self.isMuted, isOutgoingVideoPaused: self.isOutgoingVideoPaused, remoteAspectRatio: self.remoteAspectRatio, remoteAudioState: self.remoteAudioState, remoteBatteryLevel: self.remoteBatteryLevel, isScreenCapture: self.isScreenCapture)
         case let .active(_, _, keyVisualHash, _, _, _, _):
@@ -708,7 +728,7 @@ class PCallSession {
             if !wasActive {
                 let logName = "\(id.id)_\(id.accessHash)"
                 
-                let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, enableTCP: self.enableTCP, enableStunMarking: self.enableStunMarking, logName: logName, preferredVideoCodec: self.preferredVideoCodec)
+                let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, enableTCP: self.enableTCP, enableStunMarking: self.enableStunMarking, logName: logName, preferredVideoCodec: self.preferredVideoCodec, audioInputDeviceId: self.devicesContext.currentMicroId)
                 self.ongoingContext = ongoingContext
                 
                 if let requestedVideoAspect = self.requestedVideoAspect {
@@ -849,6 +869,7 @@ class PCallSession {
         drop(.disconnect)
         sessionStateDisposable.dispose()
         ongoingContextStateDisposable?.dispose()
+        settingsDisposable?.dispose()
     }
     
     private func playRingtone() {
@@ -864,12 +885,12 @@ class PCallSession {
         if isVideoAvailable {
             let requestVideo: Bool = self.videoCapturer == nil
             if self.videoCapturer == nil {
-                let videoCapturer = OngoingCallVideoCapturer()
+                let videoCapturer = OngoingCallVideoCapturer(devicesContext.currentCameraId ?? "")
                 self.videoCapturer = videoCapturer
                 self.videoIsForceDisabled = false
             }
             if self.isScreenCapture {
-                self.videoCapturer?.disableScreenCapture()
+                self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
             }
             self.isScreenCapture = false
             self.isOutgoingVideoPaused = false
@@ -909,7 +930,7 @@ class PCallSession {
         }
     }
     public func disableScreenCapture() {
-        self.videoCapturer?.disableScreenCapture()
+        self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
         if let _ = self.videoCapturer {
             self.videoCapturer = nil
             self.ongoingContext?.disableVideo()
