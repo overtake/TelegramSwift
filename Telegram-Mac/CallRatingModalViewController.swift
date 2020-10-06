@@ -21,6 +21,7 @@ private enum CallRatingState {
 
 private class CallRatingModalView: View {
     let rating:View = View()
+    let textView = TextView()
     var starsChangeHandler:((Int32?)->Void)? = nil
     private(set) var stars:Int32? = nil
     var state:CallRatingState = .stars {
@@ -57,13 +58,25 @@ private class CallRatingModalView: View {
         }
         rating.setFrameSize(x - 10, floorToScreenPixels(backingScaleFactor, rating.subviews[0].frame.height))
         addSubview(rating)
-        rating.center()
+        addSubview(textView)
+        
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
         
         updateState(.stars)
+        
+        let layout = TextViewLayout(.initialize(string: L10n.callRatingModalText, color: theme.colors.text, font: .medium(.text)), alignment: .center)
+        layout.measure(width: frame.width - 60)
+        
+        textView.update(layout)
+        
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
+        rating.centerX(y: frame.midY + 5)
+        textView.centerX(y: frame.midY - textView.frame.height - 5)
     }
     
     private func updateState(_ state:CallRatingState, animated: Bool = false) {
@@ -84,13 +97,13 @@ private class CallRatingModalView: View {
 
 class CallRatingModalViewController: ModalViewController {
     
-    private let context:AccountContext
+    private let account:Account
     private let callId:CallId
     private var starsCount:Int32? = nil
     private let isVideo: Bool
     private let userInitiated: Bool
-    init(_ context: AccountContext, callId:CallId, userInitiated: Bool, isVideo: Bool) {
-        self.context = context
+    init(_ account: Account, callId:CallId, userInitiated: Bool, isVideo: Bool) {
+        self.account = account
         self.callId = callId
         self.isVideo = isVideo
         self.userInitiated = userInitiated
@@ -134,10 +147,10 @@ class CallRatingModalViewController: ModalViewController {
     
     private func saveRating(_ starsCount: Int) {
         self.close()
-        if starsCount < 5 {
-            showModal(with: CallFeedbackController(context: context, callId: callId, starsCount: starsCount, userInitiated: userInitiated, isVideo: isVideo), for: context.window)
+        if starsCount < 4, let window = self.window {
+            showModal(with: CallFeedbackController(account: account, callId: callId, starsCount: starsCount, userInitiated: userInitiated, isVideo: isVideo), for: window)
         } else {
-            let _ = rateCallAndSendLogs(account: context.account, callId: self.callId, starsCount: starsCount, comment: "", userInitiated: userInitiated, includeLogs: false).start()
+            let _ = rateCallAndSendLogs(account: account, callId: self.callId, starsCount: starsCount, comment: "", userInitiated: userInitiated, includeLogs: false).start()
         }
     }
 }

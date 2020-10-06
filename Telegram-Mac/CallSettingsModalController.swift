@@ -81,22 +81,22 @@ private func callSettingsEntries(state: VoiceCallSettings, arguments: CallSettin
 //    sectionId += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
-    index += 1
+//    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsOtherSettingsTitle), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+//    index += 1
+//    
+//    var hasMuteSettings: Bool = false
     
-    var hasMuteSettings: Bool = false
-    
-    #if !APP_STORE
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mute_sounds, data: InputDataGeneralData(name: L10n.callSettingsMuteSound, color: theme.colors.text, icon: nil, type: .switchable(state.muteSounds), viewType: .firstItem, action: {
-        arguments.muteSound(!state.muteSounds)
-    })))
-    index += 1
-    hasMuteSettings = true
-    #endif
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_open_settings, data: InputDataGeneralData(name: L10n.callSettingsOpenSystemPreferences, color: theme.colors.text, icon: nil, type: .next, viewType: hasMuteSettings ? .lastItem : .singleItem, action: {
-        openSystemSettings(.microphone)
-    })))
-    index += 1
+//    #if !APP_STORE
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mute_sounds, data: InputDataGeneralData(name: L10n.callSettingsMuteSound, color: theme.colors.text, icon: nil, type: .switchable(state.muteSounds), viewType: .firstItem, action: {
+//        arguments.muteSound(!state.muteSounds)
+//    })))
+//    index += 1
+//    hasMuteSettings = true
+//    #endif
+//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_open_settings, data: InputDataGeneralData(name: L10n.callSettingsOpenSystemPreferences, color: theme.colors.text, icon: nil, type: .next, viewType: hasMuteSettings ? .lastItem : .singleItem, action: {
+//        openSystemSettings(.microphone)
+//    })))
+//    index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -126,11 +126,11 @@ func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> Input
 
     
     let arguments = CallSettingsArguments(updateInputDevice: { id in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedInputDeviceId(id) }).start()
+    //    _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedInputDeviceId(id) }).start()
     }, updateOutputDevice: { id in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedOutputDeviceId(id) }).start()
+    //    _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedOutputDeviceId(id) }).start()
     }, muteSound: { value in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedMuteSounds(value) }).start()
+     //   _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, { $0.withUpdatedMuteSounds(value) }).start()
     })
     
     let signal = combineLatest(voiceCallSettings(sharedContext.accountManager), inputDevices(), outputDevices()) |> map { value, inputDevices, outputDevices in

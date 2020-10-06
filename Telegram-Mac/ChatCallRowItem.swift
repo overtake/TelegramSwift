@@ -141,7 +141,7 @@ class ChatCallRowItem: ChatRowItem {
                 items.append(ContextSeparatorItem())
 
                 items.append(.init(L10n.callContextRate, handler: {
-                    showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: true, isVideo: isVideo), for: context.window)
+                    showModal(with: CallRatingModalViewController(context.account, callId: callId, userInitiated: true, isVideo: isVideo), for: context.window)
                 }))
                 if FileManager.default.fileExists(atPath: foundLog), let size = fs(foundLog), size > 0 {
                     items.append(.init(L10n.shareCallLogs, handler: {
