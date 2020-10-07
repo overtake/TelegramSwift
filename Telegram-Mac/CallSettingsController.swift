@@ -221,7 +221,7 @@ final class DevicesContext : NSObject {
     }
 }
 
-func CallSettingsController(context: AccountContext) -> ViewController {
+func CallSettingsController(context: AccountContext) -> InputDataController {
 
     let deviceContextObserver = DevicesContext(VoiceCallSettings.defaultSettings)
     
