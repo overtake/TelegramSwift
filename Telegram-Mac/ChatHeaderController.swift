@@ -20,7 +20,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case search(ChatSearchInteractions, Peer?, String?)
     case addContact(block: Bool, autoArchived: Bool)
     case shareInfo
-    case pinned(MessageId, doNotChangeTable: Bool)
+    case pinned(ChatPinnedMessage, doNotChangeTable: Bool)
     case report(autoArchived: Bool)
     case promo(PromoChatListItem.Kind)
     var stableId:Int {
@@ -39,6 +39,25 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 5
         case .shareInfo:
             return 6
+        }
+    }
+    
+    var viewClass: AnyClass? {
+        switch self {
+        case let .addContact:
+            return AddContactView.self
+        case .shareInfo:
+            return ShareInfoView.self
+        case .pinned:
+            return ChatPinnedView.self
+        case .search:
+            return ChatSearchHeader.self
+        case .report:
+            return ChatReportView.self
+        case .promo:
+            return ChatSponsoredView.self
+        case .none:
+            return nil
         }
     }
     
@@ -107,6 +126,17 @@ class ChatHeaderController {
         if _headerState != state {
             let previousState = _headerState
             _headerState = state
+            
+            
+            if previousState.viewClass == state.viewClass {
+                switch state {
+                case let .pinned(message, _):
+                    (currentView as? ChatPinnedView)?.update(message, animated: animated)
+                    return
+                default:
+                    break
+                }
+            }
             
             if let current = currentView {
                 if animated {
@@ -313,16 +343,17 @@ private final class ChatSponsoredView : Control {
 }
 
 class ChatPinnedView : Control {
-    private let node:ReplyModel
+    private var node:ReplyModel
     private let chatInteraction:ChatInteraction
     private let readyDisposable = MetaDisposable()
-    private let container:ChatAccessoryView = ChatAccessoryView()
+    private var container:ChatAccessoryView = ChatAccessoryView()
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
-    init(_ messageId:MessageId, chatInteraction:ChatInteraction) {
+    private var pinnedMessage: ChatPinnedMessage
+    init(_ pinnedMessage:ChatPinnedMessage, chatInteraction:ChatInteraction) {
+        self.pinnedMessage = pinnedMessage
         
-        
-        node = ReplyModel(replyMessageId: messageId, account: chatInteraction.context.account, replyMessage: chatInteraction.presentation.cachedPinnedMessage, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil)
+        node = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, isLast: pinnedMessage.isLatest)
         self.chatInteraction = chatInteraction
         super.init()
         
@@ -330,31 +361,25 @@ class ChatPinnedView : Control {
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         _ = self.dismiss.sizeToFit()
         
-        self.dismiss.isHidden = chatInteraction.mode.threadId == messageId
+        self.dismiss.isHidden = chatInteraction.mode.threadId == pinnedMessage.messageId
         
-//        let focusMessageId: MessageId
-//        if chatInteraction.mode.threadId == messageId {
-//          //  self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .down(true), count: requestCount, animated: true))
-//            focusMessageId = chatInteraction.presentation.cachedPinnedMessage?.sourceReference?.messageId ?? messageId
-//        } else {
-//            focusMessageId = messageId
-//        }
-//
         self.set(handler: { [weak self] _ in
             guard let `self` = self else {
                 return
             }
-            let focusMessageId: MessageId
-            if self.chatInteraction.mode.threadId == messageId {
+            if self.chatInteraction.mode.threadId == self.pinnedMessage.messageId {
                 self.chatInteraction.scrollToTheFirst()
             } else {
-                self.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                self.chatInteraction.focusMessageId(nil, self.pinnedMessage.messageId, .CenterEmpty)
             }
             
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
-            self?.chatInteraction.updatePinned(messageId, true, false)
+            guard let `self` = self else {
+                return
+            }
+            self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false)
         }, for: .SingleClick)
         
         addSubview(dismiss)
@@ -366,10 +391,56 @@ class ChatPinnedView : Control {
             self?.needsLayout = true
             
             if !result, let chatInteraction = self?.chatInteraction {
-                _ = requestUpdatePinnedMessage(account: chatInteraction.context.account, peerId: chatInteraction.peerId, update: .clear).start()
+                _ = requestUpdatePinnedMessage(account: chatInteraction.context.account, peerId: chatInteraction.peerId, update: .clear(id: pinnedMessage.messageId)).start()
             }
         }))
         updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
+        
+        if pinnedMessage.messageId != self.pinnedMessage.messageId {
+            let oldContainer = self.container
+            let newContainer = ChatAccessoryView()
+            newContainer.userInteractionEnabled = false
+            
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, isLast: pinnedMessage.isLatest)
+            
+            newNode.view = newContainer
+            
+            addSubview(newContainer)
+            
+            let width = frame.width - (40 + (dismiss.isHidden ? 0 : 30))
+            newNode.measureSize(width)
+            newContainer.setFrameSize(width, newNode.size.height)
+            newContainer.centerY(x: 20)
+            
+            if animated {
+                let oldFrom = oldContainer.frame.origin
+                let oldTo = pinnedMessage.messageId > self.pinnedMessage.messageId ? NSMakePoint(oldContainer.frame.minX, -oldContainer.frame.height) : NSMakePoint(oldContainer.frame.minX, frame.height)
+                
+                
+                oldContainer.layer?.animatePosition(from: oldFrom, to: oldTo, duration: 0.3, timingFunction: .spring, removeOnCompletion: false, completion: { [weak oldContainer] _ in
+                    oldContainer?.removeFromSuperview()
+                })
+                oldContainer.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, timingFunction: .spring, removeOnCompletion: false)
+                
+                
+                let newTo = newContainer.frame.origin
+                let newFrom = pinnedMessage.messageId < self.pinnedMessage.messageId ? NSMakePoint(newContainer.frame.minX, -newContainer.frame.height) : NSMakePoint(newContainer.frame.minX, frame.height)
+                
+                
+                newContainer.layer?.animatePosition(from: newFrom, to: newTo, duration: 0.3, timingFunction: .spring)
+                newContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3
+                    , timingFunction: .spring)
+            } else {
+                oldContainer.removeFromSuperview()
+            }
+            
+            self.container = newContainer
+            self.node = newNode
+            self.pinnedMessage = pinnedMessage
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -896,7 +967,7 @@ class ChatSearchHeader : View, Notifable {
     
     private var fromAbility: Bool {
         if let peer = chatInteraction.presentation.peer {
-            return (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history
+            return (peer.isSupergroup || peer.isGroup) && (chatInteraction.mode == .history || chatInteraction.mode.isThreadMode)
         } else {
             return false
         }
@@ -927,7 +998,7 @@ class ChatSearchHeader : View, Notifable {
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     
                     if (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, chatLocation: chatInteraction.chatLocation, .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
                                 if let strongSelf = self {
@@ -979,7 +1050,7 @@ class ChatSearchHeader : View, Notifable {
                             }
                         })
                     } else {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, chatLocation: chatInteraction.chatLocation, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             var inScope = true
                             var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?

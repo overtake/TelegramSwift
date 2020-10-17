@@ -62,7 +62,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func mouseUp(with event: NSEvent) {
-        if thumbView._mouseInside() {
+        if thumbView._mouseInside(), userInteractionEnabled {
             executeInteraction(false)
         } else {
             super.mouseUp(with: event)
@@ -200,7 +200,6 @@ class ChatFileContentView: ChatMediaContentView {
         
         var updatedStatusSignal: Signal<(MediaResourceStatus, ArchiveStatus?), NoError>?
         let parameters = parameters as? ChatFileLayoutParameters
-        actionText.backgroundColor = theme.colors.background
         
         var archiveSignal:Signal<ArchiveStatus?, NoError> = .single(nil)
         if let resource = file.resource as? LocalFileArchiveMediaResource {

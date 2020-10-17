@@ -141,8 +141,12 @@ class ChatLayoutUtils: NSObject {
             }
         } else if media is TelegramMediaMap {
             return ChatMapContentView.self
-        } else if media is TelegramMediaDice {
-            return ChatDiceContentView.self
+        } else if let media = media as? TelegramMediaDice {
+            if media.emoji == slotsEmoji {
+                return SlotsMediaContentView.self
+            } else {
+                return ChatDiceContentView.self
+            }
         } else if let media = media as? TelegramMediaGame {
             if let file = media.file {
                 return contentNode(for: file)

@@ -114,7 +114,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
-        if let fetchStatus = self.fetchStatus {
+        if let fetchStatus = self.fetchStatus, userInteractionEnabled {
             switch fetchStatus {
             case .Fetching:
                 if isControl {

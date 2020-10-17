@@ -14,9 +14,9 @@ import Postbox
 import TGUIKit
 
 
-func CallSettingsModalController(_ context: AccountContext) -> InputDataModalController {
+func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> InputDataModalController {
     
-    let modalController = InputDataModalController(CallSettingsController(context: context))
+    let modalController = InputDataModalController(CallSettingsController(sharedContext: sharedContext))
 
     return modalController
     

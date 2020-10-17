@@ -11,37 +11,59 @@ import Cocoa
 public class SelectingControl: Control {
     
    
-    private var imageView:ImageView = ImageView()
-    
+    private var selectedView:ImageView?
+    private let unselectedView = ImageView()
     private var unselectedImage:CGImage
     private var selectedImage:CGImage
     
     public init(unselectedImage:CGImage, selectedImage:CGImage, selected: Bool = false) {
         self.unselectedImage = unselectedImage
         self.selectedImage = selectedImage
-        imageView.image = selected ? selectedImage : unselectedImage
+        
+        self.unselectedView.image = unselectedImage
+        self.unselectedView.sizeToFit()
         super.init(frame:NSMakeRect(0, 0, max(unselectedImage.backingSize.width ,selectedImage.backingSize.width ), max(unselectedImage.backingSize.height,selectedImage.backingSize.height )))
         userInteractionEnabled = false
-        self.isSelected = selected
-        addSubview(imageView)
-        
+        addSubview(unselectedView)
+        self.set(selected: selected, animated: false)
     }
-    
     
     public override func layout() {
         super.layout()
-        imageView.setFrameSize(unselectedImage.backingSize)
-        imageView.center()
+        unselectedView.center()
+        selectedView?.center()
     }
     
     public func set(selected:Bool, animated:Bool = false) {
         if selected != isSelected {
 
             self.isSelected = selected
-            imageView.image = selected ? selectedImage : unselectedImage
-            if animated {
-                self.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.4)
+            if selected {
+                if selectedView == nil {
+                    selectedView = ImageView()
+                    addSubview(selectedView!)
+                    selectedView!.image = selectedImage
+                    selectedView!.sizeToFit()
+                    selectedView!.center()
+                    if animated {
+                        selectedView!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        selectedView!.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.3)
+                    }
+                }
+            } else {
+                if let selectedView = self.selectedView {
+                    self.selectedView = nil
+                    if animated {
+                        selectedView.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.3, removeOnCompletion: false)
+                        selectedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak selectedView] _ in
+                            selectedView?.removeFromSuperview()
+                        })
+                    } else {
+                        selectedView.removeFromSuperview()
+                    }
+                }
             }
+            
         }
     }
     

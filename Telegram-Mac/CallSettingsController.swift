@@ -36,12 +36,12 @@ private func devicesList() -> (camera: [AVCaptureDevice], audio: [AVCaptureDevic
 }
 
 private final class CallSettingsArguments {
-    let context: AccountContext
+    let sharedContext: SharedAccountContext
     let toggleInputAudioDevice:(String?)->Void
     let toggleOutputAudioDevice:(String?)->Void
     let toggleInputVideoDevice:(String?)->Void
-    init(context: AccountContext, toggleInputAudioDevice: @escaping(String?)->Void, toggleOutputAudioDevice:@escaping(String?)->Void, toggleInputVideoDevice:@escaping(String?)->Void) {
-        self.context = context
+    init(sharedContext: SharedAccountContext, toggleInputAudioDevice: @escaping(String?)->Void, toggleOutputAudioDevice:@escaping(String?)->Void, toggleInputVideoDevice:@escaping(String?)->Void) {
+        self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
         self.toggleInputVideoDevice = toggleInputVideoDevice
@@ -221,26 +221,26 @@ final class DevicesContext : NSObject {
     }
 }
 
-func CallSettingsController(context: AccountContext) -> InputDataController {
+func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataController {
 
     let deviceContextObserver = DevicesContext(VoiceCallSettings.defaultSettings)
     
     
-    let arguments = CallSettingsArguments(context: context, toggleInputAudioDevice: { value in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+    let arguments = CallSettingsArguments(sharedContext: sharedContext, toggleInputAudioDevice: { value in
+        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
             $0.withUpdatedAudioInputDeviceId(value)
         }).start()
     }, toggleOutputAudioDevice: { value in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
             $0.withUpdatedAudioOutputDeviceId(value)
         }).start()
     }, toggleInputVideoDevice: { value in
-        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+        _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
             $0.withUpdatedCameraInputDeviceId(value)
         }).start()
     })
     
-    let signal = combineLatest(deviceContextObserver.signal, voiceCallSettings(context.sharedContext.accountManager)) |> map { _, settings in
+    let signal = combineLatest(deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager)) |> map { _, settings in
         return InputDataSignalValue(entries: callSettingsEntries(settings: settings, arguments: arguments))
     }
     

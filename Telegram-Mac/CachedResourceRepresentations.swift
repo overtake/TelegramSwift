@@ -201,6 +201,28 @@ final class CachedDiceRepresentation: CachedMediaResourceRepresentation {
     }
 }
 
+final class CachedSlotMachineRepresentation: CachedMediaResourceRepresentation {
+    let keepDuration: CachedMediaRepresentationKeepDuration = .general
+    let value: SlotMachineValue
+    let size: NSSize
+    var uniqueId: String {
+        return "l: \(value.left.hashValue)" + ", c: \(value.center.hashValue)" + ", c: \(value.right.hashValue)" + " :slot1"
+    }
+    
+    init(value: SlotMachineValue, size: NSSize) {
+        self.value = value
+        self.size = size
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let to = to as? CachedSlotMachineRepresentation {
+            return self.value == to.value && self.size == to.size
+        } else {
+            return false
+        }
+    }
+}
+
 
 
 public enum EmojiFitzModifier: Int32, Equatable {

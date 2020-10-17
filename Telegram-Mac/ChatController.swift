@@ -488,7 +488,7 @@ class ChatControllerView : View, ChatInputDelegate {
             } else {
                 state = .none
             }
-        } else if let pinnedMessageId = interfaceState.pinnedMessageId, pinnedMessageId != interfaceState.interfaceState.dismissedPinnedMessageId, !interfaceState.hidePinnedMessage {
+        } else if let pinnedMessageId = interfaceState.pinnedMessageId, pinnedMessageId.messageId != interfaceState.interfaceState.dismissedPinnedMessageId, !interfaceState.hidePinnedMessage {
             state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
            state = .none
@@ -985,6 +985,13 @@ enum ChatHistoryViewTransitionReason {
     case Reload
 }
 
+private struct ChatTopVisibleMessageRange: Equatable {
+    var lowerBound: MessageId
+    var upperBound: MessageId
+    var isLast: Bool
+}
+
+
 
 class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
     
@@ -1041,6 +1048,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
     private let pollAnswersLoadingValue: Atomic<[MessageId : ChatPollStateData]> = Atomic(value: [:])
 
+    private let topVisibleMessageRange = ValuePromise<ChatTopVisibleMessageRange?>(nil, ignoreRepeated: true)
+    
+
+    
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
     }
@@ -2037,7 +2048,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
-            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil)
+            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil)
             self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil)
         }
         
@@ -3018,7 +3029,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent in
             if let `self` = self {
                 
-                let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear : .pin(id: pinnedId, silent: silent)
+                let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear(id: pinnedId) : .pin(id: pinnedId, silent: silent)
                 let peerId = self.chatInteraction.peerId
                 if let peer = self.chatInteraction.peer as? TelegramChannel {
                     if peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
@@ -3244,6 +3255,62 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 showConfirm()
             }
         }
+        
+        
+        let topPinnedMessage: Signal<ChatPinnedMessage?, NoError>
+        switch self.chatLocation {
+        case let .peer(peerId) where peerId.namespace == Namespaces.Peer.CloudChannel:
+            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
+                |> castError(Bool.self)
+                |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
+                    switch update {
+                    case let .Loading(_, type):
+                        if case .Generic(.FillHole) = type {
+                            return .fail(true)
+                        }
+                    case let .HistoryView(_, type, _, _):
+                        if case .Generic(.FillHole) = type {
+                            return .fail(true)
+                        }
+                    }
+                    return .single(update)
+                })
+                |> restartIfError
+            
+            topPinnedMessage = combineLatest(
+                replyHistory,
+                self.topVisibleMessageRange.get()
+                )
+                |> map { update, topVisibleMessageRange -> ChatPinnedMessage? in
+                    var message: ChatPinnedMessage?
+                    switch update {
+                    case .Loading:
+                        break
+                    case let .HistoryView(view, _, _, _):
+                        for i in 0 ..< view.entries.count {
+                            let entry = view.entries[i]
+                            var matches = false
+                            if message == nil {
+                                matches = true
+                            } else if let topVisibleMessageRange = topVisibleMessageRange {
+                                if entry.message.id < topVisibleMessageRange.lowerBound {
+                                    matches = true
+                                }
+                            } else {
+                                matches = true
+                            }
+                            if matches {
+                                message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, isLatest: i == view.entries.count - 1)
+                            }
+                        }
+                        break
+                    }
+                    return message
+                }
+                |> distinctUntilChanged
+        default:
+            topPinnedMessage = .single(nil)
+        }
 
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
             
@@ -3256,7 +3323,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case let .replyThread(data, _):
                         self.chatInteraction.update(animated:false, { present in
                             var present = present
-                            present = present.withUpdatedPinnedMessageId(data.messageId).withUpdatedHidePinnedMessage(true)
+                            present = present.withUpdatedHidePinnedMessage(true)
                             if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
@@ -3282,9 +3349,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                 }
                             }
-                            if let messageId = present.pinnedMessageId {
-                                present = present.withUpdatedCachedPinnedMessage(combinedInitialData.cachedDataMessages?[messageId]?.first)
-                            }
+                            
+                            var pinnedMessage: ChatPinnedMessage?
+                            pinnedMessage = ChatPinnedMessage(messageId: data.messageId, message: combinedInitialData.cachedDataMessages?[data.messageId]?.first, isLatest: true)
+
+                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
                     case .history:
@@ -3293,11 +3362,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                    .withUpdatedCanPinMessage(cachedData.canPinMessages)
 //                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
 //                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = present.peer as? TelegramChannel {
@@ -3323,16 +3391,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                                 
                                 
+                            }
+                            
+                            var pinnedMessageId: MessageId?
+                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
+                                pinnedMessageId = cachedData.pinnedMessageId
+                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
+                                pinnedMessageId = cachedData.pinnedMessageId
                             } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
-                                present = present
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
-//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
-                            } else {
-                                present = present.withUpdatedPinnedMessageId(nil)
+                                pinnedMessageId = cachedData.pinnedMessageId
+                            } else if let _ = combinedInitialData.cachedData as? CachedSecretChatData {
                             }
-                            if let messageId = present.pinnedMessageId {
-                                present = present.withUpdatedCachedPinnedMessage(combinedInitialData.cachedDataMessages?[messageId]?.first)
+                            
+                            var pinnedMessage: ChatPinnedMessage?
+                            if let pinnedMessageId = pinnedMessageId {
+                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: combinedInitialData.cachedDataMessages?[pinnedMessageId]?.first, isLatest: true)
                             }
+                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
+                            
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
                     case .scheduled:
@@ -3354,12 +3430,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             } |> map {_ in}
         
+        
+        
+        
         let first:Atomic<Bool> = Atomic(value: true)
         
-
         
-        peerDisposable.set((peerView.get()
-            |> deliverOnMainQueue |> beforeNext  { [weak self] postboxView in
+        
+        peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get()) |> beforeNext  { [weak self] topPinnedMessage, postboxView in
                 
                 guard let `self` = self else {return}
                 (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
@@ -3438,6 +3516,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                             
+                            var pinnedMessageId: MessageId?
+                            if let cachedData = peerView.cachedData as? CachedChannelData {
+                                pinnedMessageId = cachedData.pinnedMessageId
+                            } else if let cachedData = peerView.cachedData as? CachedUserData {
+                                pinnedMessageId = cachedData.pinnedMessageId
+                            } else if let cachedData = peerView.cachedData as? CachedGroupData {
+                                pinnedMessageId = cachedData.pinnedMessageId
+                            }
+
+                            
+                            var pinnedMessage: ChatPinnedMessage?
+                            if peerId.namespace == Namespaces.Peer.CloudChannel {
+                                pinnedMessageId = topPinnedMessage?.messageId
+                                pinnedMessage = topPinnedMessage
+                            } else {
+                                if let pinnedMessageId = pinnedMessageId {
+                                    pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: nil, isLatest: true)
+                                }
+                            }
+                            
+
+                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
+                            
                             var contactStatus: ChatPeerStatus?
                             if let cachedData = peerView.cachedData as? CachedUserData {
                                 contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
@@ -3452,12 +3553,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
+                                    .withUpdatedCanPinMessage(cachedData.canPinMessages)
                                 //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages && !(present.peer is TelegramSecretChat))
                             } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
                                 //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
@@ -3482,7 +3582,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedPinnedMessageId(cachedData.pinnedMessageId)
                                 //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let _ = peerView.cachedData as? CachedSecretChatData {
                                 present = present
@@ -3658,7 +3757,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }))
         
         
-       
         
         
         
@@ -3723,7 +3821,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let pinnedMessageId = self.chatInteraction.presentation.pinnedMessageId, position.visibleRows.location != NSNotFound {
                     var hidden: Bool = false
                     for row in position.visibleRows.min ..< position.visibleRows.max {
-                        if let item = tableView.item(at: row) as? ChatRowItem, item.effectiveCommentMessage?.id == pinnedMessageId {
+                        if let item = tableView.item(at: row) as? ChatRowItem, item.effectiveCommentMessage?.id == pinnedMessageId.messageId {
                             hidden = true
                             break
                         }
@@ -3749,13 +3847,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var messageIdsWithViewCount: [MessageId] = []
                 var messageIdsWithUnseenPersonalMention: [MessageId] = []
                 var unsupportedMessagesIds: [MessageId] = []
+                var topVisibleMessageRange: ChatTopVisibleMessageRange?
 
                 var hasFailed: Bool = false
                 
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
                         if message == nil {
-                            message = item.messages.last
+                            message = item.lastMessage
                         }
                         
                         if let message = message, message.flags.contains(.Failed) {
@@ -3792,7 +3891,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if message.media.first is TelegramMediaUnsupported {
                                 unsupportedMessagesIds.append(message.id)
                             }
+                            
+                            if let topVisibleMessageRangeValue = topVisibleMessageRange {
+                                topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: topVisibleMessageRangeValue.lowerBound, upperBound: message.id, isLast: item.index == tableView.count - 1)
+                            } else {
+                                topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: message.id, upperBound: message.id, isLast: item.index == tableView.count - 1)
+                            }
                         }
+                        
                         
                         if let msg = message, let currentMsg = item.messages.last {
                             if msg.id.namespace == Namespaces.Message.Local && currentMsg.id.namespace == Namespaces.Message.Local {
@@ -3804,6 +3910,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     return true
                 })
+                
+                strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
+
                 
                 strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)
                 

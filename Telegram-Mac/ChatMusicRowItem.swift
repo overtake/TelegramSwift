@@ -37,10 +37,13 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         return media as! TelegramMediaFile
     }
     
-    override func makeLabelsForWidth(_ width: CGFloat) {
-        nameLayout.measure(width: width - 40)
-        durationLayout.measure(width: width - 40)
-        sizeLayout.measure(width: width - 40)
+    override func makeLabelsForWidth(_ width: CGFloat) -> CGFloat {
+        nameLayout.measure(width: width - 50)
+        durationLayout.measure(width: width - 50)
+        sizeLayout.measure(width: width - 50)
+        
+        
+        return max(nameLayout.layoutSize.width, durationLayout.layoutSize.width, sizeLayout.layoutSize.width) + 50
     }
 }
 

@@ -408,6 +408,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             return L10n.chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
         case .peerJoined:
             return L10n.chatServicePeerJoinedTelegram(authorName)
+        case let .geoProximityReached(distance):
+            return L10n.chatServiceGeoProximityReached
         }
     }
     

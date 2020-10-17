@@ -621,19 +621,20 @@ final class ChatPollItemView : ChatRowView {
         addSubview(contentNode)
     }
     
-    override var contentFrameModifier: NSRect {
-        guard let item = item as? ChatRowItem else {return NSZeroRect}
+    override func contentFrameModifier(_ item: ChatRowItem) -> NSRect {
         if item.isBubbled {
-            var frame = bubbleFrame
-            frame.size.height = self.contentFrame.height
+            var frame = bubbleFrame(item)
+            let contentFrame = self.contentFrame(item)
+            let contentFrameModifier = super.contentFrameModifier(item)
+            frame.size.height = contentFrame.height
             frame.size.width -= item.additionBubbleInset
-            frame.origin.y = super.contentFrameModifier.minY
+            frame.origin.y = contentFrameModifier.minY
             if item.isIncoming {
                 frame.origin.x += item.additionBubbleInset
             }
             return frame
         } else {
-            var frame = super.contentFrameModifier
+            var frame = super.contentFrameModifier(item)
             frame.origin.x -= item.bubbleContentInset
             return frame
         }
@@ -679,7 +680,7 @@ final class ChatPollItemView : ChatRowView {
         guard let item = item as? ChatPollItem else { return }
         super.set(item: item, animated: animated)
 
-        contentNode.change(size: NSMakeSize(contentFrameModifier.width, item.contentSize.height), animated: animated)
+        contentNode.change(size: NSMakeSize(contentFrameModifier(item).width, item.contentSize.height), animated: animated)
         contentNode.update(with: item, animated: animated)
         
     }

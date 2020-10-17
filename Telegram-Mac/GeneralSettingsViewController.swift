@@ -412,7 +412,7 @@ class GeneralSettingsViewController: TableViewController {
         }, openShortcuts: {
             context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
         }, callSettings: {
-            context.sharedContext.bindings.rootNavigation().push(CallSettingsController(context: context))
+            context.sharedContext.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
         })
         
         let initialSize = atomicSize

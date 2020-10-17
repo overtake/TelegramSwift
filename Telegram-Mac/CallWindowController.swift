@@ -88,6 +88,8 @@ private class PhoneCallWindowView : View {
     fileprivate let imageView:TransformImageView = TransformImageView()
     fileprivate let controls:View = View()
     fileprivate let backgroundView:Control = Control()
+    fileprivate let settings:ImageButton = ImageButton()
+    
     let acceptControl:CallControl = CallControl(frame: .zero)
     let declineControl:CallControl = CallControl(frame: .zero)
     
@@ -131,11 +133,17 @@ private class PhoneCallWindowView : View {
         super.init(frame: frameRect)
         addSubview(imageView)
         
+        settings.set(image: theme.icons.call_screen_settings, for: .Normal)
+        settings.sizeToFit()
+        
         imageView.layer?.contentsGravity = .resizeAspectFill
         imageView.addSubview(incomingVideoView)
         
         addSubview(backgroundView)
+        
+        
         addSubview(outgoingVideoView)
+        
 
         controls.isEventLess = true
         basicControls.isEventLess = true
@@ -326,7 +334,10 @@ private class PhoneCallWindowView : View {
     
     override func layout() {
         super.layout()
-                
+        
+        settings.setFrameOrigin(NSMakePoint(frame.width - settings.frame.width - 5, 5))
+        
+        
         backgroundView.frame = bounds
         imageView.frame = bounds
 
@@ -732,6 +743,8 @@ private class PhoneCallWindowView : View {
             addSubview(backgroundView, positioned: .below, relativeTo: outgoingVideoView)
         }
         
+        addSubview(settings)
+        
         
         needsLayout = true
     }
@@ -1006,6 +1019,12 @@ class PhoneCallWindowController {
             }
         }, for: .Click)
         
+        view.settings.set(handler: { [weak window, weak session] _ in
+            guard let window = window, let session = session else {
+                return
+            }
+            showModal(with: CallSettingsModalController(session.sharedContext), for: window)
+        }, for: .SingleClick)
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
             if let `self` = self, let callState = self.state {

@@ -56,15 +56,17 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
         super.init(isWebpage: false, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
         
     }
-    override func makeLabelsForWidth(_ width: CGFloat) {
-        self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: presentation.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width, 20), nil,false, .left)
+    override func makeLabelsForWidth(_ width: CGFloat) -> CGFloat {
+        self.name = TextNode.layoutText(maybeNode: nameNode, .initialize(string: fileName , color: presentation.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (hasThumb ? 80 : 50), 20), nil,false, .left)
         
 
-        uploadingLayout.measure(width: width)
-        downloadingLayout.measure(width: width)
+        uploadingLayout.measure(width: width - (hasThumb ? 80 : 50))
+        downloadingLayout.measure(width: width - (hasThumb ? 80 : 50))
         
-        downloadLayout.measure(width: width)
-        finderLayout.measure(width: width)
+        downloadLayout.measure(width: width - (hasThumb ? 80 : 50))
+        finderLayout.measure(width: width - (hasThumb ? 80 : 50))
+        
+        return max(downloadLayout.layoutSize.width, uploadingLayout.layoutSize.width, finderLayout.layoutSize.width, downloadingLayout.layoutSize.width, self.name!.0.size.width) + (hasThumb ? 80 : 50)
 
     }
 }
@@ -100,17 +102,17 @@ class ChatFileMediaItem: ChatMediaItem {
         
         let parameters = self.parameters as! ChatFileLayoutParameters
         let file = media as! TelegramMediaFile
-        parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80))
+        let optionalWidth = parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80)) + (file.previewRepresentations.isEmpty ? 50 : 80)
         
-       
         let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
         
-        let optionalWidth = max(parameters.name?.0.size.width ?? 0, max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth)) + (file.previewRepresentations.isEmpty ? 50 : 80)
-
-        
-        if let captionLayout = self.captionLayout {
-            captionLayout.measure(width: width)
-            width = max(optionalWidth, captionLayout.layoutSize.width)
+        if !captionLayouts.isEmpty {
+            var tw: CGFloat = 0
+            for captionLayout in captionLayouts {
+                captionLayout.layout.measure(width: width)
+                tw = max(max(optionalWidth, captionLayout.layout.layoutSize.width), tw)
+            }
+            width = tw
         } else  {
             width = optionalWidth
         }
@@ -131,7 +133,7 @@ class ChatFileMediaItem: ChatMediaItem {
         }
         
         
-        return file.previewRepresentations.isEmpty || captionLayout != nil ? super.additionalLineForDateInBubbleState : nil
+        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.additionalLineForDateInBubbleState : nil
     }
     
     override var isFixedRightPosition: Bool {
@@ -146,7 +148,7 @@ class ChatFileMediaItem: ChatMediaItem {
             return true
         }
         
-        return file.previewRepresentations.isEmpty || captionLayout != nil ? super.isFixedRightPosition : true
+        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.isFixedRightPosition : true
     }
     
     override func contentNode() -> ChatMediaContentView.Type {

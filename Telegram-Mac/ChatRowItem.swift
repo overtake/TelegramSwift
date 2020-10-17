@@ -55,7 +55,19 @@ enum ChatItemRenderType {
     case list
 }
 
+
+
 class ChatRowItem: TableRowItem {
+    
+    struct RowCaption {
+        let id: UInt32
+        let offset: NSPoint
+        let layout: TextViewLayout
+        
+        func withUpdatedOffset(_ offset: CGFloat) -> RowCaption {
+            return RowCaption(id: self.id, offset: .init(x: 0, y: offset), layout: self.layout)
+        }
+    }
     
     private(set) var chatInteraction:ChatInteraction
     
@@ -63,6 +75,13 @@ class ChatRowItem: TableRowItem {
     private(set) var peer:Peer?
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
+    
+    var firstMessage: Message? {
+        return messages.first
+    }
+    var lastMessage: Message? {
+        return messages.last
+    }
     
     var messages: [Message] {
         if let message = message {
@@ -115,10 +134,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var selectableLayout:[TextViewLayout] {
-        if let caption = captionLayout {
-            return [caption]
-        }
-        return []
+        return self.captionLayouts.map { $0.layout }
     }
     
     var sending: Bool {
@@ -128,7 +144,7 @@ class ChatRowItem: TableRowItem {
     private var forwardHeaderNode:TextNode?
     private(set) var forwardHeader:(TextNodeLayout, TextNode)?
     var forwardNameLayout:TextViewLayout?
-    var captionLayout:TextViewLayout?
+    var captionLayouts:[RowCaption] = []
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
 
@@ -283,8 +299,18 @@ class ChatRowItem: TableRowItem {
             height += 2
         }
         
-        if let captionLayout = captionLayout {
-            height += captionLayout.layoutSize.height + defaultContentInnerInset
+        if !captionLayouts.isEmpty {
+            let captionHeight: CGFloat = captionLayouts.reduce(0, { $0 + $1.layout.layoutSize.height }) + defaultContentInnerInset * CGFloat(captionLayouts.count)
+            if let item = self as? ChatGroupedItem {
+                switch item.layoutType {
+                case .photoOrVideo:
+                    height += captionHeight
+                case .files:
+                    break
+                }
+            } else {
+                height += captionHeight
+            }
         }
         if let replyMarkupModel = replyMarkupModel {
             height += replyMarkupModel.size.height + defaultReplyMarkupInset
@@ -356,7 +382,7 @@ class ChatRowItem: TableRowItem {
                 }
                 return media.venue == nil
             }
-            return isBubbled && media.isInteractiveMedia && captionLayout == nil
+            return isBubbled && media.isInteractiveMedia && captionLayouts.isEmpty
         }
         return false
     }
@@ -878,7 +904,8 @@ class ChatRowItem: TableRowItem {
             if message.groupInfo != nil {
                 switch entry {
                 case .groupedPhotos(let entries, _):
-                    return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1
+                    let prettyCount = entries.filter { $0.message?.media.first?.isInteractiveMedia ?? false }.count
+                    return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1 || prettyCount != entries.count
                 default:
                     return true
                 }
@@ -937,7 +964,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var channelHasCommentButton: Bool {
-        if chatInteraction.mode == .scheduled {
+        if chatInteraction.mode == .scheduled || chatInteraction.isLogInteraction {
             return false
         }
         if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
@@ -979,6 +1006,11 @@ class ChatRowItem: TableRowItem {
         if let commentsBubbleDataOverlay = _commentsBubbleDataOverlay {
             return commentsBubbleDataOverlay
         }
+        
+        if chatInteraction.isLogInteraction {
+            return nil
+        }
+        
         if !isStateOverlayLayout || hasBubble || !channelHasCommentButton {
             return nil
         }
@@ -1019,6 +1051,9 @@ class ChatRowItem: TableRowItem {
     var commentsBubbleData: ChannelCommentsRenderData? {
         if let commentsBubbleData = _commentsBubbleData {
             return commentsBubbleData
+        }
+        if chatInteraction.isLogInteraction {
+            return nil
         }
         if !isBubbled || !channelHasCommentButton {
             return nil
@@ -1083,7 +1118,7 @@ class ChatRowItem: TableRowItem {
                         return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accentIcon, font: .normal(.title)), animation: $0.1, index: $0.2)
                     }
                     
-                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || captionLayout != nil, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
+                    _commentsBubbleData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: latestPeers, drawBorder: !isBubbleFullFilled || !captionLayouts.isEmpty, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
                         self?.chatInteraction.openReplyThread(message.id, true, false, .comments(origin: message.id))
                     })
                 }
@@ -1098,6 +1133,9 @@ class ChatRowItem: TableRowItem {
     var commentsData: ChannelCommentsRenderData? {
         if let commentsData = _commentsData {
             return commentsData
+        }
+        if chatInteraction.isLogInteraction {
+            return nil
         }
         if isBubbled || !channelHasCommentButton {
             return nil
@@ -1592,6 +1630,7 @@ class ChatRowItem: TableRowItem {
         }
  
         
+        
         super.init(initialSize)
         
         hiddenFwdTooltip = { [weak self] in
@@ -1823,7 +1862,11 @@ class ChatRowItem: TableRowItem {
         commentsBubbleDataOverlay?.makeSize()
         commentsData?.makeSize()
         
-        captionLayout?.dropLayoutSize()
+        if !(self is ChatGroupedItem) {
+            for layout in captionLayouts {
+                layout.layout.dropLayoutSize()
+            }
+        }
         
         if let channelViewsAttributed = channelViewsAttributed {
             channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
@@ -1871,10 +1914,14 @@ class ChatRowItem: TableRowItem {
         if isBubbled && isBubbleFullFilled {
             widthForContent = maxContentWidth
         }
-        
-        if let captionLayout = captionLayout, captionLayout.layoutSize == .zero {
-            captionLayout.measure(width: maxContentWidth)
+        if !(self is ChatGroupedItem) {
+            for layout in captionLayouts {
+                if layout.layout.layoutSize == .zero {
+                    layout.layout.measure(width: maxContentWidth)
+                }
+            }
         }
+        
         
 
         
@@ -2125,9 +2172,19 @@ class ChatRowItem: TableRowItem {
     func deleteMessage() {
         _ = context.account.postbox.transaction { [weak message] transaction -> Void in
             if let message = message {
-                transaction.deleteMessages([message.id], forEachMedia: { media in
-                    
-                })
+                if let _ = message.groupingKey {
+                    let messages = transaction.getMessageGroup(message.id)
+                    if let messages = messages {
+                        transaction.deleteMessages(messages.map { $0.id }, forEachMedia: { media in
+                            
+                        })
+                    }
+                } else {
+                    transaction.deleteMessages([message.id], forEachMedia: { media in
+                        
+                    })
+                }
+                
             }
         }.start()
     }
@@ -2362,15 +2419,15 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     if !message.isScheduledMessage {
         
-        let pinText = chatInteraction.presentation.pinnedMessageId == message.id ? L10n.messageContextUnpin : L10n.messageContextPin
-        let needUnpin = chatInteraction.presentation.pinnedMessageId == message.id
+        let pinText = chatInteraction.presentation.pinnedMessageId?.messageId == message.id ? L10n.messageContextUnpin : L10n.messageContextPin
+        let needUnpin = chatInteraction.presentation.pinnedMessageId?.messageId == message.id
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 if !chatInteraction.mode.isThreadMode {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
                             modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId == message.id, result != .thrid)
+                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.messageId == message.id, result != .thrid)
                             })
                         } else {
                             chatInteraction.updatePinned(message.id, needUnpin, true)
@@ -2387,6 +2444,16 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 if !needUnpin {
                     modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, result == .thrid)
+                    })
+                } else {
+                    chatInteraction.updatePinned(message.id, needUnpin, false)
+                }
+            }))
+        } else if chatInteraction.presentation.canPinMessage {
+            items.append(ContextMenuItem(pinText, handler: {
+                if !needUnpin {
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, successHandler: { _ in
+                        chatInteraction.updatePinned(message.id, needUnpin, false)
                     })
                 } else {
                     chatInteraction.updatePinned(message.id, needUnpin, false)

@@ -46,9 +46,14 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     override var fetchStatus: MediaResourceStatus? {
         didSet {
             if let fetchStatus = fetchStatus {
+                
                 switch fetchStatus {
                 case let .Fetching(_, progress):
-                    progressView.state = .Fetching(progress: progress, force: false)
+                    if progress == 1.0, parent?.groupingKey != nil {
+                        progressView.state = .Success
+                    } else {
+                        progressView.state = .Fetching(progress: progress, force: false)
+                    }
                 case .Remote:
                     progressView.state = .Remote
                 case .Local:
@@ -168,9 +173,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         if let updatedStatusSignal = updatedStatusSignal {
             self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
-                if let strongSelf = self {
-                    strongSelf.fetchStatus = status
-                }
+                self?.fetchStatus = status
             }))
         }
        
