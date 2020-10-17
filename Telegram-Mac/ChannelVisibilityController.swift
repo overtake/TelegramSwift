@@ -25,13 +25,14 @@ private final class ChannelVisibilityControllerArguments {
     let updatePublicLinkText: (String?, String) -> Void
     let displayPrivateLinkMenu: (String) -> Void
     let revokePeerId: (PeerId) -> Void
-    
-    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void) {
+    let revokeLink: ()->Void
+    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, revokeLink: @escaping()->Void) {
         self.context = context
         self.updateCurrentType = updateCurrentType
         self.updatePublicLinkText = updatePublicLinkText
         self.displayPrivateLinkMenu = displayPrivateLinkMenu
         self.revokePeerId = revokePeerId
+        self.revokeLink = revokeLink
     }
 }
 
@@ -54,6 +55,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     case publicLinkInfo(sectionId:Int32, String, GeneralViewType)
     case publicLinkStatus(sectionId:Int32, String, AddressNameValidationStatus, GeneralViewType)
     
+    case revokePrivateLink(sectionId:Int32, GeneralViewType)
+
     case existingLinksInfo(sectionId:Int32, String, GeneralViewType)
     case existingLinkPeerItem(sectionId:Int32, Int32, Peer, ShortPeerDeleting?, Bool, GeneralViewType)
     
@@ -83,6 +86,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return .index(9)
         case .existingLinksInfo:
             return .index(10)
+        case .revokePrivateLink:
+            return .index(11)
         case let .existingLinkPeerItem(_,_, peer, _, _, _):
             return .peer(peer.id)
         case let .section(sectionId: sectionId):
@@ -166,6 +171,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
+        case let .revokePrivateLink(sectionId, viewType):
+            if case .revokePrivateLink(sectionId, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
         case let .section(sectionId):
             if case .section(sectionId) = rhs {
                 return true
@@ -199,6 +210,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + 9
         case let .existingLinksInfo(sectionId: sectionId, _, _):
             return (sectionId * 1000) + 10
+        case let .revokePrivateLink(sectionId: sectionId, _):
+            return (sectionId * 1000) + 11
         case let .existingLinkPeerItem(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + index + 20
         case let .section(sectionId: sectionId):
@@ -294,6 +307,10 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, status: "t.me/\(peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
+        case let .revokePrivateLink(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelRevokeLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+                arguments.revokeLink()
+            })
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -445,6 +462,13 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
         case .privateChannel:
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation?.link, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
+            
+            
+            if (view.cachedData as? CachedChannelData)?.exportedInvitation?.link != nil {
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.revokePrivateLink(sectionId: sectionId, .singleItem))
+            }
         }
     } else if let peer = view.peers[view.peerId] as? TelegramGroup {
 
@@ -530,6 +554,12 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
         case .privateChannel:
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation?.link, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup, .textBottomItem))
+            
+            if (view.cachedData as? CachedGroupData)?.exportedInvitation?.link != nil {
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.revokePrivateLink(sectionId: sectionId, .singleItem))
+            }
         }
     }
     entries.append(.section(sectionId: sectionId))
@@ -733,6 +763,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 }
                 self?.peersDisablingAddressNameAssignment.set(.single([]))
             }))
+        }, revokeLink: {
+            confirm(for: context.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
+                 _ = showModalProgress(signal: ensuredExistingPeerExportedInvitation(account: context.account, peerId: peerId, revokeExisted: true), for: context.window).start()
+            })
         })
         
         let peerView = context.account.viewTracker.peerView(peerId)

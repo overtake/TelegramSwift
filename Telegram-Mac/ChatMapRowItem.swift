@@ -222,29 +222,31 @@ private class LiveLocationRowView : ChatMediaView {
         updatedText.backgroundColor = contentColor
     }
     
-    private var textFrame: NSRect {
-        guard let item = item as? ChatMapRowItem, let liveText = item.liveText else {return NSZeroRect}
-        
+    private func textFrame(_ item: ChatRowItem) -> NSRect {
+        guard let item = item as? ChatMapRowItem else { return .zero }
+        guard let liveText = item.liveText else {return NSZeroRect}
+        let contentFrame = self.contentFrame(item)
         return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset, liveText.layoutSize.width, liveText.layoutSize.height)
     }
-    private var updateFrame: NSRect {
-        guard let item = item as? ChatMapRowItem, let updatedText = item.updatedText else {return NSZeroRect}
-        
+    private func updateFrame(_ item: ChatRowItem) -> NSRect {
+        guard let item = item as? ChatMapRowItem else { return .zero }
+        guard let updatedText = item.updatedText else {return NSZeroRect}
+        let contentFrame = self.contentFrame(item)
         return NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultContentInnerInset + liveText.frame.height, updatedText.layoutSize.width, updatedText.layoutSize.height)
     }
     
-    private var progressFrame: NSRect {
-        guard let item = item as? ChatMapRowItem else {return NSZeroRect}
-        
+    private func progressFrame(_ item: ChatRowItem) -> NSRect {
+        let contentFrame = self.contentFrame(item)
         return NSMakeRect(contentFrame.maxX - progress.frame.width - (item.isBubbled ? item.defaultContentInnerInset : 0) - 3, contentFrame.maxY + item.defaultContentInnerInset + 5, 25, 25)
     }
     
     override func layout() {
         super.layout()
-        
-        liveText.frame = textFrame
-        updatedText.frame = updateFrame
-        progress.frame = progressFrame
+        guard let item = item as? ChatMapRowItem else { return }
+
+        liveText.frame = textFrame(item)
+        updatedText.frame = updateFrame(item)
+        progress.frame = progressFrame(item)
     }
     
     required init?(coder: NSCoder) {

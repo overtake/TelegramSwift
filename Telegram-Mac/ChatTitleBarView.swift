@@ -785,18 +785,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
             } else if chatInteraction.mode == .scheduled {
                 result = result.withUpdatedTitle(L10n.chatTitleScheduledMessages)
-            } else if case .replyThread = chatInteraction.mode {
-                let message = chatInteraction.presentation.cachedPinnedMessage
-                if let message = message {
-                    if message.sourceReference != nil {
-                        result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
-                    } else {
-                        result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
-                    }
-                    status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
-                    
-                    result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
+            } else if case .replyThread(_, let mode) = chatInteraction.mode {
+                switch mode {
+                case .comments:
+                    result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
+                case .replies:
+                    result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
                 }
+                status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
+                result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
             }
             
             if chatInteraction.context.peerId == peerView.peerId {

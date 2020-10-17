@@ -42,8 +42,46 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         return fetchCachedScaledVideoFirstFrameRepresentation(account: account, resource: resource, representation: representation)
     } else if let representation = representation as? CachedDiceRepresentation {
         if let diceCache = account.diceCache {
-            return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, side: representation.value, synchronous: false) |> filter { $0.0 != nil } |> mapToSignal { data in
-                return fetchCachedDiceRepresentation(account: account, data: data.0!, representation: representation)
+            return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, synchronous: false) |> map { values -> (String, Data?, TelegramMediaFile)? in
+                for value in values {
+                    if value.0 == representation.value {
+                        return value
+                    }
+                }
+                return nil
+            } |> filter { $0?.1 != nil } |> mapToSignal { data in
+                return fetchCachedDiceRepresentation(account: account, data: data!.1!, representation: representation)
+            }
+        } else {
+            return .complete()
+        }
+    } else if let representation = representation as? CachedSlotMachineRepresentation {
+        if let diceCache = account.diceCache {
+            return diceCache.interactiveSymbolData(baseSymbol: slotsEmoji, synchronous: false) |> map { values -> [(Data?, Int32)] in
+                var required: [(Data?, Int32)] = []
+                required.append((values[1].1, 1))
+                switch representation.value.left {
+                case .rolling:
+                    required.append((values[representation.value.packIndex[0]].1, 1))
+                default:
+                    required.append((values[representation.value.packIndex[0]].1, .max))
+                }
+                switch representation.value.center {
+                case .rolling:
+                    required.append((values[representation.value.packIndex[1]].1, 1))
+                default:
+                    required.append((values[representation.value.packIndex[1]].1, .max))
+                }
+                switch representation.value.right {
+                case .rolling:
+                    required.append((values[representation.value.packIndex[2]].1, 1))
+                default:
+                    required.append((values[representation.value.packIndex[2]].1, .max))
+                }
+                required.append((values[2].1, 1))
+                return required
+                } |> filter { !$0.contains(where: { $0.0 == nil} ) } |> map { $0.map { ($0.0!, $0.1) }} |> mapToSignal { data in
+                return fetchCachedSlotRepresentation(account: account, data: data, representation: representation)
             }
         } else {
             return .complete()
@@ -631,6 +669,60 @@ private func fetchCachedBlurredWallpaperRepresentation(account: Account, resourc
     }) |> runOn(cacheThreadPool)
 }
 
+private func fetchCachedSlotRepresentation(account: Account, data: [(Data, Int32)], representation: CachedSlotMachineRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+    return Signal { subscriber in
+        
+        var images: [CGImage] = []
+        for (data, frame) in data {
+            var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
+            if dataValue == nil {
+                dataValue = data
+            }
+            if let json = String(data: dataValue, encoding: .utf8) {
+                let rlottie = RLottieBridge(json: json, key: "\(arc4random())")
+                if let rlottie = rlottie {
+                    let unmanaged = rlottie.renderFrame(Int32.max == frame ? rlottie.endFrame() - 1 : frame, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                    let colorImage = unmanaged.takeRetainedValue()
+                    images.append(colorImage)
+                   
+                }
+            }
+        }
+        
+        let colorImage = generateImage(NSMakeSize(representation.size.width * 2, representation.size.height * 2), contextGenerator: { size, ctx in
+            ctx.clear(CGRect(origin: .zero, size: size))
+            for image in images {
+                ctx.draw(image, in: CGRect(origin: .zero, size: size))
+            }
+        }, scale: 1.0)!
+        
+        
+        let path = NSTemporaryDirectory() + "\(arc4random64())"
+        let url = URL(fileURLWithPath: path)
+        
+        let colorData = NSMutableData()
+        if let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
+            CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+            let colorQuality: Float
+            colorQuality = 0.4
+            let options = NSMutableDictionary()
+            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+            CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+            if CGImageDestinationFinalize(colorDestination)  {
+                try? colorData.write(to: url, options: .atomic)
+                subscriber.putNext(.temporaryPath(path))
+                subscriber.putCompletion()
+            }
+        } else {
+            subscriber.putCompletion()
+        }
+        
+        
+        return ActionDisposable {
+            
+        }
+    } |> runOn(lottieThreadPool)
+}
 
 private func fetchCachedDiceRepresentation(account: Account, data: Data, representation: CachedDiceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return Signal { subscriber in

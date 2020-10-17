@@ -909,9 +909,9 @@ class ChannelAdminController: TableModalViewController {
                         
                         if updateFlags == nil {
                             switch initialParticipant {
-                            case .creator:
+                            case let .creator(_, info, _):
                                 if stateValue.with ({ $0.rank != $0.initialRank }) {
-                                    updateFlags = .groupSpecific
+                                    updateFlags = info?.rights.flags ?? .groupSpecific
                                 }
                             case let .member(member):
                                 if member.adminInfo?.rights == nil {

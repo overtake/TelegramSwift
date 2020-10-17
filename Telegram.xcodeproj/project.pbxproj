@@ -817,6 +817,12 @@
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
 		D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
 		D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
+		D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C694F253887F600DD9005 /* SlotMachineValue.swift */; };
+		D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69512538894C00DD9005 /* SlotsMediaContentView.swift */; };
+		D06C69532539E30200DD9005 /* SlotMachineValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C694F253887F600DD9005 /* SlotMachineValue.swift */; };
+		D06C69552539F6BD00DD9005 /* LiveLocationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */; };
+		D06C69572539FB2C00DD9005 /* LiveLocationSummaryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */; };
+		D06C69592539FBFB00DD9005 /* LiveLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */; };
 		D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */; };
 		D06C7BB7247D6FA900E67C3C /* SampleBufferPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */; };
 		D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */; };
@@ -1986,6 +1992,11 @@
 		D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessageModalController.swift; sourceTree = "<group>"; };
 		D0675D6A217E20B9004900A7 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0675D83217F1F27004900A7 /* ArchiverContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiverContext.swift; sourceTree = "<group>"; };
+		D06C694F253887F600DD9005 /* SlotMachineValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMachineValue.swift; sourceTree = "<group>"; };
+		D06C69512538894C00DD9005 /* SlotsMediaContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotsMediaContentView.swift; sourceTree = "<group>"; };
+		D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationViewController.swift; sourceTree = "<group>"; };
+		D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationSummaryManager.swift; sourceTree = "<group>"; };
+		D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationManager.swift; sourceTree = "<group>"; };
 		D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoLayerFrameManager.swift; sourceTree = "<group>"; };
 		D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferPool.swift; sourceTree = "<group>"; };
 		D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoThumbnailLayer.swift; sourceTree = "<group>"; };
@@ -2254,6 +2265,9 @@
 				9F1AE5E320B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift */,
 				9F1AE5E520B70328002A9D8D /* LocationSendCurrentItem.swift */,
 				D0D752C722F8A76100E2CB74 /* Geocoding.swift */,
+				D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */,
+				D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */,
+				D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */,
 			);
 			name = location;
 			sourceTree = "<group>";
@@ -3260,6 +3274,7 @@
 		C230B9201DD4C23E0057F596 /* video */ = {
 			isa = PBXGroup;
 			children = (
+				D06C694E253887DC00DD9005 /* slots */,
 				C230B9211DD4C24E0057F596 /* GIFPlayerView.swift */,
 				C2DF47951DE71160003AA6C0 /* GIFContainerView.swift */,
 				D01E1F0322B39A4800AD6DAE /* LottiePlayer.swift */,
@@ -4622,6 +4637,15 @@
 			name = experemental;
 			sourceTree = "<group>";
 		};
+		D06C694E253887DC00DD9005 /* slots */ = {
+			isa = PBXGroup;
+			children = (
+				D06C694F253887F600DD9005 /* SlotMachineValue.swift */,
+				D06C69512538894C00DD9005 /* SlotsMediaContentView.swift */,
+			);
+			name = slots;
+			sourceTree = "<group>";
+		};
 		D070DB7F22D36359008A0BBE /* modern-stickers */ = {
 			isa = PBXGroup;
 			children = (
@@ -5181,6 +5205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D06C69532539E30200DD9005 /* SlotMachineValue.swift in Sources */,
 				A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */,
 				A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */,
 				A71DC8342386D512000EEDE2 /* Signature.swift in Sources */,
@@ -5525,10 +5550,12 @@
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C256A9161FB9E1490043D497 /* AdditionalSettings.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
+				D06C69572539FB2C00DD9005 /* LiveLocationSummaryManager.swift in Sources */,
 				C2DF47D01DE82475003AA6C0 /* OpusAudioPlayer.swift in Sources */,
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
+				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
 				9F9B5EB522573FA700728CDC /* FFMpegAVIOContext.m in Sources */,
 				D09D9DF4229C289F00378796 /* GZip.m in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
@@ -5546,6 +5573,7 @@
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				9F153D1421F0C7F800B95D82 /* WallpaperPreviewController.swift in Sources */,
 				9F6B54C821369B4000748FC1 /* GalleryModernControls.swift in Sources */,
+				D06C69592539FBFB00DD9005 /* LiveLocationManager.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
@@ -5662,6 +5690,7 @@
 				C209C3771F26271B009231FE /* EmojiSuggestionBridge.mm in Sources */,
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
+				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
 				D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */,
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
 				C232E9F61E1437B100C4D38C /* SearchResultModalController.swift in Sources */,
@@ -5898,6 +5927,7 @@
 				A7B5031023B62E0400C9838E /* nanosvg.c in Sources */,
 				C2E6F3CF1F9F85260023653D /* ContextHashtagRowItem.swift in Sources */,
 				C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */,
+				D06C69552539F6BD00DD9005 /* LiveLocationViewController.swift in Sources */,
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
 				9F1890932238F3DC00665EF5 /* DownloadedFilesPaths.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,

@@ -304,7 +304,7 @@ class ChatSelectText : NSObject {
                 
                 
                 if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
-                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame)) {
+                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame(item))) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
@@ -444,9 +444,9 @@ class ChatSelectText : NSObject {
         }
         
         let beginRow = table.row(at: beginInnerLocation)
-        if  let view = table.item(at: beginRow).view as? ChatRowView, selectingText, table._mouseInside() {
+        if  let view = table.item(at: beginRow).view as? ChatRowView, let item = view.item as? ChatRowItem, selectingText, table._mouseInside() {
             let rowPoint = view.convert(beginInnerLocation, from: table.documentView)
-            if (!NSPointInRect(rowPoint, view.bubbleFrame) && theme.bubbled) {
+            if (!NSPointInRect(rowPoint, view.bubbleFrame(item)) && theme.bubbled) {
                 if startIndex != endIndex {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
                         let item = table.item(at: i) as? ChatRowItem
@@ -468,6 +468,29 @@ class ChatSelectText : NSObject {
             for i in startIndex ... endIndex  {
                 let view = table.viewNecessary(at: i) as? MultipleSelectable
                 if let views = view?.selectableTextViews {
+                    
+                    var start_j:Int? = nil
+                    var end_j:Int? = nil
+                    
+                    inner: for j in 0 ..< views.count {
+                        let selectableView = views[j]
+                        let viewRect = selectableView.convert(CGRect(origin: .zero, size: selectableView.frame.size), to: table.documentView)
+                        let rect = NSRect(x: beginInnerLocation.x, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
+                        
+                        if rect.intersects(viewRect) {
+                            if start_j == nil {
+                                start_j = j
+                            } else {
+                                start_j = min(start_j!, j)
+                            }
+                            if end_j == nil {
+                                end_j = j
+                            } else {
+                                end_j = max(end_j!, j)
+                            }
+                        }
+                    }
+                    
                     for j in 0 ..< views.count {
                         let selectableView = views[j]
                         
@@ -481,6 +504,9 @@ class ChatSelectText : NSObject {
                             if i == startIndex && i == endIndex {
                                 
                             }
+                            
+                           
+                            
                             
                             if (i > startIndex && i < endIndex) {
                                 startPoint = NSMakePoint(0, 0);
@@ -506,6 +532,29 @@ class ChatSelectText : NSObject {
                                 } else {
                                     startPoint = beginViewLocation;
                                     endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                }
+                            }
+                            
+                            if let start_j = start_j, let end_j = end_j {
+                                if j < start_j || j > end_j {
+                                    continue
+                                } else {
+                                    if end_j - start_j > 0 {
+                                        if beginInnerLocation.y > endInnerLocation.y {
+                                            if j <= start_j {
+                                                endPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                            } else {
+                                                startPoint = .zero
+                                            }
+                                        } else if beginInnerLocation.y < endInnerLocation.y {
+                                            if j > start_j {
+                                                endPoint = .zero
+                                            } else {
+                                                startPoint = NSMakePoint(layout.layoutSize.width, .greatestFiniteMagnitude);
+                                            }
+                                        }
+                                    }
+                                    
                                 }
                             }
                             

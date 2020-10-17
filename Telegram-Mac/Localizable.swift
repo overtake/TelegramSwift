@@ -769,6 +769,8 @@ internal final class L10n {
   internal static var channelPublicAboutGroup: String  { return L10n.tr("Localizable", "Channel.PublicAboutGroup") }
   /// Sorry, you have reserved too many public usernames. You can revoke the link from one of your older groups or channels, or create a private entity instead
   internal static var channelPublicNamesLimitError: String  { return L10n.tr("Localizable", "Channel.PublicNamesLimitError") }
+  /// Revoke Link
+  internal static var channelRevokeLink: String  { return L10n.tr("Localizable", "Channel.RevokeLink") }
   /// Sorry, there are already too many bots in this group. Please remove some of the bots you're not using first.
   internal static var channelTooMuchBots: String  { return L10n.tr("Localizable", "Channel.TooMuchBots") }
   /// CHANNEL TYPE
@@ -1155,6 +1157,12 @@ internal final class L10n {
   internal static func channelPersmissionDeniedSendStickersUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendStickers.Until", p1)
   }
+  /// Revoke Link
+  internal static var channelRevokeLinkConfirmHeader: String  { return L10n.tr("Localizable", "Channel.RevokeLink.Confirm.Header") }
+  /// Revoke
+  internal static var channelRevokeLinkConfirmOK: String  { return L10n.tr("Localizable", "Channel.RevokeLink.Confirm.OK") }
+  /// Are you sure you want to revoke this link? Once you do, no one will be able to join the group using it.
+  internal static var channelRevokeLinkConfirmText: String  { return L10n.tr("Localizable", "Channel.RevokeLink.Confirm.Text") }
   /// contacts
   internal static var channelSelectPeersContacts: String  { return L10n.tr("Localizable", "Channel.SelectPeers.Contacts") }
   /// global
@@ -1551,6 +1559,8 @@ internal final class L10n {
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// Pinned message
   internal static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
+  /// Previous message
+  internal static var chatHeaderPinnedPrevious: String  { return L10n.tr("Localizable", "Chat.Header.PinnedPrevious") }
   /// Report Spam
   internal static var chatHeaderReportSpam: String  { return L10n.tr("Localizable", "Chat.Header.ReportSpam") }
   /// Loading...
@@ -1959,6 +1969,8 @@ internal final class L10n {
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
   }
+  /// geo proximity reached
+  internal static var chatServiceGeoProximityReached: String  { return L10n.tr("Localizable", "Chat.Service.GeoProximityReached") }
   /// You have successfully transferred **%@** to **%@** for **%@**
   internal static func chatServicePaymentSent(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent", p1, p2, p3)

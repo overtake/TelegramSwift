@@ -285,12 +285,17 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private func addGlobalAudioToVisible(tableView: TableView) {
         if let controller = controller {
             tableView.enumerateViews(with: { (view) in
+                NSLog("\(view)")
                 var contentView: NSView? = (view as? ChatRowView)?.contentView.subviews.last ?? (view as? PeerMediaMusicRowView)
                 if let view = ((view as? ChatMessageView)?.webpageContent as? WPMediaContentView)?.contentNode {
                     contentView = view
                 }
                 
-                if let view = contentView as? ChatAudioContentView {
+                if let view = view as? ChatGroupedView {
+                    for content in view.contents {
+                        controller.add(listener: content)
+                    }
+                } else if let view = contentView as? ChatAudioContentView {
                     controller.add(listener: view)
                 } else if let view = contentView as? ChatVideoMessageContentView {
                     controller.add(listener: view)

@@ -836,26 +836,38 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
 
 private func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
-    return generateImage(NSMakeSize(icon.size.width + 2, icon.size.height + 2), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(icon.backingSize.width + 2, icon.backingSize.height + 2), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-        let imageRect = NSMakeRect((size.width - icon.size.width) / 2, (size.height - icon.size.height) / 2, icon.size.width, icon.size.height)
+        let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
-    }, scale: 1)!
+    }, scale: 2)!
+}
+
+private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
+    return generateImage(NSMakeSize(icon.backingSize.width + 4, icon.backingSize.height + 4), contextGenerator: { size, ctx in
+        ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+        ctx.round(size, size.width/2)
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fill(NSMakeRect(0, 0, size.width, size.height))
+        let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+    }, scale: 2)!
 }
 
 private func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
-    return generateImage(NSMakeSize(icon.size.width, icon.size.height), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-        let imageRect = NSMakeRect((size.width - icon.size.width) / 2, (size.height - icon.size.height) / 2, icon.size.width, icon.size.height)
+        let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
-    }, scale: 1)!
+    }, scale: 2)!
 }
 
 func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize) -> CGImage {
@@ -2295,6 +2307,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) },
                                                call_screen_sharing: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.white) },
                                                call_screen_sharing_active: { NSImage(named: "Icon_CallScreenSharing")!.precomposed(.grayIcon) },
+                                               call_screen_settings: { NSImage(named: "Icon_CallScreenSettings")!.precomposed(.white) },
                                                search_filter: { NSImage(named: "Icon_SearchFilter")!.precomposed(palette.grayIcon) },
                                                search_filter_media: { NSImage(named: "Icon_SearchFilter_Media")!.precomposed(palette.grayIcon) },
                                                search_filter_files: { NSImage(named: "Icon_SearchFilter_Files")!.precomposed(palette.grayIcon) },
@@ -2311,7 +2324,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                channel_comments_bubble_next: { NSImage(named: "Icon_ChannelComments_Next")!.precomposed(palette.accentIcon, flipVertical: true) },
                                                channel_comments_list: { NSImage(named: "Icon_ChannelComments")!.precomposed(palette.accent, flipVertical: true) },
                                                channel_comments_overlay: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.accent) },
-                                               chat_replies_avatar: { NSImage(named: "Icon_RepliesChat")!.precomposed() }
+                                               chat_replies_avatar: { NSImage(named: "Icon_RepliesChat")!.precomposed() },
+                                               group_selection_foreground: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayText.withAlphaComponent(0.4), backgroundColor: palette.chatBackground) },
+                                               group_selection_foreground_bubble_incoming: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_incoming.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackground_incoming) },
+                                               group_selection_foreground_bubble_outgoing: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_outgoing.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackgroundTop_outgoing) }
 
     )
 

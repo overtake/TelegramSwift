@@ -101,7 +101,9 @@ class CornerView : View {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        ctx.round(frame.size, .cornerRadius, positionFlags: positionFlags)
+        if let positionFlags = positionFlags {
+            ctx.round(frame.size, positionFlags.isEmpty ? 0 : .cornerRadius, positionFlags: positionFlags)
+        }
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(bounds)
 //        if let positionFlags = positionFlags {

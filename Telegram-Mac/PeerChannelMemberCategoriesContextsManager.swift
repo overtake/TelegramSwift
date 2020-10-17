@@ -15,6 +15,7 @@ import SwiftSignalKit
 enum PeerChannelMemberContextKey: Equatable, Hashable {
     case recent
     case recentSearch(String)
+    case mentions(threadId: MessageId?, query: String?)
     case admins(String?)
     case contacts(String?)
     case bots(String?)
@@ -194,6 +195,11 @@ final class PeerChannelMemberCategoriesContextsManager {
                 }
             }
         }
+    }
+    
+    func mentions(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, threadMessageId: MessageId?, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        let key: PeerChannelMemberContextKey = .mentions(threadId: threadMessageId, query: searchQuery)
+        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
     }
     
     func recent(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {

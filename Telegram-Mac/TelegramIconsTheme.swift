@@ -6920,6 +6920,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var call_screen_settings: CGImage {
+      if let image = cached.with({ $0["call_screen_settings"] }) {
+          return image
+      } else {
+          let image = _call_screen_settings()
+          _ = cached.modify { current in 
+              var current = current
+              current["call_screen_settings"] = image
+              return current
+          }
+          return image
+      }
+  }
   var search_filter: CGImage {
       if let image = cached.with({ $0["search_filter"] }) {
           return image
@@ -7123,6 +7136,45 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["chat_replies_avatar"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var group_selection_foreground: CGImage {
+      if let image = cached.with({ $0["group_selection_foreground"] }) {
+          return image
+      } else {
+          let image = _group_selection_foreground()
+          _ = cached.modify { current in 
+              var current = current
+              current["group_selection_foreground"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var group_selection_foreground_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["group_selection_foreground_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _group_selection_foreground_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["group_selection_foreground_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var group_selection_foreground_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["group_selection_foreground_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _group_selection_foreground_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["group_selection_foreground_bubble_outgoing"] = image
               return current
           }
           return image
@@ -7661,6 +7713,7 @@ final class TelegramIconsTheme {
   private let _call_tooltip_micro_off: ()->CGImage
   private let _call_screen_sharing: ()->CGImage
   private let _call_screen_sharing_active: ()->CGImage
+  private let _call_screen_settings: ()->CGImage
   private let _search_filter: ()->CGImage
   private let _search_filter_media: ()->CGImage
   private let _search_filter_files: ()->CGImage
@@ -7677,6 +7730,9 @@ final class TelegramIconsTheme {
   private let _channel_comments_list: ()->CGImage
   private let _channel_comments_overlay: ()->CGImage
   private let _chat_replies_avatar: ()->CGImage
+  private let _group_selection_foreground: ()->CGImage
+  private let _group_selection_foreground_bubble_incoming: ()->CGImage
+  private let _group_selection_foreground_bubble_outgoing: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8211,6 +8267,7 @@ final class TelegramIconsTheme {
       call_tooltip_micro_off: @escaping()->CGImage,
       call_screen_sharing: @escaping()->CGImage,
       call_screen_sharing_active: @escaping()->CGImage,
+      call_screen_settings: @escaping()->CGImage,
       search_filter: @escaping()->CGImage,
       search_filter_media: @escaping()->CGImage,
       search_filter_files: @escaping()->CGImage,
@@ -8226,7 +8283,10 @@ final class TelegramIconsTheme {
       channel_comments_bubble_next: @escaping()->CGImage,
       channel_comments_list: @escaping()->CGImage,
       channel_comments_overlay: @escaping()->CGImage,
-      chat_replies_avatar: @escaping()->CGImage
+      chat_replies_avatar: @escaping()->CGImage,
+      group_selection_foreground: @escaping()->CGImage,
+      group_selection_foreground_bubble_incoming: @escaping()->CGImage,
+      group_selection_foreground_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8760,6 +8820,7 @@ final class TelegramIconsTheme {
       self._call_tooltip_micro_off = call_tooltip_micro_off
       self._call_screen_sharing = call_screen_sharing
       self._call_screen_sharing_active = call_screen_sharing_active
+      self._call_screen_settings = call_screen_settings
       self._search_filter = search_filter
       self._search_filter_media = search_filter_media
       self._search_filter_files = search_filter_files
@@ -8776,5 +8837,8 @@ final class TelegramIconsTheme {
       self._channel_comments_list = channel_comments_list
       self._channel_comments_overlay = channel_comments_overlay
       self._chat_replies_avatar = chat_replies_avatar
+      self._group_selection_foreground = group_selection_foreground
+      self._group_selection_foreground_bubble_incoming = group_selection_foreground_bubble_incoming
+      self._group_selection_foreground_bubble_outgoing = group_selection_foreground_bubble_outgoing
   }
 }

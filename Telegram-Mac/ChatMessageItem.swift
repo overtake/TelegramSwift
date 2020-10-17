@@ -197,7 +197,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
-                }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
+                }).mutableCopy() as! NSMutableAttributedString
 
                 messageAttr.fixUndefinedEmojies()
                 
@@ -402,8 +402,8 @@ class ChatMessageItem: ChatRowItem {
                         } else if let groupInfo = message.groupInfo {
                             let id = ChatHistoryEntryId.groupedPhotos(groupInfo: groupInfo)
                             if let item = self?.table?.item(stableId: id) as? ChatGroupedItem {
-                                item.parameters?.set_timeCodeInitializer(timecode)
-                                item.parameters?.showMedia(message)
+                                item.parameters.first?.set_timeCodeInitializer(timecode)
+                                item.parameters.first?.showMedia(message)
                             }
                         } else if let item = self?.table?.item(stableId: id) as? ChatMessageItem {
                             if let content = item.webpageLayout?.content {

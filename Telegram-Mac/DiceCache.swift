@@ -54,15 +54,15 @@ struct InteractiveEmojiConfiguration : Equatable {
 }
 
 private final class DiceSideDataContext {
-    var data: (Data?, TelegramMediaFile)?
-    let subscribers = Bag<((Data?, TelegramMediaFile)) -> Void>()
+    var data: [(String, Data?, TelegramMediaFile)] = []
+    let subscribers = Bag<([(String, Data?, TelegramMediaFile)]) -> Void>()
 }
 
 class DiceCache {
     private let postbox: Postbox
     private let network: Network
     
-    private var dataContexts: [String : [String: DiceSideDataContext]] = [:]
+    private var dataContexts: [String : DiceSideDataContext] = [:]
 
     
     private let fetchDisposable = MetaDisposable()
@@ -81,22 +81,20 @@ class DiceCache {
         } |> distinctUntilChanged
         
         
-        let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [String: StickerPackItem])], NoError> in
-            var signals: [Signal<(String, [String: StickerPackItem]), NoError>] = []
+        let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [StickerPackItem])], NoError> in
+            var signals: [Signal<(String, [StickerPackItem]), NoError>] = []
             for emoji in config.emojis {
                 signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: true)
-                    |> map { result -> (String, [String: StickerPackItem]) in
+                    |> map { result -> (String, [StickerPackItem]) in
                         switch result {
                         case let .result(_, items, _):
-                            var dices: [String: StickerPackItem] = [:]
+                            var dices: [StickerPackItem] = []
                             for case let item as StickerPackItem in items {
-                                if let side = item.getStringRepresentationsOfIndexKeys().first {
-                                    dices[side.fixed] = item
-                                }
+                                dices.append(item)
                             }
                             return (emoji, dices)
                         default:
-                            return (emoji, [:])
+                            return (emoji, [])
                         }
                     })
             }
@@ -105,11 +103,11 @@ class DiceCache {
         
         
         let fetchDices = packs |> map { value in
-            return value.reduce([], { current, value in
-                return current + value.1
+            return value.map { $0.1 }.reduce([], { current, value in
+                return current + value
             })
         } |> mapToSignal { dices -> Signal<Void, NoError> in
-            let signals = dices.map { _, value -> Signal<FetchResourceSourceType, FetchResourceError> in
+            let signals = dices.map { value -> Signal<FetchResourceSourceType, FetchResourceError> in
                 let reference: MediaResourceReference
                 if let stickerReference = value.file.stickerReference {
                     reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: value.file).resourceReference(value.file.resource)
@@ -128,14 +126,14 @@ class DiceCache {
             var signals: [Signal<(String, [(String, Data?, TelegramMediaFile)]), NoError>] = []
             
             for value in values {
-                let dices = value.1.map { key, value in
+                let dices = value.1.map { value in
                     return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
                         if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                             return .single(data)
                         } else {
                             return .single(nil)
                         }
-                    } |> map { (key.fixed, $0, value.file) }
+                    } |> map { (value.getStringRepresentationsOfIndexKeys().first!, $0, value.file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -155,31 +153,18 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                
-                var dict = self.dataContexts[diceData.key] ?? [:]
-                
-                for diceData in diceData.value {
-                    let context: DiceSideDataContext
-                    if let current = dict[diceData.0] {
-                        context = current
-                    } else {
-                        context = DiceSideDataContext()
-                        dict[diceData.0] = context
-                    }
-                    context.data = (diceData.1, diceData.2)
-                    for subscriber in context.subscribers.copyItems() {
-                        subscriber((diceData.1, diceData.2))
-                    }
+                let context = self.dataContexts[diceData.key] ?? DiceSideDataContext()
+                context.data = diceData.value
+                for subscriber in context.subscribers.copyItems() {
+                    subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key] = dict
-                
+                self.dataContexts[diceData.key] = context
             }
-            
         }))
         
     }
     
-    func interactiveSymbolData(baseSymbol: String, side: String, synchronous: Bool) -> Signal<(Data?, TelegramMediaFile), NoError> {
+    func interactiveSymbolData(baseSymbol: String, synchronous: Bool) -> Signal<[(String, Data?, TelegramMediaFile)], NoError> {
         return Signal { [weak self] subscriber in
             
             guard let `self` = self else {
@@ -190,34 +175,26 @@ class DiceCache {
             
             let invoke = {
                 if !cancelled {
-                    var dataContext: [String: DiceSideDataContext]
+                    var dataContext: DiceSideDataContext
                     if let dc = self.dataContexts[baseSymbol] {
                         dataContext = dc
                     } else {
-                        dataContext = [:]
+                        dataContext = DiceSideDataContext()
                     }
                     
-                    let context: DiceSideDataContext
-                    if let current = dataContext[side] {
-                        context = current
-                    } else {
-                        context = DiceSideDataContext()
-                        dataContext[side] = context
-                    }
                     self.dataContexts[baseSymbol] = dataContext
                     
-                    let index = context.subscribers.add({ data in
+                    let index = dataContext.subscribers.add({ data in
                         if !cancelled {
                             subscriber.putNext(data)
                         }
                     })
                     
-                    if let data = context.data {
-                        subscriber.putNext(data)
-                    }
+                    subscriber.putNext(dataContext.data)
+                    
                     disposable.set(ActionDisposable { [weak self] in
                         resourcesQueue.async {
-                            if let current = self?.dataContexts[baseSymbol]?[side] {
+                            if let current = self?.dataContexts[baseSymbol] {
                                 current.subscribers.remove(index)
                             }
                         }

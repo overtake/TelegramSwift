@@ -242,11 +242,15 @@ class ChatDiceContentView: ChatMediaContentView {
         
         self.diceState = diceState
         
- 
         
-        
-        let data: Signal<(Data?, TelegramMediaFile), NoError>
-        data = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, side: sideSymbol, synchronous: approximateSynchronousValue)
+        let data: Signal<(Data?, TelegramMediaFile), NoError> = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, synchronous: approximateSynchronousValue) |> mapToSignal { values in
+            for value in values {
+                if value.0 == sideSymbol {
+                    return .single((value.1, value.2))
+                }
+            }
+            return .never()
+        }
         
         
         self.playerView.isHidden = true

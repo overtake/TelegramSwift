@@ -159,8 +159,8 @@ class ChatMediaLayoutParameters : Equatable {
         }
     }
     
-    func makeLabelsForWidth(_ width: CGFloat) {
-        
+    @discardableResult func makeLabelsForWidth(_ width: CGFloat) -> CGFloat {
+        return 0
     }
     
 }
@@ -253,7 +253,7 @@ class ChatMediaItem: ChatRowItem {
     
     
     override var _defaultHeight: CGFloat {
-        if hasBubble && isBubbleFullFilled && captionLayout == nil {
+        if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
             return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 1
         }
         
@@ -276,7 +276,7 @@ class ChatMediaItem: ChatRowItem {
         if let file = self.media as? TelegramMediaFile, file.isEmojiAnimatedSticker {
             return rightSize.height + 3
         }
-        if let caption = captionLayout {
+        if let caption = captionLayouts.last?.layout {
             if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                 return rightSize.height
             }
@@ -292,7 +292,7 @@ class ChatMediaItem: ChatRowItem {
             return true
         } else if let media = media as? TelegramMediaFile {
             
-            if let captionLayout = captionLayout, let line = captionLayout.lines.last, line.frame.width < realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+            if let captionLayout = captionLayouts.last?.layout, let line = captionLayout.lines.last, line.frame.width < realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                 return true
             }
             
@@ -302,7 +302,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override var instantlyResize: Bool {
-        if captionLayout != nil && media.isInteractiveMedia {
+        if !captionLayouts.isEmpty && media.isInteractiveMedia {
             return true
         } else {
             return super.instantlyResize
@@ -396,7 +396,7 @@ class ChatMediaItem: ChatRowItem {
             if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
-            captionLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false)
+            captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false))]
             
             let interactions = globalLinkExecutor
             
@@ -404,9 +404,8 @@ class ChatMediaItem: ChatRowItem {
                 copyToClipboard(text)
                 context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
             }
-            captionLayout?.interactions = interactions
-            
-            if let textLayout = self.captionLayout {
+            for textLayout in self.captionLayouts.map ({ $0.layout }) {
+                textLayout.interactions = interactions
                 if let highlightFoundText = entry.additionalData.highlightFoundText {
                     if highlightFoundText.isMessage {
                         if let range = rangeOfSearch(highlightFoundText.query, in: caption.string) {
@@ -435,7 +434,7 @@ class ChatMediaItem: ChatRowItem {
         
         if isBubbleFullFilled  {
             var positionFlags: LayoutPositionFlags = []
-            if captionLayout == nil && commentsBubbleData == nil {
+            if captionLayouts.isEmpty && commentsBubbleData == nil {
                 positionFlags.insert(.bottom)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
@@ -466,13 +465,13 @@ class ChatMediaItem: ChatRowItem {
         }
         return items |> map { [weak self] items in
             var items = items
-            if let captionLayout = self?.captionLayout {
-                let text = captionLayout.attributedString.string
+            if let captionLayout = self?.captionLayouts.first(where: { $0.id == self?.lastMessage?.stableId }) {
+                let text = captionLayout.layout.attributedString.string
                 items.insert(ContextMenuItem(L10n.textCopyText, handler: {
                     copyToClipboard(text)
                 }), at: min(items.count, 1))
                 
-                if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
+                if let view = self?.view as? ChatRowView, let textView = view.captionViews.first(where: { $0.id == self?.lastMessage?.stableId})?.view, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                     if let layout = textView.layout {
                         if let (link, _, range, _) = layout.link(at: point) {
@@ -623,11 +622,11 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         self.contentNode?.updateMouse()
     }
     
-    override var contentFrame: NSRect {
-        var rect = super.contentFrame
-        
-        guard let item = item as? ChatMediaItem else { return rect }
-        
+    override func contentFrame(_ item: ChatRowItem) -> NSRect {
+        var rect = super.contentFrame(item)
+        guard let item = item as? ChatMediaItem else {
+            return rect
+        }
         if item.isBubbled, item.isBubbleFullFilled {
             rect.origin.x -= item.bubbleContentInset
             if item.hasBubble {

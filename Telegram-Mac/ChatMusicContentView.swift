@@ -28,7 +28,11 @@ class ChatMusicContentView: ChatAudioContentView {
             if let fetchStatus = fetchStatus {
                 switch fetchStatus {
                 case let .Fetching(_, progress):
-                    progressView.state = .Fetching(progress: progress, force: false)
+                    if progress == 1.0, parent?.groupingKey != nil {
+                        progressView.state = .Success
+                    } else {
+                        progressView.state = .Fetching(progress: progress, force: false)
+                    }
                     progressView.isHidden = false
                 case .Remote:
                     progressView.isHidden = true

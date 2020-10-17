@@ -572,6 +572,8 @@ func initialize() -> [String] {
     array.append("call_screen_sharing")
     array.append("call_screen_sharing_active")
 
+    array.append("call_screen_settings")
+
     
     array.append("search_filter")
     array.append("search_filter_media")
@@ -592,8 +594,13 @@ func initialize() -> [String] {
     array.append("channel_comments_list")
     array.append("channel_comments_overlay")
     
-    
     array.append("chat_replies_avatar")
+
+    
+    array.append("group_selection_foreground")
+    array.append("group_selection_foreground_bubble_incoming")
+    array.append("group_selection_foreground_bubble_outgoing")
+        
     
     return array
 }

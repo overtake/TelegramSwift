@@ -24,13 +24,15 @@ class ReplyModel: ChatAccessoryModel {
     private let makesizeCallback:(()->Void)?
     private let autodownload: Bool
     private let headerAsName: Bool
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, makesizeCallback: (()->Void)? = nil) {
+    private let isLast: Bool
+    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, isLast: Bool = true, makesizeCallback: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.account = account
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
+        self.isLast = isLast
         super.init(presentation: presentation)
         
         let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
@@ -54,8 +56,6 @@ class ReplyModel: ChatAccessoryModel {
         } else {
             
             make(with: nil, display: false)
-           
-
             nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
                  self?.make(with: message, isLoading: false, display: true)
                  return message != nil
@@ -244,8 +244,11 @@ class ReplyModel: ChatAccessoryModel {
             if text.isEmpty {
                 text = serviceMessageText(message, account: account, isReplied: true)
             }
-            
-            self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+            if !isLast {
+                self.headerAttr = .initialize(string: L10n.chatHeaderPinnedPrevious, color: presentation.title, font: .medium(.text))
+            } else {
+                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+            }
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
