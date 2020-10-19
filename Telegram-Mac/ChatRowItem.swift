@@ -2376,18 +2376,18 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
             }))
         }
-        if let attr = message.replyAttribute, let threadId = attr.threadMessageId, threadId != message.id {
-            switch chatInteraction.presentation.discussionGroupId {
-            case let .known(peerId):
-                if peerId != nil {
-                    items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
-                        chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
-                    }))
-                }
-            default:
-                break
-            }
-        }
+//        if let attr = message.replyAttribute, let threadId = attr.threadMessageId, threadId != message.id {
+//            switch chatInteraction.presentation.discussionGroupId {
+//            case let .known(peerId):
+//                if peerId != nil {
+//                    items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
+//                        chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
+//                    }))
+//                }
+//            default:
+//                break
+//            }
+//        }
     }
     
     if let file = message.media.first as? TelegramMediaFile, file.isEmojiAnimatedSticker {

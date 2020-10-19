@@ -823,6 +823,7 @@
 		D06C69552539F6BD00DD9005 /* LiveLocationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */; };
 		D06C69572539FB2C00DD9005 /* LiveLocationSummaryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */; };
 		D06C69592539FBFB00DD9005 /* LiveLocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */; };
+		D06C695F253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C695E253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift */; };
 		D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */; };
 		D06C7BB7247D6FA900E67C3C /* SampleBufferPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */; };
 		D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */; };
@@ -1997,6 +1998,7 @@
 		D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationViewController.swift; sourceTree = "<group>"; };
 		D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationSummaryManager.swift; sourceTree = "<group>"; };
 		D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveLocationManager.swift; sourceTree = "<group>"; };
+		D06C695E253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPreviewMapRowItem.swift; sourceTree = "<group>"; };
 		D06C7BB4247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoLayerFrameManager.swift; sourceTree = "<group>"; };
 		D06C7BB6247D6FA900E67C3C /* SampleBufferPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleBufferPool.swift; sourceTree = "<group>"; };
 		D06C7BB8247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoThumbnailLayer.swift; sourceTree = "<group>"; };
@@ -2268,6 +2270,7 @@
 				D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */,
 				D06C69562539FB2C00DD9005 /* LiveLocationSummaryManager.swift */,
 				D06C69582539FBFB00DD9005 /* LiveLocationManager.swift */,
+				D06C695E253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift */,
 			);
 			name = location;
 			sourceTree = "<group>";
@@ -5349,6 +5352,7 @@
 				A76C8AB3242366EC00FDB071 /* PeerMediaBlockRowItem.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */,
+				D06C695F253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
 				9F72973420B878B00067F815 /* MapResources.swift in Sources */,
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,

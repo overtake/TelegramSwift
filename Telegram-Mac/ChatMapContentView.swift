@@ -31,7 +31,7 @@ class ChatMapContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         if let parameters = self.parameters as? ChatMediaMapLayoutParameters {
-            execute(inapp: .external(link: parameters.url, false))
+            parameters.execute()
         }
     }
     

@@ -229,7 +229,9 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                         } else {
                             let fetchedDisposable = fetchedThumbnail.start()
                             let thumbnailDisposable = postbox.mediaBox.resourceData(smallestRepresentation.resource, attemptSynchronously: synchronousLoad).start(next: { next in
-                                subscriber.putNext(next.size == 0 ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []))
+                                if next.complete {
+                                    subscriber.putNext(next.size == 0 ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []))
+                                }
                             }, error: subscriber.putError, completed: subscriber.putCompletion)
 
                             return ActionDisposable {

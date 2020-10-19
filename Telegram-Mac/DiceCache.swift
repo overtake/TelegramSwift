@@ -133,7 +133,7 @@ class DiceCache {
                         } else {
                             return .single(nil)
                         }
-                    } |> map { (value.getStringRepresentationsOfIndexKeys().first!, $0, value.file) }
+                    } |> map { (value.getStringRepresentationsOfIndexKeys().first!.fixed, $0, value.file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -142,7 +142,7 @@ class DiceCache {
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
-                    dict[value.0] = value.1
+                    dict[value.0.fixed] = value.1
                 }
                 return dict
             }

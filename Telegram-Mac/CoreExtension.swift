@@ -2427,9 +2427,9 @@ func wallpaperPath(_ resource: TelegramMediaResource, settings: WallpaperSetting
 func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     var canCollage: Bool = urls.count > 1 && urls.count <= 10
     
-    return canCollage
-    
     var musicCount: Int = 0
+    var voiceCount: Int = 0
+    var gifCount: Int = 0
     if canCollage {
         for url in urls {
             let mime = MIMEType(url.path)
@@ -2450,30 +2450,48 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
                     return false
                 }
             })
+            let isVoice = attrs.contains(where: { attr -> Bool in
+                switch attr {
+                case let .Audio(isVoice, _, _, _, _):
+                    return isVoice
+                default:
+                    return false
+                }
+            })
             if isMusic {
                 musicCount += 1
-                continue
             }
-            
-           
-            
-            if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
-                if image.size.width / 10 > image.size.height || image.size.height < 40 {
+            if isVoice {
+                voiceCount += 1
+            }
+            if isGif {
+                gifCount += 1
+            }
+            if !isMusic || !isVoice || !isGif {
+                if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
+                    if image.size.width / 10 > image.size.height || image.size.height < 40 {
+                        canCollage = false
+                        break
+                    }
+                }
+                if (!photoExts.contains(url.pathExtension.lowercased()) && !videoExts.contains(url.pathExtension.lowercased())) {
                     canCollage = false
                     break
                 }
             }
-            
-            if (!photoExts.contains(url.pathExtension.lowercased()) && !videoExts.contains(url.pathExtension.lowercased())) || isGif {
-                canCollage = false
-                break
-            }
         }
     }
     
-    if canCollage, musicCount > 0 {
-        return musicCount == urls.count
+    if musicCount > 0 && musicCount == urls.count {
+        return canCollage
     }
+    if voiceCount > 0 {
+        return canCollage
+    }
+    if gifCount > 0 && gifCount == urls.count {
+        return canCollage
+    }
+
     
     return canCollage
 }
