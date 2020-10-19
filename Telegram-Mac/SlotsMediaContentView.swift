@@ -29,14 +29,18 @@ class SlotsMediaContentView: ChatMediaContentView {
     private let thumbView = TransformImageView()
     private let loadResourceDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
+    private let view = NSView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(self.idlePlayer)
-        addSubview(self.spin1Player)
-        addSubview(self.spin2Player)
-        addSubview(self.spin3Player)
-        addSubview(self.pullPlayer)
-        addSubview(self.thumbView)
+        view.addSubview(self.idlePlayer)
+        view.addSubview(self.spin1Player)
+        view.addSubview(self.spin2Player)
+        view.addSubview(self.spin3Player)
+        view.addSubview(self.pullPlayer)
+        view.addSubview(self.thumbView)
+        
+        addSubview(view)
+        view.frame = bounds
     }
     
     required init?(coder: NSCoder) {
@@ -278,6 +282,7 @@ class SlotsMediaContentView: ChatMediaContentView {
     
     override func layout() {
         super.layout()
+        view.frame = bounds
         _ = players.map {
             $0.frame = bounds
         }

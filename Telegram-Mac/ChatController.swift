@@ -488,7 +488,7 @@ class ChatControllerView : View, ChatInputDelegate {
             } else {
                 state = .none
             }
-        } else if let pinnedMessageId = interfaceState.pinnedMessageId, pinnedMessageId.messageId != interfaceState.interfaceState.dismissedPinnedMessageId, !interfaceState.hidePinnedMessage {
+        } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage {
             state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
            state = .none
@@ -3038,7 +3038,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate) |> `catch` {_ in .complete()
                         }, for: context.window)}).start())
                     } else {
-                        self.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedDismissedPinnedId(pinnedId)})})
+                        self.chatInteraction.update({$0.updatedInterfaceState({$0.withAddedDismissedPinnedIds([pinnedId])})})
                     }
                 } else if self.chatInteraction.peerId == context.peerId {
                     if dismiss {

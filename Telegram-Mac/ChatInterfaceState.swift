@@ -526,11 +526,6 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
         
         if let processedMessageIdPeerId = (decoder.decodeOptionalInt64ForKey("pb.p") as Int64?), let processedMessageIdNamespace = (decoder.decodeOptionalInt32ForKey("pb.n") as Int32?), let processedMessageIdId = (decoder.decodeOptionalInt32ForKey("pb.i") as Int32?) {
             self.processedSetupReplyMessageId = MessageId(peerId: PeerId(processedMessageIdPeerId), namespace: processedMessageIdNamespace, id: processedMessageIdId)
-            
-            if processedMessageIdId == 349 {
-                var bp:Int = 0
-                bp += 1
-            }
         } else {
             self.processedSetupReplyMessageId = nil
         }
@@ -730,7 +725,7 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
 
     let forwardMessageIds: [MessageId]
     let forwardMessages: [Message]
-    let dismissedPinnedMessageId:MessageId?
+    let dismissedPinnedMessageId:[MessageId]
     let composeDisableUrlPreview: String?
     let dismissedForceReplyId: MessageId?
     
@@ -770,14 +765,14 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         self.forwardMessageIds = []
         self.forwardMessages = []
         self.messageActionsState = ChatInterfaceMessageActionsState()
-        self.dismissedPinnedMessageId = nil
+        self.dismissedPinnedMessageId = []
         self.composeDisableUrlPreview = nil
         self.historyScrollState = nil
         self.dismissedForceReplyId = nil
         self.editState = nil
     }
     
-    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: MessageId?, replyMessage: Message?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: MessageId?, composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?, dismissedForceReplyId:MessageId?, editState: ChatEditState?, forwardMessages:[Message]) {
+    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: MessageId?, replyMessage: Message?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: [MessageId], composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?, dismissedForceReplyId: MessageId?, editState: ChatEditState?, forwardMessages:[Message]) {
         self.timestamp = timestamp
         self.inputState = inputState
         self.replyMessageId = replyMessageId
@@ -820,13 +815,10 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
             self.messageActionsState = ChatInterfaceMessageActionsState()
         }
         
-        let dismissedPinnedIdPeerId: Int64? = decoder.decodeOptionalInt64ForKey("d.p.p")
-        let dismissedPinnedIdNamespace: Int32? = decoder.decodeOptionalInt32ForKey("d.p.n")
-        let dismissedPinnedIdId: Int32? = decoder.decodeOptionalInt32ForKey("d.p.i")
-        if let dismissedPinnedIdPeerId = dismissedPinnedIdPeerId, let dismissedPinnedIdNamespace = dismissedPinnedIdNamespace, let dismissedPinnedIdId = dismissedPinnedIdId {
-            self.dismissedPinnedMessageId = MessageId(peerId: PeerId(dismissedPinnedIdPeerId), namespace: dismissedPinnedIdNamespace, id: dismissedPinnedIdId)
+        if let dismissedPinnedData = decoder.decodeBytesForKeyNoCopy("dpl") {
+            self.dismissedPinnedMessageId = MessageId.decodeArrayFromBuffer(dismissedPinnedData)
         } else {
-            self.dismissedPinnedMessageId = nil
+            self.dismissedPinnedMessageId = []
         }
         
         if let composeDisableUrlPreview = decoder.decodeOptionalStringForKey("dup") as String? {
@@ -877,15 +869,10 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
             encoder.encodeObject(self.messageActionsState, forKey: "as")
         }
         
-        if let dismissedPinnedMessageId = self.dismissedPinnedMessageId {
-            encoder.encodeInt64(dismissedPinnedMessageId.peerId.toInt64(), forKey: "d.p.p")
-            encoder.encodeInt32(dismissedPinnedMessageId.namespace, forKey: "d.p.n")
-            encoder.encodeInt32(dismissedPinnedMessageId.id, forKey: "d.p.i")
-        } else {
-            encoder.encodeNil(forKey: "d.p.p")
-            encoder.encodeNil(forKey: "d.p.n")
-            encoder.encodeNil(forKey: "d.p.i")
-        }
+        let d_buffer = WriteBuffer()
+        MessageId.encodeArrayToBuffer(dismissedPinnedMessageId, buffer: d_buffer)
+        encoder.encodeBytes(d_buffer, forKey: "dpl")
+        
         
         if let composeDisableUrlPreview = self.composeDisableUrlPreview {
             encoder.encodeString(composeDisableUrlPreview, forKey: "dup")
@@ -924,8 +911,8 @@ struct ChatInterfaceState: SynchronizeableChatInterfaceState, Equatable {
         return ChatInterfaceState(timestamp: self.timestamp, inputState: self.editState == nil ? inputState : self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState?.withUpdated(state: inputState), forwardMessages: self.forwardMessages)
     }
     
-    func withUpdatedDismissedPinnedId(_ dismissedPinnedId: MessageId?) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: dismissedPinnedId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
+    func withAddedDismissedPinnedIds(_ dismissedPinnedId: [MessageId]) -> ChatInterfaceState {
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: (self.dismissedPinnedMessageId + dismissedPinnedId).uniqueElements, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages)
     }
     
     func withUpdatedDismissedForceReplyId(_ dismissedId: MessageId?) -> ChatInterfaceState {
