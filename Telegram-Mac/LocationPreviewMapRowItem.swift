@@ -20,6 +20,9 @@ private final class MapPin : NSObject, MKAnnotation
     let coordinate: CLLocationCoordinate2D
     let peer: Peer?
     let account: Account
+    
+    var focusRegion: (()->Void)?
+    
     init (coordinate: CLLocationCoordinate2D, account: Account, peer: Peer?)
     {
         self.coordinate = coordinate
@@ -44,6 +47,7 @@ private final class MapPinView: View {
 private final class LocationAnnotationView : MKAnnotationView {
     private let avatar = AvatarControl(font: .avatar(14))
     private let border = View()
+    fileprivate let control = OverlayControl()
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         
@@ -67,6 +71,16 @@ private final class LocationAnnotationView : MKAnnotationView {
         avatar.setFrameSize(NSMakeSize(40, 40))
         avatar.layer?.cornerRadius = avatar.frame.width / 2
         addSubview(avatar)
+        
+        control.frame = bounds
+        
+        addSubview(control)
+        
+        control.set(handler: { [weak self] _ in
+            var bp:Int = 0
+            bp += 1
+            (self?.annotation as? MapPin)?.focusRegion?()
+        }, for: .Click)
         
         update()
     }
@@ -113,6 +127,11 @@ class LocationPreviewMapRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     override func viewClass() -> AnyClass {
         return LocationPreviewMapRowView.self
     }
@@ -151,6 +170,25 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         }
     }
     
+    private var doNotUpdateRegion: Bool = false
+    
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        if location != nil {
+            doNotUpdateRegion = true
+        }
+    }
+
+    private var location: NSPoint? = nil
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        location = nil
+       
+    }
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        location = event.locationInWindow
+    }
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         let previousItem = self.item
         super.set(item: item, animated: animated)
@@ -161,13 +199,24 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
             return
         }
         
-        let center = CLLocationCoordinate2D(latitude: item.map.latitude, longitude: item.map.longitude)
-        let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-        mapView.setRegion(region, animated: animated)
+        let focus:(Bool)->Void = { [weak self, unowned item] animated in
+            let center = CLLocationCoordinate2D(latitude: item.map.latitude, longitude: item.map.longitude)
+            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            self?.mapView.setRegion(region, animated: animated)
+            self?.doNotUpdateRegion = false
+        }
+        
+        if !doNotUpdateRegion {
+            focus(animated)
+        }
         
         if let previousItem = previousItem as? LocationPreviewMapRowItem {
             mapView.removeAnnotation(previousItem.pin)
         }
+        item.pin.focusRegion = {
+            focus(true)
+        }
+        
         mapView.addAnnotation(item.pin)
     }
 }
