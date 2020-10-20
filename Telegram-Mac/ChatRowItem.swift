@@ -198,7 +198,7 @@ class ChatRowItem: TableRowItem {
             
             var tempWidth: CGFloat = width - self.contentOffset.x - bubbleDefaultInnerInset - (20 + 10 + additionBubbleInset) - 20
             
-            if isSharable || isStorage {
+            if isSharable || hasSource {
                 tempWidth -= 35
             }
             if isLikable {
@@ -529,7 +529,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let item = self as? ChatMessageItem, item.containsBigEmoji {
-            if commentsBubbleDataOverlay != nil || isSharable || isStorage {
+            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
                 top += 20
             }
         }
@@ -547,17 +547,21 @@ class ChatRowItem: TableRowItem {
         return entry.stableId
     }
     
-    var isStorage: Bool {
-        if let message = message {
-            for attr in message.attributes {
-                if let attr = attr as? SourceReferenceMessageAttribute {
-                    if authorIsChannel {
-                        return true
+    var hasSource: Bool {
+        switch chatInteraction.mode {
+        case .pinned:
+            return true
+        default:
+            if let message = message {
+                for attr in message.attributes {
+                    if let attr = attr as? SourceReferenceMessageAttribute {
+                        if authorIsChannel {
+                            return true
+                        }
+                        return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId) || message.id.peerId == repliesPeerId
                     }
-                    return (chatInteraction.peerId == context.peerId && context.peerId != attr.messageId.peerId) || message.id.peerId == repliesPeerId
                 }
             }
-            
         }
         return false
     }
@@ -589,20 +593,29 @@ class ChatRowItem: TableRowItem {
     
     func gotoSourceMessage() {
         if let message = message {
-            for attr in message.attributes {
-                if let attr = attr as? SourceReferenceMessageAttribute {
-                    if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
-                        chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: attr.messageId))
-                    } else {
-                        switch chatInteraction.mode {
-                        case .replyThread:
-                            chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
-                        default:
-                            chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+            switch chatInteraction.mode {
+            case .pinned:
+                let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                let controller = navigation.previousController as? ChatController
+                controller?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+                navigation.back()
+            default:
+                for attr in message.attributes {
+                    if let attr = attr as? SourceReferenceMessageAttribute {
+                        if message.id.peerId == repliesPeerId, let threadMessageId = message.replyAttribute?.threadMessageId {
+                            chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: attr.messageId))
+                        } else {
+                            switch chatInteraction.mode {
+                            case .replyThread:
+                                chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
+                            default:
+                                chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
+                            }
                         }
                     }
                 }
             }
+            
         }
     }
     
@@ -2488,7 +2501,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
 
     
-    if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId {
+    if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
         items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: {
             _ = Sender.forwardMessages(messageIds: [message.id], context: chatInteraction.context, peerId: account.peerId).start()
         }))
@@ -2628,7 +2641,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     
     signal = signal |> map { items in
-        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, !chatInteraction.mode.isThreadMode {
+        if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, chatInteraction.mode == .history {
             if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId {
                 var items = items
                 items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
@@ -2654,7 +2667,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
 //
     signal = signal |> map { items in
         var items = items
-        if canReportMessage(message, account) {
+        if canReportMessage(message, account), chatInteraction.mode != .pinned {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
                 _ = reportReasonSelector(context: context).start(next: { reason in
                     _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start(completed: {
@@ -2668,7 +2681,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     return signal |> map { items in
         var items = items
-        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, !message.isScheduledMessage, !chatInteraction.mode.isThreadMode {
+        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, chatInteraction.mode == .history {
             items.append(ContextSeparatorItem())
             items.append(ContextMenuItem(L10n.chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
                 chatInteraction.searchPeerMessages(author)

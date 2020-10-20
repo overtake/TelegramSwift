@@ -24,16 +24,16 @@ class ReplyModel: ChatAccessoryModel {
     private let makesizeCallback:(()->Void)?
     private let autodownload: Bool
     private let headerAsName: Bool
-    private let isLast: Bool
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, isLast: Bool = true, makesizeCallback: (()->Void)? = nil) {
+    private let customHeader: String?
+    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.account = account
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
-        self.isLast = isLast
-        super.init(presentation: presentation)
+        self.customHeader = customHeader
+        super.init(presentation: presentation, drawLine: drawLine)
         
         let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
             if let message = view.message {
@@ -174,9 +174,9 @@ class ReplyModel: ChatAccessoryModel {
                         if file.isVideo {
                             updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
                         } else if file.isAnimatedSticker {
-                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize))
+                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true)
                         } else if file.isSticker {
-                            updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor)
+                            updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
@@ -244,8 +244,8 @@ class ReplyModel: ChatAccessoryModel {
             if text.isEmpty {
                 text = serviceMessageText(message, account: account, isReplied: true)
             }
-            if !isLast {
-                self.headerAttr = .initialize(string: L10n.chatHeaderPinnedPrevious, color: presentation.title, font: .medium(.text))
+            if let header = customHeader {
+                self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))
             } else {
                 self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
             }

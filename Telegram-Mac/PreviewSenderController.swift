@@ -269,6 +269,8 @@ fileprivate class PreviewSenderView : Control {
                     break
                 case .replyThread:
                     break
+                case .pinned:
+                    break
                 }
                 if !items.isEmpty {
                     showPopover(for: control, with: SPopoverViewController(items: items))
@@ -867,6 +869,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         case .history, .replyThread:
             sendCurrentMedia?(silent, atDate)
+        case .pinned:
+            break
         }
     }
     
@@ -1046,7 +1050,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             var canCollage = canCollagesFromUrl(self.urls)
             switch state.state {
             case .media:
-                canCollage = options == [.media]
+                canCollage = canCollage && options == [.media]
             default:
                 break
             }
@@ -1089,7 +1093,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let mediaState:PreviewSendingState.State = asMedia ? .media : .file
         switch mediaState {
         case .media:
-            canCollage = options == [.media]
+            canCollage = canCollage && options == [.media]
         default:
             break
         }
@@ -1113,7 +1117,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             let options = takeSenderOptions(for: self.urls)
             switch state.state {
             case .media:
-                canCollage = options == [.media]
+                canCollage = canCollage && options == [.media]
             default:
                 break
             }

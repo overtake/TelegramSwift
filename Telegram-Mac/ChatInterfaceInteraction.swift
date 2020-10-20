@@ -144,6 +144,8 @@ final class ChatInteraction : InterfaceObserver  {
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
+    var openPinnedMessages: ()->Void = { }
+    var unpinAllMessages: ()->Void = {}
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
     var scrollToTheFirst: () -> Void = {}
     

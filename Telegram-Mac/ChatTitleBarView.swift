@@ -457,13 +457,13 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     strongSelf.isSingleLayout = true
                     strongSelf.badgeNode.view?.isHidden = false
                     strongSelf.closeButton.isHidden = false
-                    strongSelf.avatarControl.isHidden = false
                 default:
                     strongSelf.isSingleLayout = strongSelf.controller?.className != "Telegram.ChatController" 
                     strongSelf.badgeNode.view?.isHidden = true
                     strongSelf.closeButton.isHidden = strongSelf.controller?.className == "Telegram.ChatController" && strongSelf.chatInteraction.mode.threadId == nil
-                    strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil
                 }
+                strongSelf.avatarControl.isHidden = strongSelf.controller is ChatScheduleController || strongSelf.chatInteraction.mode.threadId != nil || strongSelf.chatInteraction.mode == .pinned
+
                 strongSelf.textInset = strongSelf.avatarControl.isHidden ? 24 : strongSelf.isSingleLayout ? 66 : 46
                 strongSelf.needsLayout = true
             }
@@ -739,6 +739,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 callButton.isHidden = true
             case .replyThread:
                 callButton.isHidden = true
+            case .pinned:
+                callButton.isHidden = true
             }
             
             
@@ -794,11 +796,14 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
                 status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
                 result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
+            } else if chatInteraction.mode == .pinned {
+                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessages)
+                status = nil
             }
             
             if chatInteraction.context.peerId == peerView.peerId {
                 status = nil
-            } else if (status == nil || !status!.isEqual(to: result.status) || force) && chatInteraction.mode != .scheduled && chatInteraction.mode.threadId == nil {
+            } else if (status == nil || !status!.isEqual(to: result.status) || force) && chatInteraction.mode != .scheduled && chatInteraction.mode.threadId == nil && chatInteraction.mode != .pinned {
                 status = result.status
                 shouldUpdateLayout = true
             }

@@ -61,6 +61,7 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     }
     
     open var size:NSSize = NSZeroSize
+    let drawLine: Bool
     var width: CGFloat = 0
     var sizeToFit: Bool = false
     open var frame:NSRect {
@@ -79,8 +80,9 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
         }
     }
     
-    public init(_ view:ChatAccessoryView? = nil, presentation: ChatAccessoryPresentation? = nil) {
+    public init(_ view:ChatAccessoryView? = nil, presentation: ChatAccessoryPresentation? = nil, drawLine: Bool = true) {
         _strongView = view
+        self.drawLine = drawLine
         _presentation = presentation
         if view != nil {
             assertOnMainThread()
@@ -114,7 +116,7 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return 8
+        return drawLine ? 6 : 8
     }
     
     var headerAttr:NSAttributedString?
@@ -151,10 +153,12 @@ class ChatAccessoryModel: NSObject, ViewDisplayDelegate {
             
             ctx.setFillColor(presentation.border.cgColor)
             
-            let radius:CGFloat = 1.0
-            ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0) + topOffset, 2, size.height - topOffset - radius * 2 - (isSideAccessory ? 10 : 0)))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0) + topOffset), size: CGSize(width: radius + radius, height: radius + radius)))
-            ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: size.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
+            if drawLine {
+                let radius:CGFloat = 1.0
+                ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0) + topOffset, 2, size.height - topOffset - radius * 2 - (isSideAccessory ? 10 : 0)))
+                ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0) + topOffset), size: CGSize(width: radius + radius, height: radius + radius)))
+                ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: size.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
+            }
             
             if  let header = header, let message = message {
                 header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)

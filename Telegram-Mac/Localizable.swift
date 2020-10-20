@@ -1559,6 +1559,10 @@ internal final class L10n {
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// Pinned message
   internal static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
+  /// Pinned message #%d
+  internal static func chatHeaderPinnedMessageNumer(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Header.PinnedMessage_Numer", p1)
+  }
   /// Previous message
   internal static var chatHeaderPinnedPrevious: String  { return L10n.tr("Localizable", "Chat.Header.PinnedPrevious") }
   /// Report Spam
@@ -1761,6 +1765,36 @@ internal final class L10n {
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
   /// SHOW MESSAGE
   internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
+  /// Don't Show Pinned Messages
+  internal static var chatPinnedDontShow: String  { return L10n.tr("Localizable", "Chat.Pinned.DontShow") }
+  /// %d
+  internal static func chatPinnedUnpinAllCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_countable", p1)
+  }
+  /// Unpin All %d Messages
+  internal static func chatPinnedUnpinAllFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_few", p1)
+  }
+  /// Unpin All %d Messages
+  internal static func chatPinnedUnpinAllMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_many", p1)
+  }
+  /// Unpin %d Message
+  internal static func chatPinnedUnpinAllOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_one", p1)
+  }
+  /// Unpin All %d Messages
+  internal static func chatPinnedUnpinAllOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_other", p1)
+  }
+  /// Unpin All %d Messages
+  internal static func chatPinnedUnpinAllTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_two", p1)
+  }
+  /// Unpin All %d Messages
+  internal static func chatPinnedUnpinAllZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Pinned.UnpinAll_zero", p1)
+  }
   /// %@%%
   internal static func chatPollResult(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Poll.Result", p1)
@@ -2097,6 +2131,8 @@ internal final class L10n {
   internal static var chatTitleCommentsZero: String  { return L10n.tr("Localizable", "Chat.Title.Comments_zero") }
   /// Discussion
   internal static var chatTitleDiscussion: String  { return L10n.tr("Localizable", "Chat.Title.Discussion") }
+  /// Pinned Messages
+  internal static var chatTitlePinnedMessages: String  { return L10n.tr("Localizable", "Chat.Title.PinnedMessages") }
   /// Reminder
   internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
   /// %d

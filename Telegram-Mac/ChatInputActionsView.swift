@@ -494,6 +494,8 @@ class ChatInputActionsView: View, Notifable {
                     break
                 case .replyThread:
                     break
+                case .pinned:
+                    break
                 }
                 
                 if !items.isEmpty {

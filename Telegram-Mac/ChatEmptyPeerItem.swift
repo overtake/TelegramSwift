@@ -104,6 +104,9 @@ class ChatEmptyPeerItem: TableRowItem {
             case .replies:
                 _ = attr.append(string: L10n.chatEmptyReplies, color: theme.chatServiceItemTextColor, font: .medium(.text))
             }
+        case .pinned:
+            lineSpacing = nil
+            _ = attr.append(string: L10n.chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
         }
         
         

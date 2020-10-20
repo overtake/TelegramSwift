@@ -22,7 +22,6 @@ func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentation
                 return nil
             } else {
                 return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
-                
             }
         } else {
             return (nil, .single({ _ in return nil }))

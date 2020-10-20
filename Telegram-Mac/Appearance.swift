@@ -2327,7 +2327,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_replies_avatar: { NSImage(named: "Icon_RepliesChat")!.precomposed() },
                                                group_selection_foreground: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayText.withAlphaComponent(0.4), backgroundColor: palette.chatBackground) },
                                                group_selection_foreground_bubble_incoming: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_incoming.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackground_incoming) },
-                                               group_selection_foreground_bubble_outgoing: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_outgoing.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackgroundTop_outgoing) }
+                                               group_selection_foreground_bubble_outgoing: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_outgoing.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackgroundTop_outgoing) },
+                                               chat_pinned_list: { NSImage(named: "Icon_ChatPinnedList")!.precomposed(palette.accentIcon) }
 
     )
 
