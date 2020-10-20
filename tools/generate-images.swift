@@ -600,7 +600,9 @@ func initialize() -> [String] {
     array.append("group_selection_foreground")
     array.append("group_selection_foreground_bubble_incoming")
     array.append("group_selection_foreground_bubble_outgoing")
-        
+    
+    
+    array.append("chat_pinned_list")
     
     return array
 }

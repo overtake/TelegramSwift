@@ -111,6 +111,7 @@
 		D050518E2342A75D00D93176 /* DisplayLinkAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */; };
 		D0558D8221528DF5006B403D /* ModalTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D8121528DF5006B403D /* ModalTouchBar.swift */; };
 		D05F392022FB37920040F341 /* DatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F391F22FB37920040F341 /* DatePicker.swift */; };
+		D06C6961253ECD2600DD9005 /* VerticalParticleListControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06C6960253ECD2600DD9005 /* VerticalParticleListControl.swift */; };
 		D0BEB9922163C1F00055B718 /* SelectionRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BEB9912163C1F00055B718 /* SelectionRectView.swift */; };
 /* End PBXBuildFile section */
 
@@ -226,6 +227,7 @@
 		D050518D2342A75D00D93176 /* DisplayLinkAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayLinkAnimator.swift; sourceTree = "<group>"; };
 		D0558D8121528DF5006B403D /* ModalTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalTouchBar.swift; sourceTree = "<group>"; };
 		D05F391F22FB37920040F341 /* DatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePicker.swift; sourceTree = "<group>"; };
+		D06C6960253ECD2600DD9005 /* VerticalParticleListControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalParticleListControl.swift; sourceTree = "<group>"; };
 		D0BEB9912163C1F00055B718 /* SelectionRectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRectView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -543,6 +545,7 @@
 				9F4EEF9921DCD260002C3B33 /* SliderView.swift */,
 				A7D49477235F226C003E9A25 /* SpinningProgressView.swift */,
 				D006030824D0256000206226 /* HorizontalSliderControl.swift */,
+				D06C6960253ECD2600DD9005 /* VerticalParticleListControl.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -650,6 +653,7 @@
 				C219E1EF1D8AE3310042F0C8 /* AnimationStyle.swift in Sources */,
 				A7D49478235F226C003E9A25 /* SpinningProgressView.swift in Sources */,
 				C2271DA61DAD16B4001792B6 /* BadgeNode.swift in Sources */,
+				D06C6961253ECD2600DD9005 /* VerticalParticleListControl.swift in Sources */,
 				C234CA8F1D97DF26003023F7 /* Image.swift in Sources */,
 				C2B1A1181DA1673300ACB1DD /* TableAnimationInterface.swift in Sources */,
 				C2271F331DB4CEB30045E719 /* HorizontalTableView.swift in Sources */,

@@ -898,6 +898,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 case .replies:
                     return peer.canSendMessage(true)
                 }
+            case .pinned:
+                return false
             }
         }
     }
@@ -2493,7 +2495,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     }
 
     
-    return canCollage
+    return false
 }
 
 extension AutomaticMediaDownloadSettings {

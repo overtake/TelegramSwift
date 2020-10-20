@@ -350,15 +350,16 @@ class ChatPinnedView : Control {
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
     private var pinnedMessage: ChatPinnedMessage
+    private let particleList: VerticalParticleListControl = VerticalParticleListControl()
     init(_ pinnedMessage:ChatPinnedMessage, chatInteraction:ChatInteraction) {
         self.pinnedMessage = pinnedMessage
         
-        node = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, isLast: pinnedMessage.isLatest)
+        node = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : L10n.chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
         self.chatInteraction = chatInteraction
         super.init()
         
         dismiss.disableActions()
-        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         _ = self.dismiss.sizeToFit()
         
         self.dismiss.isHidden = chatInteraction.mode.threadId == pinnedMessage.messageId
@@ -379,7 +380,11 @@ class ChatPinnedView : Control {
             guard let `self` = self else {
                 return
             }
-            self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false)
+            if self.pinnedMessage.totalCount > 1 {
+                self.chatInteraction.openPinnedMessages()
+            } else {
+                self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false)
+            }
         }, for: .SingleClick)
         
         addSubview(dismiss)
@@ -394,17 +399,28 @@ class ChatPinnedView : Control {
                 _ = requestUpdatePinnedMessage(account: chatInteraction.context.account, peerId: chatInteraction.peerId, update: .clear(id: pinnedMessage.messageId)).start()
             }
         }))
+        
+        particleList.frame = NSMakeRect(20, 5, 3, 34)
+        
+        addSubview(particleList)
+        
+        particleList.update(count: pinnedMessage.totalCount, selectedIndex: pinnedMessage.index, animated: false)
+        
         updateLocalizationAndTheme(theme: theme)
     }
     
     func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
+        
+        particleList.update(count: pinnedMessage.totalCount, selectedIndex: pinnedMessage.index, animated: animated)
+        
+        self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         
         if pinnedMessage.messageId != self.pinnedMessage.messageId {
             let oldContainer = self.container
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
             
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, isLast: pinnedMessage.isLatest)
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : L10n.chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
             
             newNode.view = newContainer
             
@@ -413,7 +429,7 @@ class ChatPinnedView : Control {
             let width = frame.width - (40 + (dismiss.isHidden ? 0 : 30))
             newNode.measureSize(width)
             newContainer.setFrameSize(width, newNode.size.height)
-            newContainer.centerY(x: 20)
+            newContainer.centerY(x: 23)
             
             if animated {
                 let oldFrom = oldContainer.frame.origin
@@ -439,8 +455,8 @@ class ChatPinnedView : Control {
             
             self.container = newContainer
             self.node = newNode
-            self.pinnedMessage = pinnedMessage
         }
+        self.pinnedMessage = pinnedMessage
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -448,7 +464,7 @@ class ChatPinnedView : Control {
         let theme = (theme as! TelegramPresentationTheme)
         node.update()
         self.backgroundColor = theme.colors.background
-        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         container.backgroundColor = theme.colors.background
     }
     
@@ -460,7 +476,7 @@ class ChatPinnedView : Control {
     override func layout() {
         node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
         container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
-        container.centerY(x: 20)
+        container.centerY(x: 23)
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         node.setNeedDisplay()
     }
@@ -962,7 +978,7 @@ class ChatSearchHeader : View, Notifable {
     }
     
     private var calendarAbility: Bool {
-        return chatInteraction.mode != .scheduled
+        return chatInteraction.mode != .scheduled && chatInteraction.mode != .pinned
     }
     
     private var fromAbility: Bool {

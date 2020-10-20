@@ -32,11 +32,14 @@ final class ChatPinnedMessage: Equatable {
     let messageId: MessageId
     let message: Message?
     let isLatest: Bool
-    
-    init(messageId: MessageId, message: Message?, isLatest: Bool) {
+    let index: Int
+    let totalCount: Int
+    init(messageId: MessageId, message: Message?, isLatest: Bool, index:Int = 0, totalCount: Int = 1) {
         self.messageId = messageId
         self.message = message
         self.isLatest = isLatest
+        self.index = index
+        self.totalCount = totalCount
     }
     
     static func ==(lhs: ChatPinnedMessage, rhs: ChatPinnedMessage) -> Bool {
@@ -53,6 +56,12 @@ final class ChatPinnedMessage: Equatable {
             return false
         }
         if lhs.isLatest != rhs.isLatest {
+            return false
+        }
+        if lhs.index != rhs.index {
+            return false
+        }
+        if lhs.totalCount != rhs.totalCount {
             return false
         }
         return true
@@ -487,6 +496,18 @@ struct ChatPresentationInterfaceState: Equatable {
         return reply.rows.count > 0
     }
     
+    var canPinMessageInPeer: Bool {
+        if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
+            return true
+        } else if let peer = peer as? TelegramGroup, peer.canPinMessage {
+            return true
+        } else if let _ = peer as? TelegramSecretChat {
+            return false
+        } else {
+            return canPinMessage
+        }
+    }
+    
     var state:ChatState {
         if self.selectionState == nil {
             
@@ -498,7 +519,25 @@ struct ChatPresentationInterfaceState: Equatable {
                 return .editing
             }
             
-          
+            switch chatMode {
+            case .pinned:
+                if canPinMessageInPeer {
+                    return .action("Unpin All Messages", { chatInteraction in
+                        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                        (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
+                        navigation.back()
+                    })
+                } else {
+                    return .action(L10n.chatPinnedDontShow, { chatInteraction in
+                        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                        (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
+                        navigation.back()
+                    })
+                }
+                
+            default:
+                break
+            }
             
             if let peer = peer as? TelegramChannel {
                 #if APP_STORE

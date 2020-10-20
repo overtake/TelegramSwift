@@ -77,8 +77,6 @@ private final class LocationAnnotationView : MKAnnotationView {
         addSubview(control)
         
         control.set(handler: { [weak self] _ in
-            var bp:Int = 0
-            bp += 1
             (self?.annotation as? MapPin)?.focusRegion?()
         }, for: .Click)
         
@@ -128,8 +126,7 @@ class LocationPreviewMapRowItem: GeneralRowItem {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+       
     }
     
     override func viewClass() -> AnyClass {
@@ -146,6 +143,10 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         addSubview(mapView)
         mapView.register(LocationAnnotationView.self, forAnnotationViewWithReuseIdentifier: LocationAnnotationView.reuseIdentifier)
         mapView.delegate = self
+        
+        
+        mapView.showsZoomControls = true
+    //    mapView.showsUserLocation = true
     }
     
     required init?(coder: NSCoder) {
@@ -193,7 +194,6 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         let previousItem = self.item
         super.set(item: item, animated: animated)
         
-        mapView.showsZoomControls = true
         
         guard let item = item as? LocationPreviewMapRowItem else {
             return

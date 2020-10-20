@@ -618,7 +618,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                 frame.origin.x = contentFrame.minX - reply.size.width - 10
             }
-            if item.isSharable || item.isStorage || item.commentsBubbleDataOverlay != nil {
+            if item.isSharable || item.hasSource || item.commentsBubbleDataOverlay != nil {
                 if item.isIncoming {
                     frame.origin.x += 46
                 } else {
@@ -1154,7 +1154,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {
-        if item.shareVisible || item.isStorage {
+        if item.shareVisible || item.hasSource {
             var isPresented: Bool = true
             if shareView == nil {
                 shareView = ImageButton()
@@ -1182,7 +1182,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             if item.isBubbled && item.presentation.backgroundMode.hasWallpaper  {
                 
-                control.set(image: item.isStorage ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
+                control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
                 let size = NSMakeSize(control.frame.width, control.frame.height)
                 control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
@@ -1191,7 +1191,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
                 control.set(cornerRadius: .half, for: .Normal)
             } else {
-                control.set(image: item.isStorage ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
+                control.set(image: item.hasSource ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
                 control.background = .clear
             }
@@ -1199,7 +1199,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             control.removeAllHandlers()
             control.set(handler: { [ weak item] _ in
                 if let item = item {
-                    if item.isStorage {
+                    if item.hasSource {
                         item.gotoSourceMessage()
                     } else {
                         item.share()

@@ -61,7 +61,7 @@ class ChatRightView: View {
                         self.addSubview(stateView!)
                     }
                     
-                    if item.isRead && !item.isFailed && !item.isStorage {
+                    if item.isRead && !item.isFailed && !item.hasSource {
                         if readImageView == nil {
                             readImageView = ImageView()
                             addSubview(readImageView!)
