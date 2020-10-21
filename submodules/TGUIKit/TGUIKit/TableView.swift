@@ -278,6 +278,9 @@ public enum TableScrollState :Equatable {
     public static var CenterEmpty: TableScrollState {
         return .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true), inset: 0)
     }
+    public static func CenterActionEmpty(_ f:@escaping(NSView)->Void) -> TableScrollState {
+        return .center(id: 0, innerId: nil, animated: true, focus: .init(focus: true, action: f), inset: 0)
+    }
 }
 
 public extension TableScrollState {

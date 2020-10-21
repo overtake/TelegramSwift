@@ -6,12 +6,19 @@
 //  Copyright © 2016 Telegram. All rights reserved.
 //
 
+
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import SyncCore
 import Postbox
+
+
+
+
+
+
 
 
 
@@ -371,7 +378,7 @@ class ChatPinnedView : Control {
             if self.chatInteraction.mode.threadId == self.pinnedMessage.messageId {
                 self.chatInteraction.scrollToTheFirst()
             } else {
-                self.chatInteraction.focusMessageId(nil, self.pinnedMessage.messageId, .CenterEmpty)
+                self.chatInteraction.focusPinnedMessageId(self.pinnedMessage.messageId)
             }
             
         }, for: .Click)
@@ -381,7 +388,7 @@ class ChatPinnedView : Control {
                 return
             }
             if self.pinnedMessage.totalCount > 1 {
-                self.chatInteraction.openPinnedMessages()
+                self.chatInteraction.openPinnedMessages(self.pinnedMessage.messageId)
             } else {
                 self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false)
             }
