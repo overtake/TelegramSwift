@@ -88,6 +88,7 @@ final class ChatInteraction : InterfaceObserver  {
 
     //
     var focusMessageId: (MessageId?, MessageId, TableScrollState) -> Void = {_,_,_  in} // from, to, animated, position
+    var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile, Bool) -> Void = { _,_ in}
     var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?) -> Void = {_,_,_,_,_,_ in}
@@ -144,7 +145,7 @@ final class ChatInteraction : InterfaceObserver  {
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
-    var openPinnedMessages: ()->Void = { }
+    var openPinnedMessages: (MessageId)->Void = { _ in }
     var unpinAllMessages: ()->Void = {}
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
     var scrollToTheFirst: () -> Void = {}

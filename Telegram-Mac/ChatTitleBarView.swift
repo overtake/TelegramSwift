@@ -779,7 +779,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if let peerView = self.postboxView as? PeerView {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
-            if chatInteraction.context.peerId == peerView.peerId  {
+            if chatInteraction.mode == .pinned {
+                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessages)
+                status = nil
+            } else if chatInteraction.context.peerId == peerView.peerId  {
                 if chatInteraction.mode == .scheduled {
                     result = result.withUpdatedTitle(L10n.chatTitleReminder)
                 } else {
@@ -796,9 +799,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
                 status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
                 result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
-            } else if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessages)
-                status = nil
             }
             
             if chatInteraction.context.peerId == peerView.peerId {

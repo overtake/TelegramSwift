@@ -1006,7 +1006,10 @@ private struct ChatTopVisibleMessageRange: Equatable {
     var isLast: Bool
 }
 
-
+private struct ChatDismissedPins : Equatable {
+    let ids: [MessageId]
+    let tempMaxId: MessageId?
+}
 
 class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
     
@@ -1064,7 +1067,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let pollAnswersLoadingValue: Atomic<[MessageId : ChatPollStateData]> = Atomic(value: [:])
 
     private let topVisibleMessageRange = ValuePromise<ChatTopVisibleMessageRange?>(nil, ignoreRepeated: true)
-    private let dismissedPinnedIds = ValuePromise<[MessageId]>([], ignoreRepeated: true)
+    private let dismissedPinnedIds = ValuePromise<ChatDismissedPins>(ChatDismissedPins(ids: [], tempMaxId: nil), ignoreRepeated: true)
 
 
     
@@ -2568,6 +2571,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }))
         }
         
+        chatInteraction.focusPinnedMessageId = { [weak self] messageId in
+            self?.chatInteraction.focusMessageId(nil, messageId, .CenterActionEmpty { [weak self] _ in
+                self?.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(messageId)})
+            })
+          //  self?.chatInteraction.update({ $0.wi})
+        }
+        
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
             
             if let strongSelf = self {
@@ -3092,11 +3102,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.openPinnedMessages = { [weak self, unowned context] in
+        chatInteraction.openPinnedMessages = { [weak self, unowned context] messageId in
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), mode: .pinned))
+            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), mode: .pinned, messageId: messageId))
         }
         
         chatInteraction.unpinAllMessages = { [weak self, unowned context] in
@@ -3345,7 +3355,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         switch mode {
         case .history:
             switch self.chatLocation {
-            case let .peer(peerId) where peerId.namespace == Namespaces.Peer.CloudChannel:
+            case let .peer(peerId):
                 let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
                     |> castError(Bool.self)
                     |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
@@ -3377,14 +3387,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let entry = view.entries[i]
                                 var matches = false
                                 if message == nil {
-                                    matches = !dismissed.contains(entry.message.id)
+                                    matches = !dismissed.ids.contains(entry.message.id)
                                 } else if let topVisibleMessageRange = topVisibleMessageRange {
-                                    if entry.message.id < topVisibleMessageRange.lowerBound {
-                                        matches = !dismissed.contains(entry.message.id)
+                                    if entry.message.id <= topVisibleMessageRange.lowerBound {
+                                        matches = !dismissed.ids.contains(entry.message.id)
                                     }
                                 }
+                                if let tempMaxId = dismissed.tempMaxId {
+                                    var effectiveMatches = matches && entry.message.id < tempMaxId
+                                    
+                                    if matches, message == nil, i == view.entries.count - 1 {
+                                        effectiveMatches = true
+                                    }
+                                    matches = effectiveMatches
+                                }
                                 if matches {
-                                    message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
+                                    message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
                                 }
                             }
                             break
@@ -3450,7 +3468,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
-                                    .withUpdatedCanPinMessage(cachedData.canPinMessages)
+                                    .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
 //                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
@@ -3617,14 +3635,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                             
                             var pinnedMessage: ChatPinnedMessage?
-                            if peerId.namespace == Namespaces.Peer.CloudChannel {
-                                pinnedMessageId = topPinnedMessage?.messageId
-                                pinnedMessage = topPinnedMessage
-                            } else {
-                                if let pinnedMessageId = pinnedMessageId {
-                                    pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: nil, isLatest: true)
-                                }
-                            }
+                            pinnedMessageId = topPinnedMessage?.messageId
+                            pinnedMessage = topPinnedMessage
                             
 
                             present = present.withUpdatedPinnedMessageId(pinnedMessage)
@@ -3643,7 +3655,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedCanPinMessage(cachedData.canPinMessages)
+                                    .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
                                 //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages && !(present.peer is TelegramSecretChat))
                             } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                 present = present
@@ -3686,12 +3698,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 case .scheduled, .pinned:
                     self.chatInteraction.update(animated: !first.swap(false), {  presentation in
-                        return presentation.updatedPeer { _ in
+                        return presentation.withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
                             if let peerView = peerView {
                                 return peerView.peers[peerView.peerId]
                             }
                             return nil
-                            }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                        }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
                     })
                 case .replyThread:
                     self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
@@ -3858,10 +3870,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let view = view {
                 var messageIndex:MessageIndex?
 
-                
                 let visible = self.genericView.tableView.visibleRows()
-
-                
                 
                 switch scroll.direction {
                 case .top:
@@ -3895,7 +3904,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self.setLocation(location)
                 }
             }
-            
+            self.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(nil)})
         })
         
         genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
@@ -3906,9 +3915,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
             guard let `self` = self else {return}
             let tableView = self.genericView.tableView
+            let chatInteraction = self.chatInteraction
             switch self.mode {
             case .replyThread:
-                if let pinnedMessageId = self.chatInteraction.presentation.pinnedMessageId, position.visibleRows.location != NSNotFound {
+                if let pinnedMessageId = chatInteraction.presentation.pinnedMessageId, position.visibleRows.location != NSNotFound {
                     var hidden: Bool = false
                     for row in position.visibleRows.min ..< position.visibleRows.max {
                         if let item = tableView.item(at: row) as? ChatRowItem, item.effectiveCommentMessage?.id == pinnedMessageId.messageId {
@@ -5416,8 +5426,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 navigationController?.removeAll()
                 navigationController?.push(controller, false, style: .none)
             }
-            
-            dismissedPinnedIds.set(value.interfaceState.dismissedPinnedMessageId)
+            dismissedPinnedIds.set(ChatDismissedPins(ids: value.interfaceState.dismissedPinnedMessageId, tempMaxId: value.tempPinnedMaxId))
            
         }
     }

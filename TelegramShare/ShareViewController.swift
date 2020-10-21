@@ -55,7 +55,7 @@ class ShareViewController: NSViewController {
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
         
-        let logger = Logger(basePath: containerUrl.path + "/sharelogs")
+        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/sharelogs")
         logger.logToConsole = false
         logger.logToFile = false
         Logger.setSharedLogger(logger)

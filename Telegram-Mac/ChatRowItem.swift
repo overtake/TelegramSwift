@@ -597,7 +597,7 @@ class ChatRowItem: TableRowItem {
             case .pinned:
                 let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                 let controller = navigation.previousController as? ChatController
-                controller?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+                controller?.chatInteraction.focusPinnedMessageId(message.id)
                 navigation.back()
             default:
                 for attr in message.attributes {
@@ -2430,17 +2430,17 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if !message.isScheduledMessage {
+    if !message.isScheduledMessage && chatInteraction.mode == .history {
         
-        let pinText = chatInteraction.presentation.pinnedMessageId?.messageId == message.id ? L10n.messageContextUnpin : L10n.messageContextPin
-        let needUnpin = chatInteraction.presentation.pinnedMessageId?.messageId == message.id
+        let pinText = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true ? L10n.messageContextUnpin : L10n.messageContextPin
+        let needUnpin = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 if !chatInteraction.mode.isThreadMode {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
                             modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.messageId == message.id, result != .thrid)
+                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid)
                             })
                         } else {
                             chatInteraction.updatePinned(message.id, needUnpin, true)

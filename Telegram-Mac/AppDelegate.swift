@@ -209,7 +209,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
 
-        let logger = Logger(basePath: containerUrl.path + "/logs")
+        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
         logger.logToFile = UserDefaults.standard.bool(forKey: "enablelogs")
         

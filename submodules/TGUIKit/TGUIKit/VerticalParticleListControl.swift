@@ -14,6 +14,7 @@ private func + (left: CGPoint, right: CGPoint) -> CGPoint {
 private func - (left: CGPoint, right: CGPoint) -> CGPoint {
     return CGPoint(x: left.x - right.x, y: left.y - right.y)
 }
+
 private func generateParticle(_ itemSize: NSSize, foregroundColor: NSColor) -> CGImage {
     return generateImage(itemSize, contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: .zero, size: size))
@@ -24,7 +25,7 @@ private func generateParticle(_ itemSize: NSSize, foregroundColor: NSColor) -> C
 }
 
 private func generateList(_ count: Int, itemSize: NSSize, backgroundColor: NSColor, foregroundColor: NSColor, mask: Bool) -> CGImage {
-
+    
     return generateImage(NSMakeSize(itemSize.width, (itemSize.height * CGFloat(count)) + (itemSize.width * CGFloat(count - 1))), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: .zero, size: size))
         var pos: CGPoint = .zero
@@ -43,10 +44,10 @@ private func generateList(_ count: Int, itemSize: NSSize, backgroundColor: NSCol
 }
 
 public class VerticalParticleListControl: Control {
-
+    
     private let unselected = ImageView()
     private let unselectedMask = ImageView()
-
+    
     private let selected = ImageView()
     
     private var count: Int = 0
@@ -68,9 +69,9 @@ public class VerticalParticleListControl: Control {
         unselected.isEventLess = true
         selected.isEventLess = true
         unselectedMask.isEventLess = true
-        unselected.animates = true
-        unselectedMask.animates = true
-        selected.animates = true
+        //        unselected.animates = true
+        //        unselectedMask.animates = true
+        //        selected.animates = true
         addSubview(unselected)
         addSubview(selected)
         addSubview(unselectedMask)
@@ -83,7 +84,7 @@ public class VerticalParticleListControl: Control {
             itemSize.height = floor((frame.height - (CGFloat(count - 1) * frame.width)) / CGFloat(count))
         }
         
-       
+        
         if self.count != count {
             self.unselected.image = generateList(count, itemSize: itemSize, backgroundColor: presentation.colors.background, foregroundColor: presentation.colors.accentIcon.withAlphaComponent(0.2), mask: false)
             self.unselected.sizeToFit()
@@ -103,8 +104,9 @@ public class VerticalParticleListControl: Control {
         let itemPos = NSMakePoint(0, floor((itemSize.height * CGFloat(selectedIndex)) + (CGFloat(selectedIndex) * itemSize.width)))
         let maxDifference = -(unselected.frame.height - frame.height)
         if count > 3 {
-            let topDifference = (itemPos.y + itemSize.height) - frame.height
-            pos = NSMakePoint(0, max(min(0, -(topDifference + floor((frame.height - itemSize.height) / 2))), maxDifference))
+            let topDifference = itemPos.y + itemSize.height - frame.height
+            pos = NSMakePoint(0, max(min(0, -topDifference - ((frame.height - itemSize.height) / 2)), maxDifference))
+            
         }
         
         if pos.y == 0 {
@@ -124,7 +126,7 @@ public class VerticalParticleListControl: Control {
         self.unselectedMask.setFrameOrigin(pos)
         
         self.selected.setFrameOrigin(selectedPoint)
-
+        
         self.count = count
         self.itemSize = itemSize
         self.selectedIndex = selectedIndex
