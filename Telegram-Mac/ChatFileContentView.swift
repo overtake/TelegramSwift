@@ -84,7 +84,13 @@ class ChatFileContentView: ChatMediaContentView {
             if media.isGraphicFile || media.isVideoFile {
                 showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters, type: media.isVideoFile ? .alone : .history)
             } else {
-                QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
+                    confirm(for: context.window, information: L10n.chatFileQuickLookSvg, successHandler: { _ in
+                        QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                    })
+                } else {
+                    QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
+                }
             }
         }
     }

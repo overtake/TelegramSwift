@@ -11,6 +11,8 @@ import Postbox
 import TelegramCore
 import SyncCore
 import TGUIKit
+import MapKit
+
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)
 }
@@ -262,4 +264,17 @@ func stringForFullDate(timestamp: Int32) -> String {
     default:
         return ""
     }
+}
+private var sharedDistanceFormatter: MKDistanceFormatter?
+func stringForDistance(distance: CLLocationDistance) -> String {
+    let distanceFormatter: MKDistanceFormatter
+    if let currentDistanceFormatter = sharedDistanceFormatter {
+        distanceFormatter = currentDistanceFormatter
+    } else {
+        distanceFormatter = MKDistanceFormatter()
+        distanceFormatter.unitStyle = .full
+        sharedDistanceFormatter = distanceFormatter
+    }
+    
+    return distanceFormatter.string(fromDistance: distance)
 }

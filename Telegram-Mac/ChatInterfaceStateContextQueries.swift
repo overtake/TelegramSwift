@@ -16,7 +16,7 @@ import Postbox
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
     switch chatPresentationInterfaceState.state {
-    case .normal:
+    case .normal, .editing:
         if inputQuery != .none {
             if inputQuery == currentQuery {
                 return nil

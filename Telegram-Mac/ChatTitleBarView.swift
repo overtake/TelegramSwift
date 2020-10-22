@@ -780,7 +780,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
             if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessages)
+                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessagesCountable(chatInteraction.presentation.pinnedMessageId?.totalCount ?? 0))
                 status = nil
             } else if chatInteraction.context.peerId == peerView.peerId  {
                 if chatInteraction.mode == .scheduled {

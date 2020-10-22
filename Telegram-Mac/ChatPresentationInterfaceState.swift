@@ -524,7 +524,7 @@ struct ChatPresentationInterfaceState: Equatable {
             switch chatMode {
             case .pinned:
                 if canPinMessageInPeer {
-                    return .action("Unpin All Messages", { chatInteraction in
+                    return .action(L10n.chatPinnedUnpinAllCountable(pinnedMessageId?.totalCount ?? 0), { chatInteraction in
                         let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
                         navigation.back()

@@ -39,22 +39,44 @@ class ChatInputAttachView: ImageButton, Notifable {
                 
                 var items:[SPopoverItem] = []
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
-                    
-                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
-                        self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                    }, theme.icons.chatAttachPhoto))
-                    
                     if editState.message.groupingKey == nil {
+                        items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                            self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                        }, theme.icons.chatAttachPhoto))
+                        
                         items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
                             self?.chatInteraction.updateEditingMessageMedia(nil, false)
                         }, theme.icons.chatAttachFile))
+                        
+                        if media is TelegramMediaImage {
+                            items.append(SPopoverItem(L10n.editMessageEditCurrentPhoto, { [weak self] in
+                                self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
+                            }, theme.icons.editMessageCurrentPhoto))
+                        }
+                    } else {
+                        if let _ = editState.message.media.first as? TelegramMediaImage {
+                            items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                                self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                            }, theme.icons.chatAttachPhoto))
+                        } else if let file = editState.message.media.first as? TelegramMediaFile {
+                            if file.isVideoFile {
+                                items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                                    self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                                }, theme.icons.chatAttachPhoto))
+                            }
+                            if file.isMusic {
+                                items.append(SPopoverItem(L10n.inputAttachPopoverMusic, { [weak self] in
+                                    self?.chatInteraction.updateEditingMessageMedia(audioExts, false)
+                                }, theme.icons.chatAttachFile))
+                            } else {
+                                items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                                    self?.chatInteraction.updateEditingMessageMedia(nil, false)
+                                }, theme.icons.chatAttachFile))
+                            }
+                        }
                     }
                     
-                    if media is TelegramMediaImage {
-                        items.append(SPopoverItem(L10n.editMessageEditCurrentPhoto, { [weak self] in
-                            self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
-                        }, theme.icons.editMessageCurrentPhoto))
-                    }
+                    
                     
                     
                 } else if chatInteraction.presentation.interfaceState.editState == nil {

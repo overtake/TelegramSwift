@@ -2424,7 +2424,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     items.append(ContextSeparatorItem())
     
-    if canEditMessage(message, context: context){
+    if canEditMessage(message, context: context), chatInteraction.mode != .pinned {
         items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
             chatInteraction.beginEditingMessage(message)
         }))
