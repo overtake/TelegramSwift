@@ -287,7 +287,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
-                
+        
+        self.scrollCompletion?(false)
         self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
         if animated {
