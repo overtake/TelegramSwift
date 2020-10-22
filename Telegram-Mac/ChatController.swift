@@ -707,10 +707,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         if case let .groupedPhotos(entries, _) = entry.appearance.entry {
                             for inner in entries {
                                 if case let .MessageEntry(values) = inner {
-                                    
-                                    //                                    if !scrollIndex.isLess(than: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) && scrollIndex.isLessOrEqual(to: MessageIndex(values.0.withUpdatedTimestamp(values.0.timestamp - Int32(timeDifference)))) {
-
-                                    
                                     let timestamp = Int32(min(TimeInterval(values.0.timestamp) - timeDifference, TimeInterval(Int32.max)))
 
                                     let messageIndex = MessageIndex(values.0.withUpdatedTimestamp(timestamp))
@@ -3151,6 +3147,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self.chatInteraction.update({ state in
                     return state.updatedInterfaceState { $0.withAddedDismissedPinnedIds(state.pinnedMessageId?.others.map { $0 } ?? [] )}
                 })
+                self.navigationController?.back()
             }
 
             

@@ -527,13 +527,11 @@ struct ChatPresentationInterfaceState: Equatable {
                     return .action(L10n.chatPinnedUnpinAllCountable(pinnedMessageId?.totalCount ?? 0), { chatInteraction in
                         let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                        navigation.back()
                     })
                 } else {
                     return .action(L10n.chatPinnedDontShow, { chatInteraction in
                         let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                        navigation.back()
                     })
                 }
                 
