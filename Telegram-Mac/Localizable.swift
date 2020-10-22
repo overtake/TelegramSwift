@@ -1369,6 +1369,34 @@ internal final class L10n {
   internal static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
   internal static var chatTitleFeed: String  { return L10n.tr("Localizable", "Chat.TitleFeed") }
+  /// %d
+  internal static func chatUnpinAllMessagesConfirmationCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_countable", p1)
+  }
+  /// Do you want to unpin all %d messages in this chat?
+  internal static func chatUnpinAllMessagesConfirmationFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_few", p1)
+  }
+  /// Do you want to unpin all %d messages in this chat?
+  internal static func chatUnpinAllMessagesConfirmationMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_many", p1)
+  }
+  /// Do you want to unpin all %d message in this chat?
+  internal static func chatUnpinAllMessagesConfirmationOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_one", p1)
+  }
+  /// Do you want to unpin all %d messages in this chat?
+  internal static func chatUnpinAllMessagesConfirmationOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_other", p1)
+  }
+  /// Do you want to unpin all %d messages in this chat?
+  internal static func chatUnpinAllMessagesConfirmationTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_two", p1)
+  }
+  /// Do you want to unpin all %d messages in this chat?
+  internal static func chatUnpinAllMessagesConfirmationZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_zero", p1)
+  }
   /// VIEW BACKGROUND
   internal static var chatViewBackground: String  { return L10n.tr("Localizable", "Chat.ViewBackground") }
   /// VIEW CONTACT
@@ -1555,6 +1583,8 @@ internal final class L10n {
   internal static var chatEmptyLinkPreview: String  { return L10n.tr("Localizable", "Chat.Empty.LinkPreview") }
   /// No replies here yet
   internal static var chatEmptyReplies: String  { return L10n.tr("Localizable", "Chat.Empty.Replies") }
+  /// Previewing this file can potentially expose your IP address to its sender.
+  internal static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Sorry, this group is not accessible.
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// Pinned message
@@ -2003,8 +2033,6 @@ internal final class L10n {
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
   }
-  /// geo proximity reached
-  internal static var chatServiceGeoProximityReached: String  { return L10n.tr("Localizable", "Chat.Service.GeoProximityReached") }
   /// You have successfully transferred **%@** to **%@** for **%@**
   internal static func chatServicePaymentSent(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent", p1, p2, p3)
@@ -2131,8 +2159,34 @@ internal final class L10n {
   internal static var chatTitleCommentsZero: String  { return L10n.tr("Localizable", "Chat.Title.Comments_zero") }
   /// Discussion
   internal static var chatTitleDiscussion: String  { return L10n.tr("Localizable", "Chat.Title.Discussion") }
-  /// Pinned Messages
-  internal static var chatTitlePinnedMessages: String  { return L10n.tr("Localizable", "Chat.Title.PinnedMessages") }
+  /// %d
+  internal static func chatTitlePinnedMessagesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_countable", p1)
+  }
+  /// %d Pinned Messages
+  internal static func chatTitlePinnedMessagesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_few", p1)
+  }
+  /// %d Pinned Messages
+  internal static func chatTitlePinnedMessagesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_many", p1)
+  }
+  /// %d Pinned Message
+  internal static func chatTitlePinnedMessagesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_one", p1)
+  }
+  /// %d Pinned Messages
+  internal static func chatTitlePinnedMessagesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_other", p1)
+  }
+  /// %d Pinned Messages
+  internal static func chatTitlePinnedMessagesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_two", p1)
+  }
+  /// %d Pinned Messages
+  internal static func chatTitlePinnedMessagesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.PinnedMessages_zero", p1)
+  }
   /// Reminder
   internal static var chatTitleReminder: String  { return L10n.tr("Localizable", "Chat.Title.Reminder") }
   /// %d
@@ -3725,6 +3779,8 @@ internal final class L10n {
   internal static var inputAttachPopoverFile: String  { return L10n.tr("Localizable", "InputAttach.Popover.File") }
   /// Location
   internal static var inputAttachPopoverLocation: String  { return L10n.tr("Localizable", "InputAttach.Popover.Location") }
+  /// Audio File
+  internal static var inputAttachPopoverMusic: String  { return L10n.tr("Localizable", "InputAttach.Popover.Music") }
   /// Photo Or Video
   internal static var inputAttachPopoverPhotoOrVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.PhotoOrVideo") }
   /// Camera
@@ -4397,6 +4453,14 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
+  /// %1$@ is now within %2$@ from %3$@
+  internal static func notificationProximityReached(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Notification.ProximityReached", p1, p2, p3)
+  }
+  /// %1$@ is now within %2$@ from you
+  internal static func notificationProximityReachedYou(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.ProximityReachedYou", p1, p2)
+  }
   /// 📆 Reminder
   internal static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// All Accounts

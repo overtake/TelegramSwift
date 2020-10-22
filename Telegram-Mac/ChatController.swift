@@ -503,7 +503,7 @@ class ChatControllerView : View, ChatInputDelegate {
             } else {
                 state = .none
             }
-        } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage {
+        } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
             state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
            state = .none
@@ -3113,45 +3113,48 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .pinned, additionalData: [])
-                |> castError(Bool.self)
-                |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
-                    switch update {
-                    case let .Loading(_, type):
-                        if case .Generic(.FillHole) = type {
-                            return .fail(true)
-                        }
-                    case let .HistoryView(_, type, _, _):
-                        if case .Generic(.FillHole) = type {
-                            return .fail(true)
-                        }
-                    }
-                    return .single(update)
-                })
-                |> restartIfError
-                |> deliverOnMainQueue
-                |> take(until: { update in
-                    switch update {
-                    case .Loading:
-                        return .init(passthrough: false, complete: false)
-                    case let .HistoryView(view, _, _, _):
-                        if view.isLoading {
-                            return .init(passthrough: false, complete: false)
-                        } else {
-                            return .init(passthrough: true, complete: true)
-                        }
-                    }
-                })
-                
             
-            _ = replyHistory.start(next: { [weak self] update in
-                switch update {
-                case let .HistoryView(view, _, _, _):
-                    self?.chatInteraction.update({$0.updatedInterfaceState { $0.withAddedDismissedPinnedIds(view.entries.map { $0.message.id })}})
+            guard let peer = self.chatInteraction.presentation.peer else {
+                return
+            }
+            
+            var canManagePin = false
+            if let channel = peer as? TelegramChannel {
+                canManagePin = channel.hasPermission(.pinMessages)
+            } else if let group = peer as? TelegramGroup {
+                switch group.role {
+                case .creator, .admin:
+                    canManagePin = true
                 default:
-                    break
+                    if let defaultBannedRights = group.defaultBannedRights {
+                        canManagePin = !defaultBannedRights.flags.contains(.banPinMessages)
+                    } else {
+                        canManagePin = true
+                    }
                 }
-            })
+            } else if let _ = peer as? TelegramUser, self.chatInteraction.presentation.canPinMessage {
+                canManagePin = true
+            }
+
+            if canManagePin {
+                let count = self.chatInteraction.presentation.pinnedMessageId?.totalCount ?? 1
+                
+                confirm(for: context.window, information: L10n.chatUnpinAllMessagesConfirmationCountable(count), okTitle: L10n.modalCancel, cancelTitle: L10n.chatConfirmUnpinOK, successHandler: { [weak self] _ in
+                    let _ = (requestUnpinAllMessages(account: context.account, peerId: peerId)
+                        |> deliverOnMainQueue).start(error: { _ in
+                            
+                        }, completed: { [weak self] in
+                            self?.navigationController?.back()
+                        })
+                })
+            } else {
+                self.chatInteraction.update({ state in
+                    return state.updatedInterfaceState { $0.withAddedDismissedPinnedIds(state.pinnedMessageId?.others.map { $0 } ?? [] )}
+                })
+            }
+
+            
+            
         }
         
         chatInteraction.reportSpamAndClose = { [weak self] in
@@ -3413,6 +3416,37 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             default:
                 topPinnedMessage = .single(nil)
             }
+        case .pinned:
+            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
+                |> castError(Bool.self)
+                |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
+                    switch update {
+                    case let .Loading(_, type):
+                        if case .Generic(.FillHole) = type {
+                            return .fail(true)
+                        }
+                    case let .HistoryView(_, type, _, _):
+                        if case .Generic(.FillHole) = type {
+                            return .fail(true)
+                        }
+                    }
+                    return .single(update)
+                })
+                |> restartIfError
+            
+            topPinnedMessage = replyHistory
+                |> map { update -> ChatPinnedMessage? in
+                    switch update {
+                    case .Loading:
+                        break
+                    case let .HistoryView(view, _, _, _):
+                        if let first = view.entries.first {
+                            return ChatPinnedMessage(messageId: first.message.id, message: first.message, others: view.entries.map { $0.message.id }, isLatest: true, index: 0, totalCount: view.entries.count)
+                        }
+                    }
+                    return nil
+                }
+                |> distinctUntilChanged
         default:
             topPinnedMessage = .single(nil)
         }
@@ -3696,9 +3730,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         return presentation
                     })
-                case .scheduled, .pinned:
+                case .scheduled:
                     self.chatInteraction.update(animated: !first.swap(false), {  presentation in
                         return presentation.withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
+                            if let peerView = peerView {
+                                return peerView.peers[peerView.peerId]
+                            }
+                            return nil
+                        }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                    })
+                case .pinned:
+                    self.chatInteraction.update(animated: !first.swap(false), { presentation in
+                        var pinnedMessage: ChatPinnedMessage?
+                        pinnedMessage = topPinnedMessage
+                        
+                        return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
                             if let peerView = peerView {
                                 return peerView.peers[peerView.peerId]
                             }
@@ -4338,6 +4384,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
 //
             loadSharedMediaDisposable.set(combineLatest(tabItems).start())
+        }
+        
+        switch self.mode {
+        case .pinned:
+            if genericView.tableView.isEmpty {
+                navigationController?.back()
+            }
+        default:
+            break
         }
     }
     

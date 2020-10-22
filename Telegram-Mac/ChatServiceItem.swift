@@ -295,6 +295,24 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
+                case let .geoProximityReached(_, toId, distance):
+                    let distanceString = stringForDistance(distance: Double(distance))
+                    if toId == context.peerId {
+                        let _ = attributedString.append(string: L10n.notificationProximityReachedYou(authorName, distanceString), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    } else {
+                        let _ = attributedString.append(string: L10n.notificationProximityReached(authorName, distanceString, message.peers[toId]?.displayTitle ?? ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    }
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                    if let peer = message.peers[toId], !peer.displayTitle.isEmpty {
+                        let range = attributedString.string.nsstring.range(of: peer.displayTitle)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                    
                 default:
                     break
                 }

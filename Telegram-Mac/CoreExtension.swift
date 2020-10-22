@@ -2469,33 +2469,24 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
             if isGif {
                 gifCount += 1
             }
-            if !isMusic || !isVoice || !isGif {
-                if mime.hasPrefix("image"), let image = NSImage(contentsOf: url) {
-                    if image.size.width / 10 > image.size.height || image.size.height < 40 {
-                        canCollage = false
-                        break
-                    }
-                }
-                if (!photoExts.contains(url.pathExtension.lowercased()) && !videoExts.contains(url.pathExtension.lowercased())) {
-                    canCollage = false
-                    break
-                }
-            }
         }
     }
     
-    if musicCount > 0 && musicCount == urls.count {
-        return canCollage
+    if musicCount > 0 {
+        if musicCount == urls.count {
+            return true
+        } else {
+            return false
+        }
     }
     if voiceCount > 0 {
-        return canCollage
+        return false
     }
-    if gifCount > 0 && gifCount == urls.count {
-        return canCollage
+    if gifCount > 0 {
+        return false
     }
 
-    
-    return false
+    return canCollage
 }
 
 extension AutomaticMediaDownloadSettings {
