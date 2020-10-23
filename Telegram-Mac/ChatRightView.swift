@@ -158,11 +158,14 @@ class ChatRightView: View {
             if let likes = item.likes {
                 viewsOffset += likes.0.size.width + 18
                 let icon = item.presentation.chat.likedIcon(item)
-                
                 ctx.draw(icon, in: NSMakeRect(likes.0.size.width + 2 + item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 1 : 0) : 0, icon.backingSize.width, icon.backingSize.height))
-                
                 likes.1.draw(NSMakeRect(item.stateOverlayAdditionCorner, item.isBubbled ? (item.isStateOverlayLayout ? 2 : 1) : 0, likes.0.size.width, likes.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
 
+            }
+            if item.isPinned {
+                let icon = item.presentation.chat.messagePinnedIcon(item)
+                ctx.draw(icon, in: NSMakeRect(viewsOffset + (item.isStateOverlayLayout ? 4 : 0), item.isBubbled ? (item.isStateOverlayLayout ? 3 : 2) : 2, icon.backingSize.width, icon.backingSize.height))
+                viewsOffset += icon.backingSize.width + (item.isStateOverlayLayout ? 4 : 0)
             }
             
             if let channelViews = item.channelViews {

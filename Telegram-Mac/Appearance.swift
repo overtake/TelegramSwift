@@ -1552,6 +1552,17 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
+    private var _chat_pinned_message_overlay_service_bubble: CGImage?
+    var chat_pinned_message_overlay_service_bubble: CGImage {
+        if let icon = _chat_pinned_message_overlay_service_bubble {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            _chat_pinned_message_overlay_service_bubble = new
+            return new
+        }
+    }
+    
     
     private var _chat_reply_count_overlay_service_bubble: CGImage?
     var chat_reply_count_overlay_service_bubble: CGImage {
@@ -2328,7 +2339,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                group_selection_foreground: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayText.withAlphaComponent(0.4), backgroundColor: palette.chatBackground) },
                                                group_selection_foreground_bubble_incoming: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_incoming.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackground_incoming) },
                                                group_selection_foreground_bubble_outgoing: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_outgoing.withAlphaComponent(0.4), backgroundColor: palette.bubbleBackgroundTop_outgoing) },
-                                               chat_pinned_list: { NSImage(named: "Icon_ChatPinnedList")!.precomposed(palette.accentIcon) }
+                                               chat_pinned_list: { NSImage(named: "Icon_ChatPinnedList")!.precomposed(palette.accentIcon) },
+                                               chat_pinned_message: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.accentIcon) },
+                                               chat_pinned_message_bubble_incoming: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
+                                               chat_pinned_message_bubble_outgoing: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
+                                               chat_pinned_message_overlay_bubble: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(.white, flipVertical: true) }
 
     )
 

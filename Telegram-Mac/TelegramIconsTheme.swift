@@ -7193,6 +7193,58 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_pinned_message: CGImage {
+      if let image = cached.with({ $0["chat_pinned_message"] }) {
+          return image
+      } else {
+          let image = _chat_pinned_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_pinned_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_pinned_message_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["chat_pinned_message_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _chat_pinned_message_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_pinned_message_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_pinned_message_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["chat_pinned_message_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _chat_pinned_message_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_pinned_message_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_pinned_message_overlay_bubble: CGImage {
+      if let image = cached.with({ $0["chat_pinned_message_overlay_bubble"] }) {
+          return image
+      } else {
+          let image = _chat_pinned_message_overlay_bubble()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_pinned_message_overlay_bubble"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7747,6 +7799,10 @@ final class TelegramIconsTheme {
   private let _group_selection_foreground_bubble_incoming: ()->CGImage
   private let _group_selection_foreground_bubble_outgoing: ()->CGImage
   private let _chat_pinned_list: ()->CGImage
+  private let _chat_pinned_message: ()->CGImage
+  private let _chat_pinned_message_bubble_incoming: ()->CGImage
+  private let _chat_pinned_message_bubble_outgoing: ()->CGImage
+  private let _chat_pinned_message_overlay_bubble: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8301,7 +8357,11 @@ final class TelegramIconsTheme {
       group_selection_foreground: @escaping()->CGImage,
       group_selection_foreground_bubble_incoming: @escaping()->CGImage,
       group_selection_foreground_bubble_outgoing: @escaping()->CGImage,
-      chat_pinned_list: @escaping()->CGImage
+      chat_pinned_list: @escaping()->CGImage,
+      chat_pinned_message: @escaping()->CGImage,
+      chat_pinned_message_bubble_incoming: @escaping()->CGImage,
+      chat_pinned_message_bubble_outgoing: @escaping()->CGImage,
+      chat_pinned_message_overlay_bubble: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8856,5 +8916,9 @@ final class TelegramIconsTheme {
       self._group_selection_foreground_bubble_incoming = group_selection_foreground_bubble_incoming
       self._group_selection_foreground_bubble_outgoing = group_selection_foreground_bubble_outgoing
       self._chat_pinned_list = chat_pinned_list
+      self._chat_pinned_message = chat_pinned_message
+      self._chat_pinned_message_bubble_incoming = chat_pinned_message_bubble_incoming
+      self._chat_pinned_message_bubble_outgoing = chat_pinned_message_bubble_outgoing
+      self._chat_pinned_message_overlay_bubble = chat_pinned_message_overlay_bubble
   }
 }
