@@ -392,21 +392,21 @@ class ChatGroupedItem: ChatRowItem {
                 items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
                     if peer.isSupergroup {
                         modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                            chatInteraction.updatePinned(message.id, false, result != .thrid)
+                            chatInteraction.updatePinned(message.id, false, result != .thrid, false)
                         })
                     } else {
-                        chatInteraction.updatePinned(message.id, false, true)
+                        chatInteraction.updatePinned(message.id, false, true, false)
                     }
                 }))
             }
         } else if message.id.peerId == account.peerId, chatInteraction.mode == .history {
             items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-                chatInteraction.updatePinned(message.id, false, true)
+                chatInteraction.updatePinned(message.id, false, true, false)
             }))
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, chatInteraction.mode == .history {
             items.append(ContextMenuItem(L10n.messageContextPin, handler: {
                 modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                    chatInteraction.updatePinned(message.id, false, result == .thrid)
+                    chatInteraction.updatePinned(message.id, false, result == .thrid, false)
                 })
             }))
         }

@@ -114,7 +114,7 @@ final class ChatInteraction : InterfaceObserver  {
     var returnGroup:()->Void = {}
     var shareContact:(TelegramUser)->Void = {_ in}
     var unblock:()->Void = {}
-    var updatePinned:(MessageId, Bool, Bool)->Void = {_,_,_ in}
+    var updatePinned:(MessageId, Bool, Bool, Bool)->Void = {_,_,_,_ in}
     var reportSpamAndClose:()->Void = {}
     var dismissPeerStatusOptions:()->Void = {}
     var toggleSidebar:()->Void = {}
@@ -149,7 +149,6 @@ final class ChatInteraction : InterfaceObserver  {
     var unpinAllMessages: ()->Void = {}
     var setLocation: (ChatHistoryLocation)->Void = { _ in }
     var scrollToTheFirst: () -> Void = {}
-    
     var openReplyThread:(MessageId, Bool, Bool, ReplyThreadMode)->Void = {  _, _, _, _ in }
 
     func chatLocationInput() -> ChatLocationInput {

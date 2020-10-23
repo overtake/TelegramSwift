@@ -2430,46 +2430,46 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if !message.isScheduledMessage && chatInteraction.mode == .history {
+    if !message.isScheduledMessage {
         
         let pinText = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true ? L10n.messageContextUnpin : L10n.messageContextPin
         let needUnpin = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                if !chatInteraction.mode.isThreadMode {
+                if !chatInteraction.mode.isThreadMode, (needUnpin || chatInteraction.mode != .pinned) {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
-                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid)
+                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                                chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid, false)
                             })
                         } else {
-                            chatInteraction.updatePinned(message.id, needUnpin, true)
+                            chatInteraction.updatePinned(message.id, needUnpin, true, false)
                         }
                     }))
                 }
             }
         } else if message.id.peerId == account.peerId {
             items.append(ContextMenuItem(pinText, handler: {
-                chatInteraction.updatePinned(message.id, needUnpin, true)
+                chatInteraction.updatePinned(message.id, needUnpin, true, false)
             }))
-        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage {
+        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
-                        chatInteraction.updatePinned(message.id, needUnpin, result == .thrid)
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                        chatInteraction.updatePinned(message.id, needUnpin, result == .thrid, false)
                     })
                 } else {
-                    chatInteraction.updatePinned(message.id, needUnpin, false)
+                    chatInteraction.updatePinned(message.id, needUnpin, false, false)
                 }
             }))
-        } else if chatInteraction.presentation.canPinMessage {
+        } else if chatInteraction.presentation.canPinMessage, let peer = chatInteraction.peer, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, successHandler: { _ in
-                        chatInteraction.updatePinned(message.id, needUnpin, false)
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), successHandler: { result in
+                        chatInteraction.updatePinned(message.id, needUnpin, false, result != .thrid)
                     })
                 } else {
-                    chatInteraction.updatePinned(message.id, needUnpin, false)
+                    chatInteraction.updatePinned(message.id, needUnpin, false, false)
                 }
             }))
         }
