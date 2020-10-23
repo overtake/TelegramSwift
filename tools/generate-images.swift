@@ -604,6 +604,12 @@ func initialize() -> [String] {
     
     array.append("chat_pinned_list")
     
+    array.append("chat_pinned_message")
+    array.append("chat_pinned_message_bubble_incoming")
+    array.append("chat_pinned_message_bubble_outgoing")
+    array.append("chat_pinned_message_overlay_bubble")
+    
+
     return array
 }
 //swift ./tools/generate-images.swift

@@ -257,6 +257,9 @@ class ChatRowItem: TableRowItem {
         if let likes = likes {
             size.width += likes.0.size.width + 18
         }
+        if isPinned {
+            size.width += 14
+        }
         
         if let postAuthor = postAuthor {
             size.width += postAuthor.0.size.width + 8
@@ -760,6 +763,13 @@ class ChatRowItem: TableRowItem {
     var isFailed: Bool {
         if let message = message {
             return message.flags.contains(.Failed)
+        }
+        return false
+    }
+    
+    var isPinned: Bool {
+        if let message = firstMessage {
+            return message.tags.contains(.pinned)
         }
         return false
     }
@@ -2465,7 +2475,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         } else if chatInteraction.presentation.canPinMessage, let peer = chatInteraction.peer, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, false, result != .thrid)
                     })
                 } else {
