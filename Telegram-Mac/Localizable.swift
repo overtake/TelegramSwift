@@ -1455,6 +1455,10 @@ internal final class L10n {
   internal static var chatConfirmDeleteMessagesZero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_zero") }
   /// Delete for Everyone
   internal static var chatConfirmDeleteMessagesForEveryone: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessagesForEveryone") }
+  /// Pin for me and %@
+  internal static func chatConfirmPinFor(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Confirm.PinFor", p1)
+  }
   /// Report Spam?
   internal static var chatConfirmReportSpam: String  { return L10n.tr("Localizable", "Chat.Confirm.ReportSpam") }
   /// Are you sure you want to report spam from this user?

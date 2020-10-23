@@ -1151,7 +1151,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
 
     override func scrollup(force: Bool = false) -> Void {
+        chatInteraction.update({ $0.withUpdatedTempPinnedMaxId(nil) })
         if let reply = historyState.reply() {
+            
             chatInteraction.focusMessageId(nil, reply, .CenterEmpty)
             historyState = historyState.withRemovingReplies(max: reply)
         } else {
@@ -2067,7 +2069,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
-            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil)
+            let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
             self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil)
         }
         
@@ -3064,10 +3066,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent in
+        chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
             if let `self` = self {
                 
-                let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear(id: pinnedId) : .pin(id: pinnedId, silent: silent)
+                let pinnedUpdate: PinnedMessageUpdate = dismiss ? .clear(id: pinnedId) : .pin(id: pinnedId, silent: silent, forThisPeerOnlyIfPossible: forThisPeerOnlyIfPossible)
                 let peerId = self.chatInteraction.peerId
                 if let peer = self.chatInteraction.peer as? TelegramChannel {
                     if peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
@@ -3078,7 +3080,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else {
                         self.chatInteraction.update({$0.updatedInterfaceState({$0.withAddedDismissedPinnedIds([pinnedId])})})
                     }
-                } else if self.chatInteraction.peerId == context.peerId {
+                } else if self.chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
                     if dismiss {
                         confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { _ in
                             self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
@@ -3135,7 +3137,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if canManagePin {
                 let count = self.chatInteraction.presentation.pinnedMessageId?.totalCount ?? 1
                 
-                confirm(for: context.window, information: L10n.chatUnpinAllMessagesConfirmationCountable(count), okTitle: L10n.modalCancel, cancelTitle: L10n.chatConfirmUnpinOK, successHandler: { [weak self] _ in
+                confirm(for: context.window, information: L10n.chatUnpinAllMessagesConfirmationCountable(count), okTitle: L10n.chatConfirmUnpinOK, cancelTitle: L10n.modalCancel, successHandler: { [weak self] _ in
                     let _ = (requestUnpinAllMessages(account: context.account, peerId: peerId)
                         |> deliverOnMainQueue).start(error: { _ in
                             
@@ -3740,8 +3742,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self.chatInteraction.update(animated: !first.swap(false), { presentation in
                         var pinnedMessage: ChatPinnedMessage?
                         pinnedMessage = topPinnedMessage
-                        
-                        return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
+                        return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage((peerView?.cachedData as? CachedUserData)?.canPinMessages ?? true || context.peerId == peerId).updatedPeer { _ in
                             if let peerView = peerView {
                                 return peerView.peers[peerView.peerId]
                             }

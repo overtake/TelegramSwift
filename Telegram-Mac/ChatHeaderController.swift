@@ -390,7 +390,7 @@ class ChatPinnedView : Control {
             if self.pinnedMessage.totalCount > 1 {
                 self.chatInteraction.openPinnedMessages(self.pinnedMessage.messageId)
             } else {
-                self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false)
+                self.chatInteraction.updatePinned(self.pinnedMessage.messageId, true, false, false)
             }
         }, for: .SingleClick)
         

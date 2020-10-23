@@ -102,6 +102,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 
+
 @interface TGGrowingTextView ()
     @property (nonatomic, strong) NSUndoManager *undo;
     @property (nonatomic, strong) NSMutableArray<MarkdownUndoItem *> *markdownItems;
@@ -1226,8 +1227,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         }
         
         
+        NSMutableAttributedString *storage = [_textView.attributedString mutableCopy];
         
-        [_textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
+        [storage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
         
         
         
@@ -1250,7 +1252,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
             TGInputTextTagAndRange *tagAndRange = inputTextTags[i];
             if ([removeTags containsObject:@(tagAndRange.tag.uniqueId)]) {
                 [inputTextTags removeObjectAtIndex:i];
-                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                 
                 i--;
             } else {
@@ -1265,9 +1267,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                 
                 if (j != (NSInteger)tagAndRange.range.location) {
                     NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                    [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                    [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                     
-                    [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                    [storage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                     
                     inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                     
@@ -1286,9 +1288,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                     
                     if (j < ((NSInteger)tagAndRange.range.location)) {
                         NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                        [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                        [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                         
-                        [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                        [storage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                         
                         inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                         
@@ -1303,23 +1305,24 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                             NSInteger candidateStart = tagAndRange.range.location + tagAndRange.range.length;
                             NSInteger candidateEnd = nextTagAndRange == nil ? string.length : nextTagAndRange.range.location;
                             NSInteger j = candidateStart;
-                            while (j < candidateEnd) {
-                                unichar c = [string.string characterAtIndex:j];
-                                NSCharacterSet *alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
-                                if (![alphanumericSet characterIsMember:c]) {
-                                    break;
+                            if (candidateStart > 0 && [alphanumericSet characterIsMember:[string.string characterAtIndex:candidateStart - 1]]) {
+                                while (j < candidateEnd) {
+                                    unichar c = [string.string characterAtIndex:j];
+                                    NSCharacterSet *alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
+                                    if (![alphanumericSet characterIsMember:c]) {
+                                        break;
+                                    }
+                                    j++;
                                 }
-                                j++;
-                            }
-                            
+                            }                            
                             if (j == candidateStart) {
                                 [removeTags addObject:@(tagAndRange.tag.uniqueId)];
-                                [_textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
+                                [storage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
                             } else {
-                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                                [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                                [storage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 
                                 i--;
@@ -1339,30 +1342,30 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
                             }
                             
                             if (j == candidateEnd) {
-                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                                [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
-                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:nextTagAndRange.range];
+                                [storage removeAttribute:TGCustomLinkAttributeName range:nextTagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, nextTagAndRange.range.location + nextTagAndRange.range.length - tagAndRange.range.location);
                                 
-                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                                [storage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 [inputTextTags removeObjectAtIndex:i + 1];
                                 
                                 i--;
                             } else if (j != candidateStart) {
-                                [_textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                                [storage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
                                 NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [_textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                                [storage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
                                 
                                 inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                                 
                                 i--;
                             } else {
                                 [removeTags addObject:@(tagAndRange.tag.uniqueId)];
-                                [_textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
+                                [storage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
                             }
                         }
                     }
@@ -1370,12 +1373,14 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
             }
         }
         
-        
+        [_textView.textStorage setAttributedString:storage];
+        [self setSelectedRange:self.selectedRange];
+
     } @catch (NSException *exception) {
         
     }
     
-    [self setSelectedRange:self.selectedRange];
+    
 }
     
 -(void)boldWord {
@@ -1460,7 +1465,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 - (void)addSimpleItem:(SimpleUndoItem *)item {
     [self.inputView addSimpleItem:item];
-    [self update: YES];
+    //[self update: YES];
 }
     
 -(void)addInputTextTag:(TGInputTextTag *)tag range:(NSRange)range {

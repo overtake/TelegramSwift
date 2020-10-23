@@ -223,7 +223,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             case let .index(index):
                 signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             case let .id(id):
-                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocation, count: count, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocation, count: count, ignoreRelatedChats: false, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
