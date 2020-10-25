@@ -1463,7 +1463,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 - (void)addSimpleItem:(SimpleUndoItem *)item {
     [self.inputView addSimpleItem:item];
-    //[self update: YES];
+    [self update: YES];
 }
     
 -(void)addInputTextTag:(TGInputTextTag *)tag range:(NSRange)range {
