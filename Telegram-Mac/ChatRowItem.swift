@@ -2440,9 +2440,9 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if !message.isScheduledMessage {
+    if !message.isScheduledMessage, let peer = message.peers[message.id.peerId], !peer.isDeleted, message.id.namespace == Namespaces.Message.Cloud {
         
-        let pinText = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true ? L10n.messageContextUnpin : L10n.messageContextPin
+        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : L10n.messageContextPin
         let needUnpin = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
