@@ -258,7 +258,11 @@ class ChatRowItem: TableRowItem {
             size.width += likes.0.size.width + 18
         }
         if isPinned {
-            size.width += 14
+            if self.isStateOverlayLayout {
+                size.width += 14
+            } else {
+                size.width += 18
+            }
         }
         
         if let postAuthor = postAuthor {
@@ -793,14 +797,6 @@ class ChatRowItem: TableRowItem {
         }
         
         for peer in peers {
-//            if let peer = peer as? TelegramChannel {
-//                switch peer.info {
-//                case .broadcast:
-//                    return false
-//                default:
-//                    break
-//                }
-//            }
             if let peer = peer as? TelegramUser {
                 if peer.botInfo != nil {
                     return false
@@ -808,7 +804,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let message = message {
+        for message in messages {
             if message.isScheduledMessage {
                 return false
             }
@@ -824,7 +820,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        return !chatInteraction.isLogInteraction && message?.groupingKey == nil && message?.id.peerId != context.peerId
+        return !chatInteraction.isLogInteraction && message?.id.peerId != context.peerId
     }
     
     private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
@@ -1199,7 +1195,7 @@ class ChatRowItem: TableRowItem {
                     title = title.filter { !$0.0.isEmpty }
                     
                     let texts:[ChannelCommentsRenderData.Text] = title.map {
-                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(10)), animation: $0.1, index: $0.2)
+                        return ChannelCommentsRenderData.Text(text: .initialize(string: $0.0, color: presentation.colors.accent, font: .normal(.short)), animation: $0.1, index: $0.2)
                     }
                     
                     _commentsData = ChannelCommentsRenderData(context: chatInteraction.context, message: message, hasUnread: hasUnread, title: texts, peers: [], drawBorder: false, isLoading: entry.additionalData.isThreadLoading, handler: { [weak self] in
@@ -1268,7 +1264,7 @@ class ChatRowItem: TableRowItem {
         }
         
         var stateOverlayTextColor: NSColor {
-            if let media = message?.media.first, media.isInteractiveMedia {
+            if let media = message?.media.first, media.isInteractiveMedia || media is TelegramMediaMap {
                  return NSColor(0xffffff)
             } else {
                 return theme.chatServiceItemTextColor
@@ -1661,6 +1657,13 @@ class ChatRowItem: TableRowItem {
             tooltip(for: forwardName, text: L10n.chatTooltipHiddenForwardName, autoCorner: false)
         }
         
+        let editedAttribute = messages.compactMap({
+            return $0.editedAttribute
+        }).sorted(by: {
+            $0.date < $1.date
+        }).first
+        
+        
         if let message = message {
             
             let formatter = DateFormatter()
@@ -1681,6 +1684,18 @@ class ChatRowItem: TableRowItem {
                         break
                     }
                 }
+            }
+            
+            if let attribute = editedAttribute {
+                if isEditMarkVisible {
+                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                }
+                
+                let formatterEdited = DateFormatter()
+                formatterEdited.dateStyle = .medium
+                formatterEdited.timeStyle = .medium
+                formatterEdited.timeZone = NSTimeZone.local
+                fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
             }
             
             for attribute in message.attributes {
@@ -1719,17 +1734,7 @@ class ChatRowItem: TableRowItem {
 //                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
 //                }
                 
-                if let attribute = attribute as? EditedMessageAttribute {
-                    if isEditMarkVisible {
-                        editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
-                    }
-                    
-                    let formatterEdited = DateFormatter()
-                    formatterEdited.dateStyle = .medium
-                    formatterEdited.timeStyle = .medium
-                    formatterEdited.timeZone = NSTimeZone.local
-                    fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
-                }
+                
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message))
                 }
@@ -2010,19 +2015,20 @@ class ChatRowItem: TableRowItem {
             }
             
             var supplyOffset: CGFloat = 0
-            if let channelViews = channelViews {
-                supplyOffset += channelViews.0.size.width + 16
-            }
-            if let replyCount = replyCount {
-                supplyOffset += replyCount.0.size.width + 16
-            }
-            
-            if let _ = postAuthorAttributed {
-                supplyOffset += 50
-            }
-            if let commentsData = commentsData {
-                supplyOffset += commentsData.size(false).width
-            }
+           
+//            if let channelViews = channelViews {
+//                supplyOffset += channelViews.0.size.width + 16
+//            }
+//            if let replyCount = replyCount {
+//                supplyOffset += replyCount.0.size.width + 16
+//            }
+//
+//            if let _ = postAuthorAttributed {
+//                supplyOffset += 50
+//            }
+//            if let commentsData = commentsData {
+//                supplyOffset += commentsData.size(false).width
+//            }
             if !isBubbled {
                 supplyOffset += rightSize.width
             }
@@ -2293,6 +2299,8 @@ class ChatRowItem: TableRowItem {
             return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
         } else if let media = media as? TelegramMediaFile, media.isVideo && !media.isInstantVideo {
             return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
+        } else if media is TelegramMediaMap {
+            return self.presentation.colors.blackTransparent.withAlphaComponent(0.5)
         } else {
             return self.presentation.chatServiceItemColor
         }
@@ -2304,7 +2312,10 @@ class ChatRowItem: TableRowItem {
        }
         if let file = media as? TelegramMediaFile, file.isInstantVideo {
             return self.presentation.chatServiceItemTextColor
+        } else if media is TelegramMediaMap {
+            return NSColor(0xffffff)
         }
+        
        if media.isInteractiveMedia {
             return NSColor(0xffffff)
        } else {
@@ -2449,14 +2460,14 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         } else {
             pinAndOld = false
         }
-        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : (pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextPin)
+        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : L10n.messageContextPin
 
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 if !chatInteraction.mode.isThreadMode, (needUnpin || chatInteraction.mode != .pinned) {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
-                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                            modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle:  L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
                                 chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid, false)
                             })
                         } else {
@@ -2472,7 +2483,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, result == .thrid, false)
                     })
                 } else {
@@ -2482,7 +2493,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         } else if chatInteraction.presentation.canPinMessage, let peer = chatInteraction.peer, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, false, result != .thrid)
                     })
                 } else {
@@ -2659,7 +2670,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     signal = signal |> map { items in
         if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, chatInteraction.mode == .history {
-            if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId {
+            if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId, message.isIncoming(account, theme.bubbled) {
                 var items = items
                 items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
                     _ = showModalProgress(signal: fetchChannelParticipant(account: account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in

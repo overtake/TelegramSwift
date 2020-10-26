@@ -321,7 +321,11 @@ class ChatFileContentView: ChatMediaContentView {
                         case .Remote:
                             self.thumbProgress?.state = .Remote
                         case let .Fetching(_, progress):
-                            self.thumbProgress?.state = .Fetching(progress: progress, force: false)
+                            if progress == 1.0, parent?.groupingKey != nil {
+                                self.thumbProgress?.state = .Success
+                            } else {
+                                self.thumbProgress?.state = .Fetching(progress: progress, force: false)
+                            }
                         default:
                             break
                         }
@@ -386,8 +390,12 @@ class ChatFileContentView: ChatMediaContentView {
                     }
                     progress = max(progress, 0.1)
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
-                    progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)
                     
+                    if progress == 1.0, parent?.groupingKey != nil {
+                        progressView.state = .Success
+                    } else {
+                        progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)
+                    }
                 case .Local:
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
                     progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)

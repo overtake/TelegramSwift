@@ -231,6 +231,8 @@ class ChatGroupedItem: ChatRowItem {
         
         if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
             offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2 - 1)
+        } else if hasBubble && authorText != nil {
+            offset.y += 2
         }
         return offset
     }
