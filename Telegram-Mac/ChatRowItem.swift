@@ -2442,14 +2442,21 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     if !message.isScheduledMessage, let peer = message.peers[message.id.peerId], !peer.isDeleted, message.id.namespace == Namespaces.Message.Cloud {
         
-        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : L10n.messageContextPin
         let needUnpin = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true
+        let pinAndOld: Bool
+        if let pinnedMessage = chatInteraction.presentation.pinnedMessageId, let last = pinnedMessage.others.last {
+            pinAndOld = last > message.id
+        } else {
+            pinAndOld = false
+        }
+        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : (pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextPin)
+
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 if !chatInteraction.mode.isThreadMode, (needUnpin || chatInteraction.mode != .pinned) {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
-                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                            modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
                                 chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid, false)
                             })
                         } else {
@@ -2465,7 +2472,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, result == .thrid, false)
                     })
                 } else {
