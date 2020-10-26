@@ -554,7 +554,7 @@ class ChatListRowItem: TableRowItem {
             let isSecret: Bool
             isSecret = renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat
             
-            if embeddedState == nil, isSecret {
+            if embeddedState == nil, !isSecret {
                 for message in messages {
                     inner: for media in message.media {
                         if !message.containsSecretMedia {

@@ -604,6 +604,15 @@ public extension Message {
         return nil
     }
     
+    var editedAttribute: EditedMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? EditedMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var autoremoveAttribute:AutoremoveTimeoutMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? AutoremoveTimeoutMessageAttribute {

@@ -165,7 +165,7 @@ class ChatRightView: View {
             if item.isPinned {
                 let icon = item.presentation.chat.messagePinnedIcon(item)
                 ctx.draw(icon, in: NSMakeRect(viewsOffset + (item.isStateOverlayLayout ? 4 : 0), item.isBubbled ? (item.isStateOverlayLayout ? 3 : 2) : 2, icon.backingSize.width, icon.backingSize.height))
-                viewsOffset += icon.backingSize.width + (item.isStateOverlayLayout ? 4 : 0)
+                viewsOffset += icon.backingSize.width + (item.isStateOverlayLayout ? 4 : 4)
             }
             
             if let channelViews = item.channelViews {
