@@ -53,6 +53,45 @@ struct InteractiveEmojiConfiguration : Equatable {
     }
 }
 
+struct EmojiesSoundConfiguration : Equatable {
+    
+    static var defaultValue: EmojiesSoundConfiguration {
+        return EmojiesSoundConfiguration(sounds: [:])
+    }
+    
+    public let sounds: [String: TelegramMediaFile]
+    
+    fileprivate init(sounds: [String: TelegramMediaFile]) {
+        self.sounds = sounds
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> EmojiesSoundConfiguration {
+        if let data = appConfiguration.data, let values = data["emojies_sounds"] as? [String: Any] {
+            var sounds: [String: TelegramMediaFile] = [:]
+            for (key, value) in values {
+                if let dict = value as? [String: String], var fileReferenceString = dict["file_reference_base64"] {
+                    fileReferenceString = fileReferenceString.replacingOccurrences(of: "-", with: "+")
+                    fileReferenceString = fileReferenceString.replacingOccurrences(of: "_", with: "/")
+                    while fileReferenceString.count % 4 != 0 {
+                        fileReferenceString.append("=")
+                    }
+                    
+                    if let idString = dict["id"], let id = Int64(idString), let accessHashString = dict["access_hash"], let accessHash = Int64(accessHashString), let fileReference = Data(base64Encoded: fileReferenceString) {
+                        let resource = CloudDocumentMediaResource(datacenterId: 1, fileId: id, accessHash: accessHash, size: nil, fileReference: fileReference, fileName: nil)
+                        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: 0), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "audio/ogg", size: nil, attributes: [])
+                        sounds[key] = file
+                    }
+                }
+            }
+            return EmojiesSoundConfiguration(sounds: sounds)
+        } else {
+            return .defaultValue
+        }
+    }
+
+    
+}
+
 private final class DiceSideDataContext {
     var data: [(String, Data?, TelegramMediaFile)] = []
     let subscribers = Bag<([(String, Data?, TelegramMediaFile)]) -> Void>()
@@ -67,6 +106,7 @@ class DiceCache {
     
     private let fetchDisposable = MetaDisposable()
     private let loadDataDisposable = MetaDisposable()
+    private let emojiesSoundDisposable = MetaDisposable()
     
     init(postbox: Postbox, network: Network) {
         self.postbox = postbox
@@ -80,6 +120,20 @@ class DiceCache {
             return InteractiveEmojiConfiguration.with(appConfiguration: $0)
         } |> distinctUntilChanged
         
+        
+        let emojiesSound = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+        } |> map { value -> EmojiesSoundConfiguration in
+            return EmojiesSoundConfiguration.with(appConfiguration: value)
+        } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in
+            //val
+            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
+            let signals = combineLatest(list)
+            
+            return signals |> ignoreValues |> `catch` { _ -> Signal<Never, NoError> in return .complete() }
+        }
+        
+        emojiesSoundDisposable.set(emojiesSound.start())
         
         let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [StickerPackItem])], NoError> in
             var signals: [Signal<(String, [StickerPackItem]), NoError>] = []
@@ -220,6 +274,7 @@ class DiceCache {
     func cleanup() {
         fetchDisposable.dispose()
         loadDataDisposable.dispose()
+        emojiesSoundDisposable.dispose()
     }
     
     deinit {
