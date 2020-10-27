@@ -1991,7 +1991,7 @@ class ChatRowItem: TableRowItem {
                 if !hasBubble {
                     replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
                 } else {
-                    replyModel.measureSize(min(_contentSize.width - bubbleDefaultInnerInset, 300), sizeToFit: true)
+                    replyModel.measureSize(_contentSize.width - bubbleDefaultInnerInset, sizeToFit: true)
                 }
             }
         }

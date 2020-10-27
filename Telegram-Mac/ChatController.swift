@@ -2934,7 +2934,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.focusMessageId(nil, slowMode.sendingIds.last!, .CenterEmpty)
                     }
                 } else {
-                    showModal(with: PreviewSenderController(urls: urls, chatInteraction: self.chatInteraction, asMedia: asMedia, attributedString: attributedString), for: context.window)
+                    var updated:[URL] = []
+                    for url in urls {
+                        if url.path.contains("/T/TemporaryItems/") {
+                            let newUrl = URL(fileURLWithPath: NSTemporaryDirectory() + url.path.nsstring.lastPathComponent)
+                            try? FileManager.default.moveItem(at: url, to: newUrl)
+                            if FileManager.default.fileExists(atPath: newUrl.path) {
+                                updated.append(newUrl)
+                            }
+                        } else {
+                            if FileManager.default.fileExists(atPath: url.path) {
+                                updated.append(url)
+                            }
+                        }
+                    }
+                    if !updated.isEmpty {
+                        showModal(with: PreviewSenderController(urls: updated, chatInteraction: self.chatInteraction, asMedia: asMedia, attributedString: attributedString), for: context.window)
+                    }
                 }
             }
         }
