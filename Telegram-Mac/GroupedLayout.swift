@@ -50,7 +50,12 @@ class GroupedLayout {
     private(set) var messages:[Message]
     private(set) var type: GroupedMediaType
     init(_ messages: [Message], type: GroupedMediaType = .photoOrVideo) {
-        self.messages = messages
+        switch type {
+        case .photoOrVideo:
+            self.messages = messages.filter { $0.media.first!.isInteractiveMedia }
+        case .files:
+            self.messages = messages.filter { $0.media.first is TelegramMediaFile }
+        }
         self.type = type
     }
     
