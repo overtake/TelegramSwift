@@ -3082,16 +3082,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 } else if self.chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
                     if dismiss {
-                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { _ in
-                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
+                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { [weak self] _ in
+                            self?.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
                         self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                     }
                 } else if let peer = self.chatInteraction.peer as? TelegramGroup, peer.canPinMessage {
                     if dismiss {
-                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: { _ in
-                            self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
+                        confirm(for: context.window, header: L10n.chatConfirmUnpinHeader, information: L10n.chatConfirmUnpin, okTitle: L10n.chatConfirmUnpinOK, successHandler: {  [weak self]_ in
+                            self?.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
                         self.updatePinnedDisposable.set(showModalProgress(signal: requestUpdatePinnedMessage(account: context.account, peerId: peerId, update: pinnedUpdate), for: context.window).start())
@@ -3532,21 +3532,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                             }
                             
-                            var pinnedMessageId: MessageId?
-                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            } else if let _ = combinedInitialData.cachedData as? CachedSecretChatData {
-                            }
+//                            var pinnedMessageId: MessageId?
+//                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
+//                                pinnedMessageId = cachedData.pinnedMessageId
+//                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
+//                                pinnedMessageId = cachedData.pinnedMessageId
+//                            } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
+//                                pinnedMessageId = cachedData.pinnedMessageId
+//                            } else if let _ = combinedInitialData.cachedData as? CachedSecretChatData {
+//                            }
                             
-                            var pinnedMessage: ChatPinnedMessage?
-                            if let pinnedMessageId = pinnedMessageId {
-                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: combinedInitialData.cachedDataMessages?[pinnedMessageId]?.first, isLatest: true)
-                            }
-                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
+//                            var pinnedMessage: ChatPinnedMessage?
+//                            if let pinnedMessageId = pinnedMessageId {
+//                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: combinedInitialData.cachedDataMessages?[pinnedMessageId]?.first, others: [pinnedMessageId], isLatest: true)
+//                            }
+//                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
                             
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
@@ -3668,8 +3668,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                             
                             var pinnedMessage: ChatPinnedMessage?
-                            pinnedMessageId = topPinnedMessage?.messageId
                             pinnedMessage = topPinnedMessage
+//                            if topPinnedMessage == nil, let pinnedMessageId = pinnedMessageId {
+//                                let message: Message?
+//                                if let msg = presentation.pinnedMessageId?.message, msg.id == pinnedMessageId {
+//                                    message = msg
+//                                } else {
+//                                    message = nil
+//                                }
+//                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: message, others: [pinnedMessageId], isLatest: true)
+//                            } else {
+//                                pinnedMessageId = topPinnedMessage?.messageId
+//                            }
                             
 
                             present = present.withUpdatedPinnedMessageId(pinnedMessage)

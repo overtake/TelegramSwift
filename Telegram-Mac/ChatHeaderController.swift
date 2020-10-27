@@ -418,6 +418,8 @@ class ChatPinnedView : Control {
     
     func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
         
+        let animated = animated && (!pinnedMessage.isLatest || (self.pinnedMessage.isLatest != pinnedMessage.isLatest))
+        
         particleList.update(count: pinnedMessage.totalCount, selectedIndex: pinnedMessage.index, animated: animated)
         
         self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
