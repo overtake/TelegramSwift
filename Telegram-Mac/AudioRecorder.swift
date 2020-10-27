@@ -268,7 +268,6 @@ final class ManagedAudioRecorderContext {
                 break
             }
         }
-        NSLog("\(inputSampleRate)")
         deviceDataRequest.mSelector = kAudioDevicePropertyNominalSampleRate
         guard AudioObjectSetPropertyData(deviceId, &deviceDataRequest, 0, nil, UInt32(MemoryLayout<AudioValueRange>.size), &inputSampleRate) == noErr else {
             return
