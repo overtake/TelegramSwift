@@ -264,7 +264,14 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
-        if let caption = captionLayouts.first(where: { $0.id == lastMessage?.stableId })?.layout {
+        let layout: TextViewLayout?
+        switch self.layout.type {
+        case .files:
+            layout = captionLayouts.last?.layout
+        case .photoOrVideo:
+            layout = captionLayouts.first?.layout
+        }
+        if let caption = layout {
             if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
                 return rightSize.height
             }
@@ -296,9 +303,7 @@ class ChatGroupedItem: ChatRowItem {
             maxContentWidth -= bubbleDefaultInnerInset
         }
         for layout in captionLayouts {
-            if layout.layout.layoutSize == .zero {
-                layout.layout.measure(width: maxContentWidth)
-            }
+            layout.layout.measure(width: maxContentWidth)
         }
         self.captionLayouts = layout.applyCaptions(captionLayouts)
         return layout.dimensions
@@ -1017,14 +1022,24 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 frame.origin.x = 0
                 frame.size.width = self.frame.width
                 frame.size.height += 8
+                
+                var caption: CGFloat = 0
+                
+                if let layout = item.captionLayouts.first(where: { $0.id == item.layout.messages[index].stableId })  {
+                    caption = layout.layout.layoutSize.height + 6
+                }
+                
                 if index == 0 {
                     frame.size.height += contentFrame.minY
                 } else if index == item.layout.count - 1 {
                     frame.origin.y += contentFrame.minY
-                    if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) == nil {
-                        frame.size.height += contentFrame.minY
-                    }
+                    frame.size.height += contentFrame.minY
+                } else {
+                    frame.origin.y += contentFrame.minY
                 }
+                
+                frame.size.height += caption
+                
                 frame.origin.y -= 4
                 
                 return (color: theme.colors.accentIcon.withAlphaComponent(0.15), frame: frame, flags: [], superview: self.rowView)
