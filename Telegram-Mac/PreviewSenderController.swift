@@ -1051,6 +1051,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             switch state.state {
             case .media:
                 canCollage = canCollage && options == [.media]
+            case .archive:
+                canCollage = false
             default:
                 break
             }
@@ -1094,6 +1096,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         switch mediaState {
         case .media:
             canCollage = canCollage && options == [.media]
+        case .archive:
+            canCollage = false
         default:
             break
         }
@@ -1118,6 +1122,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             switch state.state {
             case .media:
                 canCollage = canCollage && options == [.media]
+            case .archive:
+                canCollage = false
             default:
                 break
             }

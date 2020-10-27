@@ -220,16 +220,14 @@ private final class RendererState  {
     }
 }
 
-private final class LottieSoundEffect {
+final class LottieSoundEffect {
     private let player: MediaPlayer
     let triggerOn: Int32?
     
     private(set) var isPlayable: Bool = false
     
-    init(data: Data, animation: LottieAnimation, postbox: Postbox, triggerOn: Int32?) {
-        
-        
-        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: LottieSoundMediaResource(randomId: Int64(animation.cacheKey.hashValue), data: data)), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
+    init(file: TelegramMediaFile, postbox: Postbox, triggerOn: Int32?) {
+        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
     func play() {
@@ -261,6 +259,7 @@ private final class PlayerRenderer {
         self.displayFrame = displayFrame
         self.updateState = updateState
         self.release = release
+        self.soundEffect = animation.soundEffect
     }
     
     private var onDispose: (()->Void)?
@@ -669,7 +668,7 @@ final class LottieAnimation : Equatable {
     let maximumFps: Int
     let playPolicy: LottiePlayPolicy
     let colors:[LottieColor]
-    
+    let soundEffect: LottieSoundEffect?
     let postbox: Postbox?
     
     var onFinish:(()->Void)?
@@ -677,7 +676,7 @@ final class LottieAnimation : Equatable {
     var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], postbox: Postbox? = nil) {
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
@@ -685,6 +684,7 @@ final class LottieAnimation : Equatable {
         self.playPolicy = playPolicy
         self.colors = colors
         self.postbox = postbox
+        self.soundEffect = soundEffect
     }
     
     var size: NSSize {
@@ -1008,9 +1008,12 @@ class LottiePlayerView : NSView {
         }
     }
     
-    func playIfNeeded() {
+    func playIfNeeded(_ playSound: Bool = false) {
         if let context = self.context, context.animation.playPolicy == .once {
             context.playAgain()
+            if playSound {
+                context.playSoundEffect()
+            }
         } else {
             context?.playSoundEffect()
         }
