@@ -7137,6 +7137,16 @@ internal final class L10n {
   internal static var statsGroupTopWeekdaysTitle: String  { return L10n.tr("Localizable", "Stats.GroupTopWeekdaysTitle") }
   /// Viewing Members
   internal static var statsGroupViewers: String  { return L10n.tr("Localizable", "Stats.GroupViewers") }
+  /// INTERACTIONS
+  internal static var statsMessageInteractionsTitle: String  { return L10n.tr("Localizable", "Stats.MessageInteractionsTitle") }
+  /// OVERVIEW
+  internal static var statsMessageOverview: String  { return L10n.tr("Localizable", "Stats.MessageOverview") }
+  /// Private Shares
+  internal static var statsMessagePrivateForwardsTitle: String  { return L10n.tr("Localizable", "Stats.MessagePrivateForwardsTitle") }
+  /// Public Shares
+  internal static var statsMessagePublicForwardsTitle: String  { return L10n.tr("Localizable", "Stats.MessagePublicForwardsTitle") }
+  /// Message Statistics
+  internal static var statsMessageTitle: String  { return L10n.tr("Localizable", "Stats.MessageTitle") }
   /// %d
   internal static func statsShowMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_countable", p1)
