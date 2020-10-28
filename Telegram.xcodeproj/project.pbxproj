@@ -894,6 +894,8 @@
 		D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */; };
 		D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */; };
 		D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */; };
+		D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ABA3F225499C5A00031678 /* MessageStatsController.swift */; };
+		D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ABA3F62549C37E00031678 /* MessageSharedRowItem.swift */; };
 		D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B6D72922AA65D3008E36FE /* NewContactController.swift */; };
 		D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */; };
 		D0BE207E24D032E400038A8B /* VolumeControllerPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BE207D24D032E400038A8B /* VolumeControllerPopover.swift */; };
@@ -2073,6 +2075,8 @@
 		D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasColorPicker.swift; sourceTree = "<group>"; };
 		D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasControls.swift; sourceTree = "<group>"; };
 		D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = dart_idle.tgs; sourceTree = "<group>"; };
+		D0ABA3F225499C5A00031678 /* MessageStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageStatsController.swift; sourceTree = "<group>"; };
+		D0ABA3F62549C37E00031678 /* MessageSharedRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageSharedRowItem.swift; sourceTree = "<group>"; };
 		D0B6D72922AA65D3008E36FE /* NewContactController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewContactController.swift; sourceTree = "<group>"; };
 		D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannelsController.swift; sourceTree = "<group>"; };
 		D0BE207D24D032E400038A8B /* VolumeControllerPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeControllerPopover.swift; sourceTree = "<group>"; };
@@ -2665,6 +2669,8 @@
 				A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */,
 				A76C8AA324221F5400FDB071 /* StatisticsLoadingRowItem.swift */,
 				D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */,
+				D0ABA3F225499C5A00031678 /* MessageStatsController.swift */,
+				D0ABA3F62549C37E00031678 /* MessageSharedRowItem.swift */,
 			);
 			name = stats;
 			sourceTree = "<group>";
@@ -5776,6 +5782,7 @@
 				9FFAE4F8205A8C89000C028E /* FFMpegMediaFrameSource.swift in Sources */,
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
+				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
 				D017A3FD233949B00086174B /* WalletSendController.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
 				9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */,
@@ -5953,6 +5960,7 @@
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
 				D05051902342BA6700D93176 /* WalletSettingsController.swift in Sources */,
+				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,
 				D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */,

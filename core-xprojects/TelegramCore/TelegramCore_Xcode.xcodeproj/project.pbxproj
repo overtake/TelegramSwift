@@ -237,6 +237,7 @@
 		D0AAD1B91E326FE200D5B9DE /* ManagedAutoremoveMessageOperations.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AAD1B71E326FE200D5B9DE /* ManagedAutoremoveMessageOperations.swift */; };
 		D0AB262721C2F991008F6685 /* TelegramMediaPoll.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AB262521C2F991008F6685 /* TelegramMediaPoll.swift */; };
 		D0AB262C21C3CE80008F6685 /* Polls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AB262A21C3CE80008F6685 /* Polls.swift */; };
+		D0ABA3F52549A0B600031678 /* MessageStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ABA3F42549A0B600031678 /* MessageStatistics.swift */; };
 		D0AD02E41FFFA14800C1DCFF /* PeerLiveLocationsContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AD02E21FFFA14800C1DCFF /* PeerLiveLocationsContext.swift */; };
 		D0ADF912212B00DD00310BBC /* SecureIdConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ADF910212B00DD00310BBC /* SecureIdConfiguration.swift */; };
 		D0AF32231FAC95C20097362B /* StandaloneUploadedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0AF32211FAC95C20097362B /* StandaloneUploadedMedia.swift */; };
@@ -656,6 +657,7 @@
 		D0AB0B991D666520002C78E7 /* ManagedSynchronizePeerReadStates.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedSynchronizePeerReadStates.swift; sourceTree = "<group>"; };
 		D0AB262521C2F991008F6685 /* TelegramMediaPoll.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TelegramMediaPoll.swift; sourceTree = "<group>"; };
 		D0AB262A21C3CE80008F6685 /* Polls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Polls.swift; sourceTree = "<group>"; };
+		D0ABA3F42549A0B600031678 /* MessageStatistics.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageStatistics.swift; sourceTree = "<group>"; };
 		D0AC49491D7097A400AA55DA /* SSignalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0AD02E21FFFA14800C1DCFF /* PeerLiveLocationsContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerLiveLocationsContext.swift; sourceTree = "<group>"; };
 		D0ADF910212B00DD00310BBC /* SecureIdConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureIdConfiguration.swift; sourceTree = "<group>"; };
@@ -1423,6 +1425,7 @@
 		D0DF0C881D819C5F008AEB01 /* Peers */ = {
 			isa = PBXGroup;
 			children = (
+				D0ABA3F42549A0B600031678 /* MessageStatistics.swift */,
 				D0A2764A249C9989005E3C77 /* PeerStatistics.swift */,
 				D0830FC1241254FD006198E7 /* BankCards.swift */,
 				A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */,
@@ -1655,6 +1658,7 @@
 				D0B418A71D7E0592004562A4 /* Fetch.swift in Sources */,
 				D02ABC7C1E30058F00CAE539 /* DeleteMessagesInteractively.swift in Sources */,
 				D03DC9111F82E344001D584C /* AccountStateReset.swift in Sources */,
+				D0ABA3F52549A0B600031678 /* MessageStatistics.swift in Sources */,
 				D0B1671E1F9EA2C300976B40 /* ChatHistoryPreloadManager.swift in Sources */,
 				D0B418B81D7E05A6004562A4 /* ContactManagement.swift in Sources */,
 				D0DEF73F242A41DB00A34A30 /* AccountStateManagementUtils.swift in Sources */,

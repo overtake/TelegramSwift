@@ -765,15 +765,19 @@ class ChatRowItem: TableRowItem {
     private(set) var isForwardScam: Bool
 
     var isFailed: Bool {
-        if let message = message {
-            return message.flags.contains(.Failed)
+        for message in messages {
+            if message.flags.contains(.Failed) {
+                return true
+            }
         }
         return false
     }
     
     var isPinned: Bool {
-        if let message = firstMessage {
-            return message.tags.contains(.pinned)
+        for message in messages {
+            if message.tags.contains(.pinned) {
+                return true
+            }
         }
         return false
     }

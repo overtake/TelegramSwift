@@ -248,7 +248,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     messagesPromise.set(.single(nil) |> then(messageView))
 
     let openMessage: (MessageId)->Void = { messageId in
-        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId))
+        context.sharedContext.bindings.rootNavigation().push(MessageStatsController(context, messageId: messageId, datacenterId: datacenterId))
     }
     
     let detailedDisposable = DisposableDict<InputDataIdentifier>()
