@@ -76,6 +76,8 @@ struct SlotMachineValue : Equatable {
             return center == .berries && right == .berries
         case .lemon:
             return center == .lemon && right == .lemon
+        case .bar:
+            return center == .bar && right == .bar
         default:
             return false
         }
