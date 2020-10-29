@@ -874,8 +874,8 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
     return maybeFetched
         |> take(1)
         |> mapToSignal { maybeData in
-            if maybeData.complete {
-                let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [.mappedIfSafe])
+            let loadedData: Data? = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [.mappedIfSafe])
+            if maybeData.complete, let loadedData = loadedData, loadedData.count > 0 {
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
                 let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier), complete: true)
