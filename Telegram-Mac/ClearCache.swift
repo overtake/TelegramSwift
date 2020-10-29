@@ -95,6 +95,9 @@ private final class CCTask : Equatable {
                 scanFiles(at: account.postbox.mediaBox.basePath, anyway: { value in
                     files.append(value)
                 })
+                scanFiles(at: account.postbox.mediaBox.basePath + "/cache", anyway: { value in
+                    files.append(value)
+                })
                 return clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970)
             } |> deliverOn(cacheQueue)
         
