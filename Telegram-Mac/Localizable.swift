@@ -4459,11 +4459,11 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
-  /// %1$@ is now within %2$@ from %3$@
+  /// %@ is now within %@ from %@
   internal static func notificationProximityReached(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.ProximityReached", p1, p2, p3)
   }
-  /// %1$@ is now within %2$@ from you
+  /// %@ is now within %@ from you
   internal static func notificationProximityReachedYou(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Notification.ProximityReachedYou", p1, p2)
   }

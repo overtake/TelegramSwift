@@ -22,7 +22,7 @@ extension Message {
 
 
 extension NSMutableAttributedString {
-    func detectLinks(type:ParsingType, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
+    func detectLinks(type:ParsingType, onlyInApp: Bool = false, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
         let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentions: type.contains(.Mentions), highlightTags: type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
         
         self.beginEditing()
@@ -35,9 +35,21 @@ extension NSMutableAttributedString {
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
                     if let context = context {
-                        self.addAttribute(NSAttributedString.Key.link, value: inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy), range: range)
+                        let link = inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy)
+                        if onlyInApp {
+                            switch link {
+                            case .external:
+                                continue
+                            default:
+                                self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                            }
+                        } else {
+                            self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                        }
                     } else {
-                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                        if !onlyInApp {
+                            self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                        }
                     }
                     self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
                     self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
