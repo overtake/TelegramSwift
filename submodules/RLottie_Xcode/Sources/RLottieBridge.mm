@@ -64,12 +64,12 @@
     NSMutableData *data = [[NSMutableData alloc] initWithLength:w * h * 4];
     memset((uint8_t *)data.bytes + w * h * 4, 255, w * h);
 
-    vImage_Buffer inputBuffer;
-    inputBuffer.width = w;
-    inputBuffer.height = h;
-    inputBuffer.rowBytes = w * 4;
-    inputBuffer.data = (uint8_t *)data.bytes;
-    memcpy(inputBuffer.data, (void *)animationBuffer.get(), w * h * 4);
+//    vImage_Buffer inputBuffer;
+//    inputBuffer.width = w;
+//    inputBuffer.height = h;
+//    inputBuffer.rowBytes = w * 4;
+//    inputBuffer.data = (uint8_t *)data.bytes;
+//    memcpy(inputBuffer.data, (void *)animationBuffer.get(), w * h * 4);
 
     const uint8_t map[4] = { 3, 2, 1, 0 };
    // vImagePermuteChannels_ARGB8888(&inputBuffer, &inputBuffer, map, kvImageNoFlags);
@@ -77,13 +77,13 @@
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     
     if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_11_2)
-        colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3);
+        colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
     CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
     CGImageRef image = CGImageCreate(w, h, 8, 32, w * 4, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, dataProvider, NULL, false, kCGRenderingIntentDefault);
     CFRelease(dataProvider);
     CFRelease(colorSpace);
-    animationBuffer.reset();
+ //   animationBuffer.reset();
     return image;
     
 }

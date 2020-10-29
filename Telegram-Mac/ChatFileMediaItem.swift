@@ -102,7 +102,7 @@ class ChatFileMediaItem: ChatMediaItem {
         
         let parameters = self.parameters as! ChatFileLayoutParameters
         let file = media as! TelegramMediaFile
-        let optionalWidth = parameters.makeLabelsForWidth( width - (file.previewRepresentations.isEmpty ? 50 : 80)) + (file.previewRepresentations.isEmpty ? 50 : 80)
+        let optionalWidth = parameters.makeLabelsForWidth(width)
         
         let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
         

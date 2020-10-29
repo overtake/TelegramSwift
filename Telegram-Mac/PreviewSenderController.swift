@@ -731,15 +731,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             _urls = newValue.uniqueElements
             let canCollage: Bool = canCollagesFromUrl(_urls)
             if !lockInteractiveChanges {
-                if chatInteraction.presentation.slowMode == nil, self.urls.count > 1 {
-                    switch self.genericView.state.state {
-                    case .media, .file:
-                        self.genericView.state = self.genericView.state.withUpdatedState(.archive)
-                    case .archive:
-                        break
-                    }
-                } else if self.genericView.state.isCollage, !canCollage {
-                    self.genericView.state = self.genericView.state.withUpdatedState(.media)
+                if self.genericView.state.isCollage, !canCollage {
+                    self.genericView.state = self.genericView.state.withUpdatedIsCollage(false)
                 }
             }
             self.genericView.updateWithSlowMode(chatInteraction.presentation.slowMode, urlsCount: _urls.count)

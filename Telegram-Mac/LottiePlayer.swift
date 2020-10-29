@@ -787,7 +787,7 @@ fragment float4 basic_fragment(
     sampler sampler2D [[ sampler(0) ]]
 ) {
   float4 color = tex2D.sample(sampler2D, interpolated.texCoord);
-  return float4(color.b, color.g, color.r, color.a);
+  return float4(color.r, color.g, color.b, color.a);
 }
 """, options: nil)
             
@@ -877,7 +877,7 @@ private final class MetalRenderer: View {
     init(animation: LottieAnimation, context: MetalContext) {
         self.context = context
         self.commandQueue = context.device.makeCommandQueue()
-        let textureDesc: MTLTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: Int(animation.size.width) * animation.backingScale, height: Int(animation.size.height) * animation.backingScale, mipmapped: false)
+        let textureDesc: MTLTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: Int(animation.size.width) * animation.backingScale, height: Int(animation.size.height) * animation.backingScale, mipmapped: false)
         textureDesc.sampleCount = 1
         textureDesc.textureType = .type2D
         
