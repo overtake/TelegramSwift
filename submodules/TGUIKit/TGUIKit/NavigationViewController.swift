@@ -332,7 +332,7 @@ final class NavigationShadowView : View {
 open class NavigationViewController: ViewController, CALayerDelegate,CAAnimationDelegate {
 
     public var applyAppearOnLoad: Bool = true
-    
+    public var canAddControllers: Bool = true
     public private(set) var modalAction:NavigationModalAction?
     let shadowView:NavigationShadowView = NavigationShadowView(frame: NSMakeRect(0, 0, 20, 0))
     let navigationRightBorder: View = View()
@@ -607,6 +607,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 //        if isLocked {
 //            return
 //        }
+        
+        if !self.canAddControllers {
+            return
+        }
         
         if controller.abolishWhenNavigationSame, controller.className == self.controller.className {
             return

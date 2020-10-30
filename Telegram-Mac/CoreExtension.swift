@@ -907,7 +907,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 case .replies:
                     return peer.canSendMessage(true)
                 }
-            case .pinned:
+            case .pinned, .preview:
                 return false
             }
         }

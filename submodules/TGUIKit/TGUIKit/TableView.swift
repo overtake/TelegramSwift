@@ -214,11 +214,16 @@ public protocol TableViewDelegate : class {
     func isSelectable(row:Int, item:TableRowItem) -> Bool;
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable?
+    
+    func longSelect(row:Int, item:TableRowItem) -> Void
 }
 
-extension TableViewDelegate {
+public extension TableViewDelegate {
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
         return nil
+    }
+    func longSelect(row:Int, item:TableRowItem) -> Void {
+        
     }
 }
 
@@ -321,6 +326,7 @@ public extension TableScrollState {
 
 protocol SelectDelegate : class {
     func selectRow(index:Int) -> Void;
+    func longAction(index:Int) -> Void;
 }
 
 private final class TableSearchView : View {
@@ -490,6 +496,20 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
                 } else if let table = table, !table.alwaysOpenRowsOnMouseUp {
                     sdelegate?.selectRow(index: beforeRange.location)
                 }
+                
+                let signal: Signal<Void, NoError> = .complete() |> delay(0.5, queue: .mainQueue())
+                longDisposable.set(signal.start(completed: { [weak self] in
+                    guard let `self` = self, let window = self.window else {
+                        return
+                    }
+                    let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                    let afterRange = self.rows(in: NSMakeRect(point.x, point.y, 1, 1))
+                    
+                    if afterRange == beforeRange {
+                        self.sdelegate?.longAction(index: afterRange.location)
+                    }
+                }))
+                
             }
         }
     }
@@ -2756,6 +2776,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     func selectRow(index: Int) {
         if self.count > index {
             _ = self.select(item: self.item(at: index), byClick:true)
+        }
+    }
+    
+    func longAction(index: Int) {
+        if self.count > index {
+            _ = self.delegate?.longSelect(row: index, item: self.list[index])
         }
     }
     

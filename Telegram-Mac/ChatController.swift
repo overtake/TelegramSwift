@@ -32,7 +32,7 @@ enum ChatMode : Equatable {
     case scheduled
     case pinned
     case replyThread(data: ChatReplyThreadMessage, mode: ReplyThreadMode)
-    
+    case preview
     var threadId: MessageId? {
         switch self {
         case let .replyThread(data, _):
@@ -1615,9 +1615,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if apply {
                         let peerId = self.chatLocation.peerId
                         if !hasModals() {
-                            clearNotifies(peerId, maxId: messageIndex.id)
-                            
-                            context.applyMaxReadIndex(for: self.chatLocation, contextHolder: self.chatLocationContextHolder, messageIndex: messageIndex)
+                            switch self.mode {
+                            case .preview:
+                                break
+                            default:
+                                clearNotifies(peerId, maxId: messageIndex.id)
+                                context.applyMaxReadIndex(for: self.chatLocation, contextHolder: self.chatLocationContextHolder, messageIndex: messageIndex)
+
+                            }
                         }
                     }
                 }
@@ -1632,7 +1637,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else { return }
             
             switch self.mode {
-            case .scheduled, .pinned:
+            case .scheduled, .pinned, .preview:
                 return
             case .history:
                 break
@@ -1772,7 +1777,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             self?.chatInteraction.focusMessageId(nil, messageId, .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
                         }
                     }))
-                case .pinned:
+                case .pinned, .preview:
                     break
                 case .scheduled:
                     var previousItem: ChatRowItem?
@@ -1939,7 +1944,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         })
                         apply(strongSelf, atDate: atDate)
-                    case .pinned:
+                    case .pinned, .preview:
                         break
                     }
                     
@@ -2350,7 +2355,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }), for: context.window)
                     }
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 
@@ -2514,7 +2519,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }))
                 case .scheduled:
                     break
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 
@@ -2653,7 +2658,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .scheduled:
                     strongSelf.navigationController?.back()
                     (strongSelf.navigationController?.controller as? ChatController)?.chatInteraction.focusMessageId(fromId, toId, state)
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2734,7 +2739,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .history, .replyThread:
                     let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: {})
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2863,7 +2868,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }), for: context.window)
                     }
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2910,7 +2915,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 case .history, .replyThread:
                     apply(strongSelf, atDate: nil)
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -3344,10 +3349,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return self?.chatLocationContextHolder ?? Atomic(value: nil)
         }
         
-        chatInteraction.contextHolder = { [weak self] in
-            return self?.chatLocationContextHolder ?? Atomic(value: nil)
+        chatInteraction.push = { [weak self] controller in
+            self?.navigationController?.push(controller)
         }
-        
+        chatInteraction.back = { [weak self] in
+             self?.navigationController?.back()
+        }
         
         chatInteraction.closeAfterPeek = { [weak self] peek in
             
@@ -3568,7 +3575,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         })
                     case .scheduled:
                         break
-                    case .pinned:
+                    case .pinned, .preview:
                         break
                     }
                     
@@ -3601,7 +3608,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let peerView = postboxView as? PeerView
                 
                 switch self.chatInteraction.mode {
-                case .history:
+                case .history, .preview:
                     
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
                         let onlineMemberCount:Signal<Int32?, NoError>
@@ -4293,7 +4300,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if chatInteraction.mode.isThreadMode {
             isEmpty = genericView.tableView.count == (theme.bubbled ? 4 : 3)
         }
-        if chatInteraction.mode == .scheduled || isEmpty {
+        if chatInteraction.mode == .scheduled || chatInteraction.mode == .preview || isEmpty {
             return false
         } else {
             return true
@@ -4443,39 +4450,50 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     
     override func getRightBarViewOnce() -> BarView {
-        let back = BarView(70, controller: self) //MajorBackNavigationBar(self, account: account, excludePeerId: peerId)
+        switch mode {
+        case .preview:
+            let barView = ImageBarView(controller: self, theme.icons.modalClose)
+            barView.button.set(handler: { [weak self] _ in
+                self?.navigationController?.modal?.close()
+            }, for: .Click)
+            return barView
+           // barView.seti
+        default:
+            let back = BarView(70, controller: self)
+            
+            let editButton = ImageButton()
+            // editButton.disableActions()
+            back.addSubview(editButton)
+            
+            self.editButton = editButton
+            //
+            let doneButton = TitleButton()
+            //  doneButton.disableActions()
+            doneButton.set(font: .medium(.text), for: .Normal)
+            doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
+            
+            
+            _ = doneButton.sizeToFit()
+            back.addSubview(doneButton)
+            doneButton.center()
+            
+            self.doneButton = doneButton
+            
+            
+            doneButton.isHidden = true
+            
+            doneButton.userInteractionEnabled = false
+            editButton.userInteractionEnabled = false
+            
+            back.set(handler: { [weak self] _ in
+                if let window = self?.window {
+                    self?.showRightControls()
+                }
+                }, for: .Click)
+            requestUpdateRightBar()
+            return back
+        }
         
-        let editButton = ImageButton()
-       // editButton.disableActions()
-        back.addSubview(editButton)
-        
-        self.editButton = editButton
-//        
-        let doneButton = TitleButton()
-      //  doneButton.disableActions()
-        doneButton.set(font: .medium(.text), for: .Normal)
-        doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
-        
-        
-        _ = doneButton.sizeToFit()
-        back.addSubview(doneButton)
-        doneButton.center()
-        
-        self.doneButton = doneButton
-
-        
-        doneButton.isHidden = true
-        
-        doneButton.userInteractionEnabled = false
-        editButton.userInteractionEnabled = false
-        
-        back.set(handler: { [weak self] _ in
-            if let window = self?.window {
-                self?.showRightControls()
-            }
-        }, for: .Click)
-        requestUpdateRightBar()
-        return back
     }
 
     private func showRightControls() {
@@ -4615,6 +4633,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         items.append(SPopoverItem(L10n.chatContextEdit1,  { [weak self] in
                             self?.changeState()
                         }, theme.icons.chatActionEdit))
+                    case .preview:
+                        break
                     }
                     if !items.isEmpty {
                         if let popover = button.popover {
@@ -4820,6 +4840,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.clean()
     }
     
+    override var redirectUserInterfaceCalls: Bool {
+        return chatInteraction.mode == .preview
+    }
+    
     private var splitStateFirstUpdate: Bool = true
     override func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
         super.viewDidChangedNavigationLayout(state)
@@ -4835,351 +4859,359 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if let initialAction = self.chatInteraction.presentation.initialAction {
-            switch initialAction {
-            case let .closeAfter(peek):
-                 self.chatInteraction.closeAfterPeek(peek)
-            default:
-                break
-            }
-        }
-
-        let context = self.context
-        context.closeFolderFirst = false
-
-        self.context.sharedContext.bindings.entertainment().update(with: self.chatInteraction)
-        
-        chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
-        //NSLog("chat apeeared")
-        
-         self.failedMessageEventsDisposable.set((context.account.pendingMessageManager.failedMessageEvents(peerId: chatInteraction.peerId)
-         |> deliverOnMainQueue).start(next: { [weak self] reason in
-            if let strongSelf = self {
-                let text: String
-                switch reason {
-                case .flood:
-                    text = L10n.chatSendMessageErrorFlood
-                case .publicBan:
-                    text = L10n.chatSendMessageErrorGroupRestricted
-                case .mediaRestricted:
-                    text = L10n.chatSendMessageErrorGroupRestricted
-                case .slowmodeActive:
-                    text = L10n.chatSendMessageSlowmodeError
-                case .tooMuchScheduled:
-                    text = L10n.chatSendMessageErrorTooMuchScheduled
+        switch self.mode {
+        case .preview:
+            break
+        default:
+            if let initialAction = self.chatInteraction.presentation.initialAction {
+                switch initialAction {
+                case let .closeAfter(peek):
+                    self.chatInteraction.closeAfterPeek(peek)
+                default:
+                    break
                 }
-                confirm(for: context.window, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
-                    guard let strongSelf = strongSelf else {return}
-                    
-                    switch confirm {
-                    case .thrid:
-                        execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
-                            strongSelf?.chatInteraction.openInfo(peerId, openChat, postid, initialAction)
-                        }))
-                    default:
-                        break
+            }
+            
+            let context = self.context
+            context.closeFolderFirst = false
+            
+            
+            self.context.sharedContext.bindings.entertainment().update(with: self.chatInteraction)
+            
+            chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
+            //NSLog("chat apeeared")
+            
+            self.failedMessageEventsDisposable.set((context.account.pendingMessageManager.failedMessageEvents(peerId: chatInteraction.peerId)
+                |> deliverOnMainQueue).start(next: { [weak self] reason in
+                    if let strongSelf = self {
+                        let text: String
+                        switch reason {
+                        case .flood:
+                            text = L10n.chatSendMessageErrorFlood
+                        case .publicBan:
+                            text = L10n.chatSendMessageErrorGroupRestricted
+                        case .mediaRestricted:
+                            text = L10n.chatSendMessageErrorGroupRestricted
+                        case .slowmodeActive:
+                            text = L10n.chatSendMessageSlowmodeError
+                        case .tooMuchScheduled:
+                            text = L10n.chatSendMessageErrorTooMuchScheduled
+                        }
+                        confirm(for: context.window, information: text, cancelTitle: "", thridTitle: L10n.genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
+                            guard let strongSelf = strongSelf else {return}
+                            
+                            switch confirm {
+                            case .thrid:
+                                execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
+                                    strongSelf?.chatInteraction.openInfo(peerId, openChat, postid, initialAction)
+                                }))
+                            default:
+                                break
+                            }
+                        })
                     }
-                })
+                }))
+            
+            
+            if let peer = chatInteraction.peer {
+                if peer.isRestrictedChannel(context.contentSettings), let reason = peer.restrictionText {
+                    alert(for: context.window, info: reason, completion: { [weak self] in
+                        self?.dismiss()
+                    })
+                } else if chatInteraction.presentation.isNotAccessible {
+                    alert(for: context.window, info: peer.isChannel ? L10n.chatChannelUnaccessible : L10n.chatGroupUnaccessible, completion: { [weak self] in
+                        self?.dismiss()
+                    })
+                }
             }
-         }))
- 
-        
-        if let peer = chatInteraction.peer {
-            if peer.isRestrictedChannel(context.contentSettings), let reason = peer.restrictionText {
-                alert(for: context.window, info: reason, completion: { [weak self] in
-                    self?.dismiss()
-                })
-            } else if chatInteraction.presentation.isNotAccessible {
-                alert(for: context.window, info: peer.isChannel ? L10n.chatChannelUnaccessible : L10n.chatGroupUnaccessible, completion: { [weak self] in
-                    self?.dismiss()
-                })
+            
+            
+            
+            self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+                if let strongSelf = self, !hasModals() {
+                    let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
+                    
+                    if result == .invoked {
+                        let setup = strongSelf.findAndSetEditableMessage()
+                        if !setup {
+                            strongSelf.genericView.tableView.scrollUp()
+                        }
+                    } else {
+                        if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
+                            strongSelf.genericView.tableView.scrollUp()
+                        }
+                    }
+                    
+                    return result
+                }
+                return .rejected
+                }, with: self, for: .UpArrow, priority: .low)
+            
+            
+            self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+                if let strongSelf = self, !hasModals() {
+                    let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
+                    
+                    
+                    if result == .invoked {
+                        strongSelf.genericView.tableView.scrollDown()
+                    }
+                    
+                    return result
+                }
+                return .rejected
+                }, with: self, for: .DownArrow, priority: .low)
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
+                    var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
+                    self.genericView.tableView.enumerateItems(with: { item in
+                        if let item = item as? ChatRowItem, let message = item.message {
+                            if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId == nil || (message.id < currentReplyId!) {
+                                currentReplyId = message.id
+                                self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
+                                return false
+                            }
+                        }
+                        return true
+                    })
+                    
+                    let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
+                    self.chatInteraction.setupReplyMessage(currentReplyId)
+                    
+                    return result
+                }
+                return .rejected
+                }, with: self, for: .UpArrow, priority: .low, modifierFlags: [.command])
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
+                    var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
+                    self.genericView.tableView.enumerateItems(reversed: true, with: { item in
+                        if let item = item as? ChatRowItem, let message = item.message {
+                            if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId != nil && (message.id > currentReplyId!) {
+                                currentReplyId = message.id
+                                self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
+                                return false
+                            }
+                        }
+                        return true
+                    })
+                    
+                    let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
+                    self.chatInteraction.setupReplyMessage(currentReplyId)
+                    
+                    return result
+                }
+                return .rejected
+                }, with: self, for: .DownArrow, priority: .low, modifierFlags: [.command])
+            
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                guard let `self` = self, !hasModals() else {return .rejected}
+                
+                if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
+                    self.chatInteraction.deleteSelectedMessages()
+                    return .invoked
+                }
+                
+                return .rejected
+                }, with: self, for: .Delete, priority: .low)
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                guard let `self` = self else {return .rejected}
+                
+                if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
+                    self.chatInteraction.deleteSelectedMessages()
+                    return .invoked
+                }
+                
+                return .rejected
+                }, with: self, for: .ForwardDelete, priority: .low)
+            
+            
+            
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                if let strongSelf = self, strongSelf.context.window.firstResponder != strongSelf.genericView.inputView.textView.inputView {
+                    _ = strongSelf.context.window.makeFirstResponder(strongSelf.genericView.inputView)
+                    return .invoked
+                } else if (self?.navigationController as? MajorNavigationController)?.genericView.state == .single {
+                    return .invoked
+                }
+                return .rejected
+                }, with: self, for: .Tab, priority: .high)
+            
+            
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                guard let `self` = self, self.mode != .scheduled, self.searchAvailable else {return .rejected}
+                if !self.chatInteraction.presentation.isSearchMode.0 {
+                    self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
+                } else {
+                    self.genericView.applySearchResponder()
+                }
+                
+                return .invoked
+                }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
+            
+            
+            
+            //        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+            //            guard let `self` = self else {return .rejected}
+            //            if let editState = self.chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia as? TelegramMediaImage {
+            //                self.chatInteraction.editEditingMessagePhoto(media)
+            //            }
+            //            return .invoked
+            //        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
+            
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                self?.genericView.inputView.makeBold()
+                return .invoked
+                }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                self?.genericView.inputView.makeUrl()
+                return .invoked
+                }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                self?.genericView.inputView.makeItalic()
+                return .invoked
+                }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                guard let `self` = self else { return .rejected }
+                self.chatInteraction.startRecording(true, nil)
+                return .invoked
+                }, with: self, for: .R, priority: .medium, modifierFlags: [.command])
+            
+            
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                self?.genericView.inputView.makeMonospace()
+                return .invoked
+                }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
+            
+            
+            #if BETA || ALPHA || DEBUG
+            self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+                if let `self` = self {
+                    addAudioToSticker(context: self.context)
+                }
+                return .invoked
+                }, with: self, for: .Y, priority: .medium, modifierFlags: [.command, .shift])
+            #endif
+            
+            self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
+                guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
+                let swipeState: SwipeState?
+                switch direction {
+                case .left:
+                    return .failed
+                case let .right(_state):
+                    swipeState = _state
+                case .none:
+                    swipeState = nil
+                }
+                
+                guard let state = swipeState else {return .failed}
+                
+                
+                
+                switch state {
+                case .start:
+                    let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+                    if row != -1 {
+                        guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem, let message = item.message, canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode) else {return .failed}
+                        self.removeRevealStateIfNeeded(message.id)
+                        (item.view as? RevealTableView)?.initRevealState()
+                        return .success(RevealTableItemController(item: item))
+                    } else {
+                        return .failed
+                    }
+                    
+                case let .swiping(_delta, controller):
+                    let controller = controller as! RevealTableItemController
+                    
+                    guard let view = controller.item.view as? RevealTableView else {return .nothing}
+                    
+                    var delta:CGFloat
+                    switch direction {
+                    case .left:
+                        delta = _delta//max(0, _delta)
+                    case .right:
+                        delta = -_delta//min(-_delta, 0)
+                    default:
+                        delta = _delta
+                    }
+                    
+                    let newDelta = min(min(300, view.width) * log2(abs(delta) + 1) * log2(min(300, view.width)) / 100.0, abs(delta))
+                    
+                    if delta < 0 {
+                        delta = -newDelta
+                    } else {
+                        delta = newDelta
+                    }
+                    
+                    
+                    view.moveReveal(delta: delta)
+                    
+                case let .success(_, controller), let .failed(_, controller):
+                    let controller = controller as! RevealTableItemController
+                    guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
+                    
+                    
+                    view.completeReveal(direction: direction)
+                }
+                
+                //  return .success()
+                
+                return .nothing
+                }, with: self.genericView.tableView, identifier: "chat-reply-swipe")
+            
+            
+            
+            if !(context.window.firstResponder is NSTextView) {
+                self.genericView.inputView.makeFirstResponder()
             }
+            
+            if let window = window {
+                selectTextController.initializeHandlers(for: window, chatInteraction:chatInteraction)
+            }
+            // if !context.isInGlobalSearch {
+            _ = context.window.makeFirstResponder(genericView.inputView.textView.inputView)
+            // }
+            
+            var beginPendingTime:CFAbsoluteTime?
+            
+            self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: self.chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
+                
+                if FastSettings.inAppSounds {
+                    let afterSentSound:NSSound? = {
+                        
+                        let p = Bundle.main.path(forResource: "sent", ofType: "caf")
+                        var sound:NSSound?
+                        if let p = p {
+                            sound = NSSound(contentsOfFile: p, byReference: true)
+                            sound?.volume = 1.0
+                        }
+                        
+                        return sound
+                    }()
+                    
+                    if let beginPendingTime = beginPendingTime {
+                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
+                            return
+                        }
+                    }
+                    beginPendingTime = CFAbsoluteTimeGetCurrent()
+                    afterSentSound?.play()
+                }
+            }))
         }
         
        
-        
-        self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
-            if let strongSelf = self, !hasModals() {
-                let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
-                
-                if result == .invoked {
-                    let setup = strongSelf.findAndSetEditableMessage()
-                    if !setup {
-                        strongSelf.genericView.tableView.scrollUp()
-                    }
-                } else {
-                    if strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                        strongSelf.genericView.tableView.scrollUp()
-                    }
-                }
-                
-                return result
-            }
-            return .rejected
-        }, with: self, for: .UpArrow, priority: .low)
-        
-        
-        self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
-            if let strongSelf = self, !hasModals() {
-                let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
-                
-                
-                if result == .invoked {
-                    strongSelf.genericView.tableView.scrollDown()
-                }
-                
-                return result
-            }
-            return .rejected
-        }, with: self, for: .DownArrow, priority: .low)
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
-                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
-                self.genericView.tableView.enumerateItems(with: { item in
-                    if let item = item as? ChatRowItem, let message = item.message {
-                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId == nil || (message.id < currentReplyId!) {
-                            currentReplyId = message.id
-                            self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
-                            return false
-                        }
-                    }
-                    return true
-                })
-                
-                let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
-                self.chatInteraction.setupReplyMessage(currentReplyId)
-                
-                return result
-            }
-            return .rejected
-        }, with: self, for: .UpArrow, priority: .low, modifierFlags: [.command])
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
-                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
-                self.genericView.tableView.enumerateItems(reversed: true, with: { item in
-                    if let item = item as? ChatRowItem, let message = item.message {
-                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId != nil && (message.id > currentReplyId!) {
-                            currentReplyId = message.id
-                            self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
-                            return false
-                        }
-                    }
-                    return true
-                })
-                
-                let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
-                self.chatInteraction.setupReplyMessage(currentReplyId)
-                
-                return result
-            }
-            return .rejected
-        }, with: self, for: .DownArrow, priority: .low, modifierFlags: [.command])
-        
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, !hasModals() else {return .rejected}
-            
-            if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
-                self.chatInteraction.deleteSelectedMessages()
-                return .invoked
-            }
-            
-            return .rejected
-        }, with: self, for: .Delete, priority: .low)
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self else {return .rejected}
-            
-            if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
-                self.chatInteraction.deleteSelectedMessages()
-                return .invoked
-            }
-            
-            return .rejected
-        }, with: self, for: .ForwardDelete, priority: .low)
-        
-        
-
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let strongSelf = self, strongSelf.context.window.firstResponder != strongSelf.genericView.inputView.textView.inputView {
-                _ = strongSelf.context.window.makeFirstResponder(strongSelf.genericView.inputView)
-                return .invoked
-            } else if (self?.navigationController as? MajorNavigationController)?.genericView.state == .single {
-                return .invoked
-            }
-            return .rejected
-        }, with: self, for: .Tab, priority: .high)
-        
-      
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .scheduled, self.searchAvailable else {return .rejected}
-            if !self.chatInteraction.presentation.isSearchMode.0 {
-                self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
-            } else {
-                self.genericView.applySearchResponder()
-            }
-
-            return .invoked
-        }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
-        
-    
-        
-//        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-//            guard let `self` = self else {return .rejected}
-//            if let editState = self.chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia as? TelegramMediaImage {
-//                self.chatInteraction.editEditingMessagePhoto(media)
-//            }
-//            return .invoked
-//        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
-        
-      
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.genericView.inputView.makeBold()
-            return .invoked
-        }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.genericView.inputView.makeUrl()
-            return .invoked
-        }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.genericView.inputView.makeItalic()
-            return .invoked
-        }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            guard let `self` = self else { return .rejected }
-            self.chatInteraction.startRecording(true, nil)
-            return .invoked
-        }, with: self, for: .R, priority: .medium, modifierFlags: [.command])
-        
-        
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            self?.genericView.inputView.makeMonospace()
-            return .invoked
-        }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
-        
-        
-        #if BETA || ALPHA || DEBUG
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let `self` = self {
-                addAudioToSticker(context: self.context)
-            }
-            return .invoked
-        }, with: self, for: .Y, priority: .medium, modifierFlags: [.command, .shift])
-        #endif
-        
-        self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
-            guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
-            let swipeState: SwipeState?
-            switch direction {
-            case .left:
-               return .failed
-            case let .right(_state):
-                swipeState = _state
-            case .none:
-                swipeState = nil
-            }
-            
-            guard let state = swipeState else {return .failed}
-            
-
-            
-            switch state {
-            case .start:
-                let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-                if row != -1 {
-                    guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem, let message = item.message, canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode) else {return .failed}
-                    self.removeRevealStateIfNeeded(message.id)
-                    (item.view as? RevealTableView)?.initRevealState()
-                    return .success(RevealTableItemController(item: item))
-                } else {
-                    return .failed
-                }
-                
-            case let .swiping(_delta, controller):
-                let controller = controller as! RevealTableItemController
-                
-                guard let view = controller.item.view as? RevealTableView else {return .nothing}
-                
-                var delta:CGFloat
-                switch direction {
-                case .left:
-                    delta = _delta//max(0, _delta)
-                case .right:
-                    delta = -_delta//min(-_delta, 0)
-                default:
-                    delta = _delta
-                }
-                
-                let newDelta = min(min(300, view.width) * log2(abs(delta) + 1) * log2(min(300, view.width)) / 100.0, abs(delta))
-                
-                if delta < 0 {
-                    delta = -newDelta
-                } else {
-                    delta = newDelta
-                }
-
-                
-                view.moveReveal(delta: delta)
-
-            case let .success(_, controller), let .failed(_, controller):
-                let controller = controller as! RevealTableItemController
-                guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
-                
-                
-                view.completeReveal(direction: direction)
-            }
-            
-            //  return .success()
-            
-            return .nothing
-        }, with: self.genericView.tableView, identifier: "chat-reply-swipe")
-        
-        
-        
-        if !(context.window.firstResponder is NSTextView) {
-            self.genericView.inputView.makeFirstResponder()
-        }
-
-        if let window = window {
-            selectTextController.initializeHandlers(for: window, chatInteraction:chatInteraction)
-        }
-       // if !context.isInGlobalSearch {
-            _ = context.window.makeFirstResponder(genericView.inputView.textView.inputView)
-       // }
-        
-        var beginPendingTime:CFAbsoluteTime?
-        
-       self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: self.chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
-           
-           if FastSettings.inAppSounds {
-               let afterSentSound:NSSound? = {
-                   
-                   let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                   var sound:NSSound?
-                   if let p = p {
-                       sound = NSSound(contentsOfFile: p, byReference: true)
-                       sound?.volume = 1.0
-                   }
-                   
-                   return sound
-               }()
-               
-               if let beginPendingTime = beginPendingTime {
-                   if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
-                       return
-                   }
-               }
-               beginPendingTime = CFAbsoluteTimeGetCurrent()
-               afterSentSound?.play()
-           }
-       }))
         
     }
     
@@ -5215,14 +5247,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.chatInteraction.add(observer: self)
-        self.context.globalPeerHandler.set(.single(chatLocation))
-        self.genericView.tableView.notifyScrollHandlers()
-        self.genericView.updateHeader(chatInteraction.presentation, false, false)
-        if let controller = globalAudio {
-            (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: genericView.tableView)
+        switch self.mode {
+        case .preview:
+            break
+        default:
+            self.chatInteraction.add(observer: self)
+            self.context.globalPeerHandler.set(.single(chatLocation))
+            self.genericView.tableView.notifyScrollHandlers()
+            self.genericView.updateHeader(chatInteraction.presentation, false, false)
+            if let controller = globalAudio {
+                (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: genericView.tableView)
+            }
         }
-        
     }
     
     private func updateMaxVisibleReadIncomingMessageIndex(_ index: MessageIndex) {

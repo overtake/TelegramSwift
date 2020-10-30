@@ -282,7 +282,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             connectionStatusView?.isSingleLayout = isSingleLayout
             connectionStatusView?.backButton?.removeAllHandlers()
             connectionStatusView?.backButton?.set(handler: { [weak self] _ in
-                self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                self?.chatInteraction.back()
             }, for: .Click)
         }
     }
@@ -473,7 +473,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         closeButton.autohighlight = false
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         closeButton.set(handler: { [weak self] _ in
-            self?.chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+            self?.chatInteraction.back()
         }, for: .Click)
         _ = closeButton.sizeToFit()
         closeButton.setFrameSize(closeButton.frame.width, frame.height)
@@ -617,7 +617,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     if chatInteraction.peerId == repliesPeerId {
                         
                     } else if chatInteraction.peerId == chatInteraction.context.peerId {
-                        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+                        chatInteraction.push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
                     } else {
                         switch chatInteraction.chatLocation {
                         case let .peer(peerId):
@@ -629,13 +629,13 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 }
                
             } else {
-                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                chatInteraction.back()
             }
         } else {
             if chatInteraction.peerId == repliesPeerId {
                 
             } else if chatInteraction.peerId == chatInteraction.context.peerId {
-                chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+                chatInteraction.push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
             } else {
                 switch chatInteraction.chatLocation {
                 case let .peer(peerId):
@@ -739,7 +739,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 callButton.isHidden = true
             case .replyThread:
                 callButton.isHidden = true
-            case .pinned:
+            case .pinned, .preview:
                 callButton.isHidden = true
             }
             

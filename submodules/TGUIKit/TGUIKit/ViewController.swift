@@ -989,12 +989,23 @@ open class ModalController : ModalViewController {
         self.controller = controller
         super.init(frame: controller._frameRect)
     }
-    
+
     open override var handleEvents: Bool {
         return true
     }
     
-    
+    open override func viewWillAppear(_ animated: Bool) {
+        self.controller.viewWillAppear(animated)
+    }
+    open override func viewWillDisappear(_ animated: Bool) {
+        self.controller.viewWillDisappear(animated)
+    }
+    open override func viewDidAppear(_ animated: Bool) {
+        self.controller.viewDidAppear(animated)
+    }
+    open override func viewDidDisappear(_ animated: Bool) {
+        self.controller.viewDidDisappear(animated)
+    }
     open override func firstResponder() -> NSResponder? {
         return controller.controller.firstResponder()
     }

@@ -46,12 +46,10 @@ class ChatSwitchInlineController: ChatController {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
                                         let controller: ChatController
                                         switch self.fallbackMode {
-                                        case .history, .replyThread, .pinned:
+                                        case .history, .replyThread, .pinned, .preview:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
-                                        case .pinned:
-                                            break
                                         }
                                         self.navigationController?.push(controller)
                                     }

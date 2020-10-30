@@ -879,6 +879,7 @@
 		D07C6D832347701700468B1A /* WalletProcessTransactionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07C6D822347701700468B1A /* WalletProcessTransactionController.swift */; };
 		D0830FC424127473006198E7 /* folder_new.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* folder_new.tgs */; };
 		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
+		D0906CFC254BFE1D000E6961 /* ChatModalPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0906CFB254BFE1D000E6961 /* ChatModalPreviewController.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
 		D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7181D7E175A007784E4 /* AppDelegate.swift */; };
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
@@ -2056,6 +2057,7 @@
 		D07C6D822347701700468B1A /* WalletProcessTransactionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletProcessTransactionController.swift; sourceTree = "<group>"; };
 		D0830FC324127468006198E7 /* folder_new.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_new.tgs; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
+		D0906CFB254BFE1D000E6961 /* ChatModalPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModalPreviewController.swift; sourceTree = "<group>"; };
 		D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGroupPeersController.swift; sourceTree = "<group>"; };
 		D098C7151D7E175A007784E4 /* Telegram.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telegram.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D098C7181D7E175A007784E4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -2767,6 +2769,7 @@
 				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 				D00C73B52302C196004B1E2B /* ChatScheduleController.swift */,
 				D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */,
+				D0906CFB254BFE1D000E6961 /* ChatModalPreviewController.swift */,
 			);
 			name = chat;
 			sourceTree = "<group>";
@@ -5568,6 +5571,7 @@
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
 				9F9B5EB522573FA700728CDC /* FFMpegAVIOContext.m in Sources */,
 				D09D9DF4229C289F00378796 /* GZip.m in Sources */,
+				D0906CFC254BFE1D000E6961 /* ChatModalPreviewController.swift in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
 				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,
 				D001E976243B385E009025F9 /* FolderIcons.swift in Sources */,

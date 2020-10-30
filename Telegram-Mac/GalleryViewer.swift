@@ -561,7 +561,7 @@ class GalleryViewer: NSResponder {
                 
                 let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
                 switch mode {
-                case .history:
+                case .history, .preview:
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                 case let .replyThread(data, _):
                     if data.messageId == message.id {
