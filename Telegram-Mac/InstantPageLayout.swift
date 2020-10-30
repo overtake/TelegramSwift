@@ -123,7 +123,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
     
     let stringForDate: (Int32) -> String = { date in
         let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: appAppearance.language.languageCode)
+        dateFormatter.locale = appAppearance.locale
         dateFormatter.dateStyle = .long
         dateFormatter.timeStyle = .none
         return dateFormatter.string(from: Date(timeIntervalSince1970: Double(date)))

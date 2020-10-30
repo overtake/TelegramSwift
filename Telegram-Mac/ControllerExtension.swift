@@ -230,6 +230,10 @@ final class Appearance : Equatable {
         self.presentation = presentation
     }
     
+    var locale: Locale {
+        return Locale(identifier: appAppearance.language.languageCode)
+    }
+    
     var newAllocation: Appearance {
         return Appearance(language: language, presentation: presentation)
     }
