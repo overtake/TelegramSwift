@@ -208,7 +208,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 renderLayoutType(item, animated: animated)
                 updateColors()
             }
-            if item.chatInteraction.presentation.state == .selecting {
+            if item.chatInteraction.presentation.state == .selecting || item.disableInteractions {
                 disableHierarchyInteraction()
             } else {
                restoreHierarchyInteraction()

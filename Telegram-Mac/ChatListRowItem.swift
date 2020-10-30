@@ -918,6 +918,13 @@ class ChatListRowItem: TableRowItem {
         
         if let peer = peer {
             
+           
+            
+            
+//            if let item = item as? ChatListRowItem, let peerId = item.peerId {
+//
+//            }
+            
             let deleteChat:()->Void = { [weak self] in
                 self?.delete()
             }
@@ -926,6 +933,8 @@ class ChatListRowItem: TableRowItem {
             guard let peerId = self.peerId else {
                 return .single([])
             }
+            
+            
             
             let clearHistory = { [weak self] in
                 if let strongSelf = self, let peer = strongSelf.peer {
@@ -989,6 +998,13 @@ class ChatListRowItem: TableRowItem {
             
             let rGroup = {
                 _ = returnGroup(account: context.account, peerId: peerId).start()
+            }
+            
+            if !self.isSelected {
+                items.append(ContextMenuItem(L10n.chatListContextPreview, handler: {
+                    showModal(with: ChatModalPreviewController(location: .peer(peerId), context: context), for: context.window)
+                }))
+                items.append(ContextSeparatorItem())
             }
             
             if !isAd && groupId == .root {
