@@ -14,8 +14,8 @@ import Postbox
 import TelegramCore
 import SyncCore
 
-let mediaExts:[String] = ["png","jpg","jpeg","tiff","mp4","mov","avi", "gif", "m4v"]
-let photoExts:[String] = ["png","jpg","jpeg","tiff"]
+let mediaExts:[String] = ["png","jpg","jpeg","tiff", "heic","mp4","mov","avi", "gif", "m4v"]
+let photoExts:[String] = ["png","jpg","jpeg","tiff", "heic"]
 let videoExts:[String] = ["mp4","mov","avi", "m4v"]
 let audioExts:[String] = ["mp3","wav", "m4a"]
 

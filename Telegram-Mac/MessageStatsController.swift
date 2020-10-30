@@ -128,7 +128,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         sectionId += 1
         
         if let messages = search?.0, !messages.messages.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsMessagePublicForwardsTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
             for (i, message) in messages.messages.enumerated() {
