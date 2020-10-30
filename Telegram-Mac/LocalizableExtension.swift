@@ -173,9 +173,21 @@ func translate(key: String, _ args: [CVarArg]) -> String {
         while ranges.count != args.count {
             args.removeFirst()
         }
+        let argIndexes = ranges.sorted(by: { lhs, rhs -> Bool in
+            return lhs.2 < rhs.2
+        })
+        
+        var argValues:[String] = args.map { "\($0)" }
+        
+        for index in argIndexes.map ({ $0.0 }) {
+            if !args.isEmpty {
+                argValues[index] = "\(args.removeFirst())"
+            }
+        }
+        
         for range in ranges.reversed() {
-            if range.0 < args.count {
-                let value = "\(args[range.0])"
+            if !argValues.isEmpty {
+                let value = argValues.removeLast()
                 formatted = formatted.nsstring.replacingCharacters(in: range.1, with: value)
             } else {
                 formatted = formatted.nsstring.replacingCharacters(in: range.1, with: "")
@@ -186,18 +198,19 @@ func translate(key: String, _ args: [CVarArg]) -> String {
     return "UndefinedKey"
 }
 
-private let argumentRegex = try! NSRegularExpression(pattern: "%(((\\\\d+)\\\\$)?)([@df])", options: [])
-func extractArgumentRanges(_ value: String) -> [(Int, NSRange)] {
-    var result: [(Int, NSRange)] = []
+private let argumentRegex = try! NSRegularExpression(pattern: "(%(((\\d+)\\$)?)([0-9])%(((\\d+)\\$)?)([@df]))|(%(((\\d+)\\$)?)([@df]))", options: [])
+func extractArgumentRanges(_ value: String) -> [(Int, NSRange, Int)] {
+    var result: [(Int, NSRange, Int)] = []
     let string = value as NSString
     let matches = argumentRegex.matches(in: string as String, options: [], range: NSRange(location: 0, length: string.length))
     var index = 0
     for match in matches {
-        var currentIndex = index
-        if match.range(at: 3).location != NSNotFound {
-            currentIndex = Int(string.substring(with: match.range(at: 3)))! - 1
+        let range = match.range(at: 0)
+        var valueIndex = index
+        if range.length >= 4, let index = Int(string.substring(with: NSMakeRange(range.location + 1, range.length - 3))) {
+            valueIndex = index
         }
-        result.append((currentIndex, match.range(at: 0)))
+        result.append((index, range, valueIndex))
         index += 1
     }
     result.sort(by: { $0.1.location < $1.1.location })
