@@ -7187,6 +7187,8 @@ internal final class L10n {
   internal static var statsGroupTopPosterHistory: String  { return L10n.tr("Localizable", "Stats.GroupTopPoster.History") }
   /// Promote
   internal static var statsGroupTopPosterPromote: String  { return L10n.tr("Localizable", "Stats.GroupTopPoster.Promote") }
+  /// PUBLIC SHARES
+  internal static var statsMessagePublicForwardsTitleHeader: String  { return L10n.tr("Localizable", "Stats.MessagePublicForwardsTitle.Header") }
   /// Activate
   internal static var statusBarActivate: String  { return L10n.tr("Localizable", "StatusBar.Activate") }
   /// Hide
