@@ -1007,7 +1007,8 @@ private struct ChatDismissedPins : Equatable {
     let tempMaxId: MessageId?
 }
 
-class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
+class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate, ModalControllerHelper {
+    
     
     private var chatLocation:ChatLocation
     private let peerView = Promise<PostboxView?>()
@@ -2603,7 +2604,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 
                 switch strongSelf.mode {
-                case .history, .replyThread:
+                case .history, .replyThread, .preview:
                     if let fromId = fromId {
                         strongSelf.historyState = strongSelf.historyState.withAddingReply(fromId)
                     }
@@ -3378,7 +3379,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let topPinnedMessage: Signal<ChatPinnedMessage?, NoError>
         switch mode {
-        case .history:
+        case .history, .preview:
             switch self.chatLocation {
             case let .peer(peerId):
                 let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
@@ -3555,22 +3556,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                             }
                             
-//                            var pinnedMessageId: MessageId?
-//                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let _ = combinedInitialData.cachedData as? CachedSecretChatData {
-//                            }
-                            
-//                            var pinnedMessage: ChatPinnedMessage?
-//                            if let pinnedMessageId = pinnedMessageId {
-//                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: combinedInitialData.cachedDataMessages?[pinnedMessageId]?.first, others: [pinnedMessageId], isLatest: true)
-//                            }
-//                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
-                            
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
                     case .scheduled:
@@ -3680,30 +3665,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                             
-                            var pinnedMessageId: MessageId?
-                            if let cachedData = peerView.cachedData as? CachedChannelData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            } else if let cachedData = peerView.cachedData as? CachedUserData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            } else if let cachedData = peerView.cachedData as? CachedGroupData {
-                                pinnedMessageId = cachedData.pinnedMessageId
-                            }
-
-                            
                             var pinnedMessage: ChatPinnedMessage?
                             pinnedMessage = topPinnedMessage
-//                            if topPinnedMessage == nil, let pinnedMessageId = pinnedMessageId {
-//                                let message: Message?
-//                                if let msg = presentation.pinnedMessageId?.message, msg.id == pinnedMessageId {
-//                                    message = msg
-//                                } else {
-//                                    message = nil
-//                                }
-//                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: message, others: [pinnedMessageId], isLatest: true)
-//                            } else {
-//                                pinnedMessageId = topPinnedMessage?.messageId
-//                            }
-                            
+
 
                             present = present.withUpdatedPinnedMessageId(pinnedMessage)
                             
@@ -5247,11 +5211,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.chatInteraction.add(observer: self)
         switch self.mode {
         case .preview:
             break
         default:
-            self.chatInteraction.add(observer: self)
             self.context.globalPeerHandler.set(.single(chatLocation))
             self.genericView.tableView.notifyScrollHandlers()
             self.genericView.updateHeader(chatInteraction.presentation, false, false)
@@ -5796,5 +5760,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
 
+    
+    var modalInteractions: ModalInteractions? {
+        return ModalInteractions(acceptTitle: L10n.chatModalPreviewOpenChat, accept: { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.navigationController?.modal?.close()
+            self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: self.chatLocation))
+        }, drawBorder: true, height: 50, singleButton: true)
+    }
     
 }
