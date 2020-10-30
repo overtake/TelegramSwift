@@ -862,7 +862,11 @@ public struct ModalHeaderData {
     }
 }
 
-open class ModalViewController : ViewController {
+public protocol ModalControllerHelper {
+    var modalInteractions:ModalInteractions? { get }
+}
+
+open class ModalViewController : ViewController, ModalControllerHelper {
     
     open var closable:Bool {
         return true
@@ -992,6 +996,10 @@ open class ModalController : ModalViewController {
 
     open override var handleEvents: Bool {
         return true
+    }
+    
+    open override var modalInteractions: ModalInteractions? {
+        return (self.controller.controller as? ModalControllerHelper)?.modalInteractions
     }
     
     open override func viewWillAppear(_ animated: Bool) {

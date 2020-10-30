@@ -1801,6 +1801,8 @@ internal final class L10n {
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
   /// SHOW MESSAGE
   internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
+  /// Open Chat
+  internal static var chatModalPreviewOpenChat: String  { return L10n.tr("Localizable", "Chat.ModalPreview.OpenChat") }
   /// Don't Show Pinned Messages
   internal static var chatPinnedDontShow: String  { return L10n.tr("Localizable", "Chat.Pinned.DontShow") }
   /// %d
