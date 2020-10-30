@@ -508,6 +508,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 } else {
                     self.bindings.navigateToChat(account, messageId.peerId)
                 }
+                center.removeDeliveredNotification(notification)
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
             }
         } else {
             center.removeDeliveredNotification(notification)
