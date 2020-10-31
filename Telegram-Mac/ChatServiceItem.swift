@@ -63,7 +63,7 @@ class ChatServiceItem: ChatRowItem {
                 switch media.action {
                 case let .groupCreated(title: title):
                     if !peer.isChannel {
-                        let _ =  attributedString.append(string: L10n.chatServiceGroupCreated(authorName, title), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: L10n.chatServiceGroupCreated1(authorName, title), color: grayTextColor, font: .normal(theme.fontSize))
                         
                         if let authorId = authorId {
                             let range = attributedString.string.nsstring.range(of: authorName)
@@ -79,7 +79,7 @@ class ChatServiceItem: ChatRowItem {
                     if peerIds.first == authorId {
                         let _ =  attributedString.append(string: tr(L10n.chatServiceGroupAddedSelf(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
-                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupAddedMembers(authorName, "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupAddedMembers1(authorName, "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
@@ -102,7 +102,7 @@ class ChatServiceItem: ChatRowItem {
                     if peerIds.first == message.author?.id {
                         let _ =  attributedString.append(string: tr(L10n.chatServiceGroupRemovedSelf(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
                     } else {
-                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupRemovedMembers(authorName, "")), color: grayTextColor, font: .normal(theme.fontSize))
+                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupRemovedMembers1(authorName, "")), color: grayTextColor, font: .normal(theme.fontSize))
                         for peerId in peerIds {
                             
                             if let peer = message.peers[peerId] {
@@ -147,7 +147,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                 case let .titleUpdated(title):
-                    let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: peer.isChannel ? tr(L10n.chatServiceChannelUpdatedTitle(title)) : tr(L10n.chatServiceGroupUpdatedTitle1(authorName, title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     
                     if let authorId = authorId {
                         
@@ -167,7 +167,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     let cutted = replyMessageText.prefixWithDots(30)
-                    _ = attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    _ = attributedString.append(string: tr(L10n.chatServiceGroupUpdatedPinnedMessage1(authorName, cutted)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     let pinnedRange = attributedString.string.nsstring.range(of: cutted)
                     if pinnedRange.location != NSNotFound {
                         attributedString.add(link: inAppLink.callback("", { [weak chatInteraction] _ in
@@ -295,24 +295,39 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case let .geoProximityReached(_, toId, distance):
+                case let .geoProximityReached(fromId, toId, distance):
                     let distanceString = stringForDistance(distance: Double(distance))
-                    if toId == context.peerId {
-                        let _ = attributedString.append(string: L10n.notificationProximityReachedYou(authorName, distanceString), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let text: String
+                    if fromId == context.peerId {
+                        text = L10n.notificationProximityYouReached1(distanceString, message.peers[toId]?.displayTitle ?? "")
+                    } else if toId == context.peerId {
+                        text = L10n.notificationProximityReachedYou1(message.peers[fromId]?.displayTitle ?? "", distanceString)
                     } else {
-                        let _ = attributedString.append(string: L10n.notificationProximityReached(authorName, distanceString, message.peers[toId]?.displayTitle ?? ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        text = L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
                     }
+                    let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
                     }
                     if let peer = message.peers[toId], !peer.displayTitle.isEmpty {
                         let range = attributedString.string.nsstring.range(of: peer.displayTitle)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
-                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
                     }
-                    
+                    if let peer = message.peers[fromId], !peer.displayTitle.isEmpty {
+                        let range = attributedString.string.nsstring.range(of: peer.displayTitle)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
                 default:
                     break
                 }
