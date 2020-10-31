@@ -2069,17 +2069,17 @@ internal final class L10n {
   }
   /// channel video updated
   internal static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
-  /// %@ invited %@
-  internal static func chatServiceGroupAddedMembers(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers", p1, p2)
+  /// %1%@ invited %2%@
+  internal static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
   }
   /// %@ joined the group
   internal static func chatServiceGroupAddedSelf(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedSelf", p1)
   }
-  /// %@ created the group "%@"
-  internal static func chatServiceGroupCreated(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.Created", p1, p2)
+  /// %1%@ created the group "%2%@"
+  internal static func chatServiceGroupCreated1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.Created1", p1, p2)
   }
   /// %@ joined group via invite link
   internal static func chatServiceGroupJoinedByLink(_ p1: String) -> String {
@@ -2087,9 +2087,9 @@ internal final class L10n {
   }
   /// This group was upgraded to a supergroup
   internal static var chatServiceGroupMigratedToSupergroup: String  { return L10n.tr("Localizable", "Chat.Service.Group.MigratedToSupergroup") }
-  /// %@ removed %@
-  internal static func chatServiceGroupRemovedMembers(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.RemovedMembers", p1, p2)
+  /// %1%@ removed %2%@
+  internal static func chatServiceGroupRemovedMembers1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.RemovedMembers1", p1, p2)
   }
   /// %@ removed group photo
   internal static func chatServiceGroupRemovedPhoto(_ p1: String) -> String {
@@ -2107,13 +2107,13 @@ internal final class L10n {
   internal static func chatServiceGroupUpdatedPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPhoto", p1)
   }
-  /// %@ pinned "%@"
-  internal static func chatServiceGroupUpdatedPinnedMessage(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPinnedMessage", p1, p2)
+  /// %1%@ pinned "%2%@"
+  internal static func chatServiceGroupUpdatedPinnedMessage1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPinnedMessage1", p1, p2)
   }
-  /// %@ changed the group name to "%@"
-  internal static func chatServiceGroupUpdatedTitle(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.UpdatedTitle", p1, p2)
+  /// %1%@ changed the group name to "%2%@"
+  internal static func chatServiceGroupUpdatedTitle1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.UpdatedTitle1", p1, p2)
   }
   /// %@ updated group video
   internal static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
@@ -4459,13 +4459,17 @@ internal final class L10n {
   internal static var notificationLockedPreview: String  { return L10n.tr("Localizable", "Notification.LockedPreview") }
   /// Mark as Read
   internal static var notificationMarkAsRead: String  { return L10n.tr("Localizable", "Notification.MarkAsRead") }
-  /// %@ is now within %@ from %@
-  internal static func notificationProximityReached(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "Notification.ProximityReached", p1, p2, p3)
+  /// %1$@ is now within %2$@ from %3$@
+  internal static func notificationProximityReached1(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Notification.ProximityReached_1", p1, p2, p3)
   }
-  /// %@ is now within %@ from you
-  internal static func notificationProximityReachedYou(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Notification.ProximityReachedYou", p1, p2)
+  /// %1$@ is now within %2$@ from you
+  internal static func notificationProximityReachedYou1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.ProximityReachedYou_1", p1, p2)
+  }
+  /// You are now within %1$@ from %2$@
+  internal static func notificationProximityYouReached1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.ProximityYouReached_1", p1, p2)
   }
   /// 📆 Reminder
   internal static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
