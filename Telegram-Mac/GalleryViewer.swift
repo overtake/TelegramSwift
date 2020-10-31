@@ -1037,7 +1037,7 @@ class GalleryViewer: NSResponder {
                                         text = L10n.galleryViewFastSaveImage1
                                     }
                                     
-                                    let dateFormatter = DateFormatter()
+                                    let dateFormatter = makeNewDateFormatter()
                                     dateFormatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
                                    
                                     

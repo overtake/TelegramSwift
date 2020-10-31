@@ -20,6 +20,12 @@ extension Message {
     }
 }
 
+func makeNewDateFormatter() -> DateFormatter {
+    let formatter = DateFormatter()
+    formatter.locale = appAppearance.locale
+    return formatter
+}
+
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, onlyInApp: Bool = false, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {

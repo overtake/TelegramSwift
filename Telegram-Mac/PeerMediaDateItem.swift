@@ -38,10 +38,9 @@ class PeerMediaDateItem: TableStickItem {
         localtime_r(&now, &timeinfoNow)
         
         let text: String
-        let dateFormatter = DateFormatter()
+        let dateFormatter = makeNewDateFormatter()
         dateFormatter.timeZone = NSTimeZone.local
         dateFormatter.dateFormat = "MMMM yyyy";
-        dateFormatter.locale = appAppearance.locale
         text = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(timestamp))).uppercased()
         
         textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.listGrayText, font: .normal(.short)))
