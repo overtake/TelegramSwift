@@ -660,7 +660,6 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     
     open override func layout() {
-        super.layout()
         switch state {
         case .None:
             animateContainer.center()

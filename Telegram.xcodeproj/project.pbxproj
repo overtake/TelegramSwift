@@ -271,6 +271,10 @@
 		A7D28237236C5B2C0000A9BF /* PhoneNumberUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */; };
 		A7D28259236C70A50000A9BF /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7D2823B236C69070000A9BF /* SSignalKit.framework */; };
 		A7DF1B6C237415AD00ACC01F /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7DF1B6B237415AD00ACC01F /* Zip.framework */; };
+		A7E831F0255040B70095A167 /* ChatPresentationInputQueryResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */; };
+		A7E831F1255040D60095A167 /* ChatPresentationInputQueryResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */; };
+		A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
+		A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
 		A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */; };
 		A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */; };
@@ -1369,6 +1373,8 @@
 		A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberUtils.swift; sourceTree = "<group>"; };
 		A7D2823B236C69070000A9BF /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7DF1B6B237415AD00ACC01F /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPresentationInputQueryResult.swift; sourceTree = "<group>"; };
+		A7E831F2255041020095A167 /* IsEqualMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsEqualMessages.swift; sourceTree = "<group>"; };
 		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnauthorizedConfiguration.swift; sourceTree = "<group>"; };
 		A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchRecentQueries.swift; sourceTree = "<group>"; };
@@ -3625,6 +3631,7 @@
 				C28149891EA7F44300BB933E /* ListViewIntermediateState.swift */,
 				C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */,
 				C251FB4B1FEDCC750035E5D7 /* ChatPresentationUtils.swift */,
+				A7E831F2255041020095A167 /* IsEqualMessages.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -4118,6 +4125,7 @@
 				C253E2391DE4D3DB0022A29F /* ChatInterfaceInputContext.swift */,
 				C253E23B1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift */,
 				9FC4DA9B21DD187C003E2A62 /* SearchPeerMembers.swift */,
+				A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */,
 			);
 			name = interface;
 			sourceTree = "<group>";
@@ -5214,6 +5222,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7E831F1255040D60095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
 				D06C69532539E30200DD9005 /* SlotMachineValue.swift in Sources */,
 				A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */,
 				A7F2831923994B9700742C20 /* AutoplayPreferences.swift in Sources */,
@@ -5228,6 +5237,7 @@
 				9F147F7E22315EC200D71BD1 /* ManageSharedAccountInfo.swift in Sources */,
 				9F147F7F22315EC200D71BD1 /* SharedAccountInfo.swift in Sources */,
 				9F147F7A2231533700D71BD1 /* InAppNotificationSettings.swift in Sources */,
+				A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */,
 				9F147F79223151D900D71BD1 /* RenderedTotalUnreadCount.swift in Sources */,
 				9F147F782231515800D71BD1 /* UpdaterNotifySettings.swift in Sources */,
 				9F147F7722314FBE00D71BD1 /* PanelUtils.swift in Sources */,
@@ -5984,12 +5994,14 @@
 				D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
 				C2DF47C11DE79574003AA6C0 /* wav_io.c in Sources */,
+				A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */,
 				D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */,
 				D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */,
 				C241026F1FD58EA900DB8625 /* SImageView.swift in Sources */,
 				D06C7BBB247FAE3E00E67C3C /* GifPlayerBufferView.swift in Sources */,
 				C24D9FC71E2500AC002CD3F3 /* PasscodeSettingsViewController.swift in Sources */,
 				9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */,
+				A7E831F0255040B70095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
 				9F6314E121CAA0AB009FD379 /* NewPollController.swift in Sources */,
 				9FFAE4F1205A8C89000C028E /* MediaTrackFrame.swift in Sources */,
 				C2DE5D2A1F3CA69D0081EC1E /* InstantPageMedia.swift in Sources */,
