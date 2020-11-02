@@ -378,7 +378,7 @@ enum ContextQueryForSearchMentionFilter {
 }
 
 
-func chatContextQueryForSearchMention(peer: Peer, chatLocation: ChatLocation, _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?, context: AccountContext, filter: ContextQueryForSearchMentionFilter = .plain(includeNameless: true, includeInlineBots: false))  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
+func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuery: ChatPresentationInputQuery, currentQuery: ChatPresentationInputQuery?, context: AccountContext, filter: ContextQueryForSearchMentionFilter = .plain(includeNameless: true, includeInlineBots: false))  -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)?  {
     switch inputQuery {
     case let .mention(query: query, includeRecent: _):
         let normalizedQuery = query.lowercased()
@@ -393,77 +393,87 @@ func chatContextQueryForSearchMention(peer: Peer, chatLocation: ChatLocation, _ 
             }
         }
         
-        let participants = searchPeerMembers(context: context, peerId: peer.id, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peer.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
-                let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                    if entry.message.media.first is TelegramMediaAction {
-                        return nil
-                    }
-                    return entry.message.author?.id
-                })
-                
-                var sorted = participants.sorted{ lhs, rhs in
-                    let lhsIndex = latestIds.firstIndex(where: {$0 == lhs.id})
-                    let rhsIndex = latestIds.firstIndex(where: {$0 == rhs.id})
-                    if let lhsIndex = lhsIndex, let rhsIndex = rhsIndex  {
-                        return lhsIndex < rhsIndex
-                    } else if lhsIndex == nil && rhsIndex != nil {
-                        return false
-                    } else if lhsIndex != nil && rhsIndex == nil {
-                        return true
-                    } else {
-                        return lhs.displayTitle < rhs.displayTitle
-                    }
+        let participants: Signal<[Peer], NoError> = combineLatest(chatLocations.map { chatLocation in
+            searchPeerMembers(context: context, peerId: chatLocation.peerId, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(chatLocation.peerId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                    let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
+                        if entry.message.media.first is TelegramMediaAction {
+                            return nil
+                        }
+                        return entry.message.author?.id
+                    })
                     
-                }
-                
-                if let index = sorted.firstIndex(where: {$0.id == context.peerId}) {
-                    sorted.move(at: index, to: 0)
-                }
-                
-                return sorted
-            }
-            
-        } |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                let filteredParticipants = participants.filter { peer in
-                    
-                    switch filter {
-                    case let .plain(includeNameless, includeInlineBots):
-                        if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
+                    var sorted = participants.sorted{ lhs, rhs in
+                        let lhsIndex = latestIds.firstIndex(where: {$0 == lhs.id})
+                        let rhsIndex = latestIds.firstIndex(where: {$0 == rhs.id})
+                        if let lhsIndex = lhsIndex, let rhsIndex = rhsIndex  {
+                            return lhsIndex < rhsIndex
+                        } else if lhsIndex == nil && rhsIndex != nil {
                             return false
-                        }
-                        if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
-                            return false
-                        }
-                    case let .filterSelf(includeNameless, includeInlineBots):
-                        if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
-                            return false
-                        }
-                        if peer.id == context.peerId {
-                            return false
+                        } else if lhsIndex != nil && rhsIndex == nil {
+                            return true
+                        } else {
+                            return lhs.displayTitle < rhs.displayTitle
                         }
                         
-                        if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
-                            return false
-                        }
-                    }
-                    if peer.displayTitle == L10n.peerDeletedUser {
-                        return false
-                    }
-                    if peer.indexName.matchesByTokens(normalizedQuery) {
-                        return true
-                    }
-                    if let addressName = peer.addressName, addressName.lowercased().hasPrefix(normalizedQuery) {
-                        return true
                     }
                     
-                    return peer.addressName == nil && normalizedQuery.isEmpty
+                    if let index = sorted.firstIndex(where: {$0.id == context.peerId}) {
+                        sorted.move(at: index, to: 0)
+                    }
+                    
+                    return sorted
                 }
                 
-                return { _ in return .mentions(filteredParticipants) }
+            }
+        }) |> map { values in
+            var result:[Peer] = []
+            for value in values {
+                result.append(contentsOf: value)
+            }
+            return uniquePeers(from: result)
         }
         
-        return (inputQuery, signal |> then(participants))
+        let result = participants |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+            let filteredParticipants = participants.filter { peer in
+                
+                switch filter {
+                case let .plain(includeNameless, includeInlineBots):
+                    if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
+                        return false
+                    }
+                    if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
+                        return false
+                    }
+                case let .filterSelf(includeNameless, includeInlineBots):
+                    if !includeNameless, peer.addressName == nil || peer.addressName!.isEmpty {
+                        return false
+                    }
+                    if peer.id == context.peerId {
+                        return false
+                    }
+                    
+                    if !includeInlineBots, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder != nil {
+                        return false
+                    }
+                }
+                if peer.displayTitle == L10n.peerDeletedUser {
+                    return false
+                }
+                if peer.indexName.matchesByTokens(normalizedQuery) {
+                    return true
+                }
+                if let addressName = peer.addressName, addressName.lowercased().hasPrefix(normalizedQuery) {
+                    return true
+                }
+                
+                return peer.addressName == nil && normalizedQuery.isEmpty
+            }
+            
+            return { _ in return .mentions(filteredParticipants) }
+        }
+        
+        return (inputQuery, signal |> then(result))
     case let .emoji(query, firstWord):
         if !query.isEmpty {
             let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())

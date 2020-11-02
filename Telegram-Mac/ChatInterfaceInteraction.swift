@@ -346,8 +346,8 @@ final class ChatInteraction : InterfaceObserver  {
                         $0.withoutInitialAction()
                     })
                 }
-            case let .forward(messageIds, text, _):
-                update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(text != nil ? ChatTextInputState(inputText: text!) : $0.inputState)})})
+            case let .forward(messageIds, inputState, _):
+                update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(inputState ?? $0.inputState)})})
                 update({
                     $0.withoutInitialAction()
                 })
