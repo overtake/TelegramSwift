@@ -14,19 +14,29 @@ import Postbox
 import SwiftSignalKit
 
 final class SelectPeerPresentation : Equatable {
+    
+    struct Comment : Equatable {
+        let string: String
+        let range: NSRange
+    }
+    
     let selected:Set<PeerId>
     let peers:[PeerId: Peer]
     let limit:Int32
+    let inputQueryResult: ChatPresentationInputQueryResult?
+    let comment: Comment
     private let someFlagsAsNotice: Bool
     static func ==(lhs:SelectPeerPresentation, rhs:SelectPeerPresentation) -> Bool {
-        return lhs.selected == rhs.selected && lhs.limit == rhs.limit && lhs.someFlagsAsNotice == rhs.someFlagsAsNotice
+        return lhs.selected == rhs.selected && lhs.limit == rhs.limit && lhs.someFlagsAsNotice == rhs.someFlagsAsNotice && lhs.inputQueryResult == rhs.inputQueryResult && lhs.comment == rhs.comment
     }
     
-    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:], limit: Int32 = 0, someFlagsAsNotice:Bool = false) {
+    init(_ selected:Set<PeerId> = Set(), peers:[PeerId: Peer] = [:], limit: Int32 = 0, someFlagsAsNotice:Bool = false, inputQueryResult: ChatPresentationInputQueryResult? = nil, comment: Comment = Comment(string: "", range: NSMakeRange(0, 0))) {
         self.selected = selected
         self.peers = peers
         self.limit = limit
         self.someFlagsAsNotice = someFlagsAsNotice
+        self.inputQueryResult = inputQueryResult
+        self.comment = comment
     }
     
     func deselect(peerId:PeerId) -> SelectPeerPresentation {
@@ -35,7 +45,7 @@ final class SelectPeerPresentation : Equatable {
         selectedIds.formUnion(selected)
         let _ = selectedIds.remove(peerId)
         peers.removeValue(forKey: peerId)
-        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment)
     }
     
     var isLimitReached: Bool {
@@ -43,7 +53,15 @@ final class SelectPeerPresentation : Equatable {
     }
     
     func withUpdateLimit(_ limit: Int32) -> SelectPeerPresentation {
-        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment)
+    }
+    
+    func updatedInputQueryResult(_ f: (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?) -> SelectPeerPresentation {
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: f(inputQueryResult), comment: comment)
+    }
+    
+    func withUpdatedComment(_ comment: Comment) -> SelectPeerPresentation {
+        return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment)
     }
     
     func withToggledSelected(_ peerId: PeerId, peer:Peer) -> SelectPeerPresentation {
@@ -62,7 +80,7 @@ final class SelectPeerPresentation : Equatable {
                 someFlagsAsNotice = !someFlagsAsNotice
             }
         }
-        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice)
+        return SelectPeerPresentation(selectedIds, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment)
     }
     
 }

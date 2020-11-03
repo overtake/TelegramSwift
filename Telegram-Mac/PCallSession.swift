@@ -277,7 +277,9 @@ class PCallSession {
             if isVideoAvailable, isVideo, !isOutgoingVideoPaused, cameraUpdated {
                 self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
             }
-            
+            if microUpdated {
+                self.ongoingContext?.switchAudioInput(devicesContext.currentMicroId ?? "")
+            }
         }
     }
     
