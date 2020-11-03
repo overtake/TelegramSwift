@@ -248,30 +248,6 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
         [resultData writeToFile:filePath atomically:false];
     }
     
-    /*if (@available(iOS 11, *)) {
-     NSData *currentEncryptedData = [NSData dataWithContentsOfFile:encryptedPath];
-     
-     LocalPrivateKey *localPrivateKey = [self getLocalPrivateKey:baseAppBundleId];
-     
-     if (localPrivateKey == nil) {
-     localPrivateKey = [self addLocalPrivateKey:baseAppBundleId];
-     }
-     
-     if (localPrivateKey != nil) {
-     if (currentEncryptedData != nil) {
-     NSData *decryptedData = [localPrivateKey decrypt:currentEncryptedData];
-     
-     if (![resultData isEqualToData:decryptedData]) {
-     NSData *encryptedData = [localPrivateKey encrypt:resultData];
-     [encryptedData writeToFile:encryptedPath atomically:false];
-     //assert(false);
-     }
-     } else {
-     NSData *encryptedData = [localPrivateKey encrypt:resultData];
-     [encryptedData writeToFile:encryptedPath atomically:false];
-     }
-     }
-     }*/
     
     CFAbsoluteTime endTime = CFAbsoluteTimeGetCurrent();
     NSLog(@"deviceSpecificEncryptionParameters took %f ms", (endTime - startTime) * 1000.0);

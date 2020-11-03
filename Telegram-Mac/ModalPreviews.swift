@@ -16,5 +16,12 @@ func ChatModalPreviewController(location: ChatLocation, context: AccountContext)
     navigation._frameRect = NSMakeRect(0, 0, 350, context.window.frame.height - 60)
     navigation.canAddControllers = false
     return navigation
-    
+}
+
+
+func ChatListModalPreviewController(context: AccountContext) -> NavigationViewController {
+    let navigation = MajorNavigationController(ChatListController.self, ChatListController(context, modal: true, groupId: nil, filterId: nil), context.window)
+    navigation._frameRect = NSMakeRect(0, 0, 350, context.window.frame.height - 60)
+    navigation.canAddControllers = false
+    return navigation
 }
