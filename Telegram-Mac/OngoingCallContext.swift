@@ -358,6 +358,7 @@ private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
+    func nativeSwitchAudioInput(_ deviceId: String)
 }
 
 
@@ -370,6 +371,8 @@ private final class OngoingCallThreadLocalContextHolder {
 }
 
 extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
+    
+    
     
     
     func nativeSetNetworkType(_ type: NetworkType) {
@@ -389,6 +392,9 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
     }
+    func nativeSwitchAudioInput(_ deviceId: String) {
+        
+    }
     
     func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
     }
@@ -403,6 +409,10 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     }
     
     func nativeSwitchVideoCamera() {
+    }
+    
+    func nativeSwitchAudioInput() {
+        
     }
     
     func nativeDebugInfo() -> String {
@@ -437,6 +447,10 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
     
     func nativeSetIsLowBatteryLevel(_ value: Bool) {
         self.setIsLowBatteryLevel(value)
+    }
+    
+    func nativeSwitchAudioInput(_ deviceId: String) {
+        self.switchAudioInput(deviceId)
     }
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
@@ -853,6 +867,12 @@ final class OngoingCallContext {
     public func disableVideo() {
         self.withContext { context in
             context.nativeDisableVideo()
+        }
+    }
+    
+    public func switchAudioInput(_ deviceId: String) {
+        self.withContext { context in
+            context.nativeSwitchAudioInput(deviceId)
         }
     }
     

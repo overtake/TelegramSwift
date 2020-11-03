@@ -71,7 +71,8 @@ class ChatDateStickItem : TableStickItem {
             }
             
         } else {
-            let dateFormatter = DateFormatter()
+            let dateFormatter = makeNewDateFormatter()
+            
             dateFormatter.calendar = Calendar.autoupdatingCurrent
             //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";

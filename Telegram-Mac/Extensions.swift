@@ -20,6 +20,12 @@ extension Message {
     }
 }
 
+func makeNewDateFormatter() -> DateFormatter {
+    let formatter = DateFormatter()
+    formatter.locale = appAppearance.locale
+    return formatter
+}
+
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, onlyInApp: Bool = false, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
@@ -38,8 +44,17 @@ extension NSMutableAttributedString {
                         let link = inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy)
                         if onlyInApp {
                             switch link {
-                            case .external:
-                                continue
+                            case let .external(link, _):
+                                let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telegra.ph", "telesco.pe"]
+                                if let url = URL(string: link) {
+                                    if let host = url.host, allowed.contains(host) {
+                                        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                    } else if allowed.contains(link) {
+                                        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                    }
+                                } else {
+                                    continue
+                                }
                             default:
                                 self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
                             }
@@ -79,6 +94,8 @@ extension NSMutableAttributedString {
         }
     }
     
+   // while
+  //  7️⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣
 }
 
 

@@ -1023,7 +1023,7 @@ class ChatSearchHeader : View, Notifable {
                     searchView.change(size: NSMakeSize(searchWidth, searchView.frame.height), animated: animated)
                     
                     if (peer.isSupergroup || peer.isGroup) && chatInteraction.mode == .history {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, chatLocation: chatInteraction.chatLocation, .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(chatLocations: [chatInteraction.chatLocation], .mention(query: value.searchState.request, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
                                 if let strongSelf = self {
@@ -1075,7 +1075,7 @@ class ChatSearchHeader : View, Notifable {
                             }
                         })
                     } else {
-                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(peer: peer, chatLocation: chatInteraction.chatLocation, .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
+                        if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(chatLocations: [chatInteraction.chatLocation], .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context) {
                             self.contextQueryState?.1.dispose()
                             var inScope = true
                             var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
