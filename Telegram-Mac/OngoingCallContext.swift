@@ -358,7 +358,7 @@ private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
-    func nativeSwitchAudioInput(_ deviceId: String)
+    func nativeswitchAudioOutput(_ deviceId: String)
 }
 
 
@@ -392,7 +392,7 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
     }
-    func nativeSwitchAudioInput(_ deviceId: String) {
+    func nativeswitchAudioOutput(_ deviceId: String) {
         
     }
     
@@ -411,7 +411,7 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     func nativeSwitchVideoCamera() {
     }
     
-    func nativeSwitchAudioInput() {
+    func nativeswitchAudioOutput() {
         
     }
     
@@ -449,8 +449,8 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
         self.setIsLowBatteryLevel(value)
     }
     
-    func nativeSwitchAudioInput(_ deviceId: String) {
-        self.switchAudioInput(deviceId)
+    func nativeswitchAudioOutput(_ deviceId: String) {
+        self.switchAudioOutput(deviceId)
     }
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
@@ -870,9 +870,9 @@ final class OngoingCallContext {
         }
     }
     
-    public func switchAudioInput(_ deviceId: String) {
+    public func switchAudioOutput(_ deviceId: String) {
         self.withContext { context in
-            context.nativeSwitchAudioInput(deviceId)
+            context.nativeswitchAudioOutput(deviceId)
         }
     }
     
