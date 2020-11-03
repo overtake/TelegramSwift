@@ -274,11 +274,15 @@ class PCallSession {
         didSet {
             let cameraUpdated = devicesContext.updateCameraId(voiceSettings)
             let microUpdated = devicesContext.updateMicroId(voiceSettings) // todo
+            let outputUpdated = devicesContext.updateOutputId(voiceSettings)
             if isVideoAvailable, isVideo, !isOutgoingVideoPaused, cameraUpdated {
                 self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
             }
             if microUpdated {
-                self.ongoingContext?.switchAudioOutput(devicesContext.currentMicroId ?? "")
+                self.ongoingContext?.switchAudioInput(devicesContext.currentMicroId ?? "")
+            }
+            if outputUpdated {
+                 self.ongoingContext?.switchAudioOutput(devicesContext.currentOutputId ?? "")
             }
         }
     }

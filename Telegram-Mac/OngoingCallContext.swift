@@ -358,7 +358,8 @@ private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
-    func nativeswitchAudioOutput(_ deviceId: String)
+    func nativeSwitchAudioOutput(_ deviceId: String)
+    func nativeSwitchAudioInput(_ deviceId: String)
 }
 
 
@@ -392,10 +393,12 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
     }
-    func nativeswitchAudioOutput(_ deviceId: String) {
+    func nativeSwitchAudioOutput(_ deviceId: String) {
         
     }
-    
+    func nativeSwitchAudioInput(_ deviceId: String) {
+        
+    }
     func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
     }
     func nativeSetRequestedVideoAspect(_ aspect: Float) {
@@ -449,10 +452,12 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
         self.setIsLowBatteryLevel(value)
     }
     
-    func nativeswitchAudioOutput(_ deviceId: String) {
+    func nativeSwitchAudioOutput(_ deviceId: String) {
         self.switchAudioOutput(deviceId)
     }
-    
+    func nativeSwitchAudioInput(_ deviceId: String) {
+        self.switchAudioInput(deviceId)
+    }
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
         self.requestVideo(capturer.impl)
     }
@@ -872,10 +877,14 @@ final class OngoingCallContext {
     
     public func switchAudioOutput(_ deviceId: String) {
         self.withContext { context in
-            context.nativeswitchAudioOutput(deviceId)
+            context.nativeSwitchAudioOutput(deviceId)
         }
     }
-    
+    public func switchAudioInput(_ deviceId: String) {
+        self.withContext { context in
+            context.nativeSwitchAudioInput(deviceId)
+        }
+    }
     func debugInfo() -> Signal<(String, String), NoError> {
         let poll = Signal<(String, String), NoError> { subscriber in
             self.withContext { context in

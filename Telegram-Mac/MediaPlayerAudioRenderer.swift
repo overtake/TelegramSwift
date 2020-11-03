@@ -706,6 +706,8 @@ final class MediaPlayerAudioRenderer {
         let timebase = audioTimebase!
         
         
+      //  AudioAddress.outputDevice
+        
         self.audioTimebase = timebase
         CMTimebaseSetRate(self.audioTimebase, rate: baseRate)
         audioPlayerRendererQueue.async {
@@ -715,8 +717,6 @@ final class MediaPlayerAudioRenderer {
         }
         
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
-        
-        
         NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
     }
     
