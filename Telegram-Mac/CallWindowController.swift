@@ -193,8 +193,8 @@ private class PhoneCallWindowView : View {
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
         
-        acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(60, 60), backgroundColor: .greenUI), animated: false)
-        declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: false)
+        acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: false)
+        declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
         
         
         basicControls.addSubview(b_VideoCamera)
@@ -387,7 +387,7 @@ private class PhoneCallWindowView : View {
         
         
         switch state.state {
-        case .connecting, .active, .requesting:
+        case .connecting, .active, .requesting, .terminating:
             let activeViews = self.allActiveControlsViews
             let restWidth = self.allControlRestWidth
             var x: CGFloat = floor(restWidth / 2)
@@ -395,8 +395,6 @@ private class PhoneCallWindowView : View {
                 activeView.setFrameOrigin(NSMakePoint(x, mainControlY(acceptControl)))
                 x += activeView.size.width + 45
             }
-        case .terminating:
-            acceptControl.setFrameOrigin(frame.midX + 45,  mainControlY(acceptControl))
         case let .terminated(_, reason, _):
             if let reason = reason, reason.recall {
                 
@@ -650,9 +648,9 @@ private class PhoneCallWindowView : View {
                     activeView._change(pos: NSMakePoint(x, 0), animated: animated, duration: 0.3, timingFunction: .spring)
                     x += activeView.size.width + 45
                 }
-                acceptControl.updateWithData(CallControlData(text: L10n.callRecall, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(60, 60), backgroundColor: .greenUI), animated: animated)
+                acceptControl.updateWithData(CallControlData(text: L10n.callRecall, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: animated)
                 
-                declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(60, 60), backgroundColor: .redUI), animated: animated)
+                declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: animated)
 
 
                 acceptControl.change(pos: NSMakePoint(frame.midX + 25, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
@@ -680,13 +678,20 @@ private class PhoneCallWindowView : View {
                 }
             }
         case .terminating:
+            let activeViews = self.activeControlsViews
+            let restWidth = self.controlRestWidth
+            var x: CGFloat = floor(restWidth / 2)
+            for activeView in activeViews {
+                activeView.setFrameOrigin(NSMakePoint(x, 0))
+                x += activeView.size.width + 45
+            }
+            
+            acceptControl.setFrameOrigin(frame.midX + 25,  mainControlY(acceptControl))
+            declineControl.setFrameOrigin(frame.midX - 25 - declineControl.frame.width,  mainControlY(acceptControl))
+
             _ = allActiveControlsViews.map {
                 $0.updateEnabled(false, animated: animated)
             }
-        case .waiting:
-            break
-        case .reconnecting(_, _, _):
-            break
         }
         
         incomingVideoView.setIsPaused(state.remoteVideoState == .paused, peer: peer, animated: animated)
