@@ -22,7 +22,7 @@ private final class TooltipView: View {
         didSet {
             oldValue?.removeObserver(self, forKeyPath: "window")
             if let view = view {
-                 view.addObserver(self, forKeyPath: "window", options: .new, context: nil)
+                view.addObserver(self, forKeyPath: "window", options: .new, context: nil)
             }
         }
     }
@@ -66,7 +66,7 @@ private final class TooltipView: View {
             let _ = try? drawSvgPath(context, path: "M85.882251,0 C79.5170552,0 73.4125613,2.52817247 68.9116882,7.02834833 L51.4264069,24.5109211 C46.7401154,29.1964866 39.1421356,29.1964866 34.4558441,24.5109211 L16.9705627,7.02834833 C12.4696897,2.52817247 6.36519576,0 0,0 L85.882251,0 ")
             context.fillPath()
         })!
-
+        
         cornerView.sizeToFit()
         textView.disableBackgroundDrawing = true
         textView.isSelectable = false
@@ -138,8 +138,8 @@ private final class TooltipView: View {
 }
 
 class TooltipController: ViewController {
-
-  
+    
+    
     
 }
 
@@ -188,7 +188,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     var removeTooltip:(Bool) -> Void = { _ in
         
     }
-   
+    
     let updatePosition:(Bool)->Void = { [weak tooltip, weak view] animated in
         if let tooltip = tooltip, let view = view {
             var point = view.convert(NSZeroPoint, to: nil)
@@ -204,7 +204,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     }
     
     updatePosition(isExists)
-
+    
     
     if autoCorner {
         let point = tooltip.convert(NSMakePoint(floorToScreenPixels(System.backingScale, view.frame.width / 2), 0), from: view)
@@ -216,7 +216,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     
     
     let scroll = view.enclosingScrollView as? TableView
-
+    
     scroll?.addScroll(listener: TableScrollListener.init(dispatchWhenVisibleRangeUpdated: false, { _ in
         updatePosition(true)
     }))
@@ -239,12 +239,12 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
                     window.removeAllHandlers(for: tooltip)
                 }
             })
-//            tooltip.change(opacity: 0, true, removeOnCompletion: false, duration: 0.2, completion: { [weak tooltip] _ in
-//                if let tooltip = tooltip {
-//                    tooltip.removeFromSuperview()
-//                    window.removeAllHandlers(for: tooltip)
-//                }
-//            })
+            //            tooltip.change(opacity: 0, true, removeOnCompletion: false, duration: 0.2, completion: { [weak tooltip] _ in
+            //                if let tooltip = tooltip {
+            //                    tooltip.removeFromSuperview()
+            //                    window.removeAllHandlers(for: tooltip)
+            //                }
+            //            })
             CATransaction.commit()
         } else {
             removeShownAnimation = true
@@ -263,7 +263,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         removeTooltip(true)
     }))
     
-
+    
     window.set(mouseHandler: { _ -> KeyHandlerResult in
         DispatchQueue.main.async {
             if shouldRemoveTooltip {
@@ -274,13 +274,13 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         return .rejected
     }, with: tooltip, for: .leftMouseUp, priority: .supreme)
     
-
-
+    
+    
     window.set(mouseHandler: { _ -> KeyHandlerResult in
         removeTooltip(false)
         return .rejected
     }, with: tooltip, for: .scrollWheel, priority: .supreme)
-
+    
     
     window.set(handler: { () -> KeyHandlerResult in
         removeTooltip(false)
@@ -288,7 +288,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     }, with: tooltip, for: .All, priority: .supreme)
     
     
-
+    
 }
 
 public func removeAllTooltips(_ window: Window) {
