@@ -275,6 +275,7 @@
 		A7E831F1255040D60095A167 /* ChatPresentationInputQueryResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */; };
 		A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
 		A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
+		A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */; };
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
 		A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */; };
 		A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */; };
@@ -1376,6 +1377,7 @@
 		A7DF1B6B237415AD00ACC01F /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPresentationInputQueryResult.swift; sourceTree = "<group>"; };
 		A7E831F2255041020095A167 /* IsEqualMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsEqualMessages.swift; sourceTree = "<group>"; };
+		A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColdStartPasslockController.swift; sourceTree = "<group>"; };
 		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnauthorizedConfiguration.swift; sourceTree = "<group>"; };
 		A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchRecentQueries.swift; sourceTree = "<group>"; };
@@ -3480,6 +3482,7 @@
 			children = (
 				C24D9FC31E24FFF3002CD3F3 /* PasscodeLockController.swift */,
 				9F147F6E223014EB00D71BD1 /* PasscodeControllers.swift */,
+				A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */,
 			);
 			name = passcode;
 			sourceTree = "<group>";
@@ -5643,6 +5646,7 @@
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
+				A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
 				9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */,
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
