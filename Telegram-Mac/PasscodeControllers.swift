@@ -181,7 +181,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
                     actionsDisposable.add((sharedContext.accountManager.transaction { transaction in
                         transaction.setAccessChallengeData(.plaintextPassword(value: ""))
                     } |> deliverOnMainQueue).start(completed: {
-                        AppEncryptionParameters.appValue.change(passcode)
+                        sharedContext.appEncryptionValue.change(passcode)
                         f(.success(.navigationBackWithPushAnimation))
                     }))
                 }
@@ -237,7 +237,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
                     actionsDisposable.add((sharedContext.accountManager.transaction { transaction in
                         transaction.setAccessChallengeData(.plaintextPassword(value: ""))
                     } |> deliverOnMainQueue).start(completed: {
-                        AppEncryptionParameters.appValue.change(passcode)
+                        sharedContext.appEncryptionValue.change(passcode)
                         f(.success(.navigationBackWithPushAnimation))
                     }))
                 }
@@ -257,7 +257,7 @@ func PasscodeController(sharedContext: SharedAccountContext, mode: PasscodeMode)
                     actionsDisposable.add((sharedContext.accountManager.transaction { transaction in
                         transaction.setAccessChallengeData(.none)
                     } |> deliverOnMainQueue).start(completed: {
-                        AppEncryptionParameters.appValue.remove()
+                        sharedContext.appEncryptionValue.remove()
                         f(.success(.navigationBackWithPushAnimation))
                     }))
                 }

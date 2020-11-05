@@ -14,11 +14,14 @@ import SwiftSignalKit
 import TGUIKit
 import SyncCore
 
+
+
 private struct AccountAttributes: Equatable {
     let sortIndex: Int32
     let isTestingEnvironment: Bool
     let backupData: AccountBackupData?
 }
+
 
 
 private enum AddedAccountsResult {
@@ -70,6 +73,17 @@ class SharedAccountContext {
     #endif
    
     private let managedAccountDisposables = DisposableDict<AccountRecordId>()
+    
+    
+    private let appEncryption: Atomic<AppEncryptionParameters>
+    
+    var appEncryptionValue: AppEncryptionParameters {
+        return appEncryption.with { $0 }
+    }
+    
+    func updateAppEncryption(_ f: (AppEncryptionParameters)->AppEncryptionParameters) {
+        _ = self.appEncryption.modify(f)
+    }
     
     
     private var activeAccountsValue: (primary: Account?, accounts: [(AccountRecordId, Account, Int32)], currentAuth: UnauthorizedAccount?)?
@@ -173,9 +187,10 @@ class SharedAccountContext {
     
 
     
-    init(accountManager: AccountManager, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
+    init(accountManager: AccountManager, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
         self.accountManager = accountManager
         self.displayUpgradeProgress = displayUpgradeProgress
+        self.appEncryption = Atomic(value: appEncryption)
         #if !SHARE
         self.accountManager.mediaBox.fetchCachedResourceRepresentation = { (resource, representation) -> Signal<CachedMediaResourceRepresentationResult, NoError> in
             return fetchCachedSharedResourceRepresentation(accountManager: accountManager, resource: resource, representation: representation)
@@ -226,7 +241,7 @@ class SharedAccountContext {
                     for attribute in record.attributes {
                         if let attribute = attribute as? AccountSortOrderAttribute {
                             sortIndex = attribute.order
-                        } else if let attribute = attribute as? AccountBackupDataAttribute {
+                        } else if let attribute = attribute as? AccountBackupDataAttribute, false {
                             backupData = attribute.data
                         }
                     }
@@ -524,7 +539,9 @@ class SharedAccountContext {
                             return nil
                         }
                         var attributes = record.attributes.filter({ !($0 is AccountBackupDataAttribute) })
-                        attributes.append(AccountBackupDataAttribute(data: backupData))
+                        if false {
+                            attributes.append(AccountBackupDataAttribute(data: backupData))
+                        }
                         return AccountRecord(id: record.id, attributes: attributes, temporarySessionId: record.temporarySessionId)
                     })
                     }
