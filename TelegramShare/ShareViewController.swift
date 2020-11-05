@@ -38,6 +38,9 @@ class ShareViewController: NSViewController {
         declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
 
         
+        initializeAccountManagement()
+
+        
         let appGroupName = ApiEnvironment.group
         guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
             return
@@ -45,21 +48,8 @@ class ShareViewController: NSViewController {
         
         let rootPath = containerUrl.path
         
-        let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: Bundle.main.bundleIdentifier!)
-        let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
-
-        
-        
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
-        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
-        
-        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
-        
-        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/sharelogs")
-        logger.logToConsole = false
-        logger.logToFile = false
-        Logger.setSharedLogger(logger)
-        
+
         
         
         let themeSemaphore = DispatchSemaphore(value: 0)
@@ -83,10 +73,57 @@ class ShareViewController: NSViewController {
         }
         
         updateTheme(with: themeSettings)
+                
+        
+        let appEncryption = AppEncryptionParameters(path: rootPath)
+        
+        if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
+            let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
+            launchExtension(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+        } else {
+            let extensionContext = self.extensionContext!
+            let passlock = SEPasslockController(checkNextValue: { passcode in
+                appEncryption.applyPasscode(passcode)
+                if let params = appEncryption.decrypt() {
+                    let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
+                    self.launchExtension(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+                    return true
+                } else {
+                    return false
+                }
+            }, cancelImpl: {
+                let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
+                extensionContext.cancelRequest(withError: cancelError)
+            })
+            
+            passlock.view.frame = self.view.bounds
+            self.view.addSubview(passlock.view)
+        }
+    }
+
+    
+    private func launchExtension(accountManager: AccountManager, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         let extensionContext = self.extensionContext!
+
+        let appGroupName = ApiEnvironment.group
+
+        guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
+            return
+        }
         
-        initializeAccountManagement()
+        let rootPath = containerUrl.path
+
+        
+        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+        
+        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: { _ in })
+        
+        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/sharelogs")
+        logger.logToConsole = false
+        logger.logToFile = false
+        Logger.setSharedLogger(logger)
+
         
         let rawAccounts = sharedContext.activeAccounts
             |> map { _, accounts, _ -> [Account] in
@@ -95,45 +132,17 @@ class ShareViewController: NSViewController {
         let _ = (sharedAccountInfos(accountManager: sharedContext.accountManager, accounts: rawAccounts)
             |> deliverOn(Queue())).start(next: { infos in
                 storeAccountsData(rootPath: rootPath, accounts: infos)
-        })
-        
-        
-        var access: PostboxAccessChallengeData = .none
-        let accessSemaphore = DispatchSemaphore(value: 0)
-        _ = (accountManager.transaction { transaction in
-            access = transaction.getAccessChallengeData()
-            accessSemaphore.signal()
-        }).start()
-        accessSemaphore.wait()
-        
-        switch access {
-        case .numericalPassword, .plaintextPassword:
-            let passlock = SEPasslockController(sharedContext, cancelImpl: {
-                let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
-                extensionContext.cancelRequest(withError: cancelError)
             })
-            self.passlock = passlock
-            
-            let passlockView = passlock.view
-            _ = (passlock.doneValue |> filter { $0 } |> take(1)).start(next: { [weak passlockView] _ in
-                passlockView?._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { _ in
-                    passlockView?.removeFromSuperview()
-                    self.passlock = nil
-                })
-            })
-            passlock.view.frame = self.view.bounds
-            self.view.addSubview(passlock.view)
-        default:
-            break
-        }
+        
+        
         
         let readyDisposable = MetaDisposable()
         _ = (self.context.get() |> mapToSignal { context -> Signal<AuthorizedApplicationContext?, NoError> in
             return .single(context)
             
-        } |> deliverOnMainQueue).start(next: { context in
+            } |> deliverOnMainQueue).start(next: { context in
                 assert(Queue.mainQueue().isCurrent())
-            
+                
                 if let context = context {
                     context.rootController.view.frame = self.view.bounds
                     
@@ -169,7 +178,6 @@ class ShareViewController: NSViewController {
                     return nil
                 }
             })
-        
     }
 
 }

@@ -18,7 +18,7 @@
 
 -(NSData * _Nullable)encryptData:(NSData * _Nonnull)data;
 -(NSData * _Nullable)decryptData:(NSData * _Nonnull)data;
-
+-(BOOL)hasPasscode;
 @end
 
 @interface LocalPrivateKey : NSObject {

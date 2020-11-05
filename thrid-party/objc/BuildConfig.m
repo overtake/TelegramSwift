@@ -243,7 +243,10 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
     [encrypted writeToFile:self.path atomically:YES];
 }
 
-
+-(BOOL)hasPasscode {
+    AppEncryptionParameters *params = [[AppEncryptionParameters alloc] initWithPath:self->_rootPath];
+    return [params decrypt] == nil;
+}
 
 -(DeviceSpecificEncryptionParameters * _Nullable)decrypt {
     NSData *currentData = [NSData dataWithContentsOfFile:self.path];
