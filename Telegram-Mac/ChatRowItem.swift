@@ -1126,7 +1126,7 @@ class ChatRowItem: TableRowItem {
                         if range.location != NSNotFound {
                             title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
                             var index: Int = 0
-                            for i in range.lowerBound ..< range.upperBound {
+                            for _ in range.lowerBound ..< range.upperBound {
                                 let symbol = text.nsstring.substring(with: NSMakeRange(range.location + index, 1))
                                 title.append((symbol, .numeric, index + 1))
                                 index += 1
