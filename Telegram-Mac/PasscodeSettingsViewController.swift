@@ -16,10 +16,10 @@ import LocalAuthentication
 
 private enum PasscodeEntry : Comparable, Identifiable {
     case turnOn(sectionId:Int, viewType: GeneralViewType)
-    case turnOff(sectionId:Int, current: String, viewType: GeneralViewType)
+    case turnOff(sectionId:Int, viewType: GeneralViewType)
     case turnOnDescription(sectionId:Int, viewType: GeneralViewType)
     case turnOffDescription(sectionId:Int, viewType: GeneralViewType)
-    case change(sectionId:Int, current: String, viewType: GeneralViewType)
+    case change(sectionId:Int, viewType: GeneralViewType)
     case autoLock(sectionId:Int, time:Int32?, viewType: GeneralViewType)
     case turnTouchId(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case section(sectionId:Int)
@@ -49,13 +49,13 @@ private enum PasscodeEntry : Comparable, Identifiable {
         switch self {
         case let .turnOn(sectionId, _):
             return (sectionId * 1000) + stableId
-        case let .turnOff(sectionId, _, _):
+        case let .turnOff(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .turnOnDescription(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .turnOffDescription(sectionId, _):
             return (sectionId * 1000) + stableId
-        case let .change(sectionId, _, _):
+        case let .change(sectionId, _):
             return (sectionId * 1000) + stableId
         case let .autoLock(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -84,9 +84,9 @@ private func passcodeSettinsEntry(_ passcode: PostboxAccessChallengeData, passco
     case .none:
         entries.append(.turnOn(sectionId: sectionId, viewType: .singleItem))
         entries.append(.turnOnDescription(sectionId: sectionId, viewType: .textBottomItem))
-    case let .plaintextPassword(value), let .numericalPassword(value):
-        entries.append(.turnOff(sectionId: sectionId, current: value, viewType: .firstItem))
-        entries.append(.change(sectionId: sectionId, current: value, viewType: .lastItem))
+    case .plaintextPassword, let .numericalPassword:
+        entries.append(.turnOff(sectionId: sectionId, viewType: .firstItem))
+        entries.append(.change(sectionId: sectionId, viewType: .lastItem))
         entries.append(.turnOffDescription(sectionId: sectionId, viewType: .textBottomItem))
         
         entries.append(.section(sectionId: sectionId))
@@ -119,13 +119,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOn), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
                 arguments.turnOn()
             })
-        case let .turnOff(_, current, viewType):
+        case let .turnOff(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOff), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
-                arguments.turnOff(current)
+                arguments.turnOff()
             })
-        case let .change(_, current, viewType):
+        case let .change(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeChange), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
-                arguments.change(current)
+                arguments.change()
             })
         case let .turnOnDescription(_, viewType), let .turnOffDescription(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: L10n.passcodeControllerText, viewType: viewType)
@@ -163,11 +163,11 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
 private final class PasscodeSettingsArguments {
     let context: AccountContext
     let turnOn:()->Void
-    let turnOff:(String)->Void
-    let change:(String)->Void
+    let turnOff:()->Void
+    let change:()->Void
     let ifAway:()->Void
     let toggleTouchId:(Bool)->Void
-    init(_ context: AccountContext, turnOn: @escaping()->Void, turnOff: @escaping(String)->Void, change:@escaping(String)->Void, ifAway: @escaping()-> Void, toggleTouchId:@escaping(Bool)->Void) {
+    init(_ context: AccountContext, turnOn: @escaping()->Void, turnOff: @escaping()->Void, change:@escaping()->Void, ifAway: @escaping()-> Void, toggleTouchId:@escaping(Bool)->Void) {
         self.context = context
         self.turnOn = turnOn
         self.turnOff = turnOff
@@ -229,10 +229,10 @@ class PasscodeSettingsViewController: TableViewController {
         let context = self.context
         let arguments = PasscodeSettingsArguments(context, turnOn: { [weak self] in
             self?.show(mode: .install)
-        }, turnOff: { [weak self] current in
-            self?.show(mode: .disable(current))
-        }, change: { [weak self] current in
-            self?.show(mode: .change(current))
+        }, turnOff: { [weak self] in
+            self?.show(mode: .disable)
+        }, change: { [weak self] in
+            self?.show(mode: .change)
         }, ifAway: { [weak self] in
             self?.showIfAwayOptions()
         }, toggleTouchId: { enabled in
