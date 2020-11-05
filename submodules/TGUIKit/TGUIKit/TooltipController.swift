@@ -193,7 +193,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         if let tooltip = tooltip, let view = view {
             var point = view.convert(NSZeroPoint, to: nil)
             point.y += offset.y
-            let pos = NSMakePoint(min(max(point.x - (tooltip.frame.width - view.frame.width) / 2, 10), window.frame.width - tooltip.frame.width - 10), point.y)
+            let pos = NSMakePoint(min(max(floorToScreenPixels(System.backingScale, point.x - (tooltip.frame.width - view.frame.width) / 2), 10), window.frame.width - tooltip.frame.width - 10), point.y)
             if view.visibleRect.height != view.frame.height {
                 removeTooltip(true)
             } else {
@@ -207,7 +207,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
 
     
     if autoCorner {
-        let point = tooltip.convert(NSMakePoint(view.frame.width / 2, 0), from: view)
+        let point = tooltip.convert(NSMakePoint(floorToScreenPixels(System.backingScale, view.frame.width / 2), 0), from: view)
         tooltip.move(corner: point.x, animated: isExists)
     } else {
         let mousePoint = tooltip.convert(location, from: nil)
