@@ -208,19 +208,19 @@ final class DevicesContext : NSObject {
     func updateMicroId(_ settings: VoiceCallSettings) -> Bool {
         let devices = devicesList()
         
-        let cameraDevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+        let audiodevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
         
         let activeDevice: AVCaptureDevice?
-        if let cameraDevice = cameraDevice {
-            if cameraDevice.isConnected && !cameraDevice.isSuspended {
-                activeDevice = cameraDevice
+        if let audiodevice = audiodevice {
+            if audiodevice.isConnected && !audiodevice.isSuspended {
+                activeDevice = audiodevice
             } else {
                 activeDevice = nil
             }
         } else if settings.audioInputDeviceId == nil {
-            activeDevice = AVCaptureDevice.default(for: .video)
+            activeDevice = AVCaptureDevice.default(for: .audio)
         } else {
-            activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
+            activeDevice = devices.audio.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
         defer {
