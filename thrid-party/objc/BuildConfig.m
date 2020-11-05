@@ -168,6 +168,13 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
     [self reencrypt: parameters];
 }
 
+-(NSData * _Nullable)encryptData:(NSData * _Nonnull)data {
+    return CryptoAES(YES, self->key, self->iv, data);
+}
+-(NSData * _Nullable)decryptData:(NSData * _Nonnull)data {
+    return CryptoAES(NO, self->key, self->iv, data);
+}
+
 -(void)upgradeLegacyIfNeeded {
     NSData *currentData = [NSData dataWithContentsOfFile:self.legacyPath];
     NSData *resultData = nil;

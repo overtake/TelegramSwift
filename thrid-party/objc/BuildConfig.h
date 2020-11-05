@@ -16,6 +16,9 @@
 -(void)remove;
 -(DeviceSpecificEncryptionParameters * _Nullable)decrypt;
 
+-(NSData * _Nullable)encryptData:(NSData * _Nonnull)data;
+-(NSData * _Nullable)decryptData:(NSData * _Nonnull)data;
+
 @end
 
 @interface LocalPrivateKey : NSObject {
