@@ -2186,7 +2186,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     
                                     if result[index] == .selected {
-                                        signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+                                        signals.append(reportSupergroupPeer(account: context.account, peerId: peerId, memberId: memberId, messageIds: messageIds))
                                     }
                                     index += 1
 

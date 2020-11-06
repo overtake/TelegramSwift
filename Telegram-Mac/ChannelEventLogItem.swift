@@ -672,6 +672,10 @@ private class ServiceEventLogRowView : TableRowView {
         textView.isSelectable = false
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.chatBackground
+    }
+    
     override func updateColors() {
         super.updateColors()
         textView.backgroundColor = backdorColor
@@ -792,6 +796,10 @@ class ChannelEventLogEditedPanelView : TableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(panel)
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.chatBackground
     }
     
     override func updateColors() {
