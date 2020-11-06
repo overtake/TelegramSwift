@@ -445,12 +445,10 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
                     descId += 1
                 }
-                if channel.flags.contains(.isCreator) && channel.isChannel, !admin.isBot {
-                    if currentRightsFlags.contains(maskRightsFlags) {
-                        entries.append(.section(sectionId))
-                        sectionId += 1
-                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
-                    }
+                if channel.flags.contains(.isCreator), !admin.isBot {
+                    entries.append(.section(sectionId))
+                    sectionId += 1
+                    entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
                 }
             }
 

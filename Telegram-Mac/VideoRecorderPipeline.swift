@@ -122,11 +122,12 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
 
         if let videoDevice = videoDevice {
             setSelectedVideoDevice(videoDevice)
-            if let audioDevice = audioDevice {
-                setSelectedAudioDevice(audioDevice)
-            }
         } else if let videoDevice = AVCaptureDevice.default(for: .muxed) {
             setSelectedVideoDevice(videoDevice)
+        }
+        
+        if let audioDevice = audioDevice {
+            setSelectedAudioDevice(audioDevice)
         }
         
         videoOutput.alwaysDiscardsLateVideoFrames = false
