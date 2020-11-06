@@ -28,7 +28,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
                 messageText = tr(L10n.chatListServiceDestructingPhoto).nsstring
             } else {
-                messageText = L10n.chatListPhotoCountable(messagesCount).nsstring
+                messageText = L10n.chatListPhoto1Countable(messagesCount).nsstring
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
@@ -65,7 +65,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                              messageText = (L10n.chatListGIF + ", " + message.text.fixed).nsstring
                         }
                     } else {
-                        messageText = L10n.chatListVideoCountable(messagesCount).nsstring
+                        messageText = L10n.chatListVideo1Countable(messagesCount).nsstring
                         if !message.text.fixed.isEmpty {
                             switch mediaViewType {
                             case .emoji:

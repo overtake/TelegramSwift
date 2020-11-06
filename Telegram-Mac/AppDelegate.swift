@@ -305,7 +305,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
             
-            
             updateTheme(with: themeSettings, for: window)
             
             
