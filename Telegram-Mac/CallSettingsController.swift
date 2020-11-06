@@ -68,7 +68,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, arguments: CallSet
     
     var cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
     var microDevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
-
+    
     let activeCameraDevice: AVCaptureDevice?
     if let cameraDevice = cameraDevice {
         if cameraDevice.isConnected && !cameraDevice.isSuspended {
@@ -91,7 +91,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, arguments: CallSet
         return SPopoverItem(value.localizedName, {
             arguments.toggleInputVideoDevice(value.uniqueID)
         })
-    }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem)))
+        }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem)))
     index += 1
     
     if let activeCameraDevice = activeCameraDevice {
@@ -128,7 +128,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, arguments: CallSet
         return SPopoverItem(value.localizedName, {
             arguments.toggleInputAudioDevice(value.uniqueID)
         })
-    }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem)))
+        }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem)))
     index += 1
     
     if let activeMicroDevice = activeMicroDevice {
@@ -153,7 +153,7 @@ final class DevicesContext : NSObject {
         return _signal.get() |> map { _ in return }
     }
     private var observeContext = 0;
-
+    
     private(set) var currentCameraId: String? = nil
     private(set) var currentMicroId: String? = nil
     private(set) var currentOutputId: String? = nil
@@ -171,9 +171,9 @@ final class DevicesContext : NSObject {
             self?._signal.set(true)
         })
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
-
+        
         NotificationCenter.default.addObserver(forName: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil, queue: nil, using: { [weak self] _ in
-             self?._signal.set(true)
+            self?._signal.set(true)
         })
     }
     
@@ -208,19 +208,19 @@ final class DevicesContext : NSObject {
     func updateMicroId(_ settings: VoiceCallSettings) -> Bool {
         let devices = devicesList()
         
-        let cameraDevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+        let audiodevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
         
         let activeDevice: AVCaptureDevice?
-        if let cameraDevice = cameraDevice {
-            if cameraDevice.isConnected && !cameraDevice.isSuspended {
-                activeDevice = cameraDevice
+        if let audiodevice = audiodevice {
+            if audiodevice.isConnected && !audiodevice.isSuspended {
+                activeDevice = audiodevice
             } else {
                 activeDevice = nil
             }
         } else if settings.audioInputDeviceId == nil {
-            activeDevice = AVCaptureDevice.default(for: .video)
+            activeDevice = AVCaptureDevice.default(for: .audio)
         } else {
-            activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
+            activeDevice = devices.audio.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
         defer {
@@ -236,7 +236,7 @@ final class DevicesContext : NSObject {
         var deviceIdSize:UInt32 = UInt32(MemoryLayout<AudioDeviceID>.size)
         
         _ = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &deviceIdRequest, 0, nil, &deviceIdSize, &deviceId)
-
+        
         var propertySize = UInt32(MemoryLayout<CFString>.size)
         var propertyAddress = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyDeviceUID,
@@ -254,7 +254,7 @@ final class DevicesContext : NSObject {
     }
     
     deinit {
-       NotificationCenter.default.removeObserver(self)
+        NotificationCenter.default.removeObserver(self)
         AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
     }
 }
@@ -464,7 +464,7 @@ private extension DevicesContext {
 }
 
 func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataController {
-
+    
     let deviceContextObserver = DevicesContext(VoiceCallSettings.defaultSettings)
     
     
