@@ -493,7 +493,7 @@ private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> S
         }
     case let .enableContacts(enableFor, disableFor):
         if !enableFor.isEmpty && !disableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(enableFor))", "\(countForSelectivePeers(disableFor))")
+            return L10n.privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(disableFor))", "\(countForSelectivePeers(enableFor))")
         } else if !enableFor.isEmpty {
             return L10n.privacySettingsLastSeenContactsPlus("\(countForSelectivePeers(enableFor))")
         } else if !disableFor.isEmpty {

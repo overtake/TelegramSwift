@@ -365,7 +365,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     func songDidStopPlaying(song:APSongItem, for controller:APController) {
         if song.stableId == currentMessage?.chatStableId {
-            self.timebase = nil
+            //self.timebase = nil
         }
     }
     func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
