@@ -4080,8 +4080,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     return true
                 })
-                
-                strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
+                if topVisibleMessageRange != nil {
+                    strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
+                }
 
                 
                 strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)

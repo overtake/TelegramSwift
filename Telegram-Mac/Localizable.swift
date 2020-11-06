@@ -1670,30 +1670,30 @@ internal final class L10n {
   /// Photo
   internal static var chatListPhoto: String  { return L10n.tr("Localizable", "Chat.List.Photo") }
   /// %d
-  internal static func chatListPhotoCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_countable", p1)
+  internal static func chatListPhoto1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_countable", p1)
   }
   /// %d Photos
-  internal static func chatListPhotoFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_few", p1)
+  internal static func chatListPhoto1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_few", p1)
   }
   /// %d Photos
-  internal static func chatListPhotoMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_many", p1)
+  internal static func chatListPhoto1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_many", p1)
   }
   /// Photo
-  internal static var chatListPhotoOne: String  { return L10n.tr("Localizable", "Chat.List.Photo_one") }
+  internal static var chatListPhoto1One: String  { return L10n.tr("Localizable", "Chat.List.Photo1_one") }
   /// %d Photos
-  internal static func chatListPhotoOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_other", p1)
+  internal static func chatListPhoto1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_other", p1)
   }
   /// %d Photos
-  internal static func chatListPhotoTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_two", p1)
+  internal static func chatListPhoto1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_two", p1)
   }
   /// %d Photos
-  internal static func chatListPhotoZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Photo_zero", p1)
+  internal static func chatListPhoto1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Photo1_zero", p1)
   }
   /// %@ Sticker
   internal static func chatListSticker(_ p1: String) -> String {
@@ -1702,30 +1702,30 @@ internal final class L10n {
   /// Video
   internal static var chatListVideo: String  { return L10n.tr("Localizable", "Chat.List.Video") }
   /// %d
-  internal static func chatListVideoCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_countable", p1)
+  internal static func chatListVideo1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_countable", p1)
   }
   /// %d Videos
-  internal static func chatListVideoFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_few", p1)
+  internal static func chatListVideo1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_few", p1)
   }
   /// %d Videos
-  internal static func chatListVideoMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_many", p1)
+  internal static func chatListVideo1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_many", p1)
   }
   /// Video
-  internal static var chatListVideoOne: String  { return L10n.tr("Localizable", "Chat.List.Video_one") }
+  internal static var chatListVideo1One: String  { return L10n.tr("Localizable", "Chat.List.Video1_one") }
   /// %d Videos
-  internal static func chatListVideoOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_other", p1)
+  internal static func chatListVideo1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_other", p1)
   }
   /// %d Videos
-  internal static func chatListVideoTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_two", p1)
+  internal static func chatListVideo1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_two", p1)
   }
   /// %d Videos
-  internal static func chatListVideoZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.List.Video_zero", p1)
+  internal static func chatListVideo1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.List.Video1_zero", p1)
   }
   /// Voice message
   internal static var chatListVoice: String  { return L10n.tr("Localizable", "Chat.List.Voice") }
