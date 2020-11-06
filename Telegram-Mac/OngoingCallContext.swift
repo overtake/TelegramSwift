@@ -358,6 +358,7 @@ private protocol OngoingCallThreadLocalContextProtocol: class {
     func nativeDebugInfo() -> String
     func nativeVersion() -> String
     func nativeGetDerivedState() -> Data
+    func nativeSwitchAudioOutput(_ deviceId: String)
     func nativeSwitchAudioInput(_ deviceId: String)
 }
 
@@ -392,10 +393,12 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
     }
+    func nativeSwitchAudioOutput(_ deviceId: String) {
+        
+    }
     func nativeSwitchAudioInput(_ deviceId: String) {
         
     }
-    
     func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
     }
     func nativeSetRequestedVideoAspect(_ aspect: Float) {
@@ -411,7 +414,7 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     func nativeSwitchVideoCamera() {
     }
     
-    func nativeSwitchAudioInput() {
+    func nativeswitchAudioOutput() {
         
     }
     
@@ -449,10 +452,12 @@ extension OngoingCallThreadLocalContextWebrtc: OngoingCallThreadLocalContextProt
         self.setIsLowBatteryLevel(value)
     }
     
+    func nativeSwitchAudioOutput(_ deviceId: String) {
+        self.switchAudioOutput(deviceId)
+    }
     func nativeSwitchAudioInput(_ deviceId: String) {
         self.switchAudioInput(deviceId)
     }
-    
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
         self.requestVideo(capturer.impl)
     }
@@ -870,12 +875,16 @@ final class OngoingCallContext {
         }
     }
     
+    public func switchAudioOutput(_ deviceId: String) {
+        self.withContext { context in
+            context.nativeSwitchAudioOutput(deviceId)
+        }
+    }
     public func switchAudioInput(_ deviceId: String) {
         self.withContext { context in
             context.nativeSwitchAudioInput(deviceId)
         }
     }
-    
     func debugInfo() -> Signal<(String, String), NoError> {
         let poll = Signal<(String, String), NoError> { subscriber in
             self.withContext { context in

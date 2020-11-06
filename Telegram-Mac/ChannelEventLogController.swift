@@ -146,10 +146,11 @@ class ChannelEventLogView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        self.backgroundColor = theme.colors.chatBackground
         whatButton.set(color: theme.colors.accent, for: .Normal)
         whatButton.set(background: theme.colors.grayTransparent, for: .Highlight)
         whatButton.set(background: theme.colors.background, for: .Normal)
-        emptyTextView.backgroundColor = theme.colors.background
+        emptyTextView.backgroundColor = theme.colors.chatBackground
         separator.backgroundColor =  theme.colors.border
     }
     
@@ -432,6 +433,10 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.tableView.getBackgroundColor = {
+            return theme.colors.chatBackground
+        }
+        
         let searchState = self.searchState
         let context = self.context
         
@@ -482,9 +487,10 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 
                 let items = eventLogItems(result, initialSize: initialSize.modify({$0}), chatInteraction: chatInteraction)
                 let _previousState = previousState.swap(state)
+                
                 let _previousAppearance = previousAppearance.swap(appearance)
                 let _previousSearchState = previousSearchState.swap(searchState)
-                return (EventLogTableTransition(result: items, addition: _previousSearchState == searchState, state: state, maxId: maxId, eventLog: result, fullyLoaded: result.events.count < 50), result.peers.map {$0.value})
+                return (EventLogTableTransition(result: items, addition: _previousSearchState == searchState && (_previousState?.selectedFlags == state.selectedFlags && _previousState?.selectedAdmins == state.selectedAdmins), state: state, maxId: maxId, eventLog: result, fullyLoaded: result.events.count < 50), result.peers.map {$0.value})
                 
                 }  |> mapToSignal { transition, peers in
                     return context.account.postbox.transaction { transaction in
@@ -501,14 +507,14 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                     if let transition = transition, let peer = peer {
                         if !transition.addition {
                             tableView.removeAll()
-                            _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
+                            _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
                         }
                         tableView.insert(items: transition.result, at: tableView.count)
                         self?.genericView.updateState(tableView.isEmpty ? (transition.state.isEmpty && previousSearchState.modify({$0}).request.isEmpty ? .empty(peer.isChannel ? tr(L10n.channelEventLogEmptyText) : tr(L10n.groupEventLogEmptyText)) : .empty(tr(L10n.channelEventLogEmptySearch))) : .history)
                     } else {
                         self?.genericView.updateState(.loading)
                         self?.genericView.tableView.removeAll()
-                        _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
+                        _ = tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
                     }
                     tableView.endTableUpdates()
                     tableView.resetScrollNotifies()
@@ -542,7 +548,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
         self.genericView.updateState(.loading)
         self.genericView.tableView.removeAll()
-        _ = self.genericView.tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random()))
+        _ = self.genericView.tableView.addItem(item: GeneralRowItem(initialSize.modify{$0}, height: 20, stableId: arc4random(), backgroundColor: theme.colors.chatBackground))
         
         readyOnce()
 

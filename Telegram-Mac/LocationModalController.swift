@@ -417,7 +417,7 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
         guard !isPinRaised else {return}
         focusUserLocation(mapView)
     }
-    
+        
     func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
         willChangeRegion()
 
@@ -530,7 +530,7 @@ class LocationModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+                
         genericView.mapView.delegate = delegate
         genericView.dismiss.set(handler: { [weak self] _ in
             self?.close()
