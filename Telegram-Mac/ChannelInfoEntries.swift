@@ -534,14 +534,14 @@ enum ChannelInfoEntry: PeerInfoEntry {
                     if !lhsNotificationSettings.isEqual(to: rhsNotificationSettings) {
                         return false
                     }
-                } else if (lhsNotificationSettings == nil) != (rhsNotificationSettings == nil) {
+                } else if (lhsNotificationSettings != nil) != (rhsNotificationSettings != nil) {
                     return false
                 }
                 if let lhsCachedData = lhsCachedData, let rhsCachedData = rhsCachedData {
                     if !lhsCachedData.isEqual(to: rhsCachedData) {
                         return false
                     }
-                } else if (lhsCachedData == nil) != (rhsCachedData != nil) {
+                } else if (lhsCachedData != nil) != (rhsCachedData != nil) {
                     return false
                 }
                 return true
