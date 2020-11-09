@@ -1149,7 +1149,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         $0.0 && $0.1
     }
     
-    let accounts = sharedContext.activeAccounts
+    let accounts = sharedContext.activeAccounts |> take(1)
 
     
     return combineLatest(queue: .mainQueue(), signal, isVideoPossible, accounts) |> mapToSignal { values -> Signal<PCallResult, NoError> in

@@ -54,10 +54,19 @@ class SharedWakeupManager {
     private var ringingStatesActivated: Set<AccountRecordId> = Set()
     private var inForeground: Bool = false
 
+    private(set) var isSleeping: Bool = false {
+        didSet {
+            onSleepValueUpdated?(isSleeping)
+        }
+    }
+    
+    var onSleepValueUpdated:((Bool)->Void)?
+    
     init(sharedContext: SharedAccountContext, inForeground: Signal<Bool, NoError>) {
         self.sharedContext = sharedContext
         
          NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
 
         
         _ = (inForeground |> deliverOnMainQueue).start(next: { value in
@@ -90,10 +99,15 @@ class SharedWakeupManager {
         updateAccounts()
     }
     
+    @objc func receiveSleepNote(_ notification: Notification) {
+        self.isSleeping = true
+    }
+    
     @objc func receiveWakeNote(_ notificaiton:Notification) {
          for (account, _, _) in self.accountsAndTasks {
             account.shouldBeServiceTaskMaster.set(.single(.never) |> then(.single(.always)))
         }
+        self.isSleeping = false
     }
 
     private func updateRindingsStatuses(_ accounts:[Account]) {
@@ -106,6 +120,7 @@ class SharedWakeupManager {
                     pullCurrentSession( { session in
                         DispatchQueue.main.async {
                             if let state = states.first {
+                                
                                 if session != nil {
                                     account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
                                 } else {

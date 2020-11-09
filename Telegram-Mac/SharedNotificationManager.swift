@@ -65,7 +65,14 @@ final class SharedNotificationBindings {
 final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelegate {
 
     private let screenLocked:Promise<LockNotificationsData> = Promise(LockNotificationsData())
-    private var _lockedValue:LockNotificationsData = LockNotificationsData()
+    private(set) var _lockedValue:LockNotificationsData = LockNotificationsData() {
+        didSet {
+            didUpdateLocked?(_lockedValue)
+        }
+    }
+    
+    var didUpdateLocked:((LockNotificationsData)->Void)? = nil
+    
     private let _passlock = Promise<Bool>()
 
     var passlocked: Signal<Bool, NoError> {
