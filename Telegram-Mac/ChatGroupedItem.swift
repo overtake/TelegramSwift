@@ -531,6 +531,28 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     private var selectionBackground: CornerView = CornerView()
     
     
+    private var forceClearContentBackground: Bool = false
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        selectionBackground.didChangeSuperview = { [weak self] in
+            self?.forceClearContentBackground = self?.selectionBackground.superview != nil
+            self?.updateColors()
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var contentColor: NSColor {
+        if forceClearContentBackground {
+            return .clear
+        } else {
+            return super.contentColor
+        }
+    }
+    
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         guard let item = item as? ChatGroupedItem, let window = window as? Window else { return nil }
         
