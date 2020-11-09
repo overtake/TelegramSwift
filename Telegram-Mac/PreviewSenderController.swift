@@ -1120,10 +1120,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             default:
                 break
             }
+            FastSettings.toggleIsNeedCollage(state.isCollage)
             if !canCollage && state.isCollage {
                 state = state.withUpdatedIsCollage(false)
             }
-            
             self.genericView.tableView.scroll(to: .up(true))
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }

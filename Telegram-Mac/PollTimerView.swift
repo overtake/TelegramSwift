@@ -264,7 +264,7 @@ final class PollBubbleTimerView: View {
                 let animator = ConstantDisplayLinkAnimator(update: { [weak self] in
                     self?.updateValues()
                 })
-                animator.isPaused = self.window != nil
+                animator.isPaused = self.window == nil
                 self.animator = animator
 //                animator.isPaused = self.inHierarchyValue
             }

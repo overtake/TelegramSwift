@@ -138,7 +138,8 @@ class ChatGroupedItem: ChatRowItem {
                 }
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
-           
+            self.parameters[i].chatMode = chatInteraction.mode
+
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {

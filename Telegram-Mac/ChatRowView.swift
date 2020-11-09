@@ -1529,7 +1529,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = nil
         }
         
-        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout
+        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil
         
         if let item = item as? ChatRowItem {
             
