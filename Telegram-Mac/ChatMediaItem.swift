@@ -19,7 +19,8 @@ class ChatMediaLayoutParameters : Equatable {
     var showMessage:(Message)->Void = {_ in }
     
     var chatLocationInput:()->ChatLocationInput = { fatalError() }
-    
+    var chatMode:ChatMode = .history
+
     let presentation: ChatMediaPresentation
     let media: Media
     
@@ -189,6 +190,7 @@ class ChatMediaItem: ChatRowItem {
     var parameters:ChatMediaLayoutParameters? {
         didSet {
             parameters?.chatLocationInput = chatInteraction.chatLocationInput
+            parameters?.chatMode = chatInteraction.mode
         }
     }
     

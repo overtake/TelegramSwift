@@ -93,6 +93,12 @@ class CornerView : View {
         }
     }
     
+    var didChangeSuperview: (()->Void)? = nil
+    
+    override func viewDidMoveToSuperview() {
+        didChangeSuperview?()
+    }
+    
     override var backgroundColor: NSColor {
         didSet {
             layer?.backgroundColor = .clear
