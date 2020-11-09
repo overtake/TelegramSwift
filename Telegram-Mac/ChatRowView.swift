@@ -266,7 +266,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return backdorColor}
         
         if item.hasBubble {
-            return System.supportsTransparentFontDrawing ? .clear : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
+            //System.supportsTransparentFontDrawing ? .clear :
+            return item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
             //return .clear//isSelect || contextMenu != nil ? item.presentation.chat.backgoundSelectedColor(item.isIncoming, item.renderType == .bubble) : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
         } else {
             return backdorColor//backdorColor
