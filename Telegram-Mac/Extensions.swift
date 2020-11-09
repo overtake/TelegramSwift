@@ -48,9 +48,9 @@ extension NSMutableAttributedString {
                                 let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telegra.ph", "telesco.pe"]
                                 if let url = URL(string: link) {
                                     if let host = url.host, allowed.contains(host) {
-                                        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
                                     } else if allowed.contains(link) {
-                                        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
                                     }
                                 } else {
                                     continue
