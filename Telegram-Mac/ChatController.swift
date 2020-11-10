@@ -1472,6 +1472,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let _searchState: Atomic<SearchMessagesResultState> = Atomic(value: SearchMessagesResultState("", []))
         
+        let updatingMedia = context.account.pendingUpdateMessageManager.updatingMessageMedia
+            |> map { value -> [MessageId: ChatUpdatingMessageMedia] in
+                var result = value
+                for id in value.keys {
+                    if id.peerId != peerId {
+                        result.removeValue(forKey: id)
+                    }
+                }
+                return result
+            }
+            |> distinctUntilChanged
+        
+        let previousUpdatingMedia = Atomic<[MessageId: ChatUpdatingMessageMedia]?>(value: nil)
+        
         let historyViewTransition = combineLatest(queue: messagesViewQueue,
                                                   historyViewUpdate,
                                                   appearanceSignal,
@@ -1481,8 +1495,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                                 searchState.get(),
                                                   animatedEmojiStickers,
                                                   customChannelDiscussionReadState,
-                                                  customThreadOutgoingReadState
-) |> mapToQueue { update, appearance, readIndexAndOther, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+                                                  customThreadOutgoingReadState,
+                                                  updatingMedia
+) |> mapToQueue { update, appearance, readIndexAndOther, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
             
             //NSLog("get history")
             
@@ -1495,7 +1510,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let isLoading: Bool
             let view: MessageHistoryView?
             let initialData: ChatHistoryCombinedInitialData
-            let updateType: ChatHistoryViewUpdateType
+            var updateType: ChatHistoryViewUpdateType
             let scrollPosition: ChatHistoryViewScrollPosition?
             switch update.0 {
             case let .Loading(data, ut):
@@ -1510,6 +1525,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 isLoading = values.view.isLoading
                 updateType = values.type
                 scrollPosition = searchStateUpdated ? nil : values.scrollPosition
+            }
+    
+            if let updatedValue = previousUpdatingMedia.swap(updatingMedia), updatingMedia != updatedValue {
+                updateType = .Generic(type: .Generic)
             }
             
             switch updateType {
@@ -1574,7 +1593,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -1809,11 +1828,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let presentation = self.chatInteraction.presentation
             let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
             self.urlPreviewQueryState?.1.dispose()
-            self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
             
-            let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
-            self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime)
-            |> deliverOnMainQueue).start(next: { [weak self] progress in
+            
+            if atDate == nil {
+                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+                
+                self.chatInteraction.beginEditingMessage(nil)
+                self.chatInteraction.update({
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedComposeDisableUrlPreview(nil).updatedEditState({
+                            $0?.withUpdatedLoadingState(.none)
+                        })
+                    })
+                })
+                
+            } else {
+                let scheduleTime:Int32? = atDate != nil ? Int32(atDate!.timeIntervalSince1970) : nil
+
+                self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
+                
+                self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
                     case let .progress(progress):
@@ -1824,17 +1858,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         break
                     }
                     
-            }, completed: { [weak self] in
-                guard let `self` = self else {return}
-                self.chatInteraction.beginEditingMessage(nil)
-                self.chatInteraction.update({
-                    $0.updatedInterfaceState({
-                        $0.withUpdatedComposeDisableUrlPreview(nil).updatedEditState({
-                            $0?.withUpdatedLoadingState(.none)
+                    }, completed: { [weak self] in
+                        guard let `self` = self else {return}
+                        self.chatInteraction.beginEditingMessage(nil)
+                        self.chatInteraction.update({
+                            $0.updatedInterfaceState({
+                                $0.withUpdatedComposeDisableUrlPreview(nil).updatedEditState({
+                                    $0?.withUpdatedLoadingState(.none)
+                                })
+                            })
                         })
-                    })
-                })
-            }))
+                }))
+            }
+            
         }
         
         chatInteraction.sendMessage = { [weak self] silent, atDate in
@@ -2202,7 +2238,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let `self` = self {
                                 let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessagesCountable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? L10n.chatConfirmDeleteForEveryoneCountable(messages.count) : L10n.chatConfirmDeleteMessagesCountable(messages.count) : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? L10n.chatConfirmDeleteForEveryoneCountable(messages.count) : L10n.chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let strongSelf = strongSelf else {return}
                                     

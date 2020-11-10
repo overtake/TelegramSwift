@@ -107,11 +107,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     }
     
     
-    override func cancelFetching() {
-        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
-        }
-    }
     
     func songDidChanged(song: APSongItem, for controller: APController) {
         checkState()

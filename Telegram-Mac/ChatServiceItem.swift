@@ -277,10 +277,10 @@ class ChatServiceItem: ChatRowItem {
                     }
                     
                     if let message = paymentMessage, let media = message.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(message) {
-                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     } else {
-                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }
                 case let .botDomainAccessGranted(domain):
                     _ = attributedString.append(string: L10n.chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))

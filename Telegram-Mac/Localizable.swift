@@ -331,9 +331,9 @@ internal final class L10n {
   }
   /// Change Language?
   internal static var applyLanguageChangeLanguageTitle: String  { return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageTitle") }
-  /// You are about to apply a custom language pack **%@** that is %@%% complete.\n\nThis will translate the entire interface. You can suggest corrections in the [translation panel]().\n\nYou can change your language back at any time in Settings.
-  internal static func applyLanguageChangeLanguageUnofficialText(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageUnofficialText", p1, p2)
+  /// You are about to apply a custom language pack **%1$@** that is %2$@%% complete.\n\nThis will translate the entire interface. You can suggest corrections in the [translation panel]().\n\nYou can change your language back at any time in Settings.
+  internal static func applyLanguageChangeLanguageUnofficialText1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ApplyLanguage.ChangeLanguageUnofficialText1", p1, p2)
   }
   /// Translation Platform
   internal static var applyLanguageUnsufficientDataOpenPlatform: String  { return L10n.tr("Localizable", "ApplyLanguage.UnsufficientDataOpenPlatform") }
@@ -1011,9 +1011,9 @@ internal final class L10n {
   }
   /// transferred ownership
   internal static var channelEventLogMessageTransfered: String  { return L10n.tr("Localizable", "Channel.EventLog.MessageTransfered") }
-  /// transferred ownership to %@ %@
-  internal static func channelEventLogMessageTransferedName(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Channel.EventLog.MessageTransferedName", p1, p2)
+  /// transferred ownership to %1$@ %2$@
+  internal static func channelEventLogMessageTransferedName1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageTransferedName1", p1, p2)
   }
   /// Original message
   internal static var channelEventLogOriginalMessage: String  { return L10n.tr("Localizable", "Channel.EventLog.OriginalMessage") }
@@ -1065,9 +1065,9 @@ internal final class L10n {
   internal static func channelEventLogServicePlusTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.PlusTitle", p1)
   }
-  /// %@ set slowmode to %@
-  internal static func channelEventLogServiceSetSlowMode(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Channel.EventLog.Service.SetSlowMode", p1, p2)
+  /// %1$@ set slowmode to %2$@
+  internal static func channelEventLogServiceSetSlowMode1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.SetSlowMode1", p1, p2)
   }
   /// %@ edited this channel's title:
   internal static func channelEventLogServiceTitleUpdated(_ p1: String) -> String {
@@ -1438,21 +1438,21 @@ internal final class L10n {
   /// Are you sure you want to delete this messages for everyone?
   internal static var chatConfirmDeleteForEveryoneZero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteForEveryone_zero") }
   /// %d
-  internal static func chatConfirmDeleteMessagesCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_countable", p1)
+  internal static func chatConfirmDeleteMessages1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_countable", p1)
   }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessagesFew: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_few") }
+  internal static var chatConfirmDeleteMessages1Few: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_few") }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessagesMany: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_many") }
+  internal static var chatConfirmDeleteMessages1Many: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_many") }
   /// Delete selected message?
-  internal static var chatConfirmDeleteMessagesOne: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_one") }
+  internal static var chatConfirmDeleteMessages1One: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_one") }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessagesOther: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_other") }
+  internal static var chatConfirmDeleteMessages1Other: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_other") }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessagesTwo: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_two") }
+  internal static var chatConfirmDeleteMessages1Two: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_two") }
   /// Delete selected messages?
-  internal static var chatConfirmDeleteMessagesZero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages_zero") }
+  internal static var chatConfirmDeleteMessages1Zero: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessages1_zero") }
   /// Delete for Everyone
   internal static var chatConfirmDeleteMessagesForEveryone: String  { return L10n.tr("Localizable", "Chat.Confirm.DeleteMessagesForEveryone") }
   /// Pin for me and %@
@@ -1493,6 +1493,8 @@ internal final class L10n {
   internal static var chatContextBlockGroup: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup") }
   /// Block User
   internal static var chatContextBlockUser: String  { return L10n.tr("Localizable", "Chat.Context.BlockUser") }
+  /// Cancel Editing
+  internal static var chatContextCancelEditing: String  { return L10n.tr("Localizable", "Chat.Context.CancelEditing") }
   /// Clear Chat History
   internal static var chatContextClearHistory: String  { return L10n.tr("Localizable", "Chat.Context.ClearHistory") }
   /// Clear All
@@ -2039,9 +2041,9 @@ internal final class L10n {
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
   }
-  /// You have successfully transferred **%@** to **%@** for **%@**
-  internal static func chatServicePaymentSent(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.PaymentSent", p1, p2, p3)
+  /// You have successfully transferred **%1$@** to **%2$@** for **%3$@**
+  internal static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
   }
   /// %@ joined Telegram
   internal static func chatServicePeerJoinedTelegram(_ p1: String) -> String {
@@ -2069,7 +2071,7 @@ internal final class L10n {
   }
   /// channel video updated
   internal static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
-  /// %1%@ invited %2%@
+  /// %1$@ invited %2$@
   internal static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
   }
@@ -2077,7 +2079,7 @@ internal final class L10n {
   internal static func chatServiceGroupAddedSelf(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedSelf", p1)
   }
-  /// %1%@ created the group "%2%@"
+  /// %1$@ created the group "%2$@"
   internal static func chatServiceGroupCreated1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.Created1", p1, p2)
   }
@@ -2087,7 +2089,7 @@ internal final class L10n {
   }
   /// This group was upgraded to a supergroup
   internal static var chatServiceGroupMigratedToSupergroup: String  { return L10n.tr("Localizable", "Chat.Service.Group.MigratedToSupergroup") }
-  /// %1%@ removed %2%@
+  /// %1$@ removed %2$@
   internal static func chatServiceGroupRemovedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.RemovedMembers1", p1, p2)
   }
@@ -2107,11 +2109,11 @@ internal final class L10n {
   internal static func chatServiceGroupUpdatedPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPhoto", p1)
   }
-  /// %1%@ pinned "%2%@"
+  /// %1$@ pinned "%2$@"
   internal static func chatServiceGroupUpdatedPinnedMessage1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPinnedMessage1", p1, p2)
   }
-  /// %1%@ changed the group name to "%2%@"
+  /// %1$@ changed the group name to "%2$@"
   internal static func chatServiceGroupUpdatedTitle1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedTitle1", p1, p2)
   }
@@ -2413,9 +2415,9 @@ internal final class L10n {
   internal static var chatWPColorSecondMessage: String  { return L10n.tr("Localizable", "Chat.WP.Color.SecondMessage") }
   /// None
   internal static var chatWPPatternNone: String  { return L10n.tr("Localizable", "Chat.WP.Pattern.None") }
-  /// %d of %d
-  internal static func chatWebpageMediaCount(_ p1: Int, _ p2: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Webpage.MediaCount", p1, p2)
+  /// %1$d of %2$d
+  internal static func chatWebpageMediaCount1(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Webpage.MediaCount1", p1, p2)
   }
   /// Show Next
   internal static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
@@ -3153,9 +3155,9 @@ internal final class L10n {
   internal static var errorUsernameUnderscopeEnd: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeEnd") }
   /// A username can't start with an underscore.
   internal static var errorUsernameUnderscopeStart: String  { return L10n.tr("Localizable", "Error.Username.UnderscopeStart") }
-  /// Banned %@ %@
-  internal static func eventLogServiceBanned(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Banned", p1, p2)
+  /// Banned %1$@ %2$@
+  internal static func eventLogServiceBanned1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Banned1", p1, p2)
   }
   /// changed defaults rights
   internal static var eventLogServiceChangedDefaultsRights: String  { return L10n.tr("Localizable", "EventLog.Service.ChangedDefaultsRights") }
@@ -3167,9 +3169,9 @@ internal final class L10n {
   internal static func eventLogServiceDeletedMessage(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.DeletedMessage", p1)
   }
-  /// restricted %@ %@ indefinitely
-  internal static func eventLogServiceDemoted(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Demoted", p1, p2)
+  /// restricted %1$@ %2$@ indefinitely
+  internal static func eventLogServiceDemoted1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Demoted1", p1, p2)
   }
   /// %@ edited caption:
   internal static func eventLogServiceEditedCaption(_ p1: String) -> String {
@@ -3189,9 +3191,9 @@ internal final class L10n {
   internal static var eventLogServicePreviousLink: String  { return L10n.tr("Localizable", "EventLog.Service.PreviousLink") }
   /// Previous Title
   internal static var eventLogServicePreviousTitle: String  { return L10n.tr("Localizable", "EventLog.Service.PreviousTitle") }
-  /// promoted %@ %@:
-  internal static func eventLogServicePromoted(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Promoted", p1, p2)
+  /// promoted %1$@ %2$@:
+  internal static func eventLogServicePromoted1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Promoted1", p1, p2)
   }
   /// %@ removed group sticker set
   internal static func eventLogServiceRemovedStickerSet(_ p1: String) -> String {
@@ -3225,17 +3227,17 @@ internal final class L10n {
   internal static var eventLogServiceDemoteSendMessages: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.SendMessages") }
   /// Send Stickers
   internal static var eventLogServiceDemoteSendStickers: String  { return L10n.tr("Localizable", "EventLog.Service.Demote.SendStickers") }
-  /// changed the restrictions for %@ %@ indefinitely
-  internal static func eventLogServiceDemotedChanged(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Demoted.Changed", p1, p2)
+  /// changed the restrictions for %1$@ %2$@ indefinitely
+  internal static func eventLogServiceDemotedChanged1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Demoted.Changed1", p1, p2)
   }
-  /// restricted %@ %@ until %@
-  internal static func eventLogServiceDemotedUntil(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Demoted.Until", p1, p2, p3)
+  /// restricted %1$@ %2$@ until %3$@
+  internal static func eventLogServiceDemotedUntil1(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Demoted.Until1", p1, p2, p3)
   }
-  /// changed restrictions for %@ %@ until %@
-  internal static func eventLogServiceDemotedChangedUntil(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Demoted.Changed.Until", p1, p2, p3)
+  /// changed restrictions for %1$@ %2$@ until %3$@
+  internal static func eventLogServiceDemotedChangedUntil1(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Demoted.Changed.Until1", p1, p2, p3)
   }
   /// Add New Admins
   internal static var eventLogServicePromoteAddNewAdmins: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.AddNewAdmins") }
@@ -3257,9 +3259,9 @@ internal final class L10n {
   internal static var eventLogServicePromotePostMessages: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.PostMessages") }
   /// Remain Anonymous
   internal static var eventLogServicePromoteRemainAnonymous: String  { return L10n.tr("Localizable", "EventLog.Service.Promote.RemainAnonymous") }
-  /// changed privileges for %@ %@:
-  internal static func eventLogServicePromotedChanged(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "EventLog.Service.Promoted.Changed", p1, p2)
+  /// changed privileges for %1$@ %2$@:
+  internal static func eventLogServicePromotedChanged1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.Promoted.Changed1", p1, p2)
   }
   /// Disable Dark Mode
   internal static var fastSettingsDisableDarkMode: String  { return L10n.tr("Localizable", "FastSettings.DisableDarkMode") }
@@ -7333,6 +7335,8 @@ internal final class L10n {
   internal static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
   /// CHATS
   internal static var storageUsageChatsHeader: String  { return L10n.tr("Localizable", "StorageUsage.ChatsHeader") }
+  /// Your local cache is being cleaned...
+  internal static var storageUsageCleaningProcess: String  { return L10n.tr("Localizable", "StorageUsage.CleaningProcess") }
   /// Clear
   internal static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Keep Media
@@ -7413,8 +7417,6 @@ internal final class L10n {
   internal static var telegramChannelPermissionsController: String  { return L10n.tr("Localizable", "Telegram.ChannelPermissionsController") }
   /// Channel Stats
   internal static var telegramChannelStatisticsController: String  { return L10n.tr("Localizable", "Telegram.ChannelStatisticsController") }
-  /// Group
-  internal static var telegramChannelVisibilityController: String  { return L10n.tr("Localizable", "Telegram.ChannelVisibilityController") }
   /// Supergroup
   internal static var telegramConvertGroupViewController: String  { return L10n.tr("Localizable", "Telegram.ConvertGroupViewController") }
   /// Data and Storage
@@ -7473,6 +7475,10 @@ internal final class L10n {
   internal static var telegramUsernameSettingsViewController: String  { return L10n.tr("Localizable", "Telegram.UsernameSettingsViewController") }
   /// Logged in with Telegram
   internal static var telegramWebSessionsController: String  { return L10n.tr("Localizable", "Telegram.WebSessionsController") }
+  /// Channel
+  internal static var telegramChannelVisibilityControllerChannel: String  { return L10n.tr("Localizable", "Telegram.ChannelVisibilityController.Channel") }
+  /// Group
+  internal static var telegramChannelVisibilityControllerGroup: String  { return L10n.tr("Localizable", "Telegram.ChannelVisibilityController.Group") }
   /// Telegram needs to optimize its database after this update. This may take a few minutes, sorry for the inconvenience.
   internal static var telegramUpgradeDatabaseText: String  { return L10n.tr("Localizable", "Telegram.UpgradeDatabase.Text") }
   /// Optimizing Database
@@ -7503,10 +7509,16 @@ internal final class L10n {
   internal static var termsOfServiceDisagreeTextLastOK: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text.Last.OK") }
   /// Copy Selected Text
   internal static var textCopy: String  { return L10n.tr("Localizable", "Text.Copy") }
-  /// Copy %@
-  internal static func textCopyLabel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Text.CopyLabel", p1)
-  }
+  /// Copy About
+  internal static var textCopyLabelAbout: String  { return L10n.tr("Localizable", "Text.CopyLabel_About") }
+  /// Copy Bio
+  internal static var textCopyLabelBio: String  { return L10n.tr("Localizable", "Text.CopyLabel_Bio") }
+  /// Copy Phone Number
+  internal static var textCopyLabelPhoneNumber: String  { return L10n.tr("Localizable", "Text.CopyLabel_PhoneNumber") }
+  /// Copy Share Link
+  internal static var textCopyLabelShareLink: String  { return L10n.tr("Localizable", "Text.CopyLabel_ShareLink") }
+  /// Copy Username
+  internal static var textCopyLabelUsername: String  { return L10n.tr("Localizable", "Text.CopyLabel_Username") }
   /// Copy Text
   internal static var textCopyText: String  { return L10n.tr("Localizable", "Text.CopyText") }
   /// Copy Code

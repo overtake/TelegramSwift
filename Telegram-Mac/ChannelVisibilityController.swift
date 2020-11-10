@@ -649,11 +649,20 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     let exportedLinkDisposable = MetaDisposable()
     let peerId:PeerId
     let onlyUsername:Bool
-    
-    init(_ context: AccountContext, peerId:PeerId, onlyUsername: Bool = false) {
+    let isChannel: Bool
+    init(_ context: AccountContext, peerId:PeerId, isChannel: Bool, onlyUsername: Bool = false) {
         self.peerId = peerId
         self.onlyUsername = onlyUsername
+        self.isChannel = isChannel
         super.init(context)
+    }
+    
+    override var defaultBarTitle: String {
+        if isChannel {
+            return L10n.telegramChannelVisibilityControllerChannel
+        } else {
+            return L10n.telegramChannelVisibilityControllerGroup
+        }
     }
     
     override var enableBack: Bool {

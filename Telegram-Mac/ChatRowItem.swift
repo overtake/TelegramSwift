@@ -785,6 +785,9 @@ class ChatRowItem: TableRowItem {
     let isIncoming: Bool
     
     var isUnsent: Bool {
+        if entry.additionalData.updatingMedia != nil {
+            return true
+        }
         if let message = message {
             return message.flags.contains(.Unsent)
         }
@@ -2342,7 +2345,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     let context = chatInteraction.context
     let peerId = chatInteraction.peerId
     let peer = chatInteraction.peer
-    
+    let messageId = message.id
     if chatInteraction.isLogInteraction || chatInteraction.presentation.state == .selecting {
         return .single([])
     }
@@ -2395,7 +2398,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
     
     if canReplyMessage(message, peerId: chatInteraction.peerId, mode: chatInteraction.mode)  {
-        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(L10n.messageContextReplyHelp))" : ""), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(L10n.messageContextReplyHelp))" : ""), handler: { [unowned chatInteraction] in
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
@@ -2412,7 +2415,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 }
             }
             
-            items.append(ContextMenuItem(modeIsReplies ? L10n.messageContextViewRepliesCountable(Int(attr.count)) : L10n.messageContextViewCommentsCountable(Int(attr.count)), handler: {
+            items.append(ContextMenuItem(modeIsReplies ? L10n.messageContextViewRepliesCountable(Int(attr.count)) : L10n.messageContextViewCommentsCountable(Int(attr.count)), handler: { [unowned chatInteraction] in
                 chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
             }))
         }
@@ -2438,7 +2441,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
-            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
+            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: { [unowned chatInteraction] in
                 _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id, isThread: chatInteraction.mode.threadId != nil), for: context.window).start(next: { link in
                     if let link = link {
                         copyToClipboard(link)
@@ -2452,7 +2455,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     items.append(ContextSeparatorItem())
     
     if canEditMessage(message, context: context), chatInteraction.mode != .pinned {
-        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [unowned chatInteraction] in
             chatInteraction.beginEditingMessage(message)
         }))
     }
@@ -2473,7 +2476,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 if !chatInteraction.mode.isThreadMode, (needUnpin || chatInteraction.mode != .pinned) {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
-                            modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle:  L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                            modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle:  L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { [unowned chatInteraction] result in
                                 chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid, false)
                             })
                         } else {
@@ -2483,11 +2486,11 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 }
             }
         } else if message.id.peerId == account.peerId {
-            items.append(ContextMenuItem(pinText, handler: {
+            items.append(ContextMenuItem(pinText, handler: { [unowned chatInteraction] in
                 chatInteraction.updatePinned(message.id, needUnpin, true, false)
             }))
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, (needUnpin || chatInteraction.mode != .pinned) {
-            items.append(ContextMenuItem(pinText, handler: {
+            items.append(ContextMenuItem(pinText, handler: { [unowned chatInteraction] in
                 if !needUnpin {
                     modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, result == .thrid, false)
@@ -2511,23 +2514,23 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
    
     
     if canForwardMessage(message, account: account) {
-        items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         }))
     } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat, !message.containsSecretMedia {
-        items.append(ContextMenuItem(L10n.messageContextShare, handler: {
+        items.append(ContextMenuItem(L10n.messageContextShare, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         }))
     }
     
     if canDeleteMessage(message, account: account, mode: chatInteraction.mode) {
-        items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [unowned chatInteraction] in
             chatInteraction.deleteMessages([message.id])
         }))
     }
     
     if chatInteraction.mode.threadId != message.id {
-        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [unowned chatInteraction] in
             chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
         }))
     }
@@ -2536,7 +2539,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
 
     
     if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
-        items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: {
+        items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: { [unowned chatInteraction] in
             _ = Sender.forwardMessages(messageIds: [message.id], context: chatInteraction.context, peerId: account.peerId).start()
         }))
         items.append(ContextSeparatorItem())
@@ -2544,7 +2547,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     
     
-    
+   
 
     
     var signal:Signal<[ContextMenuItem], NoError> = .single(items)
@@ -2674,7 +2677,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
     
     
-    signal = signal |> map { items in
+    signal = signal |> map { [unowned chatInteraction] items in
         if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, chatInteraction.mode == .history {
             if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId, message.isIncoming(account, theme.bubbled) {
                 var items = items
@@ -2699,7 +2702,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         return items
     }
 //
-    signal = signal |> map { items in
+    signal = signal |> map { [unowned chatInteraction] items in
         var items = items
         if canReportMessage(message, account), chatInteraction.mode != .pinned {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
@@ -2713,7 +2716,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         return items
     }
     
-    return signal |> map { items in
+    signal = signal |> map { [unowned chatInteraction] items in
         var items = items
         if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, chatInteraction.mode == .history {
             items.append(ContextSeparatorItem())
@@ -2723,4 +2726,23 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }
         return items
     }
+    
+    signal = signal |> mapToSignal { items in
+        return account.pendingUpdateMessageManager.updatingMessageMedia |> take(1) |> deliverOnMainQueue |> map {
+            $0[messageId] != nil
+        } |> map { editing in
+            if editing {
+                var items = items
+                items.append(ContextSeparatorItem())
+                items.append(ContextMenuItem(L10n.chatContextCancelEditing, handler: {
+                    account.pendingUpdateMessageManager.cancel(messageId: messageId)
+                }))
+                return items
+            } else {
+                return items
+            }
+        }
+    }
+    
+    return signal
 }

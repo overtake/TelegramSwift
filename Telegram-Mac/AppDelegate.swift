@@ -76,7 +76,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private var sharedContextOnce: Signal<SharedApplicationContext, NoError> {
         return sharedContextPromise.get() |> take(1) |> deliverOnMainQueue
     }
-    private var sharedApplicationContextValue: SharedApplicationContext!
+    private var sharedApplicationContextValue: SharedApplicationContext?
 
     
     var passlock: Signal<Bool, NoError> {
@@ -305,7 +305,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             if let localization = localization {
                 applyUILocalization(localization)
             }
-            
+                        
             updateTheme(with: themeSettings, for: window)
             
             
@@ -829,11 +829,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     
     private func updatePeerPresence() {
-        let isOnline = self.window.isKeyWindow && NSApp.isActive && NSApp.isRunning && !NSApp.isHidden && !self.sharedApplicationContextValue.sharedWakeupManager.isSleeping && !self.sharedApplicationContextValue.notificationManager._lockedValue.screenLock && !self.sharedApplicationContextValue.notificationManager._lockedValue.passcodeLock
-        #if DEBUG
-        NSLog("accountIsOnline: \(isOnline)")
-        #endif
-        presentAccountStatus.set(.single(isOnline) |> then(.single(isOnline) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
+        if let sharedApplicationContextValue = sharedApplicationContextValue {
+            let isOnline = NSApp.isActive && NSApp.isRunning && !NSApp.isHidden && !sharedApplicationContextValue.sharedWakeupManager.isSleeping && !sharedApplicationContextValue.notificationManager._lockedValue.screenLock && !sharedApplicationContextValue.notificationManager._lockedValue.passcodeLock
+            #if DEBUG
+            NSLog("accountIsOnline: \(isOnline)")
+            #endif
+            presentAccountStatus.set(.single(isOnline) |> then(.single(isOnline) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
+        }
     }
     
     @objc public func windiwDidChangeBackingProperties() {

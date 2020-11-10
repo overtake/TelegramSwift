@@ -153,7 +153,7 @@ class EditMessageModel: ChatAccessoryModel {
                             cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
                         }
                     })
-                    if let media = media as? TelegramMediaImage {
+                    if let media = media as? TelegramMediaImage, !media.isLocalResource {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     

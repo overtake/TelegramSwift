@@ -1317,7 +1317,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     
-    func fillName(_ item:ChatRowItem) -> Void {
+    func fillName(_ item:ChatRowItem, animated: Bool) -> Void {
         if let author = item.authorText {
             if item.isBubbled && !item.hasBubble {
                 nameView?.removeFromSuperview()
@@ -1366,7 +1366,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     adminBadge = nil
                 }
                 
-                nameView?.update(author, origin: namePoint(item))
+                nameView?.update(author)
+                nameView?.change(pos: namePoint(item), animated: animated)
                 nameView?.toolTip = item.nameHide
             }
             
@@ -1547,7 +1548,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let item = item as? ChatRowItem {
             rightView.set(item:item, animated:animated)
             fillReplyIfNeeded(item.replyModel, item)
-            fillName(item)
+            fillName(item, animated: animated)
             fillForward(item)
             fillPhoto(item)
             fillForward(item)
