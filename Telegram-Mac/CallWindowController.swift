@@ -496,14 +496,16 @@ private class PhoneCallWindowView : View {
                 for tooltip in tooltips {
                     tooltip.change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 }
-                
+                self.settings._change(opacity: self.mouseInside() ? 1.0 : 0.0)
+
             default:
                 self.backgroundView.change(opacity: 1.0)
                 self.controls.change(opacity: 1.0)
                 self.textNameView._change(opacity: 1.0)
                 self.secureTextView._change(opacity: 1.0)
                 self.statusView._change(opacity: 1.0)
-                
+                self.settings._change(opacity: 1.0)
+
                 for tooltip in tooltips {
                     tooltip.change(opacity: 1.0)
                 }

@@ -139,7 +139,35 @@ class ChatGroupedItem: ChatRowItem {
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
             self.parameters[i].chatMode = chatInteraction.mode
-
+            self.parameters[i].getUpdatingMediaProgress = { messageId in
+                switch entry {
+                case let .groupedPhotos(entries, _):
+                    return .single(entries.first(where: { $0.message?.id == messageId})?.additionalData.updatingMedia?.progress)
+                default:
+                    return .single(nil)
+                }
+            }
+            self.parameters[i].cancelOperation = { [unowned context] message, media in
+                switch entry {
+                case let .groupedPhotos(entries, _):
+                    if let entry = entries.first(where: { $0.message?.id == message.id }) {
+                        if entry.additionalData.updatingMedia != nil {
+                            context.account.pendingUpdateMessageManager.cancel(messageId: message.id)
+                        } else if let media = media as? TelegramMediaFile {
+                            messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: media))
+                            if let resource = media.resource as? LocalFileArchiveMediaResource {
+                                archiver.remove(.resource(resource))
+                            }
+                        } else if let media = media as? TelegramMediaImage {
+                            chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
+                        }
+                    }
+                default:
+                    break
+                }
+                
+                
+            }
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {

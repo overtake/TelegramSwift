@@ -121,7 +121,7 @@ func createChannel(with context: AccountContext) {
                 context.sharedContext.bindings.rootNavigation().removeAll()
                 
                 var chat: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
-                var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId)
+                var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId, isChannel: true)
 
                 chat!.navigationController = context.sharedContext.bindings.rootNavigation()
                 visibility!.navigationController = context.sharedContext.bindings.rootNavigation()

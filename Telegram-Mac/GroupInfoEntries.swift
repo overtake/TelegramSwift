@@ -190,7 +190,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func visibilitySetup() {
-        let setup = ChannelVisibilityController(context, peerId: peerId)
+        let setup = ChannelVisibilityController(context, peerId: peerId, isChannel: false)
         _ = (setup.onComplete.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peerId in
             self?.changeControllers(peerId)
             self?.pullNavigation()?.back()
@@ -1317,9 +1317,9 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
             return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateGroupPhoto)
         case let .scam(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, text: text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text: text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
@@ -1328,7 +1328,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, copyMenuText: L10n.textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: mainWindow)
             }, selectFullWord: true)
         case let .setTitle(_, text, viewType):

@@ -2729,6 +2729,32 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
 }
 
 
+extension TelegramMediaImage {
+    var isLocalResource: Bool {
+        if let resource = representations.last?.resource {
+            if resource is LocalFileMediaResource {
+                return true
+            }
+            if resource is LocalFileReferenceMediaResource {
+                return true
+            }
+        }
+        return false
+    }
+}
+
+extension TelegramMediaFile {
+    var isLocalResource: Bool {
+        if resource is LocalFileMediaResource {
+            return true
+        }
+        if resource is LocalFileReferenceMediaResource {
+            return true
+        }
+        return false
+    }
+}
+
 extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {
         return MessageIndex(id: self.id, timestamp: timestamp)

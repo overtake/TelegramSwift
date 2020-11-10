@@ -187,7 +187,7 @@ class ReplyModel: ChatAccessoryModel {
                 
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
                     
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale))
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: false)
 
                     
                     view.imageView?.setSignal(updateImageSignal, animate: true, synchronousLoad: true, cacheImage: { [weak media] result in
