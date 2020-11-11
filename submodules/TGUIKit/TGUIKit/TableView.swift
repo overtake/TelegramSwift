@@ -2916,9 +2916,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
                 if let item = item, !applied {
-                    if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                        applied = true
-                        DispatchQueue.main.async {
+                    DispatchQueue.main.async {
+                        if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                            applied = true
                             if focus.focus {
                                 view.focusAnimation(innerId)
                                 focus.action?(view.interactableView)
@@ -2958,8 +2958,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if abs(bounds.minY - clipView.bounds.minY) < height || ignoreLayerAnimation {
                 if animate {
                     areSuspended = shouldSuspend
-                    clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
+                    clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self, unowned scrollListener] completed in
                         if let `self` = self {
+                            self.reloadData()
                             scrollListener.handler(self.scrollPosition().current)
                             self.removeScroll(listener: scrollListener)
                             completion(completed)
@@ -2979,11 +2980,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                
                 areSuspended = shouldSuspend
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
-                clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
-                    self?.removeScroll(listener: scrollListener)
+                clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self, unowned scrollListener] completed in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.reloadData()
+                    scrollListener.handler(self.scrollPosition().current)
+                    self.removeScroll(listener: scrollListener)
                     completion(completed)
-                    self?.areSuspended = false
-                    self?.enqueueTransitions()
+                    self.areSuspended = false
+                    self.enqueueTransitions()
                 })
 
             }
