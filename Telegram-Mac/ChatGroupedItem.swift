@@ -142,10 +142,19 @@ class ChatGroupedItem: ChatRowItem {
             self.parameters[i].getUpdatingMediaProgress = { messageId in
                 switch entry {
                 case let .groupedPhotos(entries, _):
-                    return .single(entries.first(where: { $0.message?.id == messageId})?.additionalData.updatingMedia?.progress)
+                    let media = entries.first(where: { $0.message?.id == messageId})?.additionalData.updatingMedia
+                    if let media = media {
+                        switch media.media {
+                        case .update:
+                            return .single(media.progress)
+                        default:
+                            break
+                        }
+                    }
                 default:
-                    return .single(nil)
+                    break
                 }
+                return .single(nil)
             }
             self.parameters[i].cancelOperation = { [unowned context] message, media in
                 switch entry {

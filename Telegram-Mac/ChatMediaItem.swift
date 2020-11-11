@@ -201,7 +201,15 @@ class ChatMediaItem: ChatRowItem {
         parameters?.chatMode = chatInteraction.mode
         
         parameters?.getUpdatingMediaProgress = { [weak self] messageId in
-            return .single(self?.entry.additionalData.updatingMedia?.progress)
+            if let media = self?.entry.additionalData.updatingMedia {
+                switch media.media {
+                case .update:
+                    return .single(media.progress)
+                default:
+                    break
+                }
+            }
+            return .single(nil)
         }
         
         
