@@ -2960,7 +2960,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     areSuspended = shouldSuspend
                     clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
                         if let `self` = self {
-                            self.reloadData()
                             scrollListener.handler(self.scrollPosition().current)
                             self.removeScroll(listener: scrollListener)
                             completion(completed)
@@ -2984,7 +2983,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     guard let `self` = self else {
                         return
                     }
-                    self.reloadData()
                     scrollListener.handler(self.scrollPosition().current)
                     self.removeScroll(listener: scrollListener)
                     completion(completed)
