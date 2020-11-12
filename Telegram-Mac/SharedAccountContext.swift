@@ -500,6 +500,7 @@ class SharedAccountContext {
     
     private var launchActions:[AccountRecordId : LaunchNavigation] = [:]
     
+   
     func setLaunchAction(_ action: LaunchNavigation, for accountId: AccountRecordId) -> Void {
         assert(Queue.mainQueue().isCurrent())
         launchActions[accountId] = action
@@ -511,6 +512,15 @@ class SharedAccountContext {
         launchActions.removeValue(forKey: accountId)
         return action
     }
+    
+    #if !SHARE
+    private let crossCallSession: Atomic<PCallSession?> = Atomic<PCallSession?>(value: nil)
+    
+    func getCrossAccountCallSession() -> PCallSession? {
+        return crossCallSession.swap(nil)
+    }
+    #endif
+    
     
     private func updateAccountBackupData(account: Account) -> Signal<Never, NoError> {
         return accountBackupData(postbox: account.postbox)
@@ -541,6 +551,7 @@ class SharedAccountContext {
             setLaunchAction(action, for: id)
         }
         
+        
         assert(Queue.mainQueue().isCurrent())
         
         #if SHARE
@@ -552,6 +563,9 @@ class SharedAccountContext {
         }
         return
         #else
+        
+        _ = crossCallSession.swap(bindings.callSession())
+        
          _ = self.accountManager.transaction({ transaction in
             if transaction.getCurrent()?.0 != id {
                 transaction.setCurrentId(id)

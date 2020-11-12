@@ -728,7 +728,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         self.autoresizesSubviews = YES;
         _textView.delegate = self;
         
-        [_textView setDrawsBackground:YES];
+        [_textView setDrawsBackground:NO];
         
         
         if (unscrollable) {
@@ -744,6 +744,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [self addSubview:self.scrollView];
         
         
+        [self.scrollView setDrawsBackground:NO];
         self.wantsLayer = _textView.wantsLayer = _scrollView.wantsLayer = YES;
         
         

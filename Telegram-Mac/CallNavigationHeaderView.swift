@@ -25,7 +25,7 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private let hideDisposable = MetaDisposable()
 
     
-    private var session: PCallSession?
+    private(set) var session: PCallSession?
     private var state: CallState?
     private weak var accountPeer: Peer?
     

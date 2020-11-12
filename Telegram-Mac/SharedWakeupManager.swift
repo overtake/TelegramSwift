@@ -116,19 +116,14 @@ class SharedWakeupManager {
         
         for account in accounts {
             if !ringingStatesActivated.contains(account.id) {
-                _ = (account.callSessionManager.ringingStates() |> deliverOn(callQueue)).start(next: { states in
-                    pullCurrentSession( { session in
-                        DispatchQueue.main.async {
-                            if let state = states.first {
-                                
-                                if session != nil {
-                                    account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
-                                } else {
-                                    showCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible))
-                                }
-                            }
+                _ = (account.callSessionManager.ringingStates() |> deliverOnMainQueue).start(next: { states in
+                    if let state = states.first {
+                        if self.sharedContext.bindings.callSession() != nil {
+                            account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                        } else {
+                            showCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible))
                         }
-                    } )
+                    }
                 })
                 ringingStatesActivated.insert(account.id)
             }
