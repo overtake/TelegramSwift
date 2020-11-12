@@ -145,10 +145,10 @@ public class CallNavigationHeader : NavigationHeader {
     fileprivate weak var simpleHeader:NavigationHeader?
     public override func show(_ animated:Bool) {
         assert(navigation != nil)
-        needShown = true
         if isShown {
             return
         }
+        needShown = true
         isShown = true
         if let navigation = navigation {
             let view = self.view

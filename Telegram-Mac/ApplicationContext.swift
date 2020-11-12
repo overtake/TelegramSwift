@@ -188,7 +188,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -276,6 +276,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.view.splitView.needFullsize()
         }, displayUpgradeProgress: { progress in
                 
+        }, callSession: { [weak self] in
+            return (self?.rightController.callHeader?.view as? CallNavigationHeaderView)?.session
         })
         
         
@@ -671,30 +673,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
           //  _ready.set(leftController.ready.get())
         }
         
-        
-        let callSessionSemaphore = DispatchSemaphore(value: 0)
-        var callSession: PCallSession?
-        _ = _callSession().start(next: { _session in
-            callSession = _session
-            callSessionSemaphore.signal()
-        })
-        callSessionSemaphore.wait()
-        
-        
         if let session = callSession {
-            _ = (session.state |> take(1)).start(next: { [weak session] state in
-                if case .active = state.state, let session = session {
-                    context.sharedContext.showCallHeader(with: session)
-                }
-            })
+            context.sharedContext.showCallHeader(with: session)
         }
         
         self.updateFoldersDisposable.set((chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] value in
             self?.updateLeftSidebar(with: value, animated: true)
         }))
-        
-        
-        
         
         
         if let controller = globalAudio {

@@ -192,13 +192,6 @@ private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCal
 
 let callQueue = Queue(name: "VoIPQueue")
 
-private var callSession:PCallSession? = nil
-
-func pullCurrentSession(_ f:@escaping (PCallSession?)->Void) {
-    callQueue.async {
-        f(callSession)
-    }
-}
 
 
 private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAuxiliaryServer] {
@@ -1166,39 +1159,31 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         }
         
         if microAccess {
-            return Signal { subscriber in
-                
-                assert(callQueue.isCurrent())
-                
-                if let session = callSession, session.peerId == peerId, !ignoreSame {
-                    subscriber.putNext(.samePeer(session))
-                    subscriber.putCompletion()
-                } else {
-                    let confirmation:Signal<Bool, NoError>
-                    if let sessionPeerId = callSession?.peerId {
-                        confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
-                            return account.postbox.loadedPeerWithId(sessionPeerId) |> map { (new: peer, previous: $0) }
-                            } |> mapToSignal { value in
-                                return confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader, information: L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle))
-                        }
-                        
-                    } else {
-                        confirmation = .single(true)
+            if let session = sharedContext.bindings.callSession(), session.peerId == peerId, !ignoreSame {
+                return .single(.samePeer(session))
+            } else {
+                let confirmation:Signal<Bool, NoError>
+                if let sessionPeerId = sharedContext.bindings.callSession()?.peerId {
+                    confirmation = account.postbox.loadedPeerWithId(peerId) |> mapToSignal { peer -> Signal<(new:Peer, previous:Peer), NoError> in
+                        return account.postbox.loadedPeerWithId(sessionPeerId) |> map { (new: peer, previous: $0) }
+                        } |> mapToSignal { value in
+                            return confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader, information: L10n.callConfirmDiscardCurrentDescription(value.previous.compactDisplayTitle, value.new.displayTitle))
                     }
                     
-                    return (confirmation |> filter {$0} |> map { _ in
-                        callSession?.hangUpCurrentCall()
-                    } |> mapToSignal { _ in
-                        return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
-                    } |> deliverOn(callQueue) ).start(next: { id in
-                        subscriber.putNext(.success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible)))
-                        subscriber.putCompletion()
-                    })
+                } else {
+                    confirmation = .single(true)
                 }
                 
-                return EmptyDisposable
-                
-            } |> runOn(callQueue)
+                return confirmation |> filter {$0} |> map { _ in
+                    sharedContext.bindings.callSession()?.hangUpCurrentCall()
+                    } |> mapToSignal { _ in
+                        return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
+                    }
+                    |> deliverOn(callQueue)
+                    |> map { id in
+                        return .success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
+                }
+            }
         } else {
             confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
@@ -1209,23 +1194,6 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                 }
             })
             return .complete()
-        }
-    }
-
-    
-}
-
-func _callSession() -> Signal<PCallSession?, NoError> {
-    return Signal { subscriber in
-        var cancel: Bool = false
-        pullCurrentSession({ session in
-            if !cancel {
-                subscriber.putNext(session)
-                subscriber.putCompletion()
-            }
-        })
-        return ActionDisposable {
-            cancel = true
         }
     }
 }

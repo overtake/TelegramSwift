@@ -1407,7 +1407,6 @@ func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallRes
         break
     case let .samePeer(session):
         if let header = sharedContext.bindings.rootNavigation().callHeader, header.needShown {
-            (header.view as? CallNavigationHeaderView)?.hide()
             showCallWindow(session)
         } else {
             controller.with { $0?.window.orderFront(nil) }

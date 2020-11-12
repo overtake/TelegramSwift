@@ -26,7 +26,8 @@ fileprivate final class ActionButton : Control {
         self.imageView.animates = true
         imageView.isEventLess = true
         textView.isEventLess = true
-        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
         set(handler: { control in
             control.change(opacity: 0.8, animated: true)
         }, for: .Highlight)
