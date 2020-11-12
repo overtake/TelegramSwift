@@ -3228,7 +3228,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return reportPeer(account: context.account, peerId: peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                     if let peer = self?.chatInteraction.peer {
                         if peer.id.namespace == Namespaces.Peer.CloudUser {
-                            return removePeerChat(account: context.account, peerId: peerId, reportChatSpam: false) |> deliverOnMainQueue
+                            return removePeerChat(account: context.account, peerId: peerId, reportChatSpam: true) |> deliverOnMainQueue
                                 |> mapToSignal { _ in
                                     return context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() } |> mapToSignal { _ in
                                         return .single(Void())
