@@ -674,7 +674,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         case .files:
             return item.isBubbled ? (item.isIncoming ? theme.icons.group_selection_foreground_bubble_incoming : theme.icons.group_selection_foreground_bubble_outgoing) : theme.icons.group_selection_foreground
         case .photoOrVideo:
-            return theme.icons.chatGroupToggleSelected
+            return theme.icons.chatGroupToggleUnselected
         }
     }
     

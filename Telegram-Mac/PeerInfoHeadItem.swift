@@ -56,7 +56,7 @@ fileprivate final class ActionButton : Control {
         self.removeAllHandlers()
         if let subItems = item.subItems {
             self.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(-33, -60))
+                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -60))
             }, for: .Down)
         } else {
             self.set(handler: { [weak item] _ in
@@ -76,9 +76,9 @@ fileprivate final class ActionButton : Control {
     }
 }
 
-fileprivate let photoDimension:CGFloat = 100
-fileprivate let actionItemWidth: CGFloat = 134
-fileprivate let actionItemInsetWidth: CGFloat = 20
+fileprivate let photoDimension:CGFloat = 120
+fileprivate let actionItemWidth: CGFloat = 135
+fileprivate let actionItemInsetWidth: CGFloat = 19
 
 private struct SubActionItem {
     let text: String

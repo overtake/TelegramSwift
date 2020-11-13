@@ -724,7 +724,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 point.y = f.minY
                 point.x = frame.width - selectingView.frame.width - 15
             } else {
-                point = NSMakePoint(rightFrame.maxX + 4, item.defaultContentTopOffset - 1)
+                point = NSMakePoint(rightFrame.maxX + 4, item.defaultContentTopOffset - 3)
             }
         }
         return point

@@ -187,6 +187,7 @@ private final class PeerMediaBlockRowView : TableRowView {
             item.table?._scrollWillStartLiveScrolling = {
                 scrollingInMediaTable = false
             }
+            item.controller.genericView.mainTable?.reloadData()
         } else {
             needsLayout = true
         }

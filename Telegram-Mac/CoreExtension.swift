@@ -1036,7 +1036,7 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
 extension Media {
     var isGraphicFile:Bool {
         if let media = self as? TelegramMediaFile {
-            return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff"))
+            return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff") || media.mimeType.contains("heic"))
         }
         return false
     }
