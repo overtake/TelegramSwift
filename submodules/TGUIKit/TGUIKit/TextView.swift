@@ -183,7 +183,10 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
     
 }
 
-
+public enum LinkHoverValue {
+    case entered(Any)
+    case exited
+}
 
 public final class TextViewInteractions {
     public var processURL:(Any)->Void // link, isPresent
@@ -195,7 +198,8 @@ public final class TextViewInteractions {
     public var resolveLink:(Any)->String?
     public var copyAttributedString:(NSAttributedString)->Bool
     public var copyToClipboard:((String)->Void)?
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil) {
+    public var hoverOnLink: (LinkHoverValue)->Void
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -205,6 +209,7 @@ public final class TextViewInteractions {
         self.resolveLink = resolveLink
         self.copyAttributedString = copyAttributedString
         self.copyToClipboard = copyToClipboard
+        self.hoverOnLink = hoverOnLink
     }
 }
 
@@ -955,12 +960,34 @@ public final class TextViewLayout : Equatable {
         if startIndex == -1 {
             return
         }
-        
+       
         var blockRange: NSRange = NSMakeRange(NSNotFound, 0)
         if let _ = attributedString.attribute(.preformattedPre, at: startIndex, effectiveRange: &blockRange) {
             self.selectedRange = TextSelectedRange(range: blockRange, color: selectText, def: true)
         } else {
-            self.selectedRange = TextSelectedRange(range: NSMakeRange(0,attributedString.length), color: selectText, def: true)
+            var firstIndex: Int = startIndex
+            var lastIndex: Int = startIndex
+            
+            var firstFound: Bool = false
+            var lastFound: Bool = false
+            
+            while (firstIndex > 0 && !firstFound) || (lastIndex < self.attributedString.length - 1 && !lastFound) {
+                
+                let firstSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(firstIndex, 1))
+                let lastSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(lastIndex, 1))
+                
+                firstFound = firstSymbol == "\n"
+                lastFound = lastSymbol == "\n"
+                                
+                if firstIndex > 0, !firstFound {
+                    firstIndex -= 1
+                }
+                if lastIndex < self.attributedString.length - 1, !lastFound {
+                    lastIndex += 1
+                }
+               
+            }
+            self.selectedRange = TextSelectedRange(range: NSMakeRange(firstIndex, (lastIndex + 1) - firstIndex), color: selectText, def: true)
         }
         
     }
@@ -1627,15 +1654,20 @@ public class TextView: Control, NSViewToolTipOwner {
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
             if layout?.color(at: location) != nil {
                 NSCursor.pointingHand.set()
-            } else if let layout = layout, let (_, _, _, _) = layout.link(at: location) {
+                layout?.interactions.hoverOnLink(.exited)
+            } else if let layout = layout, let (value, _, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()
+                layout.interactions.hoverOnLink(.entered(value))
             } else if isSelectable {
                 NSCursor.iBeam.set()
+                layout?.interactions.hoverOnLink(.exited)
             } else {
                 NSCursor.arrow.set()
+                layout?.interactions.hoverOnLink(.exited)
             }
         } else {
             NSCursor.arrow.set()
+            layout?.interactions.hoverOnLink(.exited)
         }
     }
     

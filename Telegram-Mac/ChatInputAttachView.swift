@@ -166,13 +166,13 @@ class ChatInputAttachView: ImageButton, Notifable {
                     return
                 }
                 self.controller?.popover?.hide()
-                Queue.mainQueue().justDispatch {
+              //  Queue.mainQueue().justDispatch {
                     if self.chatInteraction.presentation.interfaceState.editState != nil {
                         self.chatInteraction.updateEditingMessageMedia(nil, true)
                     } else {
                         self.chatInteraction.attachFile(true)
                     }
-                }
+             //   }
             }
         }, for: .Click)
 

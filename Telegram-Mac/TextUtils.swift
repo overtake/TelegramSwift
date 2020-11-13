@@ -537,7 +537,11 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
                 if channel.isChannel {
                     membersLocalized = L10n.peerStatusSubscribersCountable(Int(memberCount))
                 } else {
-                    membersLocalized = L10n.peerStatusMemberCountable(Int(memberCount))
+                    if memberCount > 0 {
+                        membersLocalized = L10n.peerStatusMemberCountable(Int(memberCount))
+                    } else {
+                        membersLocalized = L10n.peerStatusGroup
+                    }
                 }
                 
                 let countString = membersLocalized.replacingOccurrences(of: "\(memberCount)", with: memberCount.formattedWithSeparator)
