@@ -801,6 +801,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         self.tableView.flip = isFlipped
         
+        if #available(OSX 11.0, *) {
+            self.tableView.style = .fullWidth
+        }
+        
         clipView.copiesOnScroll = true
         
        // self.scrollsDynamically = true

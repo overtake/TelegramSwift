@@ -18,10 +18,12 @@ import AppCenterCrashes
 #endif
 
 
+private(set) var appDelegate: AppDelegate?
+
 #if !SHARE
 extension Account {
     var diceCache: DiceCache? {
-        return (NSApp.delegate as? AppDelegate)?.contextValue?.context.diceCache
+        return appDelegate?.contextValue?.context.diceCache
     }
 }
 #endif
@@ -111,7 +113,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         
-
+        appDelegate = self
         
         initializeSelectManager()
         startLottieCacheCleaner()

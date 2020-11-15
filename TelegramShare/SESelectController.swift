@@ -191,9 +191,7 @@ class ShareObject {
     func perform(to entries:[PeerId], view: NSView) {
         
         var signals:[Signal<Float, NoError>] = []
-        
-       
-        
+                
         var needWaitAsync = false
         var k:Int = 0
         let total = shareContext.inputItems.reduce(0) { (current, item) -> Int in
@@ -236,6 +234,8 @@ class ShareObject {
             }
         }
         
+        NSLog("\(entries), \(shareContext.inputItems)")
+        
         for peerId in entries {
             for j in 0 ..< shareContext.inputItems.count {
                 if let item = shareContext.inputItems[j] as? NSExtensionItem {
@@ -253,10 +253,11 @@ class ShareObject {
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
-                                    k += 1
-                                    requestIfNeeded()
+                                } else if let data = coding as? Data, let string = String(data: data, encoding: .utf8) {
+                                    signals.append(self.sendText(string, to:peerId))
                                 }
-                               
+                                k += 1
+                                requestIfNeeded()
                             })
                             if k != total {
                                 attachments[i].loadItem(forTypeIdentifier: kUTTypeImage as String, options: nil, completionHandler: { (coding, error) in
