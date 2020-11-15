@@ -800,10 +800,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func updateAfterInitialize(isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
         self.tableView.flip = isFlipped
-        
-        if #available(OSX 11.0, *) {
+        #if MAC_OS_X_VERSION_10_16
             self.tableView.style = .fullWidth
-        }
+        #endif
         
         clipView.copiesOnScroll = true
         
