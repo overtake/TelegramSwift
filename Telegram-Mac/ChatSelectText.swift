@@ -485,7 +485,7 @@ class ChatSelectText : NSObject {
                     inner: for j in 0 ..< views.count {
                         let selectableView = views[j]
                         let viewRect = selectableView.convert(CGRect(origin: .zero, size: selectableView.frame.size), to: table.documentView)
-                        let rect = NSRect(x: beginInnerLocation.x, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
+                        let rect = NSRect(x: viewRect.midX, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
                         
                         if rect.intersects(viewRect) {
                             if start_j == nil {
@@ -498,6 +498,9 @@ class ChatSelectText : NSObject {
                             } else {
                                 end_j = max(end_j!, j)
                             }
+                        } else {
+                            var bp:Int = 0
+                            bp += 1
                         }
                     }
                     

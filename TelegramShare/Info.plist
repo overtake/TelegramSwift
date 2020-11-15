@@ -21,7 +21,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>7.2.2</string>
 	<key>CFBundleVersion</key>
-	<string>208375</string>
+	<string>208380</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSExtension</key>
