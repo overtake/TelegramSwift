@@ -3,9 +3,17 @@ set -x
 set -e
 
 
+if [ "$1" = "alpha" ]; then
+MACOS_VERSION="10.16"
+XCODE_VERSION="12.2"
+else
 MACOS_VERSION="10.15"
 XCODE_VERSION="10.3"
+fi
+
+
 GUEST_SHELL="bash"
+
 
 VM_BASE_NAME="macos$(echo $MACOS_VERSION | sed -e 's/\.'/_/g)_Xcode$(echo $XCODE_VERSION | sed -e 's/\.'/_/g)"
 
