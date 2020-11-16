@@ -977,7 +977,7 @@ class ChatSearchHeader : View, Notifable {
       
     }
     
-    func applySearchResponder() {
+    func applySearchResponder(_ animated: Bool = false) {
        // _ = window?.makeFirstResponder(searchView.input)
         searchView.layout()
         if searchView.state == .Focus && window?.firstResponder != searchView.input {
