@@ -801,7 +801,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         self.tableView.flip = isFlipped
       //  #if MAC_OS_X_VERSION_10_16
-        if #available(OSX 10.13, *) {
+        if #available(OSX 11.0, *) {
             self.tableView.style = .fullWidth
         }
        // #endif
