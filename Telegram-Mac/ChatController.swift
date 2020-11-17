@@ -1603,7 +1603,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             return prepareEntries(from: previousView?.swap(proccesedView), to: proccesedView, timeDifference: timeDifference, initialSize: atomicSize.modify({$0}), interaction: chatInteraction, animated: false, scrollPosition:scrollPosition, reason: updateType, animationInterface: animationInterface, side: update.1) |> map { transition in
                 return (transition, view, initialData, isLoading)
-            } |> runOn(prepareOnMainQueue ? Queue.mainQueue(): messagesViewQueue)
+            } |> runOn(messagesViewQueue) //prepareOnMainQueue ? Queue.mainQueue(): 
             
         } |> deliverOnMainQueue
         
@@ -2371,7 +2371,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
                     if let message = outgoingMessageWithChatContextResult(to: chatInteraction.peerId, results: results, result: result, scheduleTime: atDate) {
-                        _ = (Sender.enqueue(message: message.withUpdatedReplyToMessageId(chatInteraction.presentation.interfaceState.replyMessageId), context: context, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                        _ = (Sender.enqueue(message: message.withUpdatedReplyToMessageId(chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId), context: context, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
                 }
