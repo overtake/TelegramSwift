@@ -40,7 +40,12 @@ final class UpdateTabView : Control {
             } else {
                 if let superview = self.superview {
                     change(size: NSMakeSize(self.textView.frame.width + 40, frame.height), animated: true, timingFunction: .spring)
-                    change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
+                    if layoutState != .minimisize {
+                        change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, superview.frame.height - self.frame.height - 60), animated: true, timingFunction: .spring)
+                    } else {
+                        change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, superview.frame.height - self.frame.height), animated: true, timingFunction: .spring)
+                    }
+                    imageView.change(pos: self.bounds.focus(imageView.frame.size).origin, animated: true, timingFunction: .spring)
                 }
             }
             

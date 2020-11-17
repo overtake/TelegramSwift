@@ -498,9 +498,6 @@ class ChatSelectText : NSObject {
                             } else {
                                 end_j = max(end_j!, j)
                             }
-                        } else {
-                            var bp:Int = 0
-                            bp += 1
                         }
                     }
                     
