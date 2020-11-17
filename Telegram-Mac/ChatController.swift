@@ -1239,7 +1239,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let atomicSize = self.atomicSize
         let chatInteraction = self.chatInteraction
         let nextTransaction = self.nextTransaction
-        
+        let chatLocation = self.chatLocation
+        let mode = self.mode
         let peerId = self.chatInteraction.peerId
         
         
@@ -1316,10 +1317,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         var chatLocationContextHolder = self.chatLocationContextHolder
 
-        let historyViewUpdate1 = location.get() |> deliverOnMainQueue
-            |> mapToSignal { [weak self] location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
-                guard let `self` = self else { return .never() }
-                
+        let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
+            |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
                 
                 var additionalData: [AdditionalMessageHistoryViewData] = []
                 additionalData.append(.cachedPeerData(peerId))
@@ -1334,14 +1333,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.SecretChat {
                     additionalData.append(.peerIsContact(peerId))
                 }
-                switch self.chatLocation {
+                switch chatLocation {
                 case let .replyThread(data):
                     additionalData.append(.message(data.messageId))
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
                 }
                 
-                return chatHistoryViewForLocation(location, context: context, chatLocation: self.chatLocation, fixedCombinedReadStates: { nil }, tagMask: self.mode.tagMask, mode: self.mode, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder) |> beforeNext { viewUpdate in
+                return chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: { nil }, tagMask: mode.tagMask, mode: mode, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder) |> beforeNext { viewUpdate in
                     switch viewUpdate {
                     case let .HistoryView(view, _, _, _):
                         if !didSetReadIndex {
@@ -1603,7 +1602,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             return prepareEntries(from: previousView?.swap(proccesedView), to: proccesedView, timeDifference: timeDifference, initialSize: atomicSize.modify({$0}), interaction: chatInteraction, animated: false, scrollPosition:scrollPosition, reason: updateType, animationInterface: animationInterface, side: update.1) |> map { transition in
                 return (transition, view, initialData, isLoading)
-            } |> runOn(messagesViewQueue) //prepareOnMainQueue ? Queue.mainQueue(): 
+            } |> runOn(prepareOnMainQueue ? Queue.mainQueue(): messagesViewQueue)
             
         } |> deliverOnMainQueue
         
@@ -4205,9 +4204,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }))
-        
-        
-        let mode = self.mode
         
         let discussion: Signal<Void, NoError> = peerView.get()
             |> map { view -> CachedChannelData? in
