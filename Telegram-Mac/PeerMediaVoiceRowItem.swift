@@ -128,7 +128,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             controller.playOrPause()
         } else {
             
-            let controller:APController = APChatVoiceController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message))
+            let controller:APController = APChatVoiceController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), volume: FastSettings.volumeRate)
             item.interface.inlineAudioPlayer(controller)
             controller.start()
         }
