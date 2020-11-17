@@ -398,7 +398,6 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             var dict: [String : Any] = [:]
                             
-                            
                             if message.wasScheduled {
                                 dict["wasScheduled"] = true
                             }
@@ -414,16 +413,13 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["thread.peer.id"] = threadId.peerId.id
                                 dict["thread.peer.namespace"] = threadId.peerId.namespace
                             }
+                            
                             dict["reply.message.id"] =  message.id.id
                             dict["reply.message.namespace"] =  message.id.namespace
                             dict["reply.peer.id"] =  message.id.peerId.id
                             dict["reply.peer.namespace"] =  message.id.peerId.namespace
-                           
-                            dict["groupId"] = groupId.rawValue
                             
-                            if screenIsLocked {
-                                dict = [:]
-                            }
+                            dict["groupId"] = groupId.rawValue
                             
                             dict["accountId"] = account.id.int64
                             dict["timestamp"] = Int32(Date().timeIntervalSince1970)

@@ -554,14 +554,15 @@ class APController : NSResponder {
         }
     }
     
-    var volume: Float = FastSettings.volumeRate {
+    var volume: Float = 1.0 {
         didSet {
             mediaPlayer?.setVolume(volume)
         }
     }
     
-    init(context: AccountContext, streamable: Bool, baseRate: Double) {
+    init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
+        self.volume = volume
         self.streamable = streamable
         self.baseRate = baseRate
         super.init()
@@ -594,7 +595,7 @@ class APController : NSResponder {
 
     fileprivate func merge(with transition:APTransition) {
 
-        var previous:[APItem] = self.items.modify({$0})
+        let previous:[APItem] = self.items.modify({$0})
         let current = self.current
         let items = self.items.modify { items -> [APItem] in
             var new:[APItem] = items
@@ -955,12 +956,12 @@ class APChatController : APController {
     fileprivate let mode: ChatMode
     private let index:MessageIndex?
     let messages: [Message]
-    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, messages: [Message] = []) {
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, streamable: Bool, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
         self.chatLocationInput = chatLocationInput
         self.mode = mode
         self.index = index
         self.messages = messages
-        super.init(context: context, streamable: streamable, baseRate: baseRate)
+        super.init(context: context, streamable: streamable, baseRate: baseRate, volume: volume)
     }
     
     
@@ -1052,8 +1053,8 @@ class APChatController : APController {
 
 class APChatMusicController : APChatController {
 
-    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, messages: [Message] = []) {
-        super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, messages: messages)
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
+        super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, volume: volume, messages: messages)
     }
 
     required init?(coder: NSCoder) {
@@ -1067,8 +1068,8 @@ class APChatMusicController : APChatController {
 
 class APChatVoiceController : APChatController {
     private let markAsConsumedDisposable = MetaDisposable()
-    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0) {
-        super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index:index, streamable: false, baseRate: baseRate)
+    init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0) {
+        super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index:index, streamable: false, baseRate: baseRate, volume: volume)
     }
 
     required init?(coder: NSCoder) {
@@ -1104,9 +1105,9 @@ class APChatVoiceController : APChatController {
 
 class APSingleResourceController : APController {
     let wrapper:APSingleWrapper
-    init(context: AccountContext, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0) {
+    init(context: AccountContext, wrapper:APSingleWrapper, streamable: Bool, baseRate: Double = 1.0, volume: Float = 1.0) {
         self.wrapper = wrapper
-        super.init(context: context, streamable: streamable, baseRate: baseRate)
+        super.init(context: context, streamable: streamable, baseRate: baseRate, volume: volume)
         merge(with: APTransition(inserted: [(0,APSongItem(.single(wrapper), account))], removed: [], updated: []))
     }
 
