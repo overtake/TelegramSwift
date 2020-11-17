@@ -189,6 +189,8 @@ final class BlobView: View {
         }
     }
     
+    private var blobAnimation: ConstantDisplayLinkAnimator?
+    
     private var speedLevel: CGFloat = 0
     private var scaleLevel: CGFloat = 0
     
@@ -281,16 +283,16 @@ final class BlobView: View {
     func stopAnimating() {
         fromPoints = currentPoints
         toPoints = nil
-        pop_removeAnimation(forKey: "blob")
+        blobAnimation = nil
     }
     
     private func animateToNewShape() {
         guard !isCircle else { return }
         
-        if pop_animation(forKey: "blob") != nil {
+        if blobAnimation != nil {
             fromPoints = currentPoints
             toPoints = nil
-            pop_removeAnimation(forKey: "blob")
+            blobAnimation = nil
         }
         
         if fromPoints == nil {
@@ -300,31 +302,30 @@ final class BlobView: View {
             toPoints = generateNextBlob(for: bounds.size)
         }
         
-        let animation = POPBasicAnimation()
-        animation.property = POPAnimatableProperty.property(withName: "blob.transition", initializer: { property in
-            property?.readBlock = { blobView, values in
-                guard let blobView = blobView as? BlobView, let values = values else { return }
-                
-                values.pointee = blobView.transition
+        
+        let duration = CGFloat(1 / (minSpeed + (maxSpeed - minSpeed) * speedLevel))
+        let fromValue: CGFloat = 0
+        let toValue: CGFloat = 1
+        let tickValue = (toValue - fromValue) / (60 * duration)
+        
+        var currentValue: CGFloat = 0
+        
+        let animation = ConstantDisplayLinkAnimator(update: { [weak self] in
+            guard let `self` = self else {
+                return
             }
-            property?.writeBlock = { blobView, values in
-                guard let blobView = blobView as? BlobView, let values = values else { return }
-                
-                blobView.transition = values.pointee
-            }
-        })  as? POPAnimatableProperty
-        animation.completionBlock = { [weak self] animation, finished in
+            currentValue += tickValue
+            self.transition = max(min(currentValue, toValue), fromValue)
+            let finished = currentValue >= toValue
             if finished {
-                self?.fromPoints = self?.currentPoints
-                self?.toPoints = nil
-                self?.animateToNewShape()
+                self.fromPoints = self.currentPoints
+                self.toPoints = nil
+                self.blobAnimation = nil
+                self.animateToNewShape()
             }
-        }
-        animation.duration = CFTimeInterval(1 / (minSpeed + (maxSpeed - minSpeed) * speedLevel))
-        animation.timingFunction = CAMediaTimingFunction(name: .linear)
-        animation.fromValue = 0
-        animation.toValue = 1
-        pop_add(animation, forKey: "blob")
+        })
+        animation.isPaused = false
+        self.blobAnimation = animation
         
         lastSpeedLevel = speedLevel
         speedLevel = 0
