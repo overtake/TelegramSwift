@@ -545,7 +545,7 @@ class ChatSelectText : NSObject {
                                 }
                             }
                             
-                            if let start_j = start_j, let end_j = end_j {
+                            if let start_j = start_j, let end_j = end_j, i == endIndex || i == startIndex {
                                 if j < start_j || j > end_j {
                                     continue
                                 } else {
