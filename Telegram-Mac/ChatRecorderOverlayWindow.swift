@@ -133,15 +133,11 @@ private class ChatRecorderOverlayView : Control {
     }
     
     func updatePeakLevel(_ peakLevel: Float) {
+        //NSLog("\(peakLevel)")
         
-        playbackAudioLevelView.updateLevel(CGFloat(peakLevel))
-        
-        let power = mappingRange(Double(peakLevel), 0.3, 3, 1.05, 1.5);
-        if abs(self.currentLevel - power) > 0.1 || (Date().timeIntervalSinceNow - previousTime.timeIntervalSinceNow) > 0.2  {
-            
-            let previous = outerContainer.layer?.presentation()?.value(forKeyPath: "transform.scale") as? CGFloat ?? CGFloat(currentLevel)
-            outerContainer.layer?.animateScaleCenter(from: previous, to: CGFloat(power), duration: 0.2, removeOnCompletion:false, timingFunction: .linear)
-            self.currentLevel = Double(power)
+        let power = mappingRange(Double(peakLevel), 0.3, 3, 0, 1);
+        if (Date().timeIntervalSinceNow - previousTime.timeIntervalSinceNow) > 0.2  {
+            playbackAudioLevelView.updateLevel(CGFloat(power))
             self.previousTime = Date()
         }
     }
