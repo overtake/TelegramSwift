@@ -64,9 +64,14 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let filter:(String)->String
     let limit:Int32
     private let updated:(String)->Void
+    private var updatedText: String?
     private var _currentText: NSAttributedString = NSAttributedString() {
         didSet {
-            updated(currentText.string)
+            let newValue = currentText.string
+            if updatedText != newValue {
+                updated(newValue)
+                updatedText = newValue
+            }
         }
     }
     fileprivate(set) var currentText: NSAttributedString {

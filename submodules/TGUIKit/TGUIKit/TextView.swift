@@ -1212,7 +1212,7 @@ public class TextView: Control, NSViewToolTipOwner {
                     
                     var lessRange = range.0.range
                     
-                    var lines:[TextViewLine] = layout.lines
+                    let lines:[TextViewLine] = layout.lines
                     
                     let beginIndex:Int = 0
                     let endIndex:Int = layout.lines.count - 1
@@ -1227,7 +1227,7 @@ public class TextView: Control, NSViewToolTipOwner {
                         
                         let line = lines[i].line
                         var rect:NSRect = lines[i].frame
-                        let lineRange = CTLineGetStringRange(line)
+                        let lineRange = lines[i].range
                         
                         var beginLineIndex:CFIndex = 0
                         var endLineIndex:CFIndex = 0
@@ -1242,7 +1242,7 @@ public class TextView: Control, NSViewToolTipOwner {
                             lessRange.length-=selectLength
                             lessRange.location+=selectLength
                             
-                            endLineIndex = beginLineIndex + selectLength
+                            endLineIndex = min(beginLineIndex + selectLength, lineRange.max)
                             
                             var ascent:CGFloat = 0
                             var descent:CGFloat = 0
@@ -1251,7 +1251,15 @@ public class TextView: Control, NSViewToolTipOwner {
                             var width:CGFloat = CGFloat(CTLineGetTypographicBounds(line, &ascent, &descent, &leading));
                             
                             let startOffset = CTLineGetOffsetForStringIndex(line, beginLineIndex, nil);
-                            let endOffset = CTLineGetOffsetForStringIndex(line, endLineIndex, nil);
+                            var endOffset = CTLineGetOffsetForStringIndex(line, endLineIndex, nil);
+                            
+                            if beginLineIndex < endLineIndex {
+                                var index = endLineIndex - 1
+                                while endOffset == 0 && index > 0 {
+                                    endOffset = CTLineGetOffsetForStringIndex(line, index, nil);
+                                    index -= 1
+                                }
+                            }
                             
                             width = endOffset - startOffset;
                             
