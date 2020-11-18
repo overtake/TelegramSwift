@@ -536,7 +536,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             case .owner:
                 rank = L10n.chatOwnerBadge
             case let .custom(string):
-                rank = "\(string)"
+                rank = string
             }
         }
         
