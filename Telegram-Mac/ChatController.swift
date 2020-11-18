@@ -4373,7 +4373,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         (self.centerBarView as? ChatTitleBarView)?.updateSearchButton(hidden: !searchAvailable, animated: transition.animated)
         
-        if !genericView.tableView.isEmpty, let peer = chatInteraction.peer, peer.isBot {
+        if genericView.tableView.isEmpty, let peer = chatInteraction.peer, peer.isBot {
             if chatInteraction.presentation.initialAction == nil && self.genericView.state == .visible {
                 chatInteraction.update(animated: false, {$0.updatedInitialAction(ChatInitialAction.start(parameter: "", behavior: .none))})
             }
