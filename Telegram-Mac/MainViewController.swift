@@ -33,13 +33,19 @@ final class UpdateTabView : Control {
             imageView.isHidden = isInstalling || layoutState != .minimisize
             
             if layoutState != .minimisize, isInstalling, let superview = self.superview {
+                self.layer?.cornerRadius = frame.height / 2
                 change(size: NSMakeSize(60, frame.height), animated: true, timingFunction: .spring)
                 change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
                 progressView.change(pos: self.bounds.focus(progressView.frame.size).origin, animated: true, timingFunction: .spring)
             } else {
                 if let superview = self.superview {
                     change(size: NSMakeSize(self.textView.frame.width + 40, frame.height), animated: true, timingFunction: .spring)
-                    change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
+                    if layoutState != .minimisize {
+                        change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, superview.frame.height - self.frame.height - 60), animated: true, timingFunction: .spring)
+                    } else {
+                        change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, superview.frame.height - self.frame.height), animated: true, timingFunction: .spring)
+                    }
+                    imageView.change(pos: self.bounds.focus(imageView.frame.size).origin, animated: true, timingFunction: .spring)
                 }
             }
             
@@ -223,8 +229,8 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
                 self?.genericView.shake(beep: false)
             }))
         } else {
-            genericView.setFrameSize(NSMakeSize(parentSize.width, 50))
-            genericView.setFrameOrigin(NSMakePoint(0, layout == .minimisize ? bottom : bottom - 50))
+            genericView.setFrameSize(NSMakeSize(parentSize.width, 60))
+            genericView.setFrameOrigin(NSMakePoint(0, layout == .minimisize ? bottom : bottom - 60))
             genericView.layer?.cornerRadius = 0
             shakeDisposable.set(nil)
         }

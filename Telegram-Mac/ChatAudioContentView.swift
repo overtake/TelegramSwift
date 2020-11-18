@@ -87,9 +87,9 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 let controller:APController
 
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true, volume: FastSettings.volumeRate)
                 } else {
-                    controller = APChatMusicController(context: context, chatLocationInput: parameters.chatLocationInput(), index: MessageIndex(parent))
+                    controller = APChatMusicController(context: context, chatLocationInput: parameters.chatLocationInput(), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                 }
                 parameters.showPlayer(controller)
                 controller.start()
@@ -107,11 +107,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     }
     
     
-    override func cancelFetching() {
-        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
-        }
-    }
     
     func songDidChanged(song: APSongItem, for controller: APController) {
         checkState()

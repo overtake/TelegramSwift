@@ -266,7 +266,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return backdorColor}
         
         if item.hasBubble {
-            return System.supportsTransparentFontDrawing ? .clear : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
+            //System.supportsTransparentFontDrawing ? .clear :
+            return item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
             //return .clear//isSelect || contextMenu != nil ? item.presentation.chat.backgoundSelectedColor(item.isIncoming, item.renderType == .bubble) : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
         } else {
             return backdorColor//backdorColor
@@ -723,7 +724,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 point.y = f.minY
                 point.x = frame.width - selectingView.frame.width - 15
             } else {
-                point = NSMakePoint(rightFrame.maxX + 4, item.defaultContentTopOffset - 1)
+                point = NSMakePoint(rightFrame.maxX + 4, item.defaultContentTopOffset - 3)
             }
         }
         return point
@@ -1316,7 +1317,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     
-    func fillName(_ item:ChatRowItem) -> Void {
+    func fillName(_ item:ChatRowItem, animated: Bool) -> Void {
         if let author = item.authorText {
             if item.isBubbled && !item.hasBubble {
                 nameView?.removeFromSuperview()
@@ -1365,7 +1366,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     adminBadge = nil
                 }
                 
-                nameView?.update(author, origin: namePoint(item))
+                nameView?.update(author)
+                nameView?.change(pos: namePoint(item), animated: animated)
                 nameView?.toolTip = item.nameHide
             }
             
@@ -1529,7 +1531,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = nil
         }
         
-        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout
+        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil
         
         if let item = item as? ChatRowItem {
             
@@ -1546,7 +1548,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let item = item as? ChatRowItem {
             rightView.set(item:item, animated:animated)
             fillReplyIfNeeded(item.replyModel, item)
-            fillName(item)
+            fillName(item, animated: animated)
             fillForward(item)
             fillPhoto(item)
             fillForward(item)

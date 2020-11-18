@@ -312,7 +312,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     
     if let ccTask = ccTask {
         entries.append(.ccTaskValue(sectionId, ccTask, .singleItem))
-        entries.append(.ccTaskValueDesc(sectionId, "Your local cache is being cleaned...", .singleItem))
+        entries.append(.ccTaskValueDesc(sectionId, L10n.storageUsageCleaningProcess, .singleItem))
     } else {
         
         var exists:[PeerId:PeerId] = [:]

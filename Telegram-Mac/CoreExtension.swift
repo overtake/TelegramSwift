@@ -1036,7 +1036,7 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
 extension Media {
     var isGraphicFile:Bool {
         if let media = self as? TelegramMediaFile {
-            return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff"))
+            return media.mimeType.hasPrefix("image") && (media.mimeType.contains("png") || media.mimeType.contains("jpg") || media.mimeType.contains("jpeg") || media.mimeType.contains("tiff") || media.mimeType.contains("heic"))
         }
         return false
     }
@@ -2728,6 +2728,32 @@ func isNotEmptyStrings(_ strings: [String?]) -> String {
     return ""
 }
 
+
+extension TelegramMediaImage {
+    var isLocalResource: Bool {
+        if let resource = representations.last?.resource {
+            if resource is LocalFileMediaResource {
+                return true
+            }
+            if resource is LocalFileReferenceMediaResource {
+                return true
+            }
+        }
+        return false
+    }
+}
+
+extension TelegramMediaFile {
+    var isLocalResource: Bool {
+        if resource is LocalFileMediaResource {
+            return true
+        }
+        if resource is LocalFileReferenceMediaResource {
+            return true
+        }
+        return false
+    }
+}
 
 extension MessageIndex {
     func withUpdatedTimestamp(_ timestamp: Int32) -> MessageIndex {

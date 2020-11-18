@@ -26,7 +26,8 @@ fileprivate final class ActionButton : Control {
         self.imageView.animates = true
         imageView.isEventLess = true
         textView.isEventLess = true
-        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
         set(handler: { control in
             control.change(opacity: 0.8, animated: true)
         }, for: .Highlight)
@@ -49,10 +50,13 @@ fileprivate final class ActionButton : Control {
         _ = self.imageView.sizeToFit()
         self.textView.update(item.textLayout)
         
+        self.backgroundColor = theme.colors.background
+        self.layer?.cornerRadius = 10
+        
         self.removeAllHandlers()
         if let subItems = item.subItems {
             self.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(-33, -60))
+                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -60))
             }, for: .Down)
         } else {
             self.set(handler: { [weak item] _ in
@@ -67,16 +71,14 @@ fileprivate final class ActionButton : Control {
     
     override func layout() {
         super.layout()
-        imageView.centerX(y: 0)
-        
-        let bottomInset = floorToScreenPixels(backingScaleFactor, ((frame.height - imageView.frame.maxY - 10) - textView.frame.height) / 2)
-        textView.centerX(y: (imageView.frame.maxY + 10) + bottomInset)
+        imageView.centerX(y: 5)
+        textView.centerX(y: frame.height - textView.frame.height - 11)
     }
 }
 
-fileprivate let photoDimension:CGFloat = 100
-fileprivate let actionItemWidth: CGFloat = 70
-fileprivate let actionItemInsetWidth: CGFloat = 20
+fileprivate let photoDimension:CGFloat = 120
+fileprivate let actionItemWidth: CGFloat = 135
+fileprivate let actionItemInsetWidth: CGFloat = 19
 
 private struct SubActionItem {
     let text: String
@@ -110,7 +112,7 @@ private final class ActionItem {
         self.textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .normal(.text)), alignment: .center)
         self.textLayout.measure(width: actionItemWidth)
         
-        self.size = NSMakeSize(actionItemWidth, image.backingSize.height + 10 + textLayout.layoutSize.height)
+        self.size = NSMakeSize(actionItemWidth, image.backingSize.height + textLayout.layoutSize.height + 10)
     }
     
 }
@@ -121,7 +123,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     var rowItemsCount: Int = 1
     
-    while width - actionItemWidth * 2 > actionItemWidth * CGFloat(rowItemsCount) + CGFloat(rowItemsCount + 1) * actionItemInsetWidth {
+    while width - (actionItemWidth + actionItemInsetWidth) > ((actionItemWidth * CGFloat(rowItemsCount)) + (CGFloat(rowItemsCount - 1) * actionItemInsetWidth)) {
         rowItemsCount += 1
     }
     rowItemsCount = min(rowItemsCount, 4)
@@ -299,7 +301,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         let insets = self.viewType.innerInset
         var height: CGFloat = 0
         if !editing {
-            height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + 4 + statusLayout.layoutSize.height + insets.bottom
+            height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
             
             if !items.isEmpty {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
@@ -434,7 +436,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
         
-        self.items = actionItems(item: self, width: width, theme: theme)
+        self.items = editing ? [] : actionItems(item: self, width: blockWidth, theme: theme)
         let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (isScam ? theme.icons.chatScam.backingSize.width + 5 : 0) - (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
         nameLayout.measure(width: textWidth)
         statusLayout.measure(width: textWidth)
@@ -620,6 +622,13 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }
     }
     
+    override var backdorColor: NSColor {
+        guard let item = item as? PeerInfoHeadItem else {
+            return super.backdorColor
+        }
+        return item.editing ? super.backdorColor : .clear
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -757,7 +766,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         photoView.centerX(y: item.viewType.innerInset.top)
         nameView.centerX(y: photoView.frame.maxY + item.viewType.innerInset.top)
         statusView.centerX(y: nameView.frame.maxY + 4)
-        actionsView.centerX(y: statusView.frame.maxY + item.viewType.innerInset.top)
+        actionsView.centerX(y: containerView.frame.height - actionsView.frame.height)
         photoEditableView?.centerX(y: item.viewType.innerInset.top)
         
         photoVideoView?.frame = photoView.frame
@@ -780,9 +789,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 actionsView.addSubview(ActionButton(frame: .zero))
             }
             
-            let inset: CGFloat = actionItemInsetWidth
+            let inset: CGFloat = 0
             
-            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count + 1) * inset, maxActionSize.height), animated: animated)
+            actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * actionItemInsetWidth, maxActionSize.height), animated: animated)
             
             var x: CGFloat = inset
             
@@ -791,7 +800,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 view.updateAndLayout(item: item, theme: theme)
                 view.setFrameSize(NSMakeSize(item.size.width, maxActionSize.height))
                 view.change(pos: NSMakePoint(x, 0), animated: false)
-                x += maxActionSize.width + inset
+                x += maxActionSize.width + actionItemInsetWidth
             }
             
         } else {

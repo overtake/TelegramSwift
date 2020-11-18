@@ -19,6 +19,10 @@ class ChatMediaLayoutParameters : Equatable {
     var showMessage:(Message)->Void = {_ in }
     
     var chatLocationInput:()->ChatLocationInput = { fatalError() }
+    var chatMode:ChatMode = .history
+    
+    var getUpdatingMediaProgress:(MessageId)->Signal<Float?, NoError> = { _ in return .single(nil) }
+    var cancelOperation:(Message, Media)->Void = { _, _ in }
     
     let presentation: ChatMediaPresentation
     let media: Media
@@ -186,13 +190,43 @@ class ChatMediaItem: ChatRowItem {
     let media:Media
 
     
-    var parameters:ChatMediaLayoutParameters? {
+    var parameters:ChatMediaLayoutParameters? = nil {
         didSet {
-            parameters?.chatLocationInput = chatInteraction.chatLocationInput
+            updateParameters()
         }
     }
     
-  
+    private func updateParameters() {
+        parameters?.chatLocationInput = chatInteraction.chatLocationInput
+        parameters?.chatMode = chatInteraction.mode
+        
+        parameters?.getUpdatingMediaProgress = { [weak self] messageId in
+            if let media = self?.entry.additionalData.updatingMedia {
+                switch media.media {
+                case .update:
+                    return .single(media.progress)
+                default:
+                    break
+                }
+            }
+            return .single(nil)
+        }
+        
+        
+        
+        parameters?.cancelOperation = { [unowned context, weak self] message, media in
+            if self?.entry.additionalData.updatingMedia != nil {
+                context.account.pendingUpdateMessageManager.cancel(messageId: message.id)
+            } else if let media = media as? TelegramMediaFile {
+                messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: media))
+                if let resource = media.resource as? LocalFileArchiveMediaResource {
+                    archiver.remove(.resource(resource))
+                }
+            } else if let media = media as? TelegramMediaImage {
+                chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
+            }
+        }
+    }
     
     
     override var topInset:CGFloat {
@@ -336,7 +370,7 @@ class ChatMediaItem: ChatRowItem {
         }
         
         
-        self.parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
+        let parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
             guard let `self` = self else {return}
             
             var type:GalleryAppearType = .history
@@ -351,6 +385,9 @@ class ChatMediaItem: ChatRowItem {
                 self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
             }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
         
+        self.parameters = parameters
+        
+        self.updateParameters()
         
         if !message.text.isEmpty, canAddCaption {
             

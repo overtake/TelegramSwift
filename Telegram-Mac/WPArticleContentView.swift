@@ -465,7 +465,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(L10n.chatWebpageMediaCount(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
+                countAccessoryView?.updateText(L10n.chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil

@@ -80,10 +80,10 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override var selectableTextViews: [TextView] {
-        let views:[TextView] = [text]
-//        if let webpage = webpageContent {
-//            views += webpage.selectableTextViews
-//        }
+        var views:[TextView] = [text]
+        if let webpage = webpageContent {
+            views += webpage.selectableTextViews
+        }
         return views
     }
     
@@ -94,9 +94,9 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
         let point = self.contentView.convert(location, from: nil)
-        if let webpageContent = webpageContent {
-            return !NSPointInRect(point, webpageContent.frame)
-        }
+//        if let webpageContent = webpageContent {
+//            return !NSPointInRect(point, webpageContent.frame)
+//        }
         return true
     }
 

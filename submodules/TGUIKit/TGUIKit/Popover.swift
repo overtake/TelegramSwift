@@ -339,7 +339,6 @@ open class Popover: NSObject {
         }
         
         isShown = false
-        control?.isSelected = false
         window?.removeAllHandlers(for: self)
         window?.remove(object: self, for: .All)
         
@@ -360,6 +359,7 @@ open class Popover: NSObject {
                     self.controller?.viewDidDisappear(true)
                     self.controller?.didRemovedFromStack()
                     self.controller?.popover = nil
+                    self.control?.isSelected = false
                 }
                 self.controller = nil
                 self.background.removeFromSuperview()
@@ -378,6 +378,7 @@ open class Popover: NSObject {
             controller?.viewDidDisappear(false)
             controller?.didRemovedFromStack()
             controller?.popover = nil
+            self.control?.isSelected = false
             controller = nil
             background.removeFromSuperview()
         }
@@ -428,6 +429,10 @@ public func showPopover(for control:Control, with controller:ViewController, edg
       //  if let event = NSApp.currentEvent, event.type == .gesture {
         
       //  }
+        
+        if !window.sheets.isEmpty {
+            return
+        }
                 
         controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller, static: `static`)
         

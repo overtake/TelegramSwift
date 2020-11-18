@@ -339,7 +339,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
    
     var postboxView:PostboxView? {
         didSet {
-           updateStatus()
+           updateStatus(true)
             switch chatInteraction.mode {
             case let .replyThread(data, _):
                 let answersCount = chatInteraction.context.account.postbox.messageView(data.messageId)

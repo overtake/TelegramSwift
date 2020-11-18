@@ -450,21 +450,21 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
     
     @objc func windowDidNeedSaveState(_ notification: Notification) {
         if let windowView = _window.contentView?.superview {
-            if let titleView = ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first {
-                let frame = NSMakeRect(0, _window.frame.height - barHeight, titleView.frame.width, barHeight)
-                if !NSEqualRects(frame, titleView.frame) {
-                    titleView.frame = frame
-                }
-                let xs:[CGFloat] = [18, 58, 38]
-                let first = ObjcUtils.findElements(byClass: "_NSThemeCloseWidget", in: windowView).first
-                let second = ObjcUtils.findElements(byClass: "_NSThemeZoomWidget", in: windowView).first
-                let thrid = ObjcUtils.findElements(byClass: "_NSThemeWidget", in: windowView).first
-                let values:[NSView] = [first, second, thrid].compactMap { $0 }
-                for i in 0 ..< min(values.count, xs.count) {
-                    let view = values[i]
-                    view.setFrameOrigin(xs[i], floorToScreenPixels(System.backingScale, (barHeight - view.frame.height)/2))
-                }
-            }
+//            if let titleView = ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first {
+//                let frame = NSMakeRect(0, _window.frame.height - barHeight, titleView.frame.width, barHeight)
+//                if !NSEqualRects(frame, titleView.frame) {
+//                    titleView.frame = frame
+//                }
+//                let xs:[CGFloat] = [18, 58, 38]
+//                let first = ObjcUtils.findElements(byClass: "_NSThemeCloseWidget", in: windowView).first
+//                let second = ObjcUtils.findElements(byClass: "_NSThemeZoomWidget", in: windowView).first
+//                let thrid = ObjcUtils.findElements(byClass: "_NSThemeWidget", in: windowView).first
+//                let values:[NSView] = [first, second, thrid].compactMap { $0 }
+//                for i in 0 ..< min(values.count, xs.count) {
+//                    let view = values[i]
+//                    view.setFrameOrigin(xs[i], floorToScreenPixels(System.backingScale, (barHeight - view.frame.height)/2))
+//                }
+//            }
         }
     }
     

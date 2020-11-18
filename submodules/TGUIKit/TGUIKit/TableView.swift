@@ -800,6 +800,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func updateAfterInitialize(isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
         self.tableView.flip = isFlipped
+      //  #if MAC_OS_X_VERSION_10_16
+//        if #available(OSX 11.0, *) {
+//            self.tableView.style = .fullWidth
+//        }
+       // #endif
         
         clipView.copiesOnScroll = true
         
@@ -2916,9 +2921,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             var applied = false
             let scrollListener = TableScrollListener({ [weak self, weak item] position in
                 if let item = item, !applied {
-                    if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
-                        applied = true
-                        DispatchQueue.main.async {
+                    DispatchQueue.main.async {
+                        if let view = self?.viewNecessary(at: item.index), view.visibleRect.height > 10 {
+                            applied = true
                             if focus.focus {
                                 view.focusAnimation(innerId)
                                 focus.action?(view.interactableView)
@@ -2980,10 +2985,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 areSuspended = shouldSuspend
                 let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
                 clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
-                    self?.removeScroll(listener: scrollListener)
+                    guard let `self` = self else {
+                        return
+                    }
+                    scrollListener.handler(self.scrollPosition().current)
+                    self.removeScroll(listener: scrollListener)
                     completion(completed)
-                    self?.areSuspended = false
-                    self?.enqueueTransitions()
+                    self.areSuspended = false
+                    self.enqueueTransitions()
                 })
 
             }

@@ -20,7 +20,7 @@ import SyncCore
 func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool {
     if poll.isClosed {
         return true
-    } else if let deadlineTimeout = poll.deadlineTimeout, message.id.namespace == Namespaces.Message.Cloud {
+    } /*else if let deadlineTimeout = poll.deadlineTimeout, message.id.namespace == Namespaces.Message.Cloud {
         let startDate: Int32
         if let forwardInfo = message.forwardInfo {
             startDate = forwardInfo.date
@@ -34,7 +34,7 @@ func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool 
         } else {
             return false
         }
-    } else {
+    }*/ else {
         return false
     }
 }
@@ -537,7 +537,7 @@ class ChatPollItem: ChatRowItem {
             let identifiers = self.entry.additionalData.pollStateData.identifiers
             chatInteraction.vote(message.id, identifiers, true)
         } else {
-            if !isBotQuiz {
+            if !isBotQuiz, let totalVoters = self.poll.results.totalVoters, totalVoters > 0 {
                 showModal(with: PollResultController(context: context, message: message, scrollToOption: fromOption), for: context.window)
             }
         }

@@ -84,13 +84,14 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
 }
 
 func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32, expanded: Bool = false) -> (String, Bool, NSColor) {
+    
     switch presence.status {
     case .none:
         return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
     case let .present(statusTimestamp):
         let statusTimestampInt: Int = Int(statusTimestamp)
         let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
-        if statusTimestamp >= timestamp {
+        if statusTimestamp > timestamp {
             return (L10n.peerStatusOnline, true, theme.colors.accent)
         } else {
             let difference = timestamp - statusTimestamp

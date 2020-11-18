@@ -38,7 +38,7 @@ struct SpotlightIdentifier : Hashable {
         return "accountId=\(recordId.int64)&source=\(source.stringValue)"
     }
 }
-
+@available(macOS 10.13, *)
 private func makeSearchItem(for peer: Peer, index: Int, accountPeer: Peer, accountId: AccountRecordId) -> SpotlightItem {
     let key = SpotlightIdentifier(recordId: accountId, source: .peerId(peer.id))
     let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeData as String)
@@ -96,7 +96,7 @@ final class SpotlightContext {
     private var previousItems:[SpotlightItem] = []
     init(account: Account) {
         self.account = account
-        if #available(OSX 10.12, *) {
+        if #available(macOS 10.12, *) {
             let accountPeer = account.postbox.loadedPeerWithId(account.peerId)
             
             
@@ -131,7 +131,11 @@ final class SpotlightContext {
                 }
                 var items: [SpotlightItem] = []
                 for (i, peer) in peers.enumerated() {
-                    items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: account.id))
+                    if #available(OSX 10.13, *) {
+                        items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: account.id))
+                    } else {
+                        // Fallback on earlier versions
+                    }
                 }
                 
                 let (delete, insert, update) = mergeListsStableWithUpdates(leftList: self.previousItems, rightList: items)

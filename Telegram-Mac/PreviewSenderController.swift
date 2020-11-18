@@ -1120,10 +1120,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             default:
                 break
             }
+            FastSettings.toggleIsNeedCollage(state.isCollage)
             if !canCollage && state.isCollage {
                 state = state.withUpdatedIsCollage(false)
             }
-            
             self.genericView.tableView.scroll(to: .up(true))
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }
@@ -1173,7 +1173,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 var additionalMessage: ChatTextInputState? = nil
                 
                 if (medias.count > 1  || (medias.count == 1 && !medias[0].canHaveCaption)) && !input.inputText.isEmpty {
-                    if state.isCollage && state.state != .media {
+                    if state.isCollage {
                         additionalMessage = input
                         input = ChatTextInputState()
                         

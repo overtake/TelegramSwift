@@ -32,8 +32,8 @@ class ChatSwitchInlineController: ChatController {
         return (L10n.navigationCancel,nil)
     }
     
-    override func applyTransition(_ transition:TableUpdateTransition, view: MessageHistoryView?, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
-        super.applyTransition(transition, view: view, initialData: initialData, isLoading: isLoading)
+    override func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
+        super.applyTransition(transition, initialData: initialData, isLoading: isLoading)
         
         if case let .none(interface) = transition.state, let _ = interface {
             for (_, item) in transition.inserted {
@@ -46,12 +46,12 @@ class ChatSwitchInlineController: ChatController {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
                                         let controller: ChatController
                                         switch self.fallbackMode {
-                                        case .history, .replyThread, .pinned:
+                                        case .history, .pinned:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
+                                        case let .replyThread(data, mode):
+                                            controller = ChatController.init(context: context, chatLocation: .replyThread(data), mode: .replyThread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
-                                        case .pinned:
-                                            break
                                         }
                                         self.navigationController?.push(controller)
                                     }

@@ -342,7 +342,17 @@ class ChatSelectText : NSObject {
                 if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index), let view = item.view as? ChatRowView {
                     
                     if event.clickCount > 1, selectManager.isEmpty {
-                        _ = window.makeFirstResponder(view.selectableTextViews.first)
+                        var set: Bool = false
+                        inner: for view in view.selectableTextViews {
+                            if view == window.firstResponder {
+                                _ = window.makeFirstResponder(view)
+                                set = true
+                                break inner
+                            }
+                        }
+                        if !set {
+                            _ = window.makeFirstResponder(view.selectableTextViews.first)
+                        }
                     }
                     
                     if view.canDropSelection(in: event.locationInWindow) {
@@ -475,7 +485,7 @@ class ChatSelectText : NSObject {
                     inner: for j in 0 ..< views.count {
                         let selectableView = views[j]
                         let viewRect = selectableView.convert(CGRect(origin: .zero, size: selectableView.frame.size), to: table.documentView)
-                        let rect = NSRect(x: beginInnerLocation.x, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
+                        let rect = NSRect(x: viewRect.midX, y: min(beginInnerLocation.y, endInnerLocation.y), width: abs(endInnerLocation.x - beginInnerLocation.x), height: abs(endInnerLocation.y - beginInnerLocation.y))
                         
                         if rect.intersects(viewRect) {
                             if start_j == nil {
@@ -535,7 +545,7 @@ class ChatSelectText : NSObject {
                                 }
                             }
                             
-                            if let start_j = start_j, let end_j = end_j {
+                            if let start_j = start_j, let end_j = end_j, i == endIndex || i == startIndex {
                                 if j < start_j || j > end_j {
                                     continue
                                 } else {

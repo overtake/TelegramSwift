@@ -520,6 +520,10 @@ class ChatMessageItem: ChatRowItem {
                 return .complete()
             }
             
+            interactions.hoverOnLink = { value in
+                
+            }
+            
             textLayout.interactions = interactions
             
             return

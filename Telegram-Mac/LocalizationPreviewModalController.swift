@@ -40,7 +40,7 @@ private final class LocalizationPreviewView : Control {
         if info.isOfficial {
             text = L10n.applyLanguageChangeLanguageOfficialText(info.title)
         } else {
-            text = L10n.applyLanguageChangeLanguageUnofficialText(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
+            text = L10n.applyLanguageChangeLanguageUnofficialText1(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
         }
         
         let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
