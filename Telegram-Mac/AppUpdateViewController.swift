@@ -96,6 +96,7 @@ func updateApplication(sharedContext: SharedAccountContext) {
         
         text += item.updateText
         
+        
         _ = (sharedContext.activeAccountsWithInfo |> take(1) |> mapToSignal { _, accounts -> Signal<Never, NoError> in
             return combineLatest(accounts.map { addAppUpdateText($0.account.postbox, applyText: text) }) |> ignoreValues
         } |> deliverOnMainQueue).start(completed: { 
@@ -589,7 +590,13 @@ private func resetUpdater() {
 private var updaterSource: UpdaterSource? = nil
 
 func updater_resetWithUpdaterSource(_ source: UpdaterSource, force: Bool = true) {
-    
+    let state = stateValue.with { $0 }
+    switch state.loadingState {
+    case .readyToInstall:
+        return
+    default:
+        break
+    }
     if updaterSource != source {
         updaterSource = source
         switch source {

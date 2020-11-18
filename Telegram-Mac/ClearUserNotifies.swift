@@ -21,15 +21,11 @@ func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
         
         
         for notification in deliveredNotifications {
-            if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
-                
+            if let notificationMessageId = getNotificationMessageId(userInfo: notification.userInfo ?? [:], for: "reply") {
+                               
                 let timestamp = notification.userInfo?["timestamp"] as? Int32 ?? 0
                 
-                let notificationPeerId = PeerId(namespace: namespace, id: id)
-
-                let notificationMessageId = MessageId(peerId: notificationPeerId, namespace: msgNamespace, id: msgId)
-                
-                if notificationPeerId == peerId, notificationMessageId <= maxId {
+                if notificationMessageId.peerId == peerId, notificationMessageId <= maxId {
                     NSUserNotificationCenter.default.removeDeliveredNotification(notification)
                 } else if timestamp == 0 || timestamp + 24 * 60 * 60 < Int32(Date().timeIntervalSince1970) {
                     NSUserNotificationCenter.default.removeDeliveredNotification(notification)
@@ -46,12 +42,7 @@ func clearNotifies(by msgIds: [MessageId]) {
         let deliveredNotifications = NSUserNotificationCenter.default.deliveredNotifications
         
         for notification in deliveredNotifications {
-            if let msgId = notification.userInfo?["message.id"] as? Int32, let msgNamespace = notification.userInfo?["message.namespace"] as? Int32, let namespace = notification.userInfo?["peer.namespace"] as? Int32, let id = notification.userInfo?["peer.id"] as? Int32 {
-                
-                let notificationPeerId = PeerId(namespace: namespace, id: id)
-                
-                let notificationMessageId = MessageId(peerId: notificationPeerId, namespace: msgNamespace, id: msgId)
-                
+            if let notificationMessageId = getNotificationMessageId(userInfo: notification.userInfo ?? [:], for: "reply") {
                 for msgId in msgIds {
                     if notificationMessageId == msgId {
                         NSUserNotificationCenter.default.removeDeliveredNotification(notification)

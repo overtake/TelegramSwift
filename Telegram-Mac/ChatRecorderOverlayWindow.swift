@@ -76,25 +76,43 @@ private class ChatRecorderOverlayView : Control {
     private let stateView: ImageView = ImageView()
     private var currentLevel: Double = 1.0
     private var previousTime: Date = Date()
+    private let playbackAudioLevelView: VoiceBlobView
     required init(frame frameRect: NSRect) {
+        playbackAudioLevelView = VoiceBlobView(
+            frame: NSMakeRect(0, 0, frameRect.width, frameRect.height),
+            maxLevel: 0.3,
+            smallBlobRange: (0, 0),
+            mediumBlobRange: (0.7, 0.8),
+            bigBlobRange: (0.8, 0.9)
+        )
+
         super.init(frame: frameRect)
         layer?.cornerRadius = frameRect.width / 2
         backgroundColor = .clear
-       
-        outerContainer.setFrameSize(NSMakeSize(frameRect.width - 30, frameRect.height - 30))
-        outerContainer.backgroundColor = theme.colors.accent.withAlphaComponent(0.5)
-        outerContainer.layer?.cornerRadius = outerContainer.frame.width / 2
-        addSubview(outerContainer)
-        outerContainer.center()
-      //  self.outerContainer.animates = true
+//
+//        outerContainer.setFrameSize(NSMakeSize(frameRect.width - 30, frameRect.height - 30))
+//        outerContainer.backgroundColor = theme.colors.accent.withAlphaComponent(0.5)
+//        outerContainer.layer?.cornerRadius = outerContainer.frame.width / 2
+//        addSubview(outerContainer)
+//        outerContainer.center()
+//      //  self.outerContainer.animates = true
+//
         
-        innerContainer.setFrameSize(NSMakeSize(frameRect.width - 30, frameRect.height - 30))
+        addSubview(playbackAudioLevelView)
+
+        playbackAudioLevelView.center()
+        
+        innerContainer.setFrameSize(NSMakeSize(frameRect.width - 40, frameRect.height - 40))
         innerContainer.backgroundColor = theme.colors.accent
         innerContainer.layer?.cornerRadius = innerContainer.frame.width / 2
         addSubview(innerContainer)
         innerContainer.center()
        // self.innerContainer.animates = true
         addSubview(stateView)
+//
+        
+        
+        self.playbackAudioLevelView.startAnimating()
         
     }
     
@@ -109,22 +127,29 @@ private class ChatRecorderOverlayView : Control {
         }
         stateView.sizeToFit()
         stateView.center()
+        
+        updateInside()
+
     }
     
     func updatePeakLevel(_ peakLevel: Float) {
-        let power = mappingRange(Double(peakLevel), 0.3, 3, 1.05, 1.5);
-        if abs(self.currentLevel - power) > 0.1 || (Date().timeIntervalSinceNow - previousTime.timeIntervalSinceNow) > 0.2  {
-            
-            let previous = outerContainer.layer?.presentation()?.value(forKeyPath: "transform.scale") as? CGFloat ?? CGFloat(currentLevel)
-            outerContainer.layer?.animateScaleCenter(from: previous, to: CGFloat(power), duration: 0.2, removeOnCompletion:false, timingFunction: .linear)
-            self.currentLevel = Double(power)
+        //NSLog("\(peakLevel)")
+        
+        let power = mappingRange(Double(peakLevel), 0.3, 3, 0, 1);
+        if (Date().timeIntervalSinceNow - previousTime.timeIntervalSinceNow) > 0.2  {
+            playbackAudioLevelView.updateLevel(CGFloat(power))
             self.previousTime = Date()
         }
     }
     
     func updateInside() {
-        innerContainer.backgroundColor = mouseInside() ? theme.colors.accent : theme.colors.redUI
-        outerContainer.backgroundColor = (mouseInside() ? theme.colors.accent : theme.colors.redUI).withAlphaComponent(0.5)
+        innerContainer.backgroundColor = mouseInside() ? theme.colors.accent : theme.colors.redUI        
+        let animation = CABasicAnimation(keyPath: "backgroundColor")
+        animation.duration = 0.1
+        innerContainer.layer?.add(animation, forKey: "backgroundColor")
+        
+        self.playbackAudioLevelView.setColor(mouseInside() ? theme.colors.accent : theme.colors.redUI)
+
     }
     
     required init?(coder: NSCoder) {

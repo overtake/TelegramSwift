@@ -92,15 +92,7 @@ class ChatGIFContentView: ChatMediaContentView {
 //        _ = nextTimebase.swap(timebase)
 //    }
 
-    override func cancelFetching() {
-        if let context = context, let media = media as? TelegramMediaFile {
-            if let parent = parent {
-                messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
-            } else {
-                cancelFreeMediaFileInteractiveFetch(context: context, resource: media.resource)
-            }
-        }
-    }
+
     
     override func fetch() {
         if let context = context, let media = media as? TelegramMediaFile {

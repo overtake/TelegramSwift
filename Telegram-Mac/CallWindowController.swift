@@ -496,14 +496,16 @@ private class PhoneCallWindowView : View {
                 for tooltip in tooltips {
                     tooltip.change(opacity: self.mouseInside() ? 1.0 : 0.0)
                 }
-                
+                self.settings._change(opacity: self.mouseInside() ? 1.0 : 0.0)
+
             default:
                 self.backgroundView.change(opacity: 1.0)
                 self.controls.change(opacity: 1.0)
                 self.textNameView._change(opacity: 1.0)
                 self.secureTextView._change(opacity: 1.0)
                 self.statusView._change(opacity: 1.0)
-                
+                self.settings._change(opacity: 1.0)
+
                 for tooltip in tooltips {
                     tooltip.change(opacity: 1.0)
                 }
@@ -1405,7 +1407,6 @@ func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallRes
         break
     case let .samePeer(session):
         if let header = sharedContext.bindings.rootNavigation().callHeader, header.needShown {
-            (header.view as? CallNavigationHeaderView)?.hide()
             showCallWindow(session)
         } else {
             controller.with { $0?.window.orderFront(nil) }

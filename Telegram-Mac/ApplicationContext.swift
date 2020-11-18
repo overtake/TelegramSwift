@@ -188,7 +188,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -276,6 +276,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.view.splitView.needFullsize()
         }, displayUpgradeProgress: { progress in
                 
+        }, callSession: { [weak self] in
+            return (self?.rightController.callHeader?.view as? CallNavigationHeaderView)?.session
         })
         
         
@@ -583,14 +585,14 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         let foldersSemaphore = DispatchSemaphore(value: 0)
         var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
-        
+            
         _ = (chatListFilterPreferences(postbox: context.account.postbox) |> take(1)).start(next: { value in
             folders = value
             foldersSemaphore.signal()
         })
         foldersSemaphore.wait()
         
-        self.updateLeftSidebar(with: folders, animated: false)
+        self.updateLeftSidebar(with: folders, layout: context.sharedContext.layout, animated: false)
         
         
         self.view.splitView.layout()
@@ -671,30 +673,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
           //  _ready.set(leftController.ready.get())
         }
         
-        
-        let callSessionSemaphore = DispatchSemaphore(value: 0)
-        var callSession: PCallSession?
-        _ = _callSession().start(next: { _session in
-            callSession = _session
-            callSessionSemaphore.signal()
-        })
-        callSessionSemaphore.wait()
-        
-        
         if let session = callSession {
-            _ = (session.state |> take(1)).start(next: { [weak session] state in
-                if case .active = state.state, let session = session {
-                    context.sharedContext.showCallHeader(with: session)
-                }
-            })
+            context.sharedContext.showCallHeader(with: session)
         }
         
-        self.updateFoldersDisposable.set((chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue).start(next: { [weak self] value in
-            self?.updateLeftSidebar(with: value, animated: true)
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(postbox: context.account.postbox), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
+            self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
-        
-        
-        
         
         
         if let controller = globalAudio {
@@ -707,16 +692,17 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     }
     
     private var folders: ChatListFolders?
+    private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
-    private func updateLeftSidebar(with folders: ChatListFolders, animated: Bool) -> Void {
+    private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
         
-        let currentSidebar = !folders.list.isEmpty && folders.sidebar
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && self.folders!.sidebar
+        let currentSidebar = !folders.list.isEmpty && (folders.sidebar || layout == .minimisize)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
 
         let readySignal: Signal<Bool, NoError>
         
         if currentSidebar != previousSidebar {
-            if folders.list.isEmpty || !folders.sidebar {
+            if !currentSidebar {
                 leftSidebarController?.removeFromSuperview()
                 leftSidebarController = nil
                 readySignal = .single(true)
@@ -753,6 +739,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             
         }
         self.folders = folders
+        self.previousLayout = layout
     }
     
     

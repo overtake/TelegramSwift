@@ -689,7 +689,12 @@ private final class MediaGifCell : MediaCell {
 
 private final class PeerPhotosMonthView : TableRowView, Notifable {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private var contentViews:[Optional<MediaCell>] = []
+    private var contentViews:[Optional<MediaCell>] = [] {
+        didSet {
+            var bp:Int = 0
+            bp == 1
+        }
+    }
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

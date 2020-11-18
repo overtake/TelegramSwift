@@ -138,7 +138,45 @@ class ChatGroupedItem: ChatRowItem {
                 }
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
-           
+            self.parameters[i].chatMode = chatInteraction.mode
+            self.parameters[i].getUpdatingMediaProgress = { messageId in
+                switch entry {
+                case let .groupedPhotos(entries, _):
+                    let media = entries.first(where: { $0.message?.id == messageId})?.additionalData.updatingMedia
+                    if let media = media {
+                        switch media.media {
+                        case .update:
+                            return .single(media.progress)
+                        default:
+                            break
+                        }
+                    }
+                default:
+                    break
+                }
+                return .single(nil)
+            }
+            self.parameters[i].cancelOperation = { [unowned context] message, media in
+                switch entry {
+                case let .groupedPhotos(entries, _):
+                    if let entry = entries.first(where: { $0.message?.id == message.id }) {
+                        if entry.additionalData.updatingMedia != nil {
+                            context.account.pendingUpdateMessageManager.cancel(messageId: message.id)
+                        } else if let media = media as? TelegramMediaFile {
+                            messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: media))
+                            if let resource = media.resource as? LocalFileArchiveMediaResource {
+                                archiver.remove(.resource(resource))
+                            }
+                        } else if let media = media as? TelegramMediaImage {
+                            chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
+                        }
+                    }
+                default:
+                    break
+                }
+                
+                
+            }
         }
         
         if isBubbleFullFilled, layout.messages.count == 1  {
@@ -530,6 +568,28 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     private var selectionBackground: CornerView = CornerView()
     
     
+    private var forceClearContentBackground: Bool = false
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        selectionBackground.didChangeSuperview = { [weak self] in
+            self?.forceClearContentBackground = self?.selectionBackground.superview != nil
+            self?.updateColors()
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var contentColor: NSColor {
+        if forceClearContentBackground {
+            return .clear
+        } else {
+            return super.contentColor
+        }
+    }
+    
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         guard let item = item as? ChatGroupedItem, let window = window as? Window else { return nil }
         
@@ -614,7 +674,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         case .files:
             return item.isBubbled ? (item.isIncoming ? theme.icons.group_selection_foreground_bubble_incoming : theme.icons.group_selection_foreground_bubble_outgoing) : theme.icons.group_selection_foreground
         case .photoOrVideo:
-            return theme.icons.chatGroupToggleSelected
+            return theme.icons.chatGroupToggleUnselected
         }
     }
     

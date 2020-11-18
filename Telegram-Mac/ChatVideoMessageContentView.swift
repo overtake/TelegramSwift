@@ -150,7 +150,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     if parameters.isWebpage, let wrapper = singleWrapper {
                         controller = APSingleResourceController(context: context, wrapper: wrapper, streamable: false)
                     } else {
-                        controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(), index: MessageIndex(parent))
+                        controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                     }
                     
                     parameters.showPlayer(controller)
@@ -232,11 +232,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     
-    override func cancelFetching() {
-        if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            messageMediaFileCancelInteractiveFetch(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media))
-        }
-    }
+    
     
     override func fetch() {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent {

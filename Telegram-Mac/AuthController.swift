@@ -769,6 +769,14 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
     }
     
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        
+        #if !APP_STORE        
+        updateController.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
+        #endif
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
