@@ -2,6 +2,24 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/webrtc/webrtc.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:/Users/keepcoder/Dropbox/Telegram-macOS/Telegram/core-xprojects/OpusBindings/OpusBinding.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/crc32/Crc32_Xcode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/ffmpeg/ffmpeg.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/libopus/libopus.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/libwebp/libwebp.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/Mozjpeg/Mozjpeg.xcodeproj">
    </FileRef>
    <FileRef
@@ -45,9 +63,6 @@
    </FileRef>
    <FileRef
       location = "group:core-xprojects/TelegramCore/TelegramCore_Xcode.xcodeproj">
-   </FileRef>
-   <FileRef
-      location = "group:core-xprojects/crc32/Crc32_Xcode.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:core-xprojects/SSignalKit/SSignalKit_Xcode.xcodeproj">

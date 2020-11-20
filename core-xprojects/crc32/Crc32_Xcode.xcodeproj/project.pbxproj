@@ -13,7 +13,6 @@
 
 /* Begin PBXFileReference section */
 		A701F92F236C1D9E002ABF81 /* Crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Crc32.h; sourceTree = "<group>"; };
-		D03E45672305CC310049C28B /* Crc32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Crc32.h; sourceTree = "<group>"; };
 		D03E45732305CCD20049C28B /* Crc32.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Crc32.m; sourceTree = "<group>"; };
 		D03E45762305CCEB0049C28B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D03E45782305CCF00049C28B /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
@@ -54,7 +53,6 @@
 			isa = PBXGroup;
 			children = (
 				D03E45732305CCD20049C28B /* Crc32.m */,
-				D03E45672305CC310049C28B /* Crc32.h */,
 			);
 			name = Sources;
 			path = "../../submodules/telegram-ios/submodules/Crc32/Sources";
