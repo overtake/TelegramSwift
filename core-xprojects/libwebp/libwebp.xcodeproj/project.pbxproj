@@ -91,7 +91,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0983B582566606600467703 /* Build configuration list for PBXNativeTarget "libwebp" */;
 			buildPhases = (
-				D0983B5D2566620000467703 /* ShellScript */,
+				D0983B5D2566620000467703 /* Run Script */,
 				D0983B4B2566606600467703 /* Headers */,
 				D0983B4C2566606600467703 /* Sources */,
 				D0983B4D2566606600467703 /* Frameworks */,
@@ -148,7 +148,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		D0983B5D2566620000467703 /* ShellScript */ = {
+		D0983B5D2566620000467703 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -157,6 +157,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (

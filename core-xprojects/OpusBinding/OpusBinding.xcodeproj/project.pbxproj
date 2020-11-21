@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D05F623E25694EB200CC7EFA /* libopus.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983CF225681EDA00467703 /* libopus.framework */; };
 		D0983C9B25681C5100467703 /* ogg.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983C8325681C5000467703 /* ogg.h */; };
 		D0983C9C25681C5100467703 /* framing.c in Sources */ = {isa = PBXBuildFile; fileRef = D0983C8425681C5000467703 /* framing.c */; };
 		D0983C9D25681C5100467703 /* os_types.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983C8525681C5000467703 /* os_types.h */; };
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D05F623E25694EB200CC7EFA /* libopus.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
