@@ -1,0 +1,4 @@
+#include "./CrashLib.xcconfig"
+
+ENABLE_TESTABILITY = YES
+COPY_PHASE_STRIP = NO

@@ -16,6 +16,3 @@ url=git@github.com:overtake/rlottie.git
 [submodule "submodules/tgcalls"]
 	path = submodules/tgcalls
 	url = git@github.com:john-preston/tgcalls.git
-[submodule "submodules/AppCenter-sdk"]
-	path = submodules/AppCenter-sdk
-	url = git@github.com:overtake/appcenter-sdk-apple.git

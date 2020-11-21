@@ -1,0 +1,5 @@
+PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.appcenter
+
+OTHER_LDFLAGS = $(inherited) -framework Foundation -framework SystemConfiguration -lsqlite3
+
+CLANG_WARN_INT_CONVERSION = NO
