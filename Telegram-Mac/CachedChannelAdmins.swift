@@ -46,9 +46,9 @@ enum CachedChannelAdminRank: PostboxCoding, Equatable {
 }
 
 final class CachedChannelAdminRanks: PostboxCoding {
-    let ranks: Dictionary<PeerId, CachedChannelAdminRank>
+    let ranks: [PeerId: CachedChannelAdminRank]
     
-    init(ranks: Dictionary<PeerId, CachedChannelAdminRank>) {
+    init(ranks: [PeerId: CachedChannelAdminRank]) {
         self.ranks = ranks
     }
     

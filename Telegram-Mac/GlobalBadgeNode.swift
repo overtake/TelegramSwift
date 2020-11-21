@@ -232,6 +232,9 @@ func forceUpdateStatusBarIconByDockTile(sharedContext: SharedAccountContext) {
                 color = .white
             }
         }
+        if #available(OSX 11.0, *) {
+            color = .white
+        }
         resourcesQueue.async {
             let icon = generateStatusBarIcon(count, color: color)
             Queue.mainQueue().async {

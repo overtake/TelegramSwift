@@ -1,0 +1,1 @@
+../TransmissionTarget/MSACPropertyConfigurator.h

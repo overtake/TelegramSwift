@@ -4,3 +4,8 @@ xcuserdata
 xcuserstate
 .DS_Store
 core-xprojects/Mozjpeg/build
+core-xprojects/OpenSSLEncryption/build
+core-xprojects/libwebp/build
+core-xprojects/libopus/build
+core-xprojects/ffmpeg/build
+core-xprojects/webrtc/build

@@ -3,7 +3,7 @@ set -x
 set -e
 
 
-if [ "$1" = "alpha" ]; then
+if [ "$1" = "alpha" ] || [ "$1" = "beta" ] ; then
 MACOS_VERSION="10.16"
 XCODE_VERSION="12.2"
 else

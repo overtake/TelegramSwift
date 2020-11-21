@@ -1,0 +1,4 @@
+#include "../../../Config/iOS.xcconfig"
+#include "../../../Config/Framework.xcconfig"
+
+OTHER_LDFLAGS = $(inherited) -framework CoreTelephony -framework UIKit -lsqlite3 -lz
