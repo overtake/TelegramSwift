@@ -1,0 +1,13 @@
+#include "./Tests.xcconfig"
+#include "./tvOS.xcconfig"
+
+OTHER_LDFLAGS = $(OTHER_LDFLAGS) -framework UIKit
+
+LD_RUNPATH_SEARCH_PATHS = @executable_path/Frameworks @loader_path/Frameworks
+
+// OCMock and OCHamcrest have a bunch of warnings so we just disable this only for testing.
+GCC_TREAT_WARNINGS_AS_ERRORS = NO
+
+// OCHTTPStubs for tvOS cannot generate code coverage data without these flags.
+ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES
+DEFINES_MODULE = YES

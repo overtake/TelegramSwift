@@ -1,0 +1,844 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D817BBED1AB871E7003B757A /* PLAsyncTask.m in Sources */ = {isa = PBXBuildFile; fileRef = D817BBEC1AB871E7003B757A /* PLAsyncTask.m */; };
+		D817BBF01AB88C32003B757A /* PLCrashWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = D817BBEF1AB88C32003B757A /* PLCrashWindowController.m */; };
+		D817BBF41AB89A11003B757A /* PLProgressIndicatorController.m in Sources */ = {isa = PBXBuildFile; fileRef = D817BBF21AB89A11003B757A /* PLProgressIndicatorController.m */; };
+		D817BBF51AB89A11003B757A /* PLProgressIndicatorController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D817BBF31AB89A11003B757A /* PLProgressIndicatorController.xib */; };
+		D817BC551AB8EBF5003B757A /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D817BC581AB8EC06003B757A /* CrashReporter.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D817BC591AB8EC65003B757A /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */; };
+		D817BC5A1AB8ECB4003B757A /* CrashReporter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */; };
+		D878135E1AB9F31F00508724 /* PLCrashWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = D878135C1AB9F31F00508724 /* PLCrashWindow.xib */; };
+		D891CC1A18D0C9510048AC0F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D891CC1918D0C9510048AC0F /* Cocoa.framework */; };
+		D891CC2418D0C9510048AC0F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D891CC2218D0C9510048AC0F /* InfoPlist.strings */; };
+		D891CC2618D0C9510048AC0F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = D891CC2518D0C9510048AC0F /* main.m */; };
+		D891CC2A18D0C9510048AC0F /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = D891CC2818D0C9510048AC0F /* Credits.rtf */; };
+		D891CC2D18D0C9510048AC0F /* PLCrashDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = D891CC2C18D0C9510048AC0F /* PLCrashDocument.m */; };
+		D891CC3518D0C9510048AC0F /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D891CC3418D0C9510048AC0F /* Images.xcassets */; };
+		D891CC6418D0CC970048AC0F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D891CC3118D0C9510048AC0F /* MainMenu.xib */; };
+		D891CC6F18D0D0180048AC0F /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D891CC6E18D0D0180048AC0F /* QuickLook.framework */; };
+		D891CC7118D0D0180048AC0F /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D891CC7018D0D0180048AC0F /* ApplicationServices.framework */; };
+		D891CC7318D0D0180048AC0F /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D891CC7218D0D0180048AC0F /* CoreServices.framework */; };
+		D891CC7518D0D0180048AC0F /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D891CC7418D0D0180048AC0F /* CoreFoundation.framework */; };
+		D891CC7B18D0D0180048AC0F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D891CC7918D0D0180048AC0F /* InfoPlist.strings */; };
+		D891CC7D18D0D0180048AC0F /* GenerateThumbnailForURL.c in Sources */ = {isa = PBXBuildFile; fileRef = D891CC7C18D0D0180048AC0F /* GenerateThumbnailForURL.c */; };
+		D891CC7F18D0D0180048AC0F /* GeneratePreviewForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = D891CC7E18D0D0180048AC0F /* GeneratePreviewForURL.m */; };
+		D891CC8118D0D0180048AC0F /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D891CC8018D0D0180048AC0F /* main.c */; };
+		D891CC8718D0D1D40048AC0F /* CrashReporterQuicklook.qlgenerator in CopyFiles */ = {isa = PBXBuildFile; fileRef = D891CC6D18D0D0180048AC0F /* CrashReporterQuicklook.qlgenerator */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D817BC381AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731F30EFA1AAB005EDFB7;
+			remoteInfo = "CrashReporter-MacOSX-Static";
+		};
+		D817BC3A1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
+			remoteInfo = "CrashReporter-MacOSX";
+		};
+		D817BC3C1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 058812B91040582D009128FB;
+			remoteInfo = "CrashReporter-iOS";
+		};
+		D817BC3E1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD31520EE936A9000FDE88;
+			remoteInfo = "CrashReporter-iOS-Device";
+		};
+		D817BC401AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD31630EE93905000FDE88;
+			remoteInfo = "CrashReporter-iOS-Simulator";
+		};
+		D817BC421AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05E731E30EFA1A3E005EDFB7;
+			remoteInfo = plcrashutil;
+		};
+		D817BC441AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD32690EE93DC3000FDE88;
+			remoteInfo = "Tests-MacOSX";
+		};
+		D817BC461AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD32A90EE94062000FDE88;
+			remoteInfo = "Tests-iOS-Simulator";
+		};
+		D817BC481AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05CD33240EE94439000FDE88;
+			remoteInfo = "Tests-iOS-Device";
+		};
+		D817BC4A1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 05F40CE70EF7AB80008050CF;
+			remoteInfo = DemoCrash;
+		};
+		D817BC4C1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 052A45CF136353FB00987004;
+			remoteInfo = "DemoCrash-iOS-Device";
+		};
+		D817BC4E1AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 052A464F136355FD00987004;
+			remoteInfo = "DemoCrash-iOS-Simulator";
+		};
+		D817BC501AB8EBAB003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 050DE24D0F61B80B00152ED3;
+			remoteInfo = "Fuzz Testing";
+		};
+		D817BC521AB8EBD5003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = "CrashReporter-MacOSX";
+		};
+		D817BC561AB8EBFE003B757A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = "CrashReporter-MacOSX";
+		};
+		D891CC8818D0D1E10048AC0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D891CC0E18D0C9510048AC0F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D891CC6C18D0D0180048AC0F;
+			remoteInfo = CrashReporterQuicklook;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D891CC6118D0CB950048AC0F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D817BC581AB8EC06003B757A /* CrashReporter.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D891CC8618D0D1B20048AC0F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/QuickLook;
+			dstSubfolderSpec = 1;
+			files = (
+				D891CC8718D0D1D40048AC0F /* CrashReporterQuicklook.qlgenerator in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D891CC8B18D0D2520048AC0F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D817BC551AB8EBF5003B757A /* CrashReporter.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D817BBEB1AB871E7003B757A /* PLAsyncTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLAsyncTask.h; sourceTree = "<group>"; };
+		D817BBEC1AB871E7003B757A /* PLAsyncTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PLAsyncTask.m; sourceTree = "<group>"; };
+		D817BBEE1AB88C32003B757A /* PLCrashWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLCrashWindowController.h; sourceTree = "<group>"; };
+		D817BBEF1AB88C32003B757A /* PLCrashWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PLCrashWindowController.m; sourceTree = "<group>"; };
+		D817BBF11AB89A11003B757A /* PLProgressIndicatorController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLProgressIndicatorController.h; sourceTree = "<group>"; };
+		D817BBF21AB89A11003B757A /* PLProgressIndicatorController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PLProgressIndicatorController.m; sourceTree = "<group>"; };
+		D817BBF31AB89A11003B757A /* PLProgressIndicatorController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PLProgressIndicatorController.xib; sourceTree = "<group>"; };
+		D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CrashReporter.xcodeproj; path = ../../CrashReporter.xcodeproj; sourceTree = "<group>"; };
+		D878135F1AB9F89300508724 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		D87813601AB9F89300508724 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PLCrashWindow.xib; sourceTree = "<group>"; };
+		D891CC1618D0C9510048AC0F /* CrashViewer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrashViewer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D891CC1918D0C9510048AC0F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		D891CC1C18D0C9510048AC0F /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		D891CC1E18D0C9510048AC0F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		D891CC2118D0C9510048AC0F /* CrashViewer-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CrashViewer-Info.plist"; sourceTree = "<group>"; };
+		D891CC2318D0C9510048AC0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D891CC2518D0C9510048AC0F /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		D891CC2718D0C9510048AC0F /* CrashViewer-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CrashViewer-Prefix.pch"; sourceTree = "<group>"; };
+		D891CC2918D0C9510048AC0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		D891CC2B18D0C9510048AC0F /* PLCrashDocument.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PLCrashDocument.h; sourceTree = "<group>"; };
+		D891CC2C18D0C9510048AC0F /* PLCrashDocument.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PLCrashDocument.m; sourceTree = "<group>"; };
+		D891CC3418D0C9510048AC0F /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		D891CC6D18D0D0180048AC0F /* CrashReporterQuicklook.qlgenerator */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CrashReporterQuicklook.qlgenerator; sourceTree = BUILT_PRODUCTS_DIR; };
+		D891CC6E18D0D0180048AC0F /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
+		D891CC7018D0D0180048AC0F /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
+		D891CC7218D0D0180048AC0F /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		D891CC7418D0D0180048AC0F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D891CC7818D0D0180048AC0F /* CrashReporterQuicklook-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CrashReporterQuicklook-Info.plist"; sourceTree = "<group>"; };
+		D891CC7A18D0D0180048AC0F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D891CC7C18D0D0180048AC0F /* GenerateThumbnailForURL.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GenerateThumbnailForURL.c; sourceTree = "<group>"; };
+		D891CC7E18D0D0180048AC0F /* GeneratePreviewForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GeneratePreviewForURL.m; sourceTree = "<group>"; };
+		D891CC8018D0D0180048AC0F /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		D891CC8218D0D0180048AC0F /* CrashReporterQuicklook-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CrashReporterQuicklook-Prefix.pch"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D891CC1318D0C9510048AC0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D891CC1A18D0C9510048AC0F /* Cocoa.framework in Frameworks */,
+				D817BC591AB8EC65003B757A /* CrashReporter.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D891CC6818D0D0180048AC0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D891CC7518D0D0180048AC0F /* CoreFoundation.framework in Frameworks */,
+				D891CC6F18D0D0180048AC0F /* QuickLook.framework in Frameworks */,
+				D891CC7318D0D0180048AC0F /* CoreServices.framework in Frameworks */,
+				D891CC7118D0D0180048AC0F /* ApplicationServices.framework in Frameworks */,
+				D817BC5A1AB8ECB4003B757A /* CrashReporter.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D817BC261AB8EBAB003B757A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D817BC391AB8EBAB003B757A /* libCrashReporter-MacOSX-Static.a */,
+				D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */,
+				D817BC3D1AB8EBAB003B757A /* CrashReporter.framework */,
+				D817BC3F1AB8EBAB003B757A /* libCrashReporter-iphoneos.a */,
+				D817BC411AB8EBAB003B757A /* libCrashReporter-iphonesimulator.a */,
+				D817BC431AB8EBAB003B757A /* plcrashutil */,
+				D817BC451AB8EBAB003B757A /* Tests-MacOSX.xctest */,
+				D817BC471AB8EBAB003B757A /* Tests-iOS-Simulator.xctest */,
+				D817BC491AB8EBAB003B757A /* Tests-iOS-Device.xctest */,
+				D817BC4B1AB8EBAB003B757A /* DemoCrash.app */,
+				D817BC4D1AB8EBAB003B757A /* DemoCrash-iOS-Device.app */,
+				D817BC4F1AB8EBAB003B757A /* DemoCrash-iOS-Simulator.app */,
+				D817BC511AB8EBAB003B757A /* Fuzz Testing */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D891CC0D18D0C9510048AC0F = {
+			isa = PBXGroup;
+			children = (
+				D891CC1F18D0C9510048AC0F /* CrashViewer */,
+				D891CC7618D0D0180048AC0F /* CrashReporterQuicklook */,
+				D891CC1818D0C9510048AC0F /* Frameworks */,
+				D891CC1718D0C9510048AC0F /* Products */,
+			);
+			sourceTree = "<group>";
+			usesTabs = 0;
+		};
+		D891CC1718D0C9510048AC0F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC1618D0C9510048AC0F /* CrashViewer.app */,
+				D891CC6D18D0D0180048AC0F /* CrashReporterQuicklook.qlgenerator */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D891CC1818D0C9510048AC0F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */,
+				D891CC1918D0C9510048AC0F /* Cocoa.framework */,
+				D891CC6E18D0D0180048AC0F /* QuickLook.framework */,
+				D891CC7018D0D0180048AC0F /* ApplicationServices.framework */,
+				D891CC7218D0D0180048AC0F /* CoreServices.framework */,
+				D891CC7418D0D0180048AC0F /* CoreFoundation.framework */,
+				D891CC1B18D0C9510048AC0F /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D891CC1B18D0C9510048AC0F /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC1C18D0C9510048AC0F /* AppKit.framework */,
+				D891CC1E18D0C9510048AC0F /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		D891CC1F18D0C9510048AC0F /* CrashViewer */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC3118D0C9510048AC0F /* MainMenu.xib */,
+				D817BBEB1AB871E7003B757A /* PLAsyncTask.h */,
+				D817BBEC1AB871E7003B757A /* PLAsyncTask.m */,
+				D891CC2B18D0C9510048AC0F /* PLCrashDocument.h */,
+				D891CC2C18D0C9510048AC0F /* PLCrashDocument.m */,
+				D878135C1AB9F31F00508724 /* PLCrashWindow.xib */,
+				D817BBEE1AB88C32003B757A /* PLCrashWindowController.h */,
+				D817BBEF1AB88C32003B757A /* PLCrashWindowController.m */,
+				D817BBF11AB89A11003B757A /* PLProgressIndicatorController.h */,
+				D817BBF21AB89A11003B757A /* PLProgressIndicatorController.m */,
+				D817BBF31AB89A11003B757A /* PLProgressIndicatorController.xib */,
+				D891CC3418D0C9510048AC0F /* Images.xcassets */,
+				D891CC2018D0C9510048AC0F /* Supporting Files */,
+			);
+			path = CrashViewer;
+			sourceTree = "<group>";
+		};
+		D891CC2018D0C9510048AC0F /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC2118D0C9510048AC0F /* CrashViewer-Info.plist */,
+				D891CC2218D0C9510048AC0F /* InfoPlist.strings */,
+				D891CC2518D0C9510048AC0F /* main.m */,
+				D891CC2718D0C9510048AC0F /* CrashViewer-Prefix.pch */,
+				D891CC2818D0C9510048AC0F /* Credits.rtf */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D891CC7618D0D0180048AC0F /* CrashReporterQuicklook */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC7C18D0D0180048AC0F /* GenerateThumbnailForURL.c */,
+				D891CC7E18D0D0180048AC0F /* GeneratePreviewForURL.m */,
+				D891CC8018D0D0180048AC0F /* main.c */,
+				D891CC7718D0D0180048AC0F /* Supporting Files */,
+			);
+			path = CrashReporterQuicklook;
+			sourceTree = "<group>";
+		};
+		D891CC7718D0D0180048AC0F /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D891CC7818D0D0180048AC0F /* CrashReporterQuicklook-Info.plist */,
+				D891CC7918D0D0180048AC0F /* InfoPlist.strings */,
+				D891CC8218D0D0180048AC0F /* CrashReporterQuicklook-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D891CC6918D0D0180048AC0F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D891CC1518D0C9510048AC0F /* CrashViewer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D891CC4A18D0C9510048AC0F /* Build configuration list for PBXNativeTarget "CrashViewer" */;
+			buildPhases = (
+				D891CC1218D0C9510048AC0F /* Sources */,
+				D891CC1318D0C9510048AC0F /* Frameworks */,
+				D891CC1418D0C9510048AC0F /* Resources */,
+				D891CC6118D0CB950048AC0F /* CopyFiles */,
+				D891CC8618D0D1B20048AC0F /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D817BC571AB8EBFE003B757A /* PBXTargetDependency */,
+				D891CC8918D0D1E10048AC0F /* PBXTargetDependency */,
+			);
+			name = CrashViewer;
+			productName = CrashViewer;
+			productReference = D891CC1618D0C9510048AC0F /* CrashViewer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D891CC6C18D0D0180048AC0F /* CrashReporterQuicklook */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D891CC8318D0D0180048AC0F /* Build configuration list for PBXNativeTarget "CrashReporterQuicklook" */;
+			buildPhases = (
+				D891CC6718D0D0180048AC0F /* Sources */,
+				D891CC6818D0D0180048AC0F /* Frameworks */,
+				D891CC6918D0D0180048AC0F /* Headers */,
+				D891CC6A18D0D0180048AC0F /* Resources */,
+				D891CC8B18D0D2520048AC0F /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D817BC531AB8EBD5003B757A /* PBXTargetDependency */,
+			);
+			name = CrashReporterQuicklook;
+			productName = CrashReporterQuicklook;
+			productReference = D891CC6D18D0D0180048AC0F /* CrashReporterQuicklook.qlgenerator */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D891CC0E18D0C9510048AC0F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = PL;
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "Plausible Labs Cooperative, Inc.";
+			};
+			buildConfigurationList = D891CC1118D0C9510048AC0F /* Build configuration list for PBXProject "CrashViewer" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D891CC0D18D0C9510048AC0F;
+			productRefGroup = D891CC1718D0C9510048AC0F /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = D817BC261AB8EBAB003B757A /* Products */;
+					ProjectRef = D817BC251AB8EBAB003B757A /* CrashReporter.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				D891CC1518D0C9510048AC0F /* CrashViewer */,
+				D891CC6C18D0D0180048AC0F /* CrashReporterQuicklook */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		D817BC391AB8EBAB003B757A /* libCrashReporter-MacOSX-Static.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libCrashReporter-MacOSX-Static.a";
+			remoteRef = D817BC381AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC3B1AB8EBAB003B757A /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = D817BC3A1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC3D1AB8EBAB003B757A /* CrashReporter.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = CrashReporter.framework;
+			remoteRef = D817BC3C1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC3F1AB8EBAB003B757A /* libCrashReporter-iphoneos.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libCrashReporter-iphoneos.a";
+			remoteRef = D817BC3E1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC411AB8EBAB003B757A /* libCrashReporter-iphonesimulator.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libCrashReporter-iphonesimulator.a";
+			remoteRef = D817BC401AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC431AB8EBAB003B757A /* plcrashutil */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = plcrashutil;
+			remoteRef = D817BC421AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC451AB8EBAB003B757A /* Tests-MacOSX.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests-MacOSX.xctest";
+			remoteRef = D817BC441AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC471AB8EBAB003B757A /* Tests-iOS-Simulator.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests-iOS-Simulator.xctest";
+			remoteRef = D817BC461AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC491AB8EBAB003B757A /* Tests-iOS-Device.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = "Tests-iOS-Device.xctest";
+			remoteRef = D817BC481AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC4B1AB8EBAB003B757A /* DemoCrash.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = DemoCrash.app;
+			remoteRef = D817BC4A1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC4D1AB8EBAB003B757A /* DemoCrash-iOS-Device.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash-iOS-Device.app";
+			remoteRef = D817BC4C1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC4F1AB8EBAB003B757A /* DemoCrash-iOS-Simulator.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "DemoCrash-iOS-Simulator.app";
+			remoteRef = D817BC4E1AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D817BC511AB8EBAB003B757A /* Fuzz Testing */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "Fuzz Testing";
+			remoteRef = D817BC501AB8EBAB003B757A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D891CC1418D0C9510048AC0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D891CC2418D0C9510048AC0F /* InfoPlist.strings in Resources */,
+				D891CC3518D0C9510048AC0F /* Images.xcassets in Resources */,
+				D891CC2A18D0C9510048AC0F /* Credits.rtf in Resources */,
+				D878135E1AB9F31F00508724 /* PLCrashWindow.xib in Resources */,
+				D817BBF51AB89A11003B757A /* PLProgressIndicatorController.xib in Resources */,
+				D891CC6418D0CC970048AC0F /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D891CC6A18D0D0180048AC0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D891CC7B18D0D0180048AC0F /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D891CC1218D0C9510048AC0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D817BBED1AB871E7003B757A /* PLAsyncTask.m in Sources */,
+				D891CC2D18D0C9510048AC0F /* PLCrashDocument.m in Sources */,
+				D817BBF41AB89A11003B757A /* PLProgressIndicatorController.m in Sources */,
+				D891CC2618D0C9510048AC0F /* main.m in Sources */,
+				D817BBF01AB88C32003B757A /* PLCrashWindowController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D891CC6718D0D0180048AC0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D891CC7D18D0D0180048AC0F /* GenerateThumbnailForURL.c in Sources */,
+				D891CC7F18D0D0180048AC0F /* GeneratePreviewForURL.m in Sources */,
+				D891CC8118D0D0180048AC0F /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D817BC531AB8EBD5003B757A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter-MacOSX";
+			targetProxy = D817BC521AB8EBD5003B757A /* PBXContainerItemProxy */;
+		};
+		D817BC571AB8EBFE003B757A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CrashReporter-MacOSX";
+			targetProxy = D817BC561AB8EBFE003B757A /* PBXContainerItemProxy */;
+		};
+		D891CC8918D0D1E10048AC0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D891CC6C18D0D0180048AC0F /* CrashReporterQuicklook */;
+			targetProxy = D891CC8818D0D1E10048AC0F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		D878135C1AB9F31F00508724 /* PLCrashWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D87813601AB9F89300508724 /* en */,
+			);
+			name = PLCrashWindow.xib;
+			sourceTree = "<group>";
+		};
+		D891CC2218D0C9510048AC0F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D891CC2318D0C9510048AC0F /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		D891CC2818D0C9510048AC0F /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D891CC2918D0C9510048AC0F /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+		D891CC3118D0C9510048AC0F /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D878135F1AB9F89300508724 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		D891CC7918D0D0180048AC0F /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D891CC7A18D0D0180048AC0F /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D891CC4818D0C9510048AC0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_ASSIGN_ENUM = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				EFFECTIVE_PLATFORM_NAME = "-MacOSX";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_LABEL = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D891CC4918D0C9510048AC0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_ASSIGN_ENUM = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_ATOMIC_PROPERTIES = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EFFECTIVE_PLATFORM_NAME = "-MacOSX";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_LABEL = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D891CC4B18D0C9510048AC0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CrashViewer/CrashViewer-Prefix.pch";
+				INFOPLIST_FILE = "CrashViewer/CrashViewer-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		D891CC4C18D0C9510048AC0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CrashViewer/CrashViewer-Prefix.pch";
+				INFOPLIST_FILE = "CrashViewer/CrashViewer-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		D891CC8418D0D0180048AC0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CrashReporterQuicklook/CrashReporterQuicklook-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "CrashReporterQuicklook/CrashReporterQuicklook-Info.plist";
+				INSTALL_PATH = /Library/QuickLook;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = qlgenerator;
+			};
+			name = Debug;
+		};
+		D891CC8518D0D0180048AC0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CrashReporterQuicklook/CrashReporterQuicklook-Prefix.pch";
+				INFOPLIST_FILE = "CrashReporterQuicklook/CrashReporterQuicklook-Info.plist";
+				INSTALL_PATH = /Library/QuickLook;
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks/";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = qlgenerator;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D891CC1118D0C9510048AC0F /* Build configuration list for PBXProject "CrashViewer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D891CC4818D0C9510048AC0F /* Debug */,
+				D891CC4918D0C9510048AC0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D891CC4A18D0C9510048AC0F /* Build configuration list for PBXNativeTarget "CrashViewer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D891CC4B18D0C9510048AC0F /* Debug */,
+				D891CC4C18D0C9510048AC0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D891CC8318D0D0180048AC0F /* Build configuration list for PBXNativeTarget "CrashReporterQuicklook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D891CC8418D0D0180048AC0F /* Debug */,
+				D891CC8518D0D0180048AC0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D891CC0E18D0C9510048AC0F /* Project object */;
+}

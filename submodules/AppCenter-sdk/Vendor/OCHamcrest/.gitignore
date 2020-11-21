@@ -1,0 +1,10 @@
+*.gcda
+*.gcno
+.DS_Store
+.idea
+build/
+*.pbxuser
+*.perspectivev3
+project.xcworkspace/
+xcuserdata/
+compile_commands.json

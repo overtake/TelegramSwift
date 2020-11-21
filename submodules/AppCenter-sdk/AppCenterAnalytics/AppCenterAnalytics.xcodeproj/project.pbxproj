@@ -1,0 +1,891 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C9A9208A230C5E390068070D /* MSACAbstractLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 358F9BC72019596400B9E22C /* MSACAbstractLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A9208B230C5E390068070D /* MSACConstants+Flags.h in Headers */ = {isa = PBXBuildFile; fileRef = 04B525BC2194D49C00FA37FD /* MSACConstants+Flags.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A9208C230C5E390068070D /* MSACLogWithProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 358F9BC52019590100B9E22C /* MSACLogWithProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A9208D230C5E390068070D /* MSACService.h in Headers */ = {isa = PBXBuildFile; fileRef = 04A082051F74BB8600DC776D /* MSACService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A9208E230C5E390068070D /* MSACServiceAbstract.h in Headers */ = {isa = PBXBuildFile; fileRef = 387C77041D6CC39400D68CC1 /* MSACServiceAbstract.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A9208F230C5E4B0068070D /* AppCenterAnalytics.h in Headers */ = {isa = PBXBuildFile; fileRef = E85547CC1D2D63EF002DF6E2 /* AppCenterAnalytics.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A92090230C5E4B0068070D /* MSACAnalytics.h in Headers */ = {isa = PBXBuildFile; fileRef = E85547C31D2D6253002DF6E2 /* MSACAnalytics.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920A1230C5E620068070D /* AppCenter+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E85547CF1D2D6521002DF6E2 /* AppCenter+Internal.h */; };
+		C9A920A2230C5E620068070D /* MSACAnalyticsInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3813B9641DBFE68200831214 /* MSACAnalyticsInternal.h */; };
+		C9A920A3230C5E620068070D /* MSACAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 35BF19E21DF9C43F00193027 /* MSACAnalyticsDelegate.h */; };
+		C9A920A4230C5E620068070D /* MSACAnalyticsTransmissionTargetInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 351343352057093600E6DC7D /* MSACAnalyticsTransmissionTargetInternal.h */; };
+		C9A920A5230C5E620068070D /* MSACAnalytics+Validation.h in Headers */ = {isa = PBXBuildFile; fileRef = C27452D520AE0EF100B64B68 /* MSACAnalytics+Validation.h */; };
+		C9A920A6230C5E620068070D /* MSACPropertyConfiguratorInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 042E5E002175230600AFD6F9 /* MSACPropertyConfiguratorInternal.h */; };
+		C9A920AD230C5E6D0068070D /* MSACAnalyticsPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = E85547CE1D2D64F0002DF6E2 /* MSACAnalyticsPrivate.h */; };
+		C9A920AE230C5E6D0068070D /* MSACAnalyticsTransmissionTargetPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3855D51320E2F03000CBC499 /* MSACAnalyticsTransmissionTargetPrivate.h */; };
+		C9A920AF230C5E6D0068070D /* MSACPropertyConfiguratorPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = E758FA8320FFE0E200011793 /* MSACPropertyConfiguratorPrivate.h */; };
+		C9A920B4230C5E9E0068070D /* MSACEventLogPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 38337D6E20C0AB0D00CEDA17 /* MSACEventLogPrivate.h */; };
+		C9A920B5230C5E9E0068070D /* MSACSessionTrackerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 042B1D291FE3508100D6E04A /* MSACSessionTrackerPrivate.h */; };
+		C9A920BC230C5EBE0068070D /* MSACEventPropertiesInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 266ED07D29C2A2CC67AD1F60 /* MSACEventPropertiesInternal.h */; };
+		C9A920BD230C5EBE0068070D /* MSACPageLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E3E2CC71D359D5E00B1EE50 /* MSACPageLog.h */; };
+		C9A920BE230C5EBE0068070D /* MSACStartSessionLog.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E48FA01D51670100A8C1B0 /* MSACStartSessionLog.h */; };
+		C9A920C3230C5EC50068070D /* MSACSessionTrackerDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = E89B33EB1D5A8F3500FDE8FB /* MSACSessionTrackerDelegate.h */; };
+		C9A920C4230C5EC50068070D /* MSACSessionTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = E8E48F9C1D515C3900A8C1B0 /* MSACSessionTracker.h */; };
+		C9A920C9230C5ECB0068070D /* MSACAnalyticsCategory.h in Headers */ = {isa = PBXBuildFile; fileRef = 0485AF8D1EAA852A00C10CAF /* MSACAnalyticsCategory.h */; };
+		C9A920CA230C5ECB0068070D /* MSACAnalyticsConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA03D5D8EA1FEA1DC687CEF /* MSACAnalyticsConstants.h */; };
+		C9A920D1230C5ED40068070D /* MSACEventProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 266ED289BE3D9562F1F61348 /* MSACEventProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920D2230C5ED40068070D /* MSACEventLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E3E2CC51D359D5E00B1EE50 /* MSACEventLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920D3230C5ED40068070D /* MSACLogWithNameAndProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = F834E37020AC8E25003CB54D /* MSACLogWithNameAndProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920DC230C5EE50068070D /* MSACAnalyticsAuthenticationProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B2E2ECB72114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920DD230C5EE50068070D /* MSACAnalyticsAuthenticationProviderDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = B2ADB12F2123A72000D0D7D9 /* MSACAnalyticsAuthenticationProviderDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920DE230C5EE50068070D /* MSACAnalyticsTransmissionTarget.h in Headers */ = {isa = PBXBuildFile; fileRef = 3513432F205704A100E6DC7D /* MSACAnalyticsTransmissionTarget.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920DF230C5EE50068070D /* MSACPropertyConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = E758FA7B20FFDEE700011793 /* MSACPropertyConfigurator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C9A920E2230C5EF00068070D /* MSACAnalyticsAuthenticationProviderInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = B2350985211A69AA00F98D4F /* MSACAnalyticsAuthenticationProviderInternal.h */; };
+		C9EBAA7F230D39CA00A20F0F /* MSACAnalytics.m in Sources */ = {isa = PBXBuildFile; fileRef = E85547C51D2D6253002DF6E2 /* MSACAnalytics.m */; };
+		C9EBAA80230D39CA00A20F0F /* MSACAnalytics+Validation.m in Sources */ = {isa = PBXBuildFile; fileRef = C27452D120AE0DAC00B64B68 /* MSACAnalytics+Validation.m */; };
+		C9EBAA81230D39CA00A20F0F /* MSACPageLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E3E2CC81D359D5E00B1EE50 /* MSACPageLog.m */; };
+		C9EBAA82230D39CA00A20F0F /* MSACStartSessionLog.m in Sources */ = {isa = PBXBuildFile; fileRef = E8E48FA11D51670100A8C1B0 /* MSACStartSessionLog.m */; };
+		C9EBAA83230D39CA00A20F0F /* MSACSessionTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = E8E48F9D1D515C3900A8C1B0 /* MSACSessionTracker.m */; };
+		C9EBAA84230D39CA00A20F0F /* MSACAnalyticsCategory.m in Sources */ = {isa = PBXBuildFile; fileRef = 0485AF8E1EAA852A00C10CAF /* MSACAnalyticsCategory.m */; };
+		C9EBAA85230D39CA00A20F0F /* MSACEventProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = 266EDBD8487DA42DAB601DD9 /* MSACEventProperties.m */; };
+		C9EBAA86230D39CA00A20F0F /* MSACEventLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E3E2CC61D359D5E00B1EE50 /* MSACEventLog.m */; };
+		C9EBAA87230D39CA00A20F0F /* MSACLogWithNameAndProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = F834E37120AC8E25003CB54D /* MSACLogWithNameAndProperties.m */; };
+		C9EBAA88230D39CA00A20F0F /* MSACAnalyticsAuthenticationProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B2E2ECB82114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.m */; };
+		C9EBAA89230D39CA00A20F0F /* MSACAnalyticsTransmissionTarget.m in Sources */ = {isa = PBXBuildFile; fileRef = 35134330205704C100E6DC7D /* MSACAnalyticsTransmissionTarget.m */; };
+		C9EBAA8A230D39CA00A20F0F /* MSACPropertyConfigurator.m in Sources */ = {isa = PBXBuildFile; fileRef = E758FA7C20FFDEE700011793 /* MSACPropertyConfigurator.m */; };
+		C9EBAB2B230D72F900A20F0F /* AppCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9EBAB2A230D72F900A20F0F /* AppCenter.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C2392F0924642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 030EF0A814632FD000B04273;
+			remoteInfo = OCMock;
+		};
+		C2392F0B24642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 03565A3118F0566E003AE91E;
+			remoteInfo = OCMockTests;
+		};
+		C2392F0D24642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 030EF0DC14632FF700B04273;
+			remoteInfo = OCMockLib;
+		};
+		C2392F0F24642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D31108AD1828DB8700737925;
+			remoteInfo = OCMockLibTests;
+		};
+		C2392F1124642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F0B950F11B0080BE00942C38;
+			remoteInfo = "OCMock iOS";
+		};
+		C2392F1324642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 817EB1621BD765130047E85A;
+			remoteInfo = "OCMock tvOS";
+		};
+		C2392F1524642C8700425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DE97CA022B43EE60098C63F;
+			remoteInfo = "OCMock watchOS";
+		};
+		DFCB802D2472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 087601E213440806001B439B;
+			remoteInfo = OCHamcrest;
+		};
+		DFCB802F2472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 087601F713440807001B439B;
+			remoteInfo = OCHamcrestTests;
+		};
+		DFCB80312472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 081BEE621345979F003F846A;
+			remoteInfo = libochamcrest;
+		};
+		DFCB80332472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 081BEE6C1345979F003F846A;
+			remoteInfo = libochamcrestTests;
+		};
+		DFCB80352472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5BFE91C1777D900C2BAFD;
+			remoteInfo = "OCHamcrest-iOS";
+		};
+		DFCB80372472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5BFF61C17781400C2BAFD;
+			remoteInfo = "OCHamcrest-tvOS";
+		};
+		DFCB80392472D5D70058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5C0031C17782500C2BAFD;
+			remoteInfo = "OCHamcrest-watchOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		041CFF8B1ECCFF6700B4654B /* Tests iOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests iOS.xcconfig"; path = "../../Config/Tests iOS.xcconfig"; sourceTree = "<group>"; };
+		042A17A71DEFA950003BA80A /* MSACAnalyticsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsTests.m; sourceTree = "<group>"; };
+		042B1D291FE3508100D6E04A /* MSACSessionTrackerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionTrackerPrivate.h; sourceTree = "<group>"; };
+		042E5E002175230600AFD6F9 /* MSACPropertyConfiguratorInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACPropertyConfiguratorInternal.h; path = ../TransmissionTarget/MSACPropertyConfiguratorInternal.h; sourceTree = "<group>"; };
+		04311FF11EE0858F007054C5 /* MSACTestFrameworks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACTestFrameworks.h; path = ../../../AppCenter/AppCenterTests/Util/MSACTestFrameworks.h; sourceTree = "<group>"; };
+		043121721EE0C248007054C5 /* tvOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = tvOS.modulemap; sourceTree = "<group>"; };
+		043121731EE0C248007054C5 /* tvOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = tvOS.xcconfig; sourceTree = "<group>"; };
+		04545DC9227B604700A49E06 /* AppCenterAnalytics.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppCenterAnalytics.xcconfig; sourceTree = "<group>"; };
+		0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AppCenterAnalytics Release.xcconfig"; sourceTree = "<group>"; };
+		0484DD601F3910FF0092B777 /* Tests tvOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests tvOS.xcconfig"; path = "../../Config/Tests tvOS.xcconfig"; sourceTree = "<group>"; };
+		0485AF8D1EAA852A00C10CAF /* MSACAnalyticsCategory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsCategory.h; sourceTree = "<group>"; };
+		0485AF8E1EAA852A00C10CAF /* MSACAnalyticsCategory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsCategory.m; sourceTree = "<group>"; };
+		049BC82A1ECE3B9400FB6719 /* iOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = iOS.xcconfig; sourceTree = "<group>"; };
+		049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = macOS.xcconfig; sourceTree = "<group>"; };
+		049BC82C1ECE3CF000FB6719 /* Tests macOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests macOS.xcconfig"; path = "../../Config/Tests macOS.xcconfig"; sourceTree = "<group>"; };
+		04A082051F74BB8600DC776D /* MSACService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACService.h; path = ../AppCenter/AppCenter/MSACService.h; sourceTree = "<group>"; };
+		04B525BC2194D49C00FA37FD /* MSACConstants+Flags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "MSACConstants+Flags.h"; path = "../AppCenter/AppCenter/MSACConstants+Flags.h"; sourceTree = "<group>"; };
+		04ED31E91EAAD32B0033BAAE /* macOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = macOS.modulemap; sourceTree = "<group>"; };
+		04ED31EB1EAAD3390033BAAE /* iOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = iOS.modulemap; sourceTree = "<group>"; };
+		266ED07D29C2A2CC67AD1F60 /* MSACEventPropertiesInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACEventPropertiesInternal.h; sourceTree = "<group>"; };
+		266ED289BE3D9562F1F61348 /* MSACEventProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACEventProperties.h; sourceTree = "<group>"; };
+		266EDBD8487DA42DAB601DD9 /* MSACEventProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACEventProperties.m; sourceTree = "<group>"; };
+		2DA03D5D8EA1FEA1DC687CEF /* MSACAnalyticsConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsConstants.h; sourceTree = "<group>"; };
+		324F3BA8254789FD0006E223 /* XCFramework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = XCFramework.xcconfig; path = ../../../Config/XCFramework.xcconfig; sourceTree = "<group>"; };
+		324F3BA9254789FD0006E223 /* iOS Universal.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "iOS Universal.xcconfig"; path = "../../../Config/iOS Universal.xcconfig"; sourceTree = "<group>"; };
+		324F3BAA254789FE0006E223 /* tvOS Universal.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "tvOS Universal.xcconfig"; path = "../../../Config/tvOS Universal.xcconfig"; sourceTree = "<group>"; };
+		3513432F205704A100E6DC7D /* MSACAnalyticsTransmissionTarget.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsTransmissionTarget.h; sourceTree = "<group>"; };
+		35134330205704C100E6DC7D /* MSACAnalyticsTransmissionTarget.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsTransmissionTarget.m; sourceTree = "<group>"; };
+		351343352057093600E6DC7D /* MSACAnalyticsTransmissionTargetInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsTransmissionTargetInternal.h; sourceTree = "<group>"; };
+		351343362058900800E6DC7D /* MSACAnalyticsTransmissionTargetTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsTransmissionTargetTests.m; sourceTree = "<group>"; };
+		358F9BC52019590100B9E22C /* MSACLogWithProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACLogWithProperties.h; path = ../AppCenter/AppCenter/Model/MSACLogWithProperties.h; sourceTree = "<group>"; };
+		358F9BC72019596400B9E22C /* MSACAbstractLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACAbstractLog.h; path = ../AppCenter/AppCenter/Model/MSACAbstractLog.h; sourceTree = "<group>"; };
+		35A204BE216C1AC600FEBADA /* MSACEventPropertiesTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACEventPropertiesTests.m; sourceTree = "<group>"; };
+		35BF19E21DF9C43F00193027 /* MSACAnalyticsDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsDelegate.h; sourceTree = "<group>"; };
+		35BF19E31DF9D58F00193027 /* MSACMockAnalyticsDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockAnalyticsDelegate.h; sourceTree = "<group>"; };
+		35BF19E41DF9D59E00193027 /* MSACMockAnalyticsDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACMockAnalyticsDelegate.m; sourceTree = "<group>"; };
+		3813B9641DBFE68200831214 /* MSACAnalyticsInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsInternal.h; sourceTree = "<group>"; };
+		38337D6E20C0AB0D00CEDA17 /* MSACEventLogPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACEventLogPrivate.h; sourceTree = "<group>"; };
+		3855D51320E2F03000CBC499 /* MSACAnalyticsTransmissionTargetPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsTransmissionTargetPrivate.h; sourceTree = "<group>"; };
+		387C77041D6CC39400D68CC1 /* MSACServiceAbstract.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACServiceAbstract.h; path = ../AppCenter/AppCenter/MSACServiceAbstract.h; sourceTree = "<group>"; };
+		38C215DF20E692C700191F3C /* MSACMockUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACMockUserDefaults.m; path = ../../../AppCenter/AppCenterTests/Util/MSACMockUserDefaults.m; sourceTree = "<group>"; };
+		38C215E020E692C700191F3C /* MSACMockUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACMockUserDefaults.h; path = ../../../AppCenter/AppCenterTests/Util/MSACMockUserDefaults.h; sourceTree = "<group>"; };
+		6E3E2CC51D359D5E00B1EE50 /* MSACEventLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACEventLog.h; sourceTree = "<group>"; };
+		6E3E2CC61D359D5E00B1EE50 /* MSACEventLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACEventLog.m; sourceTree = "<group>"; };
+		6E3E2CC71D359D5E00B1EE50 /* MSACPageLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACPageLog.h; sourceTree = "<group>"; };
+		6E3E2CC81D359D5E00B1EE50 /* MSACPageLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACPageLog.m; sourceTree = "<group>"; };
+		6E3E2CD01D359F3300B1EE50 /* MSACEventLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACEventLogTests.m; sourceTree = "<group>"; };
+		6E3E2CD11D359F3300B1EE50 /* MSACPageLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACPageLogTests.m; sourceTree = "<group>"; };
+		B2350985211A69AA00F98D4F /* MSACAnalyticsAuthenticationProviderInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsAuthenticationProviderInternal.h; sourceTree = "<group>"; };
+		B25E21CC214044A400CAA156 /* MSACPropertyConfiguratorTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACPropertyConfiguratorTests.m; sourceTree = "<group>"; };
+		B26D4DDE211BA99E00AB4E28 /* MSACAnalyticsAuthenticationProviderTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsAuthenticationProviderTests.m; sourceTree = "<group>"; };
+		B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AppCenterAnalytics Debug.xcconfig"; sourceTree = "<group>"; };
+		B2ADB12F2123A72000D0D7D9 /* MSACAnalyticsAuthenticationProviderDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsAuthenticationProviderDelegate.h; sourceTree = "<group>"; };
+		B2E2ECB72114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsAuthenticationProvider.h; sourceTree = "<group>"; };
+		B2E2ECB82114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACAnalyticsAuthenticationProvider.m; sourceTree = "<group>"; };
+		C2392EFF24642C8700425640 /* OCMock.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OCMock.xcodeproj; path = ../../Vendor/OCMock/Source/OCMock.xcodeproj; sourceTree = "<group>"; };
+		C27452D120AE0DAC00B64B68 /* MSACAnalytics+Validation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "MSACAnalytics+Validation.m"; sourceTree = "<group>"; };
+		C27452D520AE0EF100B64B68 /* MSACAnalytics+Validation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MSACAnalytics+Validation.h"; sourceTree = "<group>"; };
+		C2D73CE1230FC7DC00390198 /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2D73CE4230FC7EF00390198 /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2D73CE7230FC7FC00390198 /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9A91F3F230BFB970068070D /* AppCenterAnalytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AppCenterAnalytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9EBAB18230D724700A20F0F /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9EBAB28230D72F300A20F0F /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9EBAB2A230D72F900A20F0F /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OCHamcrest.xcodeproj; path = ../../Vendor/OCHamcrest/Source/OCHamcrest.xcodeproj; sourceTree = "<group>"; };
+		E758FA7B20FFDEE700011793 /* MSACPropertyConfigurator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACPropertyConfigurator.h; sourceTree = "<group>"; };
+		E758FA7C20FFDEE700011793 /* MSACPropertyConfigurator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACPropertyConfigurator.m; sourceTree = "<group>"; };
+		E758FA8320FFE0E200011793 /* MSACPropertyConfiguratorPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACPropertyConfiguratorPrivate.h; sourceTree = "<group>"; };
+		E81591291D526956003D5F3C /* MSACStartSessionLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStartSessionLogTests.m; sourceTree = "<group>"; };
+		E815912B1D526A09003D5F3C /* MSACSessionTrackerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACSessionTrackerTests.m; sourceTree = "<group>"; };
+		E81591301D526C3B003D5F3C /* MSACSessionTrackerUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionTrackerUtil.h; sourceTree = "<group>"; };
+		E81591311D526C3B003D5F3C /* MSACSessionTrackerUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACSessionTrackerUtil.m; sourceTree = "<group>"; };
+		E85547C31D2D6253002DF6E2 /* MSACAnalytics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAnalytics.h; sourceTree = "<group>"; };
+		E85547C51D2D6253002DF6E2 /* MSACAnalytics.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACAnalytics.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E85547CC1D2D63EF002DF6E2 /* AppCenterAnalytics.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppCenterAnalytics.h; sourceTree = "<group>"; };
+		E85547CE1D2D64F0002DF6E2 /* MSACAnalyticsPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAnalyticsPrivate.h; sourceTree = "<group>"; };
+		E85547CF1D2D6521002DF6E2 /* AppCenter+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AppCenter+Internal.h"; path = "../../../AppCenter/AppCenter/Internals/AppCenter+Internal.h"; sourceTree = "<group>"; };
+		E85547D91D2D6723002DF6E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E89B33EB1D5A8F3500FDE8FB /* MSACSessionTrackerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionTrackerDelegate.h; sourceTree = "<group>"; };
+		E8E48F9C1D515C3900A8C1B0 /* MSACSessionTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionTracker.h; sourceTree = "<group>"; };
+		E8E48F9D1D515C3900A8C1B0 /* MSACSessionTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACSessionTracker.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E8E48FA01D51670100A8C1B0 /* MSACStartSessionLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACStartSessionLog.h; sourceTree = "<group>"; };
+		E8E48FA11D51670100A8C1B0 /* MSACStartSessionLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStartSessionLog.m; sourceTree = "<group>"; };
+		F82E4C70217F1FA600EDAB34 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../../Vendor/SQLite3/sqlite3.c; sourceTree = "<group>"; };
+		F834E37020AC8E25003CB54D /* MSACLogWithNameAndProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACLogWithNameAndProperties.h; sourceTree = "<group>"; };
+		F834E37120AC8E25003CB54D /* MSACLogWithNameAndProperties.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACLogWithNameAndProperties.m; sourceTree = "<group>"; };
+		F8D68481230D7D74000A7CED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C9A91F3A230BFB970068070D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9EBAB2B230D72F900A20F0F /* AppCenter.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		04A1409C1ECE7245001CEE94 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				0485AF8D1EAA852A00C10CAF /* MSACAnalyticsCategory.h */,
+				0485AF8E1EAA852A00C10CAF /* MSACAnalyticsCategory.m */,
+				2DA03D5D8EA1FEA1DC687CEF /* MSACAnalyticsConstants.h */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		04A140AE1ECE806B001CEE94 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				041CFF8B1ECCFF6700B4654B /* Tests iOS.xcconfig */,
+				049BC82C1ECE3CF000FB6719 /* Tests macOS.xcconfig */,
+				0484DD601F3910FF0092B777 /* Tests tvOS.xcconfig */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+		04A140B11ECE811D001CEE94 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				35BF19E31DF9D58F00193027 /* MSACMockAnalyticsDelegate.h */,
+				35BF19E41DF9D59E00193027 /* MSACMockAnalyticsDelegate.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		04A140B21ECE814E001CEE94 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				38C215E020E692C700191F3C /* MSACMockUserDefaults.h */,
+				38C215DF20E692C700191F3C /* MSACMockUserDefaults.m */,
+				E81591301D526C3B003D5F3C /* MSACSessionTrackerUtil.h */,
+				E81591311D526C3B003D5F3C /* MSACSessionTrackerUtil.m */,
+				04311FF11EE0858F007054C5 /* MSACTestFrameworks.h */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		242A6C5D22D3F57500CB02C7 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				266ED289BE3D9562F1F61348 /* MSACEventProperties.h */,
+				266EDBD8487DA42DAB601DD9 /* MSACEventProperties.m */,
+				6E3E2CC51D359D5E00B1EE50 /* MSACEventLog.h */,
+				6E3E2CC61D359D5E00B1EE50 /* MSACEventLog.m */,
+				F834E37020AC8E25003CB54D /* MSACLogWithNameAndProperties.h */,
+				F834E37120AC8E25003CB54D /* MSACLogWithNameAndProperties.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		3513432E2057046700E6DC7D /* TransmissionTarget */ = {
+			isa = PBXGroup;
+			children = (
+				B2E2ECB72114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.h */,
+				B2ADB12F2123A72000D0D7D9 /* MSACAnalyticsAuthenticationProviderDelegate.h */,
+				B2350985211A69AA00F98D4F /* MSACAnalyticsAuthenticationProviderInternal.h */,
+				B2E2ECB82114DAB800C688C0 /* MSACAnalyticsAuthenticationProvider.m */,
+				3513432F205704A100E6DC7D /* MSACAnalyticsTransmissionTarget.h */,
+				35134330205704C100E6DC7D /* MSACAnalyticsTransmissionTarget.m */,
+				E758FA7B20FFDEE700011793 /* MSACPropertyConfigurator.h */,
+				E758FA7C20FFDEE700011793 /* MSACPropertyConfigurator.m */,
+			);
+			path = TransmissionTarget;
+			sourceTree = "<group>";
+		};
+		6E0684361D35A39300A8CC6C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */,
+				C2392EFF24642C8700425640 /* OCMock.xcodeproj */,
+				F82E4C70217F1FA600EDAB34 /* sqlite3.c */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6E3E2CC21D359D5E00B1EE50 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				38337D6E20C0AB0D00CEDA17 /* MSACEventLogPrivate.h */,
+				266ED07D29C2A2CC67AD1F60 /* MSACEventPropertiesInternal.h */,
+				6E3E2CC71D359D5E00B1EE50 /* MSACPageLog.h */,
+				6E3E2CC81D359D5E00B1EE50 /* MSACPageLog.m */,
+				E8E48FA01D51670100A8C1B0 /* MSACStartSessionLog.h */,
+				E8E48FA11D51670100A8C1B0 /* MSACStartSessionLog.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		C2392F0024642C8700425640 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C2392F0A24642C8700425640 /* OCMock.framework */,
+				C2392F0C24642C8700425640 /* OCMockTests.xctest */,
+				C2392F0E24642C8700425640 /* libOCMock.a */,
+				C2392F1024642C8700425640 /* OCMockLibTests.xctest */,
+				C2392F1224642C8700425640 /* OCMock.framework */,
+				C2392F1424642C8700425640 /* OCMock.framework */,
+				C2392F1624642C8700425640 /* OCMock.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C9A91F41230BFBE40068070D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C2D73CE7230FC7FC00390198 /* AppCenter.framework */,
+				C2D73CE4230FC7EF00390198 /* AppCenter.framework */,
+				C2D73CE1230FC7DC00390198 /* AppCenter.framework */,
+				C9EBAB2A230D72F900A20F0F /* AppCenter.framework */,
+				C9EBAB28230D72F300A20F0F /* AppCenter.framework */,
+				C9EBAB18230D724700A20F0F /* AppCenter.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DFCB80242472D5D70058D292 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DFCB802E2472D5D70058D292 /* OCHamcrest.framework */,
+				DFCB80302472D5D70058D292 /* OCHamcrestTests.xctest */,
+				DFCB80322472D5D70058D292 /* libochamcrest.a */,
+				DFCB80342472D5D70058D292 /* libochamcrestTests.xctest */,
+				DFCB80362472D5D70058D292 /* OCHamcrest.framework */,
+				DFCB80382472D5D70058D292 /* OCHamcrest.framework */,
+				DFCB803A2472D5D70058D292 /* OCHamcrest.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E85547B71D2D6253002DF6E2 = {
+			isa = PBXGroup;
+			children = (
+				358F9BC72019596400B9E22C /* MSACAbstractLog.h */,
+				04B525BC2194D49C00FA37FD /* MSACConstants+Flags.h */,
+				358F9BC52019590100B9E22C /* MSACLogWithProperties.h */,
+				04A082051F74BB8600DC776D /* MSACService.h */,
+				387C77041D6CC39400D68CC1 /* MSACServiceAbstract.h */,
+				E85547C21D2D6253002DF6E2 /* AppCenterAnalytics */,
+				E85547D61D2D6723002DF6E2 /* AppCenterAnalyticsTests */,
+				E85547C11D2D6253002DF6E2 /* Products */,
+				C9A91F41230BFBE40068070D /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		E85547C11D2D6253002DF6E2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C9A91F3F230BFB970068070D /* AppCenterAnalytics.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E85547C21D2D6253002DF6E2 /* AppCenterAnalytics */ = {
+			isa = PBXGroup;
+			children = (
+				E85547CC1D2D63EF002DF6E2 /* AppCenterAnalytics.h */,
+				E85547C31D2D6253002DF6E2 /* MSACAnalytics.h */,
+				E85547C51D2D6253002DF6E2 /* MSACAnalytics.m */,
+				E85547CD1D2D64B0002DF6E2 /* Internals */,
+				242A6C5D22D3F57500CB02C7 /* Model */,
+				E85547D01D2D65AF002DF6E2 /* Support */,
+				3513432E2057046700E6DC7D /* TransmissionTarget */,
+			);
+			path = AppCenterAnalytics;
+			sourceTree = "<group>";
+		};
+		E85547CD1D2D64B0002DF6E2 /* Internals */ = {
+			isa = PBXGroup;
+			children = (
+				E85547CF1D2D6521002DF6E2 /* AppCenter+Internal.h */,
+				E85547CE1D2D64F0002DF6E2 /* MSACAnalyticsPrivate.h */,
+				3813B9641DBFE68200831214 /* MSACAnalyticsInternal.h */,
+				35BF19E21DF9C43F00193027 /* MSACAnalyticsDelegate.h */,
+				3855D51320E2F03000CBC499 /* MSACAnalyticsTransmissionTargetPrivate.h */,
+				351343352057093600E6DC7D /* MSACAnalyticsTransmissionTargetInternal.h */,
+				C27452D520AE0EF100B64B68 /* MSACAnalytics+Validation.h */,
+				C27452D120AE0DAC00B64B68 /* MSACAnalytics+Validation.m */,
+				042E5E002175230600AFD6F9 /* MSACPropertyConfiguratorInternal.h */,
+				E758FA8320FFE0E200011793 /* MSACPropertyConfiguratorPrivate.h */,
+				6E3E2CC21D359D5E00B1EE50 /* Model */,
+				E8E48F9B1D515C1F00A8C1B0 /* Session */,
+				04A1409C1ECE7245001CEE94 /* Util */,
+			);
+			path = Internals;
+			sourceTree = "<group>";
+		};
+		E85547D01D2D65AF002DF6E2 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				324F3BA9254789FD0006E223 /* iOS Universal.xcconfig */,
+				324F3BAA254789FE0006E223 /* tvOS Universal.xcconfig */,
+				324F3BA8254789FD0006E223 /* XCFramework.xcconfig */,
+				F8D68481230D7D74000A7CED /* Info.plist */,
+				04545DC9227B604700A49E06 /* AppCenterAnalytics.xcconfig */,
+				B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */,
+				0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */,
+				049BC82A1ECE3B9400FB6719 /* iOS.xcconfig */,
+				04ED31EB1EAAD3390033BAAE /* iOS.modulemap */,
+				049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */,
+				04ED31E91EAAD32B0033BAAE /* macOS.modulemap */,
+				043121731EE0C248007054C5 /* tvOS.xcconfig */,
+				043121721EE0C248007054C5 /* tvOS.modulemap */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		E85547D61D2D6723002DF6E2 /* AppCenterAnalyticsTests */ = {
+			isa = PBXGroup;
+			children = (
+				E85547D91D2D6723002DF6E2 /* Info.plist */,
+				B26D4DDE211BA99E00AB4E28 /* MSACAnalyticsAuthenticationProviderTests.m */,
+				042A17A71DEFA950003BA80A /* MSACAnalyticsTests.m */,
+				351343362058900800E6DC7D /* MSACAnalyticsTransmissionTargetTests.m */,
+				6E3E2CD01D359F3300B1EE50 /* MSACEventLogTests.m */,
+				35A204BE216C1AC600FEBADA /* MSACEventPropertiesTests.m */,
+				6E3E2CD11D359F3300B1EE50 /* MSACPageLogTests.m */,
+				B25E21CC214044A400CAA156 /* MSACPropertyConfiguratorTests.m */,
+				E815912B1D526A09003D5F3C /* MSACSessionTrackerTests.m */,
+				E81591291D526956003D5F3C /* MSACStartSessionLogTests.m */,
+				6E0684361D35A39300A8CC6C /* Frameworks */,
+				04A140B11ECE811D001CEE94 /* Model */,
+				04A140AE1ECE806B001CEE94 /* Support */,
+				04A140B21ECE814E001CEE94 /* Util */,
+			);
+			path = AppCenterAnalyticsTests;
+			sourceTree = "<group>";
+		};
+		E8E48F9B1D515C1F00A8C1B0 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				E89B33EB1D5A8F3500FDE8FB /* MSACSessionTrackerDelegate.h */,
+				042B1D291FE3508100D6E04A /* MSACSessionTrackerPrivate.h */,
+				E8E48F9C1D515C3900A8C1B0 /* MSACSessionTracker.h */,
+				E8E48F9D1D515C3900A8C1B0 /* MSACSessionTracker.m */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		C9A91F37230BFB970068070D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9A920CA230C5ECB0068070D /* MSACAnalyticsConstants.h in Headers */,
+				C9A920BD230C5EBE0068070D /* MSACPageLog.h in Headers */,
+				C9A920C9230C5ECB0068070D /* MSACAnalyticsCategory.h in Headers */,
+				C9A9208C230C5E390068070D /* MSACLogWithProperties.h in Headers */,
+				C9A920E2230C5EF00068070D /* MSACAnalyticsAuthenticationProviderInternal.h in Headers */,
+				C9A920DF230C5EE50068070D /* MSACPropertyConfigurator.h in Headers */,
+				C9A920A2230C5E620068070D /* MSACAnalyticsInternal.h in Headers */,
+				C9A920DE230C5EE50068070D /* MSACAnalyticsTransmissionTarget.h in Headers */,
+				C9A920DC230C5EE50068070D /* MSACAnalyticsAuthenticationProvider.h in Headers */,
+				C9A920C4230C5EC50068070D /* MSACSessionTracker.h in Headers */,
+				C9A920BC230C5EBE0068070D /* MSACEventPropertiesInternal.h in Headers */,
+				C9A9208B230C5E390068070D /* MSACConstants+Flags.h in Headers */,
+				C9A92090230C5E4B0068070D /* MSACAnalytics.h in Headers */,
+				C9A920D2230C5ED40068070D /* MSACEventLog.h in Headers */,
+				C9A920A5230C5E620068070D /* MSACAnalytics+Validation.h in Headers */,
+				C9A920A3230C5E620068070D /* MSACAnalyticsDelegate.h in Headers */,
+				C9A9208D230C5E390068070D /* MSACService.h in Headers */,
+				C9A920AF230C5E6D0068070D /* MSACPropertyConfiguratorPrivate.h in Headers */,
+				C9A920AE230C5E6D0068070D /* MSACAnalyticsTransmissionTargetPrivate.h in Headers */,
+				C9A920A1230C5E620068070D /* AppCenter+Internal.h in Headers */,
+				C9A920AD230C5E6D0068070D /* MSACAnalyticsPrivate.h in Headers */,
+				C9A920B4230C5E9E0068070D /* MSACEventLogPrivate.h in Headers */,
+				C9A920B5230C5E9E0068070D /* MSACSessionTrackerPrivate.h in Headers */,
+				C9A920A4230C5E620068070D /* MSACAnalyticsTransmissionTargetInternal.h in Headers */,
+				C9A9208E230C5E390068070D /* MSACServiceAbstract.h in Headers */,
+				C9A920BE230C5EBE0068070D /* MSACStartSessionLog.h in Headers */,
+				C9A9208F230C5E4B0068070D /* AppCenterAnalytics.h in Headers */,
+				C9A920D1230C5ED40068070D /* MSACEventProperties.h in Headers */,
+				C9A920C3230C5EC50068070D /* MSACSessionTrackerDelegate.h in Headers */,
+				C9A9208A230C5E390068070D /* MSACAbstractLog.h in Headers */,
+				C9A920D3230C5ED40068070D /* MSACLogWithNameAndProperties.h in Headers */,
+				C9A920A6230C5E620068070D /* MSACPropertyConfiguratorInternal.h in Headers */,
+				C9A920DD230C5EE50068070D /* MSACAnalyticsAuthenticationProviderDelegate.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		C9A91F36230BFB970068070D /* AppCenterAnalytics macOS Framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C9A91F3C230BFB970068070D /* Build configuration list for PBXNativeTarget "AppCenterAnalytics macOS Framework" */;
+			buildPhases = (
+				C2D73CD8230FC75800390198 /* Verify No Build Settings */,
+				C9A91F37230BFB970068070D /* Headers */,
+				C9A91F39230BFB970068070D /* Sources */,
+				C9A91F3A230BFB970068070D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "AppCenterAnalytics macOS Framework";
+			productName = appcenteranalytics;
+			productReference = C9A91F3F230BFB970068070D /* AppCenterAnalytics.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E85547B81D2D6253002DF6E2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = MSAC;
+				LastUpgradeCheck = 0820;
+				ORGANIZATIONNAME = Microsoft;
+				TargetAttributes = {
+					C9A91F36230BFB970068070D = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = E85547BB1D2D6253002DF6E2 /* Build configuration list for PBXProject "AppCenterAnalytics" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				en,
+			);
+			mainGroup = E85547B71D2D6253002DF6E2;
+			productRefGroup = E85547C11D2D6253002DF6E2 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = DFCB80242472D5D70058D292 /* Products */;
+					ProjectRef = DFCB80232472D5D70058D292 /* OCHamcrest.xcodeproj */;
+				},
+				{
+					ProductGroup = C2392F0024642C8700425640 /* Products */;
+					ProjectRef = C2392EFF24642C8700425640 /* OCMock.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				C9A91F36230BFB970068070D /* AppCenterAnalytics macOS Framework */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		C2392F0A24642C8700425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392F0924642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F0C24642C8700425640 /* OCMockTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCMockTests.xctest;
+			remoteRef = C2392F0B24642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F0E24642C8700425640 /* libOCMock.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libOCMock.a;
+			remoteRef = C2392F0D24642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F1024642C8700425640 /* OCMockLibTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCMockLibTests.xctest;
+			remoteRef = C2392F0F24642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F1224642C8700425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392F1124642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F1424642C8700425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392F1324642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392F1624642C8700425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392F1524642C8700425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB802E2472D5D70058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB802D2472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80302472D5D70058D292 /* OCHamcrestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCHamcrestTests.xctest;
+			remoteRef = DFCB802F2472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80322472D5D70058D292 /* libochamcrest.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libochamcrest.a;
+			remoteRef = DFCB80312472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80342472D5D70058D292 /* libochamcrestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = libochamcrestTests.xctest;
+			remoteRef = DFCB80332472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80362472D5D70058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80352472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80382472D5D70058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80372472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB803A2472D5D70058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80392472D5D70058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C2D73CD8230FC75800390198 /* Verify No Build Settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Verify No Build Settings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#\"${SRCROOT}/../Scripts/VerifyNoBuildSettings.swift\" ${PROJECT_NAME}.xcodeproj/project.pbxproj\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C9A91F39230BFB970068070D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9EBAA7F230D39CA00A20F0F /* MSACAnalytics.m in Sources */,
+				C9EBAA81230D39CA00A20F0F /* MSACPageLog.m in Sources */,
+				C9EBAA82230D39CA00A20F0F /* MSACStartSessionLog.m in Sources */,
+				C9EBAA8A230D39CA00A20F0F /* MSACPropertyConfigurator.m in Sources */,
+				C9EBAA89230D39CA00A20F0F /* MSACAnalyticsTransmissionTarget.m in Sources */,
+				C9EBAA88230D39CA00A20F0F /* MSACAnalyticsAuthenticationProvider.m in Sources */,
+				C9EBAA86230D39CA00A20F0F /* MSACEventLog.m in Sources */,
+				C9EBAA85230D39CA00A20F0F /* MSACEventProperties.m in Sources */,
+				C9EBAA87230D39CA00A20F0F /* MSACLogWithNameAndProperties.m in Sources */,
+				C9EBAA83230D39CA00A20F0F /* MSACSessionTracker.m in Sources */,
+				C9EBAA84230D39CA00A20F0F /* MSACAnalyticsCategory.m in Sources */,
+				C9EBAA80230D39CA00A20F0F /* MSACAnalytics+Validation.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		C9A91F3D230BFB970068070D /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = DebugAppStore;
+		};
+		C9A91F3E230BFB970068070D /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0983E3F25683D6200467703 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
+			buildSettings = {
+			};
+			name = ReleaseAppStore;
+		};
+		D0983E4025683D6200467703 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = ReleaseAppStore;
+		};
+		D0983E4125683D6B00467703 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
+			buildSettings = {
+			};
+			name = DebugHockeyapp;
+		};
+		D0983E4225683D6B00467703 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = DebugHockeyapp;
+		};
+		D0983E4325683D7700467703 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Github;
+		};
+		D0983E4425683D7700467703 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = Github;
+		};
+		D0983E4525683D7C00467703 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
+			buildSettings = {
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0983E4625683D7C00467703 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = HockeyappMacAlpha;
+		};
+		E85547C71D2D6253002DF6E2 /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = DebugAppStore;
+		};
+		E85547C81D2D6253002DF6E2 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
+			buildSettings = {
+			};
+			name = ReleaseHockeyapp;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C9A91F3C230BFB970068070D /* Build configuration list for PBXNativeTarget "AppCenterAnalytics macOS Framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C9A91F3D230BFB970068070D /* DebugAppStore */,
+				D0983E4425683D7700467703 /* Github */,
+				C9A91F3E230BFB970068070D /* ReleaseHockeyapp */,
+				D0983E4025683D6200467703 /* ReleaseAppStore */,
+				D0983E4225683D6B00467703 /* DebugHockeyapp */,
+				D0983E4625683D7C00467703 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+		E85547BB1D2D6253002DF6E2 /* Build configuration list for PBXProject "AppCenterAnalytics" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E85547C71D2D6253002DF6E2 /* DebugAppStore */,
+				D0983E4325683D7700467703 /* Github */,
+				E85547C81D2D6253002DF6E2 /* ReleaseHockeyapp */,
+				D0983E3F25683D6200467703 /* ReleaseAppStore */,
+				D0983E4125683D6B00467703 /* DebugHockeyapp */,
+				D0983E4525683D7C00467703 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseHockeyapp;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E85547B81D2D6253002DF6E2 /* Project object */;
+}

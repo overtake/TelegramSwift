@@ -1,0 +1,30 @@
+//
+//  OHHTTPStubsProject.xcconfig
+//  OHHTTPStubs
+//
+//  Created by Jeff Lett on 3/7/19.
+//  Copyright © 2019 AliSoftware. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// These build settings are used to disable specific unit tests.
+// They can and should be overridden when running tests in CI using an xcodebuild argument.
+
+
+//   xcodebuild Example:
+//     xcodebuild -workspace OHHTTPStubs/OHHTTPStubs.xcworkspace -scheme "OHHTTPStubs iOS StaticLib" -sdk iphonesimulator -configuration Debug ONLY_ACTIVE_ARCH=NO OHHTTPSTUBS_SKIP_TIMING_TESTS=1 -destination 'name=iPhone 7,OS=latest' clean build test
+//
+//   rake Example:
+//     rake ios['iOS StaticLib','latest','build-for-testing test-without-building',"OHHTTPSTUBS_SKIP_TIMING_TESTS=1"]
+OHHTTPSTUBS_SKIP_TIMING_TESTS=0
+
+//   xcodebuild Example:
+//     xcodebuild -workspace OHHTTPStubs/OHHTTPStubs.xcworkspace -scheme "OHHTTPStubs iOS StaticLib" -sdk iphonesimulator -configuration Debug ONLY_ACTIVE_ARCH=NO OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 -destination 'name=iPhone 7,OS=latest' clean build test
+//
+//   rake Example:
+//     rake ios['iOS StaticLib','latest','build-for-testing test-without-building',"OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1"]
+OHHTTPSTUBS_SKIP_REDIRECT_TESTS=0
+
+GCC_PREPROCESSOR_DEFINITIONS=$(inherited) OHHTTPSTUBS_SKIP_TIMING_TESTS=$(OHHTTPSTUBS_SKIP_TIMING_TESTS) OHHTTPSTUBS_SKIP_REDIRECT_TESTS=$(OHHTTPSTUBS_SKIP_REDIRECT_TESTS)
