@@ -2,10 +2,22 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "group:core-xprojects/webrtc/webrtc.xcodeproj">
+      location = "group:core-xprojects/FFMpegBinding/FFMpegBinding.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:/Users/keepcoder/Dropbox/Telegram-macOS/Telegram/core-xprojects/OpusBindings/OpusBinding.xcodeproj">
+      location = "group:submodules/AppCenter-sdk/AppCenter/AppCenter.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/OpusBinding/OpusBinding.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/AppCenter-sdk/AppCenterAnalytics/AppCenterAnalytics.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:submodules/AppCenter-sdk/AppCenterCrashes/AppCenterCrashes.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/webrtc/webrtc.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:core-xprojects/crc32/Crc32_Xcode.xcodeproj">

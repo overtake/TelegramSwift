@@ -1,5 +1,5 @@
 import Cocoa
-
+import FFMpegBinding
 import SwiftSignalKit
 import Postbox
 import TelegramCore
@@ -160,7 +160,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
         
         DateUtils.setDateLocalizationFunc ({ key -> String in
-            return _NSLocalizedString(key)
+            return _NSLocalizedString(key!)
         })
         
         setInputLocalizationFunc { (key) -> String in
@@ -193,7 +193,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         #if !APP_STORE
             if let secret = Bundle.main.infoDictionary?["APPCENTER_SECRET"] as? String {
-                MSAppCenter.start(secret, withServices: [MSCrashes.self])
+                AppCenter.start(withAppSecret: secret, services: [Crashes.self])
             }
         #endif
         
