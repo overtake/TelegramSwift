@@ -1,0 +1,92 @@
+language: objective-c
+
+branches:
+  only:
+    - master
+
+before_install:
+  - gem install xcpretty --no-document --quiet
+
+matrix:
+  include:
+    - osx_image: xcode9.1
+      env: RAKETASK="ios[iOS StaticLib,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.0]"
+    - osx_image: xcode9.1
+      env: RAKETASK="ios[iOS Framework,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.0]"
+    - osx_image: xcode9.1
+      env: RAKETASK="osx[Mac Framework,x86_64,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.0]"
+    - osx_image: xcode9.1
+      env: RAKETASK="tvos[tvOS Framework,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.0]"
+    - osx_image: xcode9.1
+      env: RAKETASK="build_carthage_frameworks[iOS,3.2]"
+    - osx_image: xcode9.1
+      env: RAKETASK="build_carthage_frameworks[tvOS,3.2]"
+    - osx_image: xcode9.1
+      env: RAKETASK="build_carthage_frameworks[MacOS,4.0]"
+    - osx_image: xcode10.1
+      env: RAKETASK="ios[iOS StaticLib,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.2]"
+    - osx_image: xcode10.1
+      env: RAKETASK="ios[iOS Framework,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.2]"
+    - osx_image: xcode10.1
+      env: RAKETASK="tvos[tvOS Framework,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.2]"
+    - osx_image: xcode10.1
+      env: RAKETASK="osx[Mac Framework,x86_64,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1 SWIFT_VERSION=4.2]"
+    - osx_image: xcode10.1
+      env: RAKETASK="spm_test"
+    - osx_image: xcode10.1
+      env: RAKETASK="build_carthage_frameworks[iOS,4.1]"
+    - osx_image: xcode10.1
+      env: RAKETASK="build_carthage_frameworks[tvOS,4.2]"
+    - osx_image: xcode10.1
+      env: RAKETASK="build_carthage_frameworks[MacOS,4.2]"
+    - osx_image: xcode10.2
+      env: RAKETASK="ios[iOS StaticLib,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode10.2
+      env: RAKETASK="ios[iOS Framework,iPhone 7,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode10.2
+      env: RAKETASK="tvos[tvOS Framework,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode10.2
+      env: RAKETASK="osx[Mac Framework,x86_64,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode10.2
+      env: RAKETASK="spm_test"
+    - osx_image: xcode10.2
+      env: RAKETASK="build_carthage_frameworks[iOS,5.0]"
+    - osx_image: xcode10.2
+      env: RAKETASK="build_carthage_frameworks[tvOS,5.0]"
+    - osx_image: xcode10.2
+      env: RAKETASK="build_carthage_frameworks[MacOS,5.0]"
+    - osx_image: xcode11
+      env: RAKETASK="ios[iOS StaticLib,iPhone 8,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode11
+      env: RAKETASK="ios[iOS Framework,iPhone 8,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode11
+      env: RAKETASK="tvos[tvOS Framework,latest,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode11
+      env: RAKETASK="osx[Mac Framework,x86_64,build-for-testing test-without-building,OHHTTPSTUBS_SKIP_TIMING_TESTS=1 OHHTTPSTUBS_SKIP_REDIRECT_TESTS=1]"
+    - osx_image: xcode11
+      env: RAKETASK="spm_test"
+    - osx_image: xcode11
+      env: RAKETASK="build_carthage_frameworks[iOS,5.1]"
+    - osx_image: xcode11
+      env: RAKETASK="build_carthage_frameworks[tvOS,5.1]"
+    - osx_image: xcode11
+      env: RAKETASK="build_carthage_frameworks[MacOS,5.1]"
+    - osx_image: xcode11
+      env: RAKETASK="build_example_apps"
+
+
+script:
+  - rake "$RAKETASK"
+
+before_deploy:
+  - carthage build --no-skip-current
+  - carthage archive OHHTTPStubs
+
+deploy:
+  provider: releases
+  api_key:
+    secure: LJfogUcxlaXczvPyu+s2SAG7SXyhjQbc/kCiNjEO61ehLg0dK0bmfXHm0yeBQQPoQCF5qiWC+5HYQnCaMNmEhP4WHy6RZtmmrg1iiNbeLsRzk8COm2vv+zRgoFXU5K7j2LkfvTSrLPTYR1d+PM/S/XJzMDxrJjryM+mf12DxlnA=
+  file: OHHTTPStubs.framework.zip
+  skip_cleanup: true
+  on:
+    tags: true

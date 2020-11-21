@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import OpusBinding
 import Postbox
 import TelegramCore
 import SyncCore
@@ -215,9 +215,7 @@ final class ChatRecordingAudioState : ChatRecordingState {
         let id = arc4random64()
         let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
         let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, account: account, id: id) : nil
-        let dataItem = TGDataItem(filePath: path)
-        
-        recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
+        recorder = ManagedAudioRecorder(liveUploading: uploadManager)
         super.init(autohold: autohold)
     }
     

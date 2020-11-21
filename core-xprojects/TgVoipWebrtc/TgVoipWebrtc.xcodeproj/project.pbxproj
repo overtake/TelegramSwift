@@ -12,15 +12,14 @@
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
 		D00602FF24CF3D7500206226 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FE24CF3D7500206226 /* Message.cpp */; };
 		D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D006030124CF3DAD00206226 /* InstanceImplReference.cpp */; };
+		D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E3C25685056007EF588 /* webrtc.framework */; };
 		D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */; };
 		D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00B192124E5722A006CCB87 /* GLKit.framework */; };
 		D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D06E36A724A4FDAC00C7D03A /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */; };
 		D06E36DD24A5000100C7D03A /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DC24A5000100C7D03A /* AudioToolbox.framework */; };
 		D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DE24A5000700C7D03A /* VideoToolbox.framework */; };
 		D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E024A5001300C7D03A /* CoreMedia.framework */; };
 		D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E224A5001800C7D03A /* AVFoundation.framework */; };
-		D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */; };
 		D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */; };
 		D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D751A324BE372F0037D73A /* AppKit.framework */; };
@@ -53,6 +52,7 @@
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
 		D00602FE24CF3D7500206226 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cpp; path = ../../submodules/tgcalls/tgcalls/Message.cpp; sourceTree = "<group>"; };
 		D006030124CF3DAD00206226 /* InstanceImplReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplReference.cpp; path = ../../../submodules/tgcalls/tgcalls/reference/InstanceImplReference.cpp; sourceTree = "<group>"; };
+		D0076E3C25685056007EF588 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GLVideoViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/GLVideoViewMac.mm; sourceTree = "<group>"; };
 		D00B192124E5722A006CCB87 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TgVoipWebrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,7 +88,6 @@
 		D06E38A624A5EEAD00C7D03A /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D06E38A724A5EEAD00C7D03A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ScreenCapturer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/ScreenCapturer.mm; sourceTree = "<group>"; };
-		D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DesktopCapturer.cpp; path = ../../submodules/tgcalls/tgcalls/DesktopCapturer.cpp; sourceTree = "<group>"; };
 		D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OngoingCallThreadLocalContext.mm; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Sources/OngoingCallThreadLocalContext.mm"; sourceTree = "<group>"; };
 		D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OngoingCallThreadLocalContext.h; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/PublicHeaders/TgVoipWebrtc/OngoingCallThreadLocalContext.h"; sourceTree = "<group>"; };
 		D0D751A324BE372F0037D73A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -122,13 +121,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */,
 				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
 				D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */,
 				D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */,
 				D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */,
 				D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */,
 				D06E36DD24A5000100C7D03A /* AudioToolbox.framework in Frameworks */,
-				D06E36A724A4FDAC00C7D03A /* libmac_framework_objc_static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -157,7 +156,6 @@
 				D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */,
 				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
 				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
-				D0D4CD8024EC6CF80017D48D /* DesktopCapturer.cpp */,
 				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
 				D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */,
 				D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */,
@@ -215,6 +213,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D0076E3C25685056007EF588 /* webrtc.framework */,
 				D00B192124E5722A006CCB87 /* GLKit.framework */,
 				D0D751A324BE372F0037D73A /* AppKit.framework */,
 				D06E38A624A5EEAD00C7D03A /* Metal.framework */,
@@ -360,7 +359,6 @@
 				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
-				D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
@@ -513,7 +511,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -532,19 +530,19 @@
 					"TGVOIP_NAMESPACE=tgvoip_webrtc",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -560,6 +558,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -571,7 +570,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -589,19 +588,19 @@
 					RTC_ENABLE_VP9,
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -617,6 +616,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -692,7 +692,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -712,19 +712,19 @@
 					"TGVOIP_NAMESPACE=tgvoip_webrtc",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -740,6 +740,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -816,7 +817,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -836,19 +837,19 @@
 					"TGVOIP_NAMESPACE=tgvoip_webrtc",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -864,6 +865,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -933,7 +935,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -951,19 +953,19 @@
 					RTC_ENABLE_VP9,
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -979,6 +981,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1054,7 +1057,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -1072,19 +1075,19 @@
 					"TGVOIP_NAMESPACE=tgvoip_webrtc",
 				);
 				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/webrtc/third_party/abseil-cpp",
-					"$(PROJECT_DIR)/webrtc/sdk/objc",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/metal",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/video_codec",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/base",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/api/video_codec",
-					"$(PROJECT_DIR)/webrtc/third_party/libyuv/include",
-					"$(PROJECT_DIR)/webrtc/",
-					"$(PROJECT_DIR)/../../submodules/libtgvoip",
-					"$(PROJECT_DIR)/../../thrid-party/openssl/",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/abseil-cpp",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/metal",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/base",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/api/video_codec",
+					"$(PROJECT_DIR)/../webrtc/build/src/third_party/libyuv/include",
+					"$(PROJECT_DIR)/../webrtc/build/src/sdk/objc/components/renderer/opengl",
+					"$(PROJECT_DIR)/../webrtc/build/src/",
 					"$(PROJECT_DIR)/",
+					"$(PROJECT_DIR)/../../submodules/libtgvoip",
+					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
-					"$(PROJECT_DIR)/webrtc/sdk/objc/components/renderer/opengl",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1100,6 +1103,7 @@
 				LLVM_LTO = YES_THIN;
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

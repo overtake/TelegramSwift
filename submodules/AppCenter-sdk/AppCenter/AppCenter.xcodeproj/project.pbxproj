@@ -1,0 +1,1862 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		C229D8AB2546E7E5001909F3 /* AppCenter */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = C229D8AC2546E7E5001909F3 /* Build configuration list for PBXAggregateTarget "AppCenter" */;
+			buildPhases = (
+				C26F4E7C2546F406006E0EB7 /* Copy Products */,
+			);
+			dependencies = (
+			);
+			name = AppCenter;
+			productName = AppCenter;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		04237DC223A31617009BB406 /* MSACHttpClientDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 04237DC023A31617009BB406 /* MSACHttpClientDelegate.h */; };
+		244CC1F92399CA5A00A58F51 /* MSACDependencyConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 244CC1F62399CA5A00A58F51 /* MSACDependencyConfiguration.h */; };
+		244CC1FC2399CA5A00A58F51 /* MSACDependencyConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 244CC1F72399CA5A00A58F51 /* MSACDependencyConfiguration.m */; };
+		C9A920E6230C61820068070D /* MSACAppCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E0401561D1C9AAA0051BCFA /* MSACAppCenter.m */; };
+		C9A920E7230C61820068070D /* MSACLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 3592ABA61DC90E3600EF4592 /* MSACLogger.m */; };
+		C9A920E8230C61820068070D /* MSACServiceAbstract.m in Sources */ = {isa = PBXBuildFile; fileRef = D38024051E7126F500466558 /* MSACServiceAbstract.m */; };
+		C9A920E9230C61820068070D /* MSACWrapperLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 35D0B7521DDFABFD003EACCD /* MSACWrapperLogger.m */; };
+		C9A920EA230C61820068070D /* MSACAppDelegateForwarder.m in Sources */ = {isa = PBXBuildFile; fileRef = 38C4471F1ECE5352002E1B11 /* MSACAppDelegateForwarder.m */; };
+		C9A920EB230C61820068070D /* MSACDelegateForwarder.m in Sources */ = {isa = PBXBuildFile; fileRef = 38032086217E85A90089772A /* MSACDelegateForwarder.m */; };
+		C9A920EC230C61820068070D /* MSACChannelGroupDefault.m in Sources */ = {isa = PBXBuildFile; fileRef = E84B8E2D1D2351DB006FD231 /* MSACChannelGroupDefault.m */; };
+		C9A920ED230C61820068070D /* MSACChannelUnitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 6EF628F31D371B1600CAFF64 /* MSACChannelUnitConfiguration.m */; };
+		C9A920EE230C61820068070D /* MSACChannelUnitDefault.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E0684621D36BC8D00A8CC6C /* MSACChannelUnitDefault.m */; };
+		C9A920EF230C61820068070D /* MSACOneCollectorChannelDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 805275C020A1A5F400704115 /* MSACOneCollectorChannelDelegate.m */; };
+		C9A920F0230C61820068070D /* MSACCSEpochAndSeq.m in Sources */ = {isa = PBXBuildFile; fileRef = 3814A8E520BF5FA00093AF45 /* MSACCSEpochAndSeq.m */; };
+		C9A920F4230C61820068070D /* MSACDeviceHistoryInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B2FD53611E56501B0050F909 /* MSACDeviceHistoryInfo.m */; };
+		C9A920F5230C61820068070D /* MSACDeviceTracker.m in Sources */ = {isa = PBXBuildFile; fileRef = 04754F3C1EA980FD002CBA46 /* MSACDeviceTracker.m */; };
+		C9A920F6230C61820068070D /* MSACSessionContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 045C85131FE0B31600089540 /* MSACSessionContext.m */; };
+		C9A920F7230C61820068070D /* MSACSessionHistoryInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 047EBB9B1FE30842009BB1C8 /* MSACSessionHistoryInfo.m */; };
+		C9A920F8230C61820068070D /* MSACUserIdContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 047FEE1021A48CC200ED77CD /* MSACUserIdContext.m */; };
+		C9A920F9230C61820068070D /* MSACUserIdHistoryInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 047FEE1321A48CC200ED77CD /* MSACUserIdHistoryInfo.m */; };
+		C9A920FA230C61820068070D /* MSACHttpUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3571F659224962180052406C /* MSACHttpUtil.m */; };
+		C9A920FB230C61820068070D /* MSACHttpClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DA0350241FEC3A6A4919BFE /* MSACHttpClient.m */; };
+		C9A920FC230C61820068070D /* MSACHttpCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3571F65322457FCC0052406C /* MSACHttpCall.m */; };
+		C9A920FD230C61820068070D /* MSACTicketCache.m in Sources */ = {isa = PBXBuildFile; fileRef = B23507B32118D22800F98D4F /* MSACTicketCache.m */; };
+		C9A920FF230C61820068070D /* MSACHttpIngestion.m in Sources */ = {isa = PBXBuildFile; fileRef = E84B8E341D235226006FD231 /* MSACHttpIngestion.m */; };
+		C9A92100230C61820068070D /* MSACAppCenterIngestion.m in Sources */ = {isa = PBXBuildFile; fileRef = BA6822A89D38F04D8D95CE83 /* MSACAppCenterIngestion.m */; };
+		C9A92101230C61820068070D /* MSACOneCollectorIngestion.m in Sources */ = {isa = PBXBuildFile; fileRef = B2B7D50A20C5E562001D31B8 /* MSACOneCollectorIngestion.m */; };
+		C9A92102230C61820068070D /* MSACAppExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14D820B37042002C0183 /* MSACAppExtension.m */; };
+		C9A92103230C61820068070D /* MSACCommonSchemaLog.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B149820B364EE002C0183 /* MSACCommonSchemaLog.m */; };
+		C9A92104230C61820068070D /* MSACCSData.m in Sources */ = {isa = PBXBuildFile; fileRef = E7D23C5520B4E38B00A47D62 /* MSACCSData.m */; };
+		C9A92105230C61820068070D /* MSACCSExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = E7D23C6520B6391700A47D62 /* MSACCSExtensions.m */; };
+		C9A92106230C61820068070D /* MSACDeviceExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 359C38DC214079D90066C509 /* MSACDeviceExtension.m */; };
+		C9A92107230C61820068070D /* MSACLocExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14A920B36B9B002C0183 /* MSACLocExtension.m */; };
+		C9A92108230C61820068070D /* MSACMetadataExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DA030746930EE3DCB6A21B3 /* MSACMetadataExtension.m */; };
+		C9A92109230C61820068070D /* MSACNetExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14D120B36EC5002C0183 /* MSACNetExtension.m */; };
+		C9A9210A230C61820068070D /* MSACOSExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14D920B37042002C0183 /* MSACOSExtension.m */; };
+		C9A9210B230C61820068070D /* MSACProtocolExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14C920B36DF1002C0183 /* MSACProtocolExtension.m */; };
+		C9A9210C230C61820068070D /* MSACSDKExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14E920B3711F002C0183 /* MSACSDKExtension.m */; };
+		C9A9210D230C61820068070D /* MSACUserExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = E74B14A120B36AAB002C0183 /* MSACUserExtension.m */; };
+		C9A9210E230C61820068070D /* MSACAbstractLog.m in Sources */ = {isa = PBXBuildFile; fileRef = E88EBBEB1D2C612E007E7785 /* MSACAbstractLog.m */; };
+		C9A9210F230C61820068070D /* MSACCustomPropertiesLog.m in Sources */ = {isa = PBXBuildFile; fileRef = F803BBF81E8E3989004B1E7A /* MSACCustomPropertiesLog.m */; };
+		C9A92110230C61820068070D /* MSACLogContainer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E171B591D234717000DC480 /* MSACLogContainer.m */; };
+		C9A92111230C61820068070D /* MSACLogWithProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = E8010E671D2DD4EF0035196F /* MSACLogWithProperties.m */; };
+		C9A92112230C61820068070D /* MSACStartServiceLog.m in Sources */ = {isa = PBXBuildFile; fileRef = D38023E61E6EFC7C00466558 /* MSACStartServiceLog.m */; };
+		C9A92113230C61820068070D /* MSACBooleanTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1C22170030C00455589 /* MSACBooleanTypedProperty.m */; };
+		C9A92114230C61820068070D /* MSACDateTimeTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1C42170030C00455589 /* MSACDateTimeTypedProperty.m */; };
+		C9A92115230C61820068070D /* MSACDoubleTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1C62170030C00455589 /* MSACDoubleTypedProperty.m */; };
+		C9A92116230C61820068070D /* MSACLongTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1C82170030C00455589 /* MSACLongTypedProperty.m */; };
+		C9A92117230C61820068070D /* MSACStringTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1BE2170030C00455589 /* MSACStringTypedProperty.m */; };
+		C9A92118230C61820068070D /* MSACTypedProperty.m in Sources */ = {isa = PBXBuildFile; fileRef = 35DFC1C32170030C00455589 /* MSACTypedProperty.m */; };
+		C9A92119230C61820068070D /* MSACDBStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 3849BA7B1EF3145A0072E3E0 /* MSACDBStorage.m */; };
+		C9A9211A230C61820068070D /* MSACAppCenterUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = E8A8D1EA1D3057A90022931E /* MSACAppCenterUserDefaults.m */; };
+		C9A9211B230C61820068070D /* MSACLogDBStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74841F22BD910070E7DF /* MSACLogDBStorage.m */; };
+		C9A9211C230C61820068070D /* MSACOrderedDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = B29D883C21E925A400EAF084 /* MSACOrderedDictionary.m */; };
+		C9A9211D230C61820068070D /* MSACEncrypter.m in Sources */ = {isa = PBXBuildFile; fileRef = 8087362820C134AC004C4157 /* MSACEncrypter.m */; };
+		C9A9211E230C61820068070D /* MSACHistoryInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 047FEE0721A4884600ED77CD /* MSACHistoryInfo.m */; };
+		C9A9211F230C61820068070D /* MSACKeychainUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 045BC3161E3FD88600B6C960 /* MSACKeychainUtil.m */; };
+		C9A92120230C61820068070D /* MSACUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74911F22BE270070E7DF /* MSACUtility.m */; };
+		C9A92121230C61820068070D /* MSACUtility+Application.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74931F22BE270070E7DF /* MSACUtility+Application.m */; };
+		C9A92122230C61820068070D /* MSACUtility+Date.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74961F22BE270070E7DF /* MSACUtility+Date.m */; };
+		C9A92123230C61820068070D /* MSACUtility+Environment.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74981F22BE270070E7DF /* MSACUtility+Environment.m */; };
+		C9A92124230C61820068070D /* MSACUtility+File.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD749A1F22BE270070E7DF /* MSACUtility+File.m */; };
+		C9A92125230C61820068070D /* MSACUtility+PropertyValidation.m in Sources */ = {isa = PBXBuildFile; fileRef = B28E41D42076ECFE00CC6AD8 /* MSACUtility+PropertyValidation.m */; };
+		C9A92126230C61820068070D /* MSACUtility+StringFormatting.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD749C1F22BE270070E7DF /* MSACUtility+StringFormatting.m */; };
+		C9A92127230C61820068070D /* MSACCompression.m in Sources */ = {isa = PBXBuildFile; fileRef = 38148D8520D07FB70046257E /* MSACCompression.m */; };
+		C9A92128230C61820068070D /* MSAC_Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = E83283C51D46C62E000B029E /* MSAC_Reachability.m */; };
+		C9A92129230C61820068070D /* MSACCustomProperties.m in Sources */ = {isa = PBXBuildFile; fileRef = F803BBF21E8E3677004B1E7A /* MSACCustomProperties.m */; };
+		C9A9212A230C61820068070D /* MSACDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 3844FF1A1E8C2716003E9194 /* MSACDevice.m */; };
+		C9A9212B230C61820068070D /* MSACWrapperSdk.m in Sources */ = {isa = PBXBuildFile; fileRef = B2CD74561F22BB710070E7DF /* MSACWrapperSdk.m */; };
+		D55E7085252F5A1000AB994D /* MSACTestSessionInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = D55E7082252F5A1000AB994D /* MSACTestSessionInfo.m */; };
+		D55E7088252F5A1000AB994D /* MSACTestSessionInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = D55E7083252F5A1000AB994D /* MSACTestSessionInfo.h */; };
+		DF5DA1FA23A0E55500DE695C /* MSACDispatcherUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = DF5DA1F823A0E55500DE695C /* MSACDispatcherUtil.h */; };
+		DF5DA1FE23A0E57B00DE695C /* MSACDispatcherUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = DF5DA1FC23A0E57B00DE695C /* MSACDispatcherUtil.m */; };
+		DFE95545244D96540061E3FA /* HTTPStubsMethodSwizzling.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95522244D96170061E3FA /* HTTPStubsMethodSwizzling.h */; };
+		DFE9554D244D965A0061E3FA /* Compatibility.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95524244D96170061E3FA /* Compatibility.h */; };
+		DFE9554E244D965A0061E3FA /* HTTPStubsResponse+JSON.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95525244D96170061E3FA /* HTTPStubsResponse+JSON.h */; };
+		DFE9554F244D965A0061E3FA /* HTTPStubsPathHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95526244D96170061E3FA /* HTTPStubsPathHelpers.h */; };
+		DFE95550244D965A0061E3FA /* HTTPStubsResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95527244D96170061E3FA /* HTTPStubsResponse.h */; };
+		DFE95551244D965A0061E3FA /* NSURLRequest+HTTPBodyTesting.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95528244D96170061E3FA /* NSURLRequest+HTTPBodyTesting.h */; };
+		DFE95552244D965A0061E3FA /* HTTPStubs.h in Headers */ = {isa = PBXBuildFile; fileRef = DFE95529244D96170061E3FA /* HTTPStubs.h */; };
+		F8936CBE230C24D9006A330F /* AppCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401401D1C99AC0051BCFA /* AppCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CBF230C24D9006A330F /* MSACAppCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401551D1C9AAA0051BCFA /* MSACAppCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC0230C24D9006A330F /* MSACAppCenterErrors.h in Headers */ = {isa = PBXBuildFile; fileRef = 3889932E1E29829700C27B36 /* MSACAppCenterErrors.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC1230C24D9006A330F /* MSACChannelGroupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 3542741A2012AF0500BE766F /* MSACChannelGroupProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC2230C24D9006A330F /* MSACChannelProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 354274162012AE4000BE766F /* MSACChannelProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC3230C24D9006A330F /* MSACConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E04013F1D1C99AC0051BCFA /* MSACConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC4230C24D9006A330F /* MSACConstants+Flags.h in Headers */ = {isa = PBXBuildFile; fileRef = 04B525B82194D44E00FA37FD /* MSACConstants+Flags.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		F8936CC5230C24D9006A330F /* MSACEnable.h in Headers */ = {isa = PBXBuildFile; fileRef = 3542742220167DA400BE766F /* MSACEnable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC6230C24D9006A330F /* MSACLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 358F9BC22019531F00B9E22C /* MSACLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC7230C24DA006A330F /* MSACService.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401451D1C99AC0051BCFA /* MSACService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC8230C24DA006A330F /* MSACServiceAbstract.h in Headers */ = {isa = PBXBuildFile; fileRef = 387C76FC1D6C9CF100D68CC1 /* MSACServiceAbstract.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CC9230C24DA006A330F /* MSACWrapperLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 35D0B7511DDFABFD003EACCD /* MSACWrapperLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CDC230C25A4006A330F /* MSACCustomProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = F803BBF11E8E3677004B1E7A /* MSACCustomProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CDD230C25A4006A330F /* MSACDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 3844FF1B1E8C2716003E9194 /* MSACDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CDE230C25A4006A330F /* MSACLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E3E2C9D1D35701000B1EE50 /* MSACLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CDF230C25A4006A330F /* MSACLogWithProperties.h in Headers */ = {isa = PBXBuildFile; fileRef = 3844FF191E8C2716003E9194 /* MSACLogWithProperties.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CE0230C25A4006A330F /* MSACAbstractLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 3844FF1C1E8C2716003E9194 /* MSACAbstractLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CE1230C25A4006A330F /* MSACWrapperSdk.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74551F22BB710070E7DF /* MSACWrapperSdk.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F8936CFC230C2604006A330F /* MSACAppCenterPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 38E1B6791DDE3FDF000EFED1 /* MSACAppCenterPrivate.h */; };
+		F8936CFD230C2604006A330F /* MSACCustomPropertiesPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 266ED9D2BA796BA0329F4FC7 /* MSACCustomPropertiesPrivate.h */; };
+		F8936CFE230C2604006A330F /* MSACDelegateForwarderPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3803208D217E8BD40089772A /* MSACDelegateForwarderPrivate.h */; };
+		F8936CFF230C2604006A330F /* MSACChannelGroupDefaultPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 04AB676220E18A74002828AA /* MSACChannelGroupDefaultPrivate.h */; };
+		F8936D00230C2604006A330F /* MSACChannelUnitDefaultPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA030B94CD3D38725671A79 /* MSACChannelUnitDefaultPrivate.h */; };
+		F8936D01230C2604006A330F /* MSACOneCollectorChannelDelegatePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = E79750E620A4F41400E3EAE8 /* MSACOneCollectorChannelDelegatePrivate.h */; };
+		F8936D03230C2604006A330F /* MSACDeviceTrackerPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 04754F3D1EA980FD002CBA46 /* MSACDeviceTrackerPrivate.h */; };
+		F8936D04230C2604006A330F /* MSACSessionContextPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 049378381FE44539000ADBAF /* MSACSessionContextPrivate.h */; };
+		F8936D05230C2604006A330F /* MSACUserIdContextPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 047FEE2521A4968A00ED77CD /* MSACUserIdContextPrivate.h */; };
+		F8936D06230C2604006A330F /* MSACHttpClientPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3571F64B22454EDF0052406C /* MSACHttpClientPrivate.h */; };
+		F8936D07230C2604006A330F /* MSACHttpIngestionPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 38F1944D1DADB93100D3E0FE /* MSACHttpIngestionPrivate.h */; };
+		F8936D08230C2604006A330F /* MSACOneCollectorIngestionPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = B2ADB1412124C13300D0D7D9 /* MSACOneCollectorIngestionPrivate.h */; };
+		F8936D09230C2604006A330F /* MSACAbstractLogPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3513432D2056FF9000E6DC7D /* MSACAbstractLogPrivate.h */; };
+		F8936D0A230C2604006A330F /* MSACDBStoragePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3849BA841EF35D830072E3E0 /* MSACDBStoragePrivate.h */; };
+		F8936D0B230C2604006A330F /* MSACLogDBStoragePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 383481721EA7FF6100787F56 /* MSACLogDBStoragePrivate.h */; };
+		F8936D0C230C2604006A330F /* MSACOrderedDictionaryPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = B29D883A21E925A400EAF084 /* MSACOrderedDictionaryPrivate.h */; };
+		F8936D0D230C2604006A330F /* MSACEncrypterPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 80B7EA2020CA9C9C00DF524C /* MSACEncrypterPrivate.h */; };
+		F8936D0E230C2604006A330F /* MSACKeychainUtilPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 386A69EC1FD8843D0057B316 /* MSACKeychainUtilPrivate.h */; };
+		F8936D0F230C2604006A330F /* MSACUtility+ApplicationPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74941F22BE270070E7DF /* MSACUtility+ApplicationPrivate.h */; };
+		F8936D7C230C2805006A330F /* AppCenter+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401581D1C9CFB0051BCFA /* AppCenter+Internal.h */; };
+		F8936D7D230C2805006A330F /* MSACAppCenterInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401441D1C99AC0051BCFA /* MSACAppCenterInternal.h */; };
+		F8936D7E230C2805006A330F /* MSACCustomPropertiesInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = F803BBF51E8E383E004B1E7A /* MSACCustomPropertiesInternal.h */; };
+		F8936D7F230C2805006A330F /* MSACLoggerInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3592ABA51DC90E3600EF4592 /* MSACLoggerInternal.h */; };
+		F8936D80230C2805006A330F /* MSACServiceAbstractInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 387C757F1D6270A300D68CC1 /* MSACServiceAbstractInternal.h */; };
+		F8936D81230C2805006A330F /* MSACServiceCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 387C758D1D64DF2500D68CC1 /* MSACServiceCommon.h */; };
+		F8936D82230C2805006A330F /* MSACServiceInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E0401471D1C99AC0051BCFA /* MSACServiceInternal.h */; };
+		F8936D83230C2805006A330F /* MSACAppDelegateUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 38C633C81FDF163D005F40C9 /* MSACAppDelegateUtil.h */; };
+		F8936D84230C2805006A330F /* MSACAppDelegateForwarder.h in Headers */ = {isa = PBXBuildFile; fileRef = 38C4471E1ECE5352002E1B11 /* MSACAppDelegateForwarder.h */; };
+		F8936D85230C2805006A330F /* MSACCustomApplicationDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 38C633C61FDF15DD005F40C9 /* MSACCustomApplicationDelegate.h */; };
+		F8936D86230C2805006A330F /* MSACDelegateForwarder.h in Headers */ = {isa = PBXBuildFile; fileRef = 38032085217E85A90089772A /* MSACDelegateForwarder.h */; };
+		F8936D87230C2805006A330F /* MSACCustomDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 38032091217E9DC50089772A /* MSACCustomDelegate.h */; };
+		F8936D88230C2805006A330F /* MSACChannelGroupDefault.h in Headers */ = {isa = PBXBuildFile; fileRef = E84B8E2C1D2351DB006FD231 /* MSACChannelGroupDefault.h */; };
+		F8936D89230C2805006A330F /* MSACChannelUnitConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 6EF628F21D371B1600CAFF64 /* MSACChannelUnitConfiguration.h */; };
+		F8936D8A230C2805006A330F /* MSACChannelUnitDefault.h in Headers */ = {isa = PBXBuildFile; fileRef = 3542741C2012B53B00BE766F /* MSACChannelUnitDefault.h */; };
+		F8936D8B230C2805006A330F /* MSACChannelDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3542741B2012B02600BE766F /* MSACChannelDelegate.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		F8936D8C230C2805006A330F /* MSACOneCollectorChannelDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 805275BF20A19F7B00704115 /* MSACOneCollectorChannelDelegate.h */; };
+		F8936D8D230C2805006A330F /* MSACChannelUnitProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 354274192012AEFC00BE766F /* MSACChannelUnitProtocol.h */; };
+		F8936D8E230C2805006A330F /* MSACCSEpochAndSeq.h in Headers */ = {isa = PBXBuildFile; fileRef = 3814A8E120BF5E790093AF45 /* MSACCSEpochAndSeq.h */; };
+		F8936D93230C2805006A330F /* MSACDeviceHistoryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B2FD53601E56501B0050F909 /* MSACDeviceHistoryInfo.h */; };
+		F8936D94230C2805006A330F /* MSACDeviceTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 381C91E51D3DB65D004512F1 /* MSACDeviceTracker.h */; };
+		F8936D95230C2805006A330F /* MSACSessionContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 045C850F1FE0B1D900089540 /* MSACSessionContext.h */; };
+		F8936D96230C2805006A330F /* MSACSessionHistoryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 047EBB9C1FE30842009BB1C8 /* MSACSessionHistoryInfo.h */; };
+		F8936D97230C2805006A330F /* MSACUserIdContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 047FEE1221A48CC200ED77CD /* MSACUserIdContext.h */; };
+		F8936D98230C2805006A330F /* MSACUserIdHistoryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 047FEE1121A48CC200ED77CD /* MSACUserIdHistoryInfo.h */; };
+		F8936D99230C2805006A330F /* MSACHttpUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3571F658224962180052406C /* MSACHttpUtil.h */; };
+		F8936D9A230C2805006A330F /* MSACHttpClientProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA0373E842A41C8413D1722 /* MSACHttpClientProtocol.h */; };
+		F8936D9B230C2805006A330F /* MSACHttpClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA03260792C64C0290E6E41 /* MSACHttpClient.h */; };
+		F8936D9C230C2805006A330F /* MSACHttpCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3571F64F22457E220052406C /* MSACHttpCall.h */; };
+		F8936D9D230C2805006A330F /* MSACTicketCache.h in Headers */ = {isa = PBXBuildFile; fileRef = B23507B42118D22800F98D4F /* MSACTicketCache.h */; };
+		F8936D9E230C2805006A330F /* MSACIngestionProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = E84B8E311D235209006FD231 /* MSACIngestionProtocol.h */; };
+		F8936DA2230C2805006A330F /* MSACHttpIngestion.h in Headers */ = {isa = PBXBuildFile; fileRef = E84B8E331D235226006FD231 /* MSACHttpIngestion.h */; };
+		F8936DA3230C2805006A330F /* MSACAppCenterIngestion.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6824A001520825F18DFC42 /* MSACAppCenterIngestion.h */; };
+		F8936DA4230C2805006A330F /* MSACOneCollectorIngestion.h in Headers */ = {isa = PBXBuildFile; fileRef = B2B7D50920C5E562001D31B8 /* MSACOneCollectorIngestion.h */; };
+		F8936DA5230C2805006A330F /* MSACAppExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14C020B36C66002C0183 /* MSACAppExtension.h */; };
+		F8936DA6230C2805006A330F /* MSACCommonSchemaLog.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B149720B364EE002C0183 /* MSACCommonSchemaLog.h */; };
+		F8936DA7230C2805006A330F /* MSACCSData.h in Headers */ = {isa = PBXBuildFile; fileRef = E7D23C5420B4E38B00A47D62 /* MSACCSData.h */; };
+		F8936DA8230C2805006A330F /* MSACCSExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = E7D23C6420B6391700A47D62 /* MSACCSExtensions.h */; };
+		F8936DA9230C2805006A330F /* MSACDeviceExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = 359C38DB214079D90066C509 /* MSACDeviceExtension.h */; };
+		F8936DAA230C2805006A330F /* MSACLocExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14A820B36B9B002C0183 /* MSACLocExtension.h */; };
+		F8936DAB230C2805006A330F /* MSACMetadataExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DA038EE68EEE1414A270ADA /* MSACMetadataExtension.h */; };
+		F8936DAC230C2805006A330F /* MSACNetExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14D020B36EC5002C0183 /* MSACNetExtension.h */; };
+		F8936DAD230C2805006A330F /* MSACOSExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14B820B36C2B002C0183 /* MSACOSExtension.h */; };
+		F8936DAE230C2805006A330F /* MSACProtocolExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14C820B36DF1002C0183 /* MSACProtocolExtension.h */; };
+		F8936DAF230C2805006A330F /* MSACSDKExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14E820B3711F002C0183 /* MSACSDKExtension.h */; };
+		F8936DB0230C2805006A330F /* MSACUserExtension.h in Headers */ = {isa = PBXBuildFile; fileRef = E74B14E420B370A5002C0183 /* MSACUserExtension.h */; };
+		F8936DB1230C2805006A330F /* MSACAbstractLogInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 3844FF121E8C22CC003E9194 /* MSACAbstractLogInternal.h */; };
+		F8936DB2230C2805006A330F /* MSACCustomPropertiesLog.h in Headers */ = {isa = PBXBuildFile; fileRef = F803BBFA1E8E39AB004B1E7A /* MSACCustomPropertiesLog.h */; };
+		F8936DB3230C2805006A330F /* MSACDeviceInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = B2C3C1831DB83A3E00CB83F7 /* MSACDeviceInternal.h */; };
+		F8936DB4230C2805006A330F /* MSACLogContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6E171B581D234717000DC480 /* MSACLogContainer.h */; };
+		F8936DB5230C2805006A330F /* MSACModel.h in Headers */ = {isa = PBXBuildFile; fileRef = E7D23C6020B4EED000A47D62 /* MSACModel.h */; };
+		F8936DB6230C2805006A330F /* MSACNoAutoAssignSessionIdLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 04F3613C1FE1A92000A5A6D2 /* MSACNoAutoAssignSessionIdLog.h */; };
+		F8936DB7230C2805006A330F /* MSACSerializableObject.h in Headers */ = {isa = PBXBuildFile; fileRef = E7D23C5C20B4EC3700A47D62 /* MSACSerializableObject.h */; };
+		F8936DB8230C2805006A330F /* MSACStartServiceLog.h in Headers */ = {isa = PBXBuildFile; fileRef = D38023E71E6EFC7C00466558 /* MSACStartServiceLog.h */; };
+		F8936DB9230C2805006A330F /* MSACWrapperSdkInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD745D1F22BBBB0070E7DF /* MSACWrapperSdkInternal.h */; };
+		F8936DBA230C2805006A330F /* MSACLogConversion.h in Headers */ = {isa = PBXBuildFile; fileRef = 38BC346C20B8CB0C00119C05 /* MSACLogConversion.h */; };
+		F8936DBB230C2805006A330F /* MSACBooleanTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1C72170030C00455589 /* MSACBooleanTypedProperty.h */; };
+		F8936DBC230C2805006A330F /* MSACDateTimeTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1C52170030C00455589 /* MSACDateTimeTypedProperty.h */; };
+		F8936DBD230C2805006A330F /* MSACDoubleTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1C02170030C00455589 /* MSACDoubleTypedProperty.h */; };
+		F8936DBE230C2805006A330F /* MSACLongTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1C12170030C00455589 /* MSACLongTypedProperty.h */; };
+		F8936DBF230C2805006A330F /* MSACStringTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1BD2170030C00455589 /* MSACStringTypedProperty.h */; };
+		F8936DC0230C2805006A330F /* MSACTypedProperty.h in Headers */ = {isa = PBXBuildFile; fileRef = 35DFC1BF2170030C00455589 /* MSACTypedProperty.h */; };
+		F8936DC1230C2805006A330F /* MSACStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = E84B8E381D235246006FD231 /* MSACStorage.h */; };
+		F8936DC2230C2805006A330F /* MSACDBStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 3849BA791EF314440072E3E0 /* MSACDBStorage.h */; };
+		F8936DC3230C2805006A330F /* MSACAppCenterUserDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = E8A8D1E91D3057A90022931E /* MSACAppCenterUserDefaults.h */; };
+		F8936DC4230C2805006A330F /* MSACLogDBStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74831F22BD910070E7DF /* MSACLogDBStorage.h */; };
+		F8936DC5230C2805006A330F /* MSACLogDBStorageVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = 046658B7215AD59D0079DCC7 /* MSACLogDBStorageVersion.h */; };
+		F8936DC6230C2805006A330F /* MSACOrderedDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = B29D883B21E925A400EAF084 /* MSACOrderedDictionary.h */; };
+		F8936DC7230C2805006A330F /* MSACConstants+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD748F1F22BE270070E7DF /* MSACConstants+Internal.h */; };
+		F8936DC8230C2805006A330F /* MSACEncrypter.h in Headers */ = {isa = PBXBuildFile; fileRef = 8087362720C1348B004C4157 /* MSACEncrypter.h */; };
+		F8936DC9230C2805006A330F /* MSACHistoryInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 047FEE0621A4884600ED77CD /* MSACHistoryInfo.h */; };
+		F8936DCA230C2805006A330F /* MSACKeychainUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 045BC3181E3FD8AC00B6C960 /* MSACKeychainUtil.h */; };
+		F8936DCB230C2805006A330F /* MSACUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74901F22BE270070E7DF /* MSACUtility.h */; };
+		F8936DCC230C2805006A330F /* MSACUtility+Application.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74921F22BE270070E7DF /* MSACUtility+Application.h */; };
+		F8936DCD230C2805006A330F /* MSACUtility+Date.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74951F22BE270070E7DF /* MSACUtility+Date.h */; };
+		F8936DCE230C2805006A330F /* MSACUtility+Environment.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74971F22BE270070E7DF /* MSACUtility+Environment.h */; };
+		F8936DCF230C2805006A330F /* MSACUtility+File.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD74991F22BE270070E7DF /* MSACUtility+File.h */; };
+		F8936DD0230C2805006A330F /* MSACUtility+PropertyValidation.h in Headers */ = {isa = PBXBuildFile; fileRef = B28E41D32076EC4000CC6AD8 /* MSACUtility+PropertyValidation.h */; };
+		F8936DD1230C2805006A330F /* MSACUtility+StringFormatting.h in Headers */ = {isa = PBXBuildFile; fileRef = B2CD749B1F22BE270070E7DF /* MSACUtility+StringFormatting.h */; };
+		F8936DD2230C2805006A330F /* MSACCompression.h in Headers */ = {isa = PBXBuildFile; fileRef = 38148D8420D07FB70046257E /* MSACCompression.h */; };
+		F8936DD3230C2805006A330F /* MSAC_Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = E83283C41D46C62E000B029E /* MSAC_Reachability.h */; };
+		F8BA7A2A23AA8A26009FBCCF /* MSACStorageBindableArray.h in Headers */ = {isa = PBXBuildFile; fileRef = F8BA7A2823AA8A26009FBCCF /* MSACStorageBindableArray.h */; };
+		F8BA7A2E23AA8B84009FBCCF /* MSACStorageBindableArray.m in Sources */ = {isa = PBXBuildFile; fileRef = F8BA7A2C23AA8B84009FBCCF /* MSACStorageBindableArray.m */; };
+		F8DC50DD23AA828E00BF8839 /* MSACStorageBindableType.h in Headers */ = {isa = PBXBuildFile; fileRef = F8DC50C823AA75FF00BF8839 /* MSACStorageBindableType.h */; };
+		F8DC50DE23AA828E00BF8839 /* MSACStorageNumberType.h in Headers */ = {isa = PBXBuildFile; fileRef = F8DC50C923AA777400BF8839 /* MSACStorageNumberType.h */; };
+		F8DC50DF23AA828E00BF8839 /* MSACStorageTextType.h in Headers */ = {isa = PBXBuildFile; fileRef = F8DC50CA23AA77CB00BF8839 /* MSACStorageTextType.h */; };
+		F8DC50E123AA828E00BF8839 /* MSACStorageTextType.m in Sources */ = {isa = PBXBuildFile; fileRef = F8DC50CC23AA77F700BF8839 /* MSACStorageTextType.m */; };
+		F8DC50E223AA828E00BF8839 /* MSACStorageNumberType.m in Sources */ = {isa = PBXBuildFile; fileRef = F8DC50CE23AA7A3900BF8839 /* MSACStorageNumberType.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C2392EE42464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 030EF0A814632FD000B04273;
+			remoteInfo = OCMock;
+		};
+		C2392EE62464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 03565A3118F0566E003AE91E;
+			remoteInfo = OCMockTests;
+		};
+		C2392EE82464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 030EF0DC14632FF700B04273;
+			remoteInfo = OCMockLib;
+		};
+		C2392EEA2464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = D31108AD1828DB8700737925;
+			remoteInfo = OCMockLibTests;
+		};
+		C2392EEC2464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F0B950F11B0080BE00942C38;
+			remoteInfo = "OCMock iOS";
+		};
+		C2392EEE2464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 817EB1621BD765130047E85A;
+			remoteInfo = "OCMock tvOS";
+		};
+		C2392EF02464279400425640 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DE97CA022B43EE60098C63F;
+			remoteInfo = "OCMock watchOS";
+		};
+		DFCB80072472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 087601E213440806001B439B;
+			remoteInfo = OCHamcrest;
+		};
+		DFCB80092472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 087601F713440807001B439B;
+			remoteInfo = OCHamcrestTests;
+		};
+		DFCB800B2472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 081BEE621345979F003F846A;
+			remoteInfo = libochamcrest;
+		};
+		DFCB800D2472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 081BEE6C1345979F003F846A;
+			remoteInfo = libochamcrestTests;
+		};
+		DFCB800F2472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5BFE91C1777D900C2BAFD;
+			remoteInfo = "OCHamcrest-iOS";
+		};
+		DFCB80112472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5BFF61C17781400C2BAFD;
+			remoteInfo = "OCHamcrest-tvOS";
+		};
+		DFCB80132472C1BD0058D292 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 24C5C0031C17782500C2BAFD;
+			remoteInfo = "OCHamcrest-watchOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		041CFF8D1ECCFFD200B4654B /* Tests macOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests macOS.xcconfig"; path = "../../Config/Tests macOS.xcconfig"; sourceTree = "<group>"; };
+		04237DC023A31617009BB406 /* MSACHttpClientDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpClientDelegate.h; sourceTree = "<group>"; };
+		04311FEE1EE083C2007054C5 /* MSACTestFrameworks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACTestFrameworks.h; sourceTree = "<group>"; };
+		043120701EE0BCC4007054C5 /* tvOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = tvOS.modulemap; sourceTree = "<group>"; };
+		043120711EE0BCC4007054C5 /* tvOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = tvOS.xcconfig; sourceTree = "<group>"; };
+		04545DC8227B603D00A49E06 /* AppCenter.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppCenter.xcconfig; sourceTree = "<group>"; };
+		045660FA1D99EEEB002F7055 /* MSACLogWithPropertiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogWithPropertiesTests.m; sourceTree = "<group>"; };
+		045BC3161E3FD88600B6C960 /* MSACKeychainUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACKeychainUtil.m; sourceTree = "<group>"; };
+		045BC3181E3FD8AC00B6C960 /* MSACKeychainUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACKeychainUtil.h; sourceTree = "<group>"; };
+		045C850F1FE0B1D900089540 /* MSACSessionContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionContext.h; sourceTree = "<group>"; };
+		045C85131FE0B31600089540 /* MSACSessionContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACSessionContext.m; sourceTree = "<group>"; };
+		046658B7215AD59D0079DCC7 /* MSACLogDBStorageVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACLogDBStorageVersion.h; sourceTree = "<group>"; };
+		0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AppCenter Release.xcconfig"; sourceTree = "<group>"; };
+		04754F3C1EA980FD002CBA46 /* MSACDeviceTracker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceTracker.m; sourceTree = "<group>"; };
+		04754F3D1EA980FD002CBA46 /* MSACDeviceTrackerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDeviceTrackerPrivate.h; sourceTree = "<group>"; };
+		047EBB9B1FE30842009BB1C8 /* MSACSessionHistoryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACSessionHistoryInfo.m; sourceTree = "<group>"; };
+		047EBB9C1FE30842009BB1C8 /* MSACSessionHistoryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionHistoryInfo.h; sourceTree = "<group>"; };
+		047FEE0621A4884600ED77CD /* MSACHistoryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHistoryInfo.h; sourceTree = "<group>"; };
+		047FEE0721A4884600ED77CD /* MSACHistoryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACHistoryInfo.m; sourceTree = "<group>"; };
+		047FEE1021A48CC200ED77CD /* MSACUserIdContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUserIdContext.m; sourceTree = "<group>"; };
+		047FEE1121A48CC200ED77CD /* MSACUserIdHistoryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACUserIdHistoryInfo.h; sourceTree = "<group>"; };
+		047FEE1221A48CC200ED77CD /* MSACUserIdContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACUserIdContext.h; sourceTree = "<group>"; };
+		047FEE1321A48CC200ED77CD /* MSACUserIdHistoryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUserIdHistoryInfo.m; sourceTree = "<group>"; };
+		047FEE2521A4968A00ED77CD /* MSACUserIdContextPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACUserIdContextPrivate.h; sourceTree = "<group>"; };
+		04840CD71ECCF6560020B0FC /* Tests iOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests iOS.xcconfig"; path = "../../Config/Tests iOS.xcconfig"; sourceTree = "<group>"; };
+		0484DD5E1F3910DF0092B777 /* Tests tvOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Tests tvOS.xcconfig"; path = "../../Config/Tests tvOS.xcconfig"; sourceTree = "<group>"; };
+		0485AFEC1EAAAC3B00C10CAF /* macOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = macOS.modulemap; sourceTree = "<group>"; };
+		0485AFEE1EAAAD0000C10CAF /* iOS.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = iOS.modulemap; sourceTree = "<group>"; };
+		049378381FE44539000ADBAF /* MSACSessionContextPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSessionContextPrivate.h; sourceTree = "<group>"; };
+		0493783F1FE4913C000ADBAF /* MSACSessionContextTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACSessionContextTests.m; sourceTree = "<group>"; };
+		049BC8281ECE3A5200FB6719 /* iOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = iOS.xcconfig; sourceTree = "<group>"; };
+		049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = macOS.xcconfig; sourceTree = "<group>"; };
+		04A20D70217660D50096723C /* MSACWrapperLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACWrapperLoggerTests.m; sourceTree = "<group>"; };
+		04A79A4720C6F635006D0072 /* MSACOneCollectorIngestionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACOneCollectorIngestionTests.m; sourceTree = "<group>"; };
+		04AB676220E18A74002828AA /* MSACChannelGroupDefaultPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACChannelGroupDefaultPrivate.h; sourceTree = "<group>"; };
+		04B525B82194D44E00FA37FD /* MSACConstants+Flags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACConstants+Flags.h"; sourceTree = "<group>"; };
+		04B59A4022050370008DA079 /* MSACHttpIngestionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACHttpIngestionTests.m; sourceTree = "<group>"; };
+		04B7BBEE1E5FAD4D001A0CE1 /* MSACHttpUtilTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACHttpUtilTests.m; sourceTree = "<group>"; };
+		04F3613C1FE1A92000A5A6D2 /* MSACNoAutoAssignSessionIdLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACNoAutoAssignSessionIdLog.h; sourceTree = "<group>"; };
+		04FD126A1E4103CC007ABFE7 /* MSACKeychainUtilTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACKeychainUtilTests.m; sourceTree = "<group>"; };
+		2434213123A456C900EDFA83 /* MSACDependencyConfigurationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDependencyConfigurationTests.m; sourceTree = "<group>"; };
+		244CC1F62399CA5A00A58F51 /* MSACDependencyConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDependencyConfiguration.h; sourceTree = "<group>"; };
+		244CC1F72399CA5A00A58F51 /* MSACDependencyConfiguration.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDependencyConfiguration.m; sourceTree = "<group>"; };
+		24D44B402395DBBE003CC224 /* MSACTestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACTestUtil.h; sourceTree = "<group>"; };
+		24D44B412395DBBE003CC224 /* MSACTestUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACTestUtil.m; sourceTree = "<group>"; };
+		266ED9D2BA796BA0329F4FC7 /* MSACCustomPropertiesPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACCustomPropertiesPrivate.h; sourceTree = "<group>"; };
+		2DA030746930EE3DCB6A21B3 /* MSACMetadataExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACMetadataExtension.m; sourceTree = "<group>"; };
+		2DA030B94CD3D38725671A79 /* MSACChannelUnitDefaultPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACChannelUnitDefaultPrivate.h; sourceTree = "<group>"; };
+		2DA03260792C64C0290E6E41 /* MSACHttpClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpClient.h; sourceTree = "<group>"; };
+		2DA0350241FEC3A6A4919BFE /* MSACHttpClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACHttpClient.m; sourceTree = "<group>"; };
+		2DA0373E842A41C8413D1722 /* MSACHttpClientProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpClientProtocol.h; sourceTree = "<group>"; };
+		2DA038EE68EEE1414A270ADA /* MSACMetadataExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACMetadataExtension.h; sourceTree = "<group>"; };
+		3511AE7C20C5FF150056A739 /* MSACMockLogWithConversion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockLogWithConversion.h; sourceTree = "<group>"; };
+		3513432D2056FF9000E6DC7D /* MSACAbstractLogPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAbstractLogPrivate.h; sourceTree = "<group>"; };
+		354274162012AE4000BE766F /* MSACChannelProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACChannelProtocol.h; sourceTree = "<group>"; };
+		354274192012AEFC00BE766F /* MSACChannelUnitProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACChannelUnitProtocol.h; sourceTree = "<group>"; };
+		3542741A2012AF0500BE766F /* MSACChannelGroupProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACChannelGroupProtocol.h; sourceTree = "<group>"; };
+		3542741B2012B02600BE766F /* MSACChannelDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACChannelDelegate.h; sourceTree = "<group>"; };
+		3542741C2012B53B00BE766F /* MSACChannelUnitDefault.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACChannelUnitDefault.h; sourceTree = "<group>"; };
+		3542742220167DA400BE766F /* MSACEnable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACEnable.h; sourceTree = "<group>"; };
+		3571F64B22454EDF0052406C /* MSACHttpClientPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACHttpClientPrivate.h; sourceTree = "<group>"; };
+		3571F64F22457E220052406C /* MSACHttpCall.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACHttpCall.h; sourceTree = "<group>"; };
+		3571F65322457FCC0052406C /* MSACHttpCall.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACHttpCall.m; sourceTree = "<group>"; };
+		3571F658224962180052406C /* MSACHttpUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACHttpUtil.h; sourceTree = "<group>"; };
+		3571F659224962180052406C /* MSACHttpUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACHttpUtil.m; sourceTree = "<group>"; };
+		358F9BC22019531F00B9E22C /* MSACLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACLogger.h; sourceTree = "<group>"; };
+		3592ABA51DC90E3600EF4592 /* MSACLoggerInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACLoggerInternal.h; sourceTree = "<group>"; };
+		3592ABA61DC90E3600EF4592 /* MSACLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogger.m; sourceTree = "<group>"; };
+		359C38DB214079D90066C509 /* MSACDeviceExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDeviceExtension.h; sourceTree = "<group>"; };
+		359C38DC214079D90066C509 /* MSACDeviceExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceExtension.m; sourceTree = "<group>"; };
+		359E898F224BF70400795CF5 /* MSACHttpCallTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACHttpCallTests.m; sourceTree = "<group>"; };
+		35B80F9220C1FE1A00CDFA55 /* MSACMockLogObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockLogObject.h; sourceTree = "<group>"; };
+		35C0E3C91FD6146A004E841E /* MSACMockSecondService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACMockSecondService.m; sourceTree = "<group>"; };
+		35C0E3CA1FD6146A004E841E /* MSACMockSecondService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockSecondService.h; sourceTree = "<group>"; };
+		35D0B7511DDFABFD003EACCD /* MSACWrapperLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACWrapperLogger.h; sourceTree = "<group>"; };
+		35D0B7521DDFABFD003EACCD /* MSACWrapperLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACWrapperLogger.m; sourceTree = "<group>"; };
+		35DFC1BD2170030C00455589 /* MSACStringTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACStringTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACStringTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1BE2170030C00455589 /* MSACStringTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACStringTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACStringTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC1BF2170030C00455589 /* MSACTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1C02170030C00455589 /* MSACDoubleTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACDoubleTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACDoubleTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1C12170030C00455589 /* MSACLongTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACLongTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACLongTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1C22170030C00455589 /* MSACBooleanTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACBooleanTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACBooleanTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC1C32170030C00455589 /* MSACTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC1C42170030C00455589 /* MSACDateTimeTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACDateTimeTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACDateTimeTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC1C52170030C00455589 /* MSACDateTimeTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACDateTimeTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACDateTimeTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1C62170030C00455589 /* MSACDoubleTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACDoubleTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACDoubleTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC1C72170030C00455589 /* MSACBooleanTypedProperty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACBooleanTypedProperty.h; path = AppCenter/Internals/Model/Properties/MSACBooleanTypedProperty.h; sourceTree = SOURCE_ROOT; };
+		35DFC1C82170030C00455589 /* MSACLongTypedProperty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACLongTypedProperty.m; path = AppCenter/Internals/Model/Properties/MSACLongTypedProperty.m; sourceTree = SOURCE_ROOT; };
+		35DFC2172170044500455589 /* MSACBooleanTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACBooleanTypedPropertyTests.m; sourceTree = "<group>"; };
+		35DFC2182170044600455589 /* MSACDoubleTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDoubleTypedPropertyTests.m; sourceTree = "<group>"; };
+		35DFC2192170044600455589 /* MSACDateTimeTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDateTimeTypedPropertyTests.m; sourceTree = "<group>"; };
+		35DFC21A2170044600455589 /* MSACStringTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStringTypedPropertyTests.m; sourceTree = "<group>"; };
+		35DFC21B2170044600455589 /* MSACLongTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLongTypedPropertyTests.m; sourceTree = "<group>"; };
+		35DFC21C2170044600455589 /* MSACTypedPropertyTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACTypedPropertyTests.m; sourceTree = "<group>"; };
+		38032085217E85A90089772A /* MSACDelegateForwarder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDelegateForwarder.h; sourceTree = "<group>"; };
+		38032086217E85A90089772A /* MSACDelegateForwarder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDelegateForwarder.m; sourceTree = "<group>"; };
+		3803208D217E8BD40089772A /* MSACDelegateForwarderPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDelegateForwarderPrivate.h; sourceTree = "<group>"; };
+		38032091217E9DC50089772A /* MSACCustomDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCustomDelegate.h; sourceTree = "<group>"; };
+		380A4DCA1DD6908A00E99219 /* MSACUtilityTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUtilityTests.m; sourceTree = "<group>"; };
+		38148D8420D07FB70046257E /* MSACCompression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACCompression.h; sourceTree = "<group>"; };
+		38148D8520D07FB70046257E /* MSACCompression.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACCompression.m; sourceTree = "<group>"; };
+		3814A8E120BF5E790093AF45 /* MSACCSEpochAndSeq.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCSEpochAndSeq.h; sourceTree = "<group>"; };
+		3814A8E520BF5FA00093AF45 /* MSACCSEpochAndSeq.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCSEpochAndSeq.m; sourceTree = "<group>"; };
+		381C91E51D3DB65D004512F1 /* MSACDeviceTracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDeviceTracker.h; sourceTree = "<group>"; };
+		383481721EA7FF6100787F56 /* MSACLogDBStoragePrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACLogDBStoragePrivate.h; sourceTree = "<group>"; };
+		3844FF121E8C22CC003E9194 /* MSACAbstractLogInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAbstractLogInternal.h; sourceTree = "<group>"; };
+		3844FF191E8C2716003E9194 /* MSACLogWithProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACLogWithProperties.h; path = Model/MSACLogWithProperties.h; sourceTree = "<group>"; };
+		3844FF1A1E8C2716003E9194 /* MSACDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACDevice.m; path = Model/MSACDevice.m; sourceTree = "<group>"; };
+		3844FF1B1E8C2716003E9194 /* MSACDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACDevice.h; path = Model/MSACDevice.h; sourceTree = "<group>"; };
+		3844FF1C1E8C2716003E9194 /* MSACAbstractLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACAbstractLog.h; path = Model/MSACAbstractLog.h; sourceTree = "<group>"; };
+		384959D41D491D4F008F6B3A /* MSACAppCenterTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppCenterTests.m; sourceTree = "<group>"; };
+		3849BA791EF314440072E3E0 /* MSACDBStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDBStorage.h; sourceTree = "<group>"; };
+		3849BA7B1EF3145A0072E3E0 /* MSACDBStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDBStorage.m; sourceTree = "<group>"; };
+		3849BA7D1EF3489D0072E3E0 /* MSACDBStorageTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDBStorageTests.m; sourceTree = "<group>"; };
+		3849BA841EF35D830072E3E0 /* MSACDBStoragePrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDBStoragePrivate.h; sourceTree = "<group>"; };
+		384A925F2188BE400099BE70 /* MSACDelegateForwarderTestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDelegateForwarderTestUtil.h; sourceTree = "<group>"; };
+		384A92602188BE400099BE70 /* MSACDelegateForwarderTestUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDelegateForwarderTestUtil.m; sourceTree = "<group>"; };
+		385FC0541D37EBD700A1799F /* MSACDeviceTrackerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceTrackerTests.m; sourceTree = "<group>"; };
+		38641B041EB0F40800B2CE73 /* MSACAppDelegateForwarderTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppDelegateForwarderTests.m; sourceTree = "<group>"; };
+		386A69EC1FD8843D0057B316 /* MSACKeychainUtilPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACKeychainUtilPrivate.h; sourceTree = "<group>"; };
+		386E8D911E25932100EECF0F /* MSACHttpTestUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACHttpTestUtil.m; sourceTree = "<group>"; };
+		386E8D921E25932100EECF0F /* MSACHttpTestUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpTestUtil.h; sourceTree = "<group>"; };
+		387A7FCA22178E91008A5587 /* MSACReachabilityTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACReachabilityTests.m; sourceTree = "<group>"; };
+		387C757F1D6270A300D68CC1 /* MSACServiceAbstractInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MSACServiceAbstractInternal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		387C758D1D64DF2500D68CC1 /* MSACServiceCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MSACServiceCommon.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		387C75951D64EE1900D68CC1 /* MSACServiceAbstractTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACServiceAbstractTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		387C76FC1D6C9CF100D68CC1 /* MSACServiceAbstract.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACServiceAbstract.h; sourceTree = "<group>"; };
+		3889932E1E29829700C27B36 /* MSACAppCenterErrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppCenterErrors.h; sourceTree = "<group>"; };
+		38A3891B212B6E3C00F1C0D8 /* MSACDeadLockTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeadLockTests.m; sourceTree = "<group>"; };
+		38AE130F20C1B54000FAB2AD /* MSACModelTestsUtililty.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACModelTestsUtililty.h; sourceTree = "<group>"; };
+		38AE131020C1B54000FAB2AD /* MSACModelTestsUtililty.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACModelTestsUtililty.m; sourceTree = "<group>"; };
+		38BC346C20B8CB0C00119C05 /* MSACLogConversion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACLogConversion.h; sourceTree = "<group>"; };
+		38C4471E1ECE5352002E1B11 /* MSACAppDelegateForwarder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppDelegateForwarder.h; sourceTree = "<group>"; };
+		38C4471F1ECE5352002E1B11 /* MSACAppDelegateForwarder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppDelegateForwarder.m; sourceTree = "<group>"; };
+		38C633C61FDF15DD005F40C9 /* MSACCustomApplicationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACCustomApplicationDelegate.h; sourceTree = "<group>"; };
+		38C633C81FDF163D005F40C9 /* MSACAppDelegateUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppDelegateUtil.h; sourceTree = "<group>"; };
+		38E1B6791DDE3FDF000EFED1 /* MSACAppCenterPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppCenterPrivate.h; sourceTree = "<group>"; };
+		38F1944D1DADB93100D3E0FE /* MSACHttpIngestionPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpIngestionPrivate.h; sourceTree = "<group>"; };
+		38FDFF682109409900E17269 /* MSACMockKeychainUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockKeychainUtil.h; sourceTree = "<group>"; };
+		38FDFF692109409900E17269 /* MSACMockKeychainUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACMockKeychainUtil.m; sourceTree = "<group>"; };
+		58603EA088552D6FBB8EBE6C /* MSACAbstractLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAbstractLogTests.m; sourceTree = "<group>"; };
+		5C7877911EA0CFF3002263CC /* MSACLogDBStorageTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogDBStorageTests.m; sourceTree = "<group>"; };
+		6E04013F1D1C99AC0051BCFA /* MSACConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACConstants.h; sourceTree = "<group>"; };
+		6E0401401D1C99AC0051BCFA /* AppCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppCenter.h; sourceTree = "<group>"; };
+		6E0401441D1C99AC0051BCFA /* MSACAppCenterInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppCenterInternal.h; sourceTree = "<group>"; };
+		6E0401451D1C99AC0051BCFA /* MSACService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACService.h; sourceTree = "<group>"; };
+		6E0401471D1C99AC0051BCFA /* MSACServiceInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACServiceInternal.h; sourceTree = "<group>"; };
+		6E0401551D1C9AAA0051BCFA /* MSACAppCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppCenter.h; sourceTree = "<group>"; };
+		6E0401561D1C9AAA0051BCFA /* MSACAppCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppCenter.m; sourceTree = "<group>"; };
+		6E0401581D1C9CFB0051BCFA /* AppCenter+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppCenter+Internal.h"; sourceTree = "<group>"; };
+		6E0401841D1CAD810051BCFA /* AppCenter Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = "AppCenter Debug.xcconfig"; sourceTree = "<group>"; };
+		6E0684621D36BC8D00A8CC6C /* MSACChannelUnitDefault.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACChannelUnitDefault.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		6E171B581D234717000DC480 /* MSACLogContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACLogContainer.h; sourceTree = "<group>"; };
+		6E171B591D234717000DC480 /* MSACLogContainer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogContainer.m; sourceTree = "<group>"; };
+		6E23957C1D22EF4F00E543C8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6E3E2C9D1D35701000B1EE50 /* MSACLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACLog.h; path = Model/MSACLog.h; sourceTree = "<group>"; };
+		6E3E2CC01D3596AE00B1EE50 /* MSACDeviceLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceLogTests.m; sourceTree = "<group>"; };
+		6E48A5A31D3831FE006E8B5F /* MSACChannelUnitConfigurationTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACChannelUnitConfigurationTests.m; sourceTree = "<group>"; };
+		6E48A5A61D383893006E8B5F /* MSACChannelGroupDefaultTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACChannelGroupDefaultTests.m; sourceTree = "<group>"; };
+		6EB1F40D1D2443B7005F9F99 /* MSACChannelUnitDefaultTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACChannelUnitDefaultTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		6EF628F21D371B1600CAFF64 /* MSACChannelUnitConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACChannelUnitConfiguration.h; sourceTree = "<group>"; };
+		6EF628F31D371B1600CAFF64 /* MSACChannelUnitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACChannelUnitConfiguration.m; sourceTree = "<group>"; };
+		7FB70548222E58FB00D93258 /* MSACMockReachability.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACMockReachability.m; sourceTree = "<group>"; };
+		7FB7054A222E593400D93258 /* MSACMockReachability.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockReachability.h; sourceTree = "<group>"; };
+		805275BF20A19F7B00704115 /* MSACOneCollectorChannelDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACOneCollectorChannelDelegate.h; sourceTree = "<group>"; };
+		805275C020A1A5F400704115 /* MSACOneCollectorChannelDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACOneCollectorChannelDelegate.m; sourceTree = "<group>"; };
+		805F3F691F209C8A00B489E4 /* MSACMockService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockService.h; sourceTree = "<group>"; };
+		805F3F6A1F209C9D00B489E4 /* MSACMockService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACMockService.m; sourceTree = "<group>"; };
+		8087362720C1348B004C4157 /* MSACEncrypter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACEncrypter.h; sourceTree = "<group>"; };
+		8087362820C134AC004C4157 /* MSACEncrypter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACEncrypter.m; sourceTree = "<group>"; };
+		8087362A20C1DCCF004C4157 /* MSACEncrypterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACEncrypterTests.m; sourceTree = "<group>"; };
+		80B7EA2020CA9C9C00DF524C /* MSACEncrypterPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACEncrypterPrivate.h; sourceTree = "<group>"; };
+		9237B60B2244407000C273D8 /* MSACHttpClientTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACHttpClientTests.m; sourceTree = "<group>"; };
+		9C02498021A4BF3800C7B887 /* MSACUserIdContextTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUserIdContextTests.m; sourceTree = "<group>"; };
+		B23507B32118D22800F98D4F /* MSACTicketCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACTicketCache.m; sourceTree = "<group>"; };
+		B23507B42118D22800F98D4F /* MSACTicketCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACTicketCache.h; sourceTree = "<group>"; };
+		B24F3F161D93A3FF00827213 /* MSACLoggerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLoggerTests.m; sourceTree = "<group>"; };
+		B26D4DB8211B5BE300AB4E28 /* MSACMockCommonSchemaLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockCommonSchemaLog.h; sourceTree = "<group>"; };
+		B26D4DB9211B5BE300AB4E28 /* MSACMockCommonSchemaLog.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACMockCommonSchemaLog.m; sourceTree = "<group>"; };
+		B26D4DD6211B9B5D00AB4E28 /* MSACTicketCacheTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACTicketCacheTests.m; sourceTree = "<group>"; };
+		B27B4125214C939D007CAE9C /* MSACStorageTestUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACStorageTestUtil.h; sourceTree = "<group>"; };
+		B27B4126214C939D007CAE9C /* MSACStorageTestUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACStorageTestUtil.m; sourceTree = "<group>"; };
+		B28E41D32076EC4000CC6AD8 /* MSACUtility+PropertyValidation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+PropertyValidation.h"; sourceTree = "<group>"; };
+		B28E41D42076ECFE00CC6AD8 /* MSACUtility+PropertyValidation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+PropertyValidation.m"; sourceTree = "<group>"; };
+		B29D883A21E925A400EAF084 /* MSACOrderedDictionaryPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACOrderedDictionaryPrivate.h; sourceTree = "<group>"; };
+		B29D883B21E925A400EAF084 /* MSACOrderedDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACOrderedDictionary.h; sourceTree = "<group>"; };
+		B29D883C21E925A400EAF084 /* MSACOrderedDictionary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACOrderedDictionary.m; sourceTree = "<group>"; };
+		B29D884621E9286100EAF084 /* MSACOrderedDictionaryTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACOrderedDictionaryTest.m; sourceTree = "<group>"; };
+		B2ADB1412124C13300D0D7D9 /* MSACOneCollectorIngestionPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACOneCollectorIngestionPrivate.h; sourceTree = "<group>"; };
+		B2B7D50920C5E562001D31B8 /* MSACOneCollectorIngestion.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACOneCollectorIngestion.h; sourceTree = "<group>"; };
+		B2B7D50A20C5E562001D31B8 /* MSACOneCollectorIngestion.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACOneCollectorIngestion.m; sourceTree = "<group>"; };
+		B2C3C1831DB83A3E00CB83F7 /* MSACDeviceInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDeviceInternal.h; sourceTree = "<group>"; };
+		B2CD74551F22BB710070E7DF /* MSACWrapperSdk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACWrapperSdk.h; path = Model/MSACWrapperSdk.h; sourceTree = "<group>"; };
+		B2CD74561F22BB710070E7DF /* MSACWrapperSdk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACWrapperSdk.m; path = Model/MSACWrapperSdk.m; sourceTree = "<group>"; };
+		B2CD745D1F22BBBB0070E7DF /* MSACWrapperSdkInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACWrapperSdkInternal.h; sourceTree = "<group>"; };
+		B2CD74831F22BD910070E7DF /* MSACLogDBStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACLogDBStorage.h; sourceTree = "<group>"; };
+		B2CD74841F22BD910070E7DF /* MSACLogDBStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogDBStorage.m; sourceTree = "<group>"; };
+		B2CD748F1F22BE270070E7DF /* MSACConstants+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACConstants+Internal.h"; sourceTree = "<group>"; };
+		B2CD74901F22BE270070E7DF /* MSACUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACUtility.h; sourceTree = "<group>"; };
+		B2CD74911F22BE270070E7DF /* MSACUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUtility.m; sourceTree = "<group>"; };
+		B2CD74921F22BE270070E7DF /* MSACUtility+Application.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+Application.h"; sourceTree = "<group>"; };
+		B2CD74931F22BE270070E7DF /* MSACUtility+Application.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+Application.m"; sourceTree = "<group>"; };
+		B2CD74941F22BE270070E7DF /* MSACUtility+ApplicationPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+ApplicationPrivate.h"; sourceTree = "<group>"; };
+		B2CD74951F22BE270070E7DF /* MSACUtility+Date.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+Date.h"; sourceTree = "<group>"; };
+		B2CD74961F22BE270070E7DF /* MSACUtility+Date.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+Date.m"; sourceTree = "<group>"; };
+		B2CD74971F22BE270070E7DF /* MSACUtility+Environment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+Environment.h"; sourceTree = "<group>"; };
+		B2CD74981F22BE270070E7DF /* MSACUtility+Environment.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+Environment.m"; sourceTree = "<group>"; };
+		B2CD74991F22BE270070E7DF /* MSACUtility+File.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+File.h"; sourceTree = "<group>"; };
+		B2CD749A1F22BE270070E7DF /* MSACUtility+File.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+File.m"; sourceTree = "<group>"; };
+		B2CD749B1F22BE270070E7DF /* MSACUtility+StringFormatting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MSACUtility+StringFormatting.h"; sourceTree = "<group>"; };
+		B2CD749C1F22BE270070E7DF /* MSACUtility+StringFormatting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "MSACUtility+StringFormatting.m"; sourceTree = "<group>"; };
+		B2FD53601E56501B0050F909 /* MSACDeviceHistoryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACDeviceHistoryInfo.h; sourceTree = "<group>"; };
+		B2FD53611E56501B0050F909 /* MSACDeviceHistoryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceHistoryInfo.m; sourceTree = "<group>"; };
+		B2FD53641E567BCF0050F909 /* MSACDeviceHistoryInfoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACDeviceHistoryInfoTests.m; sourceTree = "<group>"; };
+		BA6822A89D38F04D8D95CE83 /* MSACAppCenterIngestion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppCenterIngestion.m; sourceTree = "<group>"; };
+		BA6824A001520825F18DFC42 /* MSACAppCenterIngestion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACAppCenterIngestion.h; sourceTree = "<group>"; };
+		C2392EDA2464279400425640 /* OCMock.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OCMock.xcodeproj; path = ../../Vendor/OCMock/Source/OCMock.xcodeproj; sourceTree = "<group>"; };
+		C26F4DE42546EB33006E0EB7 /* XCFramework.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = XCFramework.xcconfig; path = ../../../Config/XCFramework.xcconfig; sourceTree = "<group>"; };
+		C26F4DED2546EB34006E0EB7 /* iOS Universal.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "iOS Universal.xcconfig"; path = "../../../Config/iOS Universal.xcconfig"; sourceTree = "<group>"; };
+		C26F4DEE2546EB34006E0EB7 /* tvOS Universal.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "tvOS Universal.xcconfig"; path = "../../../Config/tvOS Universal.xcconfig"; sourceTree = "<group>"; };
+		C9A92007230C05D70068070D /* AppCenter.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AppCenter.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C9A92026230C08540068070D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D36136821E7BB338004AE043 /* MSACStoragePerformanceTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStoragePerformanceTests.m; sourceTree = "<group>"; };
+		D377A30B1E83A04600B2C97A /* MSACMockUserDefaults.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACMockUserDefaults.h; sourceTree = "<group>"; };
+		D377A30C1E83A05900B2C97A /* MSACMockUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACMockUserDefaults.m; sourceTree = "<group>"; };
+		D38023E61E6EFC7C00466558 /* MSACStartServiceLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStartServiceLog.m; sourceTree = "<group>"; };
+		D38023E71E6EFC7C00466558 /* MSACStartServiceLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACStartServiceLog.h; sourceTree = "<group>"; };
+		D38024051E7126F500466558 /* MSACServiceAbstract.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACServiceAbstract.m; sourceTree = "<group>"; };
+		D38024111E7130C700466558 /* MSACStartServiceLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACStartServiceLogTests.m; sourceTree = "<group>"; };
+		D55E7082252F5A1000AB994D /* MSACTestSessionInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACTestSessionInfo.m; sourceTree = "<group>"; };
+		D55E7083252F5A1000AB994D /* MSACTestSessionInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACTestSessionInfo.h; sourceTree = "<group>"; };
+		D5812F312423C2FA00C5F5C5 /* MSACUserDefaultsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACUserDefaultsTests.m; sourceTree = "<group>"; };
+		DF5DA1F823A0E55500DE695C /* MSACDispatcherUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACDispatcherUtil.h; sourceTree = "<group>"; };
+		DF5DA1FC23A0E57B00DE695C /* MSACDispatcherUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACDispatcherUtil.m; sourceTree = "<group>"; };
+		DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OCHamcrest.xcodeproj; path = ../../Vendor/OCHamcrest/Source/OCHamcrest.xcodeproj; sourceTree = "<group>"; };
+		DFE95520244D96170061E3FA /* HTTPStubs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPStubs.m; sourceTree = "<group>"; };
+		DFE95521244D96170061E3FA /* NSURLRequest+HTTPBodyTesting.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURLRequest+HTTPBodyTesting.m"; sourceTree = "<group>"; };
+		DFE95522244D96170061E3FA /* HTTPStubsMethodSwizzling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPStubsMethodSwizzling.h; sourceTree = "<group>"; };
+		DFE95524244D96170061E3FA /* Compatibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Compatibility.h; sourceTree = "<group>"; };
+		DFE95525244D96170061E3FA /* HTTPStubsResponse+JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "HTTPStubsResponse+JSON.h"; sourceTree = "<group>"; };
+		DFE95526244D96170061E3FA /* HTTPStubsPathHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPStubsPathHelpers.h; sourceTree = "<group>"; };
+		DFE95527244D96170061E3FA /* HTTPStubsResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPStubsResponse.h; sourceTree = "<group>"; };
+		DFE95528244D96170061E3FA /* NSURLRequest+HTTPBodyTesting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURLRequest+HTTPBodyTesting.h"; sourceTree = "<group>"; };
+		DFE95529244D96170061E3FA /* HTTPStubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HTTPStubs.h; sourceTree = "<group>"; };
+		DFE9552A244D96170061E3FA /* HTTPStubsResponse+JSON.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "HTTPStubsResponse+JSON.m"; sourceTree = "<group>"; };
+		DFE9552B244D96170061E3FA /* HTTPStubsMethodSwizzling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPStubsMethodSwizzling.m; sourceTree = "<group>"; };
+		DFE9552C244D96170061E3FA /* HTTPStubsResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPStubsResponse.m; sourceTree = "<group>"; };
+		DFE9552D244D96170061E3FA /* HTTPStubsPathHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HTTPStubsPathHelpers.m; sourceTree = "<group>"; };
+		DFE9552E244D96170061E3FA /* HTTPStubs+NSURLSessionConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "HTTPStubs+NSURLSessionConfiguration.m"; sourceTree = "<group>"; };
+		E74B149720B364EE002C0183 /* MSACCommonSchemaLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCommonSchemaLog.h; sourceTree = "<group>"; };
+		E74B149820B364EE002C0183 /* MSACCommonSchemaLog.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCommonSchemaLog.m; sourceTree = "<group>"; };
+		E74B14A120B36AAB002C0183 /* MSACUserExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACUserExtension.m; sourceTree = "<group>"; };
+		E74B14A820B36B9B002C0183 /* MSACLocExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACLocExtension.h; sourceTree = "<group>"; };
+		E74B14A920B36B9B002C0183 /* MSACLocExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACLocExtension.m; sourceTree = "<group>"; };
+		E74B14B820B36C2B002C0183 /* MSACOSExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACOSExtension.h; sourceTree = "<group>"; };
+		E74B14C020B36C66002C0183 /* MSACAppExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAppExtension.h; sourceTree = "<group>"; };
+		E74B14C820B36DF1002C0183 /* MSACProtocolExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACProtocolExtension.h; sourceTree = "<group>"; };
+		E74B14C920B36DF1002C0183 /* MSACProtocolExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACProtocolExtension.m; sourceTree = "<group>"; };
+		E74B14D020B36EC5002C0183 /* MSACNetExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACNetExtension.h; sourceTree = "<group>"; };
+		E74B14D120B36EC5002C0183 /* MSACNetExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACNetExtension.m; sourceTree = "<group>"; };
+		E74B14D820B37042002C0183 /* MSACAppExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAppExtension.m; sourceTree = "<group>"; };
+		E74B14D920B37042002C0183 /* MSACOSExtension.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACOSExtension.m; sourceTree = "<group>"; };
+		E74B14E420B370A5002C0183 /* MSACUserExtension.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACUserExtension.h; sourceTree = "<group>"; };
+		E74B14E820B3711F002C0183 /* MSACSDKExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACSDKExtension.h; sourceTree = "<group>"; };
+		E74B14E920B3711F002C0183 /* MSACSDKExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACSDKExtension.m; sourceTree = "<group>"; };
+		E79750E620A4F41400E3EAE8 /* MSACOneCollectorChannelDelegatePrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACOneCollectorChannelDelegatePrivate.h; sourceTree = "<group>"; };
+		E79750EA20A50BF400E3EAE8 /* MSACOneCollectorChannelDelegateTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACOneCollectorChannelDelegateTests.m; sourceTree = "<group>"; };
+		E7D23C5020B4E0CA00A47D62 /* MSACCommonSchemaLogTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCommonSchemaLogTests.m; sourceTree = "<group>"; };
+		E7D23C5420B4E38B00A47D62 /* MSACCSData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCSData.h; sourceTree = "<group>"; };
+		E7D23C5520B4E38B00A47D62 /* MSACCSData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCSData.m; sourceTree = "<group>"; };
+		E7D23C5C20B4EC3700A47D62 /* MSACSerializableObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACSerializableObject.h; sourceTree = "<group>"; };
+		E7D23C6020B4EED000A47D62 /* MSACModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACModel.h; sourceTree = "<group>"; };
+		E7D23C6420B6391700A47D62 /* MSACCSExtensions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCSExtensions.h; sourceTree = "<group>"; };
+		E7D23C6520B6391700A47D62 /* MSACCSExtensions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCSExtensions.m; sourceTree = "<group>"; };
+		E7D23C6E20B6412300A47D62 /* MSACCSExtensionsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACCSExtensionsTests.m; sourceTree = "<group>"; };
+		E8010E671D2DD4EF0035196F /* MSACLogWithProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACLogWithProperties.m; sourceTree = "<group>"; };
+		E829E4221D25C8BA00F19DA1 /* MSACAppCenterIngestionTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACAppCenterIngestionTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E83283C41D46C62E000B029E /* MSAC_Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSAC_Reachability.h; sourceTree = "<group>"; };
+		E83283C51D46C62E000B029E /* MSAC_Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSAC_Reachability.m; sourceTree = "<group>"; };
+		E84B8E2C1D2351DB006FD231 /* MSACChannelGroupDefault.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACChannelGroupDefault.h; sourceTree = "<group>"; };
+		E84B8E2D1D2351DB006FD231 /* MSACChannelGroupDefault.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACChannelGroupDefault.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E84B8E311D235209006FD231 /* MSACIngestionProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MSACIngestionProtocol.h; sourceTree = "<group>"; };
+		E84B8E331D235226006FD231 /* MSACHttpIngestion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACHttpIngestion.h; sourceTree = "<group>"; };
+		E84B8E341D235226006FD231 /* MSACHttpIngestion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACHttpIngestion.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E84B8E381D235246006FD231 /* MSACStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACStorage.h; sourceTree = "<group>"; };
+		E88D17041D35B6B500A5EA57 /* MSACMockLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACMockLog.h; sourceTree = "<group>"; };
+		E88D17051D35B6B500A5EA57 /* MSACMockLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACMockLog.m; sourceTree = "<group>"; };
+		E88EBBEB1D2C612E007E7785 /* MSACAbstractLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACAbstractLog.m; sourceTree = "<group>"; };
+		E88EBBFA1D2C8CC7007E7785 /* MSACLogContainerTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MSACLogContainerTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		E8A8D1E91D3057A90022931E /* MSACAppCenterUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MSACAppCenterUserDefaults.h; path = ../Model/Util/MSACAppCenterUserDefaults.h; sourceTree = "<group>"; };
+		E8A8D1EA1D3057A90022931E /* MSACAppCenterUserDefaults.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSACAppCenterUserDefaults.m; path = ../Model/Util/MSACAppCenterUserDefaults.m; sourceTree = "<group>"; };
+		F803BBF11E8E3677004B1E7A /* MSACCustomProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MSACCustomProperties.h; sourceTree = "<group>"; };
+		F803BBF21E8E3677004B1E7A /* MSACCustomProperties.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACCustomProperties.m; sourceTree = "<group>"; };
+		F803BBF51E8E383E004B1E7A /* MSACCustomPropertiesInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCustomPropertiesInternal.h; sourceTree = "<group>"; };
+		F803BBF81E8E3989004B1E7A /* MSACCustomPropertiesLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACCustomPropertiesLog.m; sourceTree = "<group>"; };
+		F803BBFA1E8E39AB004B1E7A /* MSACCustomPropertiesLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACCustomPropertiesLog.h; sourceTree = "<group>"; };
+		F803BC371E8E6927004B1E7A /* MSACCustomPropertiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACCustomPropertiesTests.m; sourceTree = "<group>"; };
+		F803BC391E8E6963004B1E7A /* MSACCustomPropertiesLogTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MSACCustomPropertiesLogTests.m; sourceTree = "<group>"; };
+		F82E4C6C217F159A00EDAB34 /* sqlite3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = sqlite3.c; path = ../../Vendor/SQLite3/sqlite3.c; sourceTree = "<group>"; };
+		F898179E2433327C008D92E1 /* MSACAppCenterUserDefaultsPrivate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACAppCenterUserDefaultsPrivate.h; sourceTree = "<group>"; };
+		F8BA7A2823AA8A26009FBCCF /* MSACStorageBindableArray.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACStorageBindableArray.h; sourceTree = "<group>"; };
+		F8BA7A2C23AA8B84009FBCCF /* MSACStorageBindableArray.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACStorageBindableArray.m; sourceTree = "<group>"; };
+		F8DC50C823AA75FF00BF8839 /* MSACStorageBindableType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACStorageBindableType.h; sourceTree = "<group>"; };
+		F8DC50C923AA777400BF8839 /* MSACStorageNumberType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACStorageNumberType.h; sourceTree = "<group>"; };
+		F8DC50CA23AA77CB00BF8839 /* MSACStorageTextType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MSACStorageTextType.h; sourceTree = "<group>"; };
+		F8DC50CC23AA77F700BF8839 /* MSACStorageTextType.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACStorageTextType.m; sourceTree = "<group>"; };
+		F8DC50CE23AA7A3900BF8839 /* MSACStorageNumberType.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MSACStorageNumberType.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C9A92001230C05D70068070D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		045C850E1FE0B19C00089540 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				045C850F1FE0B1D900089540 /* MSACSessionContext.h */,
+				049378381FE44539000ADBAF /* MSACSessionContextPrivate.h */,
+				045C85131FE0B31600089540 /* MSACSessionContext.m */,
+				047EBB9C1FE30842009BB1C8 /* MSACSessionHistoryInfo.h */,
+				047EBB9B1FE30842009BB1C8 /* MSACSessionHistoryInfo.m */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		047FEE0E21A48BDE00ED77CD /* Context */ = {
+			isa = PBXGroup;
+			children = (
+				381C91E21D3DB65D004512F1 /* Device */,
+				045C850E1FE0B19C00089540 /* Session */,
+				047FEE0F21A48CC200ED77CD /* UserId */,
+			);
+			path = Context;
+			sourceTree = "<group>";
+		};
+		047FEE0F21A48CC200ED77CD /* UserId */ = {
+			isa = PBXGroup;
+			children = (
+				047FEE1221A48CC200ED77CD /* MSACUserIdContext.h */,
+				047FEE2521A4968A00ED77CD /* MSACUserIdContextPrivate.h */,
+				047FEE1021A48CC200ED77CD /* MSACUserIdContext.m */,
+				047FEE1121A48CC200ED77CD /* MSACUserIdHistoryInfo.h */,
+				047FEE1321A48CC200ED77CD /* MSACUserIdHistoryInfo.m */,
+			);
+			path = UserId;
+			sourceTree = "<group>";
+		};
+		04A140AB1ECE7F6F001CEE94 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				04840CD71ECCF6560020B0FC /* Tests iOS.xcconfig */,
+				041CFF8D1ECCFFD200B4654B /* Tests macOS.xcconfig */,
+				0484DD5E1F3910DF0092B777 /* Tests tvOS.xcconfig */,
+			);
+			name = Support;
+			sourceTree = "<group>";
+		};
+		2DA0385B8A682DEEC59324CE /* HttpClient */ = {
+			isa = PBXGroup;
+			children = (
+				3571F657224962090052406C /* Util */,
+				2DA0373E842A41C8413D1722 /* MSACHttpClientProtocol.h */,
+				2DA0350241FEC3A6A4919BFE /* MSACHttpClient.m */,
+				2DA03260792C64C0290E6E41 /* MSACHttpClient.h */,
+				3571F64B22454EDF0052406C /* MSACHttpClientPrivate.h */,
+				3571F64F22457E220052406C /* MSACHttpCall.h */,
+				3571F65322457FCC0052406C /* MSACHttpCall.m */,
+			);
+			path = HttpClient;
+			sourceTree = "<group>";
+		};
+		354B79E0217109CE002183B5 /* Properties */ = {
+			isa = PBXGroup;
+			children = (
+				35DFC1C72170030C00455589 /* MSACBooleanTypedProperty.h */,
+				35DFC1C22170030C00455589 /* MSACBooleanTypedProperty.m */,
+				35DFC1C52170030C00455589 /* MSACDateTimeTypedProperty.h */,
+				35DFC1C42170030C00455589 /* MSACDateTimeTypedProperty.m */,
+				35DFC1C02170030C00455589 /* MSACDoubleTypedProperty.h */,
+				35DFC1C62170030C00455589 /* MSACDoubleTypedProperty.m */,
+				35DFC1C12170030C00455589 /* MSACLongTypedProperty.h */,
+				35DFC1C82170030C00455589 /* MSACLongTypedProperty.m */,
+				35DFC1BD2170030C00455589 /* MSACStringTypedProperty.h */,
+				35DFC1BE2170030C00455589 /* MSACStringTypedProperty.m */,
+				35DFC1BF2170030C00455589 /* MSACTypedProperty.h */,
+				35DFC1C32170030C00455589 /* MSACTypedProperty.m */,
+			);
+			path = Properties;
+			sourceTree = "<group>";
+		};
+		3571F657224962090052406C /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				3571F658224962180052406C /* MSACHttpUtil.h */,
+				3571F659224962180052406C /* MSACHttpUtil.m */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		381C91E21D3DB65D004512F1 /* Device */ = {
+			isa = PBXGroup;
+			children = (
+				B2FD53601E56501B0050F909 /* MSACDeviceHistoryInfo.h */,
+				B2FD53611E56501B0050F909 /* MSACDeviceHistoryInfo.m */,
+				381C91E51D3DB65D004512F1 /* MSACDeviceTracker.h */,
+				04754F3D1EA980FD002CBA46 /* MSACDeviceTrackerPrivate.h */,
+				04754F3C1EA980FD002CBA46 /* MSACDeviceTracker.m */,
+			);
+			path = Device;
+			sourceTree = "<group>";
+		};
+		3844FF161E8C261D003E9194 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				F803BBF11E8E3677004B1E7A /* MSACCustomProperties.h */,
+				F803BBF21E8E3677004B1E7A /* MSACCustomProperties.m */,
+				3844FF1B1E8C2716003E9194 /* MSACDevice.h */,
+				3844FF1A1E8C2716003E9194 /* MSACDevice.m */,
+				6E3E2C9D1D35701000B1EE50 /* MSACLog.h */,
+				3844FF191E8C2716003E9194 /* MSACLogWithProperties.h */,
+				3844FF1C1E8C2716003E9194 /* MSACAbstractLog.h */,
+				B2CD74551F22BB710070E7DF /* MSACWrapperSdk.h */,
+				B2CD74561F22BB710070E7DF /* MSACWrapperSdk.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		38C4471C1ECE5352002E1B11 /* DelegateForwarder */ = {
+			isa = PBXGroup;
+			children = (
+				38C633C81FDF163D005F40C9 /* MSACAppDelegateUtil.h */,
+				38C4471E1ECE5352002E1B11 /* MSACAppDelegateForwarder.h */,
+				38C4471F1ECE5352002E1B11 /* MSACAppDelegateForwarder.m */,
+				38C633C61FDF15DD005F40C9 /* MSACCustomApplicationDelegate.h */,
+				3803208D217E8BD40089772A /* MSACDelegateForwarderPrivate.h */,
+				38032085217E85A90089772A /* MSACDelegateForwarder.h */,
+				38032086217E85A90089772A /* MSACDelegateForwarder.m */,
+				38032091217E9DC50089772A /* MSACCustomDelegate.h */,
+			);
+			path = DelegateForwarder;
+			sourceTree = "<group>";
+		};
+		6E0400FA1D1C98220051BCFA = {
+			isa = PBXGroup;
+			children = (
+				6E0401051D1C98220051BCFA /* AppCenter */,
+				6E2395791D22EF4F00E543C8 /* AppCenterTests */,
+				6E0401041D1C98220051BCFA /* Products */,
+			);
+			sourceTree = "<group>";
+			wrapsLines = 0;
+		};
+		6E0401041D1C98220051BCFA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C9A92007230C05D70068070D /* AppCenter.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6E0401051D1C98220051BCFA /* AppCenter */ = {
+			isa = PBXGroup;
+			children = (
+				6E0401401D1C99AC0051BCFA /* AppCenter.h */,
+				6E0401551D1C9AAA0051BCFA /* MSACAppCenter.h */,
+				6E0401561D1C9AAA0051BCFA /* MSACAppCenter.m */,
+				3889932E1E29829700C27B36 /* MSACAppCenterErrors.h */,
+				3542741A2012AF0500BE766F /* MSACChannelGroupProtocol.h */,
+				354274162012AE4000BE766F /* MSACChannelProtocol.h */,
+				6E04013F1D1C99AC0051BCFA /* MSACConstants.h */,
+				04B525B82194D44E00FA37FD /* MSACConstants+Flags.h */,
+				3542742220167DA400BE766F /* MSACEnable.h */,
+				358F9BC22019531F00B9E22C /* MSACLogger.h */,
+				3592ABA61DC90E3600EF4592 /* MSACLogger.m */,
+				6E0401451D1C99AC0051BCFA /* MSACService.h */,
+				387C76FC1D6C9CF100D68CC1 /* MSACServiceAbstract.h */,
+				D38024051E7126F500466558 /* MSACServiceAbstract.m */,
+				35D0B7511DDFABFD003EACCD /* MSACWrapperLogger.h */,
+				35D0B7521DDFABFD003EACCD /* MSACWrapperLogger.m */,
+				6E0401421D1C99AC0051BCFA /* Internals */,
+				3844FF161E8C261D003E9194 /* Model */,
+				6E0401821D1CAD810051BCFA /* Support */,
+			);
+			path = AppCenter;
+			sourceTree = "<group>";
+		};
+		6E0401421D1C99AC0051BCFA /* Internals */ = {
+			isa = PBXGroup;
+			children = (
+				6E0401581D1C9CFB0051BCFA /* AppCenter+Internal.h */,
+				6E0401441D1C99AC0051BCFA /* MSACAppCenterInternal.h */,
+				38E1B6791DDE3FDF000EFED1 /* MSACAppCenterPrivate.h */,
+				F803BBF51E8E383E004B1E7A /* MSACCustomPropertiesInternal.h */,
+				266ED9D2BA796BA0329F4FC7 /* MSACCustomPropertiesPrivate.h */,
+				244CC1F62399CA5A00A58F51 /* MSACDependencyConfiguration.h */,
+				244CC1F72399CA5A00A58F51 /* MSACDependencyConfiguration.m */,
+				3592ABA51DC90E3600EF4592 /* MSACLoggerInternal.h */,
+				387C757F1D6270A300D68CC1 /* MSACServiceAbstractInternal.h */,
+				387C758D1D64DF2500D68CC1 /* MSACServiceCommon.h */,
+				6E0401471D1C99AC0051BCFA /* MSACServiceInternal.h */,
+				38C4471C1ECE5352002E1B11 /* DelegateForwarder */,
+				E84B8E241D234EC7006FD231 /* Channel */,
+				047FEE0E21A48BDE00ED77CD /* Context */,
+				2DA0385B8A682DEEC59324CE /* HttpClient */,
+				E84B8E221D234EBB006FD231 /* Ingestion */,
+				6E171B511D234717000DC480 /* Model */,
+				E84B8E231D234EC1006FD231 /* Storage */,
+				6E0401481D1C99AC0051BCFA /* Util */,
+				E83283C21D46C62E000B029E /* Vendor */,
+			);
+			path = Internals;
+			sourceTree = "<group>";
+		};
+		6E0401481D1C99AC0051BCFA /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				B29D883B21E925A400EAF084 /* MSACOrderedDictionary.h */,
+				B29D883C21E925A400EAF084 /* MSACOrderedDictionary.m */,
+				B29D883A21E925A400EAF084 /* MSACOrderedDictionaryPrivate.h */,
+				B2CD748F1F22BE270070E7DF /* MSACConstants+Internal.h */,
+				8087362720C1348B004C4157 /* MSACEncrypter.h */,
+				80B7EA2020CA9C9C00DF524C /* MSACEncrypterPrivate.h */,
+				8087362820C134AC004C4157 /* MSACEncrypter.m */,
+				047FEE0621A4884600ED77CD /* MSACHistoryInfo.h */,
+				047FEE0721A4884600ED77CD /* MSACHistoryInfo.m */,
+				045BC3181E3FD8AC00B6C960 /* MSACKeychainUtil.h */,
+				386A69EC1FD8843D0057B316 /* MSACKeychainUtilPrivate.h */,
+				045BC3161E3FD88600B6C960 /* MSACKeychainUtil.m */,
+				B2CD74901F22BE270070E7DF /* MSACUtility.h */,
+				B2CD74911F22BE270070E7DF /* MSACUtility.m */,
+				B2CD74921F22BE270070E7DF /* MSACUtility+Application.h */,
+				B2CD74931F22BE270070E7DF /* MSACUtility+Application.m */,
+				B2CD74941F22BE270070E7DF /* MSACUtility+ApplicationPrivate.h */,
+				B2CD74951F22BE270070E7DF /* MSACUtility+Date.h */,
+				B2CD74961F22BE270070E7DF /* MSACUtility+Date.m */,
+				B2CD74971F22BE270070E7DF /* MSACUtility+Environment.h */,
+				B2CD74981F22BE270070E7DF /* MSACUtility+Environment.m */,
+				B2CD74991F22BE270070E7DF /* MSACUtility+File.h */,
+				B2CD749A1F22BE270070E7DF /* MSACUtility+File.m */,
+				B28E41D32076EC4000CC6AD8 /* MSACUtility+PropertyValidation.h */,
+				B28E41D42076ECFE00CC6AD8 /* MSACUtility+PropertyValidation.m */,
+				B2CD749B1F22BE270070E7DF /* MSACUtility+StringFormatting.h */,
+				B2CD749C1F22BE270070E7DF /* MSACUtility+StringFormatting.m */,
+				38148D8420D07FB70046257E /* MSACCompression.h */,
+				38148D8520D07FB70046257E /* MSACCompression.m */,
+				DF5DA1F823A0E55500DE695C /* MSACDispatcherUtil.h */,
+				DF5DA1FC23A0E57B00DE695C /* MSACDispatcherUtil.m */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		6E0401821D1CAD810051BCFA /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				6E0401841D1CAD810051BCFA /* AppCenter Debug.xcconfig */,
+				0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */,
+				04545DC8227B603D00A49E06 /* AppCenter.xcconfig */,
+				C9A92026230C08540068070D /* Info.plist */,
+				C26F4DED2546EB34006E0EB7 /* iOS Universal.xcconfig */,
+				0485AFEE1EAAAD0000C10CAF /* iOS.modulemap */,
+				049BC8281ECE3A5200FB6719 /* iOS.xcconfig */,
+				0485AFEC1EAAAC3B00C10CAF /* macOS.modulemap */,
+				049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */,
+				C26F4DEE2546EB34006E0EB7 /* tvOS Universal.xcconfig */,
+				043120701EE0BCC4007054C5 /* tvOS.modulemap */,
+				043120711EE0BCC4007054C5 /* tvOS.xcconfig */,
+				C26F4DE42546EB33006E0EB7 /* XCFramework.xcconfig */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		6E171B511D234717000DC480 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				E74B149F20B369BF002C0183 /* CommonSchema */,
+				3844FF121E8C22CC003E9194 /* MSACAbstractLogInternal.h */,
+				E88EBBEB1D2C612E007E7785 /* MSACAbstractLog.m */,
+				3513432D2056FF9000E6DC7D /* MSACAbstractLogPrivate.h */,
+				F803BBFA1E8E39AB004B1E7A /* MSACCustomPropertiesLog.h */,
+				F803BBF81E8E3989004B1E7A /* MSACCustomPropertiesLog.m */,
+				B2C3C1831DB83A3E00CB83F7 /* MSACDeviceInternal.h */,
+				6E171B581D234717000DC480 /* MSACLogContainer.h */,
+				6E171B591D234717000DC480 /* MSACLogContainer.m */,
+				E8010E671D2DD4EF0035196F /* MSACLogWithProperties.m */,
+				E7D23C6020B4EED000A47D62 /* MSACModel.h */,
+				04F3613C1FE1A92000A5A6D2 /* MSACNoAutoAssignSessionIdLog.h */,
+				E7D23C5C20B4EC3700A47D62 /* MSACSerializableObject.h */,
+				D38023E71E6EFC7C00466558 /* MSACStartServiceLog.h */,
+				D38023E61E6EFC7C00466558 /* MSACStartServiceLog.m */,
+				B2CD745D1F22BBBB0070E7DF /* MSACWrapperSdkInternal.h */,
+				38BC346C20B8CB0C00119C05 /* MSACLogConversion.h */,
+				354B79E0217109CE002183B5 /* Properties */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		6E2395791D22EF4F00E543C8 /* AppCenterTests */ = {
+			isa = PBXGroup;
+			children = (
+				E7D23C6C20B6407E00A47D62 /* Model */,
+				6E23957C1D22EF4F00E543C8 /* Info.plist */,
+				E829E4221D25C8BA00F19DA1 /* MSACAppCenterIngestionTests.m */,
+				384959D41D491D4F008F6B3A /* MSACAppCenterTests.m */,
+				38641B041EB0F40800B2CE73 /* MSACAppDelegateForwarderTests.m */,
+				6E48A5A61D383893006E8B5F /* MSACChannelGroupDefaultTests.m */,
+				6E48A5A31D3831FE006E8B5F /* MSACChannelUnitConfigurationTests.m */,
+				6EB1F40D1D2443B7005F9F99 /* MSACChannelUnitDefaultTests.m */,
+				F803BC371E8E6927004B1E7A /* MSACCustomPropertiesTests.m */,
+				3849BA7D1EF3489D0072E3E0 /* MSACDBStorageTests.m */,
+				38A3891B212B6E3C00F1C0D8 /* MSACDeadLockTests.m */,
+				2434213123A456C900EDFA83 /* MSACDependencyConfigurationTests.m */,
+				B2FD53641E567BCF0050F909 /* MSACDeviceHistoryInfoTests.m */,
+				385FC0541D37EBD700A1799F /* MSACDeviceTrackerTests.m */,
+				8087362A20C1DCCF004C4157 /* MSACEncrypterTests.m */,
+				9237B60B2244407000C273D8 /* MSACHttpClientTests.m */,
+				359E898F224BF70400795CF5 /* MSACHttpCallTests.m */,
+				04B59A4022050370008DA079 /* MSACHttpIngestionTests.m */,
+				04B7BBEE1E5FAD4D001A0CE1 /* MSACHttpUtilTests.m */,
+				04FD126A1E4103CC007ABFE7 /* MSACKeychainUtilTests.m */,
+				5C7877911EA0CFF3002263CC /* MSACLogDBStorageTests.m */,
+				D5812F312423C2FA00C5F5C5 /* MSACUserDefaultsTests.m */,
+				B24F3F161D93A3FF00827213 /* MSACLoggerTests.m */,
+				045660FA1D99EEEB002F7055 /* MSACLogWithPropertiesTests.m */,
+				E79750EA20A50BF400E3EAE8 /* MSACOneCollectorChannelDelegateTests.m */,
+				04A79A4720C6F635006D0072 /* MSACOneCollectorIngestionTests.m */,
+				B29D884621E9286100EAF084 /* MSACOrderedDictionaryTest.m */,
+				387A7FCA22178E91008A5587 /* MSACReachabilityTests.m */,
+				387C75951D64EE1900D68CC1 /* MSACServiceAbstractTests.m */,
+				0493783F1FE4913C000ADBAF /* MSACSessionContextTests.m */,
+				D36136821E7BB338004AE043 /* MSACStoragePerformanceTests.m */,
+				B26D4DD6211B9B5D00AB4E28 /* MSACTicketCacheTests.m */,
+				9C02498021A4BF3800C7B887 /* MSACUserIdContextTests.m */,
+				380A4DCA1DD6908A00E99219 /* MSACUtilityTests.m */,
+				04A20D70217660D50096723C /* MSACWrapperLoggerTests.m */,
+				6E2395831D22EF5F00E543C8 /* Frameworks */,
+				04A140AB1ECE7F6F001CEE94 /* Support */,
+				6E363AEF1D2C84D60079043D /* Util */,
+			);
+			path = AppCenterTests;
+			sourceTree = "<group>";
+		};
+		6E2395831D22EF5F00E543C8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */,
+				C2392EDA2464279400425640 /* OCMock.xcodeproj */,
+				DFE9551F244D96170061E3FA /* OHHTTPStubs */,
+				F82E4C6C217F159A00EDAB34 /* sqlite3.c */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		6E363AEF1D2C84D60079043D /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				D55E7083252F5A1000AB994D /* MSACTestSessionInfo.h */,
+				D55E7082252F5A1000AB994D /* MSACTestSessionInfo.m */,
+				386E8D921E25932100EECF0F /* MSACHttpTestUtil.h */,
+				386E8D911E25932100EECF0F /* MSACHttpTestUtil.m */,
+				B26D4DB8211B5BE300AB4E28 /* MSACMockCommonSchemaLog.h */,
+				B26D4DB9211B5BE300AB4E28 /* MSACMockCommonSchemaLog.m */,
+				E88D17041D35B6B500A5EA57 /* MSACMockLog.h */,
+				E88D17051D35B6B500A5EA57 /* MSACMockLog.m */,
+				38FDFF682109409900E17269 /* MSACMockKeychainUtil.h */,
+				38FDFF692109409900E17269 /* MSACMockKeychainUtil.m */,
+				D377A30B1E83A04600B2C97A /* MSACMockUserDefaults.h */,
+				D377A30C1E83A05900B2C97A /* MSACMockUserDefaults.m */,
+				805F3F691F209C8A00B489E4 /* MSACMockService.h */,
+				805F3F6A1F209C9D00B489E4 /* MSACMockService.m */,
+				35C0E3CA1FD6146A004E841E /* MSACMockSecondService.h */,
+				35C0E3C91FD6146A004E841E /* MSACMockSecondService.m */,
+				04311FEE1EE083C2007054C5 /* MSACTestFrameworks.h */,
+				35B80F9220C1FE1A00CDFA55 /* MSACMockLogObject.h */,
+				3511AE7C20C5FF150056A739 /* MSACMockLogWithConversion.h */,
+				B27B4125214C939D007CAE9C /* MSACStorageTestUtil.h */,
+				B27B4126214C939D007CAE9C /* MSACStorageTestUtil.m */,
+				384A925F2188BE400099BE70 /* MSACDelegateForwarderTestUtil.h */,
+				384A92602188BE400099BE70 /* MSACDelegateForwarderTestUtil.m */,
+				7FB70548222E58FB00D93258 /* MSACMockReachability.m */,
+				7FB7054A222E593400D93258 /* MSACMockReachability.h */,
+				24D44B402395DBBE003CC224 /* MSACTestUtil.h */,
+				24D44B412395DBBE003CC224 /* MSACTestUtil.m */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+		C2392EDB2464279400425640 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C2392EE52464279400425640 /* OCMock.framework */,
+				C2392EE72464279400425640 /* OCMockTests.xctest */,
+				C2392EE92464279400425640 /* libOCMock.a */,
+				C2392EEB2464279400425640 /* OCMockLibTests.xctest */,
+				C2392EED2464279400425640 /* OCMock.framework */,
+				C2392EEF2464279400425640 /* OCMock.framework */,
+				C2392EF12464279400425640 /* OCMock.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DFCB7FFE2472C1BD0058D292 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DFCB80082472C1BD0058D292 /* OCHamcrest.framework */,
+				DFCB800A2472C1BD0058D292 /* OCHamcrestTests.xctest */,
+				DFCB800C2472C1BD0058D292 /* libochamcrest.a */,
+				DFCB800E2472C1BD0058D292 /* libochamcrestTests.xctest */,
+				DFCB80102472C1BD0058D292 /* OCHamcrest.framework */,
+				DFCB80122472C1BD0058D292 /* OCHamcrest.framework */,
+				DFCB80142472C1BD0058D292 /* OCHamcrest.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DFE9551F244D96170061E3FA /* OHHTTPStubs */ = {
+			isa = PBXGroup;
+			children = (
+				DFE95520244D96170061E3FA /* HTTPStubs.m */,
+				DFE95521244D96170061E3FA /* NSURLRequest+HTTPBodyTesting.m */,
+				DFE95522244D96170061E3FA /* HTTPStubsMethodSwizzling.h */,
+				DFE95523244D96170061E3FA /* include */,
+				DFE9552A244D96170061E3FA /* HTTPStubsResponse+JSON.m */,
+				DFE9552B244D96170061E3FA /* HTTPStubsMethodSwizzling.m */,
+				DFE9552C244D96170061E3FA /* HTTPStubsResponse.m */,
+				DFE9552D244D96170061E3FA /* HTTPStubsPathHelpers.m */,
+				DFE9552E244D96170061E3FA /* HTTPStubs+NSURLSessionConfiguration.m */,
+			);
+			name = OHHTTPStubs;
+			path = ../../Vendor/OHHTTPStubs/Sources/OHHTTPStubs;
+			sourceTree = "<group>";
+		};
+		DFE95523244D96170061E3FA /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DFE95524244D96170061E3FA /* Compatibility.h */,
+				DFE95525244D96170061E3FA /* HTTPStubsResponse+JSON.h */,
+				DFE95526244D96170061E3FA /* HTTPStubsPathHelpers.h */,
+				DFE95527244D96170061E3FA /* HTTPStubsResponse.h */,
+				DFE95528244D96170061E3FA /* NSURLRequest+HTTPBodyTesting.h */,
+				DFE95529244D96170061E3FA /* HTTPStubs.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		E74B149F20B369BF002C0183 /* CommonSchema */ = {
+			isa = PBXGroup;
+			children = (
+				E74B14C020B36C66002C0183 /* MSACAppExtension.h */,
+				E74B14D820B37042002C0183 /* MSACAppExtension.m */,
+				E74B149720B364EE002C0183 /* MSACCommonSchemaLog.h */,
+				E74B149820B364EE002C0183 /* MSACCommonSchemaLog.m */,
+				E7D23C5420B4E38B00A47D62 /* MSACCSData.h */,
+				E7D23C5520B4E38B00A47D62 /* MSACCSData.m */,
+				E7D23C6420B6391700A47D62 /* MSACCSExtensions.h */,
+				E7D23C6520B6391700A47D62 /* MSACCSExtensions.m */,
+				359C38DB214079D90066C509 /* MSACDeviceExtension.h */,
+				359C38DC214079D90066C509 /* MSACDeviceExtension.m */,
+				E74B14A820B36B9B002C0183 /* MSACLocExtension.h */,
+				E74B14A920B36B9B002C0183 /* MSACLocExtension.m */,
+				2DA038EE68EEE1414A270ADA /* MSACMetadataExtension.h */,
+				2DA030746930EE3DCB6A21B3 /* MSACMetadataExtension.m */,
+				E74B14D020B36EC5002C0183 /* MSACNetExtension.h */,
+				E74B14D120B36EC5002C0183 /* MSACNetExtension.m */,
+				E74B14B820B36C2B002C0183 /* MSACOSExtension.h */,
+				E74B14D920B37042002C0183 /* MSACOSExtension.m */,
+				E74B14C820B36DF1002C0183 /* MSACProtocolExtension.h */,
+				E74B14C920B36DF1002C0183 /* MSACProtocolExtension.m */,
+				E74B14E820B3711F002C0183 /* MSACSDKExtension.h */,
+				E74B14E920B3711F002C0183 /* MSACSDKExtension.m */,
+				E74B14E420B370A5002C0183 /* MSACUserExtension.h */,
+				E74B14A120B36AAB002C0183 /* MSACUserExtension.m */,
+			);
+			path = CommonSchema;
+			sourceTree = "<group>";
+		};
+		E7D23C6C20B6407E00A47D62 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				E7D23C6D20B640A000A47D62 /* CommonSchema */,
+				58603EA088552D6FBB8EBE6C /* MSACAbstractLogTests.m */,
+				35DFC2172170044500455589 /* MSACBooleanTypedPropertyTests.m */,
+				F803BC391E8E6963004B1E7A /* MSACCustomPropertiesLogTests.m */,
+				35DFC2192170044600455589 /* MSACDateTimeTypedPropertyTests.m */,
+				6E3E2CC01D3596AE00B1EE50 /* MSACDeviceLogTests.m */,
+				35DFC2182170044600455589 /* MSACDoubleTypedPropertyTests.m */,
+				E88EBBFA1D2C8CC7007E7785 /* MSACLogContainerTests.m */,
+				35DFC21B2170044600455589 /* MSACLongTypedPropertyTests.m */,
+				38AE130F20C1B54000FAB2AD /* MSACModelTestsUtililty.h */,
+				38AE131020C1B54000FAB2AD /* MSACModelTestsUtililty.m */,
+				D38024111E7130C700466558 /* MSACStartServiceLogTests.m */,
+				35DFC21A2170044600455589 /* MSACStringTypedPropertyTests.m */,
+				35DFC21C2170044600455589 /* MSACTypedPropertyTests.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		E7D23C6D20B640A000A47D62 /* CommonSchema */ = {
+			isa = PBXGroup;
+			children = (
+				E7D23C5020B4E0CA00A47D62 /* MSACCommonSchemaLogTests.m */,
+				E7D23C6E20B6412300A47D62 /* MSACCSExtensionsTests.m */,
+			);
+			name = CommonSchema;
+			sourceTree = "<group>";
+		};
+		E83283C21D46C62E000B029E /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				E83283C31D46C62E000B029E /* Reachability */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
+		E83283C31D46C62E000B029E /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				E83283C41D46C62E000B029E /* MSAC_Reachability.h */,
+				E83283C51D46C62E000B029E /* MSAC_Reachability.m */,
+			);
+			path = Reachability;
+			sourceTree = "<group>";
+		};
+		E84B8E221D234EBB006FD231 /* Ingestion */ = {
+			isa = PBXGroup;
+			children = (
+				04237DC023A31617009BB406 /* MSACHttpClientDelegate.h */,
+				E8753D6B1D4BE4FC00241513 /* Util */,
+				E84B8E311D235209006FD231 /* MSACIngestionProtocol.h */,
+				E84B8E331D235226006FD231 /* MSACHttpIngestion.h */,
+				38F1944D1DADB93100D3E0FE /* MSACHttpIngestionPrivate.h */,
+				E84B8E341D235226006FD231 /* MSACHttpIngestion.m */,
+				BA6824A001520825F18DFC42 /* MSACAppCenterIngestion.h */,
+				BA6822A89D38F04D8D95CE83 /* MSACAppCenterIngestion.m */,
+				B2B7D50920C5E562001D31B8 /* MSACOneCollectorIngestion.h */,
+				B2ADB1412124C13300D0D7D9 /* MSACOneCollectorIngestionPrivate.h */,
+				B2B7D50A20C5E562001D31B8 /* MSACOneCollectorIngestion.m */,
+			);
+			path = Ingestion;
+			sourceTree = "<group>";
+		};
+		E84B8E231D234EC1006FD231 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				E84B8E381D235246006FD231 /* MSACStorage.h */,
+				3849BA791EF314440072E3E0 /* MSACDBStorage.h */,
+				3849BA841EF35D830072E3E0 /* MSACDBStoragePrivate.h */,
+				3849BA7B1EF3145A0072E3E0 /* MSACDBStorage.m */,
+				E8A8D1E91D3057A90022931E /* MSACAppCenterUserDefaults.h */,
+				E8A8D1EA1D3057A90022931E /* MSACAppCenterUserDefaults.m */,
+				B2CD74831F22BD910070E7DF /* MSACLogDBStorage.h */,
+				383481721EA7FF6100787F56 /* MSACLogDBStoragePrivate.h */,
+				B2CD74841F22BD910070E7DF /* MSACLogDBStorage.m */,
+				046658B7215AD59D0079DCC7 /* MSACLogDBStorageVersion.h */,
+				F8DC50C823AA75FF00BF8839 /* MSACStorageBindableType.h */,
+				F8DC50C923AA777400BF8839 /* MSACStorageNumberType.h */,
+				F8DC50CA23AA77CB00BF8839 /* MSACStorageTextType.h */,
+				F8DC50CC23AA77F700BF8839 /* MSACStorageTextType.m */,
+				F8DC50CE23AA7A3900BF8839 /* MSACStorageNumberType.m */,
+				F8BA7A2823AA8A26009FBCCF /* MSACStorageBindableArray.h */,
+				F8BA7A2C23AA8B84009FBCCF /* MSACStorageBindableArray.m */,
+				F898179E2433327C008D92E1 /* MSACAppCenterUserDefaultsPrivate.h */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		E84B8E241D234EC7006FD231 /* Channel */ = {
+			isa = PBXGroup;
+			children = (
+				E84B8E2C1D2351DB006FD231 /* MSACChannelGroupDefault.h */,
+				04AB676220E18A74002828AA /* MSACChannelGroupDefaultPrivate.h */,
+				E84B8E2D1D2351DB006FD231 /* MSACChannelGroupDefault.m */,
+				6EF628F21D371B1600CAFF64 /* MSACChannelUnitConfiguration.h */,
+				6EF628F31D371B1600CAFF64 /* MSACChannelUnitConfiguration.m */,
+				3542741C2012B53B00BE766F /* MSACChannelUnitDefault.h */,
+				2DA030B94CD3D38725671A79 /* MSACChannelUnitDefaultPrivate.h */,
+				6E0684621D36BC8D00A8CC6C /* MSACChannelUnitDefault.m */,
+				3542741B2012B02600BE766F /* MSACChannelDelegate.h */,
+				805275BF20A19F7B00704115 /* MSACOneCollectorChannelDelegate.h */,
+				E79750E620A4F41400E3EAE8 /* MSACOneCollectorChannelDelegatePrivate.h */,
+				805275C020A1A5F400704115 /* MSACOneCollectorChannelDelegate.m */,
+				354274192012AEFC00BE766F /* MSACChannelUnitProtocol.h */,
+				3814A8E120BF5E790093AF45 /* MSACCSEpochAndSeq.h */,
+				3814A8E520BF5FA00093AF45 /* MSACCSEpochAndSeq.m */,
+			);
+			path = Channel;
+			sourceTree = "<group>";
+		};
+		E8753D6B1D4BE4FC00241513 /* Util */ = {
+			isa = PBXGroup;
+			children = (
+				B23507B42118D22800F98D4F /* MSACTicketCache.h */,
+				B23507B32118D22800F98D4F /* MSACTicketCache.m */,
+			);
+			path = Util;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		C9A91FFF230C05D70068070D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8936CE0230C25A4006A330F /* MSACAbstractLog.h in Headers */,
+				F8936D81230C2805006A330F /* MSACServiceCommon.h in Headers */,
+				F8936CC3230C24D9006A330F /* MSACConstants.h in Headers */,
+				F8936DA2230C2805006A330F /* MSACHttpIngestion.h in Headers */,
+				F8936CBE230C24D9006A330F /* AppCenter.h in Headers */,
+				F8936D06230C2604006A330F /* MSACHttpClientPrivate.h in Headers */,
+				DF5DA1FA23A0E55500DE695C /* MSACDispatcherUtil.h in Headers */,
+				F8936DBB230C2805006A330F /* MSACBooleanTypedProperty.h in Headers */,
+				F8936D04230C2604006A330F /* MSACSessionContextPrivate.h in Headers */,
+				F8936D7C230C2805006A330F /* AppCenter+Internal.h in Headers */,
+				F8936CC0230C24D9006A330F /* MSACAppCenterErrors.h in Headers */,
+				F8936DBD230C2805006A330F /* MSACDoubleTypedProperty.h in Headers */,
+				F8936DA9230C2805006A330F /* MSACDeviceExtension.h in Headers */,
+				F8936D7F230C2805006A330F /* MSACLoggerInternal.h in Headers */,
+				F8936DA7230C2805006A330F /* MSACCSData.h in Headers */,
+				F8936DA3230C2805006A330F /* MSACAppCenterIngestion.h in Headers */,
+				F8936D01230C2604006A330F /* MSACOneCollectorChannelDelegatePrivate.h in Headers */,
+				F8936DB5230C2805006A330F /* MSACModel.h in Headers */,
+				F8936DCE230C2805006A330F /* MSACUtility+Environment.h in Headers */,
+				F8936D88230C2805006A330F /* MSACChannelGroupDefault.h in Headers */,
+				F8936DA6230C2805006A330F /* MSACCommonSchemaLog.h in Headers */,
+				F8936D9D230C2805006A330F /* MSACTicketCache.h in Headers */,
+				F8936DC0230C2805006A330F /* MSACTypedProperty.h in Headers */,
+				F8936DC3230C2805006A330F /* MSACAppCenterUserDefaults.h in Headers */,
+				F8936D8E230C2805006A330F /* MSACCSEpochAndSeq.h in Headers */,
+				F8936DC7230C2805006A330F /* MSACConstants+Internal.h in Headers */,
+				F8936DB1230C2805006A330F /* MSACAbstractLogInternal.h in Headers */,
+				F8936D0C230C2604006A330F /* MSACOrderedDictionaryPrivate.h in Headers */,
+				F8936CC4230C24D9006A330F /* MSACConstants+Flags.h in Headers */,
+				F8936D0D230C2604006A330F /* MSACEncrypterPrivate.h in Headers */,
+				F8936D95230C2805006A330F /* MSACSessionContext.h in Headers */,
+				F8936DC9230C2805006A330F /* MSACHistoryInfo.h in Headers */,
+				F8936D85230C2805006A330F /* MSACCustomApplicationDelegate.h in Headers */,
+				F8936D98230C2805006A330F /* MSACUserIdHistoryInfo.h in Headers */,
+				DFE9554F244D965A0061E3FA /* HTTPStubsPathHelpers.h in Headers */,
+				DFE9554D244D965A0061E3FA /* Compatibility.h in Headers */,
+				F8936DD0230C2805006A330F /* MSACUtility+PropertyValidation.h in Headers */,
+				F8936D8C230C2805006A330F /* MSACOneCollectorChannelDelegate.h in Headers */,
+				F8936DBE230C2805006A330F /* MSACLongTypedProperty.h in Headers */,
+				F8936DCF230C2805006A330F /* MSACUtility+File.h in Headers */,
+				F8936CC9230C24DA006A330F /* MSACWrapperLogger.h in Headers */,
+				F8936D0B230C2604006A330F /* MSACLogDBStoragePrivate.h in Headers */,
+				F8936D94230C2805006A330F /* MSACDeviceTracker.h in Headers */,
+				F8936D83230C2805006A330F /* MSACAppDelegateUtil.h in Headers */,
+				F8936DD2230C2805006A330F /* MSACCompression.h in Headers */,
+				F8936CFE230C2604006A330F /* MSACDelegateForwarderPrivate.h in Headers */,
+				D55E7088252F5A1000AB994D /* MSACTestSessionInfo.h in Headers */,
+				F8936CC1230C24D9006A330F /* MSACChannelGroupProtocol.h in Headers */,
+				F8936DAC230C2805006A330F /* MSACNetExtension.h in Headers */,
+				F8936D05230C2604006A330F /* MSACUserIdContextPrivate.h in Headers */,
+				F8936D96230C2805006A330F /* MSACSessionHistoryInfo.h in Headers */,
+				F8936DB0230C2805006A330F /* MSACUserExtension.h in Headers */,
+				F8936DAD230C2805006A330F /* MSACOSExtension.h in Headers */,
+				DFE9554E244D965A0061E3FA /* HTTPStubsResponse+JSON.h in Headers */,
+				F8936DB9230C2805006A330F /* MSACWrapperSdkInternal.h in Headers */,
+				F8936D9E230C2805006A330F /* MSACIngestionProtocol.h in Headers */,
+				F8936D03230C2604006A330F /* MSACDeviceTrackerPrivate.h in Headers */,
+				F8936DC5230C2805006A330F /* MSACLogDBStorageVersion.h in Headers */,
+				F8936DB7230C2805006A330F /* MSACSerializableObject.h in Headers */,
+				F8936CDF230C25A4006A330F /* MSACLogWithProperties.h in Headers */,
+				F8936D93230C2805006A330F /* MSACDeviceHistoryInfo.h in Headers */,
+				F8936DAA230C2805006A330F /* MSACLocExtension.h in Headers */,
+				F8936CBF230C24D9006A330F /* MSACAppCenter.h in Headers */,
+				F8936DB4230C2805006A330F /* MSACLogContainer.h in Headers */,
+				F8936CFC230C2604006A330F /* MSACAppCenterPrivate.h in Headers */,
+				F8936DD3230C2805006A330F /* MSAC_Reachability.h in Headers */,
+				F8936DB2230C2805006A330F /* MSACCustomPropertiesLog.h in Headers */,
+				F8936D82230C2805006A330F /* MSACServiceInternal.h in Headers */,
+				F8DC50DE23AA828E00BF8839 /* MSACStorageNumberType.h in Headers */,
+				F8936CC8230C24DA006A330F /* MSACServiceAbstract.h in Headers */,
+				F8936CFF230C2604006A330F /* MSACChannelGroupDefaultPrivate.h in Headers */,
+				F8936D08230C2604006A330F /* MSACOneCollectorIngestionPrivate.h in Headers */,
+				F8936DCA230C2805006A330F /* MSACKeychainUtil.h in Headers */,
+				F8936D97230C2805006A330F /* MSACUserIdContext.h in Headers */,
+				F8936DC8230C2805006A330F /* MSACEncrypter.h in Headers */,
+				F8936D9B230C2805006A330F /* MSACHttpClient.h in Headers */,
+				F8936DA4230C2805006A330F /* MSACOneCollectorIngestion.h in Headers */,
+				F8936CDC230C25A4006A330F /* MSACCustomProperties.h in Headers */,
+				244CC1F92399CA5A00A58F51 /* MSACDependencyConfiguration.h in Headers */,
+				F8936DCB230C2805006A330F /* MSACUtility.h in Headers */,
+				F8936D87230C2805006A330F /* MSACCustomDelegate.h in Headers */,
+				F8936D7E230C2805006A330F /* MSACCustomPropertiesInternal.h in Headers */,
+				F8936DCC230C2805006A330F /* MSACUtility+Application.h in Headers */,
+				DFE95551244D965A0061E3FA /* NSURLRequest+HTTPBodyTesting.h in Headers */,
+				DFE95545244D96540061E3FA /* HTTPStubsMethodSwizzling.h in Headers */,
+				F8936D8A230C2805006A330F /* MSACChannelUnitDefault.h in Headers */,
+				F8936D84230C2805006A330F /* MSACAppDelegateForwarder.h in Headers */,
+				F8936CFD230C2604006A330F /* MSACCustomPropertiesPrivate.h in Headers */,
+				F8936DBF230C2805006A330F /* MSACStringTypedProperty.h in Headers */,
+				F8936D7D230C2805006A330F /* MSACAppCenterInternal.h in Headers */,
+				F8936DC1230C2805006A330F /* MSACStorage.h in Headers */,
+				F8936D99230C2805006A330F /* MSACHttpUtil.h in Headers */,
+				F8936DBC230C2805006A330F /* MSACDateTimeTypedProperty.h in Headers */,
+				F8936D0A230C2604006A330F /* MSACDBStoragePrivate.h in Headers */,
+				F8936D80230C2805006A330F /* MSACServiceAbstractInternal.h in Headers */,
+				F8936DA8230C2805006A330F /* MSACCSExtensions.h in Headers */,
+				F8936D8D230C2805006A330F /* MSACChannelUnitProtocol.h in Headers */,
+				F8936CDE230C25A4006A330F /* MSACLog.h in Headers */,
+				F8936DCD230C2805006A330F /* MSACUtility+Date.h in Headers */,
+				F8936DAF230C2805006A330F /* MSACSDKExtension.h in Headers */,
+				F8936DC2230C2805006A330F /* MSACDBStorage.h in Headers */,
+				DFE95550244D965A0061E3FA /* HTTPStubsResponse.h in Headers */,
+				F8936DB3230C2805006A330F /* MSACDeviceInternal.h in Headers */,
+				F8936D00230C2604006A330F /* MSACChannelUnitDefaultPrivate.h in Headers */,
+				F8936DD1230C2805006A330F /* MSACUtility+StringFormatting.h in Headers */,
+				F8DC50DF23AA828E00BF8839 /* MSACStorageTextType.h in Headers */,
+				F8936DC6230C2805006A330F /* MSACOrderedDictionary.h in Headers */,
+				F8936DAB230C2805006A330F /* MSACMetadataExtension.h in Headers */,
+				F8936CC2230C24D9006A330F /* MSACChannelProtocol.h in Headers */,
+				F8936D9C230C2805006A330F /* MSACHttpCall.h in Headers */,
+				F8936CDD230C25A4006A330F /* MSACDevice.h in Headers */,
+				DFE95552244D965A0061E3FA /* HTTPStubs.h in Headers */,
+				F8BA7A2A23AA8A26009FBCCF /* MSACStorageBindableArray.h in Headers */,
+				F8936D8B230C2805006A330F /* MSACChannelDelegate.h in Headers */,
+				F8DC50DD23AA828E00BF8839 /* MSACStorageBindableType.h in Headers */,
+				F8936DA5230C2805006A330F /* MSACAppExtension.h in Headers */,
+				F8936DAE230C2805006A330F /* MSACProtocolExtension.h in Headers */,
+				F8936D07230C2604006A330F /* MSACHttpIngestionPrivate.h in Headers */,
+				F8936DC4230C2805006A330F /* MSACLogDBStorage.h in Headers */,
+				F8936D89230C2805006A330F /* MSACChannelUnitConfiguration.h in Headers */,
+				F8936CC6230C24D9006A330F /* MSACLogger.h in Headers */,
+				F8936DBA230C2805006A330F /* MSACLogConversion.h in Headers */,
+				F8936D86230C2805006A330F /* MSACDelegateForwarder.h in Headers */,
+				04237DC223A31617009BB406 /* MSACHttpClientDelegate.h in Headers */,
+				F8936D0F230C2604006A330F /* MSACUtility+ApplicationPrivate.h in Headers */,
+				F8936CC7230C24DA006A330F /* MSACService.h in Headers */,
+				F8936DB6230C2805006A330F /* MSACNoAutoAssignSessionIdLog.h in Headers */,
+				F8936DB8230C2805006A330F /* MSACStartServiceLog.h in Headers */,
+				F8936D09230C2604006A330F /* MSACAbstractLogPrivate.h in Headers */,
+				F8936CC5230C24D9006A330F /* MSACEnable.h in Headers */,
+				F8936D9A230C2805006A330F /* MSACHttpClientProtocol.h in Headers */,
+				F8936CE1230C25A4006A330F /* MSACWrapperSdk.h in Headers */,
+				F8936D0E230C2604006A330F /* MSACKeychainUtilPrivate.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		C9A91FFE230C05D70068070D /* AppCenter macOS Framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C9A92004230C05D70068070D /* Build configuration list for PBXNativeTarget "AppCenter macOS Framework" */;
+			buildPhases = (
+				C2CB276B230EDEC30076A4E0 /* Verify No Build Settings */,
+				C9A91FFF230C05D70068070D /* Headers */,
+				C9A92000230C05D70068070D /* Sources */,
+				C9A92001230C05D70068070D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "AppCenter macOS Framework";
+			productName = AppCenterStatic;
+			productReference = C9A92007230C05D70068070D /* AppCenter.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6E0400FB1D1C98220051BCFA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				CLASSPREFIX = MS;
+				LastUpgradeCheck = 1220;
+				ORGANIZATIONNAME = Microsoft;
+				TargetAttributes = {
+					C229D8AB2546E7E5001909F3 = {
+						CreatedOnToolsVersion = 12.2;
+						ProvisioningStyle = Automatic;
+					};
+					C9A91FFE230C05D70068070D = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 6E0400FE1D1C98220051BCFA /* Build configuration list for PBXProject "AppCenter" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6E0400FA1D1C98220051BCFA;
+			productRefGroup = 6E0401041D1C98220051BCFA /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = DFCB7FFE2472C1BD0058D292 /* Products */;
+					ProjectRef = DFCB7FFD2472C1BD0058D292 /* OCHamcrest.xcodeproj */;
+				},
+				{
+					ProductGroup = C2392EDB2464279400425640 /* Products */;
+					ProjectRef = C2392EDA2464279400425640 /* OCMock.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				C229D8AB2546E7E5001909F3 /* AppCenter */,
+				C9A91FFE230C05D70068070D /* AppCenter macOS Framework */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		C2392EE52464279400425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392EE42464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EE72464279400425640 /* OCMockTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCMockTests.xctest;
+			remoteRef = C2392EE62464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EE92464279400425640 /* libOCMock.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libOCMock.a;
+			remoteRef = C2392EE82464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EEB2464279400425640 /* OCMockLibTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCMockLibTests.xctest;
+			remoteRef = C2392EEA2464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EED2464279400425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392EEC2464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EEF2464279400425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392EEE2464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		C2392EF12464279400425640 /* OCMock.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCMock.framework;
+			remoteRef = C2392EF02464279400425640 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80082472C1BD0058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80072472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB800A2472C1BD0058D292 /* OCHamcrestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = OCHamcrestTests.xctest;
+			remoteRef = DFCB80092472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB800C2472C1BD0058D292 /* libochamcrest.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libochamcrest.a;
+			remoteRef = DFCB800B2472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB800E2472C1BD0058D292 /* libochamcrestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = libochamcrestTests.xctest;
+			remoteRef = DFCB800D2472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80102472C1BD0058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB800F2472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80122472C1BD0058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80112472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		DFCB80142472C1BD0058D292 /* OCHamcrest.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = OCHamcrest.framework;
+			remoteRef = DFCB80132472C1BD0058D292 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		C26F4E7C2546F406006E0EB7 /* Copy Products */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Products";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/../Scripts/copy-products.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C2CB276B230EDEC30076A4E0 /* Verify No Build Settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Verify No Build Settings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#\"${SRCROOT}/../Scripts/VerifyNoBuildSettings.swift\" ${PROJECT_NAME}.xcodeproj/project.pbxproj\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C9A92000230C05D70068070D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9A92103230C61820068070D /* MSACCommonSchemaLog.m in Sources */,
+				C9A920FC230C61820068070D /* MSACHttpCall.m in Sources */,
+				C9A92118230C61820068070D /* MSACTypedProperty.m in Sources */,
+				C9A92101230C61820068070D /* MSACOneCollectorIngestion.m in Sources */,
+				D55E7085252F5A1000AB994D /* MSACTestSessionInfo.m in Sources */,
+				C9A92126230C61820068070D /* MSACUtility+StringFormatting.m in Sources */,
+				C9A92114230C61820068070D /* MSACDateTimeTypedProperty.m in Sources */,
+				C9A920ED230C61820068070D /* MSACChannelUnitConfiguration.m in Sources */,
+				C9A9211E230C61820068070D /* MSACHistoryInfo.m in Sources */,
+				F8DC50E223AA828E00BF8839 /* MSACStorageNumberType.m in Sources */,
+				C9A920EA230C61820068070D /* MSACAppDelegateForwarder.m in Sources */,
+				C9A92123230C61820068070D /* MSACUtility+Environment.m in Sources */,
+				C9A920EE230C61820068070D /* MSACChannelUnitDefault.m in Sources */,
+				C9A920E8230C61820068070D /* MSACServiceAbstract.m in Sources */,
+				C9A92109230C61820068070D /* MSACNetExtension.m in Sources */,
+				C9A9211C230C61820068070D /* MSACOrderedDictionary.m in Sources */,
+				C9A92108230C61820068070D /* MSACMetadataExtension.m in Sources */,
+				C9A92112230C61820068070D /* MSACStartServiceLog.m in Sources */,
+				C9A920FA230C61820068070D /* MSACHttpUtil.m in Sources */,
+				C9A92113230C61820068070D /* MSACBooleanTypedProperty.m in Sources */,
+				244CC1FC2399CA5A00A58F51 /* MSACDependencyConfiguration.m in Sources */,
+				C9A920E9230C61820068070D /* MSACWrapperLogger.m in Sources */,
+				C9A920EF230C61820068070D /* MSACOneCollectorChannelDelegate.m in Sources */,
+				C9A920FB230C61820068070D /* MSACHttpClient.m in Sources */,
+				C9A920FD230C61820068070D /* MSACTicketCache.m in Sources */,
+				C9A920F7230C61820068070D /* MSACSessionHistoryInfo.m in Sources */,
+				F8BA7A2E23AA8B84009FBCCF /* MSACStorageBindableArray.m in Sources */,
+				C9A920EB230C61820068070D /* MSACDelegateForwarder.m in Sources */,
+				C9A9210B230C61820068070D /* MSACProtocolExtension.m in Sources */,
+				C9A920F5230C61820068070D /* MSACDeviceTracker.m in Sources */,
+				C9A9211F230C61820068070D /* MSACKeychainUtil.m in Sources */,
+				C9A920EC230C61820068070D /* MSACChannelGroupDefault.m in Sources */,
+				C9A9210F230C61820068070D /* MSACCustomPropertiesLog.m in Sources */,
+				C9A92105230C61820068070D /* MSACCSExtensions.m in Sources */,
+				C9A92129230C61820068070D /* MSACCustomProperties.m in Sources */,
+				C9A92121230C61820068070D /* MSACUtility+Application.m in Sources */,
+				C9A92117230C61820068070D /* MSACStringTypedProperty.m in Sources */,
+				C9A92111230C61820068070D /* MSACLogWithProperties.m in Sources */,
+				C9A920F0230C61820068070D /* MSACCSEpochAndSeq.m in Sources */,
+				C9A92128230C61820068070D /* MSAC_Reachability.m in Sources */,
+				C9A92102230C61820068070D /* MSACAppExtension.m in Sources */,
+				C9A92122230C61820068070D /* MSACUtility+Date.m in Sources */,
+				C9A92119230C61820068070D /* MSACDBStorage.m in Sources */,
+				C9A92110230C61820068070D /* MSACLogContainer.m in Sources */,
+				C9A92124230C61820068070D /* MSACUtility+File.m in Sources */,
+				C9A92125230C61820068070D /* MSACUtility+PropertyValidation.m in Sources */,
+				DF5DA1FE23A0E57B00DE695C /* MSACDispatcherUtil.m in Sources */,
+				C9A92127230C61820068070D /* MSACCompression.m in Sources */,
+				C9A9210D230C61820068070D /* MSACUserExtension.m in Sources */,
+				C9A9210E230C61820068070D /* MSACAbstractLog.m in Sources */,
+				C9A920F6230C61820068070D /* MSACSessionContext.m in Sources */,
+				C9A92106230C61820068070D /* MSACDeviceExtension.m in Sources */,
+				C9A920F4230C61820068070D /* MSACDeviceHistoryInfo.m in Sources */,
+				C9A920E6230C61820068070D /* MSACAppCenter.m in Sources */,
+				C9A9211A230C61820068070D /* MSACAppCenterUserDefaults.m in Sources */,
+				C9A9210C230C61820068070D /* MSACSDKExtension.m in Sources */,
+				C9A920E7230C61820068070D /* MSACLogger.m in Sources */,
+				C9A9211D230C61820068070D /* MSACEncrypter.m in Sources */,
+				C9A9212B230C61820068070D /* MSACWrapperSdk.m in Sources */,
+				C9A9211B230C61820068070D /* MSACLogDBStorage.m in Sources */,
+				C9A92115230C61820068070D /* MSACDoubleTypedProperty.m in Sources */,
+				C9A92116230C61820068070D /* MSACLongTypedProperty.m in Sources */,
+				C9A920F9230C61820068070D /* MSACUserIdHistoryInfo.m in Sources */,
+				C9A92120230C61820068070D /* MSACUtility.m in Sources */,
+				F8DC50E123AA828E00BF8839 /* MSACStorageTextType.m in Sources */,
+				C9A920FF230C61820068070D /* MSACHttpIngestion.m in Sources */,
+				C9A92100230C61820068070D /* MSACAppCenterIngestion.m in Sources */,
+				C9A920F8230C61820068070D /* MSACUserIdContext.m in Sources */,
+				C9A92107230C61820068070D /* MSACLocExtension.m in Sources */,
+				C9A92104230C61820068070D /* MSACCSData.m in Sources */,
+				C9A9210A230C61820068070D /* MSACOSExtension.m in Sources */,
+				C9A9212A230C61820068070D /* MSACDevice.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6E04010A1D1C98220051BCFA /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6E0401841D1CAD810051BCFA /* AppCenter Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = DebugAppStore;
+		};
+		6E04010B1D1C98220051BCFA /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */;
+			buildSettings = {
+			};
+			name = ReleaseAppStore;
+		};
+		C229D8AD2546E7E5001909F3 /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = DebugAppStore;
+		};
+		C229D8AE2546E7E5001909F3 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = ReleaseAppStore;
+		};
+		C9A92005230C05D70068070D /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = DebugAppStore;
+		};
+		C9A92006230C05D70068070D /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = ReleaseAppStore;
+		};
+		D0076ED7256859DC007EF588 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */;
+			buildSettings = {
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0076ED8256859DC007EF588 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0076ED9256859DC007EF588 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = ReleaseHockeyapp;
+		};
+		D0076EDA256859E2007EF588 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */;
+			buildSettings = {
+			};
+			name = DebugHockeyapp;
+		};
+		D0076EDB256859E2007EF588 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = DebugHockeyapp;
+		};
+		D0076EDC256859E2007EF588 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = DebugHockeyapp;
+		};
+		D0076EDD256859E7007EF588 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0469D1B11F4DF89A00A43A8E /* AppCenter Release.xcconfig */;
+			buildSettings = {
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0076EDE256859E7007EF588 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0076EDF256859E7007EF588 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0076EE0256859ED007EF588 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6E0401841D1CAD810051BCFA /* AppCenter Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Github;
+		};
+		D0076EE1256859ED007EF588 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+			};
+			name = Github;
+		};
+		D0076EE2256859ED007EF588 /* Github */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 049BC8291ECE3A5A00FB6719 /* macOS.xcconfig */;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = Github;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6E0400FE1D1C98220051BCFA /* Build configuration list for PBXProject "AppCenter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6E04010A1D1C98220051BCFA /* DebugAppStore */,
+				D0076EE0256859ED007EF588 /* Github */,
+				6E04010B1D1C98220051BCFA /* ReleaseAppStore */,
+				D0076ED7256859DC007EF588 /* ReleaseHockeyapp */,
+				D0076EDA256859E2007EF588 /* DebugHockeyapp */,
+				D0076EDD256859E7007EF588 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+		C229D8AC2546E7E5001909F3 /* Build configuration list for PBXAggregateTarget "AppCenter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C229D8AD2546E7E5001909F3 /* DebugAppStore */,
+				D0076EE1256859ED007EF588 /* Github */,
+				C229D8AE2546E7E5001909F3 /* ReleaseAppStore */,
+				D0076ED8256859DC007EF588 /* ReleaseHockeyapp */,
+				D0076EDB256859E2007EF588 /* DebugHockeyapp */,
+				D0076EDE256859E7007EF588 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+		C9A92004230C05D70068070D /* Build configuration list for PBXNativeTarget "AppCenter macOS Framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C9A92005230C05D70068070D /* DebugAppStore */,
+				D0076EE2256859ED007EF588 /* Github */,
+				C9A92006230C05D70068070D /* ReleaseAppStore */,
+				D0076ED9256859DC007EF588 /* ReleaseHockeyapp */,
+				D0076EDC256859E2007EF588 /* DebugHockeyapp */,
+				D0076EDF256859E7007EF588 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6E0400FB1D1C98220051BCFA /* Project object */;
+}

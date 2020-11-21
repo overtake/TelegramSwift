@@ -1,0 +1,18 @@
+FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../Vendor/$(APPCENTER_BUILD_PLATFORM)"/**
+HEADER_SEARCH_PATHS = "$(SRCROOT)/../Vendor/$(APPCENTER_BUILD_PLATFORM)"/** "$(SRCROOT)/../Vendor/SQLite3"
+LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../Vendor/$(APPCENTER_BUILD_PLATFORM)"/**
+
+APPLICATION_EXTENSION_API_ONLY = NO
+INFOPLIST_FILE = $(PROJECT_NAME)Tests/Info.plist
+
+// OCMock assumes the use of 'unqualified id'
+WARNING_CFLAGS = -Wno-objc-messaging-id
+
+OTHER_CFLAGS = $(inherited) -iframework "$(PLATFORM_DIR)/Developer/Library/Frameworks"
+
+OTHER_LDFLAGS = $(inherited) -ObjC -lz
+OTHER_LDFLAGS = $(OTHER_LDFLAGS) -framework Foundation
+OTHER_LDFLAGS = $(OTHER_LDFLAGS) -framework Security
+OTHER_LDFLAGS = $(OTHER_LDFLAGS) -framework SystemConfiguration
+
+ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES

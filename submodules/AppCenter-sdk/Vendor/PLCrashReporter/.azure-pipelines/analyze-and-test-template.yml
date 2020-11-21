@@ -1,0 +1,56 @@
+parameters:
+- name: platforms
+  type: object
+
+jobs:
+- ${{ each platform in parameters.platforms }}:
+  - job:
+    displayName: ${{ format('CrashReporter {0} Analyze and Test', platform) }}
+    pool:
+      vmImage: internal-macos-10.15
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - task: Xcode@5
+      displayName: Analyze
+      inputs:
+        actions: analyze
+        configuration: Debug
+        xcWorkspacePath: CrashReporter.xcodeproj
+        ${{ if eq(platform, 'MacCatalyst') }}:
+          scheme: 'CrashReporter iOS'
+          destinationPlatformOption: macOS
+        ${{ if ne(platform, 'MacCatalyst') }}:
+          scheme: 'CrashReporter ${{ platform }}'
+          destinationPlatformOption: ${{ platform }}
+        ${{ if eq(platform, 'iOS') }}:
+          destinationSimulators: 'iPhone 11'
+        ${{ if eq(platform, 'tvOS') }}:
+          destinationSimulators: 'Apple TV'
+
+    - task: Xcode@5
+      displayName: Test
+      inputs:
+        actions: test
+        configuration: Debug
+        xcWorkspacePath: CrashReporter.xcodeproj
+        ${{ if eq(platform, 'MacCatalyst') }}:
+          scheme: 'CrashReporter iOS'
+          destinationPlatformOption: macOS
+        ${{ if ne(platform, 'MacCatalyst') }}:
+          scheme: 'CrashReporter ${{ platform }}'
+          destinationPlatformOption: ${{ platform }}
+        ${{ if eq(platform, 'iOS') }}:
+          destinationSimulators: 'iPhone 11'
+        ${{ if eq(platform, 'tvOS') }}:
+          destinationSimulators: 'Apple TV'
+        publishJUnitResults: true
+      timeoutInMinutes: 10
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Diagnostic Reports'
+      inputs:
+        PathtoPublish: /Users/runner/Library/Logs/DiagnosticReports
+        ArtifactName: 'Test Diagnostic Reports'
+      condition: failed()

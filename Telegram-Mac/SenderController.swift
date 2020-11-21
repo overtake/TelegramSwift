@@ -53,7 +53,9 @@ class VoiceSenderContainer : MediaSenderContainer {
     public init(data:RecordedAudioData, id: Int64?) {
         self.data = data
         self.id = id
-        super.init(path: data.path)
+        let path = NSTemporaryDirectory() + "\(arc4random64())"
+        try? data.compressedData.write(to: URL.init(fileURLWithPath: path))
+        super.init(path: path)
         
     }
 }
