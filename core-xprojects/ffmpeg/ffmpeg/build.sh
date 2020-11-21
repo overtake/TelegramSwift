@@ -145,7 +145,6 @@ then
 			    --prefix="$THIN/$ARCH" \
 			    --pkg-config="$PKG_CONFIG" \
 			    --pkg-config-flags="--libopus_path $LIBOPUS_PATH" \
-                --mmacosx-version-min="10.11" \
 			|| exit 1
 			echo "$CONFIGURE_FLAGS" > "$CONFIGURED_MARKER"
 		fi
