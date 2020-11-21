@@ -1,0 +1,1 @@
+../../../AppCenter/AppCenter/Model/MSACAbstractLog.h

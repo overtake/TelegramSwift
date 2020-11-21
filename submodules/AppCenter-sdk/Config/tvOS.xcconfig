@@ -1,0 +1,8 @@
+SDKROOT = appletvos
+SKIP_INSTALL = YES
+TARGETED_DEVICE_FAMILY = 3
+
+OTHER_CFLAGS = $(inherited) -fembed-bitcode-marker
+OTHER_CFLAGS[config=Release][sdk=appletvos*] = $(GLOBAL_CFLAGS) -fembed-bitcode
+
+APPCENTER_BUILD_PLATFORM = tvOS

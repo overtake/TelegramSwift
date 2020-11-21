@@ -1,0 +1,5 @@
+PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.appcenter.crashes
+
+OTHER_LDFLAGS = $(inherited) -framework Foundation -lc++ -lz
+
+USER_HEADER_SEARCH_PATHS = $(USER_HEADER_SEARCH_PATHS) "$(SRCROOT)/../Vendor/PLCrashReporter/Source"
