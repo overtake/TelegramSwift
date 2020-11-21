@@ -1,0 +1,11 @@
+GET|POST
+.*/users
+200
+application/json
+Connection: Close
+
+{
+"user_id":    "happyuser1",
+"user_token": "happytoken",
+"status": "SUCCESS"
+}

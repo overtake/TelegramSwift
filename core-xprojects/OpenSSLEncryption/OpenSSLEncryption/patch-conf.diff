@@ -1,0 +1,27 @@
+diff --git a/Configurations/10-main.conf b/Configurations/10-main.conf
+index c9e1a46..a94d8ea 100644
+--- a/Configurations/10-main.conf
++++ b/Configurations/10-main.conf
+@@ -1551,13 +1551,21 @@ my %targets = (
+         perlasm_scheme   => "macosx",
+     },
+     "darwin64-x86_64-cc" => {
+-        inherit_from     => [ "darwin-common", asm("x86_64_asm") ],
++        inherit_from     => [ "darwin-common", asm("no_asm") ],
+         CFLAGS           => add("-Wall"),
+         cflags           => add("-arch x86_64"),
+         lib_cppflags     => add("-DL_ENDIAN"),
+         bn_ops           => "SIXTY_FOUR_BIT_LONG",
+         perlasm_scheme   => "macosx",
+     },
++    "darwin64-arm64-cc" => {
++        inherit_from     => [ "darwin-common", asm("no_asm") ],
++        CFLAGS           => add("-Wall"),
++        cflags           => add("-arch arm64"),
++        lib_cppflags     => add("-DL_ENDIAN"),
++        bn_ops           => "SIXTY_FOUR_BIT_LONG",
++        perlasm_scheme   => "macosx",
++    },
+ 
+ ##### GNU Hurd
+     "hurd-x86" => {

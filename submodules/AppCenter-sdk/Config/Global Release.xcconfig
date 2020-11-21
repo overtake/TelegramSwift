@@ -1,0 +1,26 @@
+#include "./Global.xcconfig"
+
+// :Mark: Architectures
+ONLY_ACTIVE_ARCH = NO
+
+// :Mark: Build Options
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+ENABLE_TESTABILITY = NO
+VALIDATE_PRODUCT = YES
+BITCODE_GENERATION_MODE = bitcode
+
+// :Mark: Apple LLVM 8.1 - Code Generation
+GCC_OPTIMIZATION_LEVEL = s
+
+// :Mark: Apple LLVM 8.1 - Preprocessing
+ENABLE_NS_ASSERTIONS = NO
+
+// :Mark: User-Defined
+MTL_ENABLE_DEBUG_INFO = NO
+
+// :Mark: Language - Modules
+// Avoid dSYM warnings during build macOS application in release mode.
+CLANG_ENABLE_MODULE_DEBUGGING[sdk=macosx*] = NO
+
+// Build without code-coverage to avoid 'undefined symbols' issue.
+CLANG_ENABLE_CODE_COVERAGE = NO

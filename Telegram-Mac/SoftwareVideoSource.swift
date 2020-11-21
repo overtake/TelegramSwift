@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import FFMpegBinding
 import Foundation
 import CoreMedia
 import SwiftSignalKit

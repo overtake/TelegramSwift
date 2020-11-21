@@ -1,0 +1,20 @@
+parameters:
+- name: scheme
+  type: string
+
+- name: destination
+  type: object
+  default: {}
+
+steps:
+- task: Xcode@5
+  displayName: ${{ format('Build {0} for Apple Silicon', parameters.scheme) }}
+  inputs:
+    xcWorkspacePath: CrashReporter.xcodeproj
+    scheme: ${{ parameters.scheme }}
+    configuration: Release
+    sdk:
+    xcodeVersion: specifyPath
+    xcodeDeveloperDir: '/Applications/Xcode_12.2.app/Contents/Developer'
+    args: 'SYMROOT="$(Build.BinariesDirectory)" ONLY_ACTIVE_ARCH=NO ARCHS=arm64'
+    ${{ insert }}: ${{ parameters.destination }}
