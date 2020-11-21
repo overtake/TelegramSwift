@@ -34,7 +34,7 @@ prlctl start "$VM_NAME"
 
 
 rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
-tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" --exclude "build" "."
+tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" "."
 
 
 
