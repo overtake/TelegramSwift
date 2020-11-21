@@ -12,8 +12,8 @@
 		A790A2ED236AFE7C000451B5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A2EC236AFE7C000451B5 /* Foundation.framework */; };
 		A790A30F236B097D000451B5 /* EncryptionProvider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A790A2FF236B0188000451B5 /* EncryptionProvider.framework */; };
 		A791912C240CFDB6002011CA /* OpenSSLEncryptionProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = A791912B240CFDB6002011CA /* OpenSSLEncryptionProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0983AD82565B0DD00467703 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983AD62565B0DD00467703 /* libssl.a */; };
-		D0983AD92565B0DE00467703 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983AD72565B0DD00467703 /* libcrypto.a */; };
+		D0076EAE25685957007EF588 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983AD72565B0DD00467703 /* libcrypto.a */; };
+		D0076EAF25685957007EF588 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983AD62565B0DD00467703 /* libssl.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,8 +37,8 @@
 			files = (
 				A790A30F236B097D000451B5 /* EncryptionProvider.framework in Frameworks */,
 				A790A2ED236AFE7C000451B5 /* Foundation.framework in Frameworks */,
-				D0983AD82565B0DD00467703 /* libssl.a in Frameworks */,
-				D0983AD92565B0DE00467703 /* libcrypto.a in Frameworks */,
+				D0076EAE25685957007EF588 /* libcrypto.a in Frameworks */,
+				D0076EAF25685957007EF588 /* libssl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

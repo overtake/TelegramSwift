@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import OpusBinding
 import Foundation
 import SwiftSignalKit
 import CoreMedia
@@ -142,11 +142,18 @@ private func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: U
 }
 
 struct RecordedAudioData {
-    let path: String
-    let duration: Double
-    let waveform: Data?
-    let id:Int64?
+    public let compressedData: Data
+    public let duration: Double
+    public let waveform: Data?
+    public let id:Int64?
+    public init(compressedData: Data, duration: Double, waveform: Data?, id: Int64?) {
+        self.compressedData = compressedData
+        self.duration = duration
+        self.waveform = waveform
+        self.id = id
+    }
 }
+
 
 final class ManagedAudioRecorderContext {
     private let id: Int32
@@ -175,7 +182,7 @@ final class ManagedAudioRecorderContext {
     private var recordingStateUpdateTimestamp: Double?
     
     
-    init(queue: Queue, micLevel: ValuePromise<Float>, recordingState: ValuePromise<AudioRecordingState>, dataItem: TGDataItem, liveUploading: PreUploadManager?) {
+    init(queue: Queue, micLevel: ValuePromise<Float>, recordingState: ValuePromise<AudioRecordingState>, liveUploading: PreUploadManager?) {
         assert(queue.isCurrent())
         self.liveUploading = liveUploading
         self.id = getNextRecorderContextId()
@@ -183,7 +190,7 @@ final class ManagedAudioRecorderContext {
         self.recordingState = recordingState
         
         self.queue = queue
-        self.dataItem = dataItem
+        self.dataItem = TGDataItem()
         self.oggWriter = TGOggOpusWriter()
         
         addAudioRecorderContext(self.id, self)
@@ -521,7 +528,7 @@ final class ManagedAudioRecorderContext {
                 
             }
             liveUploading?.fileDidChangedSize(true)
-            return RecordedAudioData(path: self.dataItem.path(), duration: self.oggWriter.encodedDuration(), waveform: waveform, id: liveUploading?.id)
+            return RecordedAudioData(compressedData: self.dataItem.data(), duration: self.oggWriter.encodedDuration(), waveform: waveform, id: liveUploading?.id)
         } else {
             return nil
         }
@@ -563,10 +570,10 @@ final class ManagedAudioRecorder {
         return self.recordingStateValue.get()
     }
     
-    init(liveUploading: PreUploadManager?, dataItem: TGDataItem) {
+    init(liveUploading: PreUploadManager?) {
         
         self.queue.async {
-            let context = ManagedAudioRecorderContext(queue: self.queue, micLevel: self.micLevelValue, recordingState: self.recordingStateValue, dataItem: dataItem, liveUploading: liveUploading)
+            let context = ManagedAudioRecorderContext(queue: self.queue, micLevel: self.micLevelValue, recordingState: self.recordingStateValue, liveUploading: liveUploading)
             self.contextRef = Unmanaged.passRetained(context)
         }
     }

@@ -7,9 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D0076E8D256853F7007EF588 /* OpenSSLEncryption.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C122566CCD900467703 /* OpenSSLEncryption.framework */; };
 		D0983C002566C86800467703 /* webrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983BFE2566C86800467703 /* webrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0983C132566CCD900467703 /* OpenSSLEncryption.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C122566CCD900467703 /* OpenSSLEncryption.framework */; };
-		D0983C42256815B200467703 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C41256815B200467703 /* libmac_framework_objc_static.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,8 +24,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0983C132566CCD900467703 /* OpenSSLEncryption.framework in Frameworks */,
-				D0983C42256815B200467703 /* libmac_framework_objc_static.a in Frameworks */,
+				D0076E8D256853F7007EF588 /* OpenSSLEncryption.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

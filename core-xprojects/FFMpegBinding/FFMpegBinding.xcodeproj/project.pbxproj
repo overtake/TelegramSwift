@@ -7,140 +7,221 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A7919027240CF904002011CA /* ReachabilityPublic.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919025240CF904002011CA /* ReachabilityPublic.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7919030240CF91D002011CA /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = A791902F240CF91D002011CA /* Reachability.m */; };
-		A7919032240CF925002011CA /* Reachability.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919031240CF925002011CA /* Reachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FBC25691D2D007EF588 /* FFMpegRemuxer.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB325691D2D007EF588 /* FFMpegRemuxer.m */; };
+		D0076FBD25691D2D007EF588 /* FFMpegAVFrame.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB425691D2D007EF588 /* FFMpegAVFrame.m */; };
+		D0076FBE25691D2D007EF588 /* FFMpegAVFormatContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB525691D2D007EF588 /* FFMpegAVFormatContext.m */; };
+		D0076FBF25691D2D007EF588 /* FFMpegAVIOContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB625691D2D007EF588 /* FFMpegAVIOContext.m */; };
+		D0076FC025691D2D007EF588 /* FFMpegSWResample.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB725691D2D007EF588 /* FFMpegSWResample.m */; };
+		D0076FC125691D2D007EF588 /* FFMpegGlobals.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB825691D2D007EF588 /* FFMpegGlobals.m */; };
+		D0076FC225691D2D007EF588 /* FFMpegAVCodec.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FB925691D2D007EF588 /* FFMpegAVCodec.m */; };
+		D0076FC325691D2D007EF588 /* FFMpegPacket.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FBA25691D2D007EF588 /* FFMpegPacket.m */; };
+		D0076FC425691D2D007EF588 /* FFMpegAVCodecContext.m in Sources */ = {isa = PBXBuildFile; fileRef = D0076FBB25691D2D007EF588 /* FFMpegAVCodecContext.m */; };
+		D0076FD325691D3C007EF588 /* FFMpegGlobals.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FC825691D3C007EF588 /* FFMpegGlobals.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD425691D3C007EF588 /* FFMpegAVCodec.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FC925691D3C007EF588 /* FFMpegAVCodec.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD525691D3C007EF588 /* FFMpegAVCodecContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCA25691D3C007EF588 /* FFMpegAVCodecContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD625691D3C007EF588 /* FFMpegPacket.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCB25691D3C007EF588 /* FFMpegPacket.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD725691D3C007EF588 /* FFMpegAVFormatContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCC25691D3C007EF588 /* FFMpegAVFormatContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD825691D3C007EF588 /* FFMpegBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCD25691D3C007EF588 /* FFMpegBinding.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FD925691D3C007EF588 /* FFMpegAVFrame.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCE25691D3C007EF588 /* FFMpegAVFrame.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FDA25691D3C007EF588 /* FFMpegRemuxer.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FCF25691D3C007EF588 /* FFMpegRemuxer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FDB25691D3C007EF588 /* FFMpegAVIOContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FD025691D3C007EF588 /* FFMpegAVIOContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FDC25691D3C007EF588 /* FFMpegAVSampleFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FD125691D3C007EF588 /* FFMpegAVSampleFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FDD25691D3C007EF588 /* FFMpegSWResample.h in Headers */ = {isa = PBXBuildFile; fileRef = D0076FD225691D3C007EF588 /* FFMpegSWResample.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D0076FF425691E9B007EF588 /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076FF325691E9B007EF588 /* ffmpeg.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A7919022240CF904002011CA /* Reachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Reachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7919025240CF904002011CA /* ReachabilityPublic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReachabilityPublic.h; sourceTree = "<group>"; };
-		A7919026240CF904002011CA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A791902F240CF91D002011CA /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Reachability.m; path = "../../../../submodules/telegram-ios/submodules/Reachability/Sources/Reachability.m"; sourceTree = "<group>"; };
-		A7919031240CF925002011CA /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Reachability.h; path = "../../../../submodules/telegram-ios/submodules/Reachability/PublicHeaders/Reachability/Reachability.h"; sourceTree = "<group>"; };
+		D0076FA625691C89007EF588 /* FFMpegBinding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FFMpegBinding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0076FAA25691C89007EF588 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D0076FB325691D2D007EF588 /* FFMpegRemuxer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegRemuxer.m; sourceTree = "<group>"; };
+		D0076FB425691D2D007EF588 /* FFMpegAVFrame.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegAVFrame.m; sourceTree = "<group>"; };
+		D0076FB525691D2D007EF588 /* FFMpegAVFormatContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegAVFormatContext.m; sourceTree = "<group>"; };
+		D0076FB625691D2D007EF588 /* FFMpegAVIOContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegAVIOContext.m; sourceTree = "<group>"; };
+		D0076FB725691D2D007EF588 /* FFMpegSWResample.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegSWResample.m; sourceTree = "<group>"; };
+		D0076FB825691D2D007EF588 /* FFMpegGlobals.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegGlobals.m; sourceTree = "<group>"; };
+		D0076FB925691D2D007EF588 /* FFMpegAVCodec.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegAVCodec.m; sourceTree = "<group>"; };
+		D0076FBA25691D2D007EF588 /* FFMpegPacket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegPacket.m; sourceTree = "<group>"; };
+		D0076FBB25691D2D007EF588 /* FFMpegAVCodecContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFMpegAVCodecContext.m; sourceTree = "<group>"; };
+		D0076FC825691D3C007EF588 /* FFMpegGlobals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegGlobals.h; sourceTree = "<group>"; };
+		D0076FC925691D3C007EF588 /* FFMpegAVCodec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVCodec.h; sourceTree = "<group>"; };
+		D0076FCA25691D3C007EF588 /* FFMpegAVCodecContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVCodecContext.h; sourceTree = "<group>"; };
+		D0076FCB25691D3C007EF588 /* FFMpegPacket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegPacket.h; sourceTree = "<group>"; };
+		D0076FCC25691D3C007EF588 /* FFMpegAVFormatContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVFormatContext.h; sourceTree = "<group>"; };
+		D0076FCD25691D3C007EF588 /* FFMpegBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegBinding.h; sourceTree = "<group>"; };
+		D0076FCE25691D3C007EF588 /* FFMpegAVFrame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVFrame.h; sourceTree = "<group>"; };
+		D0076FCF25691D3C007EF588 /* FFMpegRemuxer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegRemuxer.h; sourceTree = "<group>"; };
+		D0076FD025691D3C007EF588 /* FFMpegAVIOContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVIOContext.h; sourceTree = "<group>"; };
+		D0076FD125691D3C007EF588 /* FFMpegAVSampleFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegAVSampleFormat.h; sourceTree = "<group>"; };
+		D0076FD225691D3C007EF588 /* FFMpegSWResample.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFMpegSWResample.h; sourceTree = "<group>"; };
+		D0076FF325691E9B007EF588 /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0076FF525691EAB007EF588 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../ffmpeg/build/ffmpeg/lib/libavcodec.a; sourceTree = "<group>"; };
+		D0076FF625691EAB007EF588 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = ../ffmpeg/build/ffmpeg/lib/libswresample.a; sourceTree = "<group>"; };
+		D0076FF725691EAB007EF588 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../ffmpeg/build/ffmpeg/lib/libavformat.a; sourceTree = "<group>"; };
+		D0076FF825691EAB007EF588 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../ffmpeg/build/ffmpeg/lib/libavutil.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A791901F240CF904002011CA /* Frameworks */ = {
+		D0076FA325691C89007EF588 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0076FF425691E9B007EF588 /* ffmpeg.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A7919018240CF904002011CA = {
+		D0076F9C25691C89007EF588 = {
 			isa = PBXGroup;
 			children = (
-				A7919024240CF904002011CA /* Reachability */,
-				A7919023240CF904002011CA /* Products */,
+				D0076FC725691D3C007EF588 /* FFMpegBinding */,
+				D0076FB225691D2D007EF588 /* Sources */,
+				D0076FA825691C89007EF588 /* FFMpegBinding */,
+				D0076FA725691C89007EF588 /* Products */,
+				D0076FF225691E9B007EF588 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
-		A7919023240CF904002011CA /* Products */ = {
+		D0076FA725691C89007EF588 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A7919022240CF904002011CA /* Reachability.framework */,
+				D0076FA625691C89007EF588 /* FFMpegBinding.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A7919024240CF904002011CA /* Reachability */ = {
+		D0076FA825691C89007EF588 /* FFMpegBinding */ = {
 			isa = PBXGroup;
 			children = (
-				A791902E240CF913002011CA /* Headers */,
-				A791902D240CF90B002011CA /* Sources */,
-				A7919025240CF904002011CA /* ReachabilityPublic.h */,
-				A7919026240CF904002011CA /* Info.plist */,
+				D0076FAA25691C89007EF588 /* Info.plist */,
 			);
-			path = Reachability;
+			path = FFMpegBinding;
 			sourceTree = "<group>";
 		};
-		A791902D240CF90B002011CA /* Sources */ = {
+		D0076FB225691D2D007EF588 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				A791902F240CF91D002011CA /* Reachability.m */,
+				D0076FB325691D2D007EF588 /* FFMpegRemuxer.m */,
+				D0076FB425691D2D007EF588 /* FFMpegAVFrame.m */,
+				D0076FB525691D2D007EF588 /* FFMpegAVFormatContext.m */,
+				D0076FB625691D2D007EF588 /* FFMpegAVIOContext.m */,
+				D0076FB725691D2D007EF588 /* FFMpegSWResample.m */,
+				D0076FB825691D2D007EF588 /* FFMpegGlobals.m */,
+				D0076FB925691D2D007EF588 /* FFMpegAVCodec.m */,
+				D0076FBA25691D2D007EF588 /* FFMpegPacket.m */,
+				D0076FBB25691D2D007EF588 /* FFMpegAVCodecContext.m */,
 			);
-			path = Sources;
+			name = Sources;
+			path = "../../submodules/telegram-ios/submodules/FFMpegBinding/Sources";
 			sourceTree = "<group>";
 		};
-		A791902E240CF913002011CA /* Headers */ = {
+		D0076FC725691D3C007EF588 /* FFMpegBinding */ = {
 			isa = PBXGroup;
 			children = (
-				A7919031240CF925002011CA /* Reachability.h */,
+				D0076FC825691D3C007EF588 /* FFMpegGlobals.h */,
+				D0076FC925691D3C007EF588 /* FFMpegAVCodec.h */,
+				D0076FCA25691D3C007EF588 /* FFMpegAVCodecContext.h */,
+				D0076FCB25691D3C007EF588 /* FFMpegPacket.h */,
+				D0076FCC25691D3C007EF588 /* FFMpegAVFormatContext.h */,
+				D0076FCD25691D3C007EF588 /* FFMpegBinding.h */,
+				D0076FCE25691D3C007EF588 /* FFMpegAVFrame.h */,
+				D0076FCF25691D3C007EF588 /* FFMpegRemuxer.h */,
+				D0076FD025691D3C007EF588 /* FFMpegAVIOContext.h */,
+				D0076FD125691D3C007EF588 /* FFMpegAVSampleFormat.h */,
+				D0076FD225691D3C007EF588 /* FFMpegSWResample.h */,
 			);
-			name = Headers;
-			path = "New Group1";
+			name = FFMpegBinding;
+			path = "../../submodules/telegram-ios/submodules/FFMpegBinding/Public/FFMpegBinding";
+			sourceTree = "<group>";
+		};
+		D0076FF225691E9B007EF588 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D0076FF525691EAB007EF588 /* libavcodec.a */,
+				D0076FF725691EAB007EF588 /* libavformat.a */,
+				D0076FF825691EAB007EF588 /* libavutil.a */,
+				D0076FF625691EAB007EF588 /* libswresample.a */,
+				D0076FF325691E9B007EF588 /* ffmpeg.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		A791901D240CF904002011CA /* Headers */ = {
+		D0076FA125691C89007EF588 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7919027240CF904002011CA /* ReachabilityPublic.h in Headers */,
-				A7919032240CF925002011CA /* Reachability.h in Headers */,
+				D0076FD825691D3C007EF588 /* FFMpegBinding.h in Headers */,
+				D0076FD325691D3C007EF588 /* FFMpegGlobals.h in Headers */,
+				D0076FD525691D3C007EF588 /* FFMpegAVCodecContext.h in Headers */,
+				D0076FD725691D3C007EF588 /* FFMpegAVFormatContext.h in Headers */,
+				D0076FDD25691D3C007EF588 /* FFMpegSWResample.h in Headers */,
+				D0076FDA25691D3C007EF588 /* FFMpegRemuxer.h in Headers */,
+				D0076FD925691D3C007EF588 /* FFMpegAVFrame.h in Headers */,
+				D0076FDB25691D3C007EF588 /* FFMpegAVIOContext.h in Headers */,
+				D0076FD625691D3C007EF588 /* FFMpegPacket.h in Headers */,
+				D0076FDC25691D3C007EF588 /* FFMpegAVSampleFormat.h in Headers */,
+				D0076FD425691D3C007EF588 /* FFMpegAVCodec.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		A7919021240CF904002011CA /* Reachability */ = {
+		D0076FA525691C89007EF588 /* FFMpegBinding */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A791902A240CF904002011CA /* Build configuration list for PBXNativeTarget "Reachability" */;
+			buildConfigurationList = D0076FAE25691C89007EF588 /* Build configuration list for PBXNativeTarget "FFMpegBinding" */;
 			buildPhases = (
-				A791901D240CF904002011CA /* Headers */,
-				A791901E240CF904002011CA /* Sources */,
-				A791901F240CF904002011CA /* Frameworks */,
-				A7919020240CF904002011CA /* Resources */,
+				D0076FA125691C89007EF588 /* Headers */,
+				D0076FA225691C89007EF588 /* Sources */,
+				D0076FA325691C89007EF588 /* Frameworks */,
+				D0076FA425691C89007EF588 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = Reachability;
-			productName = Reachability;
-			productReference = A7919022240CF904002011CA /* Reachability.framework */;
+			name = FFMpegBinding;
+			productName = FFMpegBinding;
+			productReference = D0076FA625691C89007EF588 /* FFMpegBinding.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		A7919019240CF904002011CA /* Project object */ = {
+		D0076F9D25691C89007EF588 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1030;
-				ORGANIZATIONNAME = Telegram;
+				LastUpgradeCheck = 1220;
 				TargetAttributes = {
-					A7919021240CF904002011CA = {
-						CreatedOnToolsVersion = 10.3;
+					D0076FA525691C89007EF588 = {
+						CreatedOnToolsVersion = 12.2;
 					};
 				};
 			};
-			buildConfigurationList = A791901C240CF904002011CA /* Build configuration list for PBXProject "Reachability" */;
+			buildConfigurationList = D0076FA025691C89007EF588 /* Build configuration list for PBXProject "FFMpegBinding" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
-			mainGroup = A7919018240CF904002011CA;
-			productRefGroup = A7919023240CF904002011CA /* Products */;
+			mainGroup = D0076F9C25691C89007EF588;
+			productRefGroup = D0076FA725691C89007EF588 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A7919021240CF904002011CA /* Reachability */,
+				D0076FA525691C89007EF588 /* FFMpegBinding */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A7919020240CF904002011CA /* Resources */ = {
+		D0076FA425691C89007EF588 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -150,18 +231,26 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A791901E240CF904002011CA /* Sources */ = {
+		D0076FA225691C89007EF588 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A7919030240CF91D002011CA /* Reachability.m in Sources */,
+				D0076FC425691D2D007EF588 /* FFMpegAVCodecContext.m in Sources */,
+				D0076FBC25691D2D007EF588 /* FFMpegRemuxer.m in Sources */,
+				D0076FC125691D2D007EF588 /* FFMpegGlobals.m in Sources */,
+				D0076FBD25691D2D007EF588 /* FFMpegAVFrame.m in Sources */,
+				D0076FBE25691D2D007EF588 /* FFMpegAVFormatContext.m in Sources */,
+				D0076FC025691D2D007EF588 /* FFMpegSWResample.m in Sources */,
+				D0076FBF25691D2D007EF588 /* FFMpegAVIOContext.m in Sources */,
+				D0076FC325691D2D007EF588 /* FFMpegPacket.m in Sources */,
+				D0076FC225691D2D007EF588 /* FFMpegAVCodec.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A7919028240CF904002011CA /* DebugAppStore */ = {
+		D0076FAC25691C89007EF588 /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -187,13 +276,13 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -213,17 +302,19 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
 			name = DebugAppStore;
 		};
-		A7919029240CF904002011CA /* ReleaseHockeyapp */ = {
+		D0076FAD25691C89007EF588 /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -249,13 +340,13 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -269,20 +360,20 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = ReleaseHockeyapp;
+			name = ReleaseAppStore;
 		};
-		A791902B240CF904002011CA /* DebugAppStore */ = {
+		D0076FAF25691C89007EF588 /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -290,8 +381,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Reachability/Info.plist;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -301,17 +392,16 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = DebugAppStore;
 		};
-		A791902C240CF904002011CA /* ReleaseHockeyapp */ = {
+		D0076FB025691C89007EF588 /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -319,8 +409,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Reachability/Info.plist;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -330,13 +420,14 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 			};
-			name = ReleaseHockeyapp;
+			name = ReleaseAppStore;
 		};
-		A791903C240CFA4D002011CA /* DebugHockeyapp */ = {
+		D0076FDF25691D75007EF588 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -362,199 +453,13 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = DebugHockeyapp;
-		};
-		A791903D240CFA4D002011CA /* DebugHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				GCC_OPTIMIZATION_LEVEL = s;
-				INFOPLIST_FILE = Reachability/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SKIP_INSTALL = YES;
-			};
-			name = DebugHockeyapp;
-		};
-		A791903E240CFA55002011CA /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = HockeyappMacAlpha;
-		};
-		A791903F240CFA55002011CA /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 6N38VWS5BX;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				GCC_OPTIMIZATION_LEVEL = s;
-				INFOPLIST_FILE = Reachability/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-				SKIP_INSTALL = YES;
-			};
-			name = HockeyappMacAlpha;
-		};
-		A7919040240CFA5D002011CA /* ReleaseAppStore */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -568,20 +473,20 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
-			name = ReleaseAppStore;
+			name = ReleaseHockeyapp;
 		};
-		A7919041240CFA5D002011CA /* ReleaseAppStore */ = {
+		D0076FE025691D75007EF588 /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -589,8 +494,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Reachability/Info.plist;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -600,13 +505,14 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 			};
-			name = ReleaseAppStore;
+			name = ReleaseHockeyapp;
 		};
-		D0B4941624F3F60B00E0A9B3 /* Github */ = {
+		D0076FE125691D7A007EF588 /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -632,13 +538,183 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		D0076FE225691D7A007EF588 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = DebugHockeyapp;
+		};
+		D0076FE325691D81007EF588 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0076FE425691D81007EF588 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = HockeyappMacAlpha;
+		};
+		D0076FE525691D87007EF588 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -658,21 +734,21 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
 			name = Github;
 		};
-		D0B4941724F3F60B00E0A9B3 /* Github */ = {
+		D0076FE625691D87007EF588 /* Github */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
-				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -680,8 +756,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Reachability/Info.plist;
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/../ffmpeg/build/ffmpeg/include;
+				INFOPLIST_FILE = FFMpegBinding/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -691,42 +767,43 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Reachability;
+				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.FFMpegBinding;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Github;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A791901C240CF904002011CA /* Build configuration list for PBXProject "Reachability" */ = {
+		D0076FA025691C89007EF588 /* Build configuration list for PBXProject "FFMpegBinding" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A7919028240CF904002011CA /* DebugAppStore */,
-				D0B4941624F3F60B00E0A9B3 /* Github */,
-				A791903E240CFA55002011CA /* HockeyappMacAlpha */,
-				A791903C240CFA4D002011CA /* DebugHockeyapp */,
-				A7919029240CF904002011CA /* ReleaseHockeyapp */,
-				A7919040240CFA5D002011CA /* ReleaseAppStore */,
+				D0076FAC25691C89007EF588 /* DebugAppStore */,
+				D0076FE525691D87007EF588 /* Github */,
+				D0076FAD25691C89007EF588 /* ReleaseAppStore */,
+				D0076FDF25691D75007EF588 /* ReleaseHockeyapp */,
+				D0076FE125691D7A007EF588 /* DebugHockeyapp */,
+				D0076FE325691D81007EF588 /* HockeyappMacAlpha */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseHockeyapp;
+			defaultConfigurationName = ReleaseAppStore;
 		};
-		A791902A240CF904002011CA /* Build configuration list for PBXNativeTarget "Reachability" */ = {
+		D0076FAE25691C89007EF588 /* Build configuration list for PBXNativeTarget "FFMpegBinding" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A791902B240CF904002011CA /* DebugAppStore */,
-				D0B4941724F3F60B00E0A9B3 /* Github */,
-				A791903F240CFA55002011CA /* HockeyappMacAlpha */,
-				A791903D240CFA4D002011CA /* DebugHockeyapp */,
-				A791902C240CF904002011CA /* ReleaseHockeyapp */,
-				A7919041240CFA5D002011CA /* ReleaseAppStore */,
+				D0076FAF25691C89007EF588 /* DebugAppStore */,
+				D0076FE625691D87007EF588 /* Github */,
+				D0076FB025691C89007EF588 /* ReleaseAppStore */,
+				D0076FE025691D75007EF588 /* ReleaseHockeyapp */,
+				D0076FE225691D7A007EF588 /* DebugHockeyapp */,
+				D0076FE425691D81007EF588 /* HockeyappMacAlpha */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseHockeyapp;
+			defaultConfigurationName = ReleaseAppStore;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = A7919019240CF904002011CA /* Project object */;
+	rootObject = D0076F9D25691C89007EF588 /* Project object */;
 }

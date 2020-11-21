@@ -12,6 +12,7 @@
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
 		D00602FF24CF3D7500206226 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FE24CF3D7500206226 /* Message.cpp */; };
 		D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D006030124CF3DAD00206226 /* InstanceImplReference.cpp */; };
+		D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E3C25685056007EF588 /* webrtc.framework */; };
 		D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */; };
 		D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00B192124E5722A006CCB87 /* GLKit.framework */; };
 		D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -19,7 +20,6 @@
 		D06E36DF24A5000700C7D03A /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36DE24A5000700C7D03A /* VideoToolbox.framework */; };
 		D06E36E124A5001300C7D03A /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E024A5001300C7D03A /* CoreMedia.framework */; };
 		D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D06E36E224A5001800C7D03A /* AVFoundation.framework */; };
-		D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */; };
 		D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */; };
 		D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */ = {isa = PBXBuildFile; fileRef = D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D751A324BE372F0037D73A /* AppKit.framework */; };
@@ -52,6 +52,7 @@
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
 		D00602FE24CF3D7500206226 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cpp; path = ../../submodules/tgcalls/tgcalls/Message.cpp; sourceTree = "<group>"; };
 		D006030124CF3DAD00206226 /* InstanceImplReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplReference.cpp; path = ../../../submodules/tgcalls/tgcalls/reference/InstanceImplReference.cpp; sourceTree = "<group>"; };
+		D0076E3C25685056007EF588 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GLVideoViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/GLVideoViewMac.mm; sourceTree = "<group>"; };
 		D00B192124E5722A006CCB87 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
 		D06E368924A4FD4900C7D03A /* TgVoipWebrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TgVoipWebrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -120,6 +121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */,
 				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
 				D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */,
 				D06E36E324A5001800C7D03A /* AVFoundation.framework in Frameworks */,
@@ -211,6 +213,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D0076E3C25685056007EF588 /* webrtc.framework */,
 				D00B192124E5722A006CCB87 /* GLKit.framework */,
 				D0D751A324BE372F0037D73A /* AppKit.framework */,
 				D06E38A624A5EEAD00C7D03A /* Metal.framework */,
@@ -356,7 +359,6 @@
 				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
-				D0D4CD7F24EC62960017D48D /* ScreenCapturer.mm in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,

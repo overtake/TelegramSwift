@@ -75,3 +75,5 @@ int colorIndexForUid(int32_t uid, int32_t myUserId);
 
 NSArray<NSString *> * __nonnull currentAppInputSource();
 NSEvent * __nullable createScrollWheelEvent();
+
+double mappingRange(double x, double in_min, double in_max, double out_min, double out_max);
