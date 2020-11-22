@@ -44,6 +44,8 @@
 		D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */; };
 		D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */; };
 		D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */; };
+		D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */; };
+		D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -61,33 +63,12 @@
 		D06E369724A4FD4A00C7D03A /* TgVoipWebrtcTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TgVoipWebrtcTests.swift; sourceTree = "<group>"; };
 		D06E369924A4FD4A00C7D03A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D06E36A624A4FDAC00C7D03A /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmac_framework_objc_static.a; sourceTree = "<group>"; };
-		D06E36AA24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCDefaultVideoEncoderFactory.mm; sourceTree = "<group>"; };
-		D06E36AB24A4FF3100C7D03A /* TGRTCVideoEncoderH265.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCVideoEncoderH265.h; sourceTree = "<group>"; };
-		D06E36AC24A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCDefaultVideoDecoderFactory.mm; sourceTree = "<group>"; };
-		D06E36AD24A4FF3100C7D03A /* TGRTCVideoDecoderH265.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCVideoDecoderH265.h; sourceTree = "<group>"; };
-		D06E36AE24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCDefaultVideoEncoderFactory.h; sourceTree = "<group>"; };
-		D06E36AF24A4FF3100C7D03A /* TGRTCVideoEncoderH265.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCVideoEncoderH265.mm; sourceTree = "<group>"; };
-		D06E36B024A4FF3100C7D03A /* TGRTCVideoDecoderH265.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCVideoDecoderH265.mm; sourceTree = "<group>"; };
-		D06E36B124A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCDefaultVideoDecoderFactory.h; sourceTree = "<group>"; };
-		D06E36B324A4FF3100C7D03A /* TgVoip.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TgVoip.mm; sourceTree = "<group>"; };
-		D06E36B524A4FF3100C7D03A /* NetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NetworkManager.h; sourceTree = "<group>"; };
-		D06E36B624A4FF3100C7D03A /* TgVoip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TgVoip.h; sourceTree = "<group>"; };
-		D06E36B724A4FF3100C7D03A /* Manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Manager.h; sourceTree = "<group>"; };
-		D06E36B824A4FF3100C7D03A /* ThreadLocalObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ThreadLocalObject.h; sourceTree = "<group>"; };
-		D06E36BA24A4FF3100C7D03A /* Manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Manager.cpp; sourceTree = "<group>"; };
-		D06E36BB24A4FF3100C7D03A /* ThreadLocalObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThreadLocalObject.cpp; sourceTree = "<group>"; };
-		D06E36BC24A4FF3100C7D03A /* NetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NetworkManager.cpp; sourceTree = "<group>"; };
-		D06E36BD24A4FF3100C7D03A /* CodecsApple.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CodecsApple.h; sourceTree = "<group>"; };
-		D06E36BE24A4FF3100C7D03A /* CodecsApple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CodecsApple.mm; sourceTree = "<group>"; };
-		D06E36BF24A4FF3100C7D03A /* MediaManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MediaManager.cpp; sourceTree = "<group>"; };
-		D06E36C124A4FF3100C7D03A /* MediaManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MediaManager.h; sourceTree = "<group>"; };
 		D06E36DC24A5000100C7D03A /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		D06E36DE24A5000700C7D03A /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		D06E36E024A5001300C7D03A /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		D06E36E224A5001800C7D03A /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		D06E38A624A5EEAD00C7D03A /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D06E38A724A5EEAD00C7D03A /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
-		D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ScreenCapturer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/ScreenCapturer.mm; sourceTree = "<group>"; };
 		D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OngoingCallThreadLocalContext.mm; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Sources/OngoingCallThreadLocalContext.mm"; sourceTree = "<group>"; };
 		D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OngoingCallThreadLocalContext.h; path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/PublicHeaders/TgVoipWebrtc/OngoingCallThreadLocalContext.h"; sourceTree = "<group>"; };
 		D0D751A324BE372F0037D73A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -112,8 +93,8 @@
 		D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCCVPixelBuffer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCCVPixelBuffer.mm; sourceTree = "<group>"; };
 		D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoDecoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoDecoderH264.mm; sourceTree = "<group>"; };
 		D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoEncoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoEncoderH264.mm; sourceTree = "<group>"; };
-		D0E8A78824B339F10056CD6E /* VideoCaptureInterfaceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoCaptureInterfaceImpl.h; sourceTree = "<group>"; };
-		D0E8A78924B339F10056CD6E /* VideoCaptureInterfaceImpl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = VideoCaptureInterfaceImpl.mm; sourceTree = "<group>"; };
+		D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceImpl.cpp; sourceTree = "<group>"; };
+		D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupInstanceImpl.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +126,7 @@
 		D06E367F24A4FD4900C7D03A = {
 			isa = PBXGroup;
 			children = (
+				D0E7BD1C256A7E0D0068644D /* group */,
 				D006030024CF3DA000206226 /* reference */,
 				D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */,
 				D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */,
@@ -168,12 +150,10 @@
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
 				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
-				D0D4CD7E24EC62960017D48D /* ScreenCapturer.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
 				D00602FC24CF3D6600206226 /* CryptoHelper.cpp */,
 				D00602FE24CF3D7500206226 /* Message.cpp */,
-				D0D7519D24BE33190037D73A /* tgcalls */,
 				D06E368B24A4FD4900C7D03A /* TgVoipWebrtc */,
 				D06E369624A4FD4A00C7D03A /* TgVoipWebrtcTests */,
 				D06E368A24A4FD4900C7D03A /* Products */,
@@ -194,7 +174,6 @@
 			children = (
 				D0D751A124BE34B40037D73A /* OngoingCallThreadLocalContext.h */,
 				D0D7519F24BE34AB0037D73A /* OngoingCallThreadLocalContext.mm */,
-				D06E36A824A4FF3100C7D03A /* Impl */,
 				D06E368C24A4FD4900C7D03A /* TgVoipWebrtc.h */,
 				D06E368D24A4FD4900C7D03A /* Info.plist */,
 			);
@@ -227,49 +206,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		D06E36A824A4FF3100C7D03A /* Impl */ = {
+		D0E7BD1C256A7E0D0068644D /* group */ = {
 			isa = PBXGroup;
 			children = (
-				D06E36A924A4FF3100C7D03A /* Apple */,
-				D06E36B324A4FF3100C7D03A /* TgVoip.mm */,
-				D06E36B524A4FF3100C7D03A /* NetworkManager.h */,
-				D06E36B624A4FF3100C7D03A /* TgVoip.h */,
-				D06E36B724A4FF3100C7D03A /* Manager.h */,
-				D06E36B824A4FF3100C7D03A /* ThreadLocalObject.h */,
-				D06E36BA24A4FF3100C7D03A /* Manager.cpp */,
-				D06E36BB24A4FF3100C7D03A /* ThreadLocalObject.cpp */,
-				D06E36BC24A4FF3100C7D03A /* NetworkManager.cpp */,
-				D06E36BD24A4FF3100C7D03A /* CodecsApple.h */,
-				D06E36BE24A4FF3100C7D03A /* CodecsApple.mm */,
-				D06E36BF24A4FF3100C7D03A /* MediaManager.cpp */,
-				D06E36C124A4FF3100C7D03A /* MediaManager.h */,
-				D0E8A78824B339F10056CD6E /* VideoCaptureInterfaceImpl.h */,
-				D0E8A78924B339F10056CD6E /* VideoCaptureInterfaceImpl.mm */,
+				D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */,
+				D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */,
 			);
-			name = Impl;
-			path = "../../../submodules/telegram-ios/submodules/TgVoipWebrtc/Impl";
-			sourceTree = "<group>";
-		};
-		D06E36A924A4FF3100C7D03A /* Apple */ = {
-			isa = PBXGroup;
-			children = (
-				D06E36AA24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.mm */,
-				D06E36AB24A4FF3100C7D03A /* TGRTCVideoEncoderH265.h */,
-				D06E36AC24A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.mm */,
-				D06E36AD24A4FF3100C7D03A /* TGRTCVideoDecoderH265.h */,
-				D06E36AE24A4FF3100C7D03A /* TGRTCDefaultVideoEncoderFactory.h */,
-				D06E36AF24A4FF3100C7D03A /* TGRTCVideoEncoderH265.mm */,
-				D06E36B024A4FF3100C7D03A /* TGRTCVideoDecoderH265.mm */,
-				D06E36B124A4FF3100C7D03A /* TGRTCDefaultVideoDecoderFactory.h */,
-			);
-			path = Apple;
-			sourceTree = "<group>";
-		};
-		D0D7519D24BE33190037D73A /* tgcalls */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = tgcalls;
+			name = group;
+			path = ../../submodules/tgcalls/tgcalls/group;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -279,6 +223,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
 			);
@@ -365,6 +310,7 @@
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
+				D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
 				D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */,

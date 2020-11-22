@@ -417,7 +417,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
-
+        case .groupPhoneCall:
+            return "Group Call"
         }
     }
     
