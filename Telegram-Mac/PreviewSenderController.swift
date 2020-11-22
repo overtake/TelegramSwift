@@ -1173,12 +1173,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 var additionalMessage: ChatTextInputState? = nil
                 
                 if (medias.count > 1  || (medias.count == 1 && !medias[0].canHaveCaption)) && !input.inputText.isEmpty {
-                    if state.isCollage {
+                    if !state.isCollage {
                         additionalMessage = input
                         input = ChatTextInputState()
                         
                     }
                 }
+                var bp = 0
                 self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate)
             }
             
