@@ -328,6 +328,8 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
+                case .groupPhoneCall:
+                    _ = attributedString.append(string: "Group Call", color: grayTextColor, font: .normal(theme.fontSize))
                 default:
                     break
                 }
