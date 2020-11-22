@@ -27,7 +27,7 @@ mkdir -p $BUILD_DIR || true
 
 LIBOPUS_PATH="${BUILD_DIR}../../libopus/build/libopus"
 
-FF_VERSION="4.3"
+FF_VERSION="4.1"
 SOURCE="$SOURCE_DIR/ffmpeg-$FF_VERSION"
 
 GAS_PREPROCESSOR_PATH="$SOURCE_DIR/gas-preprocessor.pl"
