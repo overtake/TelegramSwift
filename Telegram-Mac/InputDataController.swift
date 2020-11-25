@@ -191,7 +191,7 @@ final class InputDataArguments {
 
 private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool) -> Signal<TableUpdateTransition, NoError> {
+func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         
         func makeItem(_ entry: InputDataEntry) -> TableRowItem {
@@ -267,13 +267,6 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputDataEntry>]
         }
     } |> runOn(onMainQueue ? .mainQueue() : prepareQueue)
     
-    
-    
-//
-//    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
-//        return entry.entry.item(arguments: arguments, initialSize: initialSize)
-//    }
-//    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, searchState: searchState)
 }
 
 
@@ -552,8 +545,10 @@ class InputDataController: GenericViewController<InputDataView> {
         
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, values.get()) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return prepareTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false))
-        } |> deliverOnMainQueue
+            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false))
+        } |> deliverOnMainQueue |> afterDisposed {
+            previous.swap([])
+        }
         
         disposable.set(signal.start(next: { [weak self] transition in
             guard let `self` = self else {return}

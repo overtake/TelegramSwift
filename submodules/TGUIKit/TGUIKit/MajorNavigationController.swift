@@ -52,6 +52,7 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle, liveSwiping: false)
         
         containerView.addSubview(controller.view)
+        controller.viewDidLoad()
         Queue.mainQueue().justDispatch {
             self.controller.viewDidAppear(false)
         }

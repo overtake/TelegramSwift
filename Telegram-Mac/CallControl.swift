@@ -76,17 +76,22 @@ final class CallControl : Control {
     override var mouseDownCanMoveWindow: Bool {
         return false
     }
+    private var previousState: ControlState?
     
     override func stateDidUpdated( _ state: ControlState) {
-        
         switch controlState {
         case .Highlight:
             imageBackgroundView?._change(opacity: 0.9)
             textView.change(opacity: 0.9)
+            imageBackgroundView?.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
         default:
             imageBackgroundView?._change(opacity: 1.0)
             textView.change(opacity: 1.0)
+            if let previousState = previousState, previousState == .Highlight {
+                imageBackgroundView?.layer?.animateScaleCenter(from: 0.95, to: 1.0, duration: 0.2)
+            }
         }
+        previousState = state
     }
     
     func updateEnabled(_ enabled: Bool, animated: Bool) {

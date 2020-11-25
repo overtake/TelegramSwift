@@ -299,6 +299,7 @@ final class MediaPlayerView: View {
             videoLayer.videoGravity = .resize
             
             if let sublayers = videoLayer.sublayers {
+                var bp = 0
                 findContentsLayer(sublayers)?.minificationFilter = .trilinear
             }
             

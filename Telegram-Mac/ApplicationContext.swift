@@ -186,7 +186,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -217,7 +217,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
-            let view = CallNavigationHeaderView(header)
+            let view = GroupCallNavigationHeaderView(header)
             return view
         }))
         
@@ -276,6 +276,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 
         }, callSession: { [weak self] in
             return (self?.rightController.callHeader?.view as? CallNavigationHeaderView)?.session
+        }, groupCall: { [weak self] in
+            return (self?.rightController.callHeader?.view as? GroupCallNavigationHeaderView)?.context
         })
         
         
@@ -673,6 +675,10 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         if let session = callSession {
             context.sharedContext.showCallHeader(with: session)
+        }
+        
+        if let groupCallContext = groupCallContext {
+            context.sharedContext.showGroupCall(with: groupCallContext)
         }
         
         self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(postbox: context.account.postbox), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in

@@ -519,6 +519,12 @@ class SharedAccountContext {
     func getCrossAccountCallSession() -> PCallSession? {
         return crossCallSession.swap(nil)
     }
+    
+    private let crossGroupCall: Atomic<GroupCallContext?> = Atomic<GroupCallContext?>(value: nil)
+    
+    func getCrossAccountGroupCall() -> GroupCallContext? {
+        return crossGroupCall.swap(nil)
+    }
     #endif
     
     
@@ -565,7 +571,8 @@ class SharedAccountContext {
         #else
         
         _ = crossCallSession.swap(bindings.callSession())
-        
+        _ = crossGroupCall.swap(bindings.groupCall())
+
          _ = self.accountManager.transaction({ transaction in
             if transaction.getCurrent()?.0 != id {
                 transaction.setCurrentId(id)
@@ -580,6 +587,11 @@ class SharedAccountContext {
         if let view = bindings.rootNavigation().callHeader?.view as? CallNavigationHeaderView {
             view.update(with: session)
         }
+    }
+    func showGroupCall(with context: GroupCallContext) {
+        let callHeader = bindings.rootNavigation().callHeader
+        callHeader?.show(true)
+        (callHeader?.view as? GroupCallNavigationHeaderView)?.update(with: context)
     }
     #endif
     deinit {

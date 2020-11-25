@@ -781,7 +781,6 @@
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
 		D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */; };
-		D05F618225693F5D00CC7EFA /* TelegramShare.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C232EA911E1D07E700C4D38C /* TelegramShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
 		D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
 		D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
@@ -884,21 +883,22 @@
 		D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */; };
 		D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */; };
 		D0E7BD1A256A7D350068644D /* GroupCallWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD19256A7D350068644D /* GroupCallWindow.swift */; };
+		D0E7BD6C256AA5570068644D /* TelegramVoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0E7BD6B256AA5570068644D /* TelegramVoip.framework */; };
+		D0E7BD70256AA6430068644D /* PresentationGroupCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */; };
+		D0E7BD73256AA6B50068644D /* PresentationGroupCallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */; };
+		D0E7BD79256AE4B00068644D /* GroupCallController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD78256AE4B00068644D /* GroupCallController.swift */; };
+		D0E7BD7D256BC9460068644D /* GroupCallParticipantRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */; };
+		D0E7BD80256C1FB00068644D /* GroupCallSpeakButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */; };
+		D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */; };
+		D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE70256D30130068644D /* group_call_speaker_unmute.json */; };
+		D0E7BE77256D405A0068644D /* InfiniteProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */; };
+		D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE79256D56C90068644D /* group_call_member_mute.json */; };
+		D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */; };
 		D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */; };
 		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
 		D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */ = {isa = PBXBuildFile; fileRef = D0FFCEBD215A7CB700995AFE /* emoji14.txt */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		D05F618025693F5600CC7EFA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D098C70D1D7E175A007784E4 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C232EA901E1D07E700C4D38C;
-			remoteInfo = TelegramShare;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		C20D5AB61DAA94500042616A /* Copy Files */ = {
@@ -924,7 +924,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				D05F618225693F5D00CC7EFA /* TelegramShare.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1893,6 +1892,17 @@
 		D0E3685724DAB066009896D4 /* VideoCallsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoCallsConfiguration.swift; sourceTree = "<group>"; };
 		D0E52B3122FD66C4000C0306 /* MessageTimecode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageTimecode.swift; sourceTree = "<group>"; };
 		D0E7BD19256A7D350068644D /* GroupCallWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallWindow.swift; sourceTree = "<group>"; };
+		D0E7BD6B256AA5570068644D /* TelegramVoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramVoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationGroupCall.swift; sourceTree = "<group>"; };
+		D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationGroupCallManager.swift; sourceTree = "<group>"; };
+		D0E7BD78256AE4B00068644D /* GroupCallController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallController.swift; sourceTree = "<group>"; };
+		D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallParticipantRowItem.swift; sourceTree = "<group>"; };
+		D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakButton.swift; sourceTree = "<group>"; };
+		D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_speaker_mute.json; sourceTree = "<group>"; };
+		D0E7BE70256D30130068644D /* group_call_speaker_unmute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_speaker_unmute.json; sourceTree = "<group>"; };
+		D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteProgressView.swift; sourceTree = "<group>"; };
+		D0E7BE79256D56C90068644D /* group_call_member_mute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_mute.json; sourceTree = "<group>"; };
+		D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_unmute.json; sourceTree = "<group>"; };
 		D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergedAvatarsView.swift; sourceTree = "<group>"; };
 		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
@@ -1917,6 +1927,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D0E7BD6C256AA5570068644D /* TelegramVoip.framework in Frameworks */,
 				C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */,
 				D0076FFE25691EDE007EF588 /* FFMpegBinding.framework in Frameworks */,
 				A7D2822B236C51A50000A9BF /* OpenSSLEncryption.framework in Frameworks */,
@@ -1983,6 +1994,10 @@
 		9F0367E622707B6400456348 /* lottie */ = {
 			isa = PBXGroup;
 			children = (
+				D0E7BE79256D56C90068644D /* group_call_member_mute.json */,
+				D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */,
+				D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */,
+				D0E7BE70256D30130068644D /* group_call_speaker_unmute.json */,
 				D0D71385227ADE9400EC88B1 /* maccheck.json */,
 				9F03680C22771A9600456348 /* anim_archive.json */,
 				9F03680622771A9600456348 /* anim_delete.json */,
@@ -4223,6 +4238,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D0E7BD6B256AA5570068644D /* TelegramVoip.framework */,
 				D0076FFD25691EDE007EF588 /* FFMpegBinding.framework */,
 				D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */,
 				D0076EE725685A50007EF588 /* AppCenter.framework */,
@@ -4358,6 +4374,12 @@
 			isa = PBXGroup;
 			children = (
 				D0E7BD19256A7D350068644D /* GroupCallWindow.swift */,
+				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
+				D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */,
+				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
+				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
+				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
+				D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -4401,7 +4423,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				D05F618125693F5600CC7EFA /* PBXTargetDependency */,
 			);
 			name = Telegram;
 			productName = "Telegram-Mac";
@@ -4529,6 +4550,7 @@
 				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
 				A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
+				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
@@ -4539,6 +4561,7 @@
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
+				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
@@ -4572,9 +4595,11 @@
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
 				D07450E6233D61B800769D7F /* brilliant_static.tgs in Resources */,
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
+				D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
+				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
 				A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
@@ -4718,6 +4743,7 @@
 				9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */,
 				A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
+				D0E7BD70256AA6430068644D /* PresentationGroupCall.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
 				D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */,
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
@@ -4777,6 +4803,7 @@
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,
 				C21BE3B11FD14CDB00C1C849 /* ParseAppearanceColors.swift in Sources */,
 				D06C695F253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift in Sources */,
+				D0E7BD80256C1FB00068644D /* GroupCallSpeakButton.swift in Sources */,
 				C2A71CE11DDB18FF00C69F73 /* ThumbUtils.swift in Sources */,
 				9F72973420B878B00067F815 /* MapResources.swift in Sources */,
 				C23EEC891FCC47C1001371CD /* PeerMediaDateItem.swift in Sources */,
@@ -4917,6 +4944,7 @@
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
 				D0BE207E24D032E400038A8B /* VolumeControllerPopover.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
+				D0E7BD79256AE4B00068644D /* GroupCallController.swift in Sources */,
 				9FA0E53B2052EDFF001E5649 /* HackUtils.m in Sources */,
 				9FC4DA9E21DD1C6C003E2A62 /* ImageCompression.swift in Sources */,
 				C2271DAC1DAE1116001792B6 /* PeerInfoEntries.swift in Sources */,
@@ -4994,6 +5022,7 @@
 				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
+				D0E7BE77256D405A0068644D /* InfiniteProgressView.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
@@ -5222,6 +5251,7 @@
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,
 				C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */,
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
+				D0E7BD73256AA6B50068644D /* PresentationGroupCallManager.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
@@ -5238,6 +5268,7 @@
 				D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */,
 				C221ED5A1EA6896400471C65 /* VoiceCallSettings.swift in Sources */,
 				C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */,
+				D0E7BD7D256BC9460068644D /* GroupCallParticipantRowItem.swift in Sources */,
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
 				D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */,
 				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
@@ -5384,14 +5415,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		D05F618125693F5600CC7EFA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C232EA901E1D07E700C4D38C /* TelegramShare */;
-			targetProxy = D05F618025693F5600CC7EFA /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C232EA991E1D07E700C4D38C /* ShareViewController.xib */ = {

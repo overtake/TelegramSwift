@@ -529,8 +529,8 @@ struct InputDataIdentifier : Hashable {
     init(_ identifier: String) {
         self.identifier = identifier
     }
-    var hashValue: Int {
-        return identifier.hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(identifier)
     }
 }
 
