@@ -489,7 +489,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.switchViews(left: controller.leftBarView, center: controller.centerBarView, right: controller.rightBarView, controller: controller, style: .none, animationStyle: controller.animationStyle, liveSwiping: false)
         
         containerView.addSubview(controller.view)
-        
+        controller.viewDidLoad()
         self.view.addSubview(navigationRightBorder)
         navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, 50)
 

@@ -317,6 +317,7 @@
 		D0E412F5206B9BDC00BEE4A2 /* SecureIdVerificationDocumentReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E412F3206B9BDC00BEE4A2 /* SecureIdVerificationDocumentReference.swift */; };
 		D0E41302206B9E6E00BEE4A2 /* SecureIdAddressValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E41300206B9E6E00BEE4A2 /* SecureIdAddressValue.swift */; };
 		D0E652201E3A364A004EEA91 /* UpdateAccountPeerName.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E6521E1E3A364A004EEA91 /* UpdateAccountPeerName.swift */; };
+		D0E7BD76256AA7C90068644D /* GroupCalls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD75256AA7C90068644D /* GroupCalls.swift */; };
 		D0E8174A2010E7E300B82BBB /* ChannelAdminEventLogContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E817482010E7E300B82BBB /* ChannelAdminEventLogContext.swift */; };
 		D0E8B8B42044706300605593 /* ForwardGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E8B8B22044706300605593 /* ForwardGame.swift */; };
 		D0EC559B2101ED0800D1992C /* DeleteMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EC55992101ED0800D1992C /* DeleteMessages.swift */; };
@@ -743,6 +744,7 @@
 		D0E412F3206B9BDC00BEE4A2 /* SecureIdVerificationDocumentReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureIdVerificationDocumentReference.swift; sourceTree = "<group>"; };
 		D0E41300206B9E6E00BEE4A2 /* SecureIdAddressValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureIdAddressValue.swift; sourceTree = "<group>"; };
 		D0E6521E1E3A364A004EEA91 /* UpdateAccountPeerName.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UpdateAccountPeerName.swift; sourceTree = "<group>"; };
+		D0E7BD75256AA7C90068644D /* GroupCalls.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupCalls.swift; sourceTree = "<group>"; };
 		D0E817482010E7E300B82BBB /* ChannelAdminEventLogContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelAdminEventLogContext.swift; sourceTree = "<group>"; };
 		D0E8B8B22044706300605593 /* ForwardGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForwardGame.swift; sourceTree = "<group>"; };
 		D0EA188120D3D2B1001AEE19 /* RemoteStorageConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteStorageConfiguration.swift; sourceTree = "<group>"; };
@@ -796,13 +798,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A7D281ED236C327B0000A9BF /* thrid-party */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = "thrid-party";
-			sourceTree = "<group>";
-		};
 		D01B264723324CE600A6448B /* Wallet */ = {
 			isa = PBXGroup;
 			children = (
@@ -1318,7 +1313,6 @@
 		D09D8BF71D4FAB1D0081DBEC = {
 			isa = PBXGroup;
 			children = (
-				A7D281ED236C327B0000A9BF /* thrid-party */,
 				D03B0E591D63215200955575 /* TelegramCore.xcconfig */,
 				D09D8C031D4FAB1D0081DBEC /* Sources */,
 				D0B418681D7E03D5004562A4 /* TelegramCore */,
@@ -1408,6 +1402,7 @@
 		D0C50E2F1E93A83B00F62E39 /* Calls */ = {
 			isa = PBXGroup;
 			children = (
+				D0E7BD75256AA7C90068644D /* GroupCalls.swift */,
 				D0C50E331E93A86600F62E39 /* CallSessionManager.swift */,
 				C2F4ED1C1EC60064005F2696 /* RateCall.swift */,
 			);
@@ -1838,6 +1833,7 @@
 				D0B4188E1D7E0578004562A4 /* StoreMessage_Telegram.swift in Sources */,
 				D00602F724CF397000206226 /* ForwardCountMessageAttribute.swift in Sources */,
 				D0B844461DAB91FD005F29E1 /* RecentPeers.swift in Sources */,
+				D0E7BD76256AA7C90068644D /* GroupCalls.swift in Sources */,
 				D0E412E2206AB24700BEE4A2 /* SecureFileMediaResource.swift in Sources */,
 				D0439B5E228ECB270067E026 /* RequestPhoneNumber.swift in Sources */,
 				D03C53681DAD5CA9004C17B3 /* PeerUtils.swift in Sources */,

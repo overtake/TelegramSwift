@@ -3077,6 +3077,49 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        chatInteraction.joinGroupCall = { [weak self] activeCall in
+            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId), for: context.window).start(next: { result in
+                switch result {
+                case let .success(callContext), let .samePeer(callContext):
+                    applyGroupCallResult(context.sharedContext, callContext)
+                default:
+                    alert(for: context.window, info: L10n.errorAnError)
+                }
+            })
+
+            
+            /*
+             guard let strongSelf = self, let peer = strongSelf.presentationInterfaceState.renderedPeer?.peer else {
+                             return
+                         }
+                         let callResult = strongSelf.context.sharedContext.callManager?.requestOrJoinGroupCall(context: strongSelf.context, peerId: peer.id)
+                         if let callResult = callResult, case let .alreadyInProgress(currentPeerId) = callResult {
+                             if currentPeerId == peer.id {
+                                 strongSelf.context.sharedContext.navigateToCurrentCall()
+                             } else {
+                                 let presentationData = strongSelf.context.sharedContext.currentPresentationData.with { $0 }
+                                 let _ = (strongSelf.context.account.postbox.transaction { transaction -> (Peer?, Peer?) in
+                                     return (transaction.getPeer(peer.id), currentPeerId.flatMap(transaction.getPeer))
+                                 } |> deliverOnMainQueue).start(next: { [weak self] peer, current in
+                                     if let peer = peer {
+                                         if let strongSelf = self, let current = current {
+                                             strongSelf.present(textAlertController(context: strongSelf.context, title: presentationData.strings.Call_CallInProgressTitle, text: presentationData.strings.Call_CallInProgressMessage(current.compactDisplayTitle, peer.compactDisplayTitle).0, actions: [TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_Cancel, action: {}), TextAlertAction(type: .genericAction, title: presentationData.strings.Common_OK, action: {
+                                                 if let strongSelf = self {
+                                                     //let _ = strongSelf.context.sharedContext.callManager?.requestCall(context: context, peerId: peerId, isVideo: isVideo, endCurrentIfAny: true)
+                                                 }
+                                             })]), in: .window(.root))
+                                         } else {
+                                             strongSelf.present(textAlertController(context: strongSelf.context, title: presentationData.strings.Call_CallInProgressTitle, text: presentationData.strings.Call_ExternalCallInProgressMessage, actions: [TextAlertAction(type: .genericAction, title: presentationData.strings.Common_OK, action: {
+                                             })]), in: .window(.root))
+                                         }
+                                     }
+                                 })
+                             }
+                         }
+
+             */
+        }
+        
         chatInteraction.returnGroup = { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
                 _ = showModalProgress(signal: returnGroup(account: context.account, peerId: strongSelf.chatInteraction.peerId), for: window).start()
@@ -3556,6 +3599,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
+                                    .withUpdatedActiveCall(cachedData.activeCall)
 //                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
@@ -3754,6 +3798,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
+                                    .withUpdatedActiveCall(cachedData.activeCall)
                                 //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
                                     switch peer.info {
@@ -5079,14 +5124,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
         
         
-        #if BETA || ALPHA || DEBUG
+        #if DEBUG
         self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
-            if let `self` = self {
-                addAudioToSticker(context: self.context)
+            if let activeCall = self?.chatInteraction.presentation.activeCall {
+                self?.chatInteraction.joinGroupCall(activeCall)
             }
             return .invoked
-        }, with: self, for: .Y, priority: .medium, modifierFlags: [.command, .shift])
+        }, with: self, for: .Y, priority: .medium, modifierFlags: [.command])
         #endif
+        
         
         self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
             guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
