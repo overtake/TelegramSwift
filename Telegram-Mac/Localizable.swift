@@ -1349,6 +1349,14 @@ internal final class L10n {
   internal static var chatEmptyChat: String  { return L10n.tr("Localizable", "Chat.EmptyChat") }
   /// Forward Messages
   internal static var chatForwardActionHeader: String  { return L10n.tr("Localizable", "Chat.ForwardActionHeader") }
+  /// %d members
+  internal static func chatGroupCallMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall_many", p1)
+  }
+  /// %d members
+  internal static func chatGroupCallOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall_other", p1)
+  }
   /// INSTANT VIEW
   internal static var chatInstantView: String  { return L10n.tr("Localizable", "Chat.InstantView") }
   /// Live Location
@@ -1597,6 +1605,30 @@ internal final class L10n {
   internal static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Sorry, this group is not accessible.
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
+  /// JOIN
+  internal static var chatGroupCallJoin: String  { return L10n.tr("Localizable", "Chat.GroupCall.Join") }
+  /// %d
+  internal static func chatGroupCallMembersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_countable", p1)
+  }
+  /// %d members
+  internal static func chatGroupCallMembersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_few", p1)
+  }
+  /// %d member
+  internal static func chatGroupCallMembersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_one", p1)
+  }
+  /// %d members
+  internal static func chatGroupCallMembersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_two", p1)
+  }
+  /// %d members
+  internal static func chatGroupCallMembersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_zero", p1)
+  }
+  /// Voice Chat
+  internal static var chatGroupCallTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Title") }
   /// Pinned message
   internal static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
   /// Pinned message #%d
@@ -4309,6 +4341,38 @@ internal final class L10n {
   internal static var navigationEdit: String  { return L10n.tr("Localizable", "Navigation.Edit") }
   /// Next
   internal static var navigationNext: String  { return L10n.tr("Localizable", "Navigation.Next") }
+  /// Leave
+  internal static var navigationVoiceChatLeaveCall: String  { return L10n.tr("Localizable", "Navigation.VoiceChat.LeaveCall") }
+  /// Connecting...
+  internal static var navigationVoiceChatStatusConnecting: String  { return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Connecting") }
+  /// %d
+  internal static func navigationVoiceChatStatusMembersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_countable", p1)
+  }
+  /// %d members
+  internal static func navigationVoiceChatStatusMembersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_few", p1)
+  }
+  /// %d members
+  internal static func navigationVoiceChatStatusMembersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_many", p1)
+  }
+  /// %d member
+  internal static func navigationVoiceChatStatusMembersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_one", p1)
+  }
+  /// %d members
+  internal static func navigationVoiceChatStatusMembersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_other", p1)
+  }
+  /// %d members
+  internal static func navigationVoiceChatStatusMembersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_two", p1)
+  }
+  /// %d members
+  internal static func navigationVoiceChatStatusMembersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Navigation.VoiceChat.Status.Members_zero", p1)
+  }
   /// Bytes Received
   internal static var networkUsageBytesReceived: String  { return L10n.tr("Localizable", "NetworkUsage.BytesReceived") }
   /// Bytes Sent

@@ -189,7 +189,6 @@ class CallNavigationHeaderView: NavigationHeaderView {
     private func updateState(_ state:CallState, accountPeer: Peer?, animated: Bool) {
         self.state = state
         self.status = state.state.statusText(accountPeer, state.videoState)
-        self.accountPeer = accountPeer
         backgroundView.background = state.isMuted ? grayColor : blueColor
         if animated {
             backgroundView.layer?.animateBackground()
@@ -284,8 +283,6 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
 
     
     private(set) var context: GroupCallContext?
-    private var state: PresentationGroupCallState?
-    private weak var accountPeer: Peer?
     
     private var statusTimer: SwiftSignalKit.Timer?
 
@@ -341,6 +338,22 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
     func update(with context: GroupCallContext) {
         self.context = context
         
+        let peerId = context.call.peerId
+        
+        let data = context.call.summaryState
+        |> filter { $0 != nil }
+        |> map { $0! }
+        |> take(1)
+        |> map { summary -> GroupCallPanelData in
+            return GroupCallPanelData(
+                peerId: peerId,
+                info: summary.info,
+                topParticipants: summary.topParticipants,
+                participantCount: summary.participantCount
+            )
+        }
+
+        
         let account = context.call.account
         
         let signal = Signal<Peer?, NoError>.single(context.call.peer) |> then(context.call.account.postbox.loadedPeerWithId(context.call.peerId) |> map(Optional.init) |> deliverOnMainQueue)
@@ -353,11 +366,11 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
             }
         }
         
-        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, signal, accountPeer).start(next: { [weak self] state, peer, accountPeer in
+        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, data, signal, accountPeer, appearanceSignal).start(next: { [weak self] state, data, peer, accountPeer, _ in
             if let peer = peer {
                 self?.callInfo.set(text: peer.displayTitle, for: .Normal)
             }
-            self?.updateState(state, accountPeer: accountPeer, animated: false)
+            self?.updateState(state, data: data, accountPeer: accountPeer, animated: false)
             self?.needsLayout = true
             self?.ready.set(.single(true))
         }))
@@ -419,7 +432,6 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
             self?.context?.leave()
         }, for: .Click)
         
-        
         muteControl.autohighlight = false
         addSubview(muteControl)
         
@@ -432,18 +444,19 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    private var blueColor:NSColor {
-        return theme.colors.accentSelect
-    }
-    private var grayColor:NSColor {
-        return theme.colors.grayText
-    }
-    
-    private func updateState(_ state:PresentationGroupCallState, accountPeer: Peer?, animated: Bool) {
-        self.state = state
-        self.status = .text("group call", nil)
-        self.accountPeer = accountPeer
-        backgroundView.background = state.isMuted ? grayColor : blueColor
+    private func updateState(_ state: PresentationGroupCallState, data: GroupCallPanelData, accountPeer: Peer?, animated: Bool) {
+        switch state.networkState {
+        case .connecting:
+            backgroundView.background = theme.colors.grayIcon
+            self.status = .text(L10n.navigationVoiceChatStatusConnecting, nil)
+        case .connected:
+            if state.isMuted {
+                backgroundView.background = GroupCallTheme.speakInactiveColor
+            } else {
+                backgroundView.background = GroupCallTheme.speakActiveColor
+            }
+            self.status = .text(L10n.navigationVoiceChatStatusMembersCountable(data.participantCount), nil)
+        }
         if animated {
             backgroundView.layer?.animateBackground()
         }
@@ -455,7 +468,6 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
     
     override func layout() {
         super.layout()
-        
         backgroundView.frame = bounds
         muteControl.centerY(x:20)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
@@ -466,24 +478,17 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         callInfo.center()
     }
     
-    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         dropCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         _ = dropCall.sizeToFit()
-        endCall.set(text: tr(L10n.callHeaderEndCall), for: .Normal)
-        _ = endCall.sizeToFit(NSZeroSize, NSMakeSize(80, 20), thatFit: true)
+        endCall.set(text: L10n.navigationVoiceChatLeaveCall, for: .Normal)
+        _ = endCall.sizeToFit(NSZeroSize, .zero, thatFit: false)
         statusTextView.textColor = .white
         callInfo.set(color: .white, for: .Normal)
         endCall.set(color: .white, for: .Normal)
-        
-        if let state = state {
-            self.updateState(state, accountPeer: accountPeer, animated: false)
-        }
-        
         needsLayout = true
-
     }
     
     required init(frame frameRect: NSRect) {
@@ -492,12 +497,6 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // Drawing code here.
     }
     
 }
