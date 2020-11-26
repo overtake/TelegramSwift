@@ -205,6 +205,18 @@ struct InputDataInputPlaceholder : Equatable {
 
 
 final class InputDataGeneralData : Equatable {
+    
+    struct Theme : Equatable {
+        let backgroundColor: NSColor
+        let highlightColor: NSColor
+        let borderColor: NSColor
+        let accentColor: NSColor
+        let secondaryColor: NSColor
+        let textColor: NSColor
+        let appearance: NSAppearance
+    }
+
+    
     let name: String
     let color: NSColor
     let icon: CGImage?
@@ -216,7 +228,8 @@ final class InputDataGeneralData : Equatable {
     let enabled: Bool
     let justUpdate: Int64?
     let menuItems:(()->[ContextMenuItem])?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil) {
+    let theme: Theme?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, theme: Theme? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -228,10 +241,11 @@ final class InputDataGeneralData : Equatable {
         self.justUpdate = justUpdate
         self.disabledAction = disabledAction
         self.menuItems = menuItems
+        self.theme = theme
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate && lhs.theme == rhs.theme
     }
 }
 
@@ -434,7 +448,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems)
+            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, theme: data.theme)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

@@ -14,7 +14,7 @@ import SyncCore
 import Postbox
 import TgVoipWebrtc
 
-private func devicesList() -> (camera: [AVCaptureDevice], audio: [AVCaptureDevice]) {
+func devicesList() -> (camera: [AVCaptureDevice], audio: [AVCaptureDevice]) {
     
     let defAudioDevice = AVCaptureDevice.default(for: .audio)
     let defVideoDevice = AVCaptureDevice.default(for: .video)
@@ -35,7 +35,7 @@ private func devicesList() -> (camera: [AVCaptureDevice], audio: [AVCaptureDevic
     
 }
 
-private final class CallSettingsArguments {
+final class CallSettingsArguments {
     let sharedContext: SharedAccountContext
     let toggleInputAudioDevice:(String?)->Void
     let toggleOutputAudioDevice:(String?)->Void

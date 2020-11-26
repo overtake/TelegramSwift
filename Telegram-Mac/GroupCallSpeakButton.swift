@@ -13,8 +13,10 @@ final class GroupCallSpeakButton : Control {
     private let button: LAnimationButton = LAnimationButton(animation: "group_call_speaker_mute", size: NSMakeSize(50, 50))
     private var connectingView: InfiniteProgressView?
     required init(frame frameRect: NSRect) {
+        
         super.init(frame: frameRect)
         addSubview(button)
+
         button.userInteractionEnabled = false
         layer?.cornerRadius = frameRect.height / 2
         backgroundColor = GroupCallTheme.speakActiveColor
@@ -27,7 +29,15 @@ final class GroupCallSpeakButton : Control {
     
     private var isMuted: Bool?
     func update(with state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
-        backgroundColor = state.isMuted ? GroupCallTheme.speakInactiveColor : GroupCallTheme.speakActiveColor
+        switch state.networkState {
+        case .connecting:
+            backgroundColor = GroupCallTheme.speakDisabledColor
+            userInteractionEnabled = false
+        case .connected:
+            backgroundColor = state.isMuted ? GroupCallTheme.speakInactiveColor : GroupCallTheme.speakActiveColor
+            userInteractionEnabled = true
+        }
+       
         
         if animated && isMuted != state.isMuted {
             button.setAnimationName(!state.isMuted ? "group_call_speaker_unmute" : "group_call_speaker_mute")
@@ -42,7 +52,7 @@ final class GroupCallSpeakButton : Control {
         switch state.networkState {
         case .connecting:
             if connectingView == nil {
-                connectingView = InfiniteProgressView(color: GroupCallTheme.speakActiveColor, lineWidth: 3)
+                connectingView = InfiniteProgressView(color: GroupCallTheme.speakInactiveColor, lineWidth: 3)
                 connectingView?.frame = bounds
                 connectingView?.progress = nil
                 addSubview(connectingView!)

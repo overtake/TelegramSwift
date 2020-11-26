@@ -145,13 +145,39 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     
     override var backdorColor: NSColor {
+        guard let item = item as? GeneralInteractedRowItem else {
+            return super.backdorColor
+        }
+        if let theme = item.customTheme {
+            return theme.backgroundColor
+        }
         return isSelect ? theme.colors.accentSelect : theme.colors.background
+    }
+    
+    var highlightColor: NSColor {
+        guard let item = item as? GeneralInteractedRowItem else {
+            return super.backdorColor
+        }
+        if let theme = item.customTheme {
+            return theme.highlightColor
+        }
+        return theme.colors.grayHighlight
+    }
+    
+    var borderColor: NSColor {
+        guard let item = item as? GeneralInteractedRowItem else {
+            return theme.colors.border
+        }
+        if let theme = item.customTheme {
+            return theme.borderColor
+        }
+        return theme.colors.border
     }
     
     override func updateColors() {
         if let item = item as? GeneralInteractedRowItem {
             self.background = item.viewType.rowBackground
-            let highlighted = isSelect ? self.backdorColor : theme.colors.grayHighlight
+            let highlighted = isSelect ? self.backdorColor : highlightColor
             descriptionView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
@@ -197,7 +223,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 if item.drawCustomSeparator, !isSelect && !self.isResorting {
-                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.setFillColor(borderColor.cgColor)
                     ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
                 }
                 
@@ -227,7 +253,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 if position.border, !isSelect && !self.isResorting  {
-                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.setFillColor(borderColor.cgColor)
                     ctx.fill(NSMakeRect(textXAdditional + insets.left, containerView.frame.height - .borderSize, containerView.frame.width - (insets.left + insets.right + textXAdditional), .borderSize))
                 }
                 
@@ -294,8 +320,21 @@ class GeneralInteractedRowView: GeneralRowView {
         if item.enabled {
             if let textView = self.textView {
                 switch item.type {
-                case let .contextSelector(_, items):
-                    showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
+                case let .contextSelector(value, items):
+                    if let event = NSApp.currentEvent {
+                        let menu = NSMenu()
+                        if let customTheme = item.customTheme {
+                            menu.appearance = customTheme.appearance
+                        }
+                        menu.items = items.map{ pItem -> ContextMenuItem in
+                            return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
+                        }
+                        NSMenu.popUpContextMenu(menu, with: event, for: textView)
+                    } else {
+                        showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
+                    }
+                    
+                    
                     return
                 default:
                     break

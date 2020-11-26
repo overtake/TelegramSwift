@@ -28,6 +28,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case addContact(block: Bool, autoArchived: Bool)
     case shareInfo
     case pinned(ChatPinnedMessage, doNotChangeTable: Bool)
+    case groupCall(CachedChannelData.ActiveCall)
     case report(autoArchived: Bool)
     case promo(PromoChatListItem.Kind)
     var stableId:Int {
@@ -46,6 +47,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 5
         case .shareInfo:
             return 6
+        case .groupCall:
+            return 7
         }
     }
     
@@ -63,6 +66,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatReportView.self
         case .promo:
             return ChatSponsoredView.self
+        case .groupCall:
+            return ChatGroupCallView.self
         case .none:
             return nil
         }
@@ -83,6 +88,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .pinned:
             return 44
         case .promo:
+            return 44
+        case .groupCall:
             return 44
         }
     }
@@ -189,6 +196,8 @@ class ChatHeaderController {
             view = ChatReportView(chatInteraction, autoArchived: autoArchived)
         case let .promo(kind):
             view = ChatSponsoredView(chatInteraction: chatInteraction, kind: kind)
+        case let .groupCall(call):
+            view = ChatGroupCallView(chatInteraction: chatInteraction, call: call)
         case .none:
             view = nil
         
@@ -1372,6 +1381,32 @@ class ChatSearchHeader : View, Notifable {
         self.calendarController = CalendarController(NSMakeRect(0,0,250,250), chatInteraction.context.window, selectHandler: interactions.calendarAction)
         super.init(frame: frameRect)
         initialize()
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+private final class ChatGroupCallView : Control {
+    
+    init(chatInteraction: ChatInteraction, call: CachedChannelData.ActiveCall) {
+        super.init(frame: .zero)
+        updateLocalizationAndTheme(theme: theme)
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        backgroundColor = theme.colors.background
+        border = [.Bottom]
+        borderColor = theme.colors.border
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     required init(frame frameRect: NSRect) {

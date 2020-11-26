@@ -419,6 +419,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .groupPhoneCall:
             return "Group Call"
+        case  let .inviteToGroupPhoneCall(_, _, peerId):
+            return "invited to group call"
         }
     }
     
