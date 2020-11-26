@@ -17,8 +17,9 @@ struct GroupCallTheme {
     static let blueStatusColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
     static let greenStatusColor = NSColor(srgbRed: 81 / 255, green: 165 / 255, blue: 113 / 255, alpha: 1)
     static let memberSeparatorColor = NSColor(srgbRed: 58 / 255, green: 58 / 255, blue: 58 / 255, alpha: 1)
-    static let speakActiveColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let speakInactiveColor = NSColor(hexString: "#333333")!
+    static let speakActiveColor = NSColor(srgbRed: 27 / 255, green: 197 / 255, blue: 55 / 255, alpha: 1)
+    static let speakInactiveColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
+    static let speakDisabledColor = NSColor(hexString: "#333333")!
     static let titleColor = NSColor.white
     static let declineColor = NSColor(hexString: "#FF3B30")!.withAlphaComponent(0.3)
     static let settingsColor = NSColor(hexString: "#333333")!
@@ -45,12 +46,24 @@ final class GroupCallWindow : Window {
         self.titlebarAppearsTransparent = true
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
+        
+        
     }
     
     
+    override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        
+        var point: NSPoint = NSMakePoint(20, 5)
+        self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+        point.x += 20
+        self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+        point.x += 20
+        self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+    }
+    
     deinit {
-        var bp:Int = 0
-        bp += 1
+        
     }
 }
 
@@ -70,7 +83,10 @@ final class GroupCallContext {
         self.window = GroupCallWindow()
         self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager))
         self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
+        self.navigation.alwaysAnimate = true
+        self.navigation.viewWillAppear(false)
         self.window.contentView = self.navigation.view
+        self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
                 self?.readyClose()
@@ -90,10 +106,12 @@ final class GroupCallContext {
     }
     
     private func readyClose() {
+        self.navigation.viewWillDisappear(false)
         let window: Window = self.window
         if window.isVisible {
             window.orderOut(nil)
         }
+        self.navigation.viewDidDisappear(false)
     }
     
     func leave() {

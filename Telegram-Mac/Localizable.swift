@@ -669,6 +669,8 @@ internal final class L10n {
   internal static var callFeedbackWhatWentWrong: String  { return L10n.tr("Localizable", "CallFeedback.WhatWentWrong") }
   /// End Call
   internal static var callHeaderEndCall: String  { return L10n.tr("Localizable", "CallHeader.EndCall") }
+  /// Input Level
+  internal static var callSettingsInputLevel: String  { return L10n.tr("Localizable", "CallSettings.InputLevel") }
   /// Call Settings
   internal static var callSettingsTitle: String  { return L10n.tr("Localizable", "CallSettings.Title") }
   /// CAMERA

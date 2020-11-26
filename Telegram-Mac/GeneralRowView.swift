@@ -35,13 +35,17 @@ class GeneralContainableRowView : TableRowView {
         return theme.colors.background
     }
     
+    var borderColor: NSColor {
+        return theme.colors.border
+    }
+    
     override func updateColors() {
         guard let item = item as? GeneralRowItem else {
             return
         }
         self.backgroundColor = item.viewType.rowBackground
         self.containerView.backgroundColor = backdorColor
-        self.borderView.backgroundColor = theme.colors.border
+        self.borderView.backgroundColor = borderColor
     }
     
     override func layout() {

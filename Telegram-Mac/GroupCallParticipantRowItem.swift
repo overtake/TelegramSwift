@@ -14,31 +14,27 @@ import Postbox
 import TelegramCore
 
 final class GroupCallParticipantRowItem : GeneralRowItem {
-    private let participant: RenderedChannelParticipant
-    private let state: PresentationGroupCallMemberState?
-    private let audioLevel: Float?
+    private let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
     
     fileprivate let titleLayout: TextViewLayout
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, participant: RenderedChannelParticipant, state: PresentationGroupCallMemberState?, audioLevel: Float?, isLastItem: Bool, action: @escaping()->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
-        self.participant = participant
-        self.state = state
-        self.audioLevel = audioLevel
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, isLastItem: Bool, action: @escaping()->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+        self.data = data
         self.account = account
         self._contextMenu = contextMenu
-        self.titleLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: (state != nil || audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
+        self.titleLayout = TextViewLayout(.initialize(string: data.participant.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         self.isLastItem = isLastItem
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
-        if let presence = participant.presences[participant.peer.id] as? TelegramUserPresence {
+        if let presence = data.participant.presences[data.participant.peer.id] as? TelegramUserPresence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
             (string, _, _) = stringAndActivityForUserPresence(presence, timeDifference: 0, relativeTo: Int32(timestamp))
         }
-        if let state = state {
-            if state.isSpeaking || audioLevel != nil {
+        if let _ = data.state {
+            if data.isSpeaking {
                 string = "speaking"
                 color = GroupCallTheme.greenStatusColor
             } else {
@@ -51,11 +47,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var isActivePeer: Bool {
-        return state != nil || audioLevel != nil
+        return data.state != nil
     }
     
     var peer: Peer {
-        return self.participant.peer
+        return data.participant.peer
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

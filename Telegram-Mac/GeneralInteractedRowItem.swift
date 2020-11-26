@@ -76,10 +76,12 @@ class GeneralInteractedRowItem: GeneralRowItem {
     
     private let menuItems:(()->[ContextMenuItem])?
     
-   
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil) {
+    let customTheme: InputDataGeneralData.Theme?
+    
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil, theme: InputDataGeneralData.Theme? = nil) {
         self.name = name
         self.menuItems = menuItems
+        self.customTheme = theme
         if let description = description {
             descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)))
         } else {

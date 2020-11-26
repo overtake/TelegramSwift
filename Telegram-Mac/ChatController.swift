@@ -488,11 +488,13 @@ class ChatControllerView : View, ChatInputDelegate {
 
         
         var state:ChatHeaderState
-        if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
+        if let activeCall = interfaceState.activeCall {
+            state = .groupCall(activeCall)
+        } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(kind)
         } else if interfaceState.isSearchMode.0 {
             state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
-        }else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
+        } else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {

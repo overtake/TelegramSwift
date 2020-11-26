@@ -22,11 +22,11 @@ public struct SPopoverAdditionItemView {
 }
 
 public struct SPopoverItem : Equatable {
-    let title:String
+    public let title:String
     let image:CGImage?
     let textColor: NSColor
     let height: CGFloat
-    let handler:()->Void
+    public let handler:()->Void
     let isSeparator: Bool
     let drawSeparatorBorder: Bool
     let additionView: SPopoverAdditionItemView?

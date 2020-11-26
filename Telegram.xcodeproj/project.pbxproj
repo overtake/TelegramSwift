@@ -834,6 +834,7 @@
 		D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07C6D7F2346A42F00468B1A /* monkey_see.tgs */; };
 		D0830FC424127473006198E7 /* folder_new.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* folder_new.tgs */; };
 		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
+		D09046FD256F965700D5022C /* GroupCallSSettingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
 		D0983E172568373E00467703 /* AppCenterAnalytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E162568373E00467703 /* AppCenterAnalytics.framework */; };
 		D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E182568373E00467703 /* AppCenterCrashes.framework */; };
@@ -894,6 +895,7 @@
 		D0E7BE77256D405A0068644D /* InfiniteProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */; };
 		D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE79256D56C90068644D /* group_call_member_mute.json */; };
 		D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */; };
+		D0E7BED0256EA7140068644D /* GroupCallSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */; };
 		D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */; };
 		D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */; };
 		D0FFC4AC23E184BA0044D305 /* ChatListFilterController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */; };
@@ -1241,11 +1243,8 @@
 		C209C3721F262537009231FE /* emoji_suggestions.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = emoji_suggestions.h; sourceTree = "<group>"; };
 		C209C3751F26271B009231FE /* EmojiSuggestionBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EmojiSuggestionBridge.h; sourceTree = "<group>"; };
 		C209C3761F26271B009231FE /* EmojiSuggestionBridge.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EmojiSuggestionBridge.mm; sourceTree = "<group>"; };
-		C209C3791F262858009231FE /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		C209C37C1F2628D7009231FE /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		C209C37D1F2628D7009231FE /* libc++abi.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++abi.tbd"; path = "usr/lib/libc++abi.tbd"; sourceTree = SDKROOT; };
-		C209C37E1F2628D7009231FE /* libstdc++.6.0.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.6.0.9.tbd"; path = "usr/lib/libstdc++.6.0.9.tbd"; sourceTree = SDKROOT; };
-		C209C37F1F2628D7009231FE /* libstdc++.6.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.6.tbd"; path = "usr/lib/libstdc++.6.tbd"; sourceTree = SDKROOT; };
 		C209C38C1F276D4C009231FE /* ChatSearchView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSearchView.swift; sourceTree = "<group>"; };
 		C20B8F3D1DFC52EE008A354E /* ChatEmptyPeerItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatEmptyPeerItem.swift; sourceTree = "<group>"; };
 		C20B8F3F1DFD9999008A354E /* ChatListNothingItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListNothingItem.swift; sourceTree = "<group>"; };
@@ -1840,6 +1839,7 @@
 		D07C6D7F2346A42F00468B1A /* monkey_see.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_see.tgs; sourceTree = "<group>"; };
 		D0830FC324127468006198E7 /* folder_new.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_new.tgs; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
+		D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSSettingRowItem.swift; sourceTree = "<group>"; };
 		D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGroupPeersController.swift; sourceTree = "<group>"; };
 		D0983E162568373E00467703 /* AppCenterAnalytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterAnalytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0983E182568373E00467703 /* AppCenterCrashes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterCrashes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1903,6 +1903,7 @@
 		D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteProgressView.swift; sourceTree = "<group>"; };
 		D0E7BE79256D56C90068644D /* group_call_member_mute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_mute.json; sourceTree = "<group>"; };
 		D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_unmute.json; sourceTree = "<group>"; };
+		D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSettingsController.swift; sourceTree = "<group>"; };
 		D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MergedAvatarsView.swift; sourceTree = "<group>"; };
 		D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerInfoHeadItem.swift; sourceTree = "<group>"; };
 		D0FFC4AB23E184BA0044D305 /* ChatListFilterController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterController.swift; sourceTree = "<group>"; };
@@ -4300,9 +4301,6 @@
 				C21A48AD1F7CFBBE0095ADB1 /* OpenGL.framework */,
 				C209C37C1F2628D7009231FE /* libc++.tbd */,
 				C209C37D1F2628D7009231FE /* libc++abi.tbd */,
-				C209C37E1F2628D7009231FE /* libstdc++.6.0.9.tbd */,
-				C209C37F1F2628D7009231FE /* libstdc++.6.tbd */,
-				C209C3791F262858009231FE /* libstdc++.tbd */,
 				C271EB961EB916870034792D /* libtgvoip.framework */,
 				C2C9B92A1E8011CD00380D79 /* Carbon.framework */,
 				C2C9B9281E8011B000380D79 /* IOKit.framework */,
@@ -4380,6 +4378,8 @@
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */,
+				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
+				D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5212,6 +5212,7 @@
 				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
 				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
 				D00EECD1252B47B1001EB99F /* CallFeedbackController.swift in Sources */,
+				D0E7BED0256EA7140068644D /* GroupCallSettingsController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
@@ -5366,6 +5367,7 @@
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
+				D09046FD256F965700D5022C /* GroupCallSSettingRowItem.swift in Sources */,
 				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,

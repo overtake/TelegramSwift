@@ -38,9 +38,18 @@ private final class GroupCallControlsView : View {
     private let end: CallControl = CallControl(frame: .zero)
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
-    
+    private let playbackAudioLevelView: VoiceBlobView
     required init(frame frameRect: NSRect) {
+        playbackAudioLevelView = VoiceBlobView(
+            frame: NSMakeRect(0, 0, 220, 220),
+            maxLevel: 0.3,
+            smallBlobRange: (0, 0),
+            mediumBlobRange: (0.7, 0.8),
+            bigBlobRange: (0.8, 0.9)
+        )
+
         super.init(frame: frameRect)
+        addSubview(playbackAudioLevelView)
         addSubview(speak)
         addSubview(settings)
         addSubview(end)
@@ -49,13 +58,16 @@ private final class GroupCallControlsView : View {
             self?.arguments?.leave()
         }, for: .Click)
         
-        end.set(handler: { [weak self] _ in
+        settings.set(handler: { [weak self] _ in
             self?.arguments?.settings()
         }, for: .Click)
         
         speak.set(handler: { [weak self] _ in
             self?.arguments?.toggleSpeaker()
         }, for: .Click)
+        
+        playbackAudioLevelView.startAnimating()
+
     }
     
     private var preiousState: PresentationGroupCallState?
@@ -63,13 +75,25 @@ private final class GroupCallControlsView : View {
     func update(_ state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
                 
         speak.update(with: state, audioLevel: audioLevel, animated: animated)
+        playbackAudioLevelView.setColor(state.isMuted ? GroupCallTheme.speakInactiveColor : GroupCallTheme.speakActiveColor)
+
+        if !state.isMuted {
+            playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
+        } else {
+            playbackAudioLevelView.updateLevel(0)
+        }
+        switch state.networkState {
+        case .connecting:
+            playbackAudioLevelView.change(opacity: 0, animated: animated)
+        case .connected:
+            playbackAudioLevelView.change(opacity: 1, animated: animated)
+        }
         
         if state != preiousState {
             
             end.updateWithData(CallControlData(text: "Leave", isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
             settings.updateWithData(CallControlData(text: "Settings", isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
-
             
             let statusText: String
             switch state.networkState {
@@ -123,6 +147,7 @@ private final class GroupCallControlsView : View {
     override func layout() {
         super.layout()
         speak.center()
+        playbackAudioLevelView.center()
         settings.centerY(x: 60)
         end.centerY(x: frame.width - end.frame.width - 60)
         if let speakText = speakText {
@@ -231,7 +256,7 @@ private final class GroupCallView : View {
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         peersTable.merge(with: transition)
         titleView.update(state.peer, state.cachedData)
-        controlsContainer.update(state.state, audioLevel: nil, animated: animated)
+        controlsContainer.update(state.state, audioLevel: state.myAudioLevel, animated: animated)
     }
 
     required init?(coder: NSCoder) {
@@ -240,9 +265,10 @@ private final class GroupCallView : View {
 }
 
 
-private struct PeerGroupCallData : Equatable, Comparable {
+struct PeerGroupCallData : Equatable, Comparable {
     let participant: RenderedChannelParticipant
     let state: PresentationGroupCallMemberState?
+    let isSpeaking: Bool
     let audioLevel: Float?
     
     private var weight: Int {
@@ -266,7 +292,7 @@ private struct PeerGroupCallData : Equatable, Comparable {
         
         if let state = state {
             weight |= (1 << 28)
-            if state.isSpeaking || audioLevel != nil {
+            if audioLevel != nil {
                 weight |= (1 << 30)
             } else {
                 weight |= (1 << 29)
@@ -289,6 +315,9 @@ private struct PeerGroupCallData : Equatable, Comparable {
         if lhs.audioLevel != rhs.audioLevel {
             return false
         }
+        if lhs.isSpeaking != rhs.isSpeaking {
+            return false
+        }
         return true
     }
     
@@ -303,11 +332,13 @@ private struct GroupCallUIState : Equatable {
     let state: PresentationGroupCallState
     let peer: Peer
     let cachedData: CachedChannelData?
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, peer: Peer, cachedData: CachedChannelData?) {
+    let myAudioLevel: Float
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?) {
         self.memberDatas = memberDatas
         self.peer = peer
         self.cachedData = cachedData
         self.state = state
+        self.myAudioLevel = myAudioLevel
         
     }
     
@@ -316,6 +347,9 @@ private struct GroupCallUIState : Equatable {
             return false
         }
         if lhs.state != rhs.state {
+            return false
+        }
+        if lhs.myAudioLevel != rhs.myAudioLevel {
             return false
         }
         if !lhs.peer.isEqual(rhs.peer) {
@@ -332,7 +366,7 @@ private struct GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peers:[PeerId: Peer], _ peerStates: [PeerId: PresentationGroupCallMemberState], _ audioLevels: [(PeerId, Float)], _ accountPeerId: PeerId) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peers:[PeerId: Peer], _ peerStates: [PeerId: PresentationGroupCallMemberState], _ audioLevels: [(PeerId, Float)], _ myAudioLevel: Float, _ accountPeerId: PeerId) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -344,13 +378,10 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     
     for participant in participants {
         var participantState = peerStates[participant.peer.id]
-        if participant.peer.id == accountPeerId {
-            participantState = PresentationGroupCallMemberState(ssrc: UInt32(participant.peer.id.id), isSpeaking: !state.isMuted)
-        }
-        memberDatas.append(PeerGroupCallData(participant: participant, state: participantState, audioLevel: audioLevels[participant.peer.id]))
+        memberDatas.append(PeerGroupCallData(participant: participant, state: participantState, isSpeaking: participant.peer.id == accountPeerId ? !state.isMuted : false, audioLevel: audioLevels[participant.peer.id]))
     }
     
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData)
 }
 
 
@@ -361,7 +392,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     for (i, data) in state.memberDatas.enumerated() {
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.participant.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, participant: data.participant, state: data.state, audioLevel: data.audioLevel, isLastItem: i == state.memberDatas.count - 1, action: {
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, isLastItem: i == state.memberDatas.count - 1, action: {
                 
             }, contextMenu: {
                 return .complete()
@@ -396,11 +427,18 @@ final class GroupCallUIController : ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let peerId = self.data.call.peerId
+        let account = self.data.call.account
+
+        let sharedContext = self.data.call.sharedContext
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
             _ = self?.data.call.leave().start()
         }, settings: { [weak self] in
-            
+            guard let `self` = self else {
+                return
+            }
+            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, call: self.data.call))
         }, invite: { [weak self] peerId in
             
         }, mute: { [weak self] peerId in
@@ -411,8 +449,6 @@ final class GroupCallUIController : ViewController {
         
         genericView.arguments = arguments
         
-        let peerId = self.data.call.peerId
-        let account = self.data.call.account
         
         var loadMoreControl: PeerChannelMemberCategoryControl?
         
@@ -435,8 +471,8 @@ final class GroupCallUIController : ViewController {
             }
         }
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), self.data.call.audioLevels, account.viewTracker.peerView(peerId)) |> map {
-            return makeState($0.4, $0.0, $0.2, $0.1.0, $0.1.1, $0.3, account.peerId)
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), .single([]) |> then(self.data.call.audioLevels), account.viewTracker.peerView(peerId), self.data.call.myAudioLevel) |> map {
+            return makeState($0.4, $0.0, $0.2, $0.1.0, $0.1.1, $0.3, $0.5, account.peerId)
         } |> distinctUntilChanged
         
         
