@@ -16,13 +16,13 @@ private let duration: TimeInterval = 0.4
 private let timingFunction: CAMediaTimingFunctionName = .spring
 
 
-private final class AvatarContentView: View {
+final class AvatarContentView: View {
     private let unclippedView: ImageView
     private let clippedView: ImageView
     
     private var disposable: Disposable?
     
-    init(context: AccountContext, peer: Peer, message: Message?, synchronousLoad: Bool) {
+    init(context: AccountContext, peer: Peer, message: Message?, synchronousLoad: Bool, size: NSSize) {
         self.unclippedView = ImageView()
         self.clippedView = ImageView()
         
@@ -32,7 +32,7 @@ private final class AvatarContentView: View {
         self.addSubview(self.clippedView)
         
         
-        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(22, 22), scale: System.backingScale, font: .normal(10), genCap: true, synchronousLoad: synchronousLoad)
+        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: size, scale: System.backingScale, font: .normal(10), genCap: true, synchronousLoad: synchronousLoad)
         
         let disposable = (signal
             |> deliverOnMainQueue).start(next: { [weak self] image in
@@ -56,7 +56,8 @@ private final class AvatarContentView: View {
     
     private func updateImage(image: CGImage) {
         self.unclippedView.image = image
-        self.clippedView.image = generateImage(CGSize(width: 22, height: 22), rotatedContext: { size, context in
+        let frameSize = NSMakeSize(frame.height, frame.height)
+        self.clippedView.image = generateImage(frameSize, rotatedContext: { size, context in
             context.clear(CGRect(origin: CGPoint(), size: size))
             context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
             context.scaleBy(x: 1.0, y: -1.0)
@@ -68,7 +69,7 @@ private final class AvatarContentView: View {
             
             context.setBlendMode(.copy)
             context.setFillColor(NSColor.clear.cgColor)
-            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size).insetBy(dx: -1.5, dy: -1.5).offsetBy(dx: -19.0, dy: 0.0))
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size).insetBy(dx: -1.5, dy: -1.5).offsetBy(dx: -(frameSize.width - 3), dy: 0.0))
         })
     }
     
@@ -503,7 +504,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             }
         }
         for inserted in inserted {
-            let control = AvatarContentView(context: data.context, peer: inserted.1.peer, message: data.message, synchronousLoad: false)
+            let control = AvatarContentView(context: data.context, peer: inserted.1.peer, message: data.message, synchronousLoad: false, size: NSMakeSize(22, 22))
             control.updateLayout(size: NSMakeSize(22, 22), isClipped: inserted.0 != 0, animated: animated)
             control.userInteractionEnabled = false
             control.setFrameSize(NSMakeSize(22, 22))

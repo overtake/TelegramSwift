@@ -4,6 +4,26 @@ import TelegramCore
 import SyncCore
 import SwiftSignalKit
 
+struct PresentationGroupCallSummaryState: Equatable {
+    var info: GroupCallInfo
+    var participantCount: Int
+    var callState: PresentationGroupCallState
+    var topParticipants: [GroupCallParticipantsContext.Participant]
+    
+    init(
+        info: GroupCallInfo,
+        participantCount: Int,
+        callState: PresentationGroupCallState,
+        topParticipants: [GroupCallParticipantsContext.Participant]
+    ) {
+        self.info = info
+        self.participantCount = participantCount
+        self.callState = callState
+        self.topParticipants = topParticipants
+    }
+}
+
+
 
 enum RequestOrJoinGroupCallResult {
     case success(GroupCallContext)
@@ -55,6 +75,8 @@ protocol PresentationGroupCall: class {
     var members: Signal<[PeerId: PresentationGroupCallMemberState], NoError> { get }
     var audioLevels: Signal<[(PeerId, Float)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
+
+    var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
 
 
     func leave() -> Signal<Bool, NoError>
