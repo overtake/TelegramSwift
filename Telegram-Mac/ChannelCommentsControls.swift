@@ -26,7 +26,7 @@ final class AvatarContentView: View {
         self.unclippedView = ImageView()
         self.clippedView = ImageView()
         
-        super.init()
+        super.init(frame: CGRect(origin: .zero, size: size))
         
         self.addSubview(self.unclippedView)
         self.addSubview(self.clippedView)

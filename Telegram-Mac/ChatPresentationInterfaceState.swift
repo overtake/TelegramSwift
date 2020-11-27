@@ -76,7 +76,6 @@ struct GroupCallPanelData : Equatable {
     let info: GroupCallInfo
     let topParticipants: [GroupCallParticipantsContext.Participant]
     let participantCount: Int
-    
     init(
         peerId: PeerId,
         info: GroupCallInfo,

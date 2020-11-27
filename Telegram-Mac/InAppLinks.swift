@@ -647,38 +647,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .tonTransfer(_, context, data: data):
         if #available(OSX 10.12, *) {
-//            let _ = combineLatest(queue: .mainQueue(), walletConfiguration(postbox: context.account.postbox), TONKeychain.hasKeys(for: context.account)).start(next: { configuration, hasKeys in
-//                if  let config = configuration.config, let blockchainName = configuration.blockchainName {
-//                    let tonContext = context.tonContext.context(config: config, blockchainName: blockchainName, enableProxy: !configuration.disableProxy)
-//                    if hasKeys {
-//                        let signal = tonContext.storage.getWalletRecords() |> deliverOnMainQueue
-//                        _ = signal.start(next: { wallets in
-//                            if !wallets.isEmpty {
-//                                let amount = data.amount ?? 0
-//                                let formattedAmount: String
-//                                if amount > 0 {
-//                                    formattedAmount = formatBalanceText(amount)
-//                                } else {
-//                                    formattedAmount = ""
-//                                }
-//                                let controller = WalletSendController(context: context, tonContext: tonContext, walletInfo: wallets[0].info, recipient: data.address, comment: data.comment ?? "", amount: formattedAmount)
-//                                showModal(with: controller, for: context.window)
-//                            } else {
-//                                confirm(for: context.window, header: L10n.walletTonLinkEmptyTitle, information: L10n.walletTonLinkEmptyText, okTitle: L10n.walletTonLinkEmptyThrid, successHandler: { result in
-//                                    switch result {
-//                                    case .basic:
-//                                        context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .intro))
-//                                    default:
-//                                        break
-//                                    }
-//                                })
-//                            }
-//                        })
-//                    } else {
-//                       context.sharedContext.bindings.rootNavigation().push(WalletSplashController(context: context, tonContext: tonContext, mode: .unavailable))
-//                    }
-//                }
-//            })
+
         }
     case .instantView:
         afterComplete(true)
@@ -696,6 +665,15 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         context.sharedContext.bindings.rootNavigation().push(controller)
         afterComplete(true)
+    case let .joinGroupCall(_, context, peerId, callId):
+        _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: callId), for: context.window).start(next: { result in
+            switch result {
+            case let .success(callContext), let .samePeer(callContext):
+                applyGroupCallResult(context.sharedContext, callContext)
+            default:
+                alert(for: context.window, info: L10n.errorAnError)
+            }
+        })
     }
     
 }
@@ -810,6 +788,7 @@ enum inAppLink {
     case tonTransfer(link: String, context: AccountContext, data: ParsedWalletUrl)
     case instantView(link: String, webpage: TelegramMediaWebpage, anchor: String?)
     case settings(link: String, context: AccountContext, section: InAppSettingsSection)
+    case joinGroupCall(link: String, context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -852,6 +831,8 @@ enum inAppLink {
         case let .instantView(link, _, _):
             return link
         case let .settings(link, _, _):
+            return link
+        case let .joinGroupCall(link, _, _, _):
             return link
         case .nothing:
             return ""

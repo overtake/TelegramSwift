@@ -14,31 +14,37 @@ import Postbox
 import TelegramCore
 
 final class GroupCallParticipantRowItem : GeneralRowItem {
-    private let data: PeerGroupCallData
+    fileprivate let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
     
     fileprivate let titleLayout: TextViewLayout
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, isLastItem: Bool, action: @escaping()->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    fileprivate let state: PresentationGroupCallState
+    fileprivate let isInvited: Bool
+    fileprivate let invite:(PeerId)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
         self.data = data
         self.account = account
+        self.invite = invite
         self._contextMenu = contextMenu
-        self.titleLayout = TextViewLayout(.initialize(string: data.participant.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
+        self.isInvited = isInvited
+        self.state = state
+        self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         self.isLastItem = isLastItem
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
-        if let presence = data.participant.presences[data.participant.peer.id] as? TelegramUserPresence {
+        if let presence = data.presence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
             (string, _, _) = stringAndActivityForUserPresence(presence, timeDifference: 0, relativeTo: Int32(timestamp))
         }
         if let _ = data.state {
             if data.isSpeaking {
-                string = "speaking"
+                string = L10n.voiceChatSpeaking
                 color = GroupCallTheme.greenStatusColor
             } else {
-                string = "listening"
+                string = L10n.voiceChatListening
                 color = GroupCallTheme.blueStatusColor
             }
         }
@@ -51,7 +57,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var peer: Peer {
-        return data.participant.peer
+        return data.peer
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -82,18 +88,37 @@ private final class GroupCallParticipantRowView : TableRowView {
     private let titleView: TextView = TextView()
     private var statusView: TextView?
     private let control: LAnimationButton = LAnimationButton(animation: "group_call_member_mute", size: NSMakeSize(24, 24))
+    private let button = ImageButton()
     private let separator: View = View()
+    private let playbackAudioLevelView: VoiceBlobView
     required init(frame frameRect: NSRect) {
+        playbackAudioLevelView = VoiceBlobView(
+            frame: NSMakeRect(0, 0, 55, 55),
+            maxLevel: 0.3,
+            smallBlobRange: (0, 0),
+            mediumBlobRange: (0.7, 0.8),
+            bigBlobRange: (0.8, 0.9)
+        )
+
         super.init(frame: frameRect)
         photoView.setFrameSize(NSMakeSize(35, 35))
+        addSubview(playbackAudioLevelView)
         addSubview(photoView)
         addSubview(titleView)
-        addSubview(control)
         addSubview(separator)
-        addSubview(control)
+        addSubview(button)
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
-        
+
+        button.animates = true
+
+        button.autohighlight = true
+        button.set(handler: { [weak self] _ in
+            guard let item = self?.item as? GroupCallParticipantRowItem else {
+                return
+            }
+            item.invite(item.peer.id)
+        }, for: .SingleClick)
     }
     
     override func layout() {
@@ -112,6 +137,9 @@ private final class GroupCallParticipantRowView : TableRowView {
             separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
         }
         control.centerY(x: frame.width - 12 - control.frame.width)
+        button.centerY(x: frame.width - 12 - control.frame.width)
+
+        playbackAudioLevelView.centerY(x: 2, addition: 1)
     }
     
     override func updateColors() {
@@ -127,6 +155,41 @@ private final class GroupCallParticipantRowView : TableRowView {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
+
+        if item.isActivePeer {
+            if item.data.isSpeaking {
+                button.set(image: GroupCallTheme.small_speaking, for: .Normal)
+            } else {
+                if let muteState = item.data.state?.muteState {
+                    button.set(image: GroupCallTheme.small_mute, for: .Normal)
+                } else {
+                    button.set(image: GroupCallTheme.small_unmute, for: .Normal)
+                }
+            }
+        } else {
+            if item.isInvited {
+                button.set(image: GroupCallTheme.invitedIcon, for: .Normal)
+                button.userInteractionEnabled = false
+            } else {
+                button.set(image: GroupCallTheme.inviteIcon, for: .Normal)
+                button.userInteractionEnabled = true
+            }
+        }
+
+        playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
+
+        if item.data.isSpeaking {
+            playbackAudioLevelView.startAnimating()
+        } else {
+            playbackAudioLevelView.stopAnimating()
+        }
+        playbackAudioLevelView.change(opacity: item.data.isSpeaking ? 1 : 0, animated: animated)
+
+        playbackAudioLevelView.updateLevel(CGFloat(item.data.audioLevel ?? 0))
+
+        button.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+
+
         titleView.update(item.titleLayout)
         photoView.setPeer(account: item.account, peer: item.peer, message: nil)
         
@@ -157,7 +220,7 @@ private final class GroupCallParticipantRowView : TableRowView {
         }
         
         statusView?.update(item.statusLayout)
-
+        needsLayout = true
         
     }
     

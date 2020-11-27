@@ -17,12 +17,12 @@ private final class GroupCallUIArguments {
     let leave:()->Void
     let settings:()->Void
     let invite:(PeerId)->Void
-    let mute:(PeerId)->Void
+    let mute:(PeerId, Bool)->Void
     let toggleSpeaker:()->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
-    mute:@escaping(PeerId)->Void,
+    mute:@escaping(PeerId, Bool)->Void,
     toggleSpeaker:@escaping()->Void) {
         self.leave = leave
         self.invite = invite
@@ -75,42 +75,61 @@ private final class GroupCallControlsView : View {
     func update(_ state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
                 
         speak.update(with: state, audioLevel: audioLevel, animated: animated)
-        playbackAudioLevelView.setColor(state.isMuted ? GroupCallTheme.speakInactiveColor : GroupCallTheme.speakActiveColor)
-
-        if !state.isMuted {
-            playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
-        } else {
-            playbackAudioLevelView.updateLevel(0)
-        }
+        
         switch state.networkState {
         case .connecting:
             playbackAudioLevelView.change(opacity: 0, animated: animated)
+            playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
         case .connected:
-            playbackAudioLevelView.change(opacity: 1, animated: animated)
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    playbackAudioLevelView.setColor(GroupCallTheme.speakInactiveColor)
+                } else {
+                    playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
+                }
+            } else {
+                playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
+                playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
+            }
+
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    playbackAudioLevelView.change(opacity: 1, animated: animated)
+                } else {
+                    playbackAudioLevelView.change(opacity: 0, animated: animated)
+
+                }
+            } else {
+                playbackAudioLevelView.change(opacity: 1, animated: animated)
+            }
         }
         
         if state != preiousState {
             
-            end.updateWithData(CallControlData(text: "Leave", isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
+            end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
-            settings.updateWithData(CallControlData(text: "Settings", isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
             
             let statusText: String
             switch state.networkState {
             case .connected:
-                if state.isMuted {
-                    statusText = "Click to Unmute"
+                if let muteState = state.muteState {
+                    if muteState.canUnmute {
+                        statusText = L10n.voiceChatClickToUnmute
+                    } else {
+                        statusText = L10n.voiceChatListenMode
+                    }
                 } else {
-                    statusText = "You're Live"
+                    statusText = L10n.voiceChatYouLive
                 }
             case .connecting:
-                statusText = "Connecting..."
+                statusText = L10n.voiceChatConnecting
             }
             
             let speakText = TextView()
             speakText.userInteractionEnabled = false
             speakText.isSelectable = false
-            let layout = TextViewLayout(.initialize(string: statusText, color: .white, font: .normal(.title)))
+            let layout = TextViewLayout(.initialize(string: statusText, color: .white, font: .medium(.title)))
             layout.measure(width: frame.width - 60)
             speakText.update(layout)
             
@@ -191,17 +210,16 @@ private final class GroupCallTitleView : View {
     }
     
     
-    func update(_ peer: Peer, _ cachedData: CachedChannelData?) {
+    func update(_ peer: Peer, _ state: GroupCallUIState) {
         let layout = TextViewLayout(.initialize(string: peer.displayTitle, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
         layout.measure(width: frame.width - 100)
         titleView.update(layout)
-        
-        let membersCount = cachedData?.participantsSummary.memberCount ?? 0
+
         let status: String
-        if membersCount == 0 {
-            status = L10n.peerStatusGroup
+        if let summaryState = state.summaryState {
+            status = L10n.voiceChatStatusMembersCountable(summaryState.participantCount)
         } else {
-            status = L10n.peerStatusMemberCountable(Int(membersCount))
+            status = L10n.voiceChatStatusLoading
         }
         let statusLayout = TextViewLayout.init(.initialize(string: status, color: GroupCallTheme.grayStatusColor, font: .normal(.text)), maximumNumberOfLines: 1)
         statusLayout.measure(width: frame.width - 100)
@@ -255,7 +273,7 @@ private final class GroupCallView : View {
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         peersTable.merge(with: transition)
-        titleView.update(state.peer, state.cachedData)
+        titleView.update(state.peer, state)
         controlsContainer.update(state.state, audioLevel: state.myAudioLevel, animated: animated)
     }
 
@@ -266,47 +284,56 @@ private final class GroupCallView : View {
 
 
 struct PeerGroupCallData : Equatable, Comparable {
-    let participant: RenderedChannelParticipant
+    struct AudioLevel {
+        let timestamp: Int32
+        let value: Float
+    }
+
+    let peer: Peer
+    let presence: TelegramUserPresence?
     let state: PresentationGroupCallMemberState?
     let isSpeaking: Bool
     let audioLevel: Float?
-    
+    let isInvited: Bool
     private var weight: Int {
         var weight: Int = 0
         
-        if let presence = participant.presences[participant.peer.id] as? TelegramUserPresence {
-            switch presence.status {
-            case let .present(until):
-                weight += Int(until)
-                weight |= (1 << 28)
-            case .recently:
-                weight |= (1 << 27)
-            case .lastWeek:
-                weight |= (1 << 26)
-            case .lastMonth:
-                weight |= (1 << 25)
-            case .none:
-                weight |= (1 << 24)
-            }
-        }
-        
-        if let state = state {
-            weight |= (1 << 28)
-            if audioLevel != nil {
-                weight |= (1 << 30)
+        if let _ = state {
+            if isSpeaking {
+                weight += (1 << 30)
             } else {
-                weight |= (1 << 29)
+                weight += (1 << 29)
             }
             weight += Int(Int32.max)
-        } else if audioLevel != nil {
-            weight |= (1 << 30)
-            weight += Int(Int32.max)
+        } else {
+            if let presence = presence {
+                switch presence.status {
+                case let .present(until):
+                    weight += Int(until)
+                    weight += (1 << 28)
+                case .recently:
+                    weight += (1 << 27)
+                case .lastWeek:
+                    weight += (1 << 26)
+                case .lastMonth:
+                    weight += (1 << 25)
+                case .none:
+                    weight += (1 << 24)
+                }
+            }
         }
         return weight
     }
     
     static func ==(lhs: PeerGroupCallData, rhs: PeerGroupCallData) -> Bool {
-        if lhs.participant != rhs.participant {
+        if !lhs.peer.isEqual(rhs.peer) {
+            return false
+        }
+        if let lhsPresence = lhs.presence, let rhsPresence = rhs.presence {
+            if !lhsPresence.isEqual(to: rhsPresence) {
+                return false
+            }
+        } else if (lhs.presence != nil) != (rhs.presence != nil) {
             return false
         }
         if lhs.state != rhs.state {
@@ -316,6 +343,9 @@ struct PeerGroupCallData : Equatable, Comparable {
             return false
         }
         if lhs.isSpeaking != rhs.isSpeaking {
+            return false
+        }
+        if lhs.isInvited != rhs.isInvited {
             return false
         }
         return true
@@ -330,16 +360,17 @@ struct PeerGroupCallData : Equatable, Comparable {
 private struct GroupCallUIState : Equatable {
     let memberDatas:[PeerGroupCallData]
     let state: PresentationGroupCallState
+    let summaryState: PresentationGroupCallSummaryState?
     let peer: Peer
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?) {
+        self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
         self.cachedData = cachedData
         self.state = state
         self.myAudioLevel = myAudioLevel
-        
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -350,6 +381,9 @@ private struct GroupCallUIState : Equatable {
             return false
         }
         if lhs.myAudioLevel != rhs.myAudioLevel {
+            return false
+        }
+        if lhs.summaryState != rhs.summaryState {
             return false
         }
         if !lhs.peer.isEqual(rhs.peer) {
@@ -366,22 +400,28 @@ private struct GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peers:[PeerId: Peer], _ peerStates: [PeerId: PresentationGroupCallMemberState], _ audioLevels: [(PeerId, Float)], _ myAudioLevel: Float, _ accountPeerId: PeerId) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peerStates: [PeerId: PresentationGroupCallMemberState], _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ accountPeerId: PeerId) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
-    
-    let audioLevels:[PeerId: Float] = audioLevels.reduce([:], { current, value in
-        var current = current
-        current[value.0] = value.1
-        return current
+    let states = peerStates.map { $0.value }.sorted(by: { lhs, rhs in
+        return (audioLevels[lhs.peer.id]?.timestamp ?? lhs.joinTimestamp) > (audioLevels[rhs.peer.id]?.timestamp ?? rhs.joinTimestamp)
     })
-    
-    for participant in participants {
-        var participantState = peerStates[participant.peer.id]
-        memberDatas.append(PeerGroupCallData(participant: participant, state: participantState, isSpeaking: participant.peer.id == accountPeerId ? !state.isMuted : false, audioLevel: audioLevels[participant.peer.id]))
+
+    for value in states {
+        var audioLevel = audioLevels[value.peer.id]
+        if let level = audioLevel, level.timestamp + 2 <= Int32(Date().timeIntervalSince1970) {
+            audioLevel = nil
+        }
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: value.peer.id == accountPeerId ? state.muteState == nil : audioLevel != nil && value.muteState == nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
     }
-    
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData)
+
+    for participant in participants {
+        if peerStates[participant.peer.id] == nil {
+            memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
+        }
+    }
+
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData)
 }
 
 
@@ -391,10 +431,10 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     var index: Int32 = 0
     
     for (i, data) in state.memberDatas.enumerated() {
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.participant.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, isLastItem: i == state.memberDatas.count - 1, action: {
+        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, action: {
                 
-            }, contextMenu: {
+            }, invite: arguments.invite, contextMenu: {
                 return .complete()
             })
         }))
@@ -433,16 +473,16 @@ final class GroupCallUIController : ViewController {
         let sharedContext = self.data.call.sharedContext
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
-            _ = self?.data.call.leave().start()
+            _ = self?.data.call.leave(terminateIfPossible: false).start()
         }, settings: { [weak self] in
             guard let `self` = self else {
                 return
             }
             self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, call: self.data.call))
         }, invite: { [weak self] peerId in
-            
-        }, mute: { [weak self] peerId in
-            
+            self?.data.call.invitePeer(peerId)
+        }, mute: { [weak self] peerId, isMuted in
+            self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
             self?.data.call.toggleIsMuted()
         })
@@ -454,25 +494,45 @@ final class GroupCallUIController : ViewController {
         
         let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
         let (disposable, control) = data.peerMemberContextsManager.recent(postbox: data.call.account.postbox, network: data.call.account.network, accountPeerId: data.call.peerId, peerId: data.call.peerId, updated: { state in
-            channelMembersPromise.set(.single(state.list))
+            channelMembersPromise.set(.single(state.list.filter { $0.peer.isUser && !$0.peer.isBot && !$0.peer.isDeleted }))
         })
         loadMoreControl = control
         actionsDisposable.add(disposable)
         
-        let members: Signal<([PeerId: Peer], [PeerId: PresentationGroupCallMemberState]), NoError> = self.data.call.members |> mapToSignal { members in
-            return account.postbox.transaction { transaction in
-                var peers:[PeerId: Peer] = [:]
-                for (memberId, _) in members {
-                    if let peer = transaction.getPeer(memberId) {
-                        peers[memberId] = peer
+        let members: Signal<([PeerId: PresentationGroupCallMemberState]), NoError> = self.data.call.members
+
+
+
+        let cachedAudioValues:Atomic<[PeerId: PeerGroupCallData.AudioLevel]> = Atomic(value: [:])
+
+
+
+        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(combineLatest(.single([]) |> then(self.data.call.audioLevels), .single(0) |> then(self.data.call.myAudioLevel)) |> map { values, myLevel in
+            var values = values
+            values.append((account.peerId, myLevel))
+            return cachedAudioValues.modify { list in
+                var list = list
+                for value in values {
+                    var updated: Bool = true
+                    if let listValue = list[value.0] {
+                        if listValue.value == value.1 {
+                            updated = false
+                        }
+                    }
+                    if updated {
+                        list[value.0] = PeerGroupCallData.AudioLevel(timestamp: Int32(Date().timeIntervalSince1970), value: value.1)
                     }
                 }
-                return (peers, members)
+                return list
             }
-        }
+        })
+
+        let tick:Signal<Void, NoError> = .single(Void()) |> then(.single(Void()) |> delay(2.0, queue: prepareQueue) |> restart)
+
+
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), .single([]) |> then(self.data.call.audioLevels), account.viewTracker.peerView(peerId), self.data.call.myAudioLevel) |> map {
-            return makeState($0.4, $0.0, $0.2, $0.1.0, $0.1.1, $0.3, $0.5, account.peerId)
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, tick) |> map {
+            return makeState($0.4, $0.0, $0.2, $0.1, $0.3, $0.5, $0.6, account.peerId)
         } |> distinctUntilChanged
         
         
@@ -497,7 +557,7 @@ final class GroupCallUIController : ViewController {
         genericView.peersTable.setScrollHandler { [weak self] position in
             switch position.direction {
             case .bottom:
-                self?.data.peerMemberContextsManager.loadMore(peerId: peerId, control: loadMoreControl)
+                break
             default:
                 break
             }
