@@ -15,10 +15,11 @@ struct GroupCallTheme {
     static let windowBackground = NSColor(hexString: "#212121")!
     static let grayStatusColor = NSColor(srgbRed: 133 / 255, green: 133 / 255, blue: 133 / 255, alpha: 1)
     static let blueStatusColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let greenStatusColor = NSColor(srgbRed: 81 / 255, green: 165 / 255, blue: 113 / 255, alpha: 1)
+    static let greenStatusColor = NSColor(hexString: "#34C759")!
     static let memberSeparatorColor = NSColor(srgbRed: 58 / 255, green: 58 / 255, blue: 58 / 255, alpha: 1)
-    static let speakActiveColor = NSColor(srgbRed: 27 / 255, green: 197 / 255, blue: 55 / 255, alpha: 1)
+    static let speakActiveColor = NSColor(hexString: "#34C759")!
     static let speakInactiveColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
+    static let speakLockedColor = NSColor(hexString: "#FF5257")
     static let speakDisabledColor = NSColor(hexString: "#333333")!
     static let titleColor = NSColor.white
     static let declineColor = NSColor(hexString: "#FF3B30")!.withAlphaComponent(0.3)
@@ -26,13 +27,26 @@ struct GroupCallTheme {
     
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
-    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
-    static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(.white)
+    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
+
+    static let small_speaking = NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let small_unmute = NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let small_mute = NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+
 }
 
 final class GroupCallWindow : Window {
     init() {
-        super.init(contentRect: NSMakeRect(100, 100, 480, 640), styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
+        let size = NSMakeSize(480, 640)
+        var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
+        if let screen = NSScreen.main {
+            let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
+            let y = floorToScreenPixels(System.backingScale, (screen.frame.height - size.height) / 2)
+            rect = .init(origin: .init(x: x, y: y), size: size)
+        }
+
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
         self.minSize = NSMakeSize(400, 580)
         self.isOpaque = true
         self.backgroundColor = .black
@@ -92,6 +106,11 @@ final class GroupCallContext {
                 self?.readyClose()
             }
         }))
+
+        self.window.closeInterceptor = { [weak self] in
+            self?.readyClose()
+            return true
+        }
     }
     
     deinit {
@@ -109,16 +128,21 @@ final class GroupCallContext {
         self.navigation.viewWillDisappear(false)
         let window: Window = self.window
         if window.isVisible {
-            window.orderOut(nil)
+            NSAnimationContext.runAnimationGroup({ _ in
+                window.animator().alphaValue = 0
+            }, completionHandler: {
+                window.orderOut(nil)
+            })
         }
         self.navigation.viewDidDisappear(false)
     }
     
     func leave() {
-        _ = self.call.leave().start()
+        _ = self.call.leave(terminateIfPossible: false).start()
     }
     
     private func _readyPresent() {
+        window.alphaValue = 1
         self.window.makeKeyAndOrderFront(nil)
         self.window.orderFrontRegardless()
     }

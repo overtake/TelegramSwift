@@ -8,6 +8,8 @@
 
 import Foundation
 import TGUIKit
+import TelegramCore
+
 
 final class GroupCallSpeakButton : Control {
     private let button: LAnimationButton = LAnimationButton(animation: "group_call_speaker_mute", size: NSMakeSize(50, 50))
@@ -27,27 +29,55 @@ final class GroupCallSpeakButton : Control {
         button.center()
     }
     
-    private var isMuted: Bool?
+    private var muteState: GroupCallParticipantsContext.Participant.MuteState?
     func update(with state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
         switch state.networkState {
         case .connecting:
             backgroundColor = GroupCallTheme.speakDisabledColor
             userInteractionEnabled = false
         case .connected:
-            backgroundColor = state.isMuted ? GroupCallTheme.speakInactiveColor : GroupCallTheme.speakActiveColor
-            userInteractionEnabled = true
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    backgroundColor = GroupCallTheme.speakInactiveColor
+                } else {
+                    backgroundColor = GroupCallTheme.speakDisabledColor
+                }
+                userInteractionEnabled = muteState.canUnmute
+            } else {
+                backgroundColor = GroupCallTheme.speakActiveColor
+                userInteractionEnabled = true
+            }
         }
        
         
-        if animated && isMuted != state.isMuted {
-            button.setAnimationName(!state.isMuted ? "group_call_speaker_unmute" : "group_call_speaker_mute")
+        if animated && muteState != state.muteState {
+
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    button.setAnimationName("group_call_speaker_mute")
+                } else {
+                    button.setAnimationName("group_call_speaker_unmute")
+                }
+            } else {
+                button.setAnimationName("group_call_speaker_unmute")
+            }
+
+           // button.setAnimationName(!state.isMuted ? "group_call_speaker_unmute" : "group_call_speaker_mute")
             layer?.animateBackground()
             button.loop()
         }
         if !animated {
-            button.setAnimationName(state.isMuted ? "group_call_speaker_unmute" : "group_call_speaker_mute")
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    button.setAnimationName("group_call_speaker_unmute")
+                } else {
+                    button.setAnimationName("group_call_speaker_unmute")
+                }
+            } else {
+                button.setAnimationName("group_call_speaker_mute")
+            }
         }
-        isMuted = state.isMuted
+        muteState = state.muteState
         
         switch state.networkState {
         case .connecting:

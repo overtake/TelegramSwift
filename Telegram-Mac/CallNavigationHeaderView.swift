@@ -343,7 +343,6 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         let data = context.call.summaryState
         |> filter { $0 != nil }
         |> map { $0! }
-        |> take(1)
         |> map { summary -> GroupCallPanelData in
             return GroupCallPanelData(
                 peerId: peerId,
@@ -448,19 +447,24 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         switch state.networkState {
         case .connecting:
             backgroundView.background = theme.colors.grayIcon
-            self.status = .text(L10n.navigationVoiceChatStatusConnecting, nil)
+            self.status = .text(L10n.voiceChatStatusConnecting, nil)
         case .connected:
-            if state.isMuted {
-                backgroundView.background = GroupCallTheme.speakInactiveColor
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    backgroundView.background = GroupCallTheme.speakInactiveColor
+                } else {
+                    backgroundView.background = theme.colors.grayIcon
+                }
             } else {
                 backgroundView.background = GroupCallTheme.speakActiveColor
             }
-            self.status = .text(L10n.navigationVoiceChatStatusMembersCountable(data.participantCount), nil)
+            self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
         }
         if animated {
             backgroundView.layer?.animateBackground()
         }
-        muteControl.set(image: !state.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
+
+        muteControl.set(image: state.muteState == nil ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
         _ = muteControl.sizeToFit()
         needsLayout = true
         
@@ -483,7 +487,7 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         let theme = (theme as! TelegramPresentationTheme)
         dropCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         _ = dropCall.sizeToFit()
-        endCall.set(text: L10n.navigationVoiceChatLeaveCall, for: .Normal)
+        endCall.set(text: L10n.voiceChatLeaveCall, for: .Normal)
         _ = endCall.sizeToFit(NSZeroSize, .zero, thatFit: false)
         statusTextView.textColor = .white
         callInfo.set(color: .white, for: .Normal)

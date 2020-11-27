@@ -418,9 +418,17 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
         case .groupPhoneCall:
-            return "Group Call"
+            return L10n.chatServiceVoiceChat
         case  let .inviteToGroupPhoneCall(_, _, peerId):
-            return "invited to group call"
+            let text: String
+            if message.author?.id == account.peerId {
+                text = L10n.chatServiceVoiceChatInvitationByYou(message.peers[peerId]?.displayTitle ?? "")
+            } else if peerId == account.peerId {
+                text = L10n.chatServiceVoiceChatInvitationForYou(authorName)
+            } else {
+                text = L10n.chatServiceVoiceChatInvitation(authorName, message.peers[peerId]?.displayTitle ?? "")
+            }
+            return text
         }
     }
     

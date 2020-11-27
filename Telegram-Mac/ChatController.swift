@@ -2538,8 +2538,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.setLocation(location)
         }
         
-        //               // self.chatInteraction.setLocation(.Scroll(index: MessageHistoryAnchorIndex.upperBound, anchorIndex: MessageHistoryAnchorIndex.upperBound, sourceIndex: MessageHistoryAnchorIndex.lowerBound, scrollPosition: .up(true), count: 50, animated: true))
-
         
         chatInteraction.scrollToTheFirst = { [weak self] in
             guard let strongSelf = self else {

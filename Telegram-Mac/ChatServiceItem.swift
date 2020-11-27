@@ -328,8 +328,48 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case .groupPhoneCall:
-                    _ = attributedString.append(string: "Group Call", color: grayTextColor, font: .normal(theme.fontSize))
+                case let .groupPhoneCall(callId, accessHash, _):
+                    let text = L10n.chatServiceVoiceChat
+                    let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash))
+                        }))
+                    }))
+                    attributedString.append(parsed)
+                case let .inviteToGroupPhoneCall(callId, accessHash, peerId):
+                    let text: String
+                    if message.author?.id == context.peerId {
+                        text = L10n.chatServiceVoiceChatInvitationByYou(message.peers[peerId]?.displayTitle ?? "")
+                    } else if peerId == context.peerId {
+                        text = L10n.chatServiceVoiceChatInvitationForYou(authorName)
+                    } else {
+                        text = L10n.chatServiceVoiceChatInvitation(authorName, message.peers[peerId]?.displayTitle ?? "")
+                    }
+
+                    let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash))
+                        }))
+                    }))
+                    attributedString.append(parsed)
+
+                  //  let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+                    if let peer = message.peers[peerId], !peer.displayTitle.isEmpty {
+                        let range = attributedString.string.nsstring.range(of: peer.displayTitle)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
                 default:
                     break
                 }

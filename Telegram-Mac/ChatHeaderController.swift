@@ -1451,6 +1451,8 @@ private final class ChatGroupCallView : Control {
         }, for: .SingleClick)
 
         updateLocalizationAndTheme(theme: theme)
+
+        update(data, animated: false)
         
     }
     
@@ -1523,7 +1525,7 @@ private final class ChatGroupCallView : Control {
         
         self.data = data
         
-        
+        updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

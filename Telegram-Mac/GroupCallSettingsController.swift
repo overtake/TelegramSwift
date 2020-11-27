@@ -35,9 +35,9 @@ final class GroupCallSettingsView : View {
         backButton.set(image: icon, for: .Normal)
         backButton.set(image: activeIcon, for: .Highlight)
 
-        _ = backButton.sizeToFit()
+        _ = backButton.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
-        let layout = TextViewLayout.init(.initialize(string: "Voice Chat Settings", color: .white, font: .medium(15)))
+        let layout = TextViewLayout.init(.initialize(string: L10n.voiceChatSettingsTitle, color: .white, font: .medium(.header)))
         layout.measure(width: frame.width - 200)
         title.update(layout)
         tableView.getBackgroundColor = {
@@ -70,7 +70,7 @@ private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
 private let _id_input_audio = InputDataIdentifier("_id_input_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
 
-private func groupCallSettingsEntries(settings: VoiceCallSettings, peer: Peer, arguments: CallSettingsArguments) -> [InputDataEntry] {
+private func groupCallSettingsEntries(state: PresentationGroupCallState, settings: VoiceCallSettings, peer: Peer, arguments: CallSettingsArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -88,12 +88,14 @@ private func groupCallSettingsEntries(settings: VoiceCallSettings, peer: Peer, a
                                            textColor: .white,
                                            appearance: darkPalette.appearance)
     
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: "End Voice Chat", color: .redUI, type: .none, viewType: .singleItem, enabled: true, action: {}, theme: theme)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
+    if state.canManageCall {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: .redUI, type: .none, viewType: .singleItem, enabled: true, action: {}, theme: theme)))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+    }
+
     
     let devices = devicesList()
     
@@ -194,8 +196,8 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { })
         let initialSize = self.atomicSize
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId)) |> mapToSignal { _, settings, appearance, peer in
-            let entries = groupCallSettingsEntries(settings: settings, peer: peer, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state) |> mapToSignal { _, settings, appearance, peer, state in
+            let entries = groupCallSettingsEntries(state: state, settings: settings, peer: peer, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 
