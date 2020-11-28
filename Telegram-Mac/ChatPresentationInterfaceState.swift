@@ -215,7 +215,8 @@ final class ChatRecordingAudioState : ChatRecordingState {
         let id = arc4random64()
         let path = NSTemporaryDirectory() + "voice_message\(id).ogg"
         let uploadManager:PreUploadManager? = liveUpload ? PreUploadManager(path, account: account, id: id) : nil
-        recorder = ManagedAudioRecorder(liveUploading: uploadManager)
+        let dataItem = DataItem(path: path)
+        recorder = ManagedAudioRecorder(liveUploading: uploadManager, dataItem: dataItem)
         super.init(autohold: autohold)
     }
     
