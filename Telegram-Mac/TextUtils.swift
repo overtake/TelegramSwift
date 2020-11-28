@@ -417,8 +417,22 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
-        case .groupPhoneCall:
-            return L10n.chatServiceVoiceChat
+        case let .groupPhoneCall(_, _, duration):
+            let text: String
+            if let duration = duration {
+                if authorId == account.peerId {
+                    text = L10n.chatServiceVoiceChatFinishedYou(String.durationTransformed(elapsed: Int(duration)))
+                } else {
+                    text = L10n.chatServiceVoiceChatFinished(authorName, String.durationTransformed(elapsed: Int(duration)))
+                }
+            } else {
+                if authorId == account.peerId {
+                    text = L10n.chatServiceVoiceChatStartedYou
+                } else {
+                    text = L10n.chatServiceVoiceChatStarted(authorName)
+                }
+            }
+            return text
         case  let .inviteToGroupPhoneCall(_, _, peerId):
             let text: String
             if message.author?.id == account.peerId {

@@ -62,7 +62,6 @@ open class NavigationHeader {
     
     open func show(_ animated:Bool) {
         assert(navigation != nil)
-        needShown = true
         if isShown {
             return
         }
@@ -72,11 +71,11 @@ open class NavigationHeader {
             let view = self.view
             let height = self.height
             view.frame = NSMakeRect(0, navigation.controller.bar.height - height, navigation.containerView.frame.width, height)
-
             disposable.set((view.ready.get() |> filter {$0} |> take(1)).start(next: { [weak navigation, weak self, weak view] (ready) in
                 if let navigation = navigation, let view = view {
                     let contentInset = navigation.controller.bar.height + height
-                    
+                    self?.needShown = true
+
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
                     var inset:CGFloat = navigation.controller.bar.height
@@ -148,15 +147,15 @@ public class CallNavigationHeader : NavigationHeader {
         if isShown {
             return
         }
-        needShown = true
         isShown = true
         if let navigation = navigation {
             let view = self.view
             let height = self.height
             view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, height)
             
-            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
+            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view, weak self] (ready) in
                 if let navigation = navigation, let view = view {
+                    self?.needShown = true
                     let contentInset = navigation.controller.bar.height + height
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     
@@ -164,7 +163,7 @@ public class CallNavigationHeader : NavigationHeader {
                     
                     navigationBar.setFrameOrigin(NSMakePoint(0, height))
                     
-                    let simple = animated ? self.simpleHeader?.view.animator() : self.simpleHeader?.view
+                    let simple = animated ? self?.simpleHeader?.view.animator() : self?.simpleHeader?.view
                     simple?.setFrameOrigin(NSMakePoint(0, height + navigation.controller.bar.height))
                     
                     let headerView = animated ? view.animator() : view
@@ -217,7 +216,6 @@ public class UndoNavigationHeader : NavigationHeader {
     fileprivate weak var simpleHeader:NavigationHeader?
     public override func show(_ animated:Bool) {
         assert(navigation != nil)
-        needShown = true
         if isShown {
             return
         }
@@ -227,8 +225,9 @@ public class UndoNavigationHeader : NavigationHeader {
             let height = self.height
             view.frame = NSMakeRect(0, -height, navigation.containerView.frame.width, height)
             
-            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view] (ready) in
+            disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view, weak self] (ready) in
                 if let navigation = navigation, let view = view {
+                    self?.needShown = true
                     let contentInset = navigation.controller.bar.height > 0 ? height : 0
                     navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.controller.view)
                     CATransaction.begin()
@@ -236,7 +235,7 @@ public class UndoNavigationHeader : NavigationHeader {
                         navigation.navigationBar.change(pos: NSMakePoint(navigation.navigationBar.frame.minX, height), animated: animated)
                     }
                     
-                    self.simpleHeader?.view.change(pos: NSMakePoint(0, height + navigation.controller.bar.height), animated: animated)
+                    self?.simpleHeader?.view.change(pos: NSMakePoint(0, height + navigation.controller.bar.height), animated: animated)
                     let completion = navigation.controller.navigationUndoHeaderDidNoticeAnimation(height, 0, animated)
                     
                     view.change(pos: NSMakePoint(0, 0), animated: animated, completion: { [weak navigation] completed in
