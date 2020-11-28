@@ -13,7 +13,28 @@ import SyncCore
 import SwiftSignalKit
 
 
-enum CachedChannelAdminRank: PostboxCoding, Equatable {
+struct CachedChannelAdminRank : PostboxCoding, Equatable {
+   
+    
+    let peerId: PeerId
+    let type: CachedChannelAdminRankType
+    
+    init(peerId: PeerId, type: CachedChannelAdminRankType) {
+        self.peerId = peerId
+        self.type = type
+    }
+    
+    init(decoder: PostboxDecoder) {
+        self.peerId = PeerId(decoder.decodeInt64ForKey("peerId", orElse: 0))
+        self.type = decoder.decodeObjectForKey("type", decoder: { CachedChannelAdminRankType(decoder: $0) }) as! CachedChannelAdminRankType
+    }
+    func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeInt64(self.peerId.toInt64(), forKey: "peerId")
+        encoder.encodeObject(self.type, forKey: "type")
+    }
+}
+
+enum CachedChannelAdminRankType: PostboxCoding, Equatable {
     case owner
     case admin
     case custom(String)
@@ -46,24 +67,18 @@ enum CachedChannelAdminRank: PostboxCoding, Equatable {
 }
 
 final class CachedChannelAdminRanks: PostboxCoding {
-    let ranks: [PeerId: CachedChannelAdminRank]
+    let ranks: [CachedChannelAdminRank]
     
-    init(ranks: [PeerId: CachedChannelAdminRank]) {
+    init(ranks: [CachedChannelAdminRank]) {
         self.ranks = ranks
     }
     
     init(decoder: PostboxDecoder) {
-        self.ranks = decoder.decodeObjectDictionaryForKey("ranks", keyDecoder: { decoder in
-            return PeerId(decoder.decodeInt64ForKey("k", orElse: 0))
-        }, valueDecoder: { decoder in
-            return CachedChannelAdminRank(decoder: decoder)
-        })
+        self.ranks = decoder.decodeObjectArrayForKey("ranks1").compactMap { $0 as? CachedChannelAdminRank }
     }
     
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObjectDictionary(self.ranks, forKey: "ranks", keyEncoder: { key, encoder in
-            encoder.encodeInt64(key.toInt64(), forKey: "k")
-        })
+        encoder.encodeObjectArray(self.ranks, forKey: "ranks1")
     }
     
     static func cacheKey(peerId: PeerId) -> ValueBoxKey {
@@ -79,8 +94,8 @@ func cachedChannelAdminRanksEntryId(peerId: PeerId) -> ItemCacheEntryId {
     return ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId))
 }
 
-func updateCachedChannelAdminRanks(postbox: Postbox, peerId: PeerId, ranks: Dictionary<PeerId, CachedChannelAdminRank>) -> Signal<Void, NoError> {
+func updateCachedChannelAdminRanks(postbox: Postbox, peerId: PeerId, ranks: Dictionary<PeerId, CachedChannelAdminRankType>) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
-        transaction.putItemCacheEntry(id: ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId)), entry: CachedChannelAdminRanks(ranks: ranks), collectionSpec: collectionSpec)
+        transaction.putItemCacheEntry(id: ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId)), entry: CachedChannelAdminRanks(ranks: ranks.map { CachedChannelAdminRank(peerId: $0.key, type: $0.value)}), collectionSpec: collectionSpec)
     }
 }
