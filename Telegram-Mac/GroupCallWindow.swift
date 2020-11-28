@@ -31,8 +31,9 @@ struct GroupCallTheme {
     static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
 
     static let small_speaking = NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let small_unmute = NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let small_mute = NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let small_unmuted = NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let small_muted = NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let small_muted_locked = NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
 
 }
 
@@ -137,6 +138,10 @@ final class GroupCallContext {
         self.navigation.viewDidDisappear(false)
     }
     
+    func close() {
+        _ = self.call.leave(terminateIfPossible: false).start()
+        self.readyClose()
+    }
     func leave() {
         _ = self.call.leave(terminateIfPossible: false).start()
     }

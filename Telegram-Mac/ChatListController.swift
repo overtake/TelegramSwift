@@ -370,6 +370,9 @@ class ChatListController : PeersListController {
                 var cachedResult: [PeerId: [ChatListInputActivity]] = [:]
                 previousPeerCache.with { dict -> Void in
                     for (chatPeerId, activities) in activitiesByPeerId {
+                        guard case .global = chatPeerId.category else {
+                            continue
+                        }
                         var cachedChatResult: [ChatListInputActivity] = []
                         for (peerId, activity) in activities {
                             if let peer = dict[peerId] {
@@ -389,6 +392,10 @@ class ChatListController : PeersListController {
                         var result: [PeerId: [ChatListInputActivity]] = [:]
                         var peerCache: [PeerId: Peer] = [:]
                         for (chatPeerId, activities) in activitiesByPeerId {
+                            guard case .global = chatPeerId.category else {
+                                continue
+                            }
+
                             var chatResult: [ChatListInputActivity] = []
                             
                             for (peerId, activity) in activities {

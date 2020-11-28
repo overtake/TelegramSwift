@@ -451,21 +451,25 @@ class ChatListRowItem: TableRowItem {
         }
         let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
 
-        if let peerPresence = peerPresence as? TelegramUserPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
-            let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
-            
-            switch relative {
-            case .online:
-                self.isOnline = true
-            default:
-                self.isOnline = false
+        if let peerPresence = peerPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
+            if let peerPresence = peerPresence as? TelegramUserPresence {
+                let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+                let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
+                switch relative {
+                case .online:
+                    self.isOnline = true
+                default:
+                    self.isOnline = false
+                }
+            } else {
+                self.isOnline = nil
             }
-            
-           
-
         } else {
             self.isOnline = nil
+        }
+        
+        if let peer = renderedPeer.chatMainPeer as? TelegramChannel, peer.flags.contains(.hasVoiceChat) {
+            self.isOnline = true
         }
         
       

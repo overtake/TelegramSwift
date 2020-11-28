@@ -161,9 +161,13 @@ private final class GroupCallParticipantRowView : TableRowView {
                 button.set(image: GroupCallTheme.small_speaking, for: .Normal)
             } else {
                 if let muteState = item.data.state?.muteState {
-                    button.set(image: GroupCallTheme.small_mute, for: .Normal)
+                    if muteState.canUnmute {
+                        button.set(image: GroupCallTheme.small_muted, for: .Normal)
+                    } else {
+                        button.set(image: GroupCallTheme.small_muted_locked, for: .Normal)
+                    }
                 } else {
-                    button.set(image: GroupCallTheme.small_unmute, for: .Normal)
+                    button.set(image: GroupCallTheme.small_unmuted, for: .Normal)
                 }
             }
         } else {

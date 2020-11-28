@@ -50,6 +50,16 @@ enum ChatMode : Equatable {
         }
     }
     
+    var activityCategory: PeerActivitySpace.Category {
+        let activityCategory: PeerActivitySpace.Category
+        if let threadId = threadId64 {
+            activityCategory = .thread(threadId)
+        } else {
+            activityCategory = .global
+        }
+        return activityCategory
+    }
+    
     var tagMask: MessageTags? {
         switch self {
         case .pinned:
@@ -3931,7 +3941,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
         
         let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
-        self.peerInputActivitiesDisposable.set((context.account.peerInputActivities(peerId: .init(peerId: peerId, threadId: mode.threadId64))
+        
+        
+        self.peerInputActivitiesDisposable.set((context.account.peerInputActivities(peerId: .init(peerId: peerId, category: mode.activityCategory))
             |> mapToSignal { activities -> Signal<[(Peer, PeerInputActivity)], NoError> in
                 var foundAllPeers = true
                 var cachedResult: [(Peer, PeerInputActivity)] = []

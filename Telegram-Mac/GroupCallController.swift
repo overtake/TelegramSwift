@@ -404,7 +404,13 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     
     var memberDatas: [PeerGroupCallData] = []
     let states = peerStates.map { $0.value }.sorted(by: { lhs, rhs in
-        return (audioLevels[lhs.peer.id]?.timestamp ?? lhs.joinTimestamp) > (audioLevels[rhs.peer.id]?.timestamp ?? rhs.joinTimestamp)
+        let lhsValue = (audioLevels[lhs.peer.id]?.timestamp
+                            ?? lhs.activityTimestamp
+                            ?? lhs.joinTimestamp)
+        let rhsValue = (audioLevels[rhs.peer.id]?.timestamp
+                            ?? rhs.activityTimestamp
+                            ?? rhs.joinTimestamp)
+        return lhsValue > rhsValue
     })
 
     for value in states {

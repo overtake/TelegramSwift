@@ -599,12 +599,10 @@ internal final class L10n {
   }
   /// Telegram needs access to camera for Video Call.
   internal static var callCameraError: String  { return L10n.tr("Localizable", "Call.Camera.Error") }
-  /// Finish the call with %@ and start a new one with %@?
-  internal static func callConfirmDiscardCurrentDescription(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description", p1, p2)
-  }
+  /// Finish the call and start a new?
+  internal static var callConfirmDiscardCurrentDescription1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description1") }
   /// Call in Progress
-  internal static var callConfirmDiscardCurrentHeader: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Header") }
+  internal static var callConfirmDiscardCurrentHeader1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Header1") }
   /// Rate This Call
   internal static var callContextRate: String  { return L10n.tr("Localizable", "Call.Context.Rate") }
   /// Not Now
@@ -2087,8 +2085,14 @@ internal final class L10n {
   internal static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
-  /// [voice chat](open)
-  internal static var chatServiceVoiceChat: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChat") }
+  /// %1$@ finished voice chat (%2$@)
+  internal static func chatServiceVoiceChatFinished(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished", p1, p2)
+  }
+  /// You finished voice chat (%@)
+  internal static func chatServiceVoiceChatFinishedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinishedYou", p1)
+  }
   /// %1$@ invited %2$@ to the [voice chat](open)
   internal static func chatServiceVoiceChatInvitation(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatInvitation", p1, p2)
@@ -2101,6 +2105,12 @@ internal final class L10n {
   internal static func chatServiceVoiceChatInvitationForYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatInvitationForYou", p1)
   }
+  /// %1$@ started [voice chat](open)
+  internal static func chatServiceVoiceChatStarted(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted", p1)
+  }
+  /// You started [voice chat](open)
+  internal static var chatServiceVoiceChatStartedYou: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStartedYou") }
   /// You
   internal static var chatServiceYou: String  { return L10n.tr("Localizable", "Chat.Service.You") }
   /// Cancelled
@@ -4339,6 +4349,8 @@ internal final class L10n {
   internal static var modalSet: String  { return L10n.tr("Localizable", "Modal.Set") }
   /// Share
   internal static var modalShare: String  { return L10n.tr("Localizable", "Modal.Share") }
+  /// YES
+  internal static var modalYes: String  { return L10n.tr("Localizable", "Modal.Yes") }
   /// Add
   internal static var navigationAdd: String  { return L10n.tr("Localizable", "Navigation.Add") }
   /// Back

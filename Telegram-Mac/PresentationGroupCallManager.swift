@@ -67,16 +67,19 @@ struct PresentationGroupCallMemberState: Equatable {
     var ssrc: UInt32
     var muteState: GroupCallParticipantsContext.Participant.MuteState?
     var peer: Peer
+    var activityTimestamp:Int32?
     var joinTimestamp:Int32
     init(
         ssrc: UInt32,
         muteState: GroupCallParticipantsContext.Participant.MuteState?,
         peer: Peer,
+        activityTimestamp: Int32?,
         joinTimestamp: Int32
     ) {
         self.ssrc = ssrc
         self.muteState = muteState
         self.peer = peer
+        self.activityTimestamp = activityTimestamp
         self.joinTimestamp = joinTimestamp
     }
 

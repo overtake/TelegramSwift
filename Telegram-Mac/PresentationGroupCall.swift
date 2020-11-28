@@ -171,6 +171,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private let devicesContext: DevicesContext
     private var settingsDisposable: Disposable?
     
+    private var myAudioLevelTimer: SwiftSignalKit.Timer?
+    private let typingDisposable = MetaDisposable()
+
+
+    
     private var voiceSettings: VoiceCallSettings {
         didSet {
             let microUpdated = devicesContext.updateMicroId(voiceSettings) // todo
@@ -267,7 +272,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.myAudioLevelDisposable.dispose()
         self.settingsDisposable?.dispose()
         self.summaryStateDisposable?.dispose()
-
+        self.myAudioLevelTimer?.invalidate()
+        self.typingDisposable.dispose()
     }
     
     private func updateSessionState(internalState: InternalState) {
@@ -366,6 +372,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     guard let strongSelf = self else {
                         return
                     }
+                    
+                    let mappedLevel = level * 1.5
+                    
+                    strongSelf.processMyAudioLevel(level: mappedLevel)
                     strongSelf.myAudioLevelPipe.putNext(level)
                 }))
             }
@@ -390,6 +400,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
                 let participantsContext = GroupCallParticipantsContext(
                     account: self.account,
+                    peerId: peerId,
                     id: callInfo.id,
                     accessHash: callInfo.accessHash,
                     state: initialState
@@ -414,6 +425,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             ssrc: participant.ssrc,
                             muteState: participant.muteState,
                             peer: participant.peer,
+                            activityTimestamp: participant.activityTimestamp,
                             joinTimestamp: participant.joinTimestamp
                         )
 
@@ -490,6 +502,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }))
             }
         } else {
+            self.requestDisposable.set(nil)
+            self._canBeRemoved.set(.single(true))
         }
         return self._canBeRemoved.get()
     }
@@ -629,6 +643,56 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         
         let _ = inviteToGroupCall(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, peerId: peerId).start()
     }
+    
+    private var currentMyAudioLevel: Float = 0.0
+      private var currentMyAudioLevelTimestamp: Double = 0.0
+      private var isSendingTyping: Bool = false
+      
+      private func restartMyAudioLevelTimer() {
+          self.myAudioLevelTimer?.invalidate()
+          let myAudioLevelTimer = SwiftSignalKit.Timer(timeout: 0.1, repeat: false, completion: { [weak self] in
+              guard let strongSelf = self else {
+                  return
+              }
+              strongSelf.myAudioLevelTimer = nil
+              
+              let timestamp = CACurrentMediaTime()
+              
+              var shouldBeSendingTyping = false
+              if strongSelf.currentMyAudioLevel > 0.01 && timestamp < strongSelf.currentMyAudioLevelTimestamp + 1.0 {
+                  strongSelf.restartMyAudioLevelTimer()
+                  shouldBeSendingTyping = true
+              } else {
+                  if timestamp < strongSelf.currentMyAudioLevelTimestamp + 1.0 {
+                      strongSelf.restartMyAudioLevelTimer()
+                      shouldBeSendingTyping = true
+                  }
+              }
+              if shouldBeSendingTyping != strongSelf.isSendingTyping {
+                  strongSelf.isSendingTyping = shouldBeSendingTyping
+                  if shouldBeSendingTyping {
+                      strongSelf.typingDisposable.set(strongSelf.account.acquireLocalInputActivity(peerId: PeerActivitySpace(peerId: strongSelf.peerId, category: .voiceChat), activity: .speakingInGroupCall))
+                      strongSelf.restartMyAudioLevelTimer()
+                  } else {
+                      strongSelf.typingDisposable.set(nil)
+                  }
+              }
+          }, queue: .mainQueue())
+          self.myAudioLevelTimer = myAudioLevelTimer
+          myAudioLevelTimer.start()
+      }
+      
+      private func processMyAudioLevel(level: Float) {
+          self.currentMyAudioLevel = level
+          
+          if level > 0.01 {
+              self.currentMyAudioLevelTimestamp = CACurrentMediaTime()
+              
+              if self.myAudioLevelTimer == nil {
+                  self.restartMyAudioLevelTimer()
+              }
+          }
+      }
 
 }
 
@@ -642,7 +706,15 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
         if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId {
             return .single(.samePeer(context))
         } else {
-            return .single(.success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer)))
+            var confirmation:Signal<Bool, NoError> = .single(true)
+            if sharedContext.hasActiveCall {
+                confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
+            }
+            return confirmation |> filter { $0 } |> map { _ in
+                return sharedContext.bindings.groupCall()?.close()
+            } |> map { _ in
+                return .success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer))
+            }
         }
     }
     
