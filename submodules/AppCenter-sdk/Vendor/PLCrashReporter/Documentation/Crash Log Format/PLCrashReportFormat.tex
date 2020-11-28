@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage[retainorgcmds]{IEEEtrantools} % So we can use IEEE's handy LaTeX tools
+
+\usepackage{color}
+\definecolor{SubtleURL}{cmyk}{1,0,0,1} 
+
+\usepackage[pdftitle={Landon Fuller},
+            pdfauthor={Plausible Labs Cooperative, Inc.},
+            pdfsubject={Plausible Crash Log Format},
+            pdfkeywords={},
+            colorlinks=true,
+            linkcolor=SubtleURL,
+            citecolor=SubtleURL]{hyperref}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{Crash Log Format (DRAFT)}
+\author{Plausible Labs Cooperative, Inc.}
+%\date{}                                           % Activate to display a given date or no date
+
+% Terms
+\newcommand{\term}{\emph}
+
+% Spacing
+\parskip .5em
+\parindent 0em
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+
+\section{Notational Conventions}
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119\cite{RFC2119}
+
+\begin{thebibliography}{99}
+\bibitem{RFC2119} Bradner, S., ``Key words for use in RFCs to Indicate Requirement Levels'', BCP 14, RFC 2119, March 1997.
+\end{thebibliography}
+
+
+\end{document}  

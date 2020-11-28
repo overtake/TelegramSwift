@@ -1,4 +1,5 @@
 import CoreMedia
+import FFMpegBinding
 
 final class FFMpegMediaPassthroughVideoFrameDecoder: MediaTrackFrameDecoder {
     private let videoFormat: CMVideoFormatDescription

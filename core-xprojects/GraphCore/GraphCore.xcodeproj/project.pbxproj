@@ -497,7 +497,7 @@
 		A7393CBA2406859300CE44CA /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -517,6 +517,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -593,7 +594,7 @@
 		A7393CBD2406859800CE44CA /* HockeyappMacAlpha */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -613,6 +614,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -682,7 +684,7 @@
 		A7393CC0240685A600CE44CA /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -700,6 +702,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -831,7 +834,7 @@
 		A789E0CB23E841B600AEB34A /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -849,6 +852,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -859,7 +863,7 @@
 		A789E0CC23E841B600AEB34A /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -877,6 +881,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -951,7 +956,7 @@
 		D0B4940F24F3F5C800E0A9B3 /* Github */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -969,6 +974,7 @@
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.Graph;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

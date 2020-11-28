@@ -1,0 +1,6 @@
+.DS_Store
+xcuserdata
+*.xcworkspace
+.idea
+build
+Carthage
