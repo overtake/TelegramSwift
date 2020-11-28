@@ -1,14 +1,11 @@
 import Foundation
 import CoreMedia
+import FFMpegBinding
+
 
 final class FFMpegMediaFrameSourceContextHelpers {
-    static let registerFFMpegGlobals: Void = {
-        #if DEBUG
-        av_log_set_level(AV_LOG_ERROR)
-        #else
-        av_log_set_level(AV_LOG_QUIET)
-        #endif
-        av_register_all()
+    public static let registerFFMpegGlobals: Void = {
+        FFMpegGlobals.initializeGlobals()
         return
     }()
     
@@ -93,38 +90,5 @@ final class FFMpegMediaFrameSourceContextHelpers {
         CMVideoFormatDescriptionCreate(allocator: nil, codecType: CMVideoCodecType(formatId), width: width, height: height, extensions: extensions, formatDescriptionOut: &formatDescription)
         
         return formatDescription
-    }
-    
-    static func streamIndices(formatContext: UnsafeMutablePointer<AVFormatContext>, codecType: AVMediaType) -> [Int] {
-        var indices: [Int] = []
-        for i in 0 ..< Int(formatContext.pointee.nb_streams) {
-            if codecType == formatContext.pointee.streams.advanced(by: i).pointee!.pointee.codecpar!.pointee.codec_type {
-                indices.append(i)
-            }
-        }
-        return indices
-    }
-    
-    static func streamFpsAndTimeBase(stream: UnsafePointer<AVStream>, defaultTimeBase: CMTime) -> (fps: CMTime, timebase: CMTime) {
-        let timebase: CMTime
-        var fps: CMTime
-        
-        if stream.pointee.time_base.den != 0 && stream.pointee.time_base.num != 0 {
-            timebase = CMTimeMake(value: Int64(stream.pointee.time_base.num), timescale: stream.pointee.time_base.den)
-        } else if stream.pointee.codec.pointee.time_base.den != 0 && stream.pointee.codec.pointee.time_base.num != 0 {
-            timebase = CMTimeMake(value: Int64(stream.pointee.codec.pointee.time_base.num), timescale: stream.pointee.codec.pointee.time_base.den)
-        } else {
-            timebase = defaultTimeBase
-        }
-        
-        if stream.pointee.avg_frame_rate.den != 0 && stream.pointee.avg_frame_rate.num != 0 {
-            fps = CMTimeMake(value: Int64(stream.pointee.avg_frame_rate.num), timescale: stream.pointee.avg_frame_rate.den)
-        } else if stream.pointee.r_frame_rate.den != 0 && stream.pointee.r_frame_rate.num != 0 {
-            fps = CMTimeMake(value: Int64(stream.pointee.r_frame_rate.num), timescale: stream.pointee.r_frame_rate.den)
-        } else {
-            fps = CMTimeMake(value: 1, timescale: 24)
-        }
-        
-        return (fps, timebase)
     }
 }

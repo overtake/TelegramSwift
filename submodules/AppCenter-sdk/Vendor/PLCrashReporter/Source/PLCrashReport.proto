@@ -1,0 +1,366 @@
+/*
+ * Author: Landon Fuller <landonf@plausiblelabs.com>
+ *
+ * Copyright (c) 2008-2013 Plausible Labs Cooperative, Inc.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following
+ * conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
+ */
+syntax = "proto2";
+package plcrash;
+option java_package = "coop.plausible.crashreporter";
+option java_outer_classname = "CrashReport_pb";
+
+/* Legacy processor architecture type codes. These codes have been deprecated. */
+enum Architecture {
+    /* x86 */
+    X86_32 = 0;
+
+    /* x86-64 */
+    X86_64 = 1;
+
+    /* ARMv6 */
+    ARMV6 = 2;
+
+    /* PPC */
+    PPC = 3;
+
+    /** PPC64 */
+    PPC64 = 4;
+
+    /* ARMv7 */
+    ARMV7 = 5;
+
+    /* Unknown processor type. */
+    ARCHITECTURE_UNKNOWN = 6;
+}
+
+/* A crash report */
+message CrashReport {
+    /*
+     * Processor information
+     */
+    message Processor {
+        /* 
+         * CPU Type Encodings
+         *
+         * The wire format maintains support for multiple CPU type encodings; it is expected that different operating
+         * systems may target different processors, and the reported CPU type and subtype information may not be
+         * easily or directly expressed when not using the vendor's own defined types.
+         *
+         * Currently, only Apple Mach CPU type/subtype information is supported by the wire protocol. These types are
+         * stable, intended to be encoded in Mach-O files, and are defined in mach/machine.h on Mac OS X.
+         *
+         * Implementations must gracefully handle the addition of unknown type encodings.
+         */
+        enum TypeEncoding {
+            /* Unknown processor type encoding. */
+            TYPE_ENCODING_UNKNOWN = 0;
+
+            /* Apple Mach-defined processor types. */
+            TYPE_ENCODING_MACH = 1;
+        }
+        
+        /** The CPU type encoding that should be used to interpret cpu_type and cpu_subtype. This value is required. */
+        optional TypeEncoding encoding = 1 [default = TYPE_ENCODING_UNKNOWN];
+
+        /** The CPU type. */
+        required uint64 type = 2;
+
+        /** The CPU subtype. */
+        required uint64 subtype = 3;
+    }
+
+    message SystemInfo {
+        /* Known operating system types */
+        enum OperatingSystem {
+            /* Mac OS X */
+            MAC_OS_X = 0;
+
+            /* iPhone OS */
+            IPHONE_OS = 1;
+
+            /* iPhone Simulator (Mac OS X w/ simulator runtime environment) */
+            IPHONE_SIMULATOR = 2;
+            
+            /* Apple tvOS */
+            APPLE_TVOS = 4;
+
+            /* Unknown operating system. */
+            OS_UNKNOWN = 3;
+        }
+
+        /* Operating system */
+        optional OperatingSystem operating_system = 1 [default = OS_UNKNOWN];
+
+        /* OS version */
+        required string os_version = 2;
+
+        /* Processor architecture (deprecated in favor of machine_info) */
+        required Architecture architecture = 3 [default = ARCHITECTURE_UNKNOWN /* deprecated = true (TODO: unsupported by embedded protobuf-c version) */];
+
+        /* Date crash report was generated (as seconds since epoch). 0 if the time
+         * is unknown or can not be determined. */
+        required int64 timestamp = 4;
+
+        /* OS build number (eg, 10J869) */
+        optional string os_build = 5;
+    }
+
+    /* Host system data */
+    required SystemInfo system_info = 1;
+
+    /* Application info */
+    message ApplicationInfo {
+        /* Unique application identifier */
+        required string identifier = 1;
+
+        /* Application version string */
+        required string version = 2;
+
+        /* Application marketing version string */
+        optional string marketing_version = 3;
+    }
+    required ApplicationInfo application_info = 2;
+    
+    /* A symbol table entry. */
+    message Symbol {
+        /* The symbol name */
+        required string name = 1;
+
+        /* The symbol start address */
+        required uint64 start_address = 2;
+
+        /* The symbol end address, if explicitly defined. This will only be included if the end address is
+         * explicitly defined (eg, by DWARF debugging information), will not be derived by best-guess
+         * heuristics. */
+        optional uint64 end_address = 3;
+    }
+
+    /* Thread state */
+    message Thread {
+        /* Thread number (indexed at 0, must be unique within a crash report) */
+        required uint32 thread_number = 1;
+        
+        /* Stack frame */
+        message StackFrame {
+            /* Instruction pointer */
+            required uint64 pc = 3;
+            
+            /* Field numbers 4-5 were used in Bitstadium's fork of PLCrashReporter to represent
+             * symbol name and start address. They were marked as optional values, and
+             * are not supported in the official binary format.
+             *
+             * We reserve those fields to avoid unnecessary incompatibilities with the forked format. */
+
+            /*
+             * Optional symbol information for this frame's PC. If computed client-side, this value is a best guess, and may
+             * be inaccurate.
+             * 
+             * Symbol information may not be available, in which case this field will be excluded from the report.
+             *
+             * This method of encoding symbol records is unfortunately ineffecient, as it is possible that the same
+             * symbol will be included multiple times in a single crash report. Unfortunately, insofar as the crash reporter
+             * must remain async-safe, there is no reasonable way to perform symbol uniquing at the time the report
+             * is written. A future version of this format may resolve this issue, and migrate to the use of an index
+             * into a shared symbol table.
+             */
+            optional Symbol symbol = 6;
+        }
+
+        /* Backtrace stack frames */
+        repeated StackFrame frames = 2;
+
+        /* True if this is the crashed thread */
+        required bool crashed = 3;
+        
+        /* A single register value */
+        message RegisterValue {
+            /* Register name (r1, ebp, ...) */
+            required string name = 1;
+
+            /* Register value (32-bit or 64-bit) */
+            required uint64 value = 2;
+        }
+
+        /* Thread registers (required if this is the crashed thread, optional otherwise). Note that if an error occurs
+         * during crash report generation, the register values may be missing for the crashed thread. */
+        repeated RegisterValue registers = 4;
+    }
+
+    /* All backtraces */
+    repeated Thread threads = 3;
+
+    /* Binary image */
+    message BinaryImage {
+        /* Image base address */
+        required uint64 base_address = 1;
+
+        /* Segment size */
+        required uint64 size = 2;
+
+        /* Name of the binary image (should be a full path name) */
+        required string name = 3;
+
+        /* 128-bit object UUID (matches Mach-O DWARF dSYM files) */
+        optional bytes uuid = 4;
+
+        /* The image's code type. Should be included in all v1.1+ crash reports. The code type may differ between
+         * binaries in the case of architectures with forwards-compatible code types, such as ARM, where armv6 and
+         * armv7 images may be mixed. */
+        optional Processor code_type = 5;
+    }
+
+    /* All loaded binary images */
+    repeated BinaryImage binary_images = 4;
+
+    /* Exception */
+    message Exception {
+        /* The exception name that triggered this crash */
+        required string name = 1;
+
+        /* The exception reason */
+        required string reason = 2;
+        
+        /* The exception's original call stack, if available. This may be preserved across rethrow of an exception,
+         * and can be used to determine the original call stack. */
+        repeated Thread.StackFrame frames = 3;
+    }
+
+    /* The exception that triggered the crash (if any) */
+    optional Exception exception = 5;
+
+
+    /* Signal Information */
+    message Signal {
+        /** Signal name */
+        required string name = 1;
+
+        /* Signal code */
+        required string code = 2;
+
+        /* Faulting instruction or address */
+        required uint64 address = 3;
+        
+        /*
+         * Mach exception info.
+         */
+        message MachException {
+            /* The exception type. These values will generally be common across most Apple platforms. */
+            required uint64 type = 1;
+            
+            /* The exception codes. Interpretation of these values depends on the exception type, and/or the
+             * faulting platform. */
+            repeated uint64 codes = 2;
+        }
+    
+        /*
+         * The Mach Exception that triggered the crash. This field will only be included in the
+         * case that encoding crash reporter's exception-based reporting was enabled, and a Mach
+         * exception was caught.
+         *
+         * If the mach_exception field is defined, the legacy signal info will also be provided; this is required to maintain
+         * backwards compatibility with existing report handlers. Note, however, that the signal info may be derived from the
+         * Mach exception info by the encoding crash reporter, and thus may not exactly match the kernel exception-to-signal
+         * mappings implemented in xnu. As such, when Mach exception data is available, its use should be preferred.
+         */
+        optional MachException mach_exception = 4;
+    }
+
+    /* The signal that triggered the crash */
+    required Signal signal = 6;
+
+
+    /* Process Data. This was not available in earlier releases of the crash reporter and is marked optional
+     * for compatibility. */ 
+    message ProcessInfo {
+        /* Application process name */
+        optional string process_name = 1;
+        
+        /* Application process ID */
+        required uint32 process_id = 2;
+        
+        /* Application process path */
+        optional string process_path = 3;
+        
+        /* Application parent process name */
+        optional string parent_process_name = 4;
+        
+        /* Application parent process ID */
+        required uint32 parent_process_id = 5;
+        
+        /** If false, the process is being run via process-level CPU emulation (such as Rosetta). */
+        required bool native = 6;
+
+        /** The start time of the process (as seconds since UNIX epoch). The field may be
+         * ommitted if the start time can not be determined. */
+        optional uint64 start_time = 7;
+    }
+  
+    /* The process info. Required for all v1.1+ crash reports. */
+    optional ProcessInfo process_info = 7;
+    
+     /*
+      * Host architecture information.
+      */
+     message MachineInfo {    
+         /* Hardware model (eg, MacBookPro6,1) */
+         optional string model = 1;
+
+         /* The host processor. */
+         required Processor processor = 2;
+
+         /*
+          * The number of actual physical processor cores. Note that the number of active processors may be managed by the
+          * operating system's power management system, and this value may not reflect the number of active
+          * processors at the time of the crash. */
+         required uint32 processor_count = 3;
+
+         /* The number of logical processors.  Note that the number of active processors may be managed by the
+          * operating system's power management system, and this value may not reflect the number of active
+          * processors at the time of the crash.
+          */
+         required uint32 logical_processor_count = 4;
+     }
+
+    /* Host architecture information. Required for all v1.1+ crash reports. If unavailable, the information
+     * should be derived from the deprecated SystemInfo.architecture field. */
+     optional MachineInfo machine_info = 8;
+     
+     /*
+      * Report format information
+      */
+    message ReportInfo {
+        /** If true, this report was generated on request, and no crash occured. */
+        required bool user_requested = 1;
+
+        /** A client-generated 16 byte OSF standard UUID for this report. May be used to filter duplicate reports submitted
+         * by a single client. */
+        optional bytes uuid = 2;
+    }
+
+    /* Report format information. Required for all v1.1+ crash reports. */
+    optional ReportInfo report_info = 9;
+
+    /* Custom data. Can be used by user to store contextual information for the crash. */
+    optional bytes custom_data = 10;
+}

@@ -143,9 +143,7 @@ private final class ApplicationContainerView: View {
 
 final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
-    
-    private var mediaKeyTap:SPMediaKeyTap?
-    
+        
     var rootView: View {
         return view
     }

@@ -1,0 +1,15 @@
+{
+    "Registrations": [
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "name": "protobuf-c",
+                    "repositoryUrl": "https://github.com/protobuf-c/protobuf-c.git",
+                    "commitHash": "1390409f4ee4e26d0635310995b516eb702c3f9e"
+                }
+            }
+        }
+    ],
+    "Version": 1
+}

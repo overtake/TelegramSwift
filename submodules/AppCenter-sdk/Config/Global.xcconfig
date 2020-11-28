@@ -1,0 +1,159 @@
+#include "./Version.xcconfig"
+
+// :Mark: Architectures
+SDKROOT = iphoneos
+
+// :Mark: Deployment
+IPHONEOS_DEPLOYMENT_TARGET = 9.0
+TVOS_DEPLOYMENT_TARGET = 11.0
+MACOSX_DEPLOYMENT_TARGET = 10.9
+COPY_PHASE_STRIP = NO
+
+// :Mark: Packaging
+PRODUCT_NAME = $(PROJECT_NAME)
+
+// :Mark: Language configurations
+CLANG_ENABLE_MODULES = NO
+CLANG_ENABLE_OBJC_ARC = YES
+CLANG_CXX_LIBRARY = libc++
+CLANG_CXX_LANGUAGE_STANDARD = gnu++14
+GCC_C_LANGUAGE_STANDARD = gnu99
+
+// :Mark: Search paths
+ALWAYS_SEARCH_USER_PATHS = NO
+USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/../AppCenter/AppCenter"/**
+
+// :Mark: Code signing
+CODE_SIGN_IDENTITY =
+
+// :Mark: Linking
+DEAD_CODE_STRIPPING = NO
+
+// :Mark: Code generation
+GCC_NO_COMMON_BLOCKS = YES
+
+// :Mark: Preprocessing
+ENABLE_STRICT_OBJC_MSGSEND = YES
+
+// :Mark: OTHER_CFLAGS
+GLOBAL_CFLAGS = -Wshorten-64-to-32 -Wall -fstack-protector-strong -fpie
+OTHER_CFLAGS = $(GLOBAL_CFLAGS)
+
+// :Mark: Extension API Only
+// Make sure we don't use API that are not available in extensions.
+// See https://pewpewthespells.com/blog/buildsettings.html for info about the flag.
+APPLICATION_EXTENSION_API_ONLY = YES
+
+// :Mark: GCC_PREPROCESSOR_DEFINITIONS
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) APP_CENTER_C_VERSION="\""$(VERSION_STRING)"\"" APP_CENTER_C_BUILD="\""$(BUILD_NUMBER)"\""
+
+// :Mark: Configuration of warnings. We're listing every warning that we disabled and explain the reason why.
+//
+// -everything
+//  We want the best possible diagnostics, so we simply enable everything that exists, and then opt–out of what doesn’t make sense for us.
+
+// -objc-missing-property-synthesis
+//	This isn’t a real issue since we don’t have any interest in building on extremely old Clangs.
+//	(Also, each property that cannot be auto–synthesized triggers at least a warning…)
+
+// -float-equal
+// While we could change all 90 instances of floating point comparison to a method that includes an epsilon, this is overkill and not needed.
+// See http://stackoverflow.com/questions/11421756/weverything-yielding-comparing-floating-point-with-or-is-unsafe
+
+// -pedantic
+// Generates too much noise.
+
+// -padded
+// This isn’t really an issue to us, since we’re not programming embedded systems.
+
+// -c++98
+// We don't want to compile our code for C++98, no need to be warned about incompatibility.
+
+// -c++98-compat-pedantic
+// We don't want to compile our code for C++98, no need to be warned about incompatibility.
+
+// -auto-import
+// Standard ``import`` is used by tons of files and C++ code limits the possibility to use @import, so we don't. => Disabled.
+
+// -assign-enum
+// A lot of api use enums as params but Apple's docs suggest passing in 0 which causes annoying warnings.
+
+// -exit-time-destructors
+// Global destructors are obvious, no need to warn about them.
+
+// -global-constructors
+// Global constructors are obvious, no need to warn about them.
+
+// -cast-align
+// We're not interested in this one as the Mach-O format is itself well-aligned and the original memory allocation
+// happens through malloc() and mmap() which always return at least 16byte alignment.
+// Read more about alignment in the c++ reference: http://en.cppreference.com/w/cpp/language/object#Alignment.
+
+WARNING_CFLAGS = -Weverything -Wno-objc-missing-property-synthesis -Wno-float-equal -Wno-pedantic -Wno-padded -Wno-sign-conversion -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-auto-import -Wno-assign-enum -Wno-exit-time-destructors -Wno-global-constructors -Wno-cast-align
+
+// These are all partially (but not completely?) independent of WARNING_CFLAGS
+// and need to be specified explicitly.
+GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES
+GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES
+GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR
+GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES
+GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES
+GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES
+GCC_WARN_MISSING_PARENTHESES = YES
+GCC_WARN_CHECK_SWITCH_STATEMENTS = YES
+GCC_WARN_UNUSED_FUNCTION = YES
+GCC_WARN_UNUSED_LABEL = YES
+GCC_WARN_UNUSED_PARAMETER = YES
+GCC_WARN_UNUSED_VARIABLE = YES
+GCC_WARN_UNUSED_VALUE = YES
+GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE
+GCC_WARN_UNKNOWN_PRAGMAS = YES
+GCC_WARN_SHADOW = YES
+GCC_WARN_FOUR_CHARACTER_CONSTANTS = YES
+GCC_WARN_64_TO_32_BIT_CONVERSION = YES
+GCC_WARN_ABOUT_MISSING_NEWLINE = YES
+GCC_WARN_UNDECLARED_SELECTOR = YES
+GCC_WARN_ABOUT_INVALID_OFFSETOF_MACRO = YES
+CLANG_WARN__DUPLICATE_METHOD_MATCH = YES
+CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES
+CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES
+CLANG_WARN_BOOL_CONVERSION = YES
+CLANG_WARN_COMMA = YES
+CLANG_WARN_CONSTANT_CONVERSION = YES
+CLANG_WARN_CXX0X_EXTENSIONS = YES
+CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES
+CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR
+CLANG_WARN_EMPTY_BODY = YES
+CLANG_WARN_ENUM_CONVERSION = YES
+CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES
+CLANG_WARN_INFINITE_RECURSION = YES
+CLANG_WARN_INT_CONVERSION = YES
+CLANG_WARN_OBJC_EXPLICIT_OWNERSHIP_TYPE = YES
+CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES
+CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES
+CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR
+CLANG_WARN_RANGE_LOOP_ANALYSIS = YES
+CLANG_WARN_STRICT_PROTOTYPES = YES
+CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES
+CLANG_WARN_SUSPICIOUS_MOVE = YES
+CLANG_WARN_UNREACHABLE_CODE = YES
+CLANG_WARN_SEMICOLON_BEFORE_METHOD_BODY = YES
+CLANG_WARN_OBJC_INTERFACE_IVARS = YES
+
+// Enable extra analyze modes
+CLANG_ANALYZER_SECURITY_FLOATLOOPCOUNTER = YES
+CLANG_ANALYZER_SECURITY_INSECUREAPI_RAND = YES
+CLANG_ANALYZER_SECURITY_INSECUREAPI_STRCPY = YES
+CLANG_ANALYZER_NONNULL = YES
+CLANG_ANALYZER_GCD_PERFORMANCE = YES
+CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES
+
+// Enable warnings-are-errors for all modes. Don't do this just yet.
+SWIFT_TREAT_WARNINGS_AS_ERRORS = YES
+GCC_TREAT_WARNINGS_AS_ERRORS = YES
+
+// Swift Compiler - Code Generation
+SWIFT_ENFORCE_EXCLUSIVE_ACCESS = on
+
+// Option for xcframework
+BUILD_LIBRARIES_FOR_DISTRIBUTION = YES

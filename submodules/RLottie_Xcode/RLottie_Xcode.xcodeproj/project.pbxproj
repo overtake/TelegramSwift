@@ -61,7 +61,6 @@
 		A7D28337236C7A270000A9BF /* vpath.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830B236C7A250000A9BF /* vpath.h */; };
 		A7D28338236C7A270000A9BF /* vraster.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830C236C7A250000A9BF /* vraster.h */; };
 		A7D28339236C7A270000A9BF /* vmatrix.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D2830D236C7A250000A9BF /* vmatrix.h */; };
-		A7D2833A236C7A270000A9BF /* vdrawhelper_neon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2830E236C7A250000A9BF /* vdrawhelper_neon.cpp */; };
 		A7D2833B236C7A270000A9BF /* vpainter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A7D2830F236C7A250000A9BF /* vpainter.cpp */; };
 		A7D2833C236C7A270000A9BF /* vbitmap.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28310236C7A250000A9BF /* vbitmap.h */; };
 		A7D2833D236C7A270000A9BF /* vrect.h in Headers */ = {isa = PBXBuildFile; fileRef = A7D28311236C7A250000A9BF /* vrect.h */; };
@@ -653,7 +652,6 @@
 				A7D2833B236C7A270000A9BF /* vpainter.cpp in Sources */,
 				A7D2834A236C7A270000A9BF /* vdrawable.cpp in Sources */,
 				A7D282B1236C79D70000A9BF /* lottieloader.cpp in Sources */,
-				A7D2833A236C7A270000A9BF /* vdrawhelper_neon.cpp in Sources */,
 				A7D28358236C7A270000A9BF /* vpath.cpp in Sources */,
 				A7D28343236C7A270000A9BF /* vbitmap.cpp in Sources */,
 				A7D2835D236C7A270000A9BF /* vcompositionfunctions.cpp in Sources */,
@@ -744,7 +742,7 @@
 		A7D28274236C77FA0000A9BF /* ReleaseHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -755,6 +753,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -827,7 +826,7 @@
 		A7D28276236C78800000A9BF /* DebugHockeyapp */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -838,6 +837,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -910,7 +910,7 @@
 		A7D28278236C78870000A9BF /* ReleaseAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -921,6 +921,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -993,7 +994,7 @@
 		A7D2827A236C78950000A9BF /* HockeyappMacAlpha */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -1004,6 +1005,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1077,7 +1079,7 @@
 		A7D2827C236C78A30000A9BF /* DebugAppStore */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -1089,6 +1091,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1097,6 +1100,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.RLottie;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1162,7 +1166,7 @@
 		A7F282EA238EAB7900742C20 /* Github */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = x86_64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -1174,6 +1178,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
+				GCC_PREPROCESSOR_DEFINITIONS = "LOTTIE_DISABLE_ARM_NEON=1";
 				INFOPLIST_FILE = RLottie/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (

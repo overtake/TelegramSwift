@@ -298,9 +298,12 @@ final class MediaPlayerView: View {
             let videoLayer = MediaPlayerViewLayer()
             videoLayer.videoGravity = .resize
             
+            #if arch(x86_64)
             if let sublayers = videoLayer.sublayers {
                 findContentsLayer(sublayers)?.minificationFilter = .trilinear
             }
+            #endif
+            
             
             //videoLayer.sublayers?.first?.magnificationFilter = .nearest
             Queue.mainQueue().async {
