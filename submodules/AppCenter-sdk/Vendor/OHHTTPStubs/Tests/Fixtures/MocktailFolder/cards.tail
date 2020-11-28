@@ -1,0 +1,19 @@
+GET
+.*/cards
+200
+application/json
+
+[
+    {
+        "gift_card_id": "91857d87-481a-490b-8aff-c72614094398",
+        "card_number": "515676xxxxxx1234",
+        "amount": "$25.28",
+        "expiration_date": "2014-04"
+    },
+    {
+        "gift_card_id": "0578ebe0-015b-11e4-9191-0800200c9a66",
+        "card_number": "515676xxxxxx2345",
+        "amount": "$55.38",
+        "expiration_date": "2014-05"
+    }
+]

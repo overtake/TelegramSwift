@@ -28,7 +28,9 @@ func fetchGifMediaResource(resource: LocalFileGifMediaResource) -> Signal<MediaR
 //                        try? FileManager.default.removeItem(atPath: path)
 //                        try? FileManager.default.moveItem(atPath: remuxedPath, toPath: path)
 //                    }
-                    subscriber.putNext(.moveLocalFile(path: path))
+                    if let path = path {
+                        subscriber.putNext(.moveLocalFile(path: path))
+                    }
                     subscriber.putCompletion()
                 }, errorHandler: {
                     subscriber.putError(.generic)

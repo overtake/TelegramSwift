@@ -1,0 +1,6 @@
+coverage_service: coveralls
+xcodeproj: ./Source/OCHamcrest.xcodeproj
+scheme: libochamcrest
+ignore:
+  - Source/Tests/*
+  

@@ -1,0 +1,4 @@
+target :ExampleTests do
+  inherit! :search_paths
+  pod 'OCHamcrest', '~> 7.1'
+end

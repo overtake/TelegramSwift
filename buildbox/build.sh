@@ -3,13 +3,13 @@ set -x
 set -e
 
 
-if [ "$1" = "alpha" ]; then
+#if [ "$1" = "alpha" ] || [ "$1" = "beta" ] ; then
 MACOS_VERSION="10.16"
 XCODE_VERSION="12.2"
-else
-MACOS_VERSION="10.15"
-XCODE_VERSION="10.3"
-fi
+#else
+#MACOS_VERSION="10.15"
+#XCODE_VERSION="10.3"
+#fi
 
 
 GUEST_SHELL="bash"
@@ -34,7 +34,7 @@ prlctl start "$VM_NAME"
 
 
 rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
-tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" --exclude "build" "."
+tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" "."
 
 
 

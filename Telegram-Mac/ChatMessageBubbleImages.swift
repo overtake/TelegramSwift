@@ -104,33 +104,6 @@ func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: N
 }
 
 
-func ninePartPiecesFromImageWithInsets(_ image: CGImage, capInsets: RHEdgeInsets) -> [CGImage] {
-    
-    let imageWidth: CGFloat  = image.backingSize.width
-    let imageHeight: CGFloat = image.backingSize.height
-    
-    let leftCapWidth: CGFloat = capInsets.left
-    let topCapHeight: CGFloat = capInsets.top
-    let rightCapWidth: CGFloat = capInsets.right
-    let bottomCapHeight: CGFloat = capInsets.bottom
-    
-    let centerSize: NSSize  = NSMakeSize(imageWidth - leftCapWidth - rightCapWidth, imageHeight - topCapHeight - bottomCapHeight);
-    
-    let topLeftCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, imageHeight - topCapHeight, leftCapWidth, topCapHeight))
-    let topEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, imageHeight - topCapHeight, centerSize.width, topCapHeight))
-    let topRightCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, imageHeight - topCapHeight, rightCapWidth, topCapHeight))
-    
-    let leftEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, bottomCapHeight, leftCapWidth, centerSize.height))
-    let centerFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, bottomCapHeight, centerSize.width, centerSize.height))
-    let rightEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, bottomCapHeight, rightCapWidth, centerSize.height))
-    
-    let bottomLeftCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(0.0, 0.0, leftCapWidth, bottomCapHeight))
-    let bottomEdgeFill: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(leftCapWidth, 0.0, centerSize.width, bottomCapHeight))
-    let bottomRightCorner: CGImage = imageByReferencingRectOfExistingImage(image, NSMakeRect(imageWidth - rightCapWidth, 0.0, rightCapWidth, bottomCapHeight))
-    
-    return [topLeftCorner, topEdgeFill, topRightCorner, leftEdgeFill, centerFill, rightEdgeFill, bottomLeftCorner, bottomEdgeFill, bottomRightCorner]
-}
-
 func drawNinePartImage(_ context: CGContext, frame: NSRect, topLeftCorner: CGImage, topEdgeFill: CGImage, topRightCorner: CGImage, leftEdgeFill: CGImage, centerFill: CGImage, rightEdgeFill: CGImage, bottomLeftCorner: CGImage, bottomEdgeFill: CGImage, bottomRightCorner: CGImage){
     
     let imageWidth: CGFloat = frame.size.width;
