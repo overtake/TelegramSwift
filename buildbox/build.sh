@@ -3,13 +3,13 @@ set -x
 set -e
 
 
-if [ "$1" = "alpha" ] || [ "$1" = "beta" ] ; then
+#if [ "$1" = "alpha" ] || [ "$1" = "beta" ] ; then
 MACOS_VERSION="10.16"
 XCODE_VERSION="12.2"
-else
-MACOS_VERSION="10.15"
-XCODE_VERSION="10.3"
-fi
+#else
+#MACOS_VERSION="10.15"
+#XCODE_VERSION="10.3"
+#fi
 
 
 GUEST_SHELL="bash"
