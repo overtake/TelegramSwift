@@ -43,7 +43,7 @@ extension ChannelParticipant {
     }
 }
 
-private extension CachedChannelAdminRank {
+private extension CachedChannelAdminRankType {
     init(participant: ChannelParticipant) {
         switch participant {
         case let .creator(_, _, rank):
@@ -117,14 +117,14 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
         didSet {
             self.listStatePromise.set(.single(self.listStateValue))
             if case .admins(nil) = self.category, case .ready = self.listStateValue.loadingState {
-                let ranks: [PeerId: CachedChannelAdminRank] = self.listStateValue.list.reduce([:]) { (ranks, participant) in
+                let ranks: [PeerId: CachedChannelAdminRankType] = self.listStateValue.list.reduce([:]) { (ranks, participant) in
                     var ranks = ranks
-                    ranks[participant.participant.peerId] = CachedChannelAdminRank(participant: participant.participant)
+                    ranks[participant.participant.peerId] = CachedChannelAdminRankType(participant: participant.participant)
                     return ranks
                 }
-                let previousRanks: [PeerId: CachedChannelAdminRank] = oldValue.list.reduce([:]) { (ranks, participant) in
+                let previousRanks: [PeerId: CachedChannelAdminRankType] = oldValue.list.reduce([:]) { (ranks, participant) in
                     var ranks = ranks
-                    ranks[participant.participant.peerId] = CachedChannelAdminRank(participant: participant.participant)
+                    ranks[participant.participant.peerId] = CachedChannelAdminRankType(participant: participant.participant)
                     return ranks
                 }
                 if ranks != previousRanks {
