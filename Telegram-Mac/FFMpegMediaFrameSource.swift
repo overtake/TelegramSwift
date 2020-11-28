@@ -3,7 +3,7 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 import SyncCore
-
+import FFMpegBinding
 
 private final class ThreadTaskQueue: NSObject {
     private var mutex: pthread_mutex_t

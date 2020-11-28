@@ -1,0 +1,21 @@
+#include "./Global.xcconfig"
+
+// :Mark: Architectures
+ONLY_ACTIVE_ARCH = YES
+
+// :Mark: Build Options
+DEBUG_INFORMATION_FORMAT = dwarf
+ENABLE_TESTABILITY = YES
+VALIDATE_PRODUCT = NO
+
+// :Mark: Apple LLVM 8.1 - Code Generation
+GCC_OPTIMIZATION_LEVEL = 0
+
+// :Mark: Apple LLVM 8.1 - Preprocessing
+ENABLE_NS_ASSERTIONS = YES
+
+// :Mark: User-Defined
+MTL_ENABLE_DEBUG_INFO = YES
+
+// :Mark: GCC_PREPROCESSOR_DEFINITIONS
+GCC_PREPROCESSOR_DEFINITIONS[config=Debug] = $(inherited) DEBUG

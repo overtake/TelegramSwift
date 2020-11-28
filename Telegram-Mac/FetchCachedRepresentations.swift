@@ -13,6 +13,7 @@ import Postbox
 import SwiftSignalKit
 import TGUIKit
 import RLottie
+import libwebp
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 

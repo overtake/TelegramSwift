@@ -53,7 +53,8 @@ class VoiceSenderContainer : MediaSenderContainer {
     public init(data:RecordedAudioData, id: Int64?) {
         self.data = data
         self.id = id
-        super.init(path: data.path)
+        let path: String = data.path
+        super.init(path: path)
         
     }
 }

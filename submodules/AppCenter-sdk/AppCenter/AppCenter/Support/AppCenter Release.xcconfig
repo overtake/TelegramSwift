@@ -1,0 +1,2 @@
+#include "../../../Config/Global Release.xcconfig"
+#include "./AppCenter.xcconfig"

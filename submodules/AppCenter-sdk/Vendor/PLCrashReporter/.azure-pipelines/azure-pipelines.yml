@@ -1,0 +1,128 @@
+trigger:
+- master
+
+pr:
+- master
+
+pool:
+  vmImage: internal-macos-10.15
+
+variables:
+  Configuration: Release
+  SDK:
+
+  # Xcode 11.3.1 version is the last one that has compatible bitcode with Xcode 11.0 (minimal supported).
+  XCODE_PATH: '/Applications/Xcode_11.3.1.app/Contents/Developer'
+
+jobs:
+- job:
+  displayName: Build SDK for All Platforms
+  steps:
+  - checkout: self
+
+  - bash: 'brew install doxygen graphviz protobuf-c'
+    displayName: 'Install dependencies'
+
+  - task: Xcode@5
+    displayName: 'Build Crash Reporter'
+    inputs:
+      xcWorkspacePath: CrashReporter.xcodeproj
+      scheme: 'CrashReporter'
+      xcodeVersion: specifyPath
+      xcodeDeveloperDir: '$(XCODE_PATH)'
+      args: 'SYMROOT="$(Build.BinariesDirectory)"'
+
+  - task: Xcode@5
+    displayName: 'Build CrashReporter macOS Framework for Apple Silicon'
+    inputs:
+      xcWorkspacePath: CrashReporter.xcodeproj
+      scheme: 'CrashReporter macOS Framework'
+      xcodeVersion: specifyPath
+      xcodeDeveloperDir: '/Applications/Xcode_12.2.app/Contents/Developer'
+      args: 'SYMROOT="$(Build.BinariesDirectory)"'
+
+  - task: Xcode@5
+    displayName: 'Build plcrashutil for Apple Silicon'
+    inputs:
+      xcWorkspacePath: CrashReporter.xcodeproj
+      scheme: 'plcrashutil'
+      xcodeVersion: specifyPath
+      xcodeDeveloperDir: '/Applications/Xcode_12.2.app/Contents/Developer'
+      args: 'SYMROOT="$(Build.BinariesDirectory)"'
+
+  - template: build-apple-silicon-template.yml
+    parameters:
+      scheme: 'CrashReporter iOS Framework'
+      destination:
+        destinationPlatformOption: iOS
+        destinationTypeOption: simulators
+        destinationSimulators: 'iPhone 11'
+        
+  - template: build-apple-silicon-template.yml
+    parameters:
+      scheme: 'CrashReporter iOS Framework'
+      destination:
+        destinationPlatformOption: macOS
+
+  - template: build-apple-silicon-template.yml
+    parameters:
+      scheme: 'CrashReporter tvOS Framework'
+      destination:
+        destinationPlatformOption: tvOS
+        destinationTypeOption: simulators
+        destinationSimulators: 'Apple TV'
+
+  - bash: |
+      cp -f "Release-macosx/libCrashReporter.a" "Release/Static/libCrashReporter-MacOSX-Static.a"
+      lipo -info "Release/Static/libCrashReporter-MacOSX-Static.a"
+      rm -rf "Release/Mac OS X Framework/CrashReporter.framework" "Release/Mac OS X Framework/CrashReporter.framework.dSYM"
+      cp -R "Release-macosx/CrashReporter.framework" "Release-macosx/CrashReporter.framework.dSYM" "Release/Mac OS X Framework"
+      lipo -info "Release/Mac OS X Framework/CrashReporter.framework/CrashReporter"
+      cp -f "Release-macosx/plcrashutil" "Release/Tools"
+      lipo -info "Release/Tools/plcrashutil"
+
+      rm -rf "Release-xcframework/CrashReporter.xcframework/macos-x86_64/CrashReporter.framework"
+      cp -R "Release-macosx/CrashReporter.framework" "Release-xcframework/CrashReporter.xcframework/macos-x86_64"
+      lipo "Release-xcframework/CrashReporter.xcframework/ios-i386_x86_64-simulator/CrashReporter.framework/CrashReporter" \
+        "Release-iphonesimulator/CrashReporter.framework/CrashReporter" \
+        -create -output "Release-xcframework/CrashReporter.xcframework/ios-i386_x86_64-simulator/CrashReporter.framework/CrashReporter" || exit 1
+      lipo "Release-xcframework/CrashReporter.xcframework/ios-x86_64-maccatalyst/CrashReporter.framework/Versions/A/CrashReporter" \
+        "Release-maccatalyst/CrashReporter.framework/Versions/A/CrashReporter" \
+        -create -output "Release-xcframework/CrashReporter.xcframework/ios-x86_64-maccatalyst/CrashReporter.framework/Versions/A/CrashReporter" || exit 1
+      lipo "Release-xcframework/CrashReporter.xcframework/tvos-x86_64-simulator/CrashReporter.framework/CrashReporter" \
+        "Release-appletvsimulator/CrashReporter.framework/CrashReporter" \
+        -create -output "Release-xcframework/CrashReporter.xcframework/tvos-x86_64-simulator/CrashReporter.framework/CrashReporter" || exit 1
+
+      rm -rf "Release/CrashReporter.xcframework"
+      for framework in Release-xcframework/CrashReporter.xcframework/*/CrashReporter.framework; do
+        xcframeworks+=( -framework "$framework")
+      done
+      xcodebuild -create-xcframework "${xcframeworks[@]}" -output "Release/CrashReporter.xcframework"
+      ls "Release/CrashReporter.xcframework"
+    displayName: 'Combine Binaries'
+    workingDirectory: '$(Build.BinariesDirectory)'
+
+  - bash: |
+      VERSION="$(cd $BUILD_SOURCESDIRECTORY && agvtool vers -terse)"
+      [[ $BUILD_SOURCEBRANCH != 'refs/heads/master' ]] && VERSION="$VERSION+$(cd $BUILD_SOURCESDIRECTORY && git rev-parse --short $BUILD_SOURCEVERSION)"
+      "$BUILD_SOURCESDIRECTORY/Scripts/create-archive.sh" "PLCrashReporter-$VERSION" "iOS Framework" "tvOS Framework" "Mac OS X Framework" "Tools"
+      "$BUILD_SOURCESDIRECTORY/Scripts/create-archive.sh" "PLCrashReporter-Static-$VERSION" Static/*
+      "$BUILD_SOURCESDIRECTORY/Scripts/create-archive.sh" "PLCrashReporter-XCFramework-$VERSION" "CrashReporter.xcframework"
+    displayName: 'Create Archives'
+    workingDirectory: '$(Build.BinariesDirectory)/Release'
+
+  - task: CopyFiles@2
+    displayName: 'Copy Archives to Staging Directory'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/Release'
+      Contents: '*.zip'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifacts'
+    inputs:
+      ArtifactName: Release
+
+- template: analyze-and-test-template.yml
+  parameters:
+    platforms: [iOS, macOS, tvOS, MacCatalyst ]
