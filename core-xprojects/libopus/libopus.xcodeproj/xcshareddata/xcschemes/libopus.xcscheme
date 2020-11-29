@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D06E368824A4FD4900C7D03A"
-               BuildableName = "TgVoipWebrtc.framework"
-               BlueprintName = "TgVoipWebrtc"
-               ReferencedContainer = "container:TgVoipWebrtc.xcodeproj">
+               BlueprintIdentifier = "D0983B8325668FAA00467703"
+               BuildableName = "libopus.framework"
+               BlueprintName = "libopus"
+               ReferencedContainer = "container:libopus.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -50,10 +50,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D06E368824A4FD4900C7D03A"
-            BuildableName = "TgVoipWebrtc.framework"
-            BlueprintName = "TgVoipWebrtc"
-            ReferencedContainer = "container:TgVoipWebrtc.xcodeproj">
+            BlueprintIdentifier = "D0983B8325668FAA00467703"
+            BuildableName = "libopus.framework"
+            BlueprintName = "libopus"
+            ReferencedContainer = "container:libopus.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
