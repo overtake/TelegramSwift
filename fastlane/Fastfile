@@ -45,7 +45,7 @@ lane :appstore do
     sh("rm -rf ./output")
     sh("mkdir ./output")
     gym(
-      scheme: "AppStore",
+      scheme: "store",
       clean: true,
       silent: true,
       output_directory: "./output"
