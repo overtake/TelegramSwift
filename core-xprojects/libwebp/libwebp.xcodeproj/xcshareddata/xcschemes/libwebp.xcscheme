@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C2E0DEA61D7EF51C00EF1C8D"
-               BuildableName = "TGUIKit.framework"
-               BlueprintName = "TGUIKit"
-               ReferencedContainer = "container:TGUIKit.xcodeproj">
+               BlueprintIdentifier = "D0983B4F2566606600467703"
+               BuildableName = "libwebp.framework"
+               BlueprintName = "libwebp"
+               ReferencedContainer = "container:libwebp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -42,7 +42,7 @@
       allowLocationSimulation = "YES">
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "ReleaseHockeyapp"
+      buildConfiguration = "ReleaseAppStore"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -50,10 +50,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "C2E0DEA61D7EF51C00EF1C8D"
-            BuildableName = "TGUIKit.framework"
-            BlueprintName = "TGUIKit"
-            ReferencedContainer = "container:TGUIKit.xcodeproj">
+            BlueprintIdentifier = "D0983B4F2566606600467703"
+            BuildableName = "libwebp.framework"
+            BlueprintName = "libwebp"
+            ReferencedContainer = "container:libwebp.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </ProfileAction>
@@ -61,7 +61,7 @@
       buildConfiguration = "DebugAppStore">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "ReleaseHockeyapp"
+      buildConfiguration = "ReleaseAppStore"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>
