@@ -527,10 +527,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        let rawRank = ranks?.ranks[message.author?.id ?? PeerId(0)]
+        let rawRank = ranks?.ranks.first(where: { $0.peerId == message.author?.id })
         var rank:String? = nil
         if let rawRank = rawRank {
-            switch rawRank {
+            switch rawRank.type {
             case .admin:
                 rank = L10n.chatAdminBadge
             case .owner:
