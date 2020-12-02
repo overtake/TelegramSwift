@@ -464,6 +464,7 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func clean() {
+        
         addContactDisposable.dispose()
         mediaDisposable.dispose()
         startBotDisposable.dispose()

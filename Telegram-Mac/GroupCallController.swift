@@ -648,9 +648,12 @@ final class GroupCallUIController : ViewController {
         }
         
     }
+    private var pushToTalkIsActive: Bool = false
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         self.genericView.applyUpdates(state, transition, animated: animated)
+        
+        
         
         self.pushToTalk.update = { [weak self, unowned state] mode in
             switch mode {
@@ -658,12 +661,14 @@ final class GroupCallUIController : ViewController {
                 if let muteState = state.state.muteState {
                     if muteState.canUnmute {
                         self?.data.call.setIsMuted(action: .unmuted)
+                        self?.pushToTalkIsActive = true
                     }
                 }
             case .waiting:
-                if state.state.muteState == nil {
+                if state.state.muteState == nil, self?.pushToTalkIsActive == true {
                     self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
                 }
+                self?.pushToTalkIsActive = false
             }
         }
         
