@@ -23,7 +23,7 @@ class SeparatorRowItem: TableRowItem {
     
     private let h:CGFloat
     let rightText:NSAttributedString?
-    var border:BorderType = [.Right]
+    let border:BorderType
     let state:SeparatorBlockState
     let action: (()->Void)?
     override var height: CGFloat {
@@ -34,11 +34,17 @@ class SeparatorRowItem: TableRowItem {
         return _stableId
     }
     
-    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: (()->Void)? = nil) {
+    let backgroundColor: NSColor?
+    let leftInset: CGFloat?
+    
+    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: (()->Void)? = nil, backgroundColor: NSColor? = nil, leftInset: CGFloat? = nil, border:BorderType = [.Right]) {
         self._stableId = stableId
         self.h = height
+        self.backgroundColor = backgroundColor
+        self.leftInset = leftInset
         self.action = action
         self.state = state
+        self.border = border
         text = .initialize(string: string, color: theme.colors.grayText, font:.normal(.short))
         if let right = right {
             self.rightText = .initialize(string: right, color: theme.colors.grayText, font:.normal(.short))
@@ -71,6 +77,9 @@ class SeparatorRowView: TableRowView {
     }
     
     override var backdorColor: NSColor {
+        if let backgroundColor = (item as? SeparatorRowItem)?.backgroundColor {
+            return backgroundColor
+        }
         return theme.colors.grayBackground
     }
     
@@ -112,12 +121,12 @@ class SeparatorRowView: TableRowView {
             let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil,false, .left)
             let textPoint:NSPoint
             if let text = item.rightText {
-                textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
+                textPoint = NSMakePoint(item.leftInset ?? 10, round((frame.height - layout.size.height)/2.0) - 1)
                 let (layout, apply) = TextNode.layoutText(maybeNode: stateText, text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil, false, .left)
-                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                apply.draw(NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0) - 1, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 
             } else {
-                textPoint = NSMakePoint(10, round((frame.height - layout.size.height)/2.0))
+                textPoint = NSMakePoint(item.leftInset ?? 10, round((frame.height - layout.size.height)/2.0) - 1)
                 
             }
             apply.draw(NSMakeRect(textPoint.x, textPoint.y, layout.size.width, layout.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)

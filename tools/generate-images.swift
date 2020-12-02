@@ -609,6 +609,10 @@ func initialize() -> [String] {
     array.append("chat_pinned_message_bubble_outgoing")
     array.append("chat_pinned_message_overlay_bubble")
     
+    
+    array.append("chat_voicechat_can_unmute")
+    array.append("chat_voicechat_cant_unmute")
+    array.append("chat_voicechat_unmuted")
 
     return array
 }

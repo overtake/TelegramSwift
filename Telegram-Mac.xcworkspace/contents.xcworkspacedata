@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/DDHotKey/DDHotKey.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/TelegramVoip/TelegramVoip.xcodeproj">
    </FileRef>
    <FileRef

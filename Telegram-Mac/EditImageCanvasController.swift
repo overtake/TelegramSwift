@@ -426,26 +426,26 @@ final class EditImageCanvasController : ModalViewController {
         
         
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.undo()
             
             return .invoked
         }, with: self, for: .Z, priority: .modal, modifierFlags: [.command])
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.redo()
             
             return .invoked
         }, with: self, for: .Z, priority: .modal, modifierFlags: [.command, .shift])
         
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.switchAction(.clear)
             
             return .invoked
         }, with: self, for: .E, priority: .modal)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.switchAction(.draw)
             
             return .invoked

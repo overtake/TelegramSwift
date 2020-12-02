@@ -102,4 +102,8 @@ public enum KeyboardKey : UInt16  {
     case DownArrow = 125
     case UpArrow = 126
     case All = 1000
+    case Undefined = 1001
+    public var isFlagKey: Bool {
+        return self == .Shift || self == .CapsLock || self == .Command || self == .Option || self == .Control || self == .RightShift || self == .RightOption || self == .RightControl || self == .Function
+    }
 }

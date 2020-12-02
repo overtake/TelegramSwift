@@ -863,38 +863,38 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
 
         
-        context.window.set(handler: { [weak self] in
+        context.window.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.escapeKeyAction()
             }
             return .invokeNext
         }, with: self, for: .Escape, priority:.low)
         
-        context.window.set(handler: { [weak self] in
+        context.window.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
             return .invokeNext
         }, with: self, for: .Return, priority:.low)
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let item = self?.effectiveTableView.selectedItem(), item.index > 0 {
                 self?.effectiveTableView.selectPrev()
             }
             return .invoked
         }, with: self, for: .UpArrow, priority: .medium, modifierFlags: [.option])
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.effectiveTableView.selectNext()
             return .invoked
         }, with: self, for: .DownArrow, priority:.medium, modifierFlags: [.option])
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.effectiveTableView.selectNext(turnDirection: false)
             return .invoked
         }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control])
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.effectiveTableView.selectPrev(turnDirection: false)
             return .invoked
         }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control, .shift])

@@ -418,7 +418,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 if !strongSelf.genericView.inSearch {
                     strongSelf.genericView.showSearch()

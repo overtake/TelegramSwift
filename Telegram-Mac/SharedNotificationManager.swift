@@ -167,7 +167,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             |> deliverOnMainQueue
         
-        window.set(handler: { () -> KeyHandlerResult in
+        window.set(handler: { _ -> KeyHandlerResult in
             
             if !self._lockedValue.passcodeLock {
                 self._passlock.set(accountManager.transaction { transaction -> Bool in

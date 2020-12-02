@@ -472,7 +472,7 @@ public class Modal: NSObject {
             }, with: self, priority: controller.responderPriority)
             
             if controller.handleAllEvents {
-                window.set(handler: { [weak controller] () -> KeyHandlerResult in
+                window.set(handler: { [weak controller] _ -> KeyHandlerResult in
                     if let controller = controller, controller.redirectMouseAfterClosing {
                         controller.close()
                         return .rejected
@@ -481,14 +481,14 @@ public class Modal: NSObject {
                 }, with: self, for: .All, priority: controller.responderPriority)
             }
             
-            window.set(escape: {[weak self] () -> KeyHandlerResult in
+            window.set(escape: { [weak self] _ -> KeyHandlerResult in
                 if self?.controller?.escapeKeyAction() == .rejected {
                     self?.controller?.close()
                 }
                 return .invoked
             }, with: self, priority: controller.responderPriority)
             
-            window.set(handler: { [weak self] () -> KeyHandlerResult in
+            window.set(handler: { [weak self] _ -> KeyHandlerResult in
                 if let controller = self?.controller {
                     return controller.returnKeyAction()
                 }

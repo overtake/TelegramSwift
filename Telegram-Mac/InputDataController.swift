@@ -709,7 +709,7 @@ class InputDataController: GenericViewController<InputDataView> {
         }, with: self, for: .leftMouseUp, priority: self.responderPriority)
         
         
-        window?.set(handler: { [weak self] in
+        window?.set(handler: { [weak self] _ in
             guard let `self` = self else {return .rejected}
             
             switch self.deleteKeyInvocation(self.currentFirstResponderIdentifier) {
@@ -722,7 +722,7 @@ class InputDataController: GenericViewController<InputDataView> {
         }, with: self, for: .Delete, priority: self.responderPriority, modifierFlags: nil)
         
         
-        window?.set(handler: { [weak self] in
+        window?.set(handler: { [weak self] _ in
             guard let `self` = self else {return .rejected}
             
             switch self.searchKeyInvocation() {
@@ -734,20 +734,20 @@ class InputDataController: GenericViewController<InputDataView> {
             
         }, with: self, for: .F, priority: self.responderPriority, modifierFlags: nil)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             
             view?.makeBold()
             return .invoked
         }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeUrl()
             return .invoked
         }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeItalic()
             return .invoked
@@ -755,7 +755,7 @@ class InputDataController: GenericViewController<InputDataView> {
         
         
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView
             view?.makeMonospace()
             return .invoked

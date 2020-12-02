@@ -327,12 +327,12 @@ class EditImageModalController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.controls.arguments.rotate()
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.loadCanvas()
             return .invoked
         }, with: self, for: .D, priority: .modal, modifierFlags: [.command])

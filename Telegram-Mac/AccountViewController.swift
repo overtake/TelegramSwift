@@ -931,7 +931,7 @@ class LayoutAccountController : TableViewController {
         updateLocalizationAndTheme(theme: theme)
         
         
-        context.window.set(handler: { [weak self] in
+        context.window.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.escapeKeyAction()
             }

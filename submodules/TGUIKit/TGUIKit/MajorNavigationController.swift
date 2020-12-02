@@ -265,14 +265,14 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         
     open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.window?.set(handler: { [weak self] in
+        self.window?.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.escapeKeyAction()
             }
             return .rejected
         }, with: self, for: .Escape, priority: self.responderPriority)
         
-        self.window?.set(handler: { [weak self] in
+        self.window?.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
@@ -280,14 +280,14 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         }, with: self, for: .Return, priority: self.responderPriority)
         
         
-        self.window?.set(handler: { [weak self] in
+        self.window?.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.backKeyAction()
             }
             return .rejected
         }, with: self, for: .LeftArrow, priority: self.responderPriority)
         
-        self.window?.set(handler: { [weak self] in
+        self.window?.set(handler: { [weak self] _ in
             if let strongSelf = self {
                 return strongSelf.nextKeyAction()
             }

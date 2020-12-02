@@ -314,27 +314,25 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
             return true
         }
         
-        let closeKeyboardHandler:()->KeyHandlerResult = { [weak self] in
+        let closeKeyboardHandler:(NSEvent)->KeyHandlerResult = { [weak self] _ in
             if let window = self?._window {
                 if !window.styleMask.contains(.fullScreen) {
                     self?._window.orderOut(nil)
                     instantController = nil
                 } else {
                     window.toggleFullScreen(nil)
-                    var bp:Int = 0
-                    bp += 1
                 }
             }
 			
             return .invoked
         }
         
-        _window.set(handler: { [weak page] in
+        _window.set(handler: { [weak page] _ in
             page?.scrollPage(direction: .up)
             return .invoked
         }, with: self, for: .UpArrow, priority: .medium)
         
-        _window.set(handler: { [weak page] in
+        _window.set(handler: { [weak page] _ in
             page?.scrollPage(direction: .down)
             return .invoked
         }, with: self, for: .DownArrow, priority: .medium)
@@ -342,7 +340,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
         
         _window.set(handler: closeKeyboardHandler, with: self, for: .Escape)
 		if FastSettings.instantViewScrollBySpace {
-			let spaceScrollDownKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+			let spaceScrollDownKeyboardHandler:(NSEvent)->KeyHandlerResult = { [weak self, weak page] _ in
 				if let window = self?._window {
 					if !window.styleMask.contains(.fullScreen) {
 						page?.scrollPage(direction: .down)
@@ -353,7 +351,7 @@ class InstantViewController : TelegramGenericViewController<InstantWindowContent
 			}
 			_window.set(handler: spaceScrollDownKeyboardHandler, with: self, for: .Space, priority: .low)
 			
-			let spaceScrollUpKeyboardHandler:()->KeyHandlerResult = { [weak self, weak page] in
+			let spaceScrollUpKeyboardHandler:(NSEvent)->KeyHandlerResult = { [weak self, weak page] _ in
 				if let window = self?._window {
 					if !window.styleMask.contains(.fullScreen) {
 						page?.scrollPage(direction: .up)

@@ -70,6 +70,7 @@ final class AccountContextBindings {
 private var lastTimeFreeSpaceNotified: TimeInterval?
 
 
+
 final class AccountContext {
     let sharedContext: SharedAccountContext
     let account: Account
@@ -86,7 +87,8 @@ final class AccountContext {
     let blockedPeersContext: BlockedPeersContext
     let activeSessionsContext: ActiveSessionsContext
     let cacheCleaner: AccountClearCache
-
+    
+    
  //   let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
     #endif
     

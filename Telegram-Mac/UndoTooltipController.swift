@@ -33,7 +33,7 @@ import SyncCore
         self.context.window.set(mouseHandler: invocation, with: self, for: .rightMouseDown, priority: .supreme)
         
         
-        self.context.window.set(handler: { [weak self] in
+        self.context.window.set(handler: { [weak self] _ in
             self?.hideCurrentIfNeeded()
             return .rejected
         }, with: self, for: .All, priority: .supreme)

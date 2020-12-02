@@ -7245,6 +7245,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_voicechat_can_unmute: CGImage {
+      if let image = cached.with({ $0["chat_voicechat_can_unmute"] }) {
+          return image
+      } else {
+          let image = _chat_voicechat_can_unmute()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_voicechat_can_unmute"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_voicechat_cant_unmute: CGImage {
+      if let image = cached.with({ $0["chat_voicechat_cant_unmute"] }) {
+          return image
+      } else {
+          let image = _chat_voicechat_cant_unmute()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_voicechat_cant_unmute"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_voicechat_unmuted: CGImage {
+      if let image = cached.with({ $0["chat_voicechat_unmuted"] }) {
+          return image
+      } else {
+          let image = _chat_voicechat_unmuted()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_voicechat_unmuted"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7803,6 +7842,9 @@ final class TelegramIconsTheme {
   private let _chat_pinned_message_bubble_incoming: ()->CGImage
   private let _chat_pinned_message_bubble_outgoing: ()->CGImage
   private let _chat_pinned_message_overlay_bubble: ()->CGImage
+  private let _chat_voicechat_can_unmute: ()->CGImage
+  private let _chat_voicechat_cant_unmute: ()->CGImage
+  private let _chat_voicechat_unmuted: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8361,7 +8403,10 @@ final class TelegramIconsTheme {
       chat_pinned_message: @escaping()->CGImage,
       chat_pinned_message_bubble_incoming: @escaping()->CGImage,
       chat_pinned_message_bubble_outgoing: @escaping()->CGImage,
-      chat_pinned_message_overlay_bubble: @escaping()->CGImage
+      chat_pinned_message_overlay_bubble: @escaping()->CGImage,
+      chat_voicechat_can_unmute: @escaping()->CGImage,
+      chat_voicechat_cant_unmute: @escaping()->CGImage,
+      chat_voicechat_unmuted: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8920,5 +8965,8 @@ final class TelegramIconsTheme {
       self._chat_pinned_message_bubble_incoming = chat_pinned_message_bubble_incoming
       self._chat_pinned_message_bubble_outgoing = chat_pinned_message_bubble_outgoing
       self._chat_pinned_message_overlay_bubble = chat_pinned_message_overlay_bubble
+      self._chat_voicechat_can_unmute = chat_voicechat_can_unmute
+      self._chat_voicechat_cant_unmute = chat_voicechat_cant_unmute
+      self._chat_voicechat_unmuted = chat_voicechat_unmuted
   }
 }

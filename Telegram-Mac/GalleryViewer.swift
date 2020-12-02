@@ -15,10 +15,10 @@ import Postbox
 import AVFoundation
 
 final class GalleryInteractions {
-    var dismiss:()->KeyHandlerResult = { return .rejected}
-    var next:()->KeyHandlerResult = { return .rejected}
+    var dismiss:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
+    var next:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
     var select:(MGalleryItem)->Void = { _ in}
-    var previous:()->KeyHandlerResult = { return .rejected}
+    var previous:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
     var showActions:(Control)->KeyHandlerResult = {_ in return .rejected}
     var share:(Control)->Void = { _ in }
     var contextMenu:()->NSMenu? = {return nil}
@@ -265,7 +265,7 @@ class GalleryViewer: NSResponder {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         
         
-        interactions.dismiss = { [weak self] () -> KeyHandlerResult in
+        interactions.dismiss = { [weak self] _ -> KeyHandlerResult in
             if let pager = self?.pager {
                
                 if pager.isFullScreen {
@@ -279,12 +279,12 @@ class GalleryViewer: NSResponder {
             return .invoked
         }
         
-        interactions.next = { [weak self] () -> KeyHandlerResult in
+        interactions.next = { [weak self] _ -> KeyHandlerResult in
             self?.pager.next()
             return .invoked
         }
         
-        interactions.previous = { [weak self] () -> KeyHandlerResult in
+        interactions.previous = { [weak self] _ -> KeyHandlerResult in
             self?.pager.prev()
             return .invoked
         }
@@ -325,52 +325,54 @@ class GalleryViewer: NSResponder {
         interactions.fastSave = { [weak self] in
             self?.saveAs(true)
         }
-        window.set(handler: { [weak self]  in
+        window.set(handler: { [weak self] event in
             guard let `self` = self else {return .rejected}
             if self.pager.selectedItem is MGalleryVideoItem || self.pager.selectedItem is MGalleryExternalVideoItem {
                 self.pager.selectedItem?.togglePlayerOrPause()
                 return .invoked
             } else {
-                return self.interactions.dismiss()
+                return self.interactions.dismiss(event)
             }
         }, with:self, for: .Space)
         
         window.set(handler: interactions.dismiss, with:self, for: .Escape)
         
         window.closeInterceptor = { [weak self] in
-            _ = self?.interactions.dismiss()
+            if let event = NSApp.currentEvent {
+                _ = self?.interactions.dismiss(event)
+            }
             return true
         }
         
         window.set(handler: interactions.next, with:self, for: .RightArrow)
         window.set(handler: interactions.previous, with:self, for: .LeftArrow)
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.pager.zoomOut()
             return .invoked
         }, with: self, for: .Minus)
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.pager.zoomIn()
             return .invoked
         }, with: self, for: .Equal)
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.pager.decreaseSpeed()
             return .invoked
         }, with: self, for: .Minus, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.pager.increaseSpeed()
             return .invoked
         }, with: self, for: .Equal, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.pager.rotateLeft()
             return .invoked
         }, with: self, for: .R, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.saveAs()
             return .invoked
         }, with: self, for: .S, priority: .high, modifierFlags: [.command])
@@ -837,7 +839,9 @@ class GalleryViewer: NSResponder {
         }
         
         items.append(SPopoverItem(L10n.navigationClose, { [weak self] in
-            _ = self?.interactions.dismiss()
+            if let event = NSApp.currentEvent {
+                _ = self?.interactions.dismiss(event)
+            }
         }))
         
         showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-105 + 14), 0), static: true)

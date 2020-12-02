@@ -157,7 +157,7 @@ class InputFormatterPopover: NSPopover {
         
         self.contentViewController = controller
         
-        window.set(handler: { [weak view] () -> KeyHandlerResult in
+        window.set(handler: { [weak view] _ -> KeyHandlerResult in
             if let view = view {
                 if view.state == .link {
                     let attr = view.linkField.attributedStringValue.mutableCopy() as! NSMutableAttributedString
@@ -195,7 +195,7 @@ class InputFormatterPopover: NSPopover {
             return .rejected
         }, with: self, for: .Return, priority: .modal)
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.close()
             return .invoked
         }, with: self, for: .Escape, priority: .modal)

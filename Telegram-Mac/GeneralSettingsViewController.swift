@@ -473,7 +473,7 @@ class GeneralSettingsViewController: TableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.incrementLogClick()
             return .invoked
         }, with: self, for: .L, modifierFlags: [.control])

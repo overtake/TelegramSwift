@@ -20,6 +20,7 @@ struct GroupAccess {
     let isCreator:Bool
     let canCreateInviteLink: Bool
     let canReport: Bool
+    let canMakeVoiceChat: Bool
 }
 
 extension Peer {
@@ -32,6 +33,7 @@ extension Peer {
         var isPublic = false
         var isCreator = false
         var canReport = true
+        var canMakeVoiceChat = false
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
@@ -78,11 +80,14 @@ extension Peer {
             if channel.hasPermission(.inviteMembers) && channel.adminRights != nil {
                 canCreateInviteLink = true
             }
+            if channel.hasPermission(.manageCalls) {
+                canMakeVoiceChat = true
+            }
         }
         
 
 
-        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport)
+        return GroupAccess(highlightAdmins: highlightAdmins, canEditGroupInfo: canEditGroupInfo, canEditMembers: canEditMembers, canAddMembers: canAddMembers, isPublic: isPublic, isCreator: isCreator, canCreateInviteLink: canCreateInviteLink, canReport: canReport, canMakeVoiceChat: canMakeVoiceChat)
     }
     
     var canInviteUsers:Bool {

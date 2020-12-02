@@ -12,6 +12,8 @@ import LocalAuthentication
 //import WalletCore
 import OpenSSLEncryption
 import CoreSpotlight
+import DDHotKey
+
 #if !APP_STORE
 import AppCenter
 import AppCenterCrashes
@@ -247,7 +249,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         initializeAccountManagement()
         
-        
+//        DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: KeyboardKey.G.rawValue, modifierFlags: 0, task: { event in
+//            var bp:Int = 0
+//            bp += 1
+//        }))
         
         let rootPath = containerUrl!
         let window = self.window!

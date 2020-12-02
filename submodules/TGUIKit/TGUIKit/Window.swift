@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import SwiftSignalKit
 
 public class ObervableView: NSView {
     private var listeners:[WeakReference<NSObject>] = []
@@ -61,12 +62,12 @@ public func <(lhs: HandlerPriority, rhs: HandlerPriority) -> Bool {
 }
 
 class KeyHandler : Comparable {
-    let handler:()->KeyHandlerResult
+    let handler:(NSEvent)->KeyHandlerResult
     let object:WeakReference<NSObject>
     let priority:HandlerPriority
     let modifierFlags:NSEvent.ModifierFlags?
     let date: TimeInterval
-    init(_ handler:@escaping()->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEvent.ModifierFlags?) {
+    init(_ handler:@escaping(NSEvent)->KeyHandlerResult, _ object:NSObject?, _ priority:HandlerPriority, _ flags:NSEvent.ModifierFlags?) {
         self.handler = handler
         self.object = WeakReference(value: object)
         self.priority = priority
@@ -267,7 +268,7 @@ open class Window: NSWindow {
     private var keyHandlers:[KeyboardKey:[KeyHandler]] = [:]
     private var swipeHandlers:[SwipeIdentifier: SwipeHandler] = [:]
     private var swipeState:[SwipeIdentifier: SwipeDirection] = [:]
-
+    public var keyUpHandler:((NSEvent)->Void)?
     private var responsders:[ResponderObserver] = []
     private var mouseHandlers:[UInt:[MouseObserver]] = [:]
     private var swipePoints:[NSPoint] = []
@@ -279,6 +280,18 @@ open class Window: NSWindow {
     public weak var rootViewController: ViewController?
     public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
     public var onToggleFullScreen:((Bool)->Void)? = nil
+    
+    private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
+    
+    public var visibility: Signal<Bool, NoError> {
+        return visibleObserver.get()
+    }
+    
+    open override func setIsVisible(_ flag: Bool) {
+        super.setIsVisible(flag)
+        self.visibleObserver.set(flag)
+    }
+    
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
         responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
     }
@@ -296,7 +309,7 @@ open class Window: NSWindow {
     }
     
     
-    public func set(handler:@escaping() -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
+    public func set(handler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, for key:KeyboardKey, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         var handlers:[KeyHandler]? = keyHandlers[key]
         if handlers == nil {
             handlers = []
@@ -519,10 +532,12 @@ open class Window: NSWindow {
     
     open override func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
+        self.visibleObserver.set(self.isVisible)
     }
     open override func orderOut(_ sender: Any?) {
         super.orderOut(sender)
         orderOutHandler?()
+        self.visibleObserver.set(self.isVisible)
     }
     
     public func enumerateAllSubviews(callback: (NSView) -> Void) {
@@ -548,6 +563,7 @@ open class Window: NSWindow {
         } else {
             super.close()
         }
+        self.visibleObserver.set(self.isVisible)
     }
     
     private func scrollDeltaXAfterInvertion(_ value: CGFloat) -> CGFloat {
@@ -677,6 +693,10 @@ open class Window: NSWindow {
 //            bp += 1
 //        }
         
+        if event.type == .keyUp {
+            self.keyUpHandler?(event)
+        }
+        
         let eventType = event.type
         if sheets.isEmpty {
             if eventType == .keyDown {
@@ -686,20 +706,19 @@ open class Window: NSWindow {
                 cleanUndefinedHandlers()
                 
                 if let globalHandlers = keyHandlers[.All]?.sorted(by: >), let keyCode = KeyboardKey(rawValue:event.keyCode) {
-                    if let handle = keyHandlers[keyCode]?.sorted(by: >).first {
-                        for globalHandler in globalHandlers {
-                            if globalHandler.priority > handle.priority {
-                                if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!)) {
-                                    switch globalHandler.handler() {
-                                    case .invoked:
-                                        return
-                                    case .rejected:
-                                        break
-                                    case .invokeNext:
-                                        super.sendEvent(event)
-                                        return
-                                    }
-                                } 
+                    for globalHandler in globalHandlers {
+                        let handle = keyHandlers[keyCode]?.sorted(by: >).first
+                        if handle == nil || globalHandler.priority > handle!.priority {
+                            if (handle?.modifierFlags == nil || event.modifierFlags.contains(handle!.modifierFlags!)) {
+                                switch globalHandler.handler(event) {
+                                case .invoked:
+                                    return
+                                case .rejected:
+                                    break
+                                case .invokeNext:
+                                    super.sendEvent(event)
+                                    return
+                                }
                             }
                         }
                     }
@@ -710,7 +729,7 @@ open class Window: NSWindow {
                         
                         if (handle.modifierFlags == nil || event.modifierFlags.contains(handle.modifierFlags!))  {
                             
-                            switch handle.handler() {
+                            switch handle.handler(event) {
                             case .invoked:
                                 return
                             case .rejected:
@@ -794,7 +813,7 @@ open class Window: NSWindow {
     //        return self.set(handler: handler, for: .V, modifierFlags: [.command])
     //    }
     
-    public func set(escape handler:@escaping() -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
+    public func set(escape handler:@escaping(NSEvent) -> KeyHandlerResult, with object:NSObject, priority:HandlerPriority = .low, modifierFlags:NSEvent.ModifierFlags? = nil) -> Void {
         set(handler: handler, with: object, for: .Escape, priority:priority, modifierFlags:modifierFlags)
     }
     

@@ -23,6 +23,11 @@ import Cocoa
         }
     }
 }
+public extension NSView {
+    static func animationDurationFactor() -> Double {
+        return 1.0
+    }
+}
 
 private let completionKey = "CAAnimationUtils_completion"
 
@@ -92,6 +97,67 @@ public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat, 
 
 
 public extension CALayer {
+    
+    func makeAnimation(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, delay: Double = 0.0, mediaTimingFunction: CAMediaTimingFunction? = nil, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) -> CAAnimation {
+        if timingFunction == .spring {
+                let animation = makeSpringAnimation(keyPath)
+                animation.fromValue = from
+                animation.toValue = to
+                animation.isRemovedOnCompletion = removeOnCompletion
+                animation.fillMode = .forwards
+                if let completion = completion {
+                    animation.delegate = CALayerAnimationDelegate(completion: completion)
+                }
+                
+                let k = Float(NSView.animationDurationFactor())
+                var speed: Float = 1.0
+                if k != 0 && k != 1 {
+                    speed = Float(1.0) / k
+                }
+                
+                animation.speed = speed * Float(animation.duration / duration)
+                animation.isAdditive = additive
+                
+                if !delay.isZero {
+                    animation.beginTime = CACurrentMediaTime() + delay * NSView.animationDurationFactor()
+                    animation.fillMode = .both
+                }
+                
+                return animation
+            } else {
+                let k = Float(NSView.animationDurationFactor())
+                var speed: Float = 1.0
+                if k != 0 && k != 1 {
+                    speed = Float(1.0) / k
+                }
+                
+                let animation = CABasicAnimation(keyPath: keyPath)
+                animation.fromValue = from
+                animation.toValue = to
+                animation.duration = duration
+                if let mediaTimingFunction = mediaTimingFunction {
+                    animation.timingFunction = mediaTimingFunction
+                } else {
+                    animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+                }
+                animation.isRemovedOnCompletion = removeOnCompletion
+                animation.fillMode = .forwards
+                animation.speed = speed
+                animation.isAdditive = additive
+                if let completion = completion {
+                    animation.delegate = CALayerAnimationDelegate(completion: completion)
+                }
+                
+                if !delay.isZero {
+                    animation.beginTime = CACurrentMediaTime() + delay * NSView.animationDurationFactor()
+                    animation.fillMode = .both
+                }
+                
+                return animation
+            }
+        }
+
+    
     func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil, forKey: String? = nil) {
         if timingFunction == CAMediaTimingFunctionName.spring {
             let animation = makeSpringAnimation(keyPath)

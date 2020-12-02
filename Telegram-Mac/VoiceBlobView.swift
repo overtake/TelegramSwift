@@ -76,7 +76,7 @@ final class VoiceBlobView: View {
         addSubview(smallBlob)
         
         displayLinkAnimator = ConstantDisplayLinkAnimator(update: { [weak self] in
-            guard let strongSelf = self else { return }
+            guard let strongSelf = self, let window = self?.window, window.isVisible else { return }
             
             strongSelf.presentationAudioLevel = strongSelf.presentationAudioLevel * 0.9 + strongSelf.audioLevel * 0.1
             

@@ -336,6 +336,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     let shadowView:NavigationShadowView = NavigationShadowView(frame: NSMakeRect(0, 0, 20, 0))
     let navigationRightBorder: View = View()
     var stack:[ViewController] = [ViewController]()
+    
+    public var cleanupAfterDeinit: Bool = true
+    
     var lock:Bool = false {
         didSet {
             var bp:Int = 0
@@ -589,9 +592,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     deinit {
         self.popDisposable.dispose()
         self.pushDisposable.dispose()
-        while !stack.isEmpty {
-            let value = stack.removeFirst()
-            value.removeFromSuperview()
+        if cleanupAfterDeinit {
+            while !stack.isEmpty {
+                let value = stack.removeFirst()
+                value.removeFromSuperview()
+            }
         }
     }
     

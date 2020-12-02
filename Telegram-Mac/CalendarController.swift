@@ -36,14 +36,14 @@ class CalendarController: GenericViewController<CalendarControllerView> {
         
         self.navigation.viewDidAppear(animated)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let current = self?.navigation.controller as? CalendarMonthController, current.isPrevEnabled, let backAction = self?.interactions.backAction {
                 backAction(current.month.month)
             }
             return .invoked
         }, with: self, for: .LeftArrow, priority: .modal)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let current = self?.navigation.controller as? CalendarMonthController, current.isNextEnabled, let nextAction = self?.interactions.nextAction {
                 nextAction(current.month.month)
             }

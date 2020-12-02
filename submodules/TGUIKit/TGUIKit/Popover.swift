@@ -149,12 +149,12 @@ open class Popover: NSObject {
                     
                     control.isSelected = true
                     
-                    strongSelf.window?.set(escape: { [weak strongSelf] () -> KeyHandlerResult in
+                    strongSelf.window?.set(escape: { [weak strongSelf] _ -> KeyHandlerResult in
                         strongSelf?.hide()
                         return .invoked
                         }, with: strongSelf, priority: .modal)
                     
-                    strongSelf.window?.set(handler: { () -> KeyHandlerResult in
+                    strongSelf.window?.set(handler: { _ -> KeyHandlerResult in
                         return .invokeNext
                     }, with: strongSelf, for: .All)
                     

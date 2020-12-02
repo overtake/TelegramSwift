@@ -24,9 +24,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let state: PresentationGroupCallState
     fileprivate let isInvited: Bool
     fileprivate let invite:(PeerId)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    fileprivate let mute:(PeerId, Bool)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
         self.data = data
         self.account = account
+        self.mute = mute
         self.invite = invite
         self._contextMenu = contextMenu
         self.isInvited = isInvited
@@ -110,6 +112,8 @@ private final class GroupCallParticipantRowView : TableRowView {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
 
+                
+        
         button.animates = true
 
         button.autohighlight = true
@@ -117,7 +121,18 @@ private final class GroupCallParticipantRowView : TableRowView {
             guard let item = self?.item as? GroupCallParticipantRowItem else {
                 return
             }
-            item.invite(item.peer.id)
+            if item.data.state == nil {
+                item.invite(item.peer.id)
+            } else {
+                _ = item.menuItems(in: .zero).start(next: { [weak self] items in
+                    if let event = NSApp.currentEvent, let button = self?.button {
+                        let menu = NSMenu()
+                        menu.appearance = darkPalette.appearance
+                        menu.items = items
+                        NSMenu.popUpContextMenu(menu, with: event, for: button)
+                    }
+                })
+            }
         }, for: .SingleClick)
     }
     
@@ -159,15 +174,20 @@ private final class GroupCallParticipantRowView : TableRowView {
         if item.isActivePeer {
             if item.data.isSpeaking {
                 button.set(image: GroupCallTheme.small_speaking, for: .Normal)
+                button.set(image: GroupCallTheme.small_speaking_active, for: .Highlight)
+
             } else {
                 if let muteState = item.data.state?.muteState {
                     if muteState.canUnmute {
                         button.set(image: GroupCallTheme.small_muted, for: .Normal)
+                        button.set(image: GroupCallTheme.small_muted_active, for: .Highlight)
                     } else {
                         button.set(image: GroupCallTheme.small_muted_locked, for: .Normal)
+                        button.set(image: GroupCallTheme.small_muted_locked_active, for: .Highlight)
                     }
                 } else {
                     button.set(image: GroupCallTheme.small_unmuted, for: .Normal)
+                    button.set(image: GroupCallTheme.small_unmuted_active, for: .Highlight)
                 }
             }
         } else {
@@ -178,6 +198,9 @@ private final class GroupCallParticipantRowView : TableRowView {
                 button.set(image: GroupCallTheme.inviteIcon, for: .Normal)
                 button.userInteractionEnabled = true
             }
+        }
+        if item.account.peerId == item.data.peer.id {
+            button.userInteractionEnabled = false
         }
 
         playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
@@ -191,7 +214,7 @@ private final class GroupCallParticipantRowView : TableRowView {
 
         playbackAudioLevelView.updateLevel(CGFloat(item.data.audioLevel ?? 0))
 
-        button.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+        button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
 
 
         titleView.update(item.titleLayout)

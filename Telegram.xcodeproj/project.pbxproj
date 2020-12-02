@@ -731,6 +731,10 @@
 		D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */; };
 		D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004167622D4AD3B0000566B /* StickerPackItems.swift */; };
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
+		D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */; };
+		D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
+		D00747012577A7D40000DF74 /* DDHotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00747002577A7D40000DF74 /* DDHotKey.framework */; };
+		D00747042577AF0B0000DF74 /* PTTRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00747032577AF0B0000DF74 /* PTTRowItem.swift */; };
 		D0076E372568482E007EF588 /* OpusBinding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E362568482E007EF588 /* OpusBinding.framework */; };
 		D0076E8B25685339007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E8A25685339007EF588 /* webrtc.framework */; };
 		D0076E9225685596007EF588 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E9125685596007EF588 /* libwebp.a */; };
@@ -835,7 +839,6 @@
 		D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07C6D7F2346A42F00468B1A /* monkey_see.tgs */; };
 		D0830FC424127473006198E7 /* folder_new.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* folder_new.tgs */; };
 		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
-		D09046FD256F965700D5022C /* GroupCallSSettingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
 		D0983E172568373E00467703 /* AppCenterAnalytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E162568373E00467703 /* AppCenterAnalytics.framework */; };
 		D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E182568373E00467703 /* AppCenterCrashes.framework */; };
@@ -851,6 +854,7 @@
 		D0A2764E249C9D6B005E3C77 /* PeerPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */; };
 		D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */; };
 		D0A51D3624F7EC2100D75641 /* Mozjpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */; };
+		D0A5586E2574F75B00B7C182 /* group_call_chatlist_typing.json in Resources */ = {isa = PBXBuildFile; fileRef = D0A5586D2574F75B00B7C182 /* group_call_chatlist_typing.json */; };
 		D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */; };
 		D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */; };
 		D0A75F2A24487A1E001F84A0 /* EditImageCanvasControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */; };
@@ -893,7 +897,6 @@
 		D0E7BD80256C1FB00068644D /* GroupCallSpeakButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */; };
 		D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */; };
 		D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE70256D30130068644D /* group_call_speaker_unmute.json */; };
-		D0E7BE77256D405A0068644D /* InfiniteProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */; };
 		D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE79256D56C90068644D /* group_call_member_mute.json */; };
 		D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */ = {isa = PBXBuildFile; fileRef = D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */; };
 		D0E7BED0256EA7140068644D /* GroupCallSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */; };
@@ -1738,6 +1741,9 @@
 		D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackPanelRowItem.swift; sourceTree = "<group>"; };
 		D004167622D4AD3B0000566B /* StickerPackItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackItems.swift; sourceTree = "<group>"; };
 		D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewModalController.swift; sourceTree = "<group>"; };
+		D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerShimmerEffectView.swift; sourceTree = "<group>"; };
+		D00747002577A7D40000DF74 /* DDHotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DDHotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D00747032577AF0B0000DF74 /* PTTRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTRowItem.swift; sourceTree = "<group>"; };
 		D0076E362568482E007EF588 /* OpusBinding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpusBinding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0076E8A25685339007EF588 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0076E9125685596007EF588 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebp.a"; sourceTree = "<group>"; };
@@ -1841,7 +1847,6 @@
 		D07C6D7F2346A42F00468B1A /* monkey_see.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_see.tgs; sourceTree = "<group>"; };
 		D0830FC324127468006198E7 /* folder_new.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_new.tgs; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
-		D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSSettingRowItem.swift; sourceTree = "<group>"; };
 		D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGroupPeersController.swift; sourceTree = "<group>"; };
 		D0983E162568373E00467703 /* AppCenterAnalytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterAnalytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0983E182568373E00467703 /* AppCenterCrashes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterCrashes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1861,6 +1866,7 @@
 		D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerPhotos.swift; sourceTree = "<group>"; };
 		D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsStatsController.swift; sourceTree = "<group>"; };
 		D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Mozjpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0A5586D2574F75B00B7C182 /* group_call_chatlist_typing.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_chatlist_typing.json; sourceTree = "<group>"; };
 		D0A75F24244843D3001F84A0 /* EditImageCanvasController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasController.swift; sourceTree = "<group>"; };
 		D0A75F2624486B6D001F84A0 /* EditImageCanvasColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasColorPicker.swift; sourceTree = "<group>"; };
 		D0A75F2924487A1E001F84A0 /* EditImageCanvasControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditImageCanvasControls.swift; sourceTree = "<group>"; };
@@ -1902,7 +1908,6 @@
 		D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakButton.swift; sourceTree = "<group>"; };
 		D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_speaker_mute.json; sourceTree = "<group>"; };
 		D0E7BE70256D30130068644D /* group_call_speaker_unmute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_speaker_unmute.json; sourceTree = "<group>"; };
-		D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfiniteProgressView.swift; sourceTree = "<group>"; };
 		D0E7BE79256D56C90068644D /* group_call_member_mute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_mute.json; sourceTree = "<group>"; };
 		D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = group_call_member_unmute.json; sourceTree = "<group>"; };
 		D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSettingsController.swift; sourceTree = "<group>"; };
@@ -1930,6 +1935,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00747012577A7D40000DF74 /* DDHotKey.framework in Frameworks */,
+				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				D0E7BD6C256AA5570068644D /* TelegramVoip.framework in Frameworks */,
 				C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */,
 				D0076FFE25691EDE007EF588 /* FFMpegBinding.framework in Frameworks */,
@@ -1997,6 +2004,7 @@
 		9F0367E622707B6400456348 /* lottie */ = {
 			isa = PBXGroup;
 			children = (
+				D0A5586D2574F75B00B7C182 /* group_call_chatlist_typing.json */,
 				D0E7BE79256D56C90068644D /* group_call_member_mute.json */,
 				D0E7BE7A256D56DA0068644D /* group_call_member_unmute.json */,
 				D0E7BE6F256D30060068644D /* group_call_speaker_mute.json */,
@@ -2216,6 +2224,7 @@
 				C2B6488F1EB25B1700BA574B /* MediaResources.swift */,
 				9FDA713120E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift */,
 				9F4EEF8121D4F584002C3B33 /* ImageTransparency.swift */,
+				D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */,
 			);
 			name = media;
 			sourceTree = "<group>";
@@ -4242,6 +4251,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D00747002577A7D40000DF74 /* DDHotKey.framework */,
 				D0E7BD6B256AA5570068644D /* TelegramVoip.framework */,
 				D0076FFD25691EDE007EF588 /* FFMpegBinding.framework */,
 				D0076EEA25685BB5007EF588 /* libbz2.1.0.tbd */,
@@ -4380,9 +4390,8 @@
 				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
-				D0E7BE76256D405A0068644D /* InfiniteProgressView.swift */,
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
-				D09046FC256F965700D5022C /* GroupCallSSettingRowItem.swift */,
+				D00747032577AF0B0000DF74 /* PTTRowItem.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -4593,6 +4602,7 @@
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
+				D0A5586E2574F75B00B7C182 /* group_call_chatlist_typing.json in Resources */,
 				9F03681122771A9700456348 /* archiveAvatar.json in Resources */,
 				D07450EF233D61B800769D7F /* smart_guy.tgs in Resources */,
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
@@ -4964,6 +4974,7 @@
 				9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */,
 				C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */,
 				9FDD78D121C8F0CC00F1B4EF /* ChatPollItem.swift in Sources */,
+				D00747042577AF0B0000DF74 /* PTTRowItem.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */,
@@ -5025,7 +5036,6 @@
 				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
-				D0E7BE77256D405A0068644D /* InfiniteProgressView.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
@@ -5179,6 +5189,7 @@
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */,
 				D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */,
+				D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
 				A7029EF8240E3A5400A89ABD /* ChatListFiltersHeaderItem.swift in Sources */,
@@ -5370,7 +5381,6 @@
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
-				D09046FD256F965700D5022C /* GroupCallSSettingRowItem.swift in Sources */,
 				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,

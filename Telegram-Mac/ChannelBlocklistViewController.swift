@@ -471,7 +471,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {
                 return .rejected
             }

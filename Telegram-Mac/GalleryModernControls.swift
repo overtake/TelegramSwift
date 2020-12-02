@@ -136,7 +136,7 @@ class GalleryModernControlsView: View {
             } else if NSPointInRect(point, dateRect) {
                 interactions?.openMessage()
             } else if let thumbs = thumbs, !NSPointInRect(point, thumbs.frame) {
-                _ = interactions?.dismiss()
+                _ = interactions?.dismiss(event)
             }
         }
         

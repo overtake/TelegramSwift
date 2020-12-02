@@ -418,17 +418,17 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.selectPrev()
             return .invoked
         }, with: modal!, for: .UpArrow, priority: .modal)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.selectNext()
             return .invoked
         }, with: modal!, for: .DownArrow, priority: .modal)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.selectNext()
             return .invoked
         }, with: modal!, for: .Tab, priority: .modal)

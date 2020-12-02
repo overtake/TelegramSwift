@@ -761,7 +761,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: close)
     
     
-    chatInteraction.context.window.set(handler: { [weak controller] () -> KeyHandlerResult in
+    chatInteraction.context.window.set(handler: { [weak controller] _ -> KeyHandlerResult in
         if let controller = controller {
             let state = stateValue.with {$0}
             
