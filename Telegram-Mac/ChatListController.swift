@@ -1273,7 +1273,7 @@ class ChatListController : PeersListController {
         
         removeHighlightEvents()
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let item = self?.genericView.tableView.highlightedItem(), item.index > 0 {
                 self?.genericView.tableView.highlightPrev(turnDirection: false)
                 while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
@@ -1284,7 +1284,7 @@ class ChatListController : PeersListController {
         }, with: self, for: .UpArrow, priority: .low)
         
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.highlightNext(turnDirection: false)
             while self?.genericView.tableView.highlightedItem() is PopularPeersRowItem || self?.genericView.tableView.highlightedItem() is SeparatorRowItem {
                 self?.genericView.tableView.highlightNext(turnDirection: false)

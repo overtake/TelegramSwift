@@ -91,7 +91,7 @@ class NavigationModalView: Control {
     override func viewDidMoveToWindow() {
         if window != nil {
             self.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
+            self.kitWindow?.set(escape: { [weak self] _ -> KeyHandlerResult in
                 self?.close()
                 return .invoked
             }, with: self, priority: .high)

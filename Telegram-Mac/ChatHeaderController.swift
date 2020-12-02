@@ -206,7 +206,7 @@ class ChatHeaderController {
         case let .promo(kind):
             view = ChatSponsoredView(chatInteraction: chatInteraction, kind: kind)
         case let .groupCall(data):
-            view = ChatGroupCallView(chatInteraction: chatInteraction, data: data)
+            view = ChatGroupCallView(chatInteraction: chatInteraction, data: data, frame: NSMakeRect(0, 0, size.width, size.height))
         case .none:
             view = nil
         
@@ -1398,6 +1398,8 @@ class ChatSearchHeader : View, Notifable {
 }
 
 
+
+
 private final class ChatGroupCallView : Control {
     
     struct Avatar : Comparable, Identifiable {
@@ -1422,22 +1424,33 @@ private final class ChatGroupCallView : Control {
     }
     private var topPeers: [Avatar] = []
     private var avatars:[AvatarContentView] = []
-    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 26 * 3, 26))
+    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 30 * 3, 30))
 
     private let joinButton = TitleButton()
     private var data: ChatActiveGroupCallInfo
     private let chatInteraction: ChatInteraction
     private let headerView = TextView()
     private let membersCountView = TextView()
-    init(chatInteraction: ChatInteraction, data: ChatActiveGroupCallInfo) {
+    private let button = Control()
+    private var speakingActivity: DynamicCounterTextView?
+    private var activeCallButton: ImageButton = ImageButton()
+    
+    private let stateDisposable = MetaDisposable()
+    
+    init(chatInteraction: ChatInteraction, data: ChatActiveGroupCallInfo, frame: NSRect) {
         self.data = data
         self.chatInteraction = chatInteraction
-        super.init(frame: .zero)
+        super.init(frame: frame)
         addSubview(joinButton)
         addSubview(headerView)
         addSubview(membersCountView)
+        addSubview(button)
+        addSubview(activeCallButton)
         addSubview(avatarsContainer)
         avatarsContainer.isEventLess = true
+        
+        activeCallButton.setFrameSize(NSMakeSize(36, 36))
+        activeCallButton.layer?.cornerRadius = activeCallButton.frame.height / 2
         
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false
@@ -1449,16 +1462,61 @@ private final class ChatGroupCallView : Control {
                 self.chatInteraction.joinGroupCall(self.data.activeCall)
             }
         }, for: .SingleClick)
+        
+        button.set(handler: { [weak self] _ in
+            if let `self` = self {
+                self.chatInteraction.joinGroupCall(self.data.activeCall)
+            }
+        }, for: .SingleClick)
+        
+        button.set(handler: { [weak self] _ in
+            self?.headerView.change(opacity: 0.6, animated: true)
+            if self?.speakingActivity == nil {
+                self?.membersCountView.change(opacity: 0.6, animated: true)
+            }
+            self?.speakingActivity?.change(opacity: 0.6, animated: true)
+        }, for: .Highlight)
+        
+        button.set(handler: { [weak self] _ in
+            self?.headerView.change(opacity: 1, animated: true)
+            if self?.speakingActivity == nil {
+                self?.membersCountView.change(opacity: 1, animated: true)
+            }
+            self?.speakingActivity?.change(opacity: 1, animated: true)
+        }, for: .Normal)
+        
+        button.set(handler: { [weak self] _ in
+            self?.headerView.change(opacity: 1, animated: true)
+            if self?.speakingActivity == nil {
+                self?.membersCountView.change(opacity: 1, animated: true)
+            }
+            self?.speakingActivity?.change(opacity: 1, animated: true)
+        }, for: .Hover)
 
         updateLocalizationAndTheme(theme: theme)
 
         update(data, animated: false)
         
+        activeCallButton.autohighlight = false
+        
+        activeCallButton.set(handler: { [weak self] _ in
+            self?.data.data?.groupCall?.call.toggleIsMuted()
+        }, for: .Click)
+        
+
+        
     }
+    
     
     func update(_ data: ChatActiveGroupCallInfo, animated: Bool) {
         
         let context = self.chatInteraction.context
+        
+        let activeCall = data.data?.groupCall != nil
+        joinButton.change(opacity: activeCall ? 0 : 1, animated: animated)
+        activeCallButton.change(opacity: activeCall ? 1 : 0, animated: animated)
+        joinButton.userInteractionEnabled = !activeCall
+        activeCallButton.userInteractionEnabled = activeCall
         
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
@@ -1473,7 +1531,7 @@ private final class ChatGroupCallView : Control {
         }
         let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.topPeers, rightList: topPeers)
         
-        let avatarSize = NSMakeSize(26, 26)
+        let avatarSize = NSMakeSize(30, 30)
         
         for removed in removed.reversed() {
             let control = avatars.remove(at: removed)
@@ -1521,9 +1579,86 @@ private final class ChatGroupCallView : Control {
             index -= 1
         }
         
+        if let data = data.data, data.numberOfActiveSpeakers > 0 {
+            
+            membersCountView.change(opacity: 0, animated: animated)
+            
+            let textData = DynamicCounterTextView.make(for: L10n.chatGroupCallSpeakersCountable(data.numberOfActiveSpeakers), count: data.numberOfActiveSpeakers, font: .normal(.short), textColor: theme.colors.accent, width: frame.width - 100)
+            
+            if self.speakingActivity == nil {
+                self.speakingActivity = DynamicCounterTextView(frame: .init(origin: .zero, size: textData.size))
+                addSubview(self.speakingActivity!, positioned: .below, relativeTo: button)
+                self.speakingActivity!.centerX(y: frame.midY)
+                if animated {
+                    self.speakingActivity?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.speakingActivity?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            
+            guard let speakingActivity = self.speakingActivity else {
+                return
+            }
+                        
+            speakingActivity.update(textData.values, animated: animated)
+            
+            var newPoint = focus(textData.size).origin
+            newPoint.y = frame.midY
+            let newSize = textData.size
+            
+            let rect: NSRect = .init(origin: newPoint, size: newSize)
+            
+            if animated {
+                speakingActivity.layer?.animatePosition(from: rect.origin - speakingActivity.frame.origin, to: .zero, duration: 0.2, additive: true)
+                let size = newSize - speakingActivity.frame.size
+                speakingActivity.layer?.animateBounds(from: .init(origin: .zero, size: size), to: .zero, duration: 0.2, additive: true)
+            }
+            speakingActivity.frame = rect
+            
+        } else {
+            
+            membersCountView.change(opacity: 1, animated: animated)
+            
+            if let current = self.speakingActivity {
+                if animated {
+                    current.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] _ in
+                        current?.removeFromSuperview()
+                    })
+                    current.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.2)
+                } else {
+                    current.removeFromSuperview()
+                }
+                self.speakingActivity = nil
+            }
+        }
+        
+        
         self.topPeers = topPeers
         
         self.data = data
+        
+        
+        if let groupCall = self.data.data?.groupCall {
+            stateDisposable.set((groupCall.call.state |> deliverOnMainQueue).start(next: { [weak self] state in
+                if let muteState = state.muteState {
+                    self?.activeCallButton.set(background: theme.colors.accentIcon, for: .Normal)
+                    self?.activeCallButton.set(background: theme.colors.accentIcon.withAlphaComponent(0.6), for: .Highlight)
+                    self?.activeCallButton.userInteractionEnabled = muteState.canUnmute
+                    if muteState.canUnmute {
+                        self?.activeCallButton.set(image: theme.icons.chat_voicechat_can_unmute, for: .Normal)
+                    } else {
+                        self?.activeCallButton.set(image: theme.icons.chat_voicechat_cant_unmute, for: .Normal)
+                    }
+                } else {
+                    self?.activeCallButton.userInteractionEnabled = true
+                    self?.activeCallButton.set(background: theme.colors.greenUI, for: .Normal)
+                    self?.activeCallButton.set(background: theme.colors.greenUI.withAlphaComponent(0.6), for: .Highlight)
+                    self?.activeCallButton.set(image: theme.icons.chat_voicechat_unmuted, for: .Normal)
+                }
+            }))
+            
+        } else {
+            stateDisposable.set(nil)
+        }
         
         updateLocalizationAndTheme(theme: theme)
     }
@@ -1548,6 +1683,8 @@ private final class ChatGroupCallView : Control {
         membersCountLayout.measure(width: frame.width - 100)
         membersCountView.update(membersCountLayout)
         
+      
+        
         needsLayout = true
     }
     
@@ -1561,8 +1698,16 @@ private final class ChatGroupCallView : Control {
         membersCountView.update(membersCountView.layout)
         headerView.update(headerView.layout)
         
+        if let speakingActivity = self.speakingActivity {
+            speakingActivity.centerX(y: frame.midY)
+        }
+        
         headerView.centerX(y: frame.midY - headerView.frame.height)
         membersCountView.centerX(y: frame.midY)
+        
+        activeCallButton.centerY(x: frame.width - activeCallButton.frame.width - 16)
+        
+        button.frame = NSMakeRect(headerView.frame.minX, 0, max(headerView.frame.width, membersCountView.frame.width), frame.height)
     }
     
     

@@ -13,12 +13,17 @@ import TelegramCore
 
 final class GroupCallSpeakButton : Control {
     private let button: LAnimationButton = LAnimationButton(animation: "group_call_speaker_mute", size: NSMakeSize(50, 50))
+    private let lockedView = ImageView()
     private var connectingView: InfiniteProgressView?
     required init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
         addSubview(button)
-
+        addSubview(lockedView)
+        
+        lockedView.isEventLess = true
+        lockedView.image = GroupCallTheme.big_muted
+        lockedView.sizeToFit()
         button.userInteractionEnabled = false
         layer?.cornerRadius = frameRect.height / 2
         backgroundColor = GroupCallTheme.speakActiveColor
@@ -27,10 +32,12 @@ final class GroupCallSpeakButton : Control {
     override func layout() {
         super.layout()
         button.center()
+        lockedView.center()
     }
     
     private var muteState: GroupCallParticipantsContext.Participant.MuteState?
     func update(with state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
+        var lock = false
         switch state.networkState {
         case .connecting:
             backgroundColor = GroupCallTheme.speakDisabledColor
@@ -41,6 +48,7 @@ final class GroupCallSpeakButton : Control {
                     backgroundColor = GroupCallTheme.speakInactiveColor
                 } else {
                     backgroundColor = GroupCallTheme.speakDisabledColor
+                    lock = true
                 }
                 userInteractionEnabled = muteState.canUnmute
             } else {
@@ -51,7 +59,6 @@ final class GroupCallSpeakButton : Control {
        
         
         if animated && muteState != state.muteState {
-
             if let muteState = state.muteState {
                 if muteState.canUnmute {
                     button.setAnimationName("group_call_speaker_mute")
@@ -77,6 +84,10 @@ final class GroupCallSpeakButton : Control {
                 button.setAnimationName("group_call_speaker_mute")
             }
         }
+        
+        lockedView.change(opacity: lock ? 1 : 0, animated: animated)
+        button.change(opacity: lock ? 0 : 1, animated: animated)
+        
         muteState = state.muteState
         
         switch state.networkState {

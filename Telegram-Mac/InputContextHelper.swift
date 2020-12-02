@@ -319,7 +319,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             let prev = self.deselectSelectedHorizontalItem()
             self.highlightInsteadOfSelect ? self.genericView.highlightNext(true,true) : self.genericView.selectNext(true,true)
@@ -327,7 +327,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invoked
         }, with: self, for: .DownArrow, priority: .modal)
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             let prev = self.deselectSelectedHorizontalItem()
             self.highlightInsteadOfSelect ? self.genericView.highlightPrev(true,true) : self.genericView.selectPrev(true,true)
@@ -335,7 +335,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invoked
         }, with: self, for: .UpArrow, priority: .modal)
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectPreviousSticker()
@@ -347,23 +347,23 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .modal)
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .RightArrow, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
                     strongSelf.selectNextSticker()
@@ -375,7 +375,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             return .invokeNext
         }, with: self, for: .RightArrow, priority: .modal)
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 if strongSelf.context.isInGlobalSearch {
                     return .rejected
@@ -386,14 +386,14 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }, with: self, for: .Return, priority: .modal)
         
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.invokeTab()
             }
             return .invokeNext
         }, with: self, for: .Tab, priority: .modal)
         
-        context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.genericView.selectedItem() != nil {
                 _ = self?.deselectSelectedHorizontalItem()
                 self?.genericView.cancelSelection()

@@ -271,6 +271,8 @@ private func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, 
         return L10n.channelEditAdminPermissionAddNewAdmins
     } else if right.contains(.canBeAnonymous) {
         return L10n.channelEditAdminPermissionAnonymous
+    } else if right.contains(.canManageCalls) {
+        return L10n.channelEditAdminManageCalls
     } else {
         return ""
     }
@@ -367,6 +369,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 .canBanUsers,
                 .canInviteUsers,
                 .canPinMessages,
+                .canManageCalls,
                 .canBeAnonymous,
                 .canAddAdmins
             ]

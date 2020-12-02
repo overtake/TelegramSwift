@@ -9,17 +9,19 @@ struct PresentationGroupCallSummaryState: Equatable {
     var participantCount: Int
     var callState: PresentationGroupCallState
     var topParticipants: [GroupCallParticipantsContext.Participant]
-    
+    var numberOfActiveSpeakers: Int
     init(
         info: GroupCallInfo,
         participantCount: Int,
         callState: PresentationGroupCallState,
-        topParticipants: [GroupCallParticipantsContext.Participant]
+        topParticipants: [GroupCallParticipantsContext.Participant],
+        numberOfActiveSpeakers: Int
     ) {
         self.info = info
         self.participantCount = participantCount
         self.callState = callState
         self.topParticipants = topParticipants
+        self.numberOfActiveSpeakers = numberOfActiveSpeakers
     }
 }
 
@@ -42,63 +44,55 @@ public struct PresentationGroupCallState: Equatable {
         case connected
     }
     
+    public enum DefaultParticipantMuteState {
+        case unmuted
+        case muted
+    }
+
+    
     public var networkState: NetworkState
     public var canManageCall: Bool
     public var adminIds: Set<PeerId>
     public var muteState: GroupCallParticipantsContext.Participant.MuteState?
-    
+    public var defaultParticipantMuteState: DefaultParticipantMuteState?
+
     public init(
         networkState: NetworkState,
         canManageCall: Bool,
         adminIds: Set<PeerId>,
-        muteState: GroupCallParticipantsContext.Participant.MuteState?
+        muteState: GroupCallParticipantsContext.Participant.MuteState?,
+        defaultParticipantMuteState: DefaultParticipantMuteState?
     ) {
         self.networkState = networkState
         self.canManageCall = canManageCall
         self.adminIds = adminIds
         self.muteState = muteState
+        self.defaultParticipantMuteState = defaultParticipantMuteState
     }
 }
 
 
 
-struct PresentationGroupCallMemberState: Equatable {
-
-    var ssrc: UInt32
-    var muteState: GroupCallParticipantsContext.Participant.MuteState?
-    var peer: Peer
-    var activityTimestamp:Int32?
-    var joinTimestamp:Int32
-    init(
-        ssrc: UInt32,
-        muteState: GroupCallParticipantsContext.Participant.MuteState?,
-        peer: Peer,
-        activityTimestamp: Int32?,
-        joinTimestamp: Int32
+struct PresentationGroupCallMembers: Equatable {
+    public var participants: [GroupCallParticipantsContext.Participant]
+    public var speakingParticipants: Set<PeerId>
+    public var totalCount: Int
+    public var loadMoreToken: String?
+    
+    public init(
+        participants: [GroupCallParticipantsContext.Participant],
+        speakingParticipants: Set<PeerId>,
+        totalCount: Int,
+        loadMoreToken: String?
     ) {
-        self.ssrc = ssrc
-        self.muteState = muteState
-        self.peer = peer
-        self.activityTimestamp = activityTimestamp
-        self.joinTimestamp = joinTimestamp
-    }
-
-    public static func == (lhs: PresentationGroupCallMemberState, rhs: PresentationGroupCallMemberState) -> Bool {
-        if !lhs.peer.isEqual(rhs.peer) {
-            return false
-        }
-        if lhs.ssrc != rhs.ssrc {
-            return false
-        }
-        if lhs.muteState != rhs.muteState {
-            return false
-        }
-        if lhs.joinTimestamp != rhs.joinTimestamp {
-            return false
-        }
-        return true
+        self.participants = participants
+        self.speakingParticipants = speakingParticipants
+        self.totalCount = totalCount
+        self.loadMoreToken = loadMoreToken
     }
 }
+
+
 
 
 protocol PresentationGroupCall: class {
@@ -109,7 +103,7 @@ protocol PresentationGroupCall: class {
     var peer: Peer? { get }
     var canBeRemoved: Signal<Bool, NoError> { get }
     var state: Signal<PresentationGroupCallState, NoError> { get }
-    var members: Signal<[PeerId: PresentationGroupCallMemberState], NoError> { get }
+    var members: Signal<PresentationGroupCallMembers?, NoError> { get }
     var audioLevels: Signal<[(PeerId, Float)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
     var invitedPeers: Signal<Set<PeerId>, NoError> { get }
@@ -122,4 +116,5 @@ protocol PresentationGroupCall: class {
     func setIsMuted(action: PresentationGroupCallMuteAction)
     func updateMuteState(peerId: PeerId, isMuted: Bool)
     func invitePeer(_ peerId: PeerId)
+    func updateDefaultParticipantsAreMuted(isMuted: Bool)
 }

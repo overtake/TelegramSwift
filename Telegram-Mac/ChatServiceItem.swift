@@ -358,36 +358,45 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     
-                case let .inviteToGroupPhoneCall(callId, accessHash, peerId):
+                case let .inviteToGroupPhoneCall(callId, accessHash, peerIds):
                     let text: String
+                    
+                    let list = NSMutableAttributedString()
+                    for peerId in peerIds {
+                        
+                        if let peer = message.peers[peerId] {
+                            let range = list.append(string: peer.displayTitle, color: nameColor(peerId), font: .medium(theme.fontSize))
+                            list.add(link:inAppLink.peerInfo(link: "", peerId:peerId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
+                            if peerId != peerIds.last {
+                                _ = list.append(string: ", ", color: grayTextColor, font: .normal(theme.fontSize))
+                            }
+                        }
+                    }
+                    
                     if message.author?.id == context.peerId {
-                        text = L10n.chatServiceVoiceChatInvitationByYou(message.peers[peerId]?.displayTitle ?? "")
-                    } else if peerId == context.peerId {
+                        text = L10n.chatServiceVoiceChatInvitationByYou("%mark%")
+                    } else if peerIds.first == context.peerId {
                         text = L10n.chatServiceVoiceChatInvitationForYou(authorName)
                     } else {
-                        text = L10n.chatServiceVoiceChatInvitation(authorName, message.peers[peerId]?.displayTitle ?? "")
+                        text = L10n.chatServiceVoiceChatInvitation(authorName, "%mark%")
                     }
-
+                    
                     let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
                             chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash))
                         }))
                     }))
                     attributedString.append(parsed)
-
-                  //  let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    let markRange = attributedString.string.nsstring.range(of: "%mark%")
+                    if markRange.location != NSNotFound {
+                        attributedString.replaceCharacters(in: markRange, with: list)
+                    }
 
                     if let authorId = authorId {
                         let range = attributedString.string.nsstring.range(of: authorName)
                         if range.location != NSNotFound {
                             attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
-                        }
-                    }
-                    if let peer = message.peers[peerId], !peer.displayTitle.isEmpty {
-                        let range = attributedString.string.nsstring.range(of: peer.displayTitle)
-                        if range.location != NSNotFound {
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peer.id))
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }

@@ -594,7 +594,7 @@ open class ViewController : NSObject {
           //  }
         }
         if haveNextResponder {
-            self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+            self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
                 guard let `self` = self else {return .rejected}
                 
                 _ = self.window?.makeFirstResponder(self.nextResponder())

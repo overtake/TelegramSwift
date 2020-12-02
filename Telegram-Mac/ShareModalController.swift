@@ -920,17 +920,17 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         let context = self.share.context
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.highlightPrev()
             return .invoked
         }, with: self, for: .UpArrow, priority: .modal)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.tableView.highlightNext()
             return .invoked
         }, with: self, for: .DownArrow, priority: .modal)
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             if let highlighted = self.genericView.tableView.highlightedItem() as? ShortPeerRowItem  {
                 _ = self.genericView.tableView.select(item: highlighted)
@@ -941,73 +941,73 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }, with: self, for: .Return, priority: .low)
         
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.selectInteractions.action(context.peerId)
             return .invoked
         }, with: self, for: .Zero, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(0)
             return .invoked
         }, with: self, for: .One, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(1)
             return .invoked
         }, with: self, for: .Two, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(2)
             return .invoked
         }, with: self, for: .Three, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(3)
             return .invoked
         }, with: self, for: .Four, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(4)
             return .invoked
         }, with: self, for: .Five, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(5)
             return .invoked
         }, with: self, for: .Six, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(6)
             return .invoked
         }, with: self, for: .Seven, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(7)
             return .invoked
         }, with: self, for: .Eight, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.invokeShortCut(8)
             return .invoked
         }, with: self, for: .Nine, priority: self.responderPriority, modifierFlags: [.command])
         
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.boldWord()
             return .invoked
         }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.makeUrl()
             return .invoked
         }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.italicWord()
             return .invoked
         }, with: self, for: .I, priority: self.responderPriority, modifierFlags: [.command])
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.codeWord()
             return .invoked
         }, with: self, for: .K, priority: self.responderPriority, modifierFlags: [.command, .shift])

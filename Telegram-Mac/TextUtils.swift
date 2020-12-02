@@ -427,20 +427,31 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             } else {
                 if authorId == account.peerId {
-                    text = L10n.chatServiceVoiceChatStartedYou
+                    text = L10n.chatListServiceVoiceChatStartedYou
                 } else {
-                    text = L10n.chatServiceVoiceChatStarted(authorName)
+                    text = L10n.chatListServiceVoiceChatStarted(authorName)
                 }
             }
             return text
-        case  let .inviteToGroupPhoneCall(_, _, peerId):
+        case  let .inviteToGroupPhoneCall(_, _, peerIds):
             let text: String
+            
+            var list = ""
+            for peerId in peerIds {
+                if let peer = message.peers[peerId] {
+                    list += peer.displayTitle
+                    if peerId != peerIds.last {
+                        list += ", "
+                    }
+                }
+            }
+            
             if message.author?.id == account.peerId {
-                text = L10n.chatServiceVoiceChatInvitationByYou(message.peers[peerId]?.displayTitle ?? "")
-            } else if peerId == account.peerId {
-                text = L10n.chatServiceVoiceChatInvitationForYou(authorName)
+                text = L10n.chatListServiceVoiceChatInvitationByYou(list)
+            } else if peerIds.first == account.peerId {
+                text = L10n.chatListServiceVoiceChatInvitationForYou(authorName)
             } else {
-                text = L10n.chatServiceVoiceChatInvitation(authorName, message.peers[peerId]?.displayTitle ?? "")
+                text = L10n.chatListServiceVoiceChatInvitation(authorName, list)
             }
             return text
         }

@@ -1641,12 +1641,12 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.magnifyView.zoomOut()
             return .invoked
         }, with: self, for: .Minus, priority: .modal)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.magnifyView.zoomIn()
             return .invoked
         }, with: self, for: .Equal, priority: .modal)

@@ -55,6 +55,7 @@ public final class AccountWithInfo: Equatable {
 
 
 
+
 class SharedAccountContext {
     let accountManager: AccountManager
     var bindings: AccountContextBindings = AccountContextBindings()
@@ -593,11 +594,26 @@ class SharedAccountContext {
             view.update(with: session)
         }
     }
+    private let groupCallContextValue:Promise<GroupCallContext?> = Promise(nil)
+    var groupCallContext:Signal<GroupCallContext?, NoError> {
+        return groupCallContextValue.get()
+    }
     func showGroupCall(with context: GroupCallContext) {
+        groupCallContextValue.set(.single(context))
         let callHeader = bindings.rootNavigation().callHeader
         callHeader?.show(true)
         (callHeader?.view as? GroupCallNavigationHeaderView)?.update(with: context)
     }
+    
+    func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {
+        if let groupCall = bindings.groupCall() {
+            groupCallContextValue.set(groupCall.call.leave(terminateIfPossible: terminate) |> filter { $0 } |> map { _ in return nil })
+            return groupCall.call.canBeRemoved |> filter { $0 } |> take(1) 
+        } else {
+            return .single(true)
+        }
+    }
+    
     #endif
     deinit {
         layoutDisposable.dispose()

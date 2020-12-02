@@ -351,53 +351,53 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
 
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.rightController.push(ChatController(context: context, chatLocation: .peer(context.peerId)))
             return .invoked
         }, with: self, for: .Zero, priority: .low, modifierFlags: [.command])
         
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(0, false)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(1, false)
             return .invoked
             }, with: self, for: .Two, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(2, false)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(3, false)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(4, false)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(5, false)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(6, false)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(7, false)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(8, false)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
@@ -405,52 +405,52 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(0, true)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(1, true)
             return .invoked
         }, with: self, for: .Two, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(2, true)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(3, true)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(4, true)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(5, true)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(6, true)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(7, true)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(8, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command, .option])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(9, true)
             return .invoked
         }, with: self, for: .Minus, priority: .low, modifierFlags: [.command, .option])
@@ -458,52 +458,52 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
         
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(0, true)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(1, true)
             return .invoked
         }, with: self, for: .Two, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(2, true)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(3, true)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(4, true)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(5, true)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(6, true)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(7, true)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(8, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
         
-        window.set(handler: { [weak self] () -> KeyHandlerResult in
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.openChat(9, true)
             return .invoked
         }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
@@ -511,12 +511,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         
-//        window.set(handler: { [weak self] () -> KeyHandlerResult in
+//        window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            self?.leftController.focusSearch(animated: true)
 //            return .invoked
 //        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .shift])
         
-        window.set(handler: { () -> KeyHandlerResult in
+        window.set(handler: { _ -> KeyHandlerResult in
             context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
@@ -524,7 +524,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         #if DEBUG
-        window.set(handler: { () -> KeyHandlerResult in
+        window.set(handler: { _ -> KeyHandlerResult in
             
             
 //            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in

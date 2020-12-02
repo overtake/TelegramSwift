@@ -312,7 +312,7 @@ class LanguageViewController: TableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.toggleSearch?()
             return .invoked
         }, with: self, for: .F, modifierFlags: [.command])

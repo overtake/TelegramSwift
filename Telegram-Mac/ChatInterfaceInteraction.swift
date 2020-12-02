@@ -471,6 +471,9 @@ final class ChatInteraction : InterfaceObserver  {
         disableProxyDisposable.dispose()
         enableProxyDisposable.dispose()
         editDisposable.dispose()
+        update({ _ in
+            return ChatPresentationInterfaceState(chatLocation: self.chatLocation, chatMode: self.mode)
+        })
     }
     
     

@@ -282,7 +282,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     }, with: tooltip, for: .scrollWheel, priority: .supreme)
     
     
-    window.set(handler: { () -> KeyHandlerResult in
+    window.set(handler: { _ -> KeyHandlerResult in
         removeTooltip(false)
         return .rejected
     }, with: tooltip, for: .All, priority: .supreme)

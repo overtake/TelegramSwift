@@ -241,7 +241,7 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         super.viewDidAppear(animated)
         selectedSection.controller.viewDidAppear(animated)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
             if !self.sections.isEmpty {

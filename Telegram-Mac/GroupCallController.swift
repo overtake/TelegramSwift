@@ -19,16 +19,19 @@ private final class GroupCallUIArguments {
     let invite:(PeerId)->Void
     let mute:(PeerId, Bool)->Void
     let toggleSpeaker:()->Void
+    let remove:(Peer)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
     mute:@escaping(PeerId, Bool)->Void,
-    toggleSpeaker:@escaping()->Void) {
+    toggleSpeaker:@escaping()->Void,
+    remove:@escaping(Peer)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
         self.settings = settings
         self.toggleSpeaker = toggleSpeaker
+        self.remove = remove
     }
 }
 
@@ -244,6 +247,11 @@ private final class GroupCallView : View {
         }
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(peersTableContainer)
@@ -291,7 +299,7 @@ struct PeerGroupCallData : Equatable, Comparable {
 
     let peer: Peer
     let presence: TelegramUserPresence?
-    let state: PresentationGroupCallMemberState?
+    let state: GroupCallParticipantsContext.Participant?
     let isSpeaking: Bool
     let audioLevel: Float?
     let isInvited: Bool
@@ -400,29 +408,34 @@ private struct GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peerStates: [PeerId: PresentationGroupCallMemberState], _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ accountPeerId: PeerId) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ accountPeerId: PeerId) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
-    let states = peerStates.map { $0.value }.sorted(by: { lhs, rhs in
-        let lhsValue = (audioLevels[lhs.peer.id]?.timestamp
-                            ?? lhs.activityTimestamp
+    
+    
+    var activeParticipants: [GroupCallParticipantsContext.Participant] = []
+    
+    activeParticipants = peerStates?.participants ?? []
+    activeParticipants = activeParticipants.sorted(by: { lhs, rhs in
+        let lhsValue = (lhs.activityTimestamp
                             ?? lhs.joinTimestamp)
-        let rhsValue = (audioLevels[rhs.peer.id]?.timestamp
-                            ?? rhs.activityTimestamp
+        let rhsValue = (rhs.activityTimestamp
                             ?? rhs.joinTimestamp)
         return lhsValue > rhsValue
     })
 
-    for value in states {
+    for value in activeParticipants {
         var audioLevel = audioLevels[value.peer.id]
         if let level = audioLevel, level.timestamp + 2 <= Int32(Date().timeIntervalSince1970) {
             audioLevel = nil
         }
         memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: value.peer.id == accountPeerId ? state.muteState == nil : audioLevel != nil && value.muteState == nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
     }
+    
+    
 
     for participant in participants {
-        if peerStates[participant.peer.id] == nil {
+        if !activeParticipants.contains(where: { $0.peer.id == participant.peer.id}) {
             memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
         }
     }
@@ -436,12 +449,36 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     var index: Int32 = 0
     
+    var addedSeparator: Bool = false
     for (i, data) in state.memberDatas.enumerated() {
+        
+        if data.state == nil, !addedSeparator, i > 0 {
+            entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: .init("separator"), equatable: nil, item: { initialSize, stableId in
+                return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
+            }))
+            addedSeparator = true
+        }
+        
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
             return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, action: {
                 
-            }, invite: arguments.invite, contextMenu: {
-                return .complete()
+            }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
+                var items: [ContextMenuItem] = []
+                if state.state.canManageCall {
+                    if let muteState = data.state?.muteState, !muteState.canUnmute {
+                        items.append(.init(L10n.voiceChatUnmutePeer, handler: {
+                            arguments.mute(data.peer.id, false)
+                        }))
+                    } else {
+                        items.append(.init(L10n.voiceChatMutePeer, handler: {
+                            arguments.mute(data.peer.id, true)
+                        }))
+                    }
+                    items.append(.init(L10n.voiceChatRemovePeer, handler: {
+                        arguments.remove(data.peer)
+                    }))
+                }
+                return .single(items)
             })
         }))
         index += 1
@@ -449,6 +486,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     return entries
 }
+
 
 
 final class GroupCallUIController : ViewController {
@@ -475,26 +513,37 @@ final class GroupCallUIController : ViewController {
         
         let peerId = self.data.call.peerId
         let account = self.data.call.account
+        
+        
+        guard let window = self.navigationController?.window else {
+            fatalError()
+        }
 
         let sharedContext = self.data.call.sharedContext
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
-            _ = self?.data.call.leave(terminateIfPossible: false).start()
+            _ = self?.data.call.sharedContext.endGroupCall(terminate: false).start()
         }, settings: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, call: self.data.call))
+            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, call: self.data.call))
         }, invite: { [weak self] peerId in
             self?.data.call.invitePeer(peerId)
         }, mute: { [weak self] peerId, isMuted in
             self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
             self?.data.call.toggleIsMuted()
+        }, remove: { [weak self] peer in
+            guard let window = self?.window else {
+                return
+            }
+            modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { _ in
+                _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
+            })
         })
         
         genericView.arguments = arguments
-        
         
         var loadMoreControl: PeerChannelMemberCategoryControl?
         
@@ -505,7 +554,7 @@ final class GroupCallUIController : ViewController {
         loadMoreControl = control
         actionsDisposable.add(disposable)
         
-        let members: Signal<([PeerId: PresentationGroupCallMemberState]), NoError> = self.data.call.members
+        let members: Signal<PresentationGroupCallMembers?, NoError> = self.data.call.members
 
 
 
@@ -513,7 +562,7 @@ final class GroupCallUIController : ViewController {
 
 
 
-        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(combineLatest(.single([]) |> then(self.data.call.audioLevels), .single(0) |> then(self.data.call.myAudioLevel)) |> map { values, myLevel in
+        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(combineLatest(.single([]) |> then(self.data.call.audioLevels), .single(0) |> then(self.data.call.myAudioLevel |> distinctUntilChanged)) |> map { values, myLevel in
             var values = values
             values.append((account.peerId, myLevel))
             return cachedAudioValues.modify { list in
@@ -537,8 +586,12 @@ final class GroupCallUIController : ViewController {
 
 
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, tick) |> map {
-            return makeState($0.4, $0.0, $0.2, $0.1, $0.3, $0.5, $0.6, account.peerId)
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, tick, window.visibility) |> mapToSignal { values in
+            if values.8 {
+                return .single(makeState(values.4, values.0, values.2, values.1, values.3, values.5, values.6, account.peerId))
+            } else {
+                return .never()
+            }
         } |> distinctUntilChanged
         
         

@@ -262,15 +262,15 @@ class ScheduledMessageModalController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { () -> KeyHandlerResult in
+        window?.set(handler: { _ -> KeyHandlerResult in
             
             return .invokeNext
         }, with: self, for: .Tab, priority: .modal)
-        window?.set(handler: { () -> KeyHandlerResult in
+        window?.set(handler: { _ -> KeyHandlerResult in
             
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .modal)
-        window?.set(handler: { () -> KeyHandlerResult in
+        window?.set(handler: { _ -> KeyHandlerResult in
             
             return .invokeNext
         }, with: self, for: .RightArrow, priority: .modal)

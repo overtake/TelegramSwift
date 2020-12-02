@@ -428,7 +428,7 @@ class ChatSelectText : NSObject {
             return .rejected
         }, with: self, for: .pressure, priority: .medium)
         
-        window.set(handler: { () -> KeyHandlerResult in
+        window.set(handler: { _ -> KeyHandlerResult in
             
             return .rejected
         }, with: self, for: .A, priority: .medium, modifierFlags: [.command])

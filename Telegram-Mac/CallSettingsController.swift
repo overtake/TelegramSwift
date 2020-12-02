@@ -40,11 +40,13 @@ final class CallSettingsArguments {
     let toggleInputAudioDevice:(String?)->Void
     let toggleOutputAudioDevice:(String?)->Void
     let toggleInputVideoDevice:(String?)->Void
-    init(sharedContext: SharedAccountContext, toggleInputAudioDevice: @escaping(String?)->Void, toggleOutputAudioDevice:@escaping(String?)->Void, toggleInputVideoDevice:@escaping(String?)->Void) {
+    let finishCall:()->Void
+    init(sharedContext: SharedAccountContext, toggleInputAudioDevice: @escaping(String?)->Void, toggleOutputAudioDevice:@escaping(String?)->Void, toggleInputVideoDevice:@escaping(String?)->Void, finishCall:@escaping()->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
         self.toggleInputVideoDevice = toggleInputVideoDevice
+        self.finishCall = finishCall
     }
 }
 
@@ -480,6 +482,8 @@ func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataCon
         _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
             $0.withUpdatedCameraInputDeviceId(value)
         }).start()
+    }, finishCall: {
+        
     })
     
     let signal = combineLatest(deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager)) |> map { _, settings in

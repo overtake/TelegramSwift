@@ -490,7 +490,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         change(state: .Focus, true)
 
-        self.kitWindow?.set(escape: {[weak self] () -> KeyHandlerResult in
+        self.kitWindow?.set(escape: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 strongSelf.setString("")
                 return strongSelf.changeResponder() ? .invoked : .rejected
@@ -499,14 +499,14 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             
         }, with: self, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }
             return .rejected
         }, with: self, for: .RightArrow, priority: .modal)
         
-        self.kitWindow?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.kitWindow?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.state == .Focus {
                 return .invokeNext
             }

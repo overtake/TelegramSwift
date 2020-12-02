@@ -272,14 +272,14 @@ class PeerInfoController: EditableViewController<TableView> {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }
             return .rejected
         }, with: self, for: .Return, priority: .high)
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
                 return strongSelf.returnKeyAction()
             }

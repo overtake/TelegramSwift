@@ -99,6 +99,9 @@ open class Control: View {
     private var mouseMovedInside: Bool = true
     private var longInvoked: Bool = false
     public var handleLongEvent: Bool = true
+    
+    public var scaleOnClick: Bool = false
+    
     open override var backgroundColor: NSColor {
         get{
             return self.style.backgroundColor
@@ -167,9 +170,16 @@ open class Control: View {
         
         stateDidUpdated(state)
     }
-    
+    private var previousState: ControlState?
     open func stateDidUpdated(_ state: ControlState) {
-        
+        if self.scaleOnClick {
+            if state == .Highlight {
+                self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
+            } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
+                self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+            }
+        }
+        previousState = state
     }
     
     private var mouseIsDown:Bool = false

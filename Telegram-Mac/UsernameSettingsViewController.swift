@@ -135,7 +135,7 @@ class UsernameSettingsViewController: TableViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let rightView = self?.rightBarView as? TextButtonBarView, rightView.isEnabled  {
                 self?.saveUsername()
                 return .rejected

@@ -1224,7 +1224,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }
 
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
             let state = stateValue.with { $0.currentState }
@@ -1237,29 +1237,29 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }, with: self, for: .E, priority: .high, modifierFlags: [.command])
         
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .LeftArrow, priority: .modal)
         
-        context.window.set(handler: { () -> KeyHandlerResult in
+        context.window.set(handler: { _ -> KeyHandlerResult in
             return .invokeNext
         }, with: self, for: .RightArrow, priority: .modal)
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.inputInteraction.state.inputQueryResult != nil {
                 return .rejected
             }
             return .invokeNext
         }, with: self, for: .UpArrow, priority: .modal)
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.inputInteraction.state.inputQueryResult != nil {
                 return .rejected
             }
             return .invokeNext
         }, with: self, for: .DownArrow, priority: .modal)
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self, strongSelf.context.window.firstResponder != strongSelf.genericView.textView.inputView {
                 _ = strongSelf.context.window.makeFirstResponder(strongSelf.genericView.textView.inputView)
                 return .invoked
@@ -1268,23 +1268,23 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }, with: self, for: .Tab, priority: .modal)
         
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.boldWord()
             return .invoked
             }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             self.makeUrl(of: self.genericView.textView.selectedRange())
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.italicWord()
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         
-        context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.codeWord()
             return .invoked
         }, with: self, for: .K, priority: .modal, modifierFlags: [.command, .shift])

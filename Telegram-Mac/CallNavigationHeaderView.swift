@@ -222,10 +222,10 @@ class CallNavigationHeaderView: NavigationHeaderView {
         super.layout()
         
         backgroundView.frame = bounds
-        muteControl.centerY(x:20)
+        muteControl.centerY(x:23)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         callInfo.center()
-        dropCall.centerY(x: frame.width - dropCall.frame.width - 20)
+        dropCall.centerY(x: frame.width - dropCall.frame.width - 25)
         endCall.centerY(x: dropCall.frame.minX - 6 - endCall.frame.width)
         _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
         callInfo.center()
@@ -348,11 +348,12 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
                 peerId: peerId,
                 info: summary.info,
                 topParticipants: summary.topParticipants,
-                participantCount: summary.participantCount
+                participantCount: summary.participantCount,
+                numberOfActiveSpeakers: summary.numberOfActiveSpeakers,
+                groupCall: nil
             )
         }
 
-        
         let account = context.call.account
         
         let signal = Signal<Peer?, NoError>.single(context.call.peer) |> then(context.call.account.postbox.loadedPeerWithId(context.call.peerId) |> map(Optional.init) |> deliverOnMainQueue)
@@ -451,12 +452,12 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
         case .connected:
             if let muteState = state.muteState {
                 if muteState.canUnmute {
-                    backgroundView.background = GroupCallTheme.speakInactiveColor
+                    backgroundView.background = theme.colors.accent
                 } else {
                     backgroundView.background = theme.colors.grayIcon
                 }
             } else {
-                backgroundView.background = GroupCallTheme.speakActiveColor
+                backgroundView.background = theme.colors.greenUI
             }
             self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
         }
@@ -473,10 +474,10 @@ class GroupCallNavigationHeaderView: NavigationHeaderView {
     override func layout() {
         super.layout()
         backgroundView.frame = bounds
-        muteControl.centerY(x:20)
+        muteControl.centerY(x:23)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         callInfo.center()
-        dropCall.centerY(x: frame.width - dropCall.frame.width - 20)
+        dropCall.centerY(x: frame.width - dropCall.frame.width - 25)
         endCall.centerY(x: dropCall.frame.minX - 6 - endCall.frame.width)
         _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
         callInfo.center()

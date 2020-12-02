@@ -123,7 +123,6 @@ class ChatListRowItem: TableRowItem {
         return groupId != .root
     }
     
-    private let requestSessionId:MetaDisposable = MetaDisposable()
     
     override var stableId: AnyHashable {
         return entryId
@@ -320,6 +319,9 @@ class ChatListRowItem: TableRowItem {
     }
     
     private(set) var isOnline: Bool?
+    
+    private(set) var hasActiveGroupCall: Bool = false
+    
     private var presenceManager:PeerPresenceStatusManager?
     
     let archiveStatus: HiddenArchiveStatus?
@@ -469,7 +471,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = renderedPeer.chatMainPeer as? TelegramChannel, peer.flags.contains(.hasVoiceChat) {
-            self.isOnline = true
+            self.hasActiveGroupCall = true
         }
         
       
@@ -800,14 +802,19 @@ class ChatListRowItem: TableRowItem {
     }
     
     func collapseOrExpandArchive() {
+        ChatListRowItem.collapseOrExpandArchive(context: context)
+    }
+    
+    static func collapseOrExpandArchive(context: AccountContext) {
         context.sharedContext.bindings.mainController().chatList.collapseOrExpandArchive()
     }
-    func hidePromoItem(_ peerId: PeerId) {
-        context.sharedContext.bindings.mainController().chatList.hidePromoItem(peerId)
+    
+    static func toggleHideArchive(context: AccountContext) {
+        context.sharedContext.bindings.mainController().chatList.toggleHideArchive()
     }
     
     func toggleHideArchive() {
-        context.sharedContext.bindings.mainController().chatList.toggleHideArchive()
+        ChatListRowItem.toggleHideArchive(context: context)
     }
 
     func toggleUnread() {
@@ -815,52 +822,58 @@ class ChatListRowItem: TableRowItem {
             _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
         }
     }
+    
     func toggleMuted() {
-        let context = self.context
         if let peerId = peerId {
-            if isMuted {
-                _ = togglePeerMuted(account: context.account, peerId: peerId).start()
-            } else {
-                var options:[ModalOptionSet] = []
+            ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted)
+        }
+    }
+    
+    static func toggleMuted(context: AccountContext, peerId: PeerId, isMuted: Bool) {
+        if isMuted {
+            _ = togglePeerMuted(account: context.account, peerId: peerId).start()
+        } else {
+            var options:[ModalOptionSet] = []
+            
+            options.append(ModalOptionSet(title: L10n.chatListMute1Hour, selected: false, editable: true))
+            options.append(ModalOptionSet(title: L10n.chatListMute4Hours, selected: false, editable: true))
+            options.append(ModalOptionSet(title: L10n.chatListMute8Hours, selected: false, editable: true))
+            options.append(ModalOptionSet(title: L10n.chatListMute1Day, selected: false, editable: true))
+            options.append(ModalOptionSet(title: L10n.chatListMute3Days, selected: false, editable: true))
+            options.append(ModalOptionSet(title: L10n.chatListMuteForever, selected: true, editable: true))
+            
+            let intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
+            
+            showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (L10n.chatInputMute, theme.colors.accent), title: L10n.peerInfoNotifications, result: { result in
                 
-                options.append(ModalOptionSet(title: L10n.chatListMute1Hour, selected: false, editable: true))
-                options.append(ModalOptionSet(title: L10n.chatListMute4Hours, selected: false, editable: true))
-                options.append(ModalOptionSet(title: L10n.chatListMute8Hours, selected: false, editable: true))
-                options.append(ModalOptionSet(title: L10n.chatListMute1Day, selected: false, editable: true))
-                options.append(ModalOptionSet(title: L10n.chatListMute3Days, selected: false, editable: true))
-                options.append(ModalOptionSet(title: L10n.chatListMuteForever, selected: true, editable: true))
-                
-                var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
-                
-                showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (L10n.chatInputMute, theme.colors.accent), title: L10n.peerInfoNotifications, result: { result in
-                    
-                    for (i, option) in result.enumerated() {
-                        inner: switch option {
-                        case .selected:
-                            _ = updatePeerMuteSetting(account: context.account, peerId: peerId, muteInterval: intervals[i]).start()
-                            break
-                        default:
-                            break inner
-                        }
+                for (i, option) in result.enumerated() {
+                    inner: switch option {
+                    case .selected:
+                        _ = updatePeerMuteSetting(account: context.account, peerId: peerId, muteInterval: intervals[i]).start()
+                        break
+                    default:
+                        break inner
                     }
-                    
-                }), for: context.window)
-            }
-            
-            
+                }
+                
+            }), for: context.window)
         }
     }
     
     func togglePinned() {
+        ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
+    }
+    
+    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter?, associatedGroupId: PeerGroupId) {
         if let chatLocation = chatLocation {
             let location: TogglePeerChatPinnedLocation
             
-            if let filter = self.filter {
+            if let filter = filter {
                 location = .filter(filter.id)
             } else {
-                location = .group(self.associatedGroupId)
+                location = .group(associatedGroupId)
             }
-            let context = self.context
+            let context = context
             
             _ = (toggleItemPinned(postbox: context.account.postbox, location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
@@ -875,7 +888,6 @@ class ChatListRowItem: TableRowItem {
                         }
                         
                     })
-                    //alert(for: mainWindow, info: L10n.chatListContextPinErrorNew2)
                 default:
                     break
                 }
@@ -885,22 +897,16 @@ class ChatListRowItem: TableRowItem {
     }
     
     func toggleArchive() {
+        ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
+    }
+    
+    static func toggleArchive(context: AccountContext, associatedGroupId: PeerGroupId?, peerId: PeerId?) {
         if let peerId = peerId {
             switch associatedGroupId {
             case .root:
                 let postbox = context.account.postbox
                 context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
                 _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
-//                 context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .archiveChat, action: { status in
-//                    switch status {
-//                    case .cancelled:
-//                        break
-//                        //_ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: .root).start()
-//                    case .success:
-//                    default:
-//                        break
-//                    }
-//                 }))
             default:
                  _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
             }
@@ -919,6 +925,10 @@ class ChatListRowItem: TableRowItem {
 
         let context = self.context
         let peerId = self.peerId
+        let filter = self.filter
+        let isMuted = self.isMuted
+        let chatLocation = self.chatLocation
+        let associatedGroupId = self.associatedGroupId
         
         if let peer = peer {
             
@@ -931,58 +941,42 @@ class ChatListRowItem: TableRowItem {
                 return .single([])
             }
             
-            let clearHistory = { [weak self] in
-                if let strongSelf = self, let peer = strongSelf.peer {
-                    
-                    var thridTitle: String? = nil
-                    
-                    var canRemoveGlobally: Bool = false
-                    if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
-                        if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                            canRemoveGlobally = true
-                        }
+            let clearHistory = {
+                var thridTitle: String? = nil
+                
+                var canRemoveGlobally: Bool = false
+                if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
+                    if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                        canRemoveGlobally = true
                     }
+                }
+                
+                if canRemoveGlobally {
+                    thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+                }
+                modernConfirm(for: mainWindow, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peerId == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
                     
-                    if canRemoveGlobally {
-                        thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
-                    }
-                    
-                    modernConfirm(for: mainWindow, account: strongSelf.context.account, peerId: strongSelf.peer?.id, information: strongSelf.peer is TelegramUser ? strongSelf.peerId == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-                        
-                        
-                        context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+                    context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
 
-                        
-//                        context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
-//                            switch status {
-//                            case .success:
-//x                                break
-//                            default:
-//                                break
-//                            }
-//                        }))
-                   })
-                }
+               })
             }
             
-            let call = { [weak self] in
-                if let peerId = self?.peer?.id, let context = self?.context {
-                    self?.requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                        applyUIPCallResult(context.sharedContext, result)
-                    }))
-                }
+            let call:()->Void = {
+                _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context.sharedContext, result)
+                })
             }
             
-            let togglePin:()->Void = { [weak self] in
-               self?.togglePinned()
+            let togglePin:()->Void = {
+               ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
             }
             
-            let toggleArchive:()->Void = { [weak self] in
-                self?.toggleArchive()
+            let toggleArchive:()->Void = {
+                ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
             }
             
-            let toggleMute:()->Void = { [weak self] in
-                self?.toggleMuted()
+            let toggleMute:()->Void = {
+                ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted)
             }
             
             let leaveGroup = {
@@ -1017,24 +1011,21 @@ class ChatListRowItem: TableRowItem {
             
             if !isSecret {
                 if markAsUnread {
-                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: { [weak self] in
-                        guard let `self` = self else {return}
-                        _ = togglePeerUnreadMarkInteractively(postbox: self.context.account.postbox, viewTracker: self.context.account.viewTracker, peerId: peerId).start()
+                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: {
+                        _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
                         
                     }))
                     
                 } else if badgeNode != nil || mentionsCount != nil || isUnreadMarked {
-                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsRead), handler: { [weak self] in
-                        guard let `self` = self else {return}
-                        _ = togglePeerUnreadMarkInteractively(postbox: self.context.account.postbox, viewTracker: self.context.account.viewTracker, peerId: peerId).start()
+                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsRead), handler: {
+                        _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
                     }))
                 }
             }
             
             if isAd {
-                items.append(ContextMenuItem(tr(L10n.chatListContextHidePromo), handler: { [weak self] in
-                    guard let `self` = self, let peerId = self.peerId else {return}
-                    self.hidePromoItem(peerId)
+                items.append(ContextMenuItem(tr(L10n.chatListContextHidePromo), handler: {
+                    context.sharedContext.bindings.mainController().chatList.hidePromoItem(peerId)
                 }))
             }
            
@@ -1064,8 +1055,8 @@ class ChatListRowItem: TableRowItem {
             
         } else {
             if !isAd, groupId == .root {
-                items.append(ContextMenuItem(!isPinned ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: { [weak self] in
-                    self?.togglePinned()
+                items.append(ContextMenuItem(!isPinned ? L10n.chatListContextPin : L10n.chatListContextUnpin, handler: {
+                    ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
                 }))
             }
         }
@@ -1073,19 +1064,17 @@ class ChatListRowItem: TableRowItem {
         if groupId != .root, context.sharedContext.layout != .minimisize, let archiveStatus = archiveStatus {
             switch archiveStatus {
             case .collapsed:
-                items.append(ContextMenuItem(L10n.chatListRevealActionExpand , handler: { [weak self] in
-                    self?.collapseOrExpandArchive()
+                items.append(ContextMenuItem(L10n.chatListRevealActionExpand , handler: {
+                    ChatListRowItem.collapseOrExpandArchive(context: context)
                 }))
             default:
-                items.append(ContextMenuItem(L10n.chatListRevealActionCollapse, handler: { [weak self] in
-                    self?.collapseOrExpandArchive()
+                items.append(ContextMenuItem(L10n.chatListRevealActionCollapse, handler: {
+                    ChatListRowItem.collapseOrExpandArchive(context: context)
                 }))
             }
             
         }
         
-        let filter = self.filter
-
         return .single(items) |> mapToSignal { items in
             return chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
                 
@@ -1192,7 +1181,6 @@ class ChatListRowItem: TableRowItem {
     deinit {
         clearHistoryDisposable.dispose()
         deleteChatDisposable.dispose()
-        requestSessionId.dispose()
     }
     
     override func viewClass() -> AnyClass {

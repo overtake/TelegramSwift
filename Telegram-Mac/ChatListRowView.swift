@@ -190,6 +190,38 @@ private final class ChatListMediaPreviewView: View {
 }
 
 
+private final class GroupCallActivity : View {
+    private let animation:MediaAnimatedStickerView
+    private let backgroundView = ImageView()
+    required init(frame frameRect: NSRect) {
+        self.animation = MediaAnimatedStickerView(frame: .init(origin: .zero, size: NSMakeSize(frameRect.width - 2, frameRect.height - 2)))
+        super.init(frame: frameRect)
+        addSubview(backgroundView)
+        addSubview(animation)
+        animation.center()
+    }
+
+    
+    func update(context: AccountContext, tableView: TableView?, foregroundColor: NSColor, backgroundColor: NSColor) {
+        let anim = LocalAnimatedSticker.group_call_chatlist_typing
+        animation.update(with: anim.file, size: NSMakeSize(frame.width - 2, frame.height - 2), context: context, parent: nil, table: tableView, parameters: anim.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+        backgroundView.image = generateImage(frame.size, contextGenerator: { size, ctx in
+            let rect = NSRect(origin: .zero, size: size)
+            ctx.clear(rect)
+            ctx.setFillColor(backgroundColor.cgColor)
+            ctx.fillEllipse(in: rect)
+            
+            ctx.setFillColor(foregroundColor.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(2, 2, frame.width - 4, frame.height - 4))
+        })
+        backgroundView.sizeToFit()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private let revealLeftView: View = View()
@@ -203,7 +235,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var additionalBadgeView:View?
     
     private var activeImage: ImageView?
-    
+    private var groupActivityView: GroupCallActivity?
     private var activitiesModel:ChatActivitiesModel?
     private var photo:AvatarControl = AvatarControl(font: .avatar(22))
     private var hiddemMessage:Bool = false
@@ -243,19 +275,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         return true
     }
     
-    /*
-     let theme:ChatActivitiesTheme
-     if item.isSelected && item.context.sharedContext.layout != .single {
-     theme = ChatActivitiesWhiteTheme()
-     } else if item.isSelected || item.isPinned {
-     theme = ChatActivitiesTheme(backgroundColor: .grayUI)
-     } else if contextMenu != nil {
-     theme = ChatActivitiesTheme(backgroundColor: .grayBackground)
-     } else {
-     theme = ChatActivitiesBlueTheme()
-     }
-
- */
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
@@ -688,6 +707,38 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 activeImage = nil
             }
             
+            if item.hasActiveGroupCall, item.context.sharedContext.layout != .minimisize {
+                var animate: Bool = false
+
+                if self.groupActivityView == nil {
+                    self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
+                    addSubview(self.groupActivityView!)
+                    animate = true
+                }
+                
+                let groupActivityView = self.groupActivityView!
+                
+                groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
+                
+                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: item.isSelected ? .clear : theme.colors.accentSelect, backgroundColor: backdorColor)
+                if animated && animate {
+                    groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                    groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                }
+            } else {
+                if animated {
+                    let groupActivityView = self.groupActivityView
+                    self.groupActivityView = nil
+                    groupActivityView?.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
+                    groupActivityView?.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak groupActivityView] completed in
+                        groupActivityView?.removeFromSuperview()
+                    })
+                } else {
+                    groupActivityView?.removeFromSuperview()
+                    groupActivityView = nil
+                }
+            }
+            
             
             containerView.item = item
             if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
@@ -796,6 +847,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
                 if let activeImage = self.activeImage {
                     activeImage.setFrameOrigin(self.photo.frame.maxX - activeImage.frame.width - 3, self.photo.frame.maxY - 12)
+                }
+                if let groupActivityView = self.groupActivityView {
+                    groupActivityView.setFrameOrigin(self.photo.frame.maxX - groupActivityView.frame.width + 3, self.photo.frame.maxY - 18)
                 }
             }
         }

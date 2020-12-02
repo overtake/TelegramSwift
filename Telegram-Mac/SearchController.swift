@@ -1010,7 +1010,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         super.viewDidAppear(animated)
         
        
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
             if self.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
@@ -1049,7 +1049,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         removeHighlightEvents()
         
       
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
                 return .rejected
             }
@@ -1063,7 +1063,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }, with: self, for: .UpArrow, priority: .modal)
         
         
-        self.window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             if self?.window?.firstResponder?.className != "TGUIKit.SearchTextField" {
                 return .rejected
             }
@@ -1077,11 +1077,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         }, with: self, for: .DownArrow, priority: .modal)
         
         
-        self.window?.set(handler: { () -> KeyHandlerResult in
+        self.window?.set(handler: { _ -> KeyHandlerResult in
             return .rejected
         }, with: self, for: .UpArrow, priority: .modal, modifierFlags: [.command])
         
-        self.window?.set(handler: { () -> KeyHandlerResult in
+        self.window?.set(handler: { _ -> KeyHandlerResult in
             return .rejected
         }, with: self, for: .DownArrow, priority: .modal, modifierFlags: [.command])
         

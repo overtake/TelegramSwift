@@ -570,7 +570,7 @@
         }
         
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self, self.mode != .commonGroups, self.externalSearchData == nil else {
                 return .rejected
             }
@@ -582,7 +582,7 @@
             return .invoked
         }, with: self, for: .F, modifierFlags: [.command])
         
-        window?.set(handler: { [weak self] () -> KeyHandlerResult in
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {
                 return .rejected
             }

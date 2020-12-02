@@ -47,7 +47,7 @@ fileprivate final class ActionButton : Control {
     
     func updateAndLayout(item: ActionItem, theme: PresentationTheme) {
         self.imageView.image = item.image
-        _ = self.imageView.sizeToFit()
+        self.imageView.sizeToFit()
         self.textView.update(item.textLayout)
         
         self.backgroundColor = theme.colors.background
@@ -220,7 +220,12 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
         }
         
+        
+        
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_call, action: arguments.makeVoiceChat))
+            }
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)
@@ -267,12 +272,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
+        
         if let address = peer.addressName, !address.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
         }
+    
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
         }
+        
+        
         switch peer.participationStatus {
         case .member:
             items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))

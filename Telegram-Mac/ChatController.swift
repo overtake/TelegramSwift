@@ -3060,7 +3060,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.joinGroupCall = { [weak self] activeCall in
+        chatInteraction.joinGroupCall = { activeCall in
             _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: activeCall), for: context.window).start(next: { result in
                 switch result {
                 case let .success(callContext), let .samePeer(callContext):
@@ -3550,9 +3550,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                    .updatedGroupCall({ _ in
+                                    .updatedGroupCall({ currentValue in
                                         if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: nil)
+                                            return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data)
                                         } else {
                                             return nil
                                         }
@@ -3629,40 +3629,99 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         
-        let availableGroupCall: Signal<GroupCallPanelData?, NoError>
+        var availableGroupCall: Signal<GroupCallPanelData?, NoError>
         if peerId.namespace == Namespaces.Peer.CloudChannel {
-            availableGroupCall = peerView.get()
-            |> map { peerView -> CachedChannelData.ActiveCall? in
-                guard let cachedData = (peerView as? PeerView)?.cachedData as? CachedChannelData else {
-                    return nil
-                }
-                return cachedData.activeCall
-            }
-            |> distinctUntilChanged
-            |> mapToSignal { activeCall -> Signal<GroupCallPanelData?, NoError> in
-                guard let activeCall = activeCall else {
-                    return .single(nil)
-                }
-                return .single(nil) |> then(getCurrentGroupCall(account: context.account, callId: activeCall.id, accessHash: activeCall.accessHash)
-                |> `catch` { _ -> Signal<GroupCallSummary?, NoError> in
-                    return .single(nil)
-                }
-                |> map { summary -> GroupCallPanelData? in
-                    guard let summary = summary else {
-                        return nil
-                    }
-                    return GroupCallPanelData(
-                        peerId: peerId,
-                        info: summary.info,
-                        topParticipants: summary.topParticipants,
-                        participantCount: summary.info.participantCount
-                    )
-                })
-            }
+            availableGroupCall = context.account.viewTracker.peerView(peerId)
+                               |> map { peerView -> CachedChannelData.ActiveCall? in
+                                   guard let cachedData = peerView.cachedData as? CachedChannelData else {
+                                       return nil
+                                   }
+                                   return cachedData.activeCall
+                               }
+                               |> distinctUntilChanged
+                               |> mapToSignal { activeCall -> Signal<GroupCallPanelData?, NoError> in
+                                   guard let activeCall = activeCall else {
+                                       return .single(nil)
+                                   }
+                                    return context.sharedContext.groupCallContext |> mapToSignal { groupCall in
+                                        if let context = groupCall, context.call.peerId == peerId {
+                                            return context.call.summaryState
+                                                |> filter { $0 != nil }
+                                                |> map { $0! }
+                                                |> map { summary -> GroupCallPanelData in
+                                                    return GroupCallPanelData(
+                                                        peerId: peerId,
+                                                        info: summary.info,
+                                                        topParticipants: summary.topParticipants,
+                                                        participantCount: summary.participantCount,
+                                                        numberOfActiveSpeakers: summary.numberOfActiveSpeakers,
+                                                        groupCall: context
+                                                    )
+                                                }
+                                        } else {
+                                            return getGroupCallParticipants(account: context.account, callId: activeCall.id, accessHash: activeCall.accessHash, offset: "", limit: 10)
+                                                |> map(Optional.init)
+                                                |> `catch` { _ -> Signal<GroupCallParticipantsContext.State?, NoError> in
+                                                    return .single(nil)
+                                                }
+                                                |> mapToSignal { initialState -> Signal<GroupCallPanelData?, NoError> in
+                                                    guard let initialState = initialState else {
+                                                        return .single(nil)
+                                                    }
+                                                    
+                                                    return Signal<GroupCallPanelData?, NoError> { subscriber in
+                                                        let participantsContext = QueueLocalObject<GroupCallParticipantsContext>(queue: .mainQueue(), generate: {
+                                                            return GroupCallParticipantsContext(
+                                                                account: context.account,
+                                                                peerId: peerId,
+                                                                id: activeCall.id,
+                                                                accessHash: activeCall.accessHash,
+                                                                state: initialState
+                                                            )
+                                                        })
+                                                        
+                                                        let disposable = MetaDisposable()
+                                                        participantsContext.with { participantsContext in
+                                                            disposable.set(combineLatest(queue: .mainQueue(),
+                                                                participantsContext.state,
+                                                                participantsContext.numberOfActiveSpeakers
+                                                            ).start(next: { state, numberOfActiveSpeakers in
+                                                                var topParticipants: [GroupCallParticipantsContext.Participant] = []
+                                                                for participant in state.participants {
+                                                                    if topParticipants.count >= 3 {
+                                                                        break
+                                                                    }
+                                                                    topParticipants.append(participant)
+                                                                }
+                                                                let data = GroupCallPanelData(
+                                                                    peerId: peerId,
+                                                                    info: GroupCallInfo(id: activeCall.id, accessHash: activeCall.accessHash, participantCount: state.totalCount, clientParams: nil),
+                                                                    topParticipants: topParticipants,
+                                                                    participantCount: state.totalCount,
+                                                                    numberOfActiveSpeakers: numberOfActiveSpeakers,
+                                                                    groupCall: nil
+                                                                )
+                                                                subscriber.putNext(data)
+                                                            }))
+                                                        }
+                                                        
+                                                        return ActionDisposable {
+                                                            disposable.dispose()
+                                                            participantsContext.with { _ in
+                                                            }
+                                                        }
+                                                    }
+                                                    |> runOn(.mainQueue())
+                                                }
+                                        }
+                                    }
+                               }
+
         } else {
             availableGroupCall = .single(nil)
         }
         
+        availableGroupCall = .single(nil) |> then(availableGroupCall)
 
         
         peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall) |> beforeNext  { [weak self] topPinnedMessage, postboxView, groupCallData in
@@ -4930,7 +4989,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
        
         
-        self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self, !hasModals() {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
                 
@@ -4951,7 +5010,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .UpArrow, priority: .low)
         
         
-        self.context.window.set(handler: {[weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self, !hasModals() {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
                 
@@ -4965,7 +5024,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .rejected
         }, with: self, for: .DownArrow, priority: .low)
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
                 var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
                 self.genericView.tableView.enumerateItems(with: { item in
@@ -4987,7 +5046,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .rejected
         }, with: self, for: .UpArrow, priority: .low, modifierFlags: [.command])
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
                 var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
                 self.genericView.tableView.enumerateItems(reversed: true, with: { item in
@@ -5010,7 +5069,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .DownArrow, priority: .low, modifierFlags: [.command])
         
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self, !hasModals() else {return .rejected}
             
             if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
@@ -5021,7 +5080,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .rejected
         }, with: self, for: .Delete, priority: .low)
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
             
             if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
@@ -5035,7 +5094,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
 
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self, strongSelf.context.window.firstResponder != strongSelf.genericView.inputView.textView.inputView {
                 _ = strongSelf.context.window.makeFirstResponder(strongSelf.genericView.inputView)
                 return .invoked
@@ -5047,7 +5106,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
       
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self, self.mode != .scheduled, self.searchAvailable else {return .rejected}
             if !self.chatInteraction.presentation.isSearchMode.0 {
                 self.chatInteraction.update({$0.updatedSearchMode((true, nil, nil))})
@@ -5060,7 +5119,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     
         
-//        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+//        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            guard let `self` = self else {return .rejected}
 //            if let editState = self.chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia as? TelegramMediaImage {
 //                self.chatInteraction.editEditingMessagePhoto(media)
@@ -5069,36 +5128,36 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
         
       
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeBold()
             return .invoked
         }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeUrl()
             return .invoked
         }, with: self, for: .U, priority: .medium, modifierFlags: [.command])
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeItalic()
             return .invoked
         }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else { return .rejected }
             self.chatInteraction.startRecording(true, nil)
             return .invoked
         }, with: self, for: .R, priority: .medium, modifierFlags: [.command])
         
         
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeMonospace()
             return .invoked
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
         
         
         #if DEBUG
-        self.context.window.set(handler: { [weak self] () -> KeyHandlerResult in
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let groupCall = self?.chatInteraction.presentation.groupCall {
                 self?.chatInteraction.joinGroupCall(groupCall.activeCall)
             }

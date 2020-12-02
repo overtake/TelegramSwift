@@ -320,10 +320,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     return .rejected
                 }
                 
-                _ = interactions.dismiss()
+                _ = interactions.dismiss(event)
                 return .invoked
             } else if view is GalleryModernControlsView {
-                _ = interactions.dismiss()
+                _ = interactions.dismiss(event)
                 return .invoked
             }
             return .invokeNext
@@ -785,7 +785,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             }, hasNext: { [weak self] in
                 return self?.hasNext ?? false
             }, dismiss: { [weak self] in
-                _ = self?.interactions.dismiss()
+                if let event = NSApp.currentEvent {
+                    _ = self?.interactions.dismiss(event)
+                }
             })
             item.magnify.set(magnify.magnifyUpdaterValue |> deliverOnPrepareQueue)
             controller.view = magnify
