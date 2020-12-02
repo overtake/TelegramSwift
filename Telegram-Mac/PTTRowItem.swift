@@ -14,12 +14,13 @@ import TGUIKit
 final class PTTRowItem : GeneralRowItem {
     fileprivate let settings: PTTSettings?
     fileprivate let update:(PTTSettings?)->Void
+    fileprivate var ddHotKey: DDHotKey?
     init(_ initialSize: NSSize, stableId: AnyHashable, settings: PTTSettings?, update:@escaping(PTTSettings?)->Void, viewType: GeneralViewType) {
         self.settings = settings
         self.update = update
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, inset: NSEdgeInsets(top: 3, left: 30, bottom: 3, right: 30), error: nil)
         if let settings = settings {
-            DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
+            ddHotKey = DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
                 if let event = event {
                     NSLog("\(event.type == .keyUp)")
                     NSLog("\(event.type == .keyDown)")
@@ -29,6 +30,12 @@ final class PTTRowItem : GeneralRowItem {
             }))
         }
                 
+    }
+    
+    deinit {
+        if let ddHotKey = ddHotKey {
+            DDHotKeyCenter.shared()?.unregisterHotKey(ddHotKey)
+        }
     }
     
     override func viewClass() -> AnyClass {
