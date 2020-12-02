@@ -578,6 +578,10 @@
                 self.searchGroupUsers()
                 return .invoked
             }
+            if self.mode == .photoOrVideo {
+                (self.controller(for: .photoOrVideo) as? PeerMediaPhotosController)?.toggleSearch()
+                return .invoked
+            }
             self.listControllers[self.currentTagListIndex].toggleSearch()
             return .invoked
         }, with: self, for: .F, modifierFlags: [.command])
