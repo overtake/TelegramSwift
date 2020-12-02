@@ -583,11 +583,14 @@ class SharedAccountContext {
         
     }
     
+    
+    
+    #if !SHARE
+    
     var hasActiveCall:Bool {
         return bindings.callSession() != nil || bindings.groupCall() != nil
     }
     
-    #if !SHARE
     func showCallHeader(with session:PCallSession) {
         bindings.rootNavigation().callHeader?.show(true)
         if let view = bindings.rootNavigation().callHeader?.view as? CallNavigationHeaderView {

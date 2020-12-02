@@ -12,6 +12,7 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 import TelegramCore
+import DDHotKey
 
 private final class GroupCallUIArguments {
     let leave:()->Void
@@ -42,6 +43,8 @@ private final class GroupCallControlsView : View {
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
     private let playbackAudioLevelView: VoiceBlobView
+    
+    
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 220, 220),
@@ -75,7 +78,7 @@ private final class GroupCallControlsView : View {
     
     private var preiousState: PresentationGroupCallState?
     
-    func update(_ state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
+    func update(_ state: PresentationGroupCallState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
                 
         speak.update(with: state, audioLevel: audioLevel, animated: animated)
         
@@ -114,11 +117,15 @@ private final class GroupCallControlsView : View {
             settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
             
             let statusText: String
+            var secondary: String? = nil
             switch state.networkState {
             case .connected:
                 if let muteState = state.muteState {
                     if muteState.canUnmute {
                         statusText = L10n.voiceChatClickToUnmute
+                        if voiceSettings.mode == .pushToTalk, let pushToTalk = voiceSettings.pushToTalk {
+                            secondary = L10n.voiceChatClickToUnmuteSecondary(DDStringFromKeyCode(pushToTalk.keyCode, pushToTalk.modifierFlags)!.uppercased())
+                        }
                     } else {
                         statusText = L10n.voiceChatListenMode
                     }
@@ -132,7 +139,13 @@ private final class GroupCallControlsView : View {
             let speakText = TextView()
             speakText.userInteractionEnabled = false
             speakText.isSelectable = false
-            let layout = TextViewLayout(.initialize(string: statusText, color: .white, font: .medium(.title)))
+            let string = NSMutableAttributedString()
+            string.append(.initialize(string: statusText, color: .white, font: .medium(.title)))
+            if let secondary = secondary {
+                string.append(.initialize(string: "\n", color: .white, font: .medium(.text)))
+                string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
+            }
+            let layout = TextViewLayout(string, alignment: .center)
             layout.measure(width: frame.width - 60)
             speakText.update(layout)
             
@@ -151,7 +164,7 @@ private final class GroupCallControlsView : View {
             
             self.speakText = speakText
             addSubview(speakText)
-            speakText.centerX(y: speak.frame.maxY + 10)
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
             if animated {
                 speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
@@ -169,11 +182,12 @@ private final class GroupCallControlsView : View {
     override func layout() {
         super.layout()
         speak.center()
+        speak.setFrameOrigin(NSMakePoint(speak.frame.minX, speak.frame.minY - 10))
         playbackAudioLevelView.center()
         settings.centerY(x: 60)
         end.centerY(x: frame.width - end.frame.width - 60)
         if let speakText = speakText {
-            speakText.centerX(y: speak.frame.maxY + 10)
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
         }
     }
     
@@ -282,7 +296,7 @@ private final class GroupCallView : View {
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         peersTable.merge(with: transition)
         titleView.update(state.peer, state)
-        controlsContainer.update(state.state, audioLevel: state.myAudioLevel, animated: animated)
+        controlsContainer.update(state.state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
     }
 
     required init?(coder: NSCoder) {
@@ -365,20 +379,22 @@ struct PeerGroupCallData : Equatable, Comparable {
 }
 
 
-private struct GroupCallUIState : Equatable {
+private final class GroupCallUIState : Equatable {
     let memberDatas:[PeerGroupCallData]
     let state: PresentationGroupCallState
     let summaryState: PresentationGroupCallSummaryState?
     let peer: Peer
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?) {
+    let voiceSettings: VoiceCallSettings
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
         self.cachedData = cachedData
         self.state = state
         self.myAudioLevel = myAudioLevel
+        self.voiceSettings = voiceSettings
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -397,6 +413,9 @@ private struct GroupCallUIState : Equatable {
         if !lhs.peer.isEqual(rhs.peer) {
             return false
         }
+        if lhs.voiceSettings != rhs.voiceSettings {
+            return false
+        }
         if let lhsCachedData = lhs.cachedData, let rhsCachedData = rhs.cachedData {
             if !lhsCachedData.isEqual(to: rhsCachedData) {
                 return false
@@ -408,7 +427,7 @@ private struct GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ accountPeerId: PeerId) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ accountPeerId: PeerId) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -440,7 +459,7 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings)
 }
 
 
@@ -502,8 +521,11 @@ final class GroupCallUIController : ViewController {
     private let data: UIData
     private let disposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
+    
+    private let pushToTalk: PushToTalk
     init(_ data: UIData) {
         self.data = data
+        self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext)
         super.init()
         bar = .init(height: 0)
     }
@@ -513,6 +535,7 @@ final class GroupCallUIController : ViewController {
         
         let peerId = self.data.call.peerId
         let account = self.data.call.account
+        
         
         
         guard let window = self.navigationController?.window else {
@@ -586,9 +609,9 @@ final class GroupCallUIController : ViewController {
 
 
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, tick, window.visibility) |> mapToSignal { values in
-            if values.8 {
-                return .single(makeState(values.4, values.0, values.2, values.1, values.3, values.5, values.6, account.peerId))
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: prepareQueue, self.data.call.state, members, channelMembersPromise.get(), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), tick, window.visibility) |> mapToSignal { values in
+            if values.9 {
+                return .single(makeState(values.4, values.0, values.2, values.1, values.3, values.5, values.6, values.7, account.peerId))
             } else {
                 return .never()
             }
@@ -626,6 +649,26 @@ final class GroupCallUIController : ViewController {
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         self.genericView.applyUpdates(state, transition, animated: animated)
+        
+        self.pushToTalk.update = { [weak self, unowned state] mode in
+            var available = false
+            if let muteState = state.state.muteState {
+                if muteState.canUnmute {
+                    available = true
+                }
+            } else {
+                available = true
+            }
+            if available {
+                switch mode {
+                case .speaking:
+                    self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
+                case .waiting:
+                    self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
+                }
+            }
+        }
+        
     }
     
     deinit {

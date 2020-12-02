@@ -8165,6 +8165,10 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
+  /// or press %@
+  internal static func voiceChatClickToUnmuteSecondary(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary", p1)
+  }
   /// Are you sure you want to remove %1$@ from the group chat?
   internal static func voiceChatRemovePeerConfirm(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm", p1)
