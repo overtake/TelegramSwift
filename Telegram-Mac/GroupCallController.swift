@@ -418,9 +418,9 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     activeParticipants = peerStates?.participants ?? []
     activeParticipants = activeParticipants.sorted(by: { lhs, rhs in
         let lhsValue = (lhs.activityTimestamp
-                            ?? lhs.joinTimestamp)
+                            ?? Double(lhs.joinTimestamp))
         let rhsValue = (rhs.activityTimestamp
-                            ?? rhs.joinTimestamp)
+                            ?? Double(rhs.joinTimestamp))
         return lhsValue > rhsValue
     })
 

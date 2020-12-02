@@ -156,8 +156,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, setting
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    
-    
+    #if DEBUG
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsInputMode), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
@@ -195,11 +194,10 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, setting
     default:
         break
     }
-    
-    
-    
+        
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+    #endif
     
     
     return entries
