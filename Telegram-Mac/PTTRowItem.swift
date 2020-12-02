@@ -18,10 +18,17 @@ final class PTTRowItem : GeneralRowItem {
         self.settings = settings
         self.update = update
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, inset: NSEdgeInsets(top: 3, left: 30, bottom: 3, right: 30), error: nil)
-//                DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: KeyboardKey.G.rawValue, modifierFlags: 0, task: { event in
-//                    var bp:Int = 0
-//                    bp += 1
-//                }))
+        if let settings = settings {
+            DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
+                if let event = event {
+                    NSLog("\(event.type == .keyUp)")
+                    NSLog("\(event.type == .keyDown)")
+                } else {
+                    NSLog("No Event")
+                }
+            }))
+        }
+                
     }
     
     override func viewClass() -> AnyClass {
