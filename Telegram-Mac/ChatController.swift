@@ -4908,7 +4908,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func didRemovedFromStack() {
         super.didRemovedFromStack()
-        chatInteraction.clean()
+        chatInteraction.remove(observer: self)
     }
     
     private var splitStateFirstUpdate: Bool = true
