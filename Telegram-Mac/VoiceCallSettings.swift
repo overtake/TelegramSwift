@@ -26,14 +26,13 @@ struct PTTSettings : Equatable, PostboxCoding {
         self.keyCode = keyCode
         self.modifierFlags = modifierFlags
     }
-    
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt64(Int64(self.modifierFlags), forKey: "mf")
+        encoder.encodeInt64(Int64(Int(bitPattern: self.modifierFlags)), forKey: "mf")
         encoder.encodeInt32(Int32(self.keyCode), forKey: "kc")
     }
     init(decoder: PostboxDecoder) {
         self.keyCode = UInt16(decoder.decodeInt32ForKey("kc", orElse: 0))
-        self.modifierFlags = UInt(decoder.decodeInt32ForKey("mf", orElse: 0))
+        self.modifierFlags = UInt(bitPattern: Int(decoder.decodeInt64ForKey("mf", orElse: 0)))
     }
 }
 

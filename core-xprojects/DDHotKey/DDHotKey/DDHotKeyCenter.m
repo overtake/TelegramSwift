@@ -16,7 +16,8 @@
 
 #pragma mark Private Global Declarations
 
-OSStatus dd_hotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
+OSStatus dd_hotKeyHandler_Up(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
+OSStatus dd_hotKeyHandler_Down(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData);
 
 #pragma mark DDHotKey
 
@@ -106,10 +107,17 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
         sharedHotKeyCenter = [super allocWithZone:nil];
         sharedHotKeyCenter = [sharedHotKeyCenter init];
         
-		EventTypeSpec eventSpec;
-		eventSpec.eventClass = kEventClassKeyboard;
-		eventSpec.eventKind = kEventHotKeyReleased;
-		InstallApplicationEventHandler(&dd_hotKeyHandler, 1, &eventSpec, NULL, NULL);
+		EventTypeSpec eventSpec_Up;
+		eventSpec_Up.eventClass = kEventClassKeyboard;
+		eventSpec_Up.eventKind = kEventHotKeyReleased;
+		InstallApplicationEventHandler(&dd_hotKeyHandler_Up, 1, &eventSpec_Up, NULL, NULL);
+        
+        
+        EventTypeSpec eventSpec_Down;
+        eventSpec_Down.eventClass = kEventClassKeyboard;
+        eventSpec_Down.eventKind = kEventHotKeyPressed;
+        InstallApplicationEventHandler(&dd_hotKeyHandler_Down, 1, &eventSpec_Down, NULL, NULL);
+        
     });
     return sharedHotKeyCenter;
 }
@@ -252,7 +260,7 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
 
 @end
 
-OSStatus dd_hotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
+OSStatus dd_hotKeyHandler_Up(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
     @autoreleasepool {
         EventHotKeyID hotKeyID;
         GetEventParameter(theEvent, kEventParamDirectObject, typeEventHotKeyID, NULL, sizeof(hotKeyID), NULL, &hotKeyID);
@@ -267,6 +275,38 @@ OSStatus dd_hotKeyHandler(EventHandlerCallRef nextHandler, EventRef theEvent, vo
         
         NSEvent *event = [NSEvent eventWithEventRef:theEvent];
         NSEvent *keyEvent = [NSEvent keyEventWithType:NSKeyUp
+                                             location:[event locationInWindow]
+                                        modifierFlags:[event modifierFlags]
+                                            timestamp:[event timestamp]
+                                         windowNumber:-1
+                                              context:nil
+                                           characters:@""
+                          charactersIgnoringModifiers:@""
+                                            isARepeat:NO
+                                              keyCode:[matchingHotKey keyCode]];
+        
+        [matchingHotKey invokeWithEvent:keyEvent];
+    }
+    
+    return noErr;
+}
+
+
+OSStatus dd_hotKeyHandler_Down(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
+    @autoreleasepool {
+        EventHotKeyID hotKeyID;
+        GetEventParameter(theEvent, kEventParamDirectObject, typeEventHotKeyID, NULL, sizeof(hotKeyID), NULL, &hotKeyID);
+        
+        UInt32 keyID = hotKeyID.id;
+        
+        NSSet *matchingHotKeys = [[DDHotKeyCenter sharedHotKeyCenter] hotKeysMatching:^BOOL(DDHotKey *hotkey) {
+            return hotkey.hotKeyID == keyID;
+        }];
+        if ([matchingHotKeys count] > 1) { NSLog(@"ERROR!"); }
+        DDHotKey *matchingHotKey = [matchingHotKeys anyObject];
+        
+        NSEvent *event = [NSEvent eventWithEventRef:theEvent];
+        NSEvent *keyEvent = [NSEvent keyEventWithType:NSKeyDown
                                              location:[event locationInWindow]
                                         modifierFlags:[event modifierFlags]
                                             timestamp:[event timestamp]

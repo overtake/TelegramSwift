@@ -96,7 +96,7 @@ NSString *DDStringFromKeyCode(unsigned short keyCode, NSUInteger modifiers) {
         [final appendString:mapped];
     } else {
         
-        TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
+        TISInputSourceRef currentKeyboard = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
         CFDataRef uchr = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
         
         // Fix crash using non-unicode layouts, such as Chinese or Japanese.

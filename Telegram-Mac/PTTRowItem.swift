@@ -12,23 +12,23 @@ import TGUIKit
 
 
 final class PTTRowItem : GeneralRowItem {
-    fileprivate let settings: PTTSettings?
+    fileprivate var settings: PTTSettings?
     fileprivate let update:(PTTSettings?)->Void
     fileprivate var ddHotKey: DDHotKey?
     init(_ initialSize: NSSize, stableId: AnyHashable, settings: PTTSettings?, update:@escaping(PTTSettings?)->Void, viewType: GeneralViewType) {
         self.settings = settings
         self.update = update
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, inset: NSEdgeInsets(top: 3, left: 30, bottom: 3, right: 30), error: nil)
-        if let settings = settings {
-            ddHotKey = DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
-                if let event = event {
-                    NSLog("\(event.type == .keyUp)")
-                    NSLog("\(event.type == .keyDown)")
-                } else {
-                    NSLog("No Event")
-                }
-            }))
-        }
+//        if let settings = settings {
+//            ddHotKey = DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
+//                if let event = event {
+//                    NSLog("\(event.type == .keyUp)")
+//                    NSLog("\(event.type == .keyDown)")
+//                } else {
+//                    NSLog("No Event")
+//                }
+//            }))
+//        }
                 
     }
     
@@ -92,6 +92,9 @@ private final class PTTRowView: GeneralContainableRowView {
         }, for: .Click)
         
         button.scaleOnClick = true
+        
+        shortcutView.userInteractionEnabled = false
+        shortcutView.isSelectable = false
     }
     
     private func toggleMode(animated: Bool, mode: PTTMode) {
@@ -207,25 +210,37 @@ private final class PTTRowView: GeneralContainableRowView {
     
     private var recorded: PTTSettings? = nil
     private func addRecordedEvent(_ event: NSEvent) {
-        if recorded == nil {
-            recorded = PTTSettings(keyCode: KeyboardKey.Undefined.rawValue, modifierFlags: 0)
-        }
-        if let keyCode = KeyboardKey(rawValue: event.keyCode) {
-            if !keyCode.isFlagKey {
-                recorded?.keyCode = keyCode.rawValue
-                recorded?.modifierFlags = event.modifierFlags.rawValue
+        switch mode {
+        case .editing:
+            if recorded == nil {
+                recorded = PTTSettings(keyCode: KeyboardKey.Undefined.rawValue, modifierFlags: 0)
             }
+            if let keyCode = KeyboardKey(rawValue: event.keyCode) {
+                if !keyCode.isFlagKey {
+                    recorded?.keyCode = keyCode.rawValue
+                    recorded?.modifierFlags = event.modifierFlags.rawValue
+                }
+            }
+        case .normal:
+            break
         }
+        
     }
     private func finishRecording() {
         guard let item = item as? PTTRowItem else {
             return
         }
-        if recorded?.keyCode != KeyboardKey.Undefined.rawValue {
-            item.update(recorded)
-        } else {
-            shake(beep: true)
+        switch mode {
+        case .editing:
+            if recorded?.keyCode != KeyboardKey.Undefined.rawValue {
+                item.settings = recorded
+                item.update(recorded)
+            } else {
+                shake(beep: true)
+            }
             set(item: item, animated: true)
+        case .normal:
+            break
         }
     }
     
@@ -260,11 +275,7 @@ private final class PTTRowView: GeneralContainableRowView {
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
-        guard let item = item as? PTTRowItem else {
-            return
-        }
         self.toggleMode(animated: animated, mode: .normal)
-                
     }
     
     required init?(coder: NSCoder) {
