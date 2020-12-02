@@ -184,6 +184,8 @@ private final class GroupCallControlsView : View {
         speak.center()
         speak.setFrameOrigin(NSMakePoint(speak.frame.minX, speak.frame.minY - 10))
         playbackAudioLevelView.center()
+        playbackAudioLevelView.setFrameOrigin(NSMakePoint(playbackAudioLevelView.frame.minX, playbackAudioLevelView.frame.minY - 10))
+
         settings.centerY(x: 60)
         end.centerY(x: frame.width - end.frame.width - 60)
         if let speakText = speakText {
@@ -651,19 +653,15 @@ final class GroupCallUIController : ViewController {
         self.genericView.applyUpdates(state, transition, animated: animated)
         
         self.pushToTalk.update = { [weak self, unowned state] mode in
-            var available = false
-            if let muteState = state.state.muteState {
-                if muteState.canUnmute {
-                    available = true
+            switch mode {
+            case .speaking:
+                if let muteState = state.state.muteState {
+                    if muteState.canUnmute {
+                        self?.data.call.setIsMuted(action: .unmuted)
+                    }
                 }
-            } else {
-                available = true
-            }
-            if available {
-                switch mode {
-                case .speaking:
-                    self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
-                case .waiting:
+            case .waiting:
+                if state.state.muteState == nil {
                     self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
                 }
             }
