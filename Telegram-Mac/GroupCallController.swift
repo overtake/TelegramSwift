@@ -124,7 +124,7 @@ private final class GroupCallControlsView : View {
                     if muteState.canUnmute {
                         statusText = L10n.voiceChatClickToUnmute
                         if voiceSettings.mode == .pushToTalk, let pushToTalk = voiceSettings.pushToTalk {
-                            secondary = L10n.voiceChatClickToUnmuteSecondary(DDStringFromKeyCode(pushToTalk.keyCode, pushToTalk.modifierFlags)!.uppercased())
+                            secondary = L10n.voiceChatClickToUnmuteSecondary(pushToTalk.string)
                         }
                     } else {
                         statusText = L10n.voiceChatListenMode
@@ -136,39 +136,42 @@ private final class GroupCallControlsView : View {
                 statusText = L10n.voiceChatConnecting
             }
             
-            let speakText = TextView()
-            speakText.userInteractionEnabled = false
-            speakText.isSelectable = false
-            let string = NSMutableAttributedString()
-            string.append(.initialize(string: statusText, color: .white, font: .medium(.title)))
-            if let secondary = secondary {
-                string.append(.initialize(string: "\n", color: .white, font: .medium(.text)))
-                string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
-            }
-            let layout = TextViewLayout(string, alignment: .center)
-            layout.measure(width: frame.width - 60)
-            speakText.update(layout)
-            
-            if let speakText = self.speakText {
-                self.speakText = nil
+            if statusText != self.speakText?.layout?.attributedString.string {
+                let speakText = TextView()
+                speakText.userInteractionEnabled = false
+                speakText.isSelectable = false
+                let string = NSMutableAttributedString()
+                string.append(.initialize(string: statusText, color: .white, font: .medium(.title)))
+                if let secondary = secondary {
+                    string.append(.initialize(string: "\n", color: .white, font: .medium(.text)))
+                    string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
+                }
+                let layout = TextViewLayout(string, alignment: .center)
+                layout.measure(width: frame.width - 60)
+                speakText.update(layout)
+                
+                if let speakText = self.speakText {
+                    self.speakText = nil
+                    if animated {
+                        speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakText] _ in
+                            speakText?.removeFromSuperview()
+                        })
+                        speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2)
+                    } else {
+                        speakText.removeFromSuperview()
+                    }
+                }
+                
+                
+                self.speakText = speakText
+                addSubview(speakText)
+                speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
                 if animated {
-                    speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakText] _ in
-                        speakText?.removeFromSuperview()
-                    })
-                    speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2)
-                } else {
-                    speakText.removeFromSuperview()
+                    speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
                 }
             }
             
-            
-            self.speakText = speakText
-            addSubview(speakText)
-            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
-            if animated {
-                speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
-            }
         }
         self.preiousState = state
         needsLayout = true
@@ -473,7 +476,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     var addedSeparator: Bool = false
     for (i, data) in state.memberDatas.enumerated() {
         
-        if data.state == nil, !addedSeparator, i > 0 {
+        if data.state == nil, !addedSeparator {
             entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: .init("separator"), equatable: nil, item: { initialSize, stableId in
                 return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
             }))
@@ -655,20 +658,35 @@ final class GroupCallUIController : ViewController {
         
         
         
-        self.pushToTalk.update = { [weak self, unowned state] mode in
-            switch mode {
-            case .speaking:
-                if let muteState = state.state.muteState {
-                    if muteState.canUnmute {
-                        self?.data.call.setIsMuted(action: .unmuted)
-                        self?.pushToTalkIsActive = true
+        self.pushToTalk.update = { [weak self, weak state] mode in
+            if let state = state {
+                switch state.state.networkState {
+                case .connected:
+                    switch mode {
+                    case .speaking:
+                        if let muteState = state.state.muteState {
+                            if muteState.canUnmute {
+                                self?.data.call.setIsMuted(action: .unmuted)
+                                self?.pushToTalkIsActive = true
+                            }
+                        }
+                    case .waiting:
+                        if state.state.muteState == nil, self?.pushToTalkIsActive == true {
+                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
+                        }
+                        self?.pushToTalkIsActive = false
+                    case .toggle:
+                        if let muteState = state.state.muteState {
+                            if muteState.canUnmute {
+                                self?.data.call.setIsMuted(action: .unmuted)
+                            }
+                        } else {
+                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
+                        }
                     }
+                case .connecting:
+                    NSSound.beep()
                 }
-            case .waiting:
-                if state.state.muteState == nil, self?.pushToTalkIsActive == true {
-                    self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                }
-                self?.pushToTalkIsActive = false
             }
         }
         

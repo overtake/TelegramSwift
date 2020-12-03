@@ -76,12 +76,7 @@ final class GroupCallWindow : Window {
         self.isOpaque = true
         self.backgroundColor = .black
         
-        if #available(OSX 10.13, *) {
-            let customToolbar = NSToolbar()
-            customToolbar.sizeMode = .regular
-            self.titleVisibility = .hidden
-            self.toolbar = customToolbar
-        }
+
         self.titlebarAppearsTransparent = true
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
@@ -93,7 +88,7 @@ final class GroupCallWindow : Window {
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
         
-        var point: NSPoint = NSMakePoint(20, 5)
+        var point: NSPoint = NSMakePoint(20, 0)
         self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
         point.x += 20
         self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)

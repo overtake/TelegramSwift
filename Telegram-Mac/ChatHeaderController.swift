@@ -1441,10 +1441,10 @@ private final class ChatGroupCallView : Control {
         self.data = data
         self.chatInteraction = chatInteraction
         super.init(frame: frame)
-        addSubview(joinButton)
         addSubview(headerView)
         addSubview(membersCountView)
         addSubview(button)
+        addSubview(joinButton)
         addSubview(activeCallButton)
         addSubview(avatarsContainer)
         avatarsContainer.isEventLess = true
@@ -1503,8 +1503,8 @@ private final class ChatGroupCallView : Control {
             self?.data.data?.groupCall?.call.toggleIsMuted()
         }, for: .Click)
         
-
-        
+        joinButton.scaleOnClick = true
+        activeCallButton.scaleOnClick = true
     }
     
     
@@ -1517,6 +1517,8 @@ private final class ChatGroupCallView : Control {
         activeCallButton.change(opacity: activeCall ? 1 : 0, animated: animated)
         joinButton.userInteractionEnabled = !activeCall
         activeCallButton.userInteractionEnabled = activeCall
+        joinButton.isEventLess = activeCall
+        activeCallButton.isEventLess = !activeCall
         
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
@@ -1601,19 +1603,15 @@ private final class ChatGroupCallView : Control {
                         
             speakingActivity.update(textData.values, animated: animated)
             
-            var newPoint = focus(textData.size).origin
-            newPoint.y = frame.midY
             let newSize = textData.size
-            
-            let rect: NSRect = .init(origin: newPoint, size: newSize)
-            
+            let rect: NSRect = .init(origin: NSMakePoint(23, frame.midY), size: newSize)
             if animated {
-                speakingActivity.layer?.animatePosition(from: rect.origin - speakingActivity.frame.origin, to: .zero, duration: 0.2, additive: true)
-                let size = newSize - speakingActivity.frame.size
+                speakingActivity.layer?.animatePosition(from: speakingActivity.frame.origin - rect.origin, to: .zero, duration: 0.2, additive: true)
+                let size = speakingActivity.frame.size - newSize
                 speakingActivity.layer?.animateBounds(from: .init(origin: .zero, size: size), to: .zero, duration: 0.2, additive: true)
             }
             speakingActivity.frame = rect
-            
+
         } else {
             
             membersCountView.change(opacity: 1, animated: animated)
@@ -1691,7 +1689,14 @@ private final class ChatGroupCallView : Control {
     override func layout() {
         super.layout()
         joinButton.centerY(x: frame.width - joinButton.frame.width - 23)
-        self.avatarsContainer.centerY(x: 23)
+        
+        if avatarsContainer.subviews.count == 3 {
+            self.avatarsContainer.center()
+        } else {
+            let count = CGFloat(avatarsContainer.subviews.count)
+            let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
+            self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
+        }
         
         headerView.layout?.measure(width: frame.width - 100)
         membersCountView.layout?.measure(width: frame.width - 100)
@@ -1699,15 +1704,15 @@ private final class ChatGroupCallView : Control {
         headerView.update(headerView.layout)
         
         if let speakingActivity = self.speakingActivity {
-            speakingActivity.centerX(y: frame.midY)
+            speakingActivity.setFrameOrigin(.init(x: 23, y: frame.midY))
         }
         
-        headerView.centerX(y: frame.midY - headerView.frame.height)
-        membersCountView.centerX(y: frame.midY)
+        headerView.setFrameOrigin(.init(x: 23, y: frame.midY - headerView.frame.height))
+        membersCountView.setFrameOrigin(.init(x: 23, y: frame.midY))
         
         activeCallButton.centerY(x: frame.width - activeCallButton.frame.width - 16)
         
-        button.frame = NSMakeRect(headerView.frame.minX, 0, max(headerView.frame.width, membersCountView.frame.width), frame.height)
+        button.frame = bounds
     }
     
     

@@ -199,6 +199,10 @@ private final class GroupCallActivity : View {
         addSubview(backgroundView)
         addSubview(animation)
         animation.center()
+        isEventLess = true
+        animation.userInteractionEnabled = false
+        animation.isEventLess = true
+        backgroundView.isEventLess = true
     }
 
     

@@ -2827,6 +2827,7 @@ enum SystemSettingsCategory : String {
     case camera = "Privacy_Camera"
     case storage = "Storage"
     case sharing = "Privacy_ScreenCapture"
+    case accessibility = "Privacy_Accessibility"
     case none = ""
 }
 

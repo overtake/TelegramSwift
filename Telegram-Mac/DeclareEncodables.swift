@@ -53,7 +53,9 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(RecentSettingsSearchQueryItem.self, f: { RecentSettingsSearchQueryItem(decoder: $0) })
     declareEncodable(ChatListFoldersSettings.self, f: { ChatListFoldersSettings(decoder: $0) })
     declareEncodable(ChatTextInputState.self, f: { ChatTextInputState(decoder: $0) })
-    declareEncodable(PTTSettings.self, f: { PTTSettings(decoder: $0) })    
+    declareEncodable(PushToTalkValue.self, f: { PushToTalkValue(decoder: $0) })
+    declareEncodable(PushToTalkValue.ModifierFlag.self, f: { PushToTalkValue.ModifierFlag(decoder: $0) })
+    
     return
 }()
 

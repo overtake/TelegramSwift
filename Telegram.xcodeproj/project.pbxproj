@@ -734,7 +734,7 @@
 		D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */; };
 		D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
 		D00747012577A7D40000DF74 /* DDHotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00747002577A7D40000DF74 /* DDHotKey.framework */; };
-		D00747042577AF0B0000DF74 /* PTTRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00747032577AF0B0000DF74 /* PTTRowItem.swift */; };
+		D00747042577AF0B0000DF74 /* PushToTalkRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */; };
 		D0076E372568482E007EF588 /* OpusBinding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E362568482E007EF588 /* OpusBinding.framework */; };
 		D0076E8B25685339007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E8A25685339007EF588 /* webrtc.framework */; };
 		D0076E9225685596007EF588 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E9125685596007EF588 /* libwebp.a */; };
@@ -1756,7 +1756,7 @@
 		D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewModalController.swift; sourceTree = "<group>"; };
 		D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerShimmerEffectView.swift; sourceTree = "<group>"; };
 		D00747002577A7D40000DF74 /* DDHotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = DDHotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		D00747032577AF0B0000DF74 /* PTTRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTRowItem.swift; sourceTree = "<group>"; };
+		D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushToTalkRowItem.swift; sourceTree = "<group>"; };
 		D0076E362568482E007EF588 /* OpusBinding.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = OpusBinding.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0076E8A25685339007EF588 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0076E9125685596007EF588 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebp.a"; sourceTree = "<group>"; };
@@ -4405,7 +4405,7 @@
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
-				D00747032577AF0B0000DF74 /* PTTRowItem.swift */,
+				D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */,
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
 			);
 			name = "group-calls";
@@ -4990,7 +4990,7 @@
 				9F580BE520A0AA7B00F6D56C /* ChatRecorderOverlayWindow.swift in Sources */,
 				C2016F3B1EAA4538003AF981 /* RecentPeerRowItem.swift in Sources */,
 				9FDD78D121C8F0CC00F1B4EF /* ChatPollItem.swift in Sources */,
-				D00747042577AF0B0000DF74 /* PTTRowItem.swift in Sources */,
+				D00747042577AF0B0000DF74 /* PushToTalkRowItem.swift in Sources */,
 				C25F71481E410DEE0046AF4E /* InAppNotificationSettings.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */,

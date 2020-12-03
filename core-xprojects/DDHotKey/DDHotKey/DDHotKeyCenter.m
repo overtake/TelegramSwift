@@ -262,6 +262,7 @@ static DDHotKeyCenter *sharedHotKeyCenter = nil;
 
 OSStatus dd_hotKeyHandler_Up(EventHandlerCallRef nextHandler, EventRef theEvent, void *userData) {
     @autoreleasepool {
+                
         EventHotKeyID hotKeyID;
         GetEventParameter(theEvent, kEventParamDirectObject, typeEventHotKeyID, NULL, sizeof(hotKeyID), NULL, &hotKeyID);
         
@@ -288,7 +289,7 @@ OSStatus dd_hotKeyHandler_Up(EventHandlerCallRef nextHandler, EventRef theEvent,
         [matchingHotKey invokeWithEvent:keyEvent];
     }
     
-    return noErr;
+    return CallNextEventHandler(nextHandler, theEvent);
 }
 
 
@@ -320,5 +321,5 @@ OSStatus dd_hotKeyHandler_Down(EventHandlerCallRef nextHandler, EventRef theEven
         [matchingHotKey invokeWithEvent:keyEvent];
     }
     
-    return noErr;
+    return CallNextEventHandler(nextHandler, theEvent);
 }

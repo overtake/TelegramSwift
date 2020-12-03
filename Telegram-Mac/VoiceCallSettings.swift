@@ -18,21 +18,40 @@ enum VoiceCallDataSaving: Int32 {
     case always
 }
 
-struct PTTSettings : Equatable, PostboxCoding {
-    var keyCode: UInt16
-    var modifierFlags: UInt
+struct PushToTalkValue : Equatable, PostboxCoding {
     
-    init(keyCode: UInt16, modifierFlags: UInt) {
-        self.keyCode = keyCode
+    struct ModifierFlag : Equatable, PostboxCoding {
+        let keyCode: UInt16
+        
+        init(keyCode: UInt16) {
+            self.keyCode = keyCode
+        }
+        func encode(_ encoder: PostboxEncoder) {
+            encoder.encodeInt32(Int32(self.keyCode), forKey: "kc")
+        }
+        init(decoder: PostboxDecoder) {
+            self.keyCode = UInt16(decoder.decodeInt32ForKey("kc", orElse: 0) )
+        }
+        
+    }
+    
+    var keyCodes: [UInt16]
+    var modifierFlags: [ModifierFlag]
+    var string: String
+    init(keyCodes: [UInt16], modifierFlags: [ModifierFlag], string: String) {
+        self.keyCodes = keyCodes
         self.modifierFlags = modifierFlags
+        self.string = string
     }
     func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt64(Int64(Int(bitPattern: self.modifierFlags)), forKey: "mf")
-        encoder.encodeInt32(Int32(self.keyCode), forKey: "kc")
+        encoder.encodeObjectArray(self.modifierFlags, forKey: "mf")
+        encoder.encodeInt32Array(self.keyCodes.map { Int32($0) }, forKey: "kc")
+        encoder.encodeString(string, forKey: "s")
     }
     init(decoder: PostboxDecoder) {
-        self.keyCode = UInt16(decoder.decodeInt32ForKey("kc", orElse: 0))
-        self.modifierFlags = UInt(bitPattern: Int(decoder.decodeInt64ForKey("mf", orElse: 0)))
+        self.keyCodes = decoder.decodeInt32ArrayForKey("kc").map { UInt16($0) }
+        self.modifierFlags = decoder.decodeObjectArrayForKey("mf").compactMap { $0 as? ModifierFlag }
+        self.string = decoder.decodeStringForKey("s", orElse: "")
     }
 }
 
@@ -47,13 +66,13 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
     let cameraInputDeviceId: String?
     let audioOutputDeviceId: String?
     let mode: VoiceChatInputMode
-    let pushToTalk: PTTSettings?
+    let pushToTalk: PushToTalkValue?
     
     static var defaultSettings: VoiceCallSettings {
         return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil, mode: .always, pushToTalk: nil)
     }
     
-    init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?, mode: VoiceChatInputMode, pushToTalk: PTTSettings?) {
+    init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?, mode: VoiceChatInputMode, pushToTalk: PushToTalkValue?) {
         self.audioInputDeviceId = audioInputDeviceId
         self.cameraInputDeviceId = cameraInputDeviceId
         self.audioOutputDeviceId = audioOutputDeviceId
@@ -65,7 +84,7 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
         self.audioInputDeviceId = decoder.decodeOptionalStringForKey("ai")
         self.cameraInputDeviceId = decoder.decodeOptionalStringForKey("ci")
         self.audioOutputDeviceId = decoder.decodeOptionalStringForKey("ao")
-        self.pushToTalk = decoder.decodeObjectForKey("ptt") as? PTTSettings
+        self.pushToTalk = decoder.decodeObjectForKey("ptt2") as? PushToTalkValue
         self.mode = VoiceChatInputMode(rawValue: decoder.decodeInt32ForKey("m", orElse: 0)) ?? .always
     }
     
@@ -89,9 +108,9 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
         }
         
         if let pushToTalk = pushToTalk {
-            encoder.encodeObject(pushToTalk, forKey: "ptt")
+            encoder.encodeObject(pushToTalk, forKey: "ptt2")
         } else {
-            encoder.encodeNil(forKey: "ptt")
+            encoder.encodeNil(forKey: "ptt2")
         }
         encoder.encodeInt32(self.mode.rawValue, forKey: "m")
     }
@@ -114,7 +133,7 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
     func withUpdatedAudioOutputDeviceId(_ audioOutputDeviceId: String?) -> VoiceCallSettings {
         return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk)
     }
-    func withUpdatedPushToTalk(_ pushToTalk: PTTSettings?) -> VoiceCallSettings {
+    func withUpdatedPushToTalk(_ pushToTalk: PushToTalkValue?) -> VoiceCallSettings {
         return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: pushToTalk)
     }
     func withUpdatedMode(_ mode: VoiceChatInputMode) -> VoiceCallSettings {
