@@ -8165,9 +8165,13 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
+  /// or hold %@
+  internal static func voiceChatClickToUnmuteSecondaryHold(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Hold", p1)
+  }
   /// or press %@
-  internal static func voiceChatClickToUnmuteSecondary(_ p1: String) -> String {
-    return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary", p1)
+  internal static func voiceChatClickToUnmuteSecondaryPress(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Press", p1)
   }
   /// Are you sure you want to remove %1$@ from the group chat?
   internal static func voiceChatRemovePeerConfirm(_ p1: String) -> String {
@@ -8195,7 +8199,7 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeAlways: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.Always") }
   /// Push To Talk
   internal static var voiceChatSettingsInputModePushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.PushToTalk") }
-  /// If you want that shortcut will be worked even if Telegram not in focus\nPlease grant Telegram access to Input Monitor in [System Settings]()
+  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to Accessibility
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
   /// Edit Keybind
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }

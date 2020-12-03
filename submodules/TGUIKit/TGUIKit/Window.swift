@@ -489,6 +489,20 @@ open class Window: NSWindow {
             }
         }
     }
+
+    open override func keyDown(with event: NSEvent) {
+
+    }
+    open override func keyUp(with event: NSEvent) {
+
+    }
+    open override func flagsChanged(with event: NSEvent) {
+
+    }
+
+    open override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        return super.performKeyEquivalent(with: event)
+    }
     
     @available(OSX 10.12.2, *)
     open override func makeTouchBar() -> NSTouchBar? {

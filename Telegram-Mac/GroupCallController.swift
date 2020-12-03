@@ -115,64 +115,71 @@ private final class GroupCallControlsView : View {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
             settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
-            
-            let statusText: String
-            var secondary: String? = nil
-            switch state.networkState {
-            case .connected:
-                if let muteState = state.muteState {
-                    if muteState.canUnmute {
-                        statusText = L10n.voiceChatClickToUnmute
-                        if voiceSettings.mode == .pushToTalk, let pushToTalk = voiceSettings.pushToTalk {
-                            secondary = L10n.voiceChatClickToUnmuteSecondary(pushToTalk.string)
+
+        }
+
+        let statusText: String
+        var secondary: String? = nil
+        switch state.networkState {
+        case .connected:
+            if let muteState = state.muteState {
+                if muteState.canUnmute {
+                    statusText = L10n.voiceChatClickToUnmute
+                    if let pushToTalk = voiceSettings.pushToTalk {
+                        switch voiceSettings.mode {
+                        case .always:
+                            secondary = L10n.voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
+                        case .pushToTalk:
+                            secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
                         }
-                    } else {
-                        statusText = L10n.voiceChatListenMode
                     }
                 } else {
-                    statusText = L10n.voiceChatYouLive
+                    statusText = L10n.voiceChatListenMode
                 }
-            case .connecting:
-                statusText = L10n.voiceChatConnecting
+            } else {
+                statusText = L10n.voiceChatYouLive
             }
-            
-            if statusText != self.speakText?.layout?.attributedString.string {
-                let speakText = TextView()
-                speakText.userInteractionEnabled = false
-                speakText.isSelectable = false
-                let string = NSMutableAttributedString()
-                string.append(.initialize(string: statusText, color: .white, font: .medium(.title)))
-                if let secondary = secondary {
-                    string.append(.initialize(string: "\n", color: .white, font: .medium(.text)))
-                    string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
-                }
-                let layout = TextViewLayout(string, alignment: .center)
-                layout.measure(width: frame.width - 60)
-                speakText.update(layout)
-                
-                if let speakText = self.speakText {
-                    self.speakText = nil
-                    if animated {
-                        speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakText] _ in
-                            speakText?.removeFromSuperview()
-                        })
-                        speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2)
-                    } else {
-                        speakText.removeFromSuperview()
-                    }
-                }
-                
-                
-                self.speakText = speakText
-                addSubview(speakText)
-                speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
-                if animated {
-                    speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
-                }
-            }
-            
+        case .connecting:
+            statusText = L10n.voiceChatConnecting
         }
+
+        let string = NSMutableAttributedString()
+        string.append(.initialize(string: statusText, color: .white, font: .medium(.title)))
+        if let secondary = secondary {
+            string.append(.initialize(string: "\n", color: .white, font: .medium(.text)))
+            string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
+        }
+
+        if string.string != self.speakText?.layout?.attributedString.string {
+            let speakText = TextView()
+            speakText.userInteractionEnabled = false
+            speakText.isSelectable = false
+            let layout = TextViewLayout(string, alignment: .center)
+            layout.measure(width: frame.width - 60)
+            speakText.update(layout)
+
+            if let speakText = self.speakText {
+                self.speakText = nil
+                if animated {
+                    speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakText] _ in
+                        speakText?.removeFromSuperview()
+                    })
+                    speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2)
+                } else {
+                    speakText.removeFromSuperview()
+                }
+            }
+
+
+            self.speakText = speakText
+            addSubview(speakText)
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
+            if animated {
+                speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
+            }
+        }
+
         self.preiousState = state
         needsLayout = true
 
@@ -441,9 +448,13 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     
     activeParticipants = peerStates?.participants ?? []
     activeParticipants = activeParticipants.sorted(by: { lhs, rhs in
-        let lhsValue = (lhs.activityTimestamp
+
+        let lhsLevel = audioLevels[lhs.peer.id]?.timestamp != nil ? Double(audioLevels[lhs.peer.id]!.timestamp) : nil
+        let rhsLevel = audioLevels[rhs.peer.id]?.timestamp != nil ? Double(audioLevels[rhs.peer.id]!.timestamp) : nil
+
+        let lhsValue = (lhsLevel ?? lhs.activityTimestamp
                             ?? Double(lhs.joinTimestamp))
-        let rhsValue = (rhs.activityTimestamp
+        let rhsValue = (rhsLevel ?? rhs.activityTimestamp
                             ?? Double(rhs.joinTimestamp))
         return lhsValue > rhsValue
     })
@@ -666,7 +677,7 @@ final class GroupCallUIController : ViewController {
                     case .speaking:
                         if let muteState = state.state.muteState {
                             if muteState.canUnmute {
-                                self?.data.call.setIsMuted(action: .unmuted)
+                                self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
                                 self?.pushToTalkIsActive = true
                             }
                         }

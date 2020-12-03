@@ -517,6 +517,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
                                strongSelf.callContext?.setIsMuted(true)
+                           } else {
+                                strongSelf.callContext?.setIsMuted(false)
+                                strongSelf.stateValue.muteState = nil
                            }
                        }
                    }

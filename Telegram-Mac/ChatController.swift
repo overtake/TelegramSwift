@@ -496,12 +496,12 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateHeader(_ interfaceState:ChatPresentationInterfaceState, _ animated:Bool, _ animateOnlyHeader: Bool = false) {
                 
         var state:ChatHeaderState
-        if let groupCall = interfaceState.groupCall {
+        if interfaceState.isSearchMode.0 {
+            state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
+        } else if let groupCall = interfaceState.groupCall {
             state = .groupCall(groupCall)
         } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(kind)
-        } else if interfaceState.isSearchMode.0 {
-            state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         } else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))

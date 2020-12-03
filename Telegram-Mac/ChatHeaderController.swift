@@ -1443,10 +1443,10 @@ private final class ChatGroupCallView : Control {
         super.init(frame: frame)
         addSubview(headerView)
         addSubview(membersCountView)
+        addSubview(avatarsContainer)
         addSubview(button)
         addSubview(joinButton)
         addSubview(activeCallButton)
-        addSubview(avatarsContainer)
         avatarsContainer.isEventLess = true
         
         activeCallButton.setFrameSize(NSMakeSize(36, 36))
@@ -1605,11 +1605,7 @@ private final class ChatGroupCallView : Control {
             
             let newSize = textData.size
             let rect: NSRect = .init(origin: NSMakePoint(23, frame.midY), size: newSize)
-            if animated {
-                speakingActivity.layer?.animatePosition(from: speakingActivity.frame.origin - rect.origin, to: .zero, duration: 0.2, additive: true)
-                let size = speakingActivity.frame.size - newSize
-                speakingActivity.layer?.animateBounds(from: .init(origin: .zero, size: size), to: .zero, duration: 0.2, additive: true)
-            }
+            speakingActivity.change(size: newSize, animated: animated)
             speakingActivity.frame = rect
 
         } else {
