@@ -599,7 +599,7 @@ internal final class L10n {
   }
   /// Telegram needs access to camera for Video Call.
   internal static var callCameraError: String  { return L10n.tr("Localizable", "Call.Camera.Error") }
-  /// Finish the call and start a new?
+  /// Finish the call and start a new one?
   internal static var callConfirmDiscardCurrentDescription1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description1") }
   /// Call in Progress
   internal static var callConfirmDiscardCurrentHeader1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Header1") }
@@ -8195,6 +8195,8 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeAlways: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.Always") }
   /// Push To Talk
   internal static var voiceChatSettingsInputModePushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.PushToTalk") }
+  /// If you want that shortcut will be worked even if Telegram not in focus\nPlease grant Telegram access to Input Monitor in [System Settings]()
+  internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
   /// Edit Keybind
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }
   /// Stop Recording

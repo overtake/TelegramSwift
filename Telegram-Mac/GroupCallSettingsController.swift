@@ -66,6 +66,10 @@ final class GroupCallSettingsView : View {
     }
 }
 
+private struct GroupCallSettingsState : Equatable {
+    let hasPermission:Bool?
+}
+
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
 private let _id_input_audio = InputDataIdentifier("_id_input_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
@@ -75,7 +79,7 @@ private let _id_input_mode_always = InputDataIdentifier("_id_input_mode_always")
 private let _id_input_mode_ptt = InputDataIdentifier("_id_input_mode_ptt")
 private let _id_ptt = InputDataIdentifier("_id_ptt")
  
-private func groupCallSettingsEntries(state: PresentationGroupCallState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void) -> [InputDataEntry] {
+private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void, checkPermission:@escaping()->Void) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -173,25 +177,28 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, setting
     }, theme: theme)))
     index += 1
     
-    switch settings.mode {
-    case .pushToTalk:
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-        index += 1
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), item: { initialSize, stableId -> TableRowItem in
-            return PTTRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
-                updateSettings {
-                    $0.withUpdatedPushToTalk(value)
-                }
-            }, viewType: .singleItem)
-        }))
-        index += 1
-        
-    default:
-        break
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+    index += 1
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), item: { initialSize, stableId -> TableRowItem in
+        return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
+            updateSettings {
+                $0.withUpdatedPushToTalk(value)
+            }
+        }, checkPermission: checkPermission, viewType: .singleItem)
+    }))
+    index += 1
+    
+    if let permission = uiState.hasPermission {
+        if !permission {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.voiceChatSettingsPushToTalkAccess, linkHandler: { _ in
+               
+            }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+            index += 1
+        }
     }
         
     entries.append(.sectionId(sectionId, type: .normal))
@@ -230,6 +237,15 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         super.viewDidLoad()
         
         let account = self.account
+                
+        let initialState = GroupCallSettingsState(hasPermission: nil)
+        
+        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((GroupCallSettingsState) -> GroupCallSettingsState) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
+        }
+        
         
         genericView.backButton.set(handler: { [weak self] _ in
             self?.navigationController?.back()
@@ -266,11 +282,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             self?.call.updateDefaultParticipantsAreMuted(isMuted: value)
         }
         
+        let checkPermission: ()->Void = {
+            updateState { _ in
+                return GroupCallSettingsState(hasPermission: KeyboardGlobalHandler.hasPermission())
+            }
+        }
+        
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { })
         let initialSize = self.atomicSize
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state) |> mapToSignal { _, settings, appearance, peer, state in
-            let entries = groupCallSettingsEntries(state: state, settings: settings, account: account, peer: peer, arguments: arguments, updateDefaultParticipantsAreMuted: updateDefaultParticipantsAreMuted, updateSettings: updateSettings).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToSignal { _, settings, appearance, peer, state, uiState in
+            let entries = groupCallSettingsEntries(state: state, uiState: uiState, settings: settings, account: account, peer: peer, arguments: arguments, updateDefaultParticipantsAreMuted: updateDefaultParticipantsAreMuted, updateSettings: updateSettings, checkPermission: checkPermission).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 

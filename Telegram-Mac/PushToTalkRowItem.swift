@@ -1,5 +1,5 @@
 //
-//  PTTRowItem.swift
+//  PushToTalkRowItem.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 02/12/2020.
@@ -7,45 +7,32 @@
 //
 
 import Foundation
-import DDHotKey
 import TGUIKit
 
 
-final class PTTRowItem : GeneralRowItem {
-    fileprivate var settings: PTTSettings?
-    fileprivate let update:(PTTSettings?)->Void
-    fileprivate var ddHotKey: DDHotKey?
-    init(_ initialSize: NSSize, stableId: AnyHashable, settings: PTTSettings?, update:@escaping(PTTSettings?)->Void, viewType: GeneralViewType) {
+final class PushToTalkRowItem : GeneralRowItem {
+    fileprivate var settings: PushToTalkValue?
+    fileprivate let checkPermission:()->Void
+    fileprivate let update:(PushToTalkValue?)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, settings: PushToTalkValue?, update:@escaping(PushToTalkValue?)->Void, checkPermission: @escaping()->Void, viewType: GeneralViewType) {
         self.settings = settings
         self.update = update
+        self.checkPermission = checkPermission
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, inset: NSEdgeInsets(top: 3, left: 30, bottom: 3, right: 30), error: nil)
-//        if let settings = settings {
-//            ddHotKey = DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: settings.keyCode, modifierFlags: settings.modifierFlags, task: { event in
-//                if let event = event {
-//                    NSLog("\(event.type == .keyUp)")
-//                    NSLog("\(event.type == .keyDown)")
-//                } else {
-//                    NSLog("No Event")
-//                }
-//            }))
-//        }
-                
     }
     
     deinit {
-        if let ddHotKey = ddHotKey {
-            DDHotKeyCenter.shared()?.unregisterHotKey(ddHotKey)
-        }
+        
     }
     
     override func viewClass() -> AnyClass {
-        return PTTRowView.self
+        return PushToTalkRowView.self
     }
 }
 
 
 
-private final class PTTRowView: GeneralContainableRowView {
+private final class PushToTalkRowView: GeneralContainableRowView {
         
     private enum PTTMode {
         case normal
@@ -97,13 +84,34 @@ private final class PTTRowView: GeneralContainableRowView {
         shortcutView.isSelectable = false
     }
     
+    private var recorder:KeyboardGlobalHandler?
+    
     private func toggleMode(animated: Bool, mode: PTTMode) {
         
         self.mode = mode
-        recorded = nil
-
-        guard let item = item as? PTTRowItem else {
+        
+        guard let item = item as? PushToTalkRowItem else {
             return
+        }
+        
+        switch mode {
+        case .editing:
+            let recorder = KeyboardGlobalHandler()
+            self.recorder = recorder
+            recorder.setKeyUpHandler(nil, success: { [weak item, weak self] result in
+                guard let item = item else {
+                    return
+                }
+                let settings = PushToTalkValue(keyCodes: result.keyCodes, modifierFlags: result.modifierFlags, string: result.string)
+                item.update(settings)
+                item.settings = settings
+                self?.set(item: item, animated: true)
+            })
+
+            item.checkPermission()
+            
+        case .normal:
+            recorder = nil
         }
         
         button.background = buttonColor
@@ -130,20 +138,9 @@ private final class PTTRowView: GeneralContainableRowView {
             animation.autoreverses = true
             shimmerView.layer?.add(animation, forKey: "opacity")
         }
-        //DDStringFromKeyCode(event.keyCode, event.modifierFlags.rawValue))
         let attr: NSAttributedString
         if let settings = item.settings {
-            let value = DDStringFromKeyCode(settings.keyCode, settings.modifierFlags).uppercased().reduce("", { current, value in
-                var current = current
-                if current.isEmpty {
-                    current += String(value)
-                } else {
-                    current += " + "
-                    current += String(value)
-                }
-                return current
-            })
-            attr = .initialize(string: value, color: .white, font: .medium(.header))
+            attr = .initialize(string: settings.string, color: .white, font: .medium(.header))
         } else {
             attr = .initialize(string: L10n.voiceChatSettingsPushToTalkUndefined, color: GroupCallTheme.grayStatusColor, font: .medium(.header))
         }
@@ -158,7 +155,7 @@ private final class PTTRowView: GeneralContainableRowView {
     override func layout() {
         super.layout()
         
-        guard let item = item as? PTTRowItem else {
+        guard let item = item as? PushToTalkRowItem else {
             return
         }
         button.setFrameSize(NSMakeSize(textView.frame.width + 20, containerView.frame.height - 8))
@@ -166,7 +163,7 @@ private final class PTTRowView: GeneralContainableRowView {
         
         textView.center()
         
-        shortcutView.centerY(x: item.viewType.innerInset.left)
+        shortcutView.centerY(x: item.viewType.innerInset.left, addition: 1)
         
         shimmerView.frame = containerView.frame
     }
@@ -201,63 +198,14 @@ private final class PTTRowView: GeneralContainableRowView {
         return GroupCallTheme.membersColor
     }
     
-    private var effectivePtt: PTTSettings? {
-        guard let item = item as? PTTRowItem else {
-            return self.recorded
+    private var effectivePtt: PushToTalkValue? {
+        guard let item = item as? PushToTalkRowItem else {
+            return nil
         }
-        return self.recorded ?? item.settings
+        return item.settings
     }
     
-    private var recorded: PTTSettings? = nil
-    private func addRecordedEvent(_ event: NSEvent) {
-        switch mode {
-        case .editing:
-            if recorded == nil {
-                recorded = PTTSettings(keyCode: KeyboardKey.Undefined.rawValue, modifierFlags: 0)
-            }
-            if let keyCode = KeyboardKey(rawValue: event.keyCode) {
-                if !keyCode.isFlagKey {
-                    recorded?.keyCode = keyCode.rawValue
-                    recorded?.modifierFlags = event.modifierFlags.rawValue
-                }
-            }
-        case .normal:
-            break
-        }
-        
-    }
-    private func finishRecording() {
-        guard let item = item as? PTTRowItem else {
-            return
-        }
-        switch mode {
-        case .editing:
-            if recorded?.keyCode != KeyboardKey.Undefined.rawValue {
-                item.settings = recorded
-                item.update(recorded)
-            } else {
-                shake(beep: true)
-            }
-            set(item: item, animated: true)
-        case .normal:
-            break
-        }
-    }
-    
-    override func flagsChanged(with event: NSEvent) {
-        super.flagsChanged(with: event)
-        addRecordedEvent(event)
-    }
-    
-    override func keyDown(with event: NSEvent) {
-        super.keyDown(with: event)
-        addRecordedEvent(event)
-    }
-    
-    override func keyUp(with event: NSEvent) {
-        super.keyUp(with: event)
-        finishRecording()
-    }
+  
     
     override func viewWillMove(toWindow newWindow: NSWindow?) {
         if let window = newWindow as? Window {
