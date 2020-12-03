@@ -615,8 +615,8 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(void)insertNewline:(id)sender {
     [super insertNewline:sender];
 }
-    
-    
+
+
     
 - (void) keyDown:(NSEvent *)theEvent {
     

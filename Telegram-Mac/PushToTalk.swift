@@ -55,20 +55,37 @@ final class KeyboardGlobalHandler {
         monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
             self?.process(event)
         }))
-        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
-            self?.process(event)
-            return event
-        }))
-        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
-            self?.process(event)
-            return event
-        }))
         monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
             self?.process(event)
         }))
+
+        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
+            guard let `self` = self else {
+                return event
+            }
+            if !self.process(event) {
+                return event
+            }
+            return nil
+        }))
+        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+            guard let `self` = self else {
+                return event
+            }
+            if !self.process(event) {
+                return event
+            }
+            return nil
+        }))
+
         monitors.append(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
-            self?.process(event)
-            return event
+            guard let `self` = self else {
+                return event
+            }
+            if !self.process(event) {
+                return event
+            }
+            return nil
         }))
     }
     
@@ -90,7 +107,7 @@ final class KeyboardGlobalHandler {
         return total
     }
     
-    private func process(_ event: NSEvent) {
+    @discardableResult private func process(_ event: NSEvent) -> Bool {
         
         let oldActiveCount = self.activeCount
 
@@ -119,18 +136,27 @@ final class KeyboardGlobalHandler {
         
         let newActiveCount = self.activeCount
         if oldActiveCount != newActiveCount {
-            applyStake(oldActiveCount < newActiveCount)
+            return applyStake(oldActiveCount < newActiveCount) && !currentFlagsStake.isEmpty
+        } else {
+            if isDownSent {
+                return !currentFlagsStake.isEmpty
+            }
         }
-        
-        if activeCount == 0 {
-            self.downStake.removeAll()
-            self.flagsStake.removeAll()
+
+        defer {
+            if activeCount == 0 {
+                self.downStake.removeAll()
+                self.flagsStake.removeAll()
+            }
         }
+
+
+        return false
     }
     
     private var isDownSent: Bool = false
     private var isUpSent: Bool = false
-    private func applyStake(_ isDown: Bool) {
+    private func applyStake(_ isDown: Bool) -> Bool {
         var string = ""
         
         var _flags: [PushToTalkValue.ModifierFlag] = []
@@ -149,20 +175,12 @@ final class KeyboardGlobalHandler {
         }
         var _keyCodes:[UInt16] = []
         for key in downStake {
-            string += DDStringFromKeyCode(key.keyCode, 0)!
+            string += DDStringFromKeyCode(key.keyCode, 0)!.uppercased()
+            if key != downStake.last {
+                string += " + "
+            }
             _keyCodes.append(key.keyCode)
         }
-        
-        string = string.uppercased().reduce("", { current, value in
-            var current = current
-            if current.isEmpty {
-                current += String(value)
-            } else {
-                current += " + "
-                current += String(value)
-            }
-            return current
-        })
         
         
         let result = Result(keyCodes: _keyCodes, modifierFlags: _flags, string: string, eventType: isDown ? .keyDown : .keyUp)
@@ -206,19 +224,22 @@ final class KeyboardGlobalHandler {
             }
             return invoke
         }
-          
+
+        var isHandled: Bool = false
                 
         if isDown {
             isUpSent = false
             if let keyDown = self.keyDownHandler {
                 if let ptt = keyDown.pushToTalkValue {
                     if invokeDown(ptt) {
-                        isDownSent = true
                         keyDown.success(result)
+                        isDownSent = true
+                        isHandled = true
                     }
                 } else {
-                    isDownSent = true
                     keyDown.success(result)
+                    isDownSent = true
+                    isHandled = true
                 }
             }
         } else {
@@ -226,10 +247,12 @@ final class KeyboardGlobalHandler {
                 if let ptt = keyUp.pushToTalkValue {
                     if invokeUp(ptt), (isDownSent || keyDownHandler == nil), !isUpSent {
                         keyUp.success(result)
+                        isHandled = true
                         isUpSent = true
                     }
                 } else if (isDownSent || keyDownHandler == nil), !isUpSent {
                     keyUp.success(result)
+                    isHandled = true
                     isUpSent = true
                 }
             }
@@ -237,6 +260,7 @@ final class KeyboardGlobalHandler {
         if activeCount == 0 {
             isDownSent = false
         }
+        return isHandled
     }
     
     func setKeyDownHandler(_ PushToTalkValue: PushToTalkValue?, success: @escaping(Result)->Void) {
@@ -320,10 +344,7 @@ final class PushToTalk {
             }))
         } else if eventType == .keyDown {
             actionDisposable.set(nil)
-            let signal = Signal<NoValue, NoError>.complete() |> delay(0.15, queue: .mainQueue())
-            actionDisposable.set(signal.start(completed: { [weak self] in
-                self?.update(.speaking)
-            }))
+            self.update(.speaking)
         }
     }
     

@@ -716,7 +716,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 if self.groupActivityView == nil {
                     self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
-                    addSubview(self.groupActivityView!)
+                    self.containerView.addSubview(self.groupActivityView!)
                     animate = true
                 }
                 
