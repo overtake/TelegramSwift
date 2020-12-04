@@ -3654,7 +3654,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                         info: summary.info,
                                                         topParticipants: summary.topParticipants,
                                                         participantCount: summary.participantCount,
-                                                        numberOfActiveSpeakers: summary.numberOfActiveSpeakers,
+                                                        activeSpeakers: summary.activeSpeakers,
                                                         groupCall: context
                                                     )
                                                 }
@@ -3684,8 +3684,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                         participantsContext.with { participantsContext in
                                                             disposable.set(combineLatest(queue: .mainQueue(),
                                                                 participantsContext.state,
-                                                                participantsContext.numberOfActiveSpeakers
-                                                            ).start(next: { state, numberOfActiveSpeakers in
+                                                                participantsContext.activeSpeakers
+                                                            ).start(next: { state, activeSpeakers in
                                                                 var topParticipants: [GroupCallParticipantsContext.Participant] = []
                                                                 for participant in state.participants {
                                                                     if topParticipants.count >= 3 {
@@ -3698,7 +3698,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                                     info: GroupCallInfo(id: activeCall.id, accessHash: activeCall.accessHash, participantCount: state.totalCount, clientParams: nil),
                                                                     topParticipants: topParticipants,
                                                                     participantCount: state.totalCount,
-                                                                    numberOfActiveSpeakers: numberOfActiveSpeakers,
+                                                                    activeSpeakers: activeSpeakers,
                                                                     groupCall: nil
                                                                 )
                                                                 subscriber.putNext(data)

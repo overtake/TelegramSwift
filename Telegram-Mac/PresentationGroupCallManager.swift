@@ -9,19 +9,19 @@ struct PresentationGroupCallSummaryState: Equatable {
     var participantCount: Int
     var callState: PresentationGroupCallState
     var topParticipants: [GroupCallParticipantsContext.Participant]
-    var numberOfActiveSpeakers: Int
+    var activeSpeakers: Set<PeerId>
     init(
         info: GroupCallInfo,
         participantCount: Int,
         callState: PresentationGroupCallState,
         topParticipants: [GroupCallParticipantsContext.Participant],
-        numberOfActiveSpeakers: Int
+        activeSpeakers: Set<PeerId>
     ) {
         self.info = info
         self.participantCount = participantCount
         self.callState = callState
         self.topParticipants = topParticipants
-        self.numberOfActiveSpeakers = numberOfActiveSpeakers
+        self.activeSpeakers = activeSpeakers
     }
 }
 

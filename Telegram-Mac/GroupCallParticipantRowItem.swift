@@ -222,6 +222,8 @@ private final class GroupCallParticipantRowView : TableRowView {
         
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
+        
+        
         if statusView?.layout != item.statusLayout {
             if let statusView = statusView {
                 if animated {

@@ -602,16 +602,18 @@ class SharedAccountContext {
         return groupCallContextValue.get()
     }
     func showGroupCall(with context: GroupCallContext) {
-        groupCallContextValue.set(.single(context))
         let callHeader = bindings.rootNavigation().callHeader
         callHeader?.show(true)
-        (callHeader?.view as? GroupCallNavigationHeaderView)?.update(with: context)
+        (callHeader?.view as? GroupCallNavigationHeaderView)?.update(with: context, sharedContext: self)
+    }
+    
+    func updateCurrentGroupCallValue(_ value: GroupCallContext?) -> Void {
+        groupCallContextValue.set(.single(value))
     }
     
     func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {
         if let groupCall = bindings.groupCall() {
-            groupCallContextValue.set(groupCall.call.leave(terminateIfPossible: terminate) |> filter { $0 } |> map { _ in return nil })
-            return groupCall.call.canBeRemoved |> filter { $0 } |> take(1) 
+            return groupCall.call.leave(terminateIfPossible: terminate) |> take(1)
         } else {
             return .single(true)
         }
