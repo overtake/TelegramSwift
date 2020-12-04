@@ -135,7 +135,6 @@ final class GroupCallContext {
     }
     
     deinit {
-        _ = call.sharedContext.endGroupCall(terminate: false).start()
         presentDisposable.dispose()
         removeDisposable.dispose()
     }

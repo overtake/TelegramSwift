@@ -24,7 +24,7 @@ private final class ShimmerEffectForegroundView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -159,7 +159,7 @@ class StickerShimmerEffectView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -206,7 +206,7 @@ class StickerShimmerEffectView: View {
                 renderPath(segments, context: context)
             } else {
                 let path = CGMutablePath()
-                path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: 10, cornerHeight: 10)
+                path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(10, size.height / 2), cornerHeight: min(size.height / 2, 10))
                 context.addPath(path)
                 context.fillPath()
             }
