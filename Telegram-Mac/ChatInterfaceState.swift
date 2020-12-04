@@ -355,7 +355,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         var appliedText = subText.string
         var attributes:[ChatTextInputAttribute] = []
         
-        var offsetRanges:[(NSRange, Int)] = []
+        var offsetRanges:[NSRange] = []
         if let regex = markdownRegex {
             
             var rawOffset:Int = 0
@@ -374,7 +374,9 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                     rawOffset -= match.range(at: 2).length + match.range(at: 4).length
                     newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
                     attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
-                    offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 1).length, text.length), 6))
+                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
+                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
+                    
                 }
                 
                 pre = match.range(at: 8)
@@ -389,20 +391,19 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                     switch entity {
                     case "`":
                         attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), match.range(at: 6).length * 2))
                     case "**":
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
                         attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     case "~~":
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
                         attributes.append(.strikethrough(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     case "__":
-                        offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 6).length, text.length), 4))
                         attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
                     default:
                         break
                     }
 
+                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 6).length, match.range(at: 6).length))
+                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 6).length + match.range(at: 6).length  + text.length, match.range(at: 6).length))
+                    
                     rawOffset -= match.range(at: 7).length * 2
                 }
                 
@@ -420,8 +421,8 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         for attr in localAttributes {
             var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound)) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
             for offsetRange in offsetRanges {
-                if offsetRange.0.max < newRange.location {
-                    newRange.location -= offsetRange.1
+                if offsetRange.location < newRange.location {
+                    newRange.location -= offsetRange.length
                 }
             }
             //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
