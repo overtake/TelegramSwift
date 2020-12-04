@@ -1475,6 +1475,7 @@ private final class ChatGroupCallView : Control {
                 self?.membersCountView.change(opacity: 0.6, animated: true)
             }
             self?.speakingActivity?.change(opacity: 0.6, animated: true)
+            self?.avatarsContainer.change(opacity: 0.6, animated: true)
         }, for: .Highlight)
         
         button.set(handler: { [weak self] _ in
@@ -1483,6 +1484,7 @@ private final class ChatGroupCallView : Control {
                 self?.membersCountView.change(opacity: 1, animated: true)
             }
             self?.speakingActivity?.change(opacity: 1, animated: true)
+            self?.avatarsContainer.change(opacity: 1.0, animated: true)
         }, for: .Normal)
         
         button.set(handler: { [weak self] _ in
@@ -1491,6 +1493,7 @@ private final class ChatGroupCallView : Control {
                 self?.membersCountView.change(opacity: 1, animated: true)
             }
             self?.speakingActivity?.change(opacity: 1, animated: true)
+            self?.avatarsContainer.change(opacity: 1.0, animated: true)
         }, for: .Hover)
 
         updateLocalizationAndTheme(theme: theme)

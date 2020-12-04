@@ -499,7 +499,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
-                if state.state.canManageCall {
+                if state.state.canManageCall, data.peer.id != account.peerId {
                     if let muteState = data.state?.muteState, !muteState.canUnmute {
                         items.append(.init(L10n.voiceChatUnmutePeer, handler: {
                             arguments.mute(data.peer.id, false)
@@ -537,9 +537,11 @@ final class GroupCallUIController : ViewController {
     private let data: UIData
     private let disposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
-    
+    private let pushToTalkDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
+    private let sound: SoundEffectPlayQueue
     init(_ data: UIData) {
+        self.sound = SoundEffectPlayQueue(postbox: data.call.account.postbox)
         self.data = data
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext)
         super.init()
@@ -661,6 +663,42 @@ final class GroupCallUIController : ViewController {
             }
         }
         
+        pushToTalkDisposable.set((data.call.state |> deliverOnMainQueue).start(next: { [weak self] state in
+            self?.pushToTalk.update = { [weak self] mode in
+                switch state.networkState {
+                case .connected:
+                    switch mode {
+                    case let .speaking(sound):
+                        if let muteState = state.muteState {
+                            if muteState.canUnmute {
+                                self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
+                                self?.pushToTalkIsActive = true
+                                self?.sound.play(name: sound)
+                            }
+                        }
+                    case let .waiting(sound):
+                        if state.muteState == nil, self?.pushToTalkIsActive == true {
+                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
+                            self?.sound.play(name: sound)
+                        }
+                        self?.pushToTalkIsActive = false
+                    case let .toggle(unmuteSound, muteSound):
+                        if let muteState = state.muteState {
+                            if muteState.canUnmute {
+                                self?.data.call.setIsMuted(action: .unmuted)
+                                self?.sound.play(name: unmuteSound)
+                            }
+                        } else {
+                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
+                            self?.sound.play(name: muteSound)
+                        }
+                    }
+                case .connecting:
+                    NSSound.beep()
+                }
+            }
+        }))
+        
     }
     private var pushToTalkIsActive: Bool = false
     
@@ -668,43 +706,16 @@ final class GroupCallUIController : ViewController {
         self.genericView.applyUpdates(state, transition, animated: animated)
         
         
-        
-        self.pushToTalk.update = { [weak self, weak state] mode in
-            if let state = state {
-                switch state.state.networkState {
-                case .connected:
-                    switch mode {
-                    case .speaking:
-                        if let muteState = state.state.muteState {
-                            if muteState.canUnmute {
-                                self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
-                                self?.pushToTalkIsActive = true
-                            }
-                        }
-                    case .waiting:
-                        if state.state.muteState == nil, self?.pushToTalkIsActive == true {
-                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                        }
-                        self?.pushToTalkIsActive = false
-                    case .toggle:
-                        if let muteState = state.state.muteState {
-                            if muteState.canUnmute {
-                                self?.data.call.setIsMuted(action: .unmuted)
-                            }
-                        } else {
-                            self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                        }
-                    }
-                case .connecting:
-                    NSSound.beep()
-                }
-            }
-        }
+        /*
+         let tones = ObjcUtils.notificationTones("Default")
+         */
         
     }
     
     deinit {
         disposable.dispose()
+        pushToTalkDisposable.dispose()
+        actionsDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {

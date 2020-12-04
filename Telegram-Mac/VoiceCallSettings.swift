@@ -22,15 +22,18 @@ struct PushToTalkValue : Equatable, PostboxCoding {
     
     struct ModifierFlag : Equatable, PostboxCoding {
         let keyCode: UInt16
-        
-        init(keyCode: UInt16) {
+        let flag: UInt
+        init(keyCode: UInt16, flag: UInt) {
             self.keyCode = keyCode
+            self.flag = flag
         }
         func encode(_ encoder: PostboxEncoder) {
             encoder.encodeInt32(Int32(self.keyCode), forKey: "kc")
+            encoder.encodeInt64(Int64(bitPattern: UInt64(flag)), forKey: "f")
         }
         init(decoder: PostboxDecoder) {
-            self.keyCode = UInt16(decoder.decodeInt32ForKey("kc", orElse: 0) )
+            self.keyCode = UInt16(decoder.decodeInt32ForKey("kc", orElse: 0))
+            self.flag = UInt(bitPattern: Int(decoder.decodeInt64ForKey("f", orElse: 0)))
         }
         
     }
@@ -67,25 +70,27 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
     let audioOutputDeviceId: String?
     let mode: VoiceChatInputMode
     let pushToTalk: PushToTalkValue?
-    
+    let pushToTalkSoundEffects: Bool
     static var defaultSettings: VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil, mode: .always, pushToTalk: nil)
+        return VoiceCallSettings(audioInputDeviceId: nil, cameraInputDeviceId: nil, audioOutputDeviceId: nil, mode: .always, pushToTalk: nil, pushToTalkSoundEffects: false)
     }
     
-    init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?, mode: VoiceChatInputMode, pushToTalk: PushToTalkValue?) {
+    init(audioInputDeviceId: String?, cameraInputDeviceId: String?, audioOutputDeviceId: String?, mode: VoiceChatInputMode, pushToTalk: PushToTalkValue?, pushToTalkSoundEffects: Bool) {
         self.audioInputDeviceId = audioInputDeviceId
         self.cameraInputDeviceId = cameraInputDeviceId
         self.audioOutputDeviceId = audioOutputDeviceId
         self.pushToTalk = pushToTalk
         self.mode = mode
+        self.pushToTalkSoundEffects = pushToTalkSoundEffects
     }
     
     init(decoder: PostboxDecoder) {
         self.audioInputDeviceId = decoder.decodeOptionalStringForKey("ai")
         self.cameraInputDeviceId = decoder.decodeOptionalStringForKey("ci")
         self.audioOutputDeviceId = decoder.decodeOptionalStringForKey("ao")
-        self.pushToTalk = decoder.decodeObjectForKey("ptt2") as? PushToTalkValue
+        self.pushToTalk = decoder.decodeObjectForKey("ptt3") as? PushToTalkValue
         self.mode = VoiceChatInputMode(rawValue: decoder.decodeInt32ForKey("m", orElse: 0)) ?? .always
+        self.pushToTalkSoundEffects = decoder.decodeBoolForKey("se", orElse: false)
     }
     
     func encode(_ encoder: PostboxEncoder) {
@@ -108,11 +113,13 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
         }
         
         if let pushToTalk = pushToTalk {
-            encoder.encodeObject(pushToTalk, forKey: "ptt2")
+            encoder.encodeObject(pushToTalk, forKey: "ptt3")
         } else {
-            encoder.encodeNil(forKey: "ptt2")
+            encoder.encodeNil(forKey: "ptt3")
         }
         encoder.encodeInt32(self.mode.rawValue, forKey: "m")
+        
+        encoder.encodeBool(pushToTalkSoundEffects, forKey: "se")
     }
     
     func isEqual(to: PreferencesEntry) -> Bool {
@@ -125,19 +132,22 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
     
 
     func withUpdatedAudioInputDeviceId(_ audioInputDeviceId: String?) -> VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk)
+        return VoiceCallSettings(audioInputDeviceId: audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk, pushToTalkSoundEffects: self.pushToTalkSoundEffects)
     }
     func withUpdatedCameraInputDeviceId(_ cameraInputDeviceId: String?) -> VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk)
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk, pushToTalkSoundEffects: self.pushToTalkSoundEffects)
     }
     func withUpdatedAudioOutputDeviceId(_ audioOutputDeviceId: String?) -> VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk)
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk, pushToTalkSoundEffects: self.pushToTalkSoundEffects)
     }
     func withUpdatedPushToTalk(_ pushToTalk: PushToTalkValue?) -> VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: pushToTalk)
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: pushToTalk, pushToTalkSoundEffects: self.pushToTalkSoundEffects)
     }
     func withUpdatedMode(_ mode: VoiceChatInputMode) -> VoiceCallSettings {
-        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: mode, pushToTalk: self.pushToTalk)
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: mode, pushToTalk: self.pushToTalk, pushToTalkSoundEffects: self.pushToTalkSoundEffects)
+    }
+    func withUpdatedSoundEffects(_ pushToTalkSoundEffects: Bool) -> VoiceCallSettings {
+        return VoiceCallSettings(audioInputDeviceId: self.audioInputDeviceId, cameraInputDeviceId: self.cameraInputDeviceId, audioOutputDeviceId: self.audioOutputDeviceId, mode: self.mode, pushToTalk: self.pushToTalk, pushToTalkSoundEffects: pushToTalkSoundEffects)
     }
     
 }

@@ -281,6 +281,8 @@ open class Window: NSWindow {
     public var firstResponderFilter:(NSResponder?)->NSResponder? = { $0 }
     public var onToggleFullScreen:((Bool)->Void)? = nil
     
+    public var isPushToTalkEquaivalent:((NSEvent)->Bool)?
+    
     private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
     
     public var visibility: Signal<Bool, NoError> {
@@ -500,8 +502,9 @@ open class Window: NSWindow {
 
     }
 
+    
     open override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        return super.performKeyEquivalent(with: event)
+        return self.isPushToTalkEquaivalent?(event) ?? super.performKeyEquivalent(with: event)
     }
     
     @available(OSX 10.12.2, *)

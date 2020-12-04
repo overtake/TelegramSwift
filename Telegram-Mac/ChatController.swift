@@ -498,7 +498,7 @@ class ChatControllerView : View, ChatInputDelegate {
         var state:ChatHeaderState
         if interfaceState.isSearchMode.0 {
             state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
-        } else if let groupCall = interfaceState.groupCall {
+        } else if let groupCall = interfaceState.groupCall, groupCall.data?.groupCall == nil {
             state = .groupCall(groupCall)
         } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(kind)

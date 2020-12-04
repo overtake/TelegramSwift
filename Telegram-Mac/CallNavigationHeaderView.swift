@@ -331,8 +331,8 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     
     
     func update(with context: GroupCallContext, sharedContext: SharedAccountContext) {
-        self.context = context
         self.sharedContext = sharedContext
+        self.context = context
         
         let peerId = context.call.peerId
         

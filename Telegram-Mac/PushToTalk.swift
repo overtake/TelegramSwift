@@ -63,29 +63,23 @@ final class KeyboardGlobalHandler {
             guard let `self` = self else {
                 return event
             }
-            if !self.process(event) {
-                return event
-            }
-            return nil
+            self.process(event) 
+            return event
         }))
         monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
             guard let `self` = self else {
                 return event
             }
-            if !self.process(event) {
-                return event
-            }
-            return nil
+            self.process(event)
+            return event
         }))
 
         monitors.append(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
             guard let `self` = self else {
                 return event
             }
-            if !self.process(event) {
-                return event
-            }
-            return nil
+            self.process(event)
+            return event
         }))
     }
     
@@ -136,27 +130,20 @@ final class KeyboardGlobalHandler {
         
         let newActiveCount = self.activeCount
         if oldActiveCount != newActiveCount {
-            return applyStake(oldActiveCount < newActiveCount) && !currentFlagsStake.isEmpty
-        } else {
-            if isDownSent {
-                return !currentFlagsStake.isEmpty
-            }
+            applyStake(oldActiveCount < newActiveCount)
         }
 
-        defer {
-            if activeCount == 0 {
-                self.downStake.removeAll()
-                self.flagsStake.removeAll()
-            }
+        if self.activeCount == 0 {
+            self.downStake.removeAll()
+            self.flagsStake.removeAll()
         }
-
 
         return false
     }
     
     private var isDownSent: Bool = false
     private var isUpSent: Bool = false
-    private func applyStake(_ isDown: Bool) -> Bool {
+    @discardableResult private func applyStake(_ isDown: Bool) -> Bool {
         var string = ""
         
         var _flags: [PushToTalkValue.ModifierFlag] = []
@@ -171,7 +158,7 @@ final class KeyboardGlobalHandler {
         }
         
         for flag in flagsStake {
-            _flags.append(PushToTalkValue.ModifierFlag(keyCode: flag.keyCode))
+            _flags.append(PushToTalkValue.ModifierFlag(keyCode: flag.keyCode, flag: flag.modifierFlags.rawValue))
         }
         var _keyCodes:[UInt16] = []
         for key in downStake {
@@ -188,7 +175,7 @@ final class KeyboardGlobalHandler {
         string = ""
         var flags: [PushToTalkValue.ModifierFlag] = []
         for flag in currentFlagsStake {
-            flags.append(PushToTalkValue.ModifierFlag(keyCode: flag.keyCode))
+            flags.append(PushToTalkValue.ModifierFlag(keyCode: flag.keyCode, flag: flag.modifierFlags.rawValue))
         }
         var keyCodes:[UInt16] = []
         for key in currentDownStake {
@@ -289,9 +276,9 @@ final class KeyboardGlobalHandler {
 final class PushToTalk {
     
     enum Mode {
-        case speaking
-        case waiting
-        case toggle
+        case speaking(sound: String?)
+        case waiting(sound: String?)
+        case toggle(activate: String?, deactivate: String?)
     }
     var update: (Mode)->Void = { _ in }
     
@@ -310,11 +297,12 @@ final class PushToTalk {
     }
     
     private func updateSettings(_ settings: VoiceCallSettings) {
+        let performSound: Bool = settings.pushToTalkSoundEffects
         switch settings.mode {
         case .always:
             if let event = settings.pushToTalk {
                 self.monitor.setKeyUpHandler(event, success: { [weak self] result in
-                    self?.update(.toggle)
+                    self?.update(.toggle(activate: performSound ? "Purr" : nil, deactivate: performSound ? "Pop" : nil))
                 })
                 self.monitor.setKeyDownHandler(event, success: {_ in
                     
@@ -325,10 +313,10 @@ final class PushToTalk {
         case .pushToTalk:
             if let event = settings.pushToTalk {
                 self.monitor.setKeyUpHandler(event, success: { [weak self] result in
-                    self?.proccess(result.eventType)
+                    self?.proccess(result.eventType, performSound)
                 })
                 self.monitor.setKeyDownHandler(event, success: { [weak self] result in
-                    self?.proccess(result.eventType)
+                    self?.proccess(result.eventType, performSound)
                 })
             } else {
                 self.monitor.removeHandlers()
@@ -336,15 +324,15 @@ final class PushToTalk {
         }
     }
     
-    private func proccess(_ eventType: NSEvent.EventTypeMask) {
+    private func proccess(_ eventType: NSEvent.EventTypeMask, _ performSound: Bool) {
         if eventType == .keyUp {
             let signal = Signal<NoValue, NoError>.complete() |> delay(0.15, queue: .mainQueue())
             actionDisposable.set(signal.start(completed: { [weak self] in
-                self?.update(.waiting)
+                self?.update(.waiting(sound: performSound ? "Pop" : nil))
             }))
         } else if eventType == .keyDown {
             actionDisposable.set(nil)
-            self.update(.speaking)
+            self.update(.speaking(sound: performSound ? "Purr" : nil))
         }
     }
     

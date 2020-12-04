@@ -214,6 +214,9 @@ final class InputDataGeneralData : Equatable {
         let secondaryColor: NSColor
         let textColor: NSColor
         let appearance: NSAppearance
+        
+        let generalCheck: CGImage
+        let switchAppearance: SwitchViewAppearance
     }
 
     
