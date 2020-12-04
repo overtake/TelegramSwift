@@ -25,9 +25,10 @@ class GeneralInteractedRowView: GeneralRowView {
     override func set(item:TableRowItem, animated:Bool = false) {
         
         
-        nextView.image = theme.icons.generalNext
         
         if let item = item as? GeneralInteractedRowItem {
+            
+            nextView.image = theme.icons.generalNext
             
             if let descLayout = item.descLayout {
                 if descriptionView == nil {
@@ -89,7 +90,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
-                nextView.image = theme.icons.generalCheck
+                nextView.image = item.customTheme?.generalCheck ?? theme.icons.generalCheck
                 nextView.sizeToFit()
             }
             
@@ -182,7 +183,7 @@ class GeneralInteractedRowView: GeneralRowView {
             textView?.backgroundColor = containerView.controlState == .Highlight && !isSelect ? .clear : self.backdorColor
             containerView.set(background: self.backdorColor, for: .Normal)
             containerView.set(background: highlighted, for: .Highlight)
-            progressView?.progressColor = theme.colors.grayIcon
+            progressView?.progressColor = item.customTheme?.secondaryColor ?? theme.colors.grayIcon
         }
         containerView.needsDisplay = true
     }

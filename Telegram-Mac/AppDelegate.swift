@@ -249,10 +249,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         initializeAccountManagement()
         
-//        DDHotKeyCenter.shared()?.register(DDHotKey(keyCode: KeyboardKey.G.rawValue, modifierFlags: 0, task: { event in
-//            var bp:Int = 0
-//            bp += 1
-//        }))
         
         let rootPath = containerUrl!
         let window = self.window!
@@ -423,6 +419,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
             
+            self.hangKeybind(sharedContext)
+            
             
             let rawAccounts = sharedContext.activeAccounts
                 |> map { _, accounts, _ -> [Account] in
@@ -525,34 +523,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
                 return .single(sharedApplicationContext)
             })
-            
-            
-//            let tonKeychain: TonKeychain
-//            
-//            tonKeychain = TonKeychain(encryptionPublicKey: {
-//                return Signal { subscriber in
-//                    return EmptyDisposable
-//                }
-//            }, encrypt: { data in
-//                return Signal { subscriber in
-//                    if #available(OSX 10.12, *) {
-//                        if let context = self.contextValue?.context, let publicKey = TKPublicKey.get(for: context.account) {
-//                            if let result = publicKey.encrypt(data: data) {
-//                                subscriber.putNext(TonKeychainEncryptedData(publicKey: publicKey.key, data: result))
-//                                subscriber.putCompletion()
-//                                return EmptyDisposable
-//                            }
-//                        }
-//                    }
-//                    subscriber.putError(.generic)
-//                    return EmptyDisposable
-//                }
-//            }, decrypt: { encryptedData in
-//                return Signal { subscriber in
-//                    return EmptyDisposable
-//                }
-//            })
-
 
             
             self.context.set(self.sharedContextPromise.get()
@@ -832,6 +802,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
         })
         
+        
+    
+        
     }
     
     
@@ -929,6 +902,31 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
             }
         }
+    }
+    
+    private func hangKeybind(_ sharedContext: SharedAccountContext) {
+        let signal = combineLatest(queue: .mainQueue(), voiceCallSettings(sharedContext.accountManager), sharedContext.groupCallContext)
+        
+        _ = signal.start(next: { settings, activeCall in
+            if let pushToTalk = settings.pushToTalk, let _ = activeCall {
+                self.window.isPushToTalkEquaivalent = { event in
+                    if !pushToTalk.modifierFlags.isEmpty, pushToTalk.keyCodes.contains(event.keyCode) {
+                        for modifier in pushToTalk.modifierFlags {
+                            if modifier.flag == event.modifierFlags.rawValue {
+                                return true
+                            }
+                        }
+                    }
+                    return false
+                }
+            } else {
+                self.window.isPushToTalkEquaivalent = nil
+            }
+            
+        })
+
+        
+        
     }
     
     

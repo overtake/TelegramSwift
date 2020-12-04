@@ -78,7 +78,9 @@ private let _id_speak_all_members = InputDataIdentifier("_id_speak_all_members")
 private let _id_input_mode_always = InputDataIdentifier("_id_input_mode_always")
 private let _id_input_mode_ptt = InputDataIdentifier("_id_input_mode_ptt")
 private let _id_ptt = InputDataIdentifier("_id_ptt")
- 
+private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
+
+
 private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void, checkPermission:@escaping()->Void) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
@@ -89,13 +91,17 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
+    let switchAppearance = SwitchViewAppearance.init(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
+    
     let theme = InputDataGeneralData.Theme(backgroundColor: GroupCallTheme.membersColor,
                                            highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
                                            borderColor: GroupCallTheme.memberSeparatorColor,
                                            accentColor: GroupCallTheme.blueStatusColor,
                                            secondaryColor: GroupCallTheme.grayStatusColor,
                                            textColor: .white,
-                                           appearance: darkPalette.appearance)
+                                           appearance: darkPalette.appearance,
+                                           generalCheck: NSImage(named: "Icon_Check")!.precomposed(GroupCallTheme.blueStatusColor),
+                                           switchAppearance: switchAppearance)
     
     if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState {
         let isMuted = defaultParticipantMuteState == .muted
@@ -110,7 +116,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState
         }, theme: theme)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: .redUI, type: .none, viewType: .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
         index += 1
 
         entries.append(.sectionId(sectionId, type: .customModern(20)))
@@ -170,12 +176,20 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState
     }, theme: theme)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: L10n.voiceChatSettingsInputModePushToTalk, color: .white, type: .selectable(settings.mode == .pushToTalk), viewType: .lastItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: L10n.voiceChatSettingsInputModePushToTalk, color: .white, type: .selectable(settings.mode == .pushToTalk), viewType: .innerItem, action: {
         updateSettings {
             $0.withUpdatedMode(.pushToTalk)
         }
     }, theme: theme)))
     index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt_se, data: .init(name: "Sound Effects", color: .white, type: .switchable(settings.pushToTalkSoundEffects), viewType: .lastItem, action: {
+        updateSettings {
+            $0.withUpdatedSoundEffects(!$0.pushToTalkSoundEffects)
+        }
+    }, theme: theme)))
+    index += 1
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

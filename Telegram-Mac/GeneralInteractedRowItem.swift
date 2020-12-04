@@ -96,7 +96,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         self.disabledAction = disabledAction
         self.autoswitch = autoswitch
         self.activeThumb = activeIcon != nil ? GeneralThumbAdditional(thumb: activeIcon!, textInset: nil) : self.thumb
-        self.switchAppearance = switchAppearance
+        self.switchAppearance = customTheme?.switchAppearance ?? switchAppearance
         super.init(initialSize, height: 0, stableId:stableId, type:type, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:border, inset:inset, enabled: enabled, error: error)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }

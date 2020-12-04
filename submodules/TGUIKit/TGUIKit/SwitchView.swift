@@ -9,7 +9,7 @@
 import Cocoa
 import SwiftSignalKit
 
-public struct SwitchViewAppearance {
+public struct SwitchViewAppearance : Equatable {
     let backgroundColor: NSColor
     let disabledColor: NSColor
     let stateOnColor: NSColor

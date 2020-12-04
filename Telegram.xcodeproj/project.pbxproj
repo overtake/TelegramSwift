@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
+		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
+		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -980,6 +983,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
+		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
+		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -2306,6 +2312,8 @@
 		A778DC2C23C77ACB00DD307B /* sounds */ = {
 			isa = PBXGroup;
 			children = (
+				27A9904C257A8044009044DB /* Pop.wav */,
+				27A9904D257A8046009044DB /* Purr.wav */,
 				A778DC3223C8988300DD307B /* quiz-correct.mp3 */,
 				A778DC3123C8988100DD307B /* quiz-incorrect.mp3 */,
 				A778DC2D23C77AD800DD307B /* confetti.mp3 */,
@@ -4407,6 +4415,7 @@
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
 				D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */,
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
+				27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -4590,6 +4599,7 @@
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
+				27A9904E257A8047009044DB /* Pop.wav in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
@@ -4624,6 +4634,7 @@
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
 				D07450E6233D61B800769D7F /* brilliant_static.tgs in Resources */,
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
+				27A9904F257A8047009044DB /* Purr.wav in Resources */,
 				D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
@@ -5381,6 +5392,7 @@
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
 				9F1890932238F3DC00665EF5 /* DownloadedFilesPaths.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
+				27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */,
 				C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */,
 				C27A8E991EC9D48000C8E7E7 /* QuickSwitcherModalController.swift in Sources */,
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,
@@ -5847,7 +5859,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
 				DEVELOPMENT_TEAM = C67CF9S4VU;
@@ -6431,7 +6443,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = NO;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
-				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
