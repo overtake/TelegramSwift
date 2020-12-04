@@ -47,20 +47,20 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
       }
       
     private struct SummaryParticipantsState: Equatable {
-        var participantCount: Int
-        var topParticipants: [GroupCallParticipantsContext.Participant]
-        var numberOfActiveSpeakers: Int
-        
-        public init(
-            participantCount: Int,
-            topParticipants: [GroupCallParticipantsContext.Participant],
-            numberOfActiveSpeakers: Int
-        ) {
-            self.participantCount = participantCount
-            self.topParticipants = topParticipants
-            self.numberOfActiveSpeakers = numberOfActiveSpeakers
-        }
-    }
+           public var participantCount: Int
+           public var topParticipants: [GroupCallParticipantsContext.Participant]
+           public var activeSpeakers: Set<PeerId>
+           
+           public init(
+               participantCount: Int,
+               topParticipants: [GroupCallParticipantsContext.Participant],
+               activeSpeakers: Set<PeerId>
+           ) {
+               self.participantCount = participantCount
+               self.topParticipants = topParticipants
+               self.activeSpeakers = activeSpeakers
+           }
+       }
 
     private class SpeakingParticipantsContext {
         private let speakingLevelThreshold: Float = 0.15
@@ -348,7 +348,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 participantCount: participantsState.participantCount,
                 callState: callState,
                 topParticipants: participantsState.topParticipants,
-                numberOfActiveSpeakers: participantsState.numberOfActiveSpeakers
+                activeSpeakers: participantsState.activeSpeakers
             )
         })
 
@@ -511,9 +511,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 self.participantsContext = participantsContext
                 self.participantsContextStateDisposable.set(combineLatest(queue: .mainQueue(),
                    participantsContext.state,
-                   participantsContext.numberOfActiveSpeakers,
+                   participantsContext.activeSpeakers,
                    self.speakingParticipantsContext.get()
-               ).start(next: { [weak self] state, numberOfActiveSpeakers, speakingParticipants in
+               ).start(next: { [weak self] state, activeSpeakers, speakingParticipants in
                    guard let strongSelf = self else {
                        return
                    }
@@ -560,7 +560,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                    strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
                        participantCount: state.totalCount,
                        topParticipants: topParticipants,
-                       numberOfActiveSpeakers: numberOfActiveSpeakers
+                       activeSpeakers: activeSpeakers
                    )))
                }))
 

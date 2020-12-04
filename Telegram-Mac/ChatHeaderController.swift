@@ -1581,11 +1581,11 @@ private final class ChatGroupCallView : Control {
             index -= 1
         }
         
-        if let data = data.data, data.numberOfActiveSpeakers > 0 {
+        if let data = data.data, data.activeSpeakers.count > 0 {
             
             membersCountView.change(opacity: 0, animated: animated)
             
-            let textData = DynamicCounterTextView.make(for: L10n.chatGroupCallSpeakersCountable(data.numberOfActiveSpeakers), count: data.numberOfActiveSpeakers, font: .normal(.short), textColor: theme.colors.accent, width: frame.width - 100)
+            let textData = DynamicCounterTextView.make(for: L10n.chatGroupCallSpeakersCountable(data.activeSpeakers.count), count: data.activeSpeakers.count, font: .normal(.short), textColor: theme.colors.accent, width: frame.width - 100)
             
             if self.speakingActivity == nil {
                 self.speakingActivity = DynamicCounterTextView(frame: .init(origin: .zero, size: textData.size))

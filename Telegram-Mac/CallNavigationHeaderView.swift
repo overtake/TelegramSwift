@@ -309,7 +309,13 @@ class CallNavigationHeaderView: CallHeaderBasicView {
 
 class GroupCallNavigationHeaderView: CallHeaderBasicView {
   
-    private(set) var context: GroupCallContext?
+    private(set) var context: GroupCallContext? {
+        didSet {
+            self.sharedContext?.updateCurrentGroupCallValue(context)
+        }
+    }
+    
+    private var sharedContext: SharedAccountContext?
     
     override func toggleMute() {
         self.context?.call.toggleIsMuted()
@@ -324,8 +330,9 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     }
     
     
-    func update(with context: GroupCallContext) {
+    func update(with context: GroupCallContext, sharedContext: SharedAccountContext) {
         self.context = context
+        self.sharedContext = sharedContext
         
         let peerId = context.call.peerId
         
@@ -338,7 +345,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 info: summary.info,
                 topParticipants: summary.topParticipants,
                 participantCount: summary.participantCount,
-                numberOfActiveSpeakers: summary.numberOfActiveSpeakers,
+                activeSpeakers: summary.activeSpeakers,
                 groupCall: nil
             )
         }
