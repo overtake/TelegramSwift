@@ -72,6 +72,7 @@ private struct GroupCallSettingsState : Equatable {
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
 private let _id_input_audio = InputDataIdentifier("_id_input_audio")
+private let _id_output_audio = InputDataIdentifier("_id_output_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
 private let _id_speak_admin_only = InputDataIdentifier("_id_speak_admin_only")
 private let _id_speak_all_members = InputDataIdentifier("_id_speak_all_members")
@@ -81,7 +82,7 @@ private let _id_ptt = InputDataIdentifier("_id_ptt")
 private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
 
 
-private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void, checkPermission:@escaping()->Void) -> [InputDataEntry] {
+private func groupCallSettingsEntries(state: PresentationGroupCallState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void, checkPermission:@escaping()->Void) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -123,44 +124,47 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, uiState
         sectionId += 1
     }
 
-    
-    let devices = devicesList()
-    
-    var microDevice = devices.audio.first(where: { $0.uniqueID == settings.audioInputDeviceId })
-    
-    let activeMicroDevice: AVCaptureDevice?
-    if let microDevice = microDevice {
-        if microDevice.isConnected && !microDevice.isSuspended {
-            activeMicroDevice = microDevice
-        } else {
-            activeMicroDevice = nil
-        }
-    } else if settings.audioInputDeviceId == nil {
-        activeMicroDevice = AVCaptureDevice.default(for: .audio)
-    } else {
-        microDevice = devices.audio.first(where: { $0.isConnected && !$0.isSuspended })
-        activeMicroDevice = microDevice
-    }
-    
-    
+        
+    let microDevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+       
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: L10n.callSettingsInputText, color: .white, type: .contextSelector(microDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
         arguments.toggleInputAudioDevice(nil)
-    })] + devices.audio.map { value in
+    })] + devices.audioInput.map { value in
         return SPopoverItem(value.localizedName, {
             arguments.toggleInputAudioDevice(value.uniqueID)
         })
-    }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem, theme: theme)))
+    }), viewType: microDevice == nil ? .singleItem : .firstItem, theme: theme)))
     index += 1
     
-    if let activeMicroDevice = activeMicroDevice {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: activeMicroDevice, viewType: .lastItem, theme: theme)
+    if let microDevice = microDevice {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: microDevice, viewType: .lastItem, theme: theme)
         }))
         index += 1
     }
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    let outputDevice = devices.audioOutput.first(where: { $0.uniqueID == settings.audioOutputDeviceId })
+       
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("OUTPUT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: "Output Device", color: .white, type: .contextSelector(outputDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
+        arguments.toggleOutputAudioDevice(nil)
+    })] + devices.audioOutput.map { value in
+        return SPopoverItem(value.localizedName, {
+            arguments.toggleOutputAudioDevice(value.uniqueID)
+        })
+    }), viewType: .singleItem, theme: theme)))
+    index += 1
+    
     
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -227,6 +231,9 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     fileprivate let call: PresentationGroupCall
     private let disposable = MetaDisposable()
     private let account: Account
+    
+    private let permissionDisposable = MetaDisposable()
+    
     init(sharedContext: SharedAccountContext, account: Account, call: PresentationGroupCall) {
         self.sharedContext = sharedContext
         self.account = account
@@ -245,10 +252,13 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     
     deinit {
         disposable.dispose()
+        permissionDisposable.dispose()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        permissionDisposable.set(requestMicrophonePermission().start())
         
         let account = self.account
                 
@@ -266,8 +276,6 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         }, for: .Click)
         
         let sharedContext = self.sharedContext
-        
-        let deviceContextObserver = DevicesContext(VoiceCallSettings.defaultSettings)
         
         let updateSettings:(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void = { f in
             _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, f).start()
@@ -305,8 +313,8 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { })
         let initialSize = self.atomicSize
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, deviceContextObserver.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToSignal { _, settings, appearance, peer, state, uiState in
-            let entries = groupCallSettingsEntries(state: state, uiState: uiState, settings: settings, account: account, peer: peer, arguments: arguments, updateDefaultParticipantsAreMuted: updateDefaultParticipantsAreMuted, updateSettings: updateSettings, checkPermission: checkPermission).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToSignal { devices, settings, appearance, peer, state, uiState in
+            let entries = groupCallSettingsEntries(state: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, arguments: arguments, updateDefaultParticipantsAreMuted: updateDefaultParticipantsAreMuted, updateSettings: updateSettings, checkPermission: checkPermission).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 

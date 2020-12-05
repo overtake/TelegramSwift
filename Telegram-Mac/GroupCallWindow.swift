@@ -73,14 +73,10 @@ final class GroupCallWindow : Window {
 
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
         self.minSize = NSMakeSize(400, 580)
-        self.isOpaque = true
-        self.backgroundColor = .black
-        
 
         self.titlebarAppearsTransparent = true
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
-        
         
     }
     

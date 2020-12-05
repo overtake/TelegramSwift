@@ -107,9 +107,11 @@ protocol PresentationGroupCall: class {
     var audioLevels: Signal<[(PeerId, Float)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
     var invitedPeers: Signal<Set<PeerId>, NoError> { get }
-
+    var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
-
+    
+    var permissions:(PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void { get set }
+    
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
     
     func toggleIsMuted()

@@ -12,7 +12,6 @@ import LocalAuthentication
 //import WalletCore
 import OpenSSLEncryption
 import CoreSpotlight
-import DDHotKey
 
 #if !APP_STORE
 import AppCenter

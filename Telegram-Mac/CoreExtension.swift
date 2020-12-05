@@ -2816,7 +2816,7 @@ func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, No
             return ActionDisposable {
                 cancelled = true
             }
-        }
+        } |> runOn(.concurrentDefaultQueue()) |> deliverOnMainQueue
     } else {
         return .single(true)
     }

@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import DDHotKey
+import HotKey
 import SwiftSignalKit
 import TGUIKit
 
@@ -19,9 +19,25 @@ extension PushToTalkValue {
 
 final class KeyboardGlobalHandler {
     
-    static func hasPermission() -> Bool {
-        let dict:[String: Any] = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true]
-        return AXIsProcessTrustedWithOptions(dict as CFDictionary)
+    static func hasPermission(askPermission: Bool = true) -> Bool {
+        let result: Bool
+        if #available(macOS 10.15, *) {
+            result = PermissionsManager.checkInputMonitoring(withPrompt: false)
+        } else if #available(macOS 10.14, *) {
+            result = PermissionsManager.checkAccessibility(withPrompt: false)
+        } else {
+            result = true
+        }
+        if !result && askPermission {
+            self.requestPermission()
+        }
+        return result
+    }
+    
+    static func requestPermission() -> Void {
+        if #available(macOS 10.15, *) {
+            _ = PermissionsManager.checkInputMonitoring(withPrompt: true)
+        }
     }
     
     private struct Handler {
@@ -48,39 +64,104 @@ final class KeyboardGlobalHandler {
     private var keyDownHandler: Handler?
     private var keyUpHandler: Handler?
 
+    private var eventTap: CFMachPort?
+    private var runLoopSource:CFRunLoopSource?
+    
+    func getPermission()->Signal<Bool, NoError> {
+        return Signal { subscriber in
+            
+            subscriber.putNext(KeyboardGlobalHandler.hasPermission(askPermission: false))
+            subscriber.putCompletion()
+            
+            return EmptyDisposable
+            
+        } |> runOn(.concurrentDefaultQueue()) |> deliverOnMainQueue
+    }
+    
+    private let disposable = MetaDisposable()
+    
     init() {
-        monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
-            self?.process(event)
-        }))
-        monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
-            self?.process(event)
-        }))
-        monitors.append(NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
-            self?.process(event)
+        disposable.set(getPermission().start(next: { [weak self] value in
+            self?.runListener(hasPermission: value)
         }))
 
-        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
-            guard let `self` = self else {
-                return event
+    }
+    
+    private func runListener(hasPermission: Bool) {
+        final class ProcessEvent {
+            var process:(NSEvent)->Void = { _ in }
+        }
+        
+        let processEvent = ProcessEvent()
+        
+        processEvent.process = { [weak self] event in
+            self?.process(event)
+        }
+                
+        if hasPermission {
+            func callback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
+                if type == .keyDown || type == .keyUp || type == .flagsChanged {
+                    if let event = NSEvent(cgEvent: event) {
+                        let processor = Unmanaged<ProcessEvent>.fromOpaque(refcon!).takeUnretainedValue()
+                        processor.process(event)
+                    }
+                }
+                return Unmanaged.passRetained(event)
             }
-            self.process(event) 
-            return event
-        }))
-        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
-            guard let `self` = self else {
-                return event
-            }
-            self.process(event)
-            return event
-        }))
+            let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
+            self.eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
+                                                  place: .headInsertEventTap,
+                                                  options: .listenOnly,
+                                                  eventsOfInterest: CGEventMask(eventMask),
+                                                  callback: callback,
+                                                  userInfo: UnsafeMutableRawPointer(Unmanaged.passRetained(processEvent).toOpaque()))
 
-        monitors.append(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
-            guard let `self` = self else {
-                return event
+            if let eventTap = self.eventTap {
+                let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
+                CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
+                CGEvent.tapEnable(tap: eventTap, enable: true)
+                CFRunLoopRun()
+                self.runLoopSource = runLoopSource
             }
-            self.process(event)
-            return event
-        }))
+        } else {
+            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
+                guard let `self` = self else {
+                    return event
+                }
+                self.process(event)
+                return event
+            }))
+            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
+                guard let `self` = self else {
+                    return event
+                }
+                self.process(event)
+                return event
+            }))
+    
+            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
+                guard let `self` = self else {
+                    return event
+                }
+                self.process(event)
+                return event
+            }))
+        }
+    }
+    
+    deinit {
+        for monitor in monitors {
+            if let monitor = monitor {
+                NSEvent.removeMonitor(monitor)
+            }
+        }
+        if let eventTap = eventTap {
+            CGEvent.tapEnable(tap: eventTap, enable: false)
+        }
+        if let source = self.runLoopSource {
+            CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
+        }
+        disposable.dispose()
     }
     
     private var downStake:[NSEvent] = []
@@ -154,7 +235,7 @@ final class KeyboardGlobalHandler {
         })
         
         if let finalFlag = finalFlag {
-            string += DDStringFromKeyCode(finalFlag.keyCode, finalFlag.modifierFlags.rawValue)!
+            string += StringFromKeyCode(finalFlag.keyCode, finalFlag.modifierFlags.rawValue)!
         }
         
         for flag in flagsStake {
@@ -162,7 +243,7 @@ final class KeyboardGlobalHandler {
         }
         var _keyCodes:[UInt16] = []
         for key in downStake {
-            string += DDStringFromKeyCode(key.keyCode, 0)!.uppercased()
+            string += StringFromKeyCode(key.keyCode, 0)!.uppercased()
             if key != downStake.last {
                 string += " + "
             }
@@ -263,13 +344,6 @@ final class KeyboardGlobalHandler {
         self.keyUpHandler = nil
     }
     
-    deinit {
-        for monitor in monitors {
-            if let monitor = monitor {
-                NSEvent.removeMonitor(monitor)
-            }
-        }
-    }
 }
 
 
