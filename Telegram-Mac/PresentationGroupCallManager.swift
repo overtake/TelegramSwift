@@ -36,6 +36,16 @@ enum RequestOrJoinGroupCallResult {
 public enum PresentationGroupCallMuteAction: Equatable {
     case muted(isPushToTalkActive: Bool)
     case unmuted
+    
+    var isEffectivelyMuted: Bool {
+       switch self {
+           case let .muted(isPushToTalkActive):
+               return !isPushToTalkActive
+           case .unmuted:
+               return false
+       }
+   }
+
 }
 
 public struct PresentationGroupCallState: Equatable {

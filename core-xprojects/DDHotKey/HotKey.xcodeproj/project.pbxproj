@@ -10,7 +10,6 @@
 		D00746DD2577A41A0000DF74 /* HotKey.h in Headers */ = {isa = PBXBuildFile; fileRef = D00746DB2577A41A0000DF74 /* HotKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D00746E92577A68E0000DF74 /* HotKeyUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = D00746E52577A6850000DF74 /* HotKeyUtilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D00746EC2577A68E0000DF74 /* HotKeyUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = D00746E82577A68E0000DF74 /* HotKeyUtilities.m */; };
-		D00746F22577A6C90000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00746F12577A6C90000DF74 /* Carbon.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +26,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00746F22577A6C90000DF74 /* Carbon.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
