@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
+		273F9C0B257BC486004EC51B /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
@@ -736,7 +738,6 @@
 		D004BD2B23153415009A54B1 /* ThemePreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D004BD2A23153415009A54B1 /* ThemePreviewModalController.swift */; };
 		D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */; };
 		D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2C9B92A1E8011CD00380D79 /* Carbon.framework */; };
-		D00747012577A7D40000DF74 /* DDHotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00747002577A7D40000DF74 /* DDHotKey.framework */; };
 		D00747042577AF0B0000DF74 /* PushToTalkRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */; };
 		D0076E372568482E007EF588 /* OpusBinding.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E362568482E007EF588 /* OpusBinding.framework */; };
 		D0076E8B25685339007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E8A25685339007EF588 /* webrtc.framework */; };
@@ -983,6 +984,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
+		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -1955,7 +1958,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D00747012577A7D40000DF74 /* DDHotKey.framework in Frameworks */,
+				273F9C0B257BC486004EC51B /* HotKey.framework in Frameworks */,
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				D0E7BD6C256AA5570068644D /* TelegramVoip.framework in Frameworks */,
 				C22E06261D7F16C000A11C88 /* TGUIKit.framework in Frameworks */,
@@ -2210,6 +2213,7 @@
 				9F1BC1A8223FDE6D00F21815 /* InputSources.swift */,
 				9F0F8E81226DCD1C00A97F6A /* OpmizeDatabaseView.swift */,
 				A7393D432408F84300CE44CA /* DiceCache.swift */,
+				27200F1A257C256E00574365 /* DevicesContext.swift */,
 			);
 			name = account;
 			sourceTree = "<group>";
@@ -4273,6 +4277,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				273F9C0A257BC486004EC51B /* HotKey.framework */,
 				D00747002577A7D40000DF74 /* DDHotKey.framework */,
 				D0E7BD6B256AA5570068644D /* TelegramVoip.framework */,
 				D0076FFD25691EDE007EF588 /* FFMpegBinding.framework */,
@@ -5092,6 +5097,7 @@
 				D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */,
 				9F7B5FCD220099220087D020 /* WallpaperPatternPreview.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
+				27200F1B257C256E00574365 /* DevicesContext.swift in Sources */,
 				D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,

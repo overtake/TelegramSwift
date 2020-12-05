@@ -1,19 +1,10 @@
-/*
- DDHotKey -- DDHotKeyUtilities.m
- 
- Copyright (c) Dave DeLong <http://www.davedelong.com>
- 
- Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
- 
- The software is  provided "as is", without warranty of any kind, including all implied warranties of merchantability and fitness. In no event shall the author(s) or copyright holder(s) be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
- */
 
-#import "DDHotKeyUtilities.h"
+#import "HotKeyUtilities.h"
 #import <Carbon/Carbon.h>
 #import <Appkit/AppKit.h>
 
-static NSDictionary *_DDKeyCodeToCharacterMap(void);
-static NSDictionary *_DDKeyCodeToCharacterMap(void) {
+static NSDictionary *_KeyCodeToCharacterMap(void);
+static NSDictionary *_KeyCodeToCharacterMap(void) {
     static NSDictionary *keyCodeMap = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -70,9 +61,9 @@ static NSDictionary *_DDKeyCodeToCharacterMap(void) {
     return keyCodeMap;
 }
 
-NSString *DDStringFromKeyCode(unsigned short keyCode, NSUInteger modifiers) {
+NSString *StringFromKeyCode(unsigned short keyCode, NSUInteger modifiers) {
     NSMutableString *final = [NSMutableString stringWithString:@""];
-    NSDictionary *characterMap = _DDKeyCodeToCharacterMap();
+    NSDictionary *characterMap = _KeyCodeToCharacterMap();
     
     if (modifiers & NSControlKeyMask) {
         [final appendString:[characterMap objectForKey:@(kVK_Control)]];
@@ -114,7 +105,7 @@ NSString *DDStringFromKeyCode(unsigned short keyCode, NSUInteger modifiers) {
             UniCharCount actualStringLength = 0;
             UniChar unicodeString[maxStringLength];
             
-            UInt32 keyModifiers = DDCarbonModifierFlagsFromCocoaModifiers(modifiers);
+            UInt32 keyModifiers = CarbonModifierFlagsFromCocoaModifiers(modifiers);
             
             OSStatus status = UCKeyTranslate(keyboardLayout,
                                              keyCode, kUCKeyActionDown, keyModifiers,
@@ -134,7 +125,7 @@ NSString *DDStringFromKeyCode(unsigned short keyCode, NSUInteger modifiers) {
     return final;
 }
 
-UInt32 DDCarbonModifierFlagsFromCocoaModifiers(NSUInteger flags) {
+UInt32 CarbonModifierFlagsFromCocoaModifiers(NSUInteger flags) {
     UInt32 newFlags = 0;
     if ((flags & NSControlKeyMask) > 0) { newFlags |= controlKey; }
     if ((flags & NSCommandKeyMask) > 0) { newFlags |= cmdKey; }
@@ -143,3 +134,69 @@ UInt32 DDCarbonModifierFlagsFromCocoaModifiers(NSUInteger flags) {
     if ((flags & NSAlphaShiftKeyMask) > 0) { newFlags |= alphaLock; }
     return newFlags;
 }
+
+#import <IOKit/hidsystem/IOHIDLib.h>
+
+NSString *const PermissionsManagerKeyAccessibilityEnabled=@"accessibilityEnabled";
+NSString *const PermissionsManagerKeyInputMonitoringEnabled=@"inputMonitoringEnabled";
+NSString *const PermissionsManagerKeyHasAllRequiredPermissions=@"hasAllRequiredPermissions";
+
+static NSString *const PrefsHasRequestedInputMonitoringPermission=@"HasRequestedInputMonitoringPermission";
+static NSString *const PrefsHasRequestedAccessibilityPermission=@"HasRequestedAccessibilityPermission";
+
+@interface PermissionsManager ()
+@property (getter=isAccessibilityEnabled) BOOL accessibilityEnabled;
+@property (getter=isInputMonitoringEnabled) BOOL inputMonitoringEnabled;
+@property NSTimer *refreshTimer;
+@property NSDate *refreshStarted;
+@end
+
+@implementation PermissionsManager
+
+
++ (BOOL)checkAccessibilityWithPrompt:(BOOL)prompt
+{
+    // this is a 10.9 API but is only needed on 10.14.
+    // with no prompt, this check is very fast. otherwise it blocks.
+    NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @(prompt)};
+    return AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
+}
+
++ (BOOL)checkInputMonitoringWithPrompt:(BOOL)prompt
+{
+    if (@available(macOS 10.15, *)) {
+        static const IOHIDRequestType accessType=kIOHIDRequestTypeListenEvent;
+        if (prompt) {
+            // this will block
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                IOHIDRequestAccess(accessType);
+            });
+            return NO;
+        }
+        else {
+            // this check is very fast
+            return kIOHIDAccessTypeGranted==IOHIDCheckAccess(accessType);
+        }
+    }
+    else {
+        return YES;
+    }
+}
+
++ (NSURL *)securitySettingsUrlForKey:(NSString *)key
+{
+    return [NSURL URLWithString:[NSString stringWithFormat:@"x-apple.systempreferences:com.apple.preference.security?%@", key]];
+}
+
++ (void)openAccessibilityPrefs
+{
+    [[NSWorkspace sharedWorkspace] openURL:[PermissionsManager securitySettingsUrlForKey:@"Privacy_Accessibility"]];
+}
+
++ (void)openInputMonitoringPrefs
+{
+    [[NSWorkspace sharedWorkspace] openURL:[PermissionsManager securitySettingsUrlForKey:@"Privacy_ListenEvent"]];
+}
+
+
+@end

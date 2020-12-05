@@ -156,12 +156,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         |> map { value -> Bool in
             switch value {
             case let .muted(isPushToTalkActive):
-                return isPushToTalkActive
+                return !isPushToTalkActive
             case .unmuted:
                 return true
             }
         }
     }
+    
+    var permissions: (PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void = { _, f in f(true) }
 
         
     private let audioLevelsPipe = ValuePipe<[(PeerId, Float)]>()
@@ -235,30 +237,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private let isMutedDisposable = MetaDisposable()
     private let memberStatesDisposable = MetaDisposable()
     private let leaveDisposable = MetaDisposable()
+    private let devicesDisposable = MetaDisposable()
     
     private var checkCallDisposable: Disposable?
     private var isCurrentlyConnecting: Bool?
     
     private let devicesContext: DevicesContext
-    private var settingsDisposable: Disposable?
     
     private var myAudioLevelTimer: SwiftSignalKit.Timer?
     private let typingDisposable = MetaDisposable()
 
 
-    
-    private var voiceSettings: VoiceCallSettings {
-        didSet {
-            let microUpdated = devicesContext.updateMicroId(voiceSettings) // todo
-            let outputUpdated = devicesContext.updateOutputId(voiceSettings)
-            if microUpdated {
-                self.callContext?.switchAudioInput(devicesContext.currentMicroId ?? "")
-            }
-            if outputUpdated {
-                 self.callContext?.switchAudioOutput(devicesContext.currentOutputId ?? "")
-            }
-        }
-    }
+
     
     
     init(
@@ -276,16 +266,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.peer = peer
         self.initialCall = initialCall
         
-        let semaphore = DispatchSemaphore(value: 0)
-        var callSettings: VoiceCallSettings = VoiceCallSettings.defaultSettings
-        let _ =  (voiceCallSettings(sharedContext.accountManager) |> take(1)).start(next: { settings in
-            callSettings = settings
-            semaphore.signal()
-        })
-        semaphore.wait()
-        
-        self.voiceSettings = callSettings
-        self.devicesContext = DevicesContext(callSettings)
+        self.devicesContext = sharedContext.devicesContext
 
         self.groupCallParticipantUpdatesDisposable = (self.account.stateManager.groupCallParticipantUpdates
         |> deliverOnMainQueue).start(next: { [weak self] updates in
@@ -326,10 +307,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
            }
        })
 
-        
-        self.settingsDisposable = combineLatest(queue: .mainQueue(), voiceCallSettings(sharedContext.accountManager), devicesContext.signal).start(next: { [weak self] settings, _ in
-            self?.voiceSettings = settings
-        })
+        devicesDisposable.set(devicesContext.updater().start(next: { [weak self] values in
+            guard let `self` = self else {
+                return
+            }
+            if let id = values.input {
+                self.callContext?.switchAudioInput(id)
+            }
+            if let id = values.output {
+                self.callContext?.switchAudioOutput(id)
+            }
+        }))
         
         self.summaryStatePromise.set(combineLatest(queue: .mainQueue(),
             self.summaryInfoState.get(),
@@ -368,10 +356,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.audioLevelsDisposable.dispose()
         self.participantsContextStateDisposable.dispose()
         self.myAudioLevelDisposable.dispose()
-        self.settingsDisposable?.dispose()
         self.summaryStateDisposable?.dispose()
         self.myAudioLevelTimer?.invalidate()
         self.typingDisposable.dispose()
+        devicesDisposable.dispose()
     }
     
     private func updateSessionState(internalState: InternalState) {
@@ -394,7 +382,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             break
         default:
             if case let .active(callInfo) = internalState {
-                let callContext = OngoingGroupCallContext()
+                let callContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "")
                 self.callContext = callContext
                 self.requestDisposable.set((callContext.joinPayload
                 |> take(1)
@@ -538,14 +526,25 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                        
                        if participant.peer.id == strongSelf.account.peerId {
                            if let muteState = participant.muteState {
+                               if muteState.canUnmute {
+                                   switch strongSelf.isMutedValue {
+                                   case let .muted(isPushToTalkActive):
+                                       if !isPushToTalkActive {
+                                           strongSelf.callContext?.setIsMuted(true)
+                                       }
+                                   case .unmuted:
+                                       strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                       strongSelf.callContext?.setIsMuted(true)
+                                   }
+                               } else {
+                                   strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                   strongSelf.callContext?.setIsMuted(true)
+                               }
                                strongSelf.stateValue.muteState = muteState
-                               strongSelf.callContext?.setIsMuted(true)
                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
+                               strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
                                strongSelf.callContext?.setIsMuted(true)
-                           } else {
-                                strongSelf.callContext?.setIsMuted(false)
-                                strongSelf.stateValue.muteState = nil
                            }
                        }
                    }
@@ -634,30 +633,38 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     }
     
     public func setIsMuted(action: PresentationGroupCallMuteAction) {
-        if self.isMutedValue == action {
-            return
-        }
-        if let muteState = self.stateValue.muteState, !muteState.canUnmute {
-            return
-        }
-        self.isMutedValue = action
-        self.isMutedPromise.set(self.isMutedValue)
-        let isEffectivelyMuted: Bool
-        switch self.isMutedValue {
-        case let .muted(isPushToTalkActive):
-            isEffectivelyMuted = !isPushToTalkActive
-            self.updateMuteState(peerId: self.account.peerId, isMuted: true)
-        case .unmuted:
-            isEffectivelyMuted = false
-            self.updateMuteState(peerId: self.account.peerId, isMuted: false)
-        }
-        self.callContext?.setIsMuted(isEffectivelyMuted)
-        
-        if isEffectivelyMuted {
-            self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
-        } else {
-            self.stateValue.muteState = nil
-        }
+        self.permissions(action, { [weak self] permission in
+            guard let `self` = self else {
+                return
+            }
+            if !permission {
+                return
+            }
+            if self.isMutedValue == action {
+                return
+            }
+            if let muteState = self.stateValue.muteState, !muteState.canUnmute {
+                return
+            }
+            self.isMutedValue = action
+            self.isMutedPromise.set(self.isMutedValue)
+            let isEffectivelyMuted: Bool
+            switch self.isMutedValue {
+            case let .muted(isPushToTalkActive):
+                isEffectivelyMuted = !isPushToTalkActive
+                self.updateMuteState(peerId: self.account.peerId, isMuted: true)
+            case .unmuted:
+                isEffectivelyMuted = false
+                self.updateMuteState(peerId: self.account.peerId, isMuted: false)
+            }
+            self.callContext?.setIsMuted(isEffectivelyMuted)
+            
+            if isEffectivelyMuted {
+                self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
+            } else {
+                self.stateValue.muteState = nil
+            }
+        })
     }
     
     
@@ -817,12 +824,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 }
 
 func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall: CachedChannelData.ActiveCall?) -> Signal<RequestOrJoinGroupCallResult, NoError> {
-    let signal: Signal<Bool, NoError> = requestMicrophonePermission()
     let sharedContext = context.sharedContext
     let accounts = context.sharedContext.activeAccounts |> take(1)
     let account = context.account
-    
-    return combineLatest(queue: .mainQueue(), signal, accounts, account.postbox.loadedPeerWithId(peerId)) |> mapToSignal { micro, accounts, peer in
+    return combineLatest(queue: .mainQueue(), accounts, account.postbox.loadedPeerWithId(peerId)) |> mapToSignal { accounts, peer in
         if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId {
             return .single(.samePeer(context))
         } else {

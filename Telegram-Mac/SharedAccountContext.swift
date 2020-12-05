@@ -62,7 +62,7 @@ class SharedAccountContext {
 
     #if !SHARE
     let inputSource: InputSources = InputSources()
-    
+    let devicesContext: DevicesContext
     private let _baseSettings: Atomic<BaseApplicationSettings> = Atomic(value: BaseApplicationSettings.defaultSettings)
     
     var baseSettings: BaseApplicationSettings {
@@ -178,6 +178,7 @@ class SharedAccountContext {
         self.accountManager = accountManager
         self.displayUpgradeProgress = displayUpgradeProgress
         #if !SHARE
+        self.devicesContext = DevicesContext(accountManager)
         self.accountManager.mediaBox.fetchCachedResourceRepresentation = { (resource, representation) -> Signal<CachedMediaResourceRepresentationResult, NoError> in
             return fetchCachedSharedResourceRepresentation(accountManager: accountManager, resource: resource, representation: representation)
         }
@@ -186,7 +187,6 @@ class SharedAccountContext {
             self.updateStatusBar(settings.statusBar)
             forceUpdateStatusBarIconByDockTile(sharedContext: self)
         })
-        
         #endif
         
         

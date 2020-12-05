@@ -36,21 +36,26 @@ final class GroupCallSpeakButton : Control {
     }
     
     private var muteState: GroupCallParticipantsContext.Participant.MuteState?
-    func update(with state: PresentationGroupCallState, audioLevel: Float?, animated: Bool) {
+    func update(with state: PresentationGroupCallState, isMuted: Bool, audioLevel: Float?, animated: Bool) {
         var lock = false
         switch state.networkState {
         case .connecting:
             backgroundColor = GroupCallTheme.speakDisabledColor
             userInteractionEnabled = false
         case .connected:
-            if let muteState = state.muteState {
-                if muteState.canUnmute {
-                    backgroundColor = GroupCallTheme.speakInactiveColor
+            if isMuted {
+                if let muteState = state.muteState {
+                    if muteState.canUnmute {
+                        backgroundColor = GroupCallTheme.speakInactiveColor
+                    } else {
+                        backgroundColor = GroupCallTheme.speakDisabledColor
+                        lock = true
+                    }
+                    userInteractionEnabled = muteState.canUnmute
                 } else {
-                    backgroundColor = GroupCallTheme.speakDisabledColor
-                    lock = true
+                    backgroundColor = GroupCallTheme.speakActiveColor
+                    userInteractionEnabled = true
                 }
-                userInteractionEnabled = muteState.canUnmute
             } else {
                 backgroundColor = GroupCallTheme.speakActiveColor
                 userInteractionEnabled = true

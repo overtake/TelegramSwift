@@ -263,25 +263,11 @@ class PCallSession {
     private let currentNetworkType: NetworkType
     private let updatedNetworkType: Signal<NetworkType, NoError>
 
-    private var voiceSettings: VoiceCallSettings {
-        didSet {
-            let cameraUpdated = devicesContext.updateCameraId(voiceSettings)
-            let microUpdated = devicesContext.updateMicroId(voiceSettings) // todo
-            let outputUpdated = devicesContext.updateOutputId(voiceSettings)
-            if isVideoAvailable, isVideo, !isOutgoingVideoPaused, cameraUpdated {
-                self.videoCapturer?.switchVideoInput(devicesContext.currentCameraId ?? "")
-            }
-            if microUpdated {
-                self.ongoingContext?.switchAudioInput(devicesContext.currentMicroId ?? "")
-            }
-            if outputUpdated {
-                 self.ongoingContext?.switchAudioOutput(devicesContext.currentOutputId ?? "")
-            }
-        }
-    }
+
     
     private let stateDisposable = MetaDisposable()
     private let timeoutDisposable = MetaDisposable()
+    private let devicesDisposable = MetaDisposable()
     
     private let sessionStateDisposable = MetaDisposable()
     
@@ -426,8 +412,7 @@ class PCallSession {
         self.proxyServer = data.3
         self.peer = data.1
         self.currentNetworkType = data.4
-        self.voiceSettings = data.2
-        self.devicesContext = DevicesContext(self.voiceSettings)
+        self.devicesContext = sharedContext.devicesContext
         self.enableStunMarking = false
         self.enableTCP = false
         self.preferredVideoCodec = nil
@@ -455,6 +440,22 @@ class PCallSession {
             )
         }
         
+        devicesDisposable.set(self.devicesContext.updater().start(next: { [weak self] values in
+            guard let `self` = self else {
+                return
+            }
+            if isVideoAvailable, self.isVideo, !self.isOutgoingVideoPaused, let id = values.camera {
+                self.videoCapturer?.switchVideoInput(id)
+            }
+            if let id = values.input {
+                self.ongoingContext?.switchAudioInput(id)
+            }
+            if let id = values.output {
+                 self.ongoingContext?.switchAudioOutput(id)
+            }
+        }))
+
+        
         var callSessionState: Signal<CallSession, NoError> = .complete()
         if let initialState = initialState {
             callSessionState = .single(initialState)
@@ -470,10 +471,7 @@ class PCallSession {
             }
         }))
         
-        self.settingsDisposable = combineLatest(queue: .mainQueue(), voiceCallSettings(sharedContext.accountManager), devicesContext.signal).start(next: { [weak self] settings, _ in
-            self?.voiceSettings = settings
-        })
-        
+
     }
     
     
@@ -869,6 +867,7 @@ class PCallSession {
         sessionStateDisposable.dispose()
         ongoingContextStateDisposable?.dispose()
         settingsDisposable?.dispose()
+        devicesDisposable.dispose()
     }
     
     private func playRingtone() {
