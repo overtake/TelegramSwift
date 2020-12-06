@@ -137,7 +137,6 @@ final class GroupCallContext {
     
     func present() {
         presentDisposable.set((self.controller.ready.get() |> take(1)).start(completed: { [weak self] in
-            NSLog("ready present")
             guard let `self` = self else {
                 return
             }
@@ -170,7 +169,6 @@ final class GroupCallContext {
         window.alphaValue = 1
         self.window.makeKeyAndOrderFront(nil)
         self.window.orderFrontRegardless()
-        NSLog("presented")
     }
     
 }
