@@ -120,7 +120,6 @@ final class KeyboardGlobalHandler {
                 let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
                 CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
                 CGEvent.tapEnable(tap: eventTap, enable: true)
-                CFRunLoopRun()
                 self.runLoopSource = runLoopSource
             }
         } else {

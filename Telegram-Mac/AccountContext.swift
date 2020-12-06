@@ -79,6 +79,7 @@ final class AccountContext {
     #if !SHARE
     let fetchManager: FetchManager
     let diceCache: DiceCache
+    let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -193,6 +194,7 @@ final class AccountContext {
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.activeSessionsContext = ActiveSessionsContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)
+        self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
      //   self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
         #endif
         
