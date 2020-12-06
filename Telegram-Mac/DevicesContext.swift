@@ -74,10 +74,7 @@ final class DevicesContext : NSObject {
     
     private let updaterContext: UpdaterContext = UpdaterContext()
     
-    private(set) var currentCameraId: String? = nil
-    private(set) var currentMicroId: String? = nil
-    private(set) var currentOutputId: String? = nil
-    
+   
     
     func updater() -> Signal<(camera: String?, input: String?, output: String?), NoError> {
         return Signal { subscriber in
@@ -103,6 +100,21 @@ final class DevicesContext : NSObject {
     
     
     private let disposable = MetaDisposable()
+    private let devicesQueue = Queue(name: "devicesQueue")
+    
+    private let _currentCameraId: Atomic<String?> = Atomic(value: nil)
+    private let _currentMicroId: Atomic<String?> = Atomic(value: nil)
+    private let _currentOutputId: Atomic<String?> = Atomic(value: nil)
+    
+    var currentCameraId: String? {
+        return _currentCameraId.with { $0 }
+    }
+    var currentMicroId: String? {
+        return _currentMicroId.with { $0 }
+    }
+    var currentOutputId: String? {
+        return _currentOutputId.with { $0 }
+    }
     
     init(_ accountManager: AccountManager ) {
         super.init()
@@ -119,24 +131,32 @@ final class DevicesContext : NSObject {
             self?.update()
         })
         
-        disposable.set(combineLatest(queue: .mainQueue(), voiceCallSettings(accountManager), signal).start(next: { [weak self] settings, devices in
-            guard let `self` = self else {
-                return
-            }
-            let inputUpdated = self.updateMicroId(settings, devices: devices)
-            let cameraUpdated = self.updateCameraId(settings, devices: devices)
-            let outputUpdated = self.updateOutputId(settings, devices: devices)
+        let currentCameraId = self._currentCameraId
+        let currentMicroId = self._currentMicroId
+        let currentOutputId = self._currentOutputId
+        
+        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal) |> map { settings, devices -> (camera: String?, input: String?, output: String?) in
+            let inputUpdated = DevicesContext.updateMicroId(settings, devices: devices)
+            let cameraUpdated = DevicesContext.updateCameraId(settings, devices: devices)
+            let outputUpdated = DevicesContext.updateOutputId(settings, devices: devices)
             
             var result:(camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
             
-            if inputUpdated {
-                result.input = self.currentMicroId ?? ""
+            if currentMicroId.swap(inputUpdated) != inputUpdated {
+                result.input = inputUpdated
             }
-            if cameraUpdated {
-                result.camera = self.currentCameraId ?? ""
+            if currentCameraId.swap(cameraUpdated) != cameraUpdated {
+                result.camera = cameraUpdated
             }
-            if outputUpdated {
-                result.output = self.currentOutputId ?? ""
+            if currentOutputId.swap(outputUpdated) != outputUpdated {
+                result.output = outputUpdated
+            }
+            return result
+        } |> deliverOnMainQueue
+        
+        disposable.set(updated.start(next: { [weak self] result in
+            guard let `self` = self else {
+                return
             }
             self.updaterContext.status = result
             
@@ -156,7 +176,7 @@ final class DevicesContext : NSObject {
         self.update()
     }
     
-    @discardableResult func updateCameraId(_ settings: VoiceCallSettings, devices: IODevices) -> Bool {
+    static func updateCameraId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
         let cameraDevice = devices.camera.first(where: { $0.uniqueID == settings.cameraInputDeviceId })
         
         let activeDevice: AVCaptureDevice?
@@ -172,13 +192,9 @@ final class DevicesContext : NSObject {
             activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
-        defer {
-            self.currentCameraId = activeDevice?.uniqueID
-        }
-        
-        return self.currentCameraId != activeDevice?.uniqueID
+        return activeDevice?.uniqueID
     }
-    @discardableResult func updateMicroId(_ settings: VoiceCallSettings, devices: IODevices) -> Bool {
+    static func updateMicroId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
         let audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
         
         let activeDevice: AVCaptureDevice?
@@ -194,15 +210,11 @@ final class DevicesContext : NSObject {
             activeDevice = devices.audioInput.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
-        defer {
-            self.currentMicroId = activeDevice?.uniqueID
-        }
-        
-        return self.currentMicroId != activeDevice?.uniqueID
+        return activeDevice?.uniqueID
     }
     
-    @discardableResult func updateOutputId(_ settings: VoiceCallSettings, devices: IODevices) -> Bool {
-        var deviceUid: String = ""
+    static func updateOutputId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
+        var deviceUid: String? = nil
         var found = false
         for id in devices.audioOutput {
             let current = Audio.getDeviceUid(deviceId: id)
@@ -215,11 +227,7 @@ final class DevicesContext : NSObject {
             deviceUid = Audio.getDeviceUid(deviceId: Audio.getDefaultOutputDevice())
         }
         
-        defer {
-            self.currentOutputId = deviceUid as String
-        }
-        
-        return self.currentOutputId != deviceUid as String
+        return deviceUid
     }
     
     deinit {
