@@ -22,6 +22,7 @@ public extension ContainedViewLayoutTransitionCurve {
             return CAMediaTimingFunctionName.spring
         }
     }
+    
 }
 
 public enum ContainedViewLayoutTransition {
@@ -47,6 +48,41 @@ public extension ContainedViewLayoutTransition {
             })
         }
     }
+    
+    
+       func updateTransformScale(layer: CALayer, scale: CGFloat, beginWithCurrentState: Bool = false, completion: ((Bool) -> Void)? = nil) {
+           let t = layer.transform
+           let currentScale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+           if currentScale.isEqual(to: scale) {
+               if let completion = completion {
+                   completion(true)
+               }
+               return
+           }
+           
+           switch self {
+           case .immediate:
+               layer.transform = CATransform3DMakeScale(scale, scale, 1.0)
+               if let completion = completion {
+                   completion(true)
+               }
+           case let .animated(duration, curve):
+               let previousScale: CGFloat
+               if beginWithCurrentState, let presentation = layer.presentation() {
+                   let t = presentation.transform
+                   previousScale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+               } else {
+                   previousScale = currentScale
+               }
+               layer.animateScaleSpring(from: previousScale, to: scale, duration: duration, completion: { result in
+                   if let completion = completion {
+                       completion(result)
+                   }
+               })
+           }
+       }
+
+
     
 
     func updateAlpha(view: View, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
