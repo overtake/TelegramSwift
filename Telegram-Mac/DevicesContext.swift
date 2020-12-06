@@ -31,8 +31,6 @@ extension AudioDeviceID {
 private func devicesList() -> Signal<IODevices, NoError> {
     return Signal { subscriber in
         
-        subscriber.putNext(.init(camera: [], audioInput: [], audioOutput: [], loading: true))
-
         let defAudioDevice = AVCaptureDevice.default(for: .audio)
         let defVideoDevice = AVCaptureDevice.default(for: .video)
         
@@ -52,7 +50,7 @@ private func devicesList() -> Signal<IODevices, NoError> {
         
         
         return EmptyDisposable
-    } |> runOn(.concurrentBackgroundQueue())
+    } |> runOn(.concurrentDefaultQueue())
     
 }
 

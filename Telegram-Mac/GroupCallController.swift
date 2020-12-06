@@ -453,10 +453,11 @@ private final class GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ accountPeerId: PeerId) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ accountPeer: Peer) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
+    let accountPeerId = accountPeer.id
     
     var activeParticipants: [GroupCallParticipantsContext.Participant] = []
     
@@ -472,7 +473,11 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
                             ?? Double(rhs.joinTimestamp))
         return lhsValue > rhsValue
     })
-
+    
+    if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
+        memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false))
+    }
+    
     for value in activeParticipants {
         var audioLevel = audioLevels[value.peer.id]
         if let level = audioLevel, level.timestamp + 2 <= Int32(Date().timeIntervalSince1970) {
@@ -485,7 +490,9 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
 
     for participant in participants {
         if !activeParticipants.contains(where: { $0.peer.id == participant.peer.id}) {
-            memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
+            if participant.peer.id != accountPeerId {
+                memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
+            }
         }
     }
 
@@ -501,7 +508,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     var addedSeparator: Bool = false
     for (i, data) in state.memberDatas.enumerated() {
         
-        if data.state == nil, !addedSeparator {
+        if data.state == nil, !addedSeparator && data.peer.id != account.peerId {
             entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: .init("separator"), equatable: nil, item: { initialSize, stableId in
                 return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
             }))
@@ -637,12 +644,11 @@ final class GroupCallUIController : ViewController {
             }
         })
 
-        let tick:Signal<Void, NoError> = .single(Void()) |> then(.single(Void()) |> delay(2.0, queue: prepareQueue) |> restart)
 
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, tick, window.visibility) |> mapToQueue { values in
-            if values.10 {
-                return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, account.peerId))
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, window.visibility, account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
+            if values.9 {
+                return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.10))
             } else {
                 return .never()
             }
@@ -750,9 +756,9 @@ final class GroupCallUIController : ViewController {
             default:
                 f(true)
             }
-            
         }
         
+                
     }
     private var pushToTalkIsActive: Bool = false
     

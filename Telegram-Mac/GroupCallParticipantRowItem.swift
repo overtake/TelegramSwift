@@ -49,13 +49,16 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 string = L10n.voiceChatListening
                 color = GroupCallTheme.blueStatusColor
             }
+        } else if data.peer.id == account.peerId {
+            string = L10n.voiceChatListening
+            color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
         }
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 48, stableId: stableId, type: .none, viewType: .legacy, action: action, inset: NSEdgeInsetsMake(0, 12, 0, 12), enabled: true)
     }
     
     var isActivePeer: Bool {
-        return data.state != nil
+        return data.state != nil || data.peer.id == account.peerId
     }
     
     var peer: Peer {
@@ -185,6 +188,9 @@ private final class GroupCallParticipantRowView : TableRowView {
                         button.set(image: GroupCallTheme.small_muted_locked, for: .Normal)
                         button.set(image: GroupCallTheme.small_muted_locked_active, for: .Highlight)
                     }
+                } else if item.data.state == nil {
+                    button.set(image: GroupCallTheme.small_muted, for: .Normal)
+                    button.set(image: GroupCallTheme.small_muted_active, for: .Highlight)
                 } else {
                     button.set(image: GroupCallTheme.small_unmuted, for: .Normal)
                     button.set(image: GroupCallTheme.small_unmuted_active, for: .Highlight)
@@ -223,8 +229,14 @@ private final class GroupCallParticipantRowView : TableRowView {
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
         
+        if let level = item.data.audioLevel {
+            if animated {
+                let normalized = mappingRange(Double(level), 0, 10, 1, 1.4)
+                photoView.layer?.animateScaleCenter(from: 1, to: CGFloat(normalized), duration: 0.2)
+            }
+        }
         
-        if statusView?.layout != item.statusLayout {
+        if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
             if let statusView = statusView {
                 if animated {
                     statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in

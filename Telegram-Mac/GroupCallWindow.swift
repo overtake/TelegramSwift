@@ -137,7 +137,11 @@ final class GroupCallContext {
     
     func present() {
         presentDisposable.set((self.controller.ready.get() |> take(1)).start(completed: { [weak self] in
-            self?._readyPresent()
+            NSLog("ready present")
+            guard let `self` = self else {
+                return
+            }
+            self._readyPresent()
         }))
     }
     
@@ -162,10 +166,11 @@ final class GroupCallContext {
         _ = call.sharedContext.endGroupCall(terminate: false).start()
     }
     
-    private func _readyPresent() {
+    @objc private func _readyPresent() {
         window.alphaValue = 1
         self.window.makeKeyAndOrderFront(nil)
         self.window.orderFrontRegardless()
+        NSLog("presented")
     }
     
 }

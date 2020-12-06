@@ -3659,60 +3659,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                     )
                                                 }
                                         } else {
-                                            return getGroupCallParticipants(account: context.account, callId: activeCall.id, accessHash: activeCall.accessHash, offset: "", limit: 10)
-                                                |> map(Optional.init)
-                                                |> `catch` { _ -> Signal<GroupCallParticipantsContext.State?, NoError> in
-                                                    return .single(nil)
+                                            return Signal { subscriber in
+                                                let disposable = MetaDisposable()
+                                                let callContext = context.cachedGroupCallContexts
+                                                callContext.impl.syncWith { impl in
+                                                    let callContext = impl.get(account: context.account, peerId: peerId, call: activeCall)
+                                                    disposable.set((callContext.context.panelData
+                                                    |> deliverOnMainQueue).start(next: { panelData in
+                                                        callContext.keep()
+                                                        subscriber.putNext(panelData)
+                                                    }))
                                                 }
-                                                |> mapToSignal { initialState -> Signal<GroupCallPanelData?, NoError> in
-                                                    guard let initialState = initialState else {
-                                                        return .single(nil)
-                                                    }
-                                                    
-                                                    return Signal<GroupCallPanelData?, NoError> { subscriber in
-                                                        let participantsContext = QueueLocalObject<GroupCallParticipantsContext>(queue: .mainQueue(), generate: {
-                                                            return GroupCallParticipantsContext(
-                                                                account: context.account,
-                                                                peerId: peerId,
-                                                                id: activeCall.id,
-                                                                accessHash: activeCall.accessHash,
-                                                                state: initialState
-                                                            )
-                                                        })
-                                                        
-                                                        let disposable = MetaDisposable()
-                                                        participantsContext.with { participantsContext in
-                                                            disposable.set(combineLatest(queue: .mainQueue(),
-                                                                participantsContext.state,
-                                                                participantsContext.activeSpeakers
-                                                            ).start(next: { state, activeSpeakers in
-                                                                var topParticipants: [GroupCallParticipantsContext.Participant] = []
-                                                                for participant in state.participants {
-                                                                    if topParticipants.count >= 3 {
-                                                                        break
-                                                                    }
-                                                                    topParticipants.append(participant)
-                                                                }
-                                                                let data = GroupCallPanelData(
-                                                                    peerId: peerId,
-                                                                    info: GroupCallInfo(id: activeCall.id, accessHash: activeCall.accessHash, participantCount: state.totalCount, clientParams: nil),
-                                                                    topParticipants: topParticipants,
-                                                                    participantCount: state.totalCount,
-                                                                    activeSpeakers: activeSpeakers,
-                                                                    groupCall: nil
-                                                                )
-                                                                subscriber.putNext(data)
-                                                            }))
-                                                        }
-                                                        
-                                                        return ActionDisposable {
-                                                            disposable.dispose()
-                                                            participantsContext.with { _ in
-                                                            }
-                                                        }
-                                                    }
-                                                    |> runOn(.mainQueue())
-                                                }
+                                                return disposable
+                                            }
                                         }
                                     }
                                }
@@ -3721,8 +3680,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             availableGroupCall = .single(nil)
         }
         
-        availableGroupCall = .single(nil) |> then(availableGroupCall)
-
         
         peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall) |> beforeNext  { [weak self] topPinnedMessage, postboxView, groupCallData in
                 

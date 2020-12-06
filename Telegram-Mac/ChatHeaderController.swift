@@ -1433,9 +1433,7 @@ private final class ChatGroupCallView : Control {
     private let membersCountView = TextView()
     private let button = Control()
     private var speakingActivity: DynamicCounterTextView?
-    private var activeCallButton: ImageButton = ImageButton()
     
-    private let stateDisposable = MetaDisposable()
     
     init(chatInteraction: ChatInteraction, data: ChatActiveGroupCallInfo, frame: NSRect) {
         self.data = data
@@ -1446,11 +1444,8 @@ private final class ChatGroupCallView : Control {
         addSubview(avatarsContainer)
         addSubview(button)
         addSubview(joinButton)
-        addSubview(activeCallButton)
         avatarsContainer.isEventLess = true
         
-        activeCallButton.setFrameSize(NSMakeSize(36, 36))
-        activeCallButton.layer?.cornerRadius = activeCallButton.frame.height / 2
         
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false
@@ -1499,15 +1494,9 @@ private final class ChatGroupCallView : Control {
         updateLocalizationAndTheme(theme: theme)
 
         update(data, animated: false)
-        
-        activeCallButton.autohighlight = false
-        
-        activeCallButton.set(handler: { [weak self] _ in
-            self?.data.data?.groupCall?.call.toggleIsMuted()
-        }, for: .Click)
+       
         
         joinButton.scaleOnClick = true
-        activeCallButton.scaleOnClick = true
     }
     
     
@@ -1517,11 +1506,8 @@ private final class ChatGroupCallView : Control {
         
         let activeCall = data.data?.groupCall != nil
         joinButton.change(opacity: activeCall ? 0 : 1, animated: animated)
-        activeCallButton.change(opacity: activeCall ? 1 : 0, animated: animated)
         joinButton.userInteractionEnabled = !activeCall
-        activeCallButton.userInteractionEnabled = activeCall
         joinButton.isEventLess = activeCall
-        activeCallButton.isEventLess = !activeCall
         
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
@@ -1634,28 +1620,6 @@ private final class ChatGroupCallView : Control {
         self.data = data
         
         
-        if let groupCall = self.data.data?.groupCall {
-            stateDisposable.set((groupCall.call.state |> deliverOnMainQueue).start(next: { [weak self] state in
-                if let muteState = state.muteState {
-                    self?.activeCallButton.set(background: theme.colors.accentIcon, for: .Normal)
-                    self?.activeCallButton.set(background: theme.colors.accentIcon.withAlphaComponent(0.6), for: .Highlight)
-                    self?.activeCallButton.userInteractionEnabled = muteState.canUnmute
-                    if muteState.canUnmute {
-                        self?.activeCallButton.set(image: theme.icons.chat_voicechat_can_unmute, for: .Normal)
-                    } else {
-                        self?.activeCallButton.set(image: theme.icons.chat_voicechat_cant_unmute, for: .Normal)
-                    }
-                } else {
-                    self?.activeCallButton.userInteractionEnabled = true
-                    self?.activeCallButton.set(background: theme.colors.greenUI, for: .Normal)
-                    self?.activeCallButton.set(background: theme.colors.greenUI.withAlphaComponent(0.6), for: .Highlight)
-                    self?.activeCallButton.set(image: theme.icons.chat_voicechat_unmuted, for: .Normal)
-                }
-            }))
-            
-        } else {
-            stateDisposable.set(nil)
-        }
         
         updateLocalizationAndTheme(theme: theme)
     }
@@ -1708,9 +1672,7 @@ private final class ChatGroupCallView : Control {
         
         headerView.setFrameOrigin(.init(x: 23, y: frame.midY - headerView.frame.height))
         membersCountView.setFrameOrigin(.init(x: 23, y: frame.midY))
-        
-        activeCallButton.centerY(x: frame.width - activeCallButton.frame.width - 16)
-        
+                
         button.frame = bounds
     }
     

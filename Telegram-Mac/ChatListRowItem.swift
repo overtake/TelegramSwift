@@ -470,7 +470,7 @@ class ChatListRowItem: TableRowItem {
             self.isOnline = nil
         }
         
-        if let peer = renderedPeer.chatMainPeer as? TelegramChannel, peer.flags.contains(.hasVoiceChat) {
+        if let peer = renderedPeer.chatMainPeer as? TelegramChannel, peer.flags.contains(.hasActiveVoiceChat) {
             self.hasActiveGroupCall = true
         }
         
