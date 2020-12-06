@@ -11,7 +11,6 @@
 		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
 		D00602FF24CF3D7500206226 /* Message.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FE24CF3D7500206226 /* Message.cpp */; };
-		D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D006030124CF3DAD00206226 /* InstanceImplReference.cpp */; };
 		D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0076E3C25685056007EF588 /* webrtc.framework */; };
 		D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */; };
 		D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D00B192124E5722A006CCB87 /* GLKit.framework */; };
@@ -53,7 +52,6 @@
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
 		D00602FE24CF3D7500206226 /* Message.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Message.cpp; path = ../../submodules/tgcalls/tgcalls/Message.cpp; sourceTree = "<group>"; };
-		D006030124CF3DAD00206226 /* InstanceImplReference.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstanceImplReference.cpp; path = ../../../submodules/tgcalls/tgcalls/reference/InstanceImplReference.cpp; sourceTree = "<group>"; };
 		D0076E3C25685056007EF588 /* webrtc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = webrtc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GLVideoViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/GLVideoViewMac.mm; sourceTree = "<group>"; };
 		D00B192124E5722A006CCB87 /* GLKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLKit.framework; path = System/Library/Frameworks/GLKit.framework; sourceTree = SDKROOT; };
@@ -115,19 +113,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D006030024CF3DA000206226 /* reference */ = {
-			isa = PBXGroup;
-			children = (
-				D006030124CF3DAD00206226 /* InstanceImplReference.cpp */,
-			);
-			path = reference;
-			sourceTree = "<group>";
-		};
 		D06E367F24A4FD4900C7D03A = {
 			isa = PBXGroup;
 			children = (
 				D0E7BD1C256A7E0D0068644D /* group */,
-				D006030024CF3DA000206226 /* reference */,
 				D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */,
 				D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */,
 				D0D751C024BE3AC70037D73A /* Instance.cpp */,
@@ -297,7 +286,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D006030224CF3DAD00206226 /* InstanceImplReference.cpp in Sources */,
 				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
 				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,
 				D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */,

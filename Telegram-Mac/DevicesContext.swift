@@ -190,7 +190,7 @@ final class DevicesContext : NSObject {
             activeDevice = devices.camera.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
-        return activeDevice?.uniqueID
+        return activeDevice?.localizedName
     }
     static func updateMicroId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
         let audiodevice = devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
@@ -208,7 +208,7 @@ final class DevicesContext : NSObject {
             activeDevice = devices.audioInput.first(where: { $0.isConnected && !$0.isSuspended })
         }
         
-        return activeDevice?.uniqueID
+        return activeDevice?.localizedName
     }
     
     static func updateOutputId(_ settings: VoiceCallSettings, devices: IODevices) -> String? {
@@ -217,12 +217,12 @@ final class DevicesContext : NSObject {
         for id in devices.audioOutput {
             let current = Audio.getDeviceUid(deviceId: id)
             if settings.audioOutputDeviceId == current {
-                deviceUid = current
+                deviceUid = Audio.getDeviceName(deviceID: id)
                 found = true
             }
         }
         if !found {
-            deviceUid = Audio.getDeviceUid(deviceId: Audio.getDefaultOutputDevice())
+            deviceUid = Audio.getDeviceName(deviceID: Audio.getDefaultOutputDevice())
         }
         
         return deviceUid
