@@ -229,11 +229,16 @@ private final class GroupCallParticipantRowView : TableRowView {
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
         
-        if let level = item.data.audioLevel {
-            if animated {
-                let normalized = mappingRange(Double(level), 0, 10, 1, 1.4)
-                photoView.layer?.animateScaleCenter(from: 1, to: CGFloat(normalized), duration: 0.2)
+        if let value = item.data.audioLevel {
+            let level = min(1.0, max(0.0, CGFloat(value)))
+            let avatarScale: CGFloat
+            if value > 0.0 {
+                avatarScale = 1.03 + level * 0.07
+            } else {
+                avatarScale = 1.0
             }
+            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeInOut)
+            transition.updateTransformScale(layer: self.photoView.layer!, scale: avatarScale, beginWithCurrentState: true)
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
