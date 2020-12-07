@@ -350,12 +350,10 @@ struct PeerGroupCallData : Equatable, Comparable {
             } else {
                 weight += (1 << 29)
             }
-            weight += Int(Int32.max)
         } else {
             if let presence = presence {
                 switch presence.status {
                 case let .present(until):
-                    weight += Int(until)
                     weight += (1 << 28)
                 case .recently:
                     weight += (1 << 27)
@@ -479,11 +477,8 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     }
     
     for value in activeParticipants {
-        var audioLevel = audioLevels[value.peer.id]
-        if let level = audioLevel, level.timestamp + 2 <= Int32(Date().timeIntervalSince1970) {
-            audioLevel = nil
-        }
-        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: value.peer.id == accountPeerId ? state.muteState == nil : audioLevel != nil && value.muteState == nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
+        let audioLevel = audioLevels[value.peer.id]
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil && audioLevel!.value > 0, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
     }
     
     
@@ -559,6 +554,7 @@ final class GroupCallUIController : ViewController {
     private let disposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let pushToTalkDisposable = MetaDisposable()
+    private let requestPermissionDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
     private let sound: SoundEffectPlayQueue
     init(_ data: UIData) {
@@ -758,8 +754,16 @@ final class GroupCallUIController : ViewController {
             }
         }
         
-                
     }
+    
+    override func readyOnce() {
+        let was = self.didSetReady
+        super.readyOnce()
+        if didSetReady, !was {
+            requestPermissionDisposable.set(requestMicrophonePermission().start())
+        }
+    }
+    
     private var pushToTalkIsActive: Bool = false
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
@@ -770,6 +774,7 @@ final class GroupCallUIController : ViewController {
         disposable.dispose()
         pushToTalkDisposable.dispose()
         actionsDisposable.dispose()
+        requestPermissionDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {
