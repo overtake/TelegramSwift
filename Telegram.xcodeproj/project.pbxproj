@@ -196,6 +196,7 @@
 		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
 		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
+		A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */; };
 		A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D342407CAE100CE44CA /* ChatMediaDice.swift */; };
 		A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */; };
 		A7393D392407D0F100CE44CA /* GraphCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; };
@@ -1180,6 +1181,7 @@
 		A72D7AE823C471A7005BAC59 /* PollResultController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultController.swift; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
+		A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallNavigationHeaderView.swift; sourceTree = "<group>"; };
 		A7393D342407CAE100CE44CA /* ChatMediaDice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaDice.swift; sourceTree = "<group>"; };
 		A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDiceContentView.swift; sourceTree = "<group>"; };
 		A7393D382407D0F100CE44CA /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4421,6 +4423,7 @@
 				D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */,
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
 				27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */,
+				A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5461,6 +5464,7 @@
 				C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */,
 				9FC4DA9821DD0B86003E2A62 /* ChannelMemberCategoryListContext.swift in Sources */,
 				9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */,
+				A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */,
 				C253E2311DE34FBB0022A29F /* AudioPlayerController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

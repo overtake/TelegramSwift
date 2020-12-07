@@ -195,7 +195,7 @@ class ChatFileContentView: ChatMediaContentView {
     override func update(with media: Media, size:NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
-        let semanticMedia = self.media?.id == media.id
+        let semanticMedia = self.parent?.stableId == parent?.stableId
         
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
@@ -328,7 +328,8 @@ class ChatFileContentView: ChatMediaContentView {
                         case .Remote:
                             self.thumbProgress?.state = .Remote
                         case let .Fetching(_, progress):
-                            if progress == 1.0, parent?.groupingKey != nil {
+                            let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                            if progress == 1.0, sentGrouped {
                                 self.thumbProgress?.state = .Success
                             } else {
                                 self.thumbProgress?.state = .Fetching(progress: progress, force: false)
@@ -398,7 +399,8 @@ class ChatFileContentView: ChatMediaContentView {
                     progress = max(progress, 0.1)
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                     
-                    if progress == 1.0, parent?.groupingKey != nil {
+                    let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                    if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
                         progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Fetching(progress: progress, force: false)

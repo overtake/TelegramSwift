@@ -80,7 +80,7 @@ private let _id_input_mode_always = InputDataIdentifier("_id_input_mode_always")
 private let _id_input_mode_ptt = InputDataIdentifier("_id_input_mode_ptt")
 private let _id_ptt = InputDataIdentifier("_id_ptt")
 private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
-
+private let _id_input_mode_toggle = InputDataIdentifier("_id_input_mode_toggle")
 
 private func groupCallSettingsEntries(state: PresentationGroupCallState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: CallSettingsArguments, updateDefaultParticipantsAreMuted: @escaping(Bool)->Void, updateSettings: @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void, checkPermission:@escaping()->Void) -> [InputDataEntry] {
     
@@ -153,10 +153,10 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     let outputDevice = devices.audioOutput.first(where: { $0.uniqueID == settings.audioOutputDeviceId })
        
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("OUTPUT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsOutput), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: "Output Device", color: .white, type: .contextSelector(outputDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: L10n.voiceChatSettingsOutputDevice, color: .white, type: .contextSelector(outputDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
         arguments.toggleOutputAudioDevice(nil)
     })] + devices.audioOutput.map { value in
         return SPopoverItem(value.localizedName, {
@@ -165,59 +165,74 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     }), viewType: .singleItem, theme: theme)))
     index += 1
     
-    
-    
+
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsInputMode), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+
+
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalkTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_always, data: .init(name: L10n.voiceChatSettingsInputModeAlways, color: .white, type: .selectable(settings.mode == .always), viewType: .firstItem, action: {
+
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_toggle, data: .init(name: L10n.voiceChatSettingsPushToTalkEnabled, color: .white, type: .switchable(settings.mode != .none), viewType: .singleItem, action: {
         updateSettings {
-            $0.withUpdatedMode(.always)
+            $0.withUpdatedMode($0.mode == .none ? .pushToTalk : .none)
         }
     }, theme: theme)))
     index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: L10n.voiceChatSettingsInputModePushToTalk, color: .white, type: .selectable(settings.mode == .pushToTalk), viewType: .innerItem, action: {
-        updateSettings {
-            $0.withUpdatedMode(.pushToTalk)
-        }
-    }, theme: theme)))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt_se, data: .init(name: "Sound Effects", color: .white, type: .switchable(settings.pushToTalkSoundEffects), viewType: .lastItem, action: {
-        updateSettings {
-            $0.withUpdatedSoundEffects(!$0.pushToTalkSoundEffects)
-        }
-    }, theme: theme)))
-    index += 1
-    
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-    index += 1
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), item: { initialSize, stableId -> TableRowItem in
-        return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
+
+    switch settings.mode {
+    case .none:
+        break
+    default:
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsInputMode), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        index += 1
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_always, data: .init(name: L10n.voiceChatSettingsInputModeAlways, color: .white, type: .selectable(settings.mode == .always), viewType: .firstItem, action: {
             updateSettings {
-                $0.withUpdatedPushToTalk(value)
+                $0.withUpdatedMode(.always)
             }
-        }, checkPermission: checkPermission, viewType: .singleItem)
-    }))
-    index += 1
-    
-    if let permission = uiState.hasPermission {
-        if !permission {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.voiceChatSettingsPushToTalkAccess, linkHandler: { _ in
-               
-            }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-            index += 1
+        }, theme: theme)))
+        index += 1
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: L10n.voiceChatSettingsInputModePushToTalk, color: .white, type: .selectable(settings.mode == .pushToTalk), viewType: .lastItem, action: {
+            updateSettings {
+                $0.withUpdatedMode(.pushToTalk)
+            }
+        }, theme: theme)))
+        index += 1
+
+
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+        index += 1
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), item: { initialSize, stableId -> TableRowItem in
+            return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
+                updateSettings {
+                    $0.withUpdatedPushToTalk(value)
+                }
+            }, checkPermission: checkPermission, viewType: .singleItem)
+        }))
+        index += 1
+
+        if let permission = uiState.hasPermission {
+            if !permission {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.voiceChatSettingsPushToTalkAccess, linkHandler: { _ in
+
+                }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+                index += 1
+            }
         }
     }
+
+
         
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -225,6 +240,14 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     return entries
 }
+
+//    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt_se, data: .init(name: "Sound Effects", color: .white, type: .switchable(settings.pushToTalkSoundEffects), viewType: .lastItem, action: {
+//        updateSettings {
+//            $0.withUpdatedSoundEffects(!$0.pushToTalkSoundEffects)
+//        }
+//    }, theme: theme)))
+//    index += 1
+//
 
 final class GroupCallSettingsController : GenericViewController<GroupCallSettingsView> {
     fileprivate let sharedContext: SharedAccountContext
@@ -294,10 +317,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 $0.withUpdatedCameraInputDeviceId(value)
             }).start()
         }, finishCall: { [weak self] in
-            guard let call = self?.call, let window = self?.window else {
+            guard let window = self?.window else {
                 return
             }
-            _ = showModalProgress(signal: call.sharedContext.endGroupCall(terminate: true), for: window).start()
+            confirm(for: window, header: L10n.voiceChatSettingsEndConfirmTitle, information: L10n.voiceChatSettingsEndConfirm, okTitle: L10n.voiceChatSettingsEndConfirmOK, successHandler: { [weak self] _ in
+
+                guard let call = self?.call, let window = self?.window else {
+                    return
+                }
+                _ = showModalProgress(signal: call.sharedContext.endGroupCall(terminate: true), for: window).start()
+            }, appearance: darkPalette.appearance)
+
         })
         
         let updateDefaultParticipantsAreMuted:(Bool)->Void = { [weak self] value in

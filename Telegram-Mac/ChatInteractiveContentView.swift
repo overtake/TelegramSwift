@@ -382,8 +382,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         
         let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size
-        if mediaUpdated {
-            self.autoplayVideoView = nil
+
+        if mediaUpdated, let rhs = media as? TelegramMediaFile, let lhs = self.media as? TelegramMediaFile  {
+            if !lhs.isSemanticallyEqual(to: rhs) {
+                self.autoplayVideoView = nil
+            }
         }
         
         var clearInstantly: Bool = mediaUpdated

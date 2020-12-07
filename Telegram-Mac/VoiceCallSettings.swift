@@ -59,8 +59,9 @@ struct PushToTalkValue : Equatable, PostboxCoding {
 }
 
 enum VoiceChatInputMode : Int32 {
-    case always = 0
-    case pushToTalk = 1
+    case none = 0
+    case always = 1
+    case pushToTalk = 2
 }
 
 struct VoiceCallSettings: PreferencesEntry, Equatable {
@@ -89,7 +90,7 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
         self.cameraInputDeviceId = decoder.decodeOptionalStringForKey("ci")
         self.audioOutputDeviceId = decoder.decodeOptionalStringForKey("ao")
         self.pushToTalk = decoder.decodeObjectForKey("ptt3") as? PushToTalkValue
-        self.mode = VoiceChatInputMode(rawValue: decoder.decodeInt32ForKey("m", orElse: 0)) ?? .always
+        self.mode = VoiceChatInputMode(rawValue: decoder.decodeInt32ForKey("m1", orElse: 0)) ?? .none
         self.pushToTalkSoundEffects = decoder.decodeBoolForKey("se", orElse: false)
     }
     
@@ -117,7 +118,7 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
         } else {
             encoder.encodeNil(forKey: "ptt3")
         }
-        encoder.encodeInt32(self.mode.rawValue, forKey: "m")
+        encoder.encodeInt32(self.mode.rawValue, forKey: "m1")
         
         encoder.encodeBool(pushToTalkSoundEffects, forKey: "se")
     }
