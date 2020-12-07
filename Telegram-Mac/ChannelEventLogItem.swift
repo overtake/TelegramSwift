@@ -468,6 +468,21 @@ class ServiceEventLogItem: TableRowItem {
                     } else {
                         serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     }
+                } else if let media = new.media.first as? TelegramMediaAction {
+                    switch media.action {
+                    case let .groupPhoneCall(_, _, duration):
+                        if let duration = duration {
+                            let text: String
+                            if new.author?.id == chatInteraction.context.peerId {
+                                text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
+                            } else {
+                                text = L10n.chatServiceVoiceChatFinished(peer.displayTitle, autoremoveLocalized(Int(duration)))
+                            }
+                            serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                        }
+                    default:
+                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    }
                 } else {
                     serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 }
@@ -577,15 +592,8 @@ class ServiceEventLogItem: TableRowItem {
                 let text:String = newValue == nil || newValue == 0 ? L10n.channelEventLogServiceDisabledSlowMode(peer.displayTitle) : L10n.channelEventLogServiceSetSlowMode1(peer.displayTitle, autoremoveLocalized(Int(newValue!)))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .updateDefaultBannedRights(prev, new):
-                
-                
-                
                 let message = NSMutableAttributedString()
-
                 _ = message.append(string: L10n.eventLogServiceChangedDefaultsRights, color: theme.colors.text)
-
-                
-                
                 var addedRights = new.flags
                 var removedRights:TelegramChatBannedRightsFlags = []
                 addedRights = addedRights.subtracting(prev.flags)

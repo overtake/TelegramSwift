@@ -77,6 +77,7 @@ final class GroupCallWindow : Window {
         self.titlebarAppearsTransparent = true
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
+        self.isMovableByWindowBackground = true
         
     }
     

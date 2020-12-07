@@ -330,7 +330,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             case let .muted(isPushToTalkActive):
                 return !isPushToTalkActive
             case .unmuted:
-                return true
+                return false
             }
         }
     }
