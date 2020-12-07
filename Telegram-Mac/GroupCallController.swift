@@ -140,6 +140,8 @@ private final class GroupCallControlsView : View {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
                             case .pushToTalk:
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
+                            case .none:
+                                secondary = nil
                             }
                         }
                     } else {
@@ -570,9 +572,7 @@ final class GroupCallUIController : ViewController {
         
         let peerId = self.data.call.peerId
         let account = self.data.call.account
-        
-        
-        
+
         guard let window = self.navigationController?.window else {
             fatalError()
         }
@@ -598,7 +598,7 @@ final class GroupCallUIController : ViewController {
             }
             modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { _ in
                 _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
-            })
+            }, appearance: darkPalette.appearance)
         })
         
         genericView.arguments = arguments
@@ -722,14 +722,14 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            confirm(for: window, information: _NSLocalizedString("VoiceChat.RequestAccess"), okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+            confirm(for: window, information: L10n.voiceChatRequestAccess, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
                 default:
                     break
                 }
-            })
+            }, appearance: darkPalette.appearance)
         }
         
         data.call.permissions = { action, f in

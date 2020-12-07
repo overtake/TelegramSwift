@@ -49,7 +49,8 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 
                 switch fetchStatus {
                 case let .Fetching(_, progress):
-                    if progress == 1.0, parent?.groupingKey != nil {
+                    let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                    if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
                         progressView.state = .Fetching(progress: progress, force: false)

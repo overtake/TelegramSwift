@@ -394,6 +394,8 @@ final class PushToTalk {
             } else {
                 self.monitor.removeHandlers()
             }
+        case .none:
+            self.monitor.removeHandlers()
         }
     }
     

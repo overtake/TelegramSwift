@@ -385,7 +385,7 @@ final class BlobView: View {
     }
 }
 
-private extension CGPath {
+extension CGPath {
     
     static func smoothCurve(
         through points: [CGPoint],

@@ -15,14 +15,21 @@ import Postbox
 
 
 class CallHeaderBasicView : NavigationHeaderView {
-    fileprivate let backgroundView = NSView()
+
+    private var _backgroundView: NSView?
+    var backgroundView: NSView {
+        if _backgroundView == nil {
+            _backgroundView = NSView()
+        }
+        return _backgroundView!
+    }
     fileprivate let callInfo:TitleButton = TitleButton()
     fileprivate let endCall:TitleButton = TitleButton()
     fileprivate let statusTextView:NSTextField = NSTextField()
     fileprivate let muteControl:ImageButton = ImageButton()
 
-    fileprivate let disposable = MetaDisposable()
-    fileprivate let hideDisposable = MetaDisposable()
+    let disposable = MetaDisposable()
+    let hideDisposable = MetaDisposable()
 
 
     
@@ -141,6 +148,15 @@ class CallHeaderBasicView : NavigationHeaderView {
     func hangUp() {
         
     }
+
+    func setInfo(_ text: String) {
+        self.callInfo.set(text: text, for: .Normal)
+    }
+    func setMicroIcon(_ image: CGImage) {
+        muteControl.set(image: image, for: .Normal)
+        _ = muteControl.sizeToFit()
+    }
+
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         showInfoWindow()
@@ -228,7 +244,7 @@ class CallNavigationHeaderView: CallHeaderBasicView {
         
         disposable.set(combineLatest(queue: .mainQueue(), session.state, signal, accountPeer).start(next: { [weak self] state, peer, accountPeer in
             if let peer = peer {
-                self?.callInfo.set(text: peer.displayTitle, for: .Normal)
+                self?.setInfo(peer.displayTitle)
             }
             self?.updateState(state, accountPeer: accountPeer, animated: false)
             self?.needsLayout = true
@@ -253,8 +269,7 @@ class CallNavigationHeaderView: CallHeaderBasicView {
         if animated {
             backgroundView.layer?.animateBackground()
         }
-        muteControl.set(image: !state.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
-        _ = muteControl.sizeToFit()
+        setMicroIcon(!state.isMuted ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted)
         needsLayout = true
         
         switch state.state {
@@ -304,119 +319,3 @@ class CallNavigationHeaderView: CallHeaderBasicView {
     
 }
 
-
-
-
-class GroupCallNavigationHeaderView: CallHeaderBasicView {
-  
-    private(set) var context: GroupCallContext? {
-        didSet {
-            self.sharedContext?.updateCurrentGroupCallValue(context)
-        }
-    }
-    
-    private var sharedContext: SharedAccountContext?
-    
-    override func toggleMute() {
-        self.context?.call.toggleIsMuted()
-    }
-
-    override func showInfoWindow() {
-        self.context?.present()
-    }
-    
-    override func hangUp() {
-        self.context?.leave()
-    }
-    
-    
-    func update(with context: GroupCallContext, sharedContext: SharedAccountContext) {
-        self.sharedContext = sharedContext
-        self.context = context
-        
-        let peerId = context.call.peerId
-        
-        let data = context.call.summaryState
-        |> filter { $0 != nil }
-        |> map { $0! }
-        |> map { summary -> GroupCallPanelData in
-            return GroupCallPanelData(
-                peerId: peerId,
-                info: summary.info,
-                topParticipants: summary.topParticipants,
-                participantCount: summary.participantCount,
-                activeSpeakers: summary.activeSpeakers,
-                groupCall: nil
-            )
-        }
-
-        let account = context.call.account
-        
-        let signal = Signal<Peer?, NoError>.single(context.call.peer) |> then(context.call.account.postbox.loadedPeerWithId(context.call.peerId) |> map(Optional.init) |> deliverOnMainQueue)
-        
-        let accountPeer: Signal<Peer?, NoError> = context.call.sharedContext.activeAccounts |> mapToSignal { accounts in
-            if accounts.accounts.count == 1 {
-                return .single(nil)
-            } else {
-                return account.postbox.loadedPeerWithId(account.peerId) |> map(Optional.init)
-            }
-        }
-        
-        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, data, signal, accountPeer, appearanceSignal).start(next: { [weak self] state, data, peer, accountPeer, _ in
-            if let peer = peer {
-                self?.callInfo.set(text: peer.displayTitle, for: .Normal)
-            }
-            self?.updateState(state, data: data, accountPeer: accountPeer, animated: false)
-            self?.needsLayout = true
-            self?.ready.set(.single(true))
-        }))
-        
-        hideDisposable.set((context.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
-            if value {
-                self?.context = nil
-                self?.hide()
-            }
-        }))
-    }
-    
-    
-    private func updateState(_ state: PresentationGroupCallState, data: GroupCallPanelData, accountPeer: Peer?, animated: Bool) {
-        switch state.networkState {
-        case .connecting:
-            backgroundView.background = theme.colors.grayIcon
-            self.status = .text(L10n.voiceChatStatusConnecting, nil)
-        case .connected:
-            if let muteState = state.muteState {
-                if muteState.canUnmute {
-                    backgroundView.background = theme.colors.accent
-                } else {
-                    backgroundView.background = theme.colors.grayIcon
-                }
-            } else {
-                backgroundView.background = theme.colors.greenUI
-            }
-            self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
-        }
-        if animated {
-            backgroundView.layer?.animateBackground()
-        }
-
-        muteControl.set(image: state.muteState == nil ? theme.icons.callInlineUnmuted : theme.icons.callInlineMuted, for: .Normal)
-        _ = muteControl.sizeToFit()
-        needsLayout = true
-        
-    }
-    
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override init(_ header: NavigationHeader) {
-        super.init(header)
-    }
-    
-}

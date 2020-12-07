@@ -675,7 +675,7 @@ internal final class L10n {
   internal static var callSettingsCameraTitle: String  { return L10n.tr("Localizable", "CallSettings.Camera.Title") }
   /// Default
   internal static var callSettingsDeviceDefault: String  { return L10n.tr("Localizable", "CallSettings.Device.Default") }
-  /// Input device
+  /// Input Device
   internal static var callSettingsInputText: String  { return L10n.tr("Localizable", "CallSettings.Input.Text") }
   /// MICROPHONE
   internal static var callSettingsInputTitle: String  { return L10n.tr("Localizable", "CallSettings.Input.Title") }
@@ -1623,7 +1623,7 @@ internal final class L10n {
   internal static func chatGroupCallMembersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.GroupCall.Members_two", p1)
   }
-  /// click to join
+  /// Click to join
   internal static var chatGroupCallMembersZero: String  { return L10n.tr("Localizable", "Chat.GroupCall.Members_zero") }
   /// %d
   internal static func chatGroupCallSpeakersCountable(_ p1: Int) -> String {
@@ -8153,6 +8153,8 @@ internal final class L10n {
   internal static var voiceChatRemovePeer: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer") }
   /// Remove
   internal static var voiceChatRemovePeerRemove: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeerRemove") }
+  /// Telegram needs access to your microphone to speak
+  internal static var voiceChatRequestAccess: String  { return L10n.tr("Localizable", "VoiceChat.RequestAccess") }
   /// Settings
   internal static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
   /// speaking
@@ -8173,6 +8175,8 @@ internal final class L10n {
   internal static func voiceChatClickToUnmuteSecondaryPress(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Press", p1)
   }
+  /// Sorry, there are too many members in this voice chat. Please try again later.
+  internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
   /// Are you sure you want to remove %1$@ from the group chat?
   internal static func voiceChatRemovePeerConfirm(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm", p1)
@@ -8185,26 +8189,40 @@ internal final class L10n {
   internal static var voiceChatSettingsAllMembers: String  { return L10n.tr("Localizable", "VoiceChat.Settings.AllMembers") }
   /// End Voice Chat
   internal static var voiceChatSettingsEnd: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End") }
-  /// INPUT MODE
+  /// MODE
   internal static var voiceChatSettingsInputMode: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode") }
   /// New participants are muted
   internal static var voiceChatSettingsOnlyAdmins: String  { return L10n.tr("Localizable", "VoiceChat.Settings.OnlyAdmins") }
+  /// OUTPUT
+  internal static var voiceChatSettingsOutput: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output") }
   /// SHORTCUT
   internal static var voiceChatSettingsPushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk") }
   /// Voice Chat Settings
   internal static var voiceChatSettingsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title") }
-  /// Are you sure you want to delete voice chat?
+  /// Are you sure you want to end this voice chat?
   internal static var voiceChatSettingsEndConfirm: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End.Confirm") }
-  /// Always
+  /// End
+  internal static var voiceChatSettingsEndConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End.Confirm.OK") }
+  /// End voice chat
+  internal static var voiceChatSettingsEndConfirmTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End.Confirm.Title") }
+  /// Press and Release
   internal static var voiceChatSettingsInputModeAlways: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.Always") }
-  /// Push To Talk
+  /// Press and Hold
   internal static var voiceChatSettingsInputModePushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.PushToTalk") }
-  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to Accessibility
+  /// Sound Effects
+  internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
+  /// Output Device
+  internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
+  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to Input Monitor
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
-  /// Edit Keybind
+  /// Change Key
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }
-  /// Stop Recording
+  /// Enabled
+  internal static var voiceChatSettingsPushToTalkEnabled: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Enabled") }
+  /// Cancel
   internal static var voiceChatSettingsPushToTalkStopRecording: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.StopRecording") }
+  /// PUSH TO TALK
+  internal static var voiceChatSettingsPushToTalkTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Title") }
   /// Undefined
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
   /// Connecting...

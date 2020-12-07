@@ -1398,6 +1398,34 @@ class ChatSearchHeader : View, Notifable {
 }
 
 
+private final class FakeAudioLevelGenerator {
+    private var isFirstTime: Bool = true
+    private var nextTarget: Float = 0.0
+    private var nextTargetProgress: Float = 0.0
+    private var nextTargetProgressNorm: Float = 1.0
+
+    func get() -> Float {
+        let wasFirstTime = self.isFirstTime
+        self.isFirstTime = false
+
+        self.nextTargetProgress *= 0.82
+        if self.nextTargetProgress <= 0.01 {
+            if Int.random(in: 0 ... 4) <= 1 && !wasFirstTime {
+                self.nextTarget = 0.0
+                self.nextTargetProgressNorm = Float.random(in: 0.1 ..< 0.3)
+            } else {
+                self.nextTarget = Float.random(in: 0.0 ..< 20.0)
+                self.nextTargetProgressNorm = Float.random(in: 0.2 ..< 0.7)
+            }
+            self.nextTargetProgress = self.nextTargetProgressNorm
+            return self.nextTarget
+        } else {
+            let value = self.nextTarget * max(0.0, self.nextTargetProgress / self.nextTargetProgressNorm)
+            return value
+        }
+    }
+}
+
 
 
 private final class ChatGroupCallView : Control {

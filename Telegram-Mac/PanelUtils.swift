@@ -143,7 +143,7 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String = appName, info:String?, runModal: Bool = false, completion: (()->Void)? = nil) {
+func alert(for window:Window, header:String = appName, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, appearance: NSAppearance? = nil) {
 //
 //    let alert = AlertController(window, header: header, text: info ?? "")
 //    alert.show(completionHandler: { response in
@@ -151,7 +151,7 @@ func alert(for window:Window, header:String = appName, info:String?, runModal: B
 //    })
 
     let alert:NSAlert = NSAlert()
-    alert.window.appearance = theme.appearance
+    alert.window.appearance = appearance ?? theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
@@ -184,11 +184,11 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil, appearance: NSAppearance? = nil) {
 
     
     let alert:NSAlert = NSAlert()
-    alert.window.appearance = theme.appearance
+    alert.window.appearance = appearance ?? theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header ?? appName
     alert.informativeText = information ?? ""
@@ -197,7 +197,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
         alert.addButton(withTitle: cancelTitle)
         alert.buttons.last?.keyEquivalent = "\u{1b}"
     }
-    
+
 
     
     if let thridTitle = thridTitle {
@@ -224,11 +224,11 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     })
 }
 
-func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void) {
+func modernConfirm(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
     //
     
     let alert:NSAlert = NSAlert()
-    alert.window.appearance = theme.appearance
+    alert.window.appearance = appearance ?? theme.appearance
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = information ?? ""
@@ -345,7 +345,7 @@ func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, 
     
 }
 
-func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil) -> Signal<Bool, NoError> {
+func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, appearance: NSAppearance? = nil) -> Signal<Bool, NoError> {
 //    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
 //
 //    Queue.mainQueue().async {
@@ -362,7 +362,7 @@ func confirmSignal(for window:Window, header: String? = nil, information:String?
         let alert:NSAlert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = header ?? appName
-        alert.window.appearance = theme.appearance
+        alert.window.appearance = appearance ?? theme.appearance
         alert.informativeText = information ?? ""
         alert.addButton(withTitle: okTitle ?? tr(L10n.alertOK))
         alert.addButton(withTitle: cancelTitle ?? tr(L10n.alertCancel))
