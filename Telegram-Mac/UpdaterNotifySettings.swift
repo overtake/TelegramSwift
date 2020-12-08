@@ -15,6 +15,7 @@ import SyncCore
 enum LaunchNavigation : PostboxCoding, Equatable {
     case chat(PeerId, necessary: Bool)
     case thread(MessageId, MessageId, necessary: Bool)
+    case profile(PeerId, necessary: Bool)
     case settings
     
     func encode(_ encoder: PostboxEncoder) {
@@ -40,6 +41,14 @@ enum LaunchNavigation : PostboxCoding, Equatable {
             encoder.encodeInt32(fromId.namespace, forKey: "f.m.n")
             
             encoder.encodeBool(necessary, forKey: "n")
+        case let .profile(peerId, necessary: necessary):
+            encoder.encodeInt32(3, forKey: "t")
+
+            encoder.encodeInt32(peerId.namespace, forKey: "p.n")
+            encoder.encodeInt32(peerId.id, forKey: "p.id")
+
+            encoder.encodeBool(necessary, forKey: "n")
+
         }
     }
     
@@ -53,13 +62,14 @@ enum LaunchNavigation : PostboxCoding, Equatable {
         case 2:
             let threadPeerId = PeerId(namespace: decoder.decodeInt32ForKey("t.p.n", orElse: 0), id: decoder.decodeInt32ForKey("t.p.id", orElse: 0))
             let threadId = MessageId(peerId: threadPeerId, namespace: decoder.decodeInt32ForKey("t.m.id", orElse: 0), id: decoder.decodeInt32ForKey("t.m.n", orElse: 0))
-            
-            
+
             let fromPeerId = PeerId(namespace: decoder.decodeInt32ForKey("f.p.n", orElse: 0), id: decoder.decodeInt32ForKey("f.p.id", orElse: 0))
             let fromId = MessageId(peerId: fromPeerId, namespace: decoder.decodeInt32ForKey("f.m.id", orElse: 0), id: decoder.decodeInt32ForKey("f.m.n", orElse: 0))
 
-            
             self = .thread(threadId, fromId, necessary: decoder.decodeBoolForKey("n", orElse: false))
+        case 3:
+            let peerId = PeerId(namespace: decoder.decodeInt32ForKey("p.n", orElse: 0), id: decoder.decodeInt32ForKey("p.id", orElse: 0))
+            self = .profile(peerId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         default:
             fatalError()
         }

@@ -628,7 +628,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil)
+            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil)
         } else {
             self.photo = .Empty
         }

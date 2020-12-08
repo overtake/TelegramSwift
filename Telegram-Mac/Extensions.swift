@@ -2473,3 +2473,9 @@ extension NSImage {
         return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
 }
+
+
+func truncate(double: Double, places : Int)-> Double
+{
+    return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
+}
