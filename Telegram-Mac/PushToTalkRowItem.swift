@@ -39,7 +39,7 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         case editing
     }
     
-    private let textView: TextView = TextView()
+    private var textView: TextView?
     private let button: Control = Control()
     
     private var mode: PTTMode = .normal
@@ -59,7 +59,6 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         shimmerView.layer?.cornerRadius = 10
         
         addSubview(button)
-        button.addSubview(textView)
         addSubview(shortcutView)
         button.layer?.cornerRadius = 8
         
@@ -71,8 +70,6 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         
         shimmerView.background = .random
         
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
         
         button.set(handler: { [weak self] _ in
             self?.toggleMode(animated: true, mode: self?.mode == PTTMode.normal ? .editing : .normal)
@@ -115,11 +112,36 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         }
         
         button.background = buttonColor
-        textView.update(buttonText)
         
-        button.change(size: NSMakeSize(textView.frame.width + 20, containerView.frame.height - 8), animated: animated)
-        button.change(pos: NSMakePoint(containerView.frame.width - button.frame.width - 4, button.frame.minY), animated: animated)
-        textView.change(pos: button.focus(textView.frame.size).origin, animated: animated)
+        if self.textView?.layout?.attributedString.string != buttonText.attributedString.string {
+            let textView = TextView()
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            textView.update(buttonText)
+            
+            button.addSubview(textView)
+            textView.center()
+            
+            button.change(size: NSMakeSize(textView.frame.width + 20, containerView.frame.height - 8), animated: animated)
+            button.change(pos: NSMakePoint(containerView.frame.width - button.frame.width - 4, button.frame.minY), animated: animated)
+            
+            if animated {
+                textView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            if let textView = self.textView {
+                if animated {
+                    textView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak textView] _ in
+                        textView?.removeFromSuperview()
+                    })
+                } else {
+                    textView.removeFromSuperview()
+                }
+                
+            }
+            self.textView = textView
+        }
+        
+       
         
         if animated {
             button.layer?.animateBackground()
@@ -158,10 +180,12 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         guard let item = item as? PushToTalkRowItem else {
             return
         }
-        button.setFrameSize(NSMakeSize(textView.frame.width + 20, containerView.frame.height - 8))
-        button.centerY(x: containerView.frame.width - button.frame.width - 4)
+        if let textView = textView {
+            button.setFrameSize(NSMakeSize(textView.frame.width + 20, containerView.frame.height - 8))
+            button.centerY(x: containerView.frame.width - button.frame.width - 4)
+            textView.center()
+        }
         
-        textView.center()
         
         shortcutView.centerY(x: item.viewType.innerInset.left, addition: 1)
         

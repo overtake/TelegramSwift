@@ -13,17 +13,17 @@ import SwiftSignalKit
 import Postbox
 
 final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters {
-    let playPolicy: LottiePlayPolicy?
-    let alwaysAccept: Bool?
-    let cache: ASCachePurpose?
-    let hidePlayer: Bool
-    let color: [String : NSColor]
-    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, color: [String : NSColor] = [:]) {
+    var playPolicy: LottiePlayPolicy?
+    var alwaysAccept: Bool?
+    var cache: ASCachePurpose?
+    var hidePlayer: Bool
+    var colors: [LottieColor]
+    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = []) {
         self.playPolicy = playPolicy
         self.alwaysAccept = alwaysAccept
         self.cache = cache
         self.hidePlayer = hidePlayer
-        self.color = color
+        self.colors = colors
         super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
 }

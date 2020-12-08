@@ -206,9 +206,10 @@ private final class GroupCallActivity : View {
     }
 
     
-    func update(context: AccountContext, tableView: TableView?, foregroundColor: NSColor, backgroundColor: NSColor) {
+    func update(context: AccountContext, tableView: TableView?, foregroundColor: NSColor, backgroundColor: NSColor, animColor: NSColor) {
         let anim = LocalAnimatedSticker.group_call_chatlist_typing
-        animation.update(with: anim.file, size: NSMakeSize(frame.width - 2, frame.height - 2), context: context, parent: nil, table: tableView, parameters: anim.parameters, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+        let parameters = anim.parameters
+        animation.update(with: anim.file, size: NSMakeSize(frame.width - 2, frame.height - 2), context: context, parent: nil, table: tableView, parameters: parameters, animated: false, positionFlags: nil, approximateSynchronousValue: false)
         backgroundView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             let rect = NSRect(origin: .zero, size: size)
             ctx.clear(rect)
@@ -218,6 +219,9 @@ private final class GroupCallActivity : View {
             ctx.setFillColor(foregroundColor.cgColor)
             ctx.fillEllipse(in: NSMakeRect(2, 2, frame.width - 4, frame.height - 4))
         })
+        
+        self.animation.setColors([LottieColor(keyPath: "3.3.Обводка 1", color: animColor), LottieColor(keyPath: "2.2.Обводка 1", color: animColor), LottieColor(keyPath: "1.1.Обводка 1", color: animColor)])
+        
         backgroundView.sizeToFit()
     }
     
@@ -724,7 +728,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
                 
-                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: item.isSelected ? .clear : theme.colors.accentSelect, backgroundColor: backdorColor)
+                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: item.isSelected ? .white : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: item.isSelected ? theme.colors.accentSelect : theme.colors.underSelectedColor)
                 if animated && animate {
                     groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
                     groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
