@@ -86,7 +86,6 @@ private final class GroupCallControlsView : View {
             self?.arguments?.toggleSpeaker()
         }, for: .Click)
         
-        playbackAudioLevelView.startAnimating()
 
 //
 //        self.foregroundGradientLayer.type = .radial
@@ -134,6 +133,7 @@ private final class GroupCallControlsView : View {
         case .connecting:
             playbackAudioLevelView.change(opacity: 0, animated: animated)
             playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
+            playbackAudioLevelView.stopAnimating()
         case .connected:
             if callState.isMuted {
                 if let muteState = state.muteState {
@@ -163,6 +163,14 @@ private final class GroupCallControlsView : View {
             } else {
                 playbackAudioLevelView.change(opacity: 1, animated: animated)
             }
+            
+        }
+        
+        if callState.isKeyWindow {
+            playbackAudioLevelView.startAnimating()
+        } else {
+            playbackAudioLevelView.stopAnimating()
+            playbackAudioLevelView.change(opacity: 0, animated: animated)
         }
         
         if state != preiousState {
@@ -472,6 +480,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     let isSpeaking: Bool
     let audioLevel: Float?
     let isInvited: Bool
+    let isKeyWindow: Bool
     private var weight: Int {
         var weight: Int = 0
         
@@ -523,6 +532,9 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.isInvited != rhs.isInvited {
             return false
         }
+        if lhs.isKeyWindow != rhs.isKeyWindow {
+            return false
+        }
         return true
     }
     
@@ -541,7 +553,8 @@ private final class GroupCallUIState : Equatable {
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
     let voiceSettings: VoiceCallSettings
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings) {
+    let isKeyWindow: Bool
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -550,6 +563,7 @@ private final class GroupCallUIState : Equatable {
         self.state = state
         self.myAudioLevel = myAudioLevel
         self.voiceSettings = voiceSettings
+        self.isKeyWindow = isKeyWindow
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -578,11 +592,14 @@ private final class GroupCallUIState : Equatable {
         } else if (lhs.cachedData != nil) != (rhs.cachedData != nil) {
             return false
         }
+        if lhs.isKeyWindow != rhs.isKeyWindow {
+            return false
+        }
         return true
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ accountPeer: Peer) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ isKeyWindow: Bool, _ accountPeer: Peer) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -604,7 +621,7 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     })
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
-        memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow))
     }
     
     for value in activeParticipants {
@@ -612,7 +629,7 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
         if accountPeerId == value.peer.id, isMuted {
             audioLevel = nil
         }
-        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id), isKeyWindow: isKeyWindow))
     }
     
     
@@ -620,12 +637,12 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     for participant in participants {
         if !activeParticipants.contains(where: { $0.peer.id == participant.peer.id}) {
             if participant.peer.id != accountPeerId {
-                memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
+                memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id), isKeyWindow: isKeyWindow))
             }
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isKeyWindow: isKeyWindow)
 }
 
 
@@ -657,7 +674,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         }
         
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(Tuple(nextForeigner: nextForeigner, data: data)), item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, drawLine: !nextForeigner, action: {
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, drawLine: !nextForeigner, action: {
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
@@ -796,12 +813,8 @@ final class GroupCallUIController : ViewController {
 
 
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, window.visibility, account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
-            if values.9 {
-                return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.10))
-            } else {
-                return .never()
-            }
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, self.isKeyWindow.get(), account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
+            return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.9, values.10))
         } |> distinctUntilChanged
         
         
@@ -812,7 +825,7 @@ final class GroupCallUIController : ViewController {
         
         let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
-            return prepareInputDataTransition(left: previousEntries.swap(current), right: current, animated: true, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false) |> map {
+            return prepareInputDataTransition(left: previousEntries.swap(current), right: current, animated: state.isKeyWindow, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false) |> map {
                 (state, $0)
             }
         } |> deliverOnMainQueue

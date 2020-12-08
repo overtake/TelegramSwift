@@ -23,12 +23,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
-    fileprivate let state: PresentationGroupCallState
     fileprivate let isInvited: Bool
     fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let mute:(PeerId, Bool)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, drawLine: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, drawLine: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
         self.data = data
         self.account = account
         self.mute = mute
@@ -36,7 +35,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self._contextMenu = contextMenu
         self.isInvited = isInvited
         self.drawLine = drawLine
-        self.state = state
         self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         self.isLastItem = isLastItem
         var string:String = L10n.peerStatusRecently
@@ -223,7 +221,7 @@ private final class GroupCallParticipantRowView : TableRowView {
 
         playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
 
-        if item.data.isSpeaking {
+        if item.data.isSpeaking && item.data.isKeyWindow {
             playbackAudioLevelView.startAnimating()
         } else {
             playbackAudioLevelView.stopAnimating()
@@ -249,18 +247,26 @@ private final class GroupCallParticipantRowView : TableRowView {
                 avatarScale = 1.0
             }
 
+            
             let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
             let scale = self.photoView.frame.width / photoSize.width
-            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self, weak item] value in
-                guard let item = item else {
-                    return
-                }
-                self?.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (value - 1)), (item.height - (photoSize.width * value)) / 2, photoSize.width * value, photoSize.height * value)
-            }, completion: {
+            
+            if animated {
+                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self, weak item] value in
+                    guard let item = item else {
+                        return
+                    }
+                    self?.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (value - 1)), (item.height - (photoSize.width * value)) / 2, photoSize.width * value, photoSize.height * value)
+                }, completion: {
 
-            })
-
-            //transition.updateTransformScale(layer: self.photoView.layer!, scale: value, beginWithCurrentState: true)
+                })
+            } else {
+                self.scaleAnimator = nil
+                self.photoView.setFrameSize(NSMakeSize(photoSize.width * value, photoSize.height * value))
+            }
+        } else {
+            self.scaleAnimator = nil
+            self.photoView.setFrameSize(photoSize)
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
@@ -299,6 +305,15 @@ private final class GroupCallParticipantRowView : TableRowView {
     
     override var backdorColor: NSColor {
         return GroupCallTheme.membersColor
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        showContextMenu(event)
+    }
+    
+    override var rowAppearance: NSAppearance? {
+        return darkPalette.appearance
     }
     
     required init?(coder: NSCoder) {

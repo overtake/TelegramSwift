@@ -174,6 +174,9 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     index += 1
 
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_toggle, data: .init(name: L10n.voiceChatSettingsPushToTalkEnabled, color: .white, type: .switchable(settings.mode != .none), viewType: .singleItem, action: {
+        if settings.mode == .none {
+            checkPermission()
+        }
         updateSettings {
             $0.withUpdatedMode($0.mode == .none ? .pushToTalk : .none)
         }
