@@ -8149,6 +8149,8 @@ internal final class L10n {
   internal static var voiceChatListenMode: String  { return L10n.tr("Localizable", "VoiceChat.ListenMode") }
   /// Mute
   internal static var voiceChatMutePeer: String  { return L10n.tr("Localizable", "VoiceChat.MutePeer") }
+  /// Open Profile
+  internal static var voiceChatOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.OpenProfile") }
   /// Remove
   internal static var voiceChatRemovePeer: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer") }
   /// Remove
@@ -8213,7 +8215,7 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
   /// Output Device
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
-  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to Input Monitor
+  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor]()
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
   /// Change Key
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }

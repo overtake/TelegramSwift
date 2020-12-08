@@ -801,9 +801,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
         })
         
-        
-    
-        
+    }
+
+    func navigateProfile(_ peerId: PeerId, account: Account) {
+        if let context = self.contextValue?.context, context.peerId == account.peerId {
+            context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            context.window.makeKeyAndOrderFront(nil)
+            context.window.orderFrontRegardless()
+        } else {
+            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
+        }
     }
     
     
@@ -956,6 +963,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             passport.window.makeKeyAndOrderFront(nil)
         } else if !makeKeyAndOrderFrontCallWindow() {
             window.makeKeyAndOrderFront(nil)
+        } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
+            groupCallWindow.makeKeyAndOrderFront(nil)
+            groupCallWindow.orderFrontRegardless()
         }
         
         return true

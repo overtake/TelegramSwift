@@ -111,7 +111,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
         dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, nil)
         
         super.init(initialSize, height: 44, action: action)
 

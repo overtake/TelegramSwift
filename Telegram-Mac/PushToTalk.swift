@@ -67,7 +67,7 @@ final class KeyboardGlobalHandler {
     private var eventTap: CFMachPort?
     private var runLoopSource:CFRunLoopSource?
     
-    func getPermission()->Signal<Bool, NoError> {
+    static func getPermission()->Signal<Bool, NoError> {
         return Signal { subscriber in
             
             subscriber.putNext(KeyboardGlobalHandler.hasPermission(askPermission: false))
@@ -81,7 +81,7 @@ final class KeyboardGlobalHandler {
     private let disposable = MetaDisposable()
     
     init() {
-        disposable.set(getPermission().start(next: { [weak self] value in
+        disposable.set(KeyboardGlobalHandler.getPermission().start(next: { [weak self] value in
             self?.runListener(hasPermission: value)
         }))
 

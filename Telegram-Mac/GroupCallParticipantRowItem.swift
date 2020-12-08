@@ -13,6 +13,8 @@ import SyncCore
 import Postbox
 import TelegramCore
 
+private let photoSize: NSSize = NSMakeSize(35, 35)
+
 final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
@@ -23,15 +25,17 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let isLastItem: Bool
     fileprivate let state: PresentationGroupCallState
     fileprivate let isInvited: Bool
+    fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let mute:(PeerId, Bool)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: PresentationGroupCallState, data: PeerGroupCallData, isInvited: Bool, isLastItem: Bool, drawLine: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
         self.data = data
         self.account = account
         self.mute = mute
         self.invite = invite
         self._contextMenu = contextMenu
         self.isInvited = isInvited
+        self.drawLine = drawLine
         self.state = state
         self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         self.isLastItem = isLastItem
@@ -96,6 +100,7 @@ private final class GroupCallParticipantRowView : TableRowView {
     private let button = ImageButton()
     private let separator: View = View()
     private let playbackAudioLevelView: VoiceBlobView
+    private var scaleAnimator: DisplayLinkAnimator?
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 55, 55),
@@ -106,7 +111,7 @@ private final class GroupCallParticipantRowView : TableRowView {
         )
 
         super.init(frame: frameRect)
-        photoView.setFrameSize(NSMakeSize(35, 35))
+        photoView.setFrameSize(photoSize)
         addSubview(playbackAudioLevelView)
         addSubview(photoView)
         addSubview(titleView)
@@ -144,16 +149,23 @@ private final class GroupCallParticipantRowView : TableRowView {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
-        photoView.centerY(x: item.inset.left)
-        titleView.setFrameOrigin(NSMakePoint(photoView.frame.maxX + item.inset.left, 6))
+        let scale = self.photoView.frame.width / photoSize.width
+        self.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (scale - 1)), (item.height - (photoSize.width * scale)) / 2, photoSize.width * scale, photoSize.height * scale)
+
+        titleView.setFrameOrigin(NSMakePoint(item.inset.left + photoSize.width + item.inset.left, 6))
         if let statusView = statusView {
-            statusView.setFrameOrigin(NSMakePoint(photoView.frame.maxX + item.inset.left, frame.height - statusView.frame.height - 6))
+            statusView.setFrameOrigin(NSMakePoint(item.inset.left + photoSize.width + item.inset.left, frame.height - statusView.frame.height - 6))
         }
-        if item.isLastItem {
-            separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
+        if item.drawLine {
+            if item.isLastItem {
+                separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
+            } else {
+                separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
+            }
         } else {
-            separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
+            separator.frame = .zero
         }
+
         control.centerY(x: frame.width - 12 - control.frame.width)
         button.centerY(x: frame.width - 12 - control.frame.width)
 
@@ -224,11 +236,10 @@ private final class GroupCallParticipantRowView : TableRowView {
 
 
         titleView.update(item.titleLayout)
-        photoView.setPeer(account: item.account, peer: item.peer, message: nil)
-        
+        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(35 * 1.3, 35 * 1.3))
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
-        
-        
+
+
         if let value = item.data.audioLevel {
             let level = min(1.0, max(0.0, CGFloat(value)))
             let avatarScale: CGFloat
@@ -237,8 +248,19 @@ private final class GroupCallParticipantRowView : TableRowView {
             } else {
                 avatarScale = 1.0
             }
-            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeInOut)
-            transition.updateTransformScale(layer: self.photoView.layer!, scale: avatarScale, beginWithCurrentState: true)
+
+            let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+            let scale = self.photoView.frame.width / photoSize.width
+            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self, weak item] value in
+                guard let item = item else {
+                    return
+                }
+                self?.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (value - 1)), (item.height - (photoSize.width * value)) / 2, photoSize.width * value, photoSize.height * value)
+            }, completion: {
+
+            })
+
+            //transition.updateTransformScale(layer: self.photoView.layer!, scale: value, beginWithCurrentState: true)
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {

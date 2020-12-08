@@ -12,7 +12,8 @@ import TGUIKit
 enum GeneralRowTextType : Equatable {
     case plain(String)
     case markdown(String, linkHandler: (String)->Void)
-    
+    case customMarkdown(String, linkColor: NSColor, linkFont: NSFont, linkHandler: (String)->Void)
+
     static func ==(lhs: GeneralRowTextType, rhs: GeneralRowTextType) -> Bool {
         switch lhs {
         case let .plain(text):
@@ -23,6 +24,12 @@ enum GeneralRowTextType : Equatable {
             }
         case let .markdown(text, _):
             if case .markdown(text, _) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .customMarkdown(text, color, font, _):
+            if case .customMarkdown(text, color, font, _) = rhs {
                 return true
             } else {
                 return false
@@ -68,6 +75,10 @@ class GeneralTextRowItem: GeneralRowItem {
             attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize ?? 11.5)).mutableCopy() as! NSMutableAttributedString
         case let .markdown(text, handler):
             attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(fontSize ?? 11.5), textColor: textColor), link: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: theme.colors.link), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, handler))
+            })).mutableCopy() as! NSMutableAttributedString
+        case let .customMarkdown(text, linkColor, linkFont, handler):
+            attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(fontSize ?? 11.5), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(fontSize ?? 11.5), textColor: textColor), link: MarkdownAttributeSet(font: linkFont, textColor: linkColor), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, handler))
             })).mutableCopy() as! NSMutableAttributedString
         }
