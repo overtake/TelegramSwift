@@ -114,8 +114,8 @@ final class VoiceBlobView: View {
         guard !isAnimating else { return }
         isAnimating = true
         
-        mediumBlob.layer?.animateScaleSpring(from: 0.5, to: 1, duration: 0.5, removeOnCompletion: false)
-        bigBlob.layer?.animateScaleSpring(from: 0.5, to: 1, duration: 0.5, removeOnCompletion: false)
+        mediumBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6, removeOnCompletion: false)
+        bigBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6, removeOnCompletion: false)
         
         updateBlobsState()
         
@@ -126,8 +126,8 @@ final class VoiceBlobView: View {
         guard isAnimating else { return }
         isAnimating = false
         
-        mediumBlob.layer?.animateScaleSpring(from: 1.0, to: 0.5, duration: 0.5, removeOnCompletion: false)
-        bigBlob.layer?.animateScaleSpring(from: 1.0, to: 0.5, duration: 0.5, removeOnCompletion: false)
+        mediumBlob.layer?.animateScaleSpring(from: 1.0, to: 0.1, duration: 0.6, removeOnCompletion: false, bounce: false)
+        bigBlob.layer?.animateScaleSpring(from: 1.0, to: 0.1, duration: 0.6, removeOnCompletion: false, bounce: false)
         
         updateBlobsState()
         

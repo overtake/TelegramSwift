@@ -25,7 +25,7 @@ class EditAccountInfoItem: GeneralRowItem {
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil) : .Empty
+        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil, nil) : .Empty
         
         let height: CGFloat
         switch viewType {

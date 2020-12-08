@@ -74,11 +74,11 @@ public extension ContainedViewLayoutTransition {
                } else {
                    previousScale = currentScale
                }
-               layer.animateScaleSpring(from: previousScale, to: scale, duration: duration, completion: { result in
-                   if let completion = completion {
-                       completion(result)
-                   }
-               })
+            layer.animateScaleSpring(from: previousScale, to: scale, duration: duration, bounce: false, completion: { result in
+                if let completion = completion {
+                    completion(result)
+                }
+            })
            }
        }
 

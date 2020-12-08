@@ -688,7 +688,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
 
     override var inset:CGFloat {
-        return 36 + 50 + (callButton.isHidden ? 20 : callButton.frame.width + 30)
+        return 36 + 50 + (callButton.isHidden ? 20 : callButton.frame.width + 40)
     }
     
     

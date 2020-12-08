@@ -21,18 +21,21 @@ private final class GroupCallUIArguments {
     let mute:(PeerId, Bool)->Void
     let toggleSpeaker:()->Void
     let remove:(Peer)->Void
+    let openInfo: (PeerId)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
     mute:@escaping(PeerId, Bool)->Void,
     toggleSpeaker:@escaping()->Void,
-    remove:@escaping(Peer)->Void) {
+    remove:@escaping(Peer)->Void,
+    openInfo: @escaping(PeerId)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
         self.settings = settings
         self.toggleSpeaker = toggleSpeaker
         self.remove = remove
+        self.openInfo = openInfo
     }
 }
 
@@ -43,8 +46,17 @@ private final class GroupCallControlsView : View {
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
     private let playbackAudioLevelView: VoiceBlobView
-    
-    
+
+    private let foregroundView = View()
+    private let foregroundGradientLayer = CAGradientLayer()
+
+    private let maskView = View()
+    private let maskGradientLayer = CAGradientLayer()
+    private let maskCircleLayer = CAShapeLayer()
+
+
+
+
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 220, 220),
@@ -55,10 +67,12 @@ private final class GroupCallControlsView : View {
         )
 
         super.init(frame: frameRect)
+     //   addSubview(foregroundView)
         addSubview(playbackAudioLevelView)
         addSubview(speak)
         addSubview(settings)
         addSubview(end)
+
         
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
@@ -72,7 +86,39 @@ private final class GroupCallControlsView : View {
             self?.arguments?.toggleSpeaker()
         }, for: .Click)
         
-        playbackAudioLevelView.startAnimating()
+
+//
+//        self.foregroundGradientLayer.type = .radial
+//        self.foregroundGradientLayer.colors = [lightBlue.cgColor, blue.cgColor]
+//        self.foregroundGradientLayer.startPoint = CGPoint(x: 1.0, y: 0.0)
+//        self.foregroundGradientLayer.endPoint = CGPoint(x: 0.0, y: 1.0)
+//
+//        self.maskView.backgroundColor = .clear
+//
+//
+//
+//        self.maskGradientLayer.type = .radial
+//        self.maskGradientLayer.colors = [NSColor(rgb: 0xffffff, alpha: 0.4).cgColor, NSColor(rgb: 0xffffff, alpha: 0.0).cgColor]
+//        self.maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+//        self.maskGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+//        self.maskGradientLayer.transform = CATransform3DMakeScale(0.3, 0.3, 1.0)
+//        self.maskGradientLayer.isHidden = false
+//
+//        let largerCirclePath = CGMutablePath()
+//        largerCirclePath.addEllipse(in: NSMakeRect(0, 0, bounds.height - 20, bounds.height - 20))
+//        self.maskCircleLayer.fillColor = NSColor.white.cgColor
+//        self.maskCircleLayer.path = largerCirclePath
+//        self.maskCircleLayer.isHidden = false
+//
+//
+//
+//        self.foregroundView.layer?.mask = self.maskView.layer
+//        self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
+//
+//
+//        self.maskView.layer?.addSublayer(self.maskGradientLayer)
+//        self.maskView.layer?.addSublayer(self.maskCircleLayer)
+
 
     }
     
@@ -87,6 +133,7 @@ private final class GroupCallControlsView : View {
         case .connecting:
             playbackAudioLevelView.change(opacity: 0, animated: animated)
             playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
+            playbackAudioLevelView.stopAnimating()
         case .connected:
             if callState.isMuted {
                 if let muteState = state.muteState {
@@ -116,6 +163,14 @@ private final class GroupCallControlsView : View {
             } else {
                 playbackAudioLevelView.change(opacity: 1, animated: animated)
             }
+            
+        }
+        
+        if callState.isKeyWindow {
+            playbackAudioLevelView.startAnimating()
+        } else {
+            playbackAudioLevelView.stopAnimating()
+            playbackAudioLevelView.change(opacity: 0, animated: animated)
         }
         
         if state != preiousState {
@@ -197,11 +252,92 @@ private final class GroupCallControlsView : View {
         self.preiousState = state
         needsLayout = true
 
+        //updateGlowAndGradientAnimations(active: nil)
+
     }
     
     override var mouseDownCanMoveWindow: Bool {
         return true
     }
+
+    private func setupGradientAnimations() {
+        if let _ = self.foregroundGradientLayer.animation(forKey: "movement") {
+        } else {
+            let previousValue = self.foregroundGradientLayer.startPoint
+            let newValue: CGPoint
+//            if self.maskBlobView.presentationAudioLevel > 0.15 {
+//                newValue = CGPoint(x: CGFloat.random(in: 0.8 ..< 1.0), y: CGFloat.random(in: 0.1 ..< 0.45))
+//            } else {
+                newValue = CGPoint(x: CGFloat.random(in: 0.6 ..< 0.8), y: CGFloat.random(in: 0.1 ..< 0.45))
+//            }
+            self.foregroundGradientLayer.startPoint = newValue
+
+            CATransaction.begin()
+
+            let animation = CABasicAnimation(keyPath: "startPoint")
+            animation.duration = Double.random(in: 0.8 ..< 1.4)
+            animation.fromValue = previousValue
+            animation.toValue = newValue
+
+            CATransaction.setCompletionBlock { [weak self] in
+                self?.setupGradientAnimations()
+            }
+
+            self.foregroundGradientLayer.add(animation, forKey: "movement")
+            CATransaction.commit()
+        }
+    }
+
+    private var blue:NSColor {
+        return GroupCallTheme.speakInactiveColor
+    }
+
+    private var lightBlue: NSColor {
+        return NSColor(rgb: 0x59c7f8)
+    }
+
+    private var green: NSColor {
+        return GroupCallTheme.speakActiveColor
+    }
+
+
+    func updateGlowAndGradientAnimations(active: Bool?, previousActive: Bool? = nil) {
+        let effectivePreviousActive = previousActive ?? false
+
+        let initialScale: CGFloat = ((self.maskGradientLayer.value(forKeyPath: "presentationLayer.transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (((self.maskGradientLayer.value(forKeyPath: "transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (effectivePreviousActive ? 0.95 : 0.8))
+        let initialColors = self.foregroundGradientLayer.colors
+
+        let outerColor: NSColor?
+        let targetColors: [CGColor]
+        let targetScale: CGFloat
+        if let active = active {
+            if active {
+                targetColors = [blue.cgColor, green.cgColor]
+                targetScale = 0.89
+                outerColor = NSColor(rgb: 0x005720)
+            } else {
+                targetColors = [lightBlue.cgColor, blue.cgColor]
+                targetScale = 0.85
+                outerColor = NSColor(rgb: 0x00274d)
+            }
+        } else {
+            targetColors = [lightBlue.cgColor, blue.cgColor]
+            targetScale = 0.3
+            outerColor = nil
+        }
+
+        self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
+        if let _ = previousActive {
+            self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
+        } else {
+            self.maskGradientLayer.animateSpring(from: initialScale as NSNumber, to: targetScale as NSNumber, keyPath: "transform.scale", duration: 0.45)
+        }
+
+        self.foregroundGradientLayer.colors = targetColors
+        self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
+    }
+
+
     
     override func layout() {
         super.layout()
@@ -215,6 +351,7 @@ private final class GroupCallControlsView : View {
         if let speakText = speakText {
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
         }
+
     }
     
     required init?(coder: NSCoder) {
@@ -343,6 +480,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     let isSpeaking: Bool
     let audioLevel: Float?
     let isInvited: Bool
+    let isKeyWindow: Bool
     private var weight: Int {
         var weight: Int = 0
         
@@ -394,6 +532,9 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.isInvited != rhs.isInvited {
             return false
         }
+        if lhs.isKeyWindow != rhs.isKeyWindow {
+            return false
+        }
         return true
     }
     
@@ -412,7 +553,8 @@ private final class GroupCallUIState : Equatable {
     let cachedData: CachedChannelData?
     let myAudioLevel: Float
     let voiceSettings: VoiceCallSettings
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings) {
+    let isKeyWindow: Bool
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -421,6 +563,7 @@ private final class GroupCallUIState : Equatable {
         self.state = state
         self.myAudioLevel = myAudioLevel
         self.voiceSettings = voiceSettings
+        self.isKeyWindow = isKeyWindow
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -449,11 +592,14 @@ private final class GroupCallUIState : Equatable {
         } else if (lhs.cachedData != nil) != (rhs.cachedData != nil) {
             return false
         }
+        if lhs.isKeyWindow != rhs.isKeyWindow {
+            return false
+        }
         return true
     }
 }
 
-private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ accountPeer: Peer) -> GroupCallUIState {
+private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState, _ isMuted: Bool, _ participants: [RenderedChannelParticipant], _ peerStates: PresentationGroupCallMembers?, _ audioLevels: [PeerId : PeerGroupCallData.AudioLevel], _ invitedPeers: Set<PeerId>, _ summaryState: PresentationGroupCallSummaryState?, _ voiceSettings: VoiceCallSettings, _ isKeyWindow: Bool, _ accountPeer: Peer) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -475,12 +621,15 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     })
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
-        memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow))
     }
     
     for value in activeParticipants {
-        let audioLevel = audioLevels[value.peer.id]
-        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil && audioLevel!.value > 0, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
+        var audioLevel = audioLevels[value.peer.id]
+        if accountPeerId == value.peer.id, isMuted {
+            audioLevel = nil
+        }
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id), isKeyWindow: isKeyWindow))
     }
     
     
@@ -488,12 +637,12 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     for participant in participants {
         if !activeParticipants.contains(where: { $0.peer.id == participant.peer.id}) {
             if participant.peer.id != accountPeerId {
-                memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id)))
+                memberDatas.append(PeerGroupCallData(peer: participant.peer, presence: participant.presences[participant.peer.id] as? TelegramUserPresence, state: nil, isSpeaking: false, audioLevel: nil, isInvited: invitedPeers.contains(participant.peer.id), isKeyWindow: isKeyWindow))
             }
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isKeyWindow: isKeyWindow)
 }
 
 
@@ -510,13 +659,27 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
             }))
             addedSeparator = true
+
+        }
+        var nextForeigner = false
+        if (data.state != nil || data.peer.id == account.peerId), i < state.memberDatas.count - 1 {
+            if state.memberDatas[i + 1].state == nil {
+                nextForeigner = true
+            }
+        }
+
+        struct Tuple : Equatable {
+            let nextForeigner: Bool
+            let data: PeerGroupCallData
+            let canManageCall:Bool
         }
         
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, action: {
+        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(Tuple(nextForeigner: nextForeigner, data: data, canManageCall: state.state.canManageCall)), item: { initialSize, stableId in
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, canManageCall: state.state.canManageCall, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, drawLine: !nextForeigner, action: {
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
+                
                 if state.state.canManageCall, data.peer.id != account.peerId {
                     if let muteState = data.state?.muteState, !muteState.canUnmute {
                         items.append(.init(L10n.voiceChatUnmutePeer, handler: {
@@ -530,11 +693,17 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     items.append(.init(L10n.voiceChatRemovePeer, handler: {
                         arguments.remove(data.peer)
                     }))
+                    items.append(ContextSeparatorItem())
                 }
+                items.append(.init(L10n.voiceChatOpenProfile, handler: {
+                    arguments.openInfo(data.peer.id)
+                }))
+
                 return .single(items)
             })
         }))
         index += 1
+
     }
     
     return entries
@@ -599,6 +768,8 @@ final class GroupCallUIController : ViewController {
             modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { _ in
                 _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
             }, appearance: darkPalette.appearance)
+        }, openInfo: { peerId in
+            appDelegate?.navigateProfile(peerId, account: account)
         })
         
         genericView.arguments = arguments
@@ -620,11 +791,12 @@ final class GroupCallUIController : ViewController {
 
 
 
-        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(combineLatest(.single([]) |> then(self.data.call.audioLevels), .single(0) |> then(self.data.call.myAudioLevel |> distinctUntilChanged)) |> map { values, myLevel in
-            var values = values
-            values.append((account.peerId, myLevel))
+        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(.single([]) |> then(self.data.call.audioLevels) |> map { values in
             return cachedAudioValues.modify { list in
-                var list = list
+                var list = list.filter { level in
+                    return values.contains(where: { $0.0 == level.key })
+                }
+
                 for value in values {
                     var updated: Bool = true
                     if let listValue = list[value.0] {
@@ -642,12 +814,8 @@ final class GroupCallUIController : ViewController {
 
 
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, window.visibility, account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
-            if values.9 {
-                return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.10))
-            } else {
-                return .never()
-            }
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, self.isKeyWindow.get(), account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
+            return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.9, values.10))
         } |> distinctUntilChanged
         
         
@@ -658,7 +826,7 @@ final class GroupCallUIController : ViewController {
         
         let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
-            return prepareInputDataTransition(left: previousEntries.swap(current), right: current, animated: true, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false) |> map {
+            return prepareInputDataTransition(left: previousEntries.swap(current), right: current, animated: state.isKeyWindow, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false) |> map {
                 (state, $0)
             }
         } |> deliverOnMainQueue
