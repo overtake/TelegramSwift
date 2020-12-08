@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import SyncCore
 import Postbox
-
+import HotKey
 
 final class GroupCallSettingsView : View {
     fileprivate let tableView:TableView = TableView()
@@ -224,8 +224,8 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
 
         if let permission = uiState.hasPermission {
             if !permission {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.voiceChatSettingsPushToTalkAccess, linkHandler: { _ in
-
+                entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown(L10n.voiceChatSettingsPushToTalkAccess, linkColor: GroupCallTheme.speakLockedColor, linkFont: .bold(11.5), linkHandler: { _ in
+                    PermissionsManager.openInputMonitoringPrefs()
                 }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
                 index += 1
             }
@@ -254,7 +254,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     fileprivate let call: PresentationGroupCall
     private let disposable = MetaDisposable()
     private let account: Account
-    
+    private let monitorPermissionDisposable = MetaDisposable()
     private let permissionDisposable = MetaDisposable()
     
     init(sharedContext: SharedAccountContext, account: Account, call: PresentationGroupCall) {
@@ -276,6 +276,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     deinit {
         disposable.dispose()
         permissionDisposable.dispose()
+        monitorPermissionDisposable.dispose()
     }
     
     override func viewDidLoad() {
@@ -292,6 +293,13 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         let updateState: ((GroupCallSettingsState) -> GroupCallSettingsState) -> Void = { f in
             statePromise.set(stateValue.modify (f))
         }
+
+        monitorPermissionDisposable.set((KeyboardGlobalHandler.getPermission() |> deliverOnMainQueue).start(next: { value in
+            updateState { _ in
+                return GroupCallSettingsState(hasPermission: value)
+            }
+        }))
+
         
         
         genericView.backButton.set(handler: { [weak self] _ in
@@ -343,7 +351,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { })
         let initialSize = self.atomicSize
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToSignal { devices, settings, appearance, peer, state, uiState in
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, state, uiState in
             let entries = groupCallSettingsEntries(state: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, arguments: arguments, updateDefaultParticipantsAreMuted: updateDefaultParticipantsAreMuted, updateSettings: updateSettings, checkPermission: checkPermission).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue

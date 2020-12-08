@@ -21,18 +21,21 @@ private final class GroupCallUIArguments {
     let mute:(PeerId, Bool)->Void
     let toggleSpeaker:()->Void
     let remove:(Peer)->Void
+    let openInfo: (PeerId)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
     mute:@escaping(PeerId, Bool)->Void,
     toggleSpeaker:@escaping()->Void,
-    remove:@escaping(Peer)->Void) {
+    remove:@escaping(Peer)->Void,
+    openInfo: @escaping(PeerId)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
         self.settings = settings
         self.toggleSpeaker = toggleSpeaker
         self.remove = remove
+        self.openInfo = openInfo
     }
 }
 
@@ -43,8 +46,17 @@ private final class GroupCallControlsView : View {
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
     private let playbackAudioLevelView: VoiceBlobView
-    
-    
+
+    private let foregroundView = View()
+    private let foregroundGradientLayer = CAGradientLayer()
+
+    private let maskView = View()
+    private let maskGradientLayer = CAGradientLayer()
+    private let maskCircleLayer = CAShapeLayer()
+
+
+
+
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 220, 220),
@@ -55,10 +67,12 @@ private final class GroupCallControlsView : View {
         )
 
         super.init(frame: frameRect)
+     //   addSubview(foregroundView)
         addSubview(playbackAudioLevelView)
         addSubview(speak)
         addSubview(settings)
         addSubview(end)
+
         
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
@@ -73,6 +87,39 @@ private final class GroupCallControlsView : View {
         }, for: .Click)
         
         playbackAudioLevelView.startAnimating()
+
+//
+//        self.foregroundGradientLayer.type = .radial
+//        self.foregroundGradientLayer.colors = [lightBlue.cgColor, blue.cgColor]
+//        self.foregroundGradientLayer.startPoint = CGPoint(x: 1.0, y: 0.0)
+//        self.foregroundGradientLayer.endPoint = CGPoint(x: 0.0, y: 1.0)
+//
+//        self.maskView.backgroundColor = .clear
+//
+//
+//
+//        self.maskGradientLayer.type = .radial
+//        self.maskGradientLayer.colors = [NSColor(rgb: 0xffffff, alpha: 0.4).cgColor, NSColor(rgb: 0xffffff, alpha: 0.0).cgColor]
+//        self.maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+//        self.maskGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+//        self.maskGradientLayer.transform = CATransform3DMakeScale(0.3, 0.3, 1.0)
+//        self.maskGradientLayer.isHidden = false
+//
+//        let largerCirclePath = CGMutablePath()
+//        largerCirclePath.addEllipse(in: NSMakeRect(0, 0, bounds.height - 20, bounds.height - 20))
+//        self.maskCircleLayer.fillColor = NSColor.white.cgColor
+//        self.maskCircleLayer.path = largerCirclePath
+//        self.maskCircleLayer.isHidden = false
+//
+//
+//
+//        self.foregroundView.layer?.mask = self.maskView.layer
+//        self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
+//
+//
+//        self.maskView.layer?.addSublayer(self.maskGradientLayer)
+//        self.maskView.layer?.addSublayer(self.maskCircleLayer)
+
 
     }
     
@@ -197,11 +244,92 @@ private final class GroupCallControlsView : View {
         self.preiousState = state
         needsLayout = true
 
+        //updateGlowAndGradientAnimations(active: nil)
+
     }
     
     override var mouseDownCanMoveWindow: Bool {
         return true
     }
+
+    private func setupGradientAnimations() {
+        if let _ = self.foregroundGradientLayer.animation(forKey: "movement") {
+        } else {
+            let previousValue = self.foregroundGradientLayer.startPoint
+            let newValue: CGPoint
+//            if self.maskBlobView.presentationAudioLevel > 0.15 {
+//                newValue = CGPoint(x: CGFloat.random(in: 0.8 ..< 1.0), y: CGFloat.random(in: 0.1 ..< 0.45))
+//            } else {
+                newValue = CGPoint(x: CGFloat.random(in: 0.6 ..< 0.8), y: CGFloat.random(in: 0.1 ..< 0.45))
+//            }
+            self.foregroundGradientLayer.startPoint = newValue
+
+            CATransaction.begin()
+
+            let animation = CABasicAnimation(keyPath: "startPoint")
+            animation.duration = Double.random(in: 0.8 ..< 1.4)
+            animation.fromValue = previousValue
+            animation.toValue = newValue
+
+            CATransaction.setCompletionBlock { [weak self] in
+                self?.setupGradientAnimations()
+            }
+
+            self.foregroundGradientLayer.add(animation, forKey: "movement")
+            CATransaction.commit()
+        }
+    }
+
+    private var blue:NSColor {
+        return GroupCallTheme.speakInactiveColor
+    }
+
+    private var lightBlue: NSColor {
+        return NSColor(rgb: 0x59c7f8)
+    }
+
+    private var green: NSColor {
+        return GroupCallTheme.speakActiveColor
+    }
+
+
+    func updateGlowAndGradientAnimations(active: Bool?, previousActive: Bool? = nil) {
+        let effectivePreviousActive = previousActive ?? false
+
+        let initialScale: CGFloat = ((self.maskGradientLayer.value(forKeyPath: "presentationLayer.transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (((self.maskGradientLayer.value(forKeyPath: "transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (effectivePreviousActive ? 0.95 : 0.8))
+        let initialColors = self.foregroundGradientLayer.colors
+
+        let outerColor: NSColor?
+        let targetColors: [CGColor]
+        let targetScale: CGFloat
+        if let active = active {
+            if active {
+                targetColors = [blue.cgColor, green.cgColor]
+                targetScale = 0.89
+                outerColor = NSColor(rgb: 0x005720)
+            } else {
+                targetColors = [lightBlue.cgColor, blue.cgColor]
+                targetScale = 0.85
+                outerColor = NSColor(rgb: 0x00274d)
+            }
+        } else {
+            targetColors = [lightBlue.cgColor, blue.cgColor]
+            targetScale = 0.3
+            outerColor = nil
+        }
+
+        self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
+        if let _ = previousActive {
+            self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
+        } else {
+            self.maskGradientLayer.animateSpring(from: initialScale as NSNumber, to: targetScale as NSNumber, keyPath: "transform.scale", duration: 0.45)
+        }
+
+        self.foregroundGradientLayer.colors = targetColors
+        self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
+    }
+
+
     
     override func layout() {
         super.layout()
@@ -215,6 +343,7 @@ private final class GroupCallControlsView : View {
         if let speakText = speakText {
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
         }
+
     }
     
     required init?(coder: NSCoder) {
@@ -479,8 +608,11 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     }
     
     for value in activeParticipants {
-        let audioLevel = audioLevels[value.peer.id]
-        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil && audioLevel!.value > 0, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
+        var audioLevel = audioLevels[value.peer.id]
+        if accountPeerId == value.peer.id, isMuted {
+            audioLevel = nil
+        }
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id)))
     }
     
     
@@ -510,13 +642,26 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
             }))
             addedSeparator = true
+
+        }
+        var nextForeigner = false
+        if (data.state != nil || data.peer.id == account.peerId), i < state.memberDatas.count - 1 {
+            if state.memberDatas[i + 1].state == nil {
+                nextForeigner = true
+            }
+        }
+
+        struct Tuple : Equatable {
+            let nextForeigner: Bool
+            let data: PeerGroupCallData
         }
         
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(data), item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, action: {
+        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(Tuple(nextForeigner: nextForeigner, data: data)), item: { initialSize, stableId in
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, state: state.state, data: data, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, drawLine: !nextForeigner, action: {
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
+                
                 if state.state.canManageCall, data.peer.id != account.peerId {
                     if let muteState = data.state?.muteState, !muteState.canUnmute {
                         items.append(.init(L10n.voiceChatUnmutePeer, handler: {
@@ -530,11 +675,17 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     items.append(.init(L10n.voiceChatRemovePeer, handler: {
                         arguments.remove(data.peer)
                     }))
+                    items.append(ContextSeparatorItem())
                 }
+                items.append(.init(L10n.voiceChatOpenProfile, handler: {
+                    arguments.openInfo(data.peer.id)
+                }))
+
                 return .single(items)
             })
         }))
         index += 1
+
     }
     
     return entries
@@ -599,6 +750,8 @@ final class GroupCallUIController : ViewController {
             modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { _ in
                 _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
             }, appearance: darkPalette.appearance)
+        }, openInfo: { peerId in
+            appDelegate?.navigateProfile(peerId, account: account)
         })
         
         genericView.arguments = arguments
@@ -620,11 +773,12 @@ final class GroupCallUIController : ViewController {
 
 
 
-        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(combineLatest(.single([]) |> then(self.data.call.audioLevels), .single(0) |> then(self.data.call.myAudioLevel |> distinctUntilChanged)) |> map { values, myLevel in
-            var values = values
-            values.append((account.peerId, myLevel))
+        let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(.single([]) |> then(self.data.call.audioLevels) |> map { values in
             return cachedAudioValues.modify { list in
-                var list = list
+                var list = list.filter { level in
+                    return values.contains(where: { $0.0 == level.key })
+                }
+
                 for value in values {
                     var updated: Bool = true
                     if let listValue = list[value.0] {

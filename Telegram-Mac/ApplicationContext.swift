@@ -606,6 +606,38 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.launchAction = .preferences
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
+            case let .profile(peerId, necessary):
+                let peerSemaphore = DispatchSemaphore(value: 0)
+                var peer: Peer?
+                _ = context.account.postbox.transaction { transaction in
+                    peer = transaction.getPeer(peerId)
+                    peerSemaphore.signal()
+                }.start()
+                peerSemaphore.wait()
+
+                _ready.set(leftController.chatList.ready.get())
+                self.leftController.tabController.select(index: self.leftController.chatIndex)
+
+                if (necessary || context.sharedContext.layout != .single) {
+                    if let _ = peer {
+                        let controller = PeerInfoController(context: context, peerId: peerId)
+                        controller.navigationController = self.rightController
+                        controller.loadViewIfNeeded(self.rightController.bounds)
+
+                        self.launchAction = .navigate(controller)
+
+                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+                    } else {
+                       // self._ready.set(self.leftController.chatList.ready.get())
+                        self.leftController.tabController.select(index: self.leftController.chatIndex)
+                        self._ready.set(.single(true))
+                    }
+                } else {
+                   // self._ready.set(.single(true))
+                    _ready.set(leftController.chatList.ready.get())
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
+                }
             case let .chat(peerId, necessary):
                 let peerSemaphore = DispatchSemaphore(value: 0)
                 var peer: Peer?
