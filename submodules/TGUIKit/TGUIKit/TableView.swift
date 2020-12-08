@@ -412,6 +412,10 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var _mouseDownCanMoveWindow: Bool = false
+    override var mouseDownCanMoveWindow: Bool {
+        return _mouseDownCanMoveWindow
+    }
     
     override var isFlipped: Bool {
         return flip
@@ -1146,6 +1150,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         needsLayouItemsOnNextTransition = false
     }
     
+    public var _mouseDownCanMoveWindow: Bool = false {
+        didSet {
+            clipView._mouseDownCanMoveWindow = _mouseDownCanMoveWindow
+            tableView._mouseDownCanMoveWindow = _mouseDownCanMoveWindow
+        }
+    }
+    
+    open override var mouseDownCanMoveWindow: Bool {
+        return _mouseDownCanMoveWindow
+    }
+    
     private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
         //, clipView.bounds.minY > 0
         if !visibleItems.isEmpty, documentOffset.y > 0 {
@@ -1191,6 +1206,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             updateStickAfterScroll(animated)
         }
     }
+    
     
     public func updateStickAfterScroll(_ animated: Bool) -> Void {
         let visibleRect = self.tableView.visibleRect

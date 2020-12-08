@@ -39,6 +39,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
             return super.needsDisplay
         }
     }
+    public var _mouseDownCanMoveWindow: Bool = false
+    public override var mouseDownCanMoveWindow: Bool {
+        return _mouseDownCanMoveWindow
+    }
     
     weak var containingScrollView:NSScrollView? {
         

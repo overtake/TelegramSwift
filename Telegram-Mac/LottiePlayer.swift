@@ -312,6 +312,15 @@ private final class PlayerRenderer {
     func playSoundEffect() {
         self.soundEffect?.markAsPlayable()
     }
+    
+    func setColors(_ colors: [LottieColor]) {
+        self.layer.with { bridge -> Void in
+            for color in colors {
+                bridge?.setColor(color.color, forKeyPath: color.keyPath)
+            }
+        }
+    }
+    
     private var getCurrentFrame:()->Int32? = { return nil }
     var currentFrame: Int32? {
         return self.getCurrentFrame()
@@ -576,6 +585,13 @@ private final class PlayerContext {
             }
         }
     }
+    
+    func setColors(_ colors: [LottieColor]) {
+        self.rendererRef.with { renderer in
+            renderer.setColors(colors)
+        }
+    }
+    
     func playSoundEffect() {
         self.rendererRef.with { renderer in
             renderer.playSoundEffect()
@@ -714,15 +730,15 @@ final class LottieAnimation : Equatable {
         case let .media(id):
             if let id = id {
                 if let fitzModifier = key.fitzModifier {
-                    return "animation-\(id.namespace)-\(id.id)-fitz\(fitzModifier.rawValue)"
+                    return "animation-\(id.namespace)-\(id.id)-fitz\(fitzModifier.rawValue)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
                 } else {
-                    return "animation-\(id.namespace)-\(id.id)"
+                    return "animation-\(id.namespace)-\(id.id)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
                 }
             } else {
                 return "\(arc4random())"
             }
         case let .bundle(string):
-            return string
+            return string + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
         }
     }
 }
@@ -1025,6 +1041,10 @@ class LottiePlayerView : NSView {
         } else {
             return nil
         }
+    }
+    
+    func setColors(_ colors: [LottieColor]) {
+        context?.setColors(colors)
     }
     
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {

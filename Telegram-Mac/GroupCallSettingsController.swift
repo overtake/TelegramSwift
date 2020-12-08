@@ -254,9 +254,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     fileprivate let call: PresentationGroupCall
     private let disposable = MetaDisposable()
     private let account: Account
-    
-    private let permissionDisposable = MetaDisposable()
-    
+        
     init(sharedContext: SharedAccountContext, account: Account, call: PresentationGroupCall) {
         self.sharedContext = sharedContext
         self.account = account
@@ -275,13 +273,11 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     
     deinit {
         disposable.dispose()
-        permissionDisposable.dispose()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        permissionDisposable.set(requestMicrophonePermission().start())
         
         let account = self.account
                 
@@ -292,6 +288,8 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         let updateState: ((GroupCallSettingsState) -> GroupCallSettingsState) -> Void = { f in
             statePromise.set(stateValue.modify (f))
         }
+        
+        genericView.tableView._mouseDownCanMoveWindow = true
         
         
         genericView.backButton.set(handler: { [weak self] _ in

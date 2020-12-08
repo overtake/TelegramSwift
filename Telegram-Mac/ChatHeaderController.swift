@@ -1557,11 +1557,12 @@ private final class ChatGroupCallView : Control {
             let peer = self.topPeers[removed]
             let haveNext = topPeers.contains(where: { $0.stableId == peer.stableId })
             control.updateLayout(size: avatarSize, isClipped: false, animated: animated)
+            control.layer?.opacity = 0
             if animated && !haveNext {
                 control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
                     control?.removeFromSuperview()
                 })
-                control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration)
+                control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration, bounce: false)
             } else {
                 control.removeFromSuperview()
             }
@@ -1579,7 +1580,7 @@ private final class ChatGroupCallView : Control {
                     control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 19, 0), to: control.frame.origin, timingFunction: timingFunction)
                 } else {
                     control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
-                    control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
+                    control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration, bounce: false)
                 }
             }
         }
@@ -1610,7 +1611,7 @@ private final class ChatGroupCallView : Control {
                 self.speakingActivity!.centerX(y: frame.midY)
                 if animated {
                     self.speakingActivity?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    self.speakingActivity?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                    self.speakingActivity?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
                 }
             }
             
@@ -1634,7 +1635,7 @@ private final class ChatGroupCallView : Control {
                     current.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] _ in
                         current?.removeFromSuperview()
                     })
-                    current.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.2, bounce: false)
                 } else {
                     current.removeFromSuperview()
                 }
@@ -1681,10 +1682,12 @@ private final class ChatGroupCallView : Control {
         super.layout()
         joinButton.centerY(x: frame.width - joinButton.frame.width - 23)
         
-        if avatarsContainer.subviews.count == 3 {
+        let subviews = avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }
+        
+        if subviews.count == 3 || subviews.count == 0 {
             self.avatarsContainer.center()
         } else {
-            let count = CGFloat(avatarsContainer.subviews.count)
+            let count = CGFloat(subviews.count)
             let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
             self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
         }

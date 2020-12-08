@@ -35,6 +35,10 @@ class GeneralContainableRowView : TableRowView {
         return theme.colors.background
     }
     
+    override var mouseDownCanMoveWindow: Bool {
+        return false
+    }
+    
     var borderColor: NSColor {
         return theme.colors.border
     }
@@ -279,6 +283,14 @@ class GeneralRowView: TableRowView,ViewDisplayDelegate {
             return .clear
         }
         return item.backgroundColor
+    }
+    
+    override var mouseDownCanMoveWindow: Bool {
+        if self.className == GeneralRowView.className() {
+            return item?.table?._mouseDownCanMoveWindow ?? super.mouseDownCanMoveWindow
+        } else {
+            return false
+        }
     }
     
 }

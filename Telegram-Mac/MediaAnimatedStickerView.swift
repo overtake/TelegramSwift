@@ -108,6 +108,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
     }
     
+    func setColors(_ colors: [LottieColor]) {
+        self.playerView.setColors(colors)
+    }
+    
     private var nextForceAccept: Bool = false
 
     
@@ -236,7 +240,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 24 : 30 : 60
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
-                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, soundEffect: soundEffect, postbox: self.context?.account.postbox)
+                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
+                
                 self.fetchStatus = .Local
             } else {
                 self?.sticker = nil
@@ -252,7 +257,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
-        let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil
+        let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 40
         
         if hasPlaceholder {
             let current: StickerShimmerEffectView

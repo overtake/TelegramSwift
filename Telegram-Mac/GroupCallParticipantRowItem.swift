@@ -196,6 +196,8 @@ private final class GroupCallParticipantRowView : TableRowView {
                     button.set(image: GroupCallTheme.small_unmuted_active, for: .Highlight)
                 }
             }
+            button.userInteractionEnabled = item.state.canManageCall
+            
         } else {
             if item.isInvited {
                 button.set(image: GroupCallTheme.invitedIcon, for: .Normal)
