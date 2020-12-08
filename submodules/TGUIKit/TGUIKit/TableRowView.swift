@@ -229,6 +229,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                 if let strongSelf = self {
                     let menu = ContextMenu()
                     
+                    menu.appearance = self?.rowAppearance
                     
 //                    presntContextMenu(for: event, items: items.compactMap({ item in
 //                        if !(item is ContextSeparatorItem) {
@@ -457,6 +458,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func mouseInside() -> Bool {
         return super._mouseInside()
+    }
+    
+    open var rowAppearance: NSAppearance? {
+        return self.appearance
     }
     
 }
