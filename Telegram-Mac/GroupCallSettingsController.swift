@@ -282,7 +282,9 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+
+        self.genericView.tableView._mouseDownCanMoveWindow = true
         
         let account = self.account
                 
