@@ -20,13 +20,17 @@ final class GroupCallSpeakButton : Control {
         super.init(frame: frameRect)
         addSubview(button)
         addSubview(lockedView)
-        
+
         lockedView.isEventLess = true
         lockedView.image = GroupCallTheme.big_muted
         lockedView.sizeToFit()
         button.userInteractionEnabled = false
         layer?.cornerRadius = frameRect.height / 2
         backgroundColor = GroupCallTheme.speakActiveColor
+    }
+
+    override var mouseDownCanMoveWindow: Bool {
+        return false
     }
     
     override func layout() {
