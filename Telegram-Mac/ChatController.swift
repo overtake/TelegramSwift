@@ -2305,14 +2305,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            if let navigation = self?.navigationController {
-                if let header = navigation.header, let strongSelf = self {
-                    header.show(true)
-                    if let view = header.view as? InlineAudioPlayerView {
-                        view.update(with: controller, context: context, tableView: strongSelf.genericView.tableView)
-                    }
-                }
-            }
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: self?.genericView.tableView, supportTableView: nil)
+            self?.navigationController?.header?.show(true, contextObject: object)
         }
         
         
@@ -5269,8 +5263,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.globalPeerHandler.set(.single(chatLocation))
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)
-        if let controller = globalAudio {
-            (self.navigationController?.header?.view as? InlineAudioPlayerView)?.update(with: controller, context: context, tableView: genericView.tableView)
+        if let controller = globalAudio, let header = self.navigationController?.header, header.needShown {
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
+            header.view.update(with: object)
         }
         
     }

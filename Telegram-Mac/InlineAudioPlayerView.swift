@@ -17,6 +17,24 @@ import SwiftSignalKit
 
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
+
+    struct ContextObject {
+        let controller: APController
+        let context: AccountContext
+        let tableView: TableView?
+        let supportTableView: TableView?
+    }
+
+    var contextValue: ContextObject? {
+        return header?.contextObject as? ContextObject
+    }
+    var controller: APController? {
+        return contextValue?.controller
+    }
+    var context: AccountContext? {
+        return contextValue?.context
+    }
+
     private let previous:ImageButton = ImageButton()
     private let next:ImageButton = ImageButton()
     private let playOrPause:ImageButton = ImageButton()
@@ -28,23 +46,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let containerView:Control
     private let separator:View = View()
     private let playingSpeed: ImageButton = ImageButton()
-    private(set) var controller:APController? {
-        didSet {
-            if let controller = controller {
-                self.bufferingStatusDisposable.set((controller.bufferingStatus
-                    |> deliverOnMainQueue).start(next: { [weak self] status in
-                        if let status = status {
-                            self?.updateStatus(status.0, status.1)
-                        }
-                    }))
-                controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
-            } else {
-                self.bufferingStatusDisposable.set(nil)
-            }
-            self.playingSpeed.isHidden = !(controller is APChatVoiceController)
-        }
-    }
-    private var context: AccountContext?
+
+
+
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
     private var ranges: (IndexSet, Int)?
@@ -258,30 +262,43 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }
     }
-    
-    func update(with controller:APController, context: AccountContext, tableView:TableView?, supportTableView: TableView? = nil) {
-        self.controller?.remove(listener: self)
-        self.controller = controller
-        self.controller?.add(listener: self)
-        self.context = context
+
+    override func update(with contextObject: Any) {
+        super.update(with: contextObject)
+
+        let contextObject = contextObject as! ContextObject
+
+        let controller = contextObject.controller
+
+        self.bufferingStatusDisposable.set((controller.bufferingStatus
+            |> deliverOnMainQueue).start(next: { [weak self] status in
+                if let status = status {
+                    self?.updateStatus(status.0, status.1)
+                }
+            }))
+        controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
+
+        self.playingSpeed.isHidden = !(controller is APChatVoiceController)
+
+        controller.add(listener: self)
         self.ready.set(controller.ready.get())
-        
+
         repeatControl.isHidden = !(controller is APChatMusicController)
-        if let tableView = tableView {
+        if let tableView = contextObject.tableView {
             if self.instantVideoPip == nil {
                 self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
             }
             self.instantVideoPip?.updateTableView(tableView, context: controller.context, controller: controller)
             addGlobalAudioToVisible(tableView: tableView)
         }
-        if let supportTableView = supportTableView {
+        if let supportTableView = contextObject.supportTableView {
             addGlobalAudioToVisible(tableView: supportTableView)
         }
         if let song = controller.currentSong {
             songDidChanged(song: song, for: controller)
         }
     }
-    
+
     private func addGlobalAudioToVisible(tableView: TableView) {
         if let controller = controller {
             tableView.enumerateViews(with: { (view) in
@@ -314,7 +331,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     deinit {
-        controller?.remove(listener: self)
         bufferingStatusDisposable.dispose()
     }
     
@@ -408,11 +424,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     func stopAndHide(_ animated:Bool) -> Void {
-        header?.hide(true)
+        self.hide(animated)
         controller?.remove(listener: self)
         controller?.stop()
         controller?.cleanup()
-        controller = nil
         instantVideoPip?.hide()
         instantVideoPip = nil
     }

@@ -158,12 +158,12 @@ func alert(for window:Window, header:String = appName, info:String?, runModal: B
     alert.addButton(withTitle: L10n.alertOK)
     
     
-    alert.addButton(withTitle: L10n.alertCancel)
-    alert.buttons.last?.wantsLayer = true
-    alert.buttons.last?.layer?.opacity = 0
-    alert.buttons.last?.keyEquivalent = "\u{1b}"
-    alert.buttons.last?.removeAllSubviews()
-    alert.buttons.last?.focusRingType = .none
+//    alert.addButton(withTitle: L10n.alertCancel)
+//    alert.buttons.last?.wantsLayer = true
+//    alert.buttons.last?.layer?.opacity = 0
+//    alert.buttons.last?.keyEquivalent = "\u{1b}"
+//    alert.buttons.last?.removeAllSubviews()
+//    alert.buttons.last?.focusRingType = .none
     if runModal {
         alert.runModal()
     } else {

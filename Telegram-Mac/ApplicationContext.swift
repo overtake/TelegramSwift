@@ -210,15 +210,32 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         rightController = ExMajorNavigationController(context, ChatController.self, emptyController);
-        rightController.set(header: NavigationHeader(44, initializer: { (header) -> NavigationHeaderView in
-            let view = InlineAudioPlayerView(header)
-            return view
+        rightController.set(header: NavigationHeader(44, realHeight: 44, initializer: { header, contextObject, view -> NavigationHeaderView in
+            let newView = view ?? InlineAudioPlayerView(header)
+            newView.update(with: contextObject)
+            return newView
         }))
         
         
-        rightController.set(callHeader: CallNavigationHeader(35, initializer: { header -> NavigationHeaderView in
-            let view = GroupCallNavigationHeaderView(header)
-            return view
+        rightController.set(callHeader: CallNavigationHeader(35, realHeight: 50, initializer: { header, contextObject, view -> NavigationHeaderView in
+            let newView: NavigationHeaderView
+            if contextObject is GroupCallContext {
+                if let view = view, view.className == GroupCallNavigationHeaderView.className() {
+                    newView = view
+                } else {
+                    newView = GroupCallNavigationHeaderView(header)
+                }
+            } else if contextObject is PCallSession {
+                if let view = view, view.className == CallNavigationHeaderView.className() {
+                    newView = view
+                } else {
+                    newView = CallNavigationHeaderView(header)
+                }
+            } else {
+                fatalError("not supported")
+            }
+            newView.update(with: contextObject)
+            return newView
         }))
         
         window.rootViewController = rightController
@@ -275,26 +292,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, displayUpgradeProgress: { progress in
                 
         }, callSession: { [weak self] in
-            return (self?.rightController.callHeader?.view as? CallNavigationHeaderView)?.session
+            return self?.rightController.callHeader?.contextObject as? PCallSession
         }, groupCall: { [weak self] in
-            return (self?.rightController.callHeader?.view as? GroupCallNavigationHeaderView)?.context
+            return self?.rightController.callHeader?.contextObject as? GroupCallContext
         })
         
-        
-        chatUndoManagerDisposable.set((context.chatUndoManager.allStatuses() |> deliverOnMainQueue).start(next: { [weak self] statuses in
-            guard let `self` = self else {return}
-            
-            if let header = self.rightController.undoHeader {
-                (header.view as? UndoOverlayHeaderView)?.removeAnimationForNextTransition = true
-
-                if statuses.hasProcessingActions {
-                    header.show(true)
-                } else {
-                    header.hide(true)
-                }
-            }
-            
-        }))
         
         termDisposable.set((context.account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
             if let terms = terms {
@@ -718,10 +720,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }))
         
         
-        if let controller = globalAudio {
-            let header = self.rightController.header?.view as? InlineAudioPlayerView
-            header?.update(with: controller, context: context, tableView: nil)
-            self.rightController.header?.show(false)
+        if let controller = globalAudio, let header = self.rightController.header {
+            self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
         }
         
        // _ready.set(.single(true))

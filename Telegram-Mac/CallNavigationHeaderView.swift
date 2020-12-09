@@ -32,6 +32,11 @@ class CallHeaderBasicView : NavigationHeaderView {
     let hideDisposable = MetaDisposable()
 
 
+    override func hide(_ animated: Bool) {
+        super.hide(true)
+        disposable.set(nil)
+        hideDisposable.set(nil)
+    }
     
     private var statusTimer: SwiftSignalKit.Timer?
 
@@ -168,11 +173,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     var grayColor:NSColor {
         return theme.colors.grayText
     }
-    
-    func hide() {
-        header?.hide(true)
-        disposable.set(nil)
-    }
+
     
     
     override func layout() {
@@ -207,8 +208,12 @@ class CallHeaderBasicView : NavigationHeaderView {
 
 class CallNavigationHeaderView: CallHeaderBasicView {
     
-    
-    fileprivate(set) var session: PCallSession?
+    var session: PCallSession? {
+        get {
+            self.header?.contextObject as? PCallSession
+        }
+    }
+
     fileprivate weak var accountPeer: Peer?
     fileprivate var state: CallState?
 
@@ -225,15 +230,12 @@ class CallNavigationHeaderView: CallHeaderBasicView {
         session?.toggleMute()
     }
     
-
-    
-    func update(with session: PCallSession) {
-        self.session = session
-        
+    override func update(with contextObject: Any) {
+        super.update(with: contextObject)
+        let session = contextObject as! PCallSession
         let account = session.account
-        
         let signal = Signal<Peer?, NoError>.single(session.peer) |> then(session.account.postbox.loadedPeerWithId(session.peerId) |> map(Optional.init) |> deliverOnMainQueue)
-        
+
         let accountPeer: Signal<Peer?, NoError> =  session.sharedContext.activeAccounts |> mapToSignal { accounts in
             if accounts.accounts.count == 1 {
                 return .single(nil)
@@ -241,7 +243,7 @@ class CallNavigationHeaderView: CallHeaderBasicView {
                 return account.postbox.loadedPeerWithId(account.peerId) |> map(Optional.init)
             }
         }
-        
+
         disposable.set(combineLatest(queue: .mainQueue(), session.state, signal, accountPeer).start(next: { [weak self] state, peer, accountPeer in
             if let peer = peer {
                 self?.setInfo(peer.displayTitle)
@@ -250,17 +252,13 @@ class CallNavigationHeaderView: CallHeaderBasicView {
             self?.needsLayout = true
             self?.ready.set(.single(true))
         }))
-        
+
         hideDisposable.set((session.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
-                self?.hide()
-                self?.session = nil
+                self?.hide(true)
             }
         }))
-        
     }
-    
-    
     
     private func updateState(_ state:CallState, accountPeer: Peer?, animated: Bool) {
         self.state = state

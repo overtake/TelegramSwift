@@ -1642,7 +1642,16 @@ private final class ChatGroupCallView : Control {
                 self.speakingActivity = nil
             }
         }
-        
+
+        let subviews = avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }
+
+        if subviews.count == 3 || subviews.count == 0 {
+            self.avatarsContainer.change(pos: self.focus(self.avatarsContainer.frame.size).origin, animated: animated)
+        } else {
+            let count = CGFloat(subviews.count)
+            let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
+            self.avatarsContainer.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY), animated: animated)
+        }
         
         self.topPeers = topPeers
         

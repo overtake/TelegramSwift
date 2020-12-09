@@ -592,10 +592,8 @@ class SharedAccountContext {
     }
     
     func showCallHeader(with session:PCallSession) {
-        bindings.rootNavigation().callHeader?.show(true)
-        if let view = bindings.rootNavigation().callHeader?.view as? CallNavigationHeaderView {
-            view.update(with: session)
-        }
+        let callHeader = bindings.rootNavigation().callHeader
+        callHeader?.show(true, contextObject: session)
     }
     private let groupCallContextValue:Promise<GroupCallContext?> = Promise(nil)
     var groupCallContext:Signal<GroupCallContext?, NoError> {
@@ -603,8 +601,7 @@ class SharedAccountContext {
     }
     func showGroupCall(with context: GroupCallContext) {
         let callHeader = bindings.rootNavigation().callHeader
-        callHeader?.show(true)
-        (callHeader?.view as? GroupCallNavigationHeaderView)?.update(with: context, sharedContext: self)
+        callHeader?.show(true, contextObject: context)
     }
     
     func updateCurrentGroupCallValue(_ value: GroupCallContext?) -> Void {

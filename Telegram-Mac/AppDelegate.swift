@@ -94,8 +94,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private var authContextValue: UnauthorizedApplicationContext?
     private let authContext = Promise<UnauthorizedApplicationContext?>()
 
-    
-    
+    private var activeValue: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
+
+    var isActive: Signal<Bool, NoError> {
+        return self.activeValue.get()
+    }
+
     private let handleEventContextDisposable = MetaDisposable()
     private let proxyDisposable = MetaDisposable()
     private var activity:Any?
@@ -1015,7 +1019,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             } else {
                // window.makeKeyAndOrderFront(nil)
             }
-            
+            self.activeValue.set(true)
             
         }
     }
@@ -1028,6 +1032,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if viewer != nil {
             viewer?.window.orderOut(nil)
         }
+        self.activeValue.set(false)
     }
     
     func applicationWillTerminate(_ notification: Notification) {

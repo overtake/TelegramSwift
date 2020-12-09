@@ -332,10 +332,11 @@ class ChatServiceItem: ChatRowItem {
                     let text: String
                     if let duration = duration {
                         if authorId == context.peerId {
-                            text = L10n.chatServiceVoiceChatFinishedYou(String.durationTransformed(elapsed: Int(duration)))
+                            text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                         } else {
-                            text = L10n.chatServiceVoiceChatFinished(authorName, String.durationTransformed(elapsed: Int(duration)))
+                            text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                         }
+                        let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
                         if authorId == context.peerId {
                             text = L10n.chatServiceVoiceChatStartedYou
