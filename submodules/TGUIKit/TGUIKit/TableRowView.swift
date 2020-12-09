@@ -230,7 +230,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     let menu = ContextMenu()
 
                     if let appearance = self?.rowAppearance {
-                        menu.appearance = appearance
+                        if menu.responds(to: Selector("appearance")) {
+                            menu.appearance = appearance
+                        }
                     }
 
 //                    presntContextMenu(for: event, items: items.compactMap({ item in
@@ -259,8 +261,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                         menu.addItem(item)
                     }
                     
-                    menu.delegate = menu
-                    
+
                     RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
 
                     

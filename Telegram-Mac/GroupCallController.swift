@@ -695,9 +695,11 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     }))
                     items.append(ContextSeparatorItem())
                 }
-                items.append(.init(L10n.voiceChatOpenProfile, handler: {
-                    arguments.openInfo(data.peer.id)
-                }))
+                if data.peer.id != account.peerId {
+                    items.append(.init(L10n.voiceChatOpenProfile, handler: {
+                        arguments.openInfo(data.peer.id)
+                    }))
+                }
 
                 return .single(items)
             })
@@ -845,8 +847,24 @@ final class GroupCallUIController : ViewController {
                 break
             }
         }
+
+        var connectedMusicPlayed: Bool = false
         
-        pushToTalkDisposable.set(combineLatest(queue: .mainQueue(), data.call.state, data.call.isMuted).start(next: { [weak self] state, isMuted in
+        pushToTalkDisposable.set(combineLatest(queue: .mainQueue(), data.call.state, data.call.isMuted, data.call.canBeRemoved).start(next: { [weak self] state, isMuted, canBeRemoved in
+
+            switch state.networkState {
+            case .connected:
+                if !connectedMusicPlayed {
+                    self?.sound.play(name: "interface call up")
+                    connectedMusicPlayed = true
+                }
+                if canBeRemoved, connectedMusicPlayed {
+                    self?.sound.play(name: "interface call down")
+                }
+            default:
+                break
+            }
+
             self?.pushToTalk.update = { [weak self] mode in
                 switch state.networkState {
                 case .connected:

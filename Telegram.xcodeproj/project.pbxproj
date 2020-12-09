@@ -198,6 +198,8 @@
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */; };
 		A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73884342580E501002E8424 /* CGChatListIndicator.swift */; };
+		A738843925810602002E8424 /* interface call down.wav in Resources */ = {isa = PBXBuildFile; fileRef = A738843725810601002E8424 /* interface call down.wav */; };
+		A738843A25810602002E8424 /* interface call up.wav in Resources */ = {isa = PBXBuildFile; fileRef = A738843825810602002E8424 /* interface call up.wav */; };
 		A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D342407CAE100CE44CA /* ChatMediaDice.swift */; };
 		A7393D372407CD7A00CE44CA /* ChatDiceContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */; };
 		A7393D392407D0F100CE44CA /* GraphCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7393D382407D0F100CE44CA /* GraphCore.framework */; };
@@ -1184,6 +1186,8 @@
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallNavigationHeaderView.swift; sourceTree = "<group>"; };
 		A73884342580E501002E8424 /* CGChatListIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGChatListIndicator.swift; sourceTree = "<group>"; };
+		A738843725810601002E8424 /* interface call down.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "interface call down.wav"; sourceTree = "<group>"; };
+		A738843825810602002E8424 /* interface call up.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "interface call up.wav"; sourceTree = "<group>"; };
 		A7393D342407CAE100CE44CA /* ChatMediaDice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMediaDice.swift; sourceTree = "<group>"; };
 		A7393D362407CD7A00CE44CA /* ChatDiceContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDiceContentView.swift; sourceTree = "<group>"; };
 		A7393D382407D0F100CE44CA /* GraphCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GraphCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2320,6 +2324,8 @@
 		A778DC2C23C77ACB00DD307B /* sounds */ = {
 			isa = PBXGroup;
 			children = (
+				A738843725810601002E8424 /* interface call down.wav */,
+				A738843825810602002E8424 /* interface call up.wav */,
 				27A9904C257A8044009044DB /* Pop.wav */,
 				27A9904D257A8046009044DB /* Purr.wav */,
 				A778DC3223C8988300DD307B /* quiz-correct.mp3 */,
@@ -4605,12 +4611,14 @@
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
+				A738843A25810602002E8424 /* interface call up.wav in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				27A9904E257A8047009044DB /* Pop.wav in Resources */,
+				A738843925810602002E8424 /* interface call down.wav in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
