@@ -287,9 +287,14 @@ open class Window: NSWindow {
 
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
-
     public var keyWindowUpdater: Signal<Bool, NoError> {
         return self.isKeyWindowValue.get()
+    }
+
+    private let occlusionStateValue: ValuePromise<NSWindow.OcclusionState> = ValuePromise(NSWindow.OcclusionState.visible, ignoreRepeated: true)
+
+    public var takeOcclusionState: Signal<NSWindow.OcclusionState, NoError> {
+        return occlusionStateValue.get()
     }
 
     public var visibility: Signal<Bool, NoError> {
@@ -903,11 +908,26 @@ open class Window: NSWindow {
         isKeyWindowValue.set(false)
     }
 
+    /*
+     - (void)windowDidChangeOcclusionState:(NSNotification *)notification
+     {
+         if ([[notification object] occlusionState]  &  NSWindowOcclusionStateVisible) {
+             // visible
+         } else {
+             // occluded
+         }
+     }
+     */
+
+    @objc func windowDidChangeOcclusionState() {
+        occlusionStateValue.set(self.occlusionState)
+    }
+
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
         
         self.acceptsMouseMovedEvents = true
-        
+        occlusionStateValue.set(self.occlusionState)
         isOpaque = true
         
         self.contentView?.acceptsTouchEvents = true
@@ -916,6 +936,10 @@ open class Window: NSWindow {
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: self)
+
+
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidChangeOcclusionState), name: NSWindow.didChangeOcclusionStateNotification, object: self)
+
 
     }
     

@@ -105,7 +105,8 @@ class PlayerListController: TableViewController {
         
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            self?.audioPlayer.update(with: controller, context: currentContext, tableView: self?.genericView)
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: currentContext, tableView: self?.genericView, supportTableView: nil)
+            self?.audioPlayer.update(with: object)
         }
     }
     

@@ -865,15 +865,12 @@
         }
         
         interactions.inlineAudioPlayer = { [weak self] controller in
-            if let navigation = self?.navigationController, let `self` = self {
-                if let header = navigation.header {
-                    header.show(true)
-                    if let view = header.view as? InlineAudioPlayerView {
-                        let tableView = (navigation.first { $0 is ChatController} as? ChatController)?.genericView.tableView
-                        view.update(with: controller, context: context, tableView: tableView, supportTableView: self.currentTable)
-                    }
-                }
+            guard let navigation = self?.navigationController else {
+                return
             }
+            let tableView = (navigation.first { $0 is ChatController} as? ChatController)?.genericView.tableView
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: tableView, supportTableView: self?.currentTable)
+            navigation.header?.show(true, contextObject: object)
         }
         
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in

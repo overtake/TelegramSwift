@@ -455,14 +455,8 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         }
         
         self.chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            if let navigation = self?.navigationController {
-                if let header = navigation.header, let strongSelf = self {
-                    header.show(true)
-                    if let view = header.view as? InlineAudioPlayerView {
-                        view.update(with: controller, context: context, tableView: strongSelf.genericView.tableView)
-                    }
-                }
-            }
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: self?.genericView.tableView, supportTableView: nil)
+            self?.navigationController?.header?.show(true, contextObject: object)
         }
         
         let currentMaxId:Atomic<AdminLogEventId> = Atomic(value: 0)

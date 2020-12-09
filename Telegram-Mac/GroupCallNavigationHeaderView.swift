@@ -161,13 +161,11 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
     private let audioLevelDisposable = MetaDisposable()
 
-    private(set) var context: GroupCallContext? {
-        didSet {
-            self.sharedContext?.updateCurrentGroupCallValue(context)
+    var context: GroupCallContext? {
+        get {
+            return self.header?.contextObject as? GroupCallContext
         }
     }
-
-    private var sharedContext: SharedAccountContext?
 
     override func toggleMute() {
         self.context?.call.toggleIsMuted()
@@ -188,10 +186,16 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         return NSColor(rgb: 0x33c659)
     }
 
-    func update(with context: GroupCallContext, sharedContext: SharedAccountContext) {
-        self.sharedContext = sharedContext
-        self.context = context
+    override func hide(_ animated: Bool) {
+        super.hide(true)
+        audioLevelDisposable.set(nil)
+        context?.call.sharedContext.updateCurrentGroupCallValue(nil)
+    }
 
+    override func update(with contextObject: Any) {
+        super.update(with: contextObject)
+
+        let context = contextObject as! GroupCallContext
         let peerId = context.call.peerId
 
         let data = context.call.summaryState
@@ -231,8 +235,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
         hideDisposable.set((context.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
-                self?.context = nil
-                self?.hide()
+                self?.hide(true)
             }
         }))
 

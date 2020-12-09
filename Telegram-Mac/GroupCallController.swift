@@ -672,16 +672,26 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             let nextForeigner: Bool
             let data: PeerGroupCallData
             let canManageCall:Bool
+            let adminIds: Set<PeerId>
         }
-        
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(Tuple(nextForeigner: nextForeigner, data: data, canManageCall: state.state.canManageCall)), item: { initialSize, stableId in
+
+        let tuple = Tuple(nextForeigner: nextForeigner, data: data, canManageCall: state.state.canManageCall, adminIds: state.state.adminIds)
+
+
+        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
             return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, canManageCall: state.state.canManageCall, isInvited: data.isInvited, isLastItem: i == state.memberDatas.count - 1, drawLine: !nextForeigner, action: {
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
                 
-                if state.state.canManageCall, data.peer.id != account.peerId {
-                    if let muteState = data.state?.muteState, !muteState.canUnmute {
+                if tuple.canManageCall, data.peer.id != account.peerId {
+                    if tuple.adminIds.contains(data.peer.id) {
+                        if data.state?.muteState == nil {
+                            items.append(.init(L10n.voiceChatMutePeer, handler: {
+                                arguments.mute(data.peer.id, true)
+                            }))
+                        }
+                    } else if let muteState = data.state?.muteState, !muteState.canUnmute {
                         items.append(.init(L10n.voiceChatUnmutePeer, handler: {
                             arguments.mute(data.peer.id, false)
                         }))
@@ -690,10 +700,14 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             arguments.mute(data.peer.id, true)
                         }))
                     }
-                    items.append(.init(L10n.voiceChatRemovePeer, handler: {
-                        arguments.remove(data.peer)
-                    }))
-                    items.append(ContextSeparatorItem())
+                    if !tuple.adminIds.contains(data.peer.id) {
+                        items.append(.init(L10n.voiceChatRemovePeer, handler: {
+                            arguments.remove(data.peer)
+                        }))
+                    }
+                    if !items.isEmpty {
+                        items.append(ContextSeparatorItem())
+                    }
                 }
                 if data.peer.id != account.peerId {
                     items.append(.init(L10n.voiceChatOpenProfile, handler: {
@@ -729,9 +743,7 @@ final class GroupCallUIController : ViewController {
     private let pushToTalkDisposable = MetaDisposable()
     private let requestPermissionDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
-    private let sound: SoundEffectPlayQueue
     init(_ data: UIData) {
-        self.sound = SoundEffectPlayQueue(postbox: data.call.account.postbox)
         self.data = data
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext)
         super.init()
@@ -815,8 +827,11 @@ final class GroupCallUIController : ViewController {
         })
 
 
+        let animate: Signal<Bool, NoError> = window.takeOcclusionState |> map {
+            $0.contains(.visible)
+        }
                
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, self.isKeyWindow.get(), account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: Queue(name: "voicechat.ui"), self.data.call.state, members, .single([]) |> then(channelMembersPromise.get()), audioLevels, account.viewTracker.peerView(peerId), self.data.call.invitedPeers, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), self.data.call.isMuted, animate, account.postbox.loadedPeerWithId(account.peerId)) |> mapToQueue { values in
             return .single(makeState(values.4, values.0, values.8, values.2, values.1, values.3, values.5, values.6, values.7, values.9, values.10))
         } |> distinctUntilChanged
         
@@ -855,11 +870,11 @@ final class GroupCallUIController : ViewController {
             switch state.networkState {
             case .connected:
                 if !connectedMusicPlayed {
-                    self?.sound.play(name: "interface call up")
+                    SoundEffectPlay.play(postbox: account.postbox, name: "interface call up")
                     connectedMusicPlayed = true
                 }
                 if canBeRemoved, connectedMusicPlayed {
-                    self?.sound.play(name: "interface call down")
+                    SoundEffectPlay.play(postbox: account.postbox, name: "interface call down")
                 }
             default:
                 break
@@ -875,25 +890,25 @@ final class GroupCallUIController : ViewController {
                                 if muteState.canUnmute {
                                     self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
                                     self?.pushToTalkIsActive = true
-                                    self?.sound.play(name: sound)
+                                    SoundEffectPlay.play(postbox: account.postbox, name: sound)
                                 }
                             }
                         }
                     case let .waiting(sound):
                         if !isMuted, self?.pushToTalkIsActive == true {
                             self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                            self?.sound.play(name: sound)
+                            SoundEffectPlay.play(postbox: account.postbox, name: sound)
                         }
                         self?.pushToTalkIsActive = false
                     case let .toggle(unmuteSound, muteSound):
                         if let muteState = state.muteState {
                             if muteState.canUnmute {
                                 self?.data.call.setIsMuted(action: .unmuted)
-                                self?.sound.play(name: unmuteSound)
+                                SoundEffectPlay.play(postbox: account.postbox, name: unmuteSound)
                             }
                         } else {
                             self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                            self?.sound.play(name: muteSound)
+                            SoundEffectPlay.play(postbox: account.postbox, name: muteSound)
                         }
                     }
                 case .connecting:
