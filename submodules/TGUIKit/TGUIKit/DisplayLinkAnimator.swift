@@ -45,6 +45,8 @@ public final class DisplayLinkAnimator {
         }, queue: .mainQueue())
         
         self.displayLink.start()
+
+        self.tick()
     }
     
     deinit {

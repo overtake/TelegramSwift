@@ -284,7 +284,14 @@ open class Window: NSWindow {
     public var isPushToTalkEquaivalent:((NSEvent)->Bool)?
     
     private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
-    
+
+
+    private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+
+    public var keyWindowUpdater: Signal<Bool, NoError> {
+        return self.isKeyWindowValue.get()
+    }
+
     public var visibility: Signal<Bool, NoError> {
         return visibleObserver.get()
     }
@@ -884,8 +891,17 @@ open class Window: NSWindow {
     public func windowImageShot() -> CGImage? {
         return CGWindowListCreateImage(CGRect.null, [.optionIncludingWindow], CGWindowID(windowNumber), [.boundsIgnoreFraming])
     }
+
+
     
-    
+    @objc open func windowDidBecomeKey() {
+        isKeyWindowValue.set(true)
+
+    }
+
+    @objc open func windowDidResignKey() {
+        isKeyWindowValue.set(false)
+    }
 
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
@@ -898,8 +914,9 @@ open class Window: NSWindow {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didMoveNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidNeedSaveState(_:)), name: NSWindow.didResizeNotification, object: self)
         
-        
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: self)
+
     }
     
     public static var statusBarHeight: CGFloat {
