@@ -191,25 +191,22 @@ private final class ChatListMediaPreviewView: View {
 
 
 private final class GroupCallActivity : View {
-    private let animation:MediaAnimatedStickerView
+    private let animation:GCChatListIndicator = GCChatListIndicator(color: .white)
     private let backgroundView = ImageView()
+    
     required init(frame frameRect: NSRect) {
-        self.animation = MediaAnimatedStickerView(frame: .init(origin: .zero, size: NSMakeSize(frameRect.width - 2, frameRect.height - 2)))
         super.init(frame: frameRect)
         addSubview(backgroundView)
         addSubview(animation)
         animation.center()
         isEventLess = true
-        animation.userInteractionEnabled = false
         animation.isEventLess = true
         backgroundView.isEventLess = true
     }
 
     
     func update(context: AccountContext, tableView: TableView?, foregroundColor: NSColor, backgroundColor: NSColor, animColor: NSColor) {
-        let anim = LocalAnimatedSticker.group_call_chatlist_typing
-        let parameters = anim.parameters
-        animation.update(with: anim.file, size: NSMakeSize(frame.width - 2, frame.height - 2), context: context, parent: nil, table: tableView, parameters: parameters, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+        self.animation.color = animColor
         backgroundView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             let rect = NSRect(origin: .zero, size: size)
             ctx.clear(rect)
@@ -219,9 +216,6 @@ private final class GroupCallActivity : View {
             ctx.setFillColor(foregroundColor.cgColor)
             ctx.fillEllipse(in: NSMakeRect(2, 2, frame.width - 4, frame.height - 4))
         })
-        
-        self.animation.setColors([LottieColor(keyPath: "3.3.Обводка 1", color: animColor), LottieColor(keyPath: "2.2.Обводка 1", color: animColor), LottieColor(keyPath: "1.1.Обводка 1", color: animColor)])
-        
         backgroundView.sizeToFit()
     }
     

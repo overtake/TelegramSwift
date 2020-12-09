@@ -228,9 +228,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
             menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
                 if let strongSelf = self {
                     let menu = ContextMenu()
-                    
-                    menu.appearance = self?.rowAppearance
-                    
+
+                    if let appearance = self?.rowAppearance {
+                        menu.appearance = appearance
+                    }
+
 //                    presntContextMenu(for: event, items: items.compactMap({ item in
 //                        if !(item is ContextSeparatorItem) {
 //                            return SPopoverItem(item.title, item.handler)
