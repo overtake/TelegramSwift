@@ -768,12 +768,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                        strongSelf.callContext?.setIsMuted(false)
                                    }
                                } else {
-                                   strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                                   strongSelf.callContext?.setIsMuted(true)
+                                    strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                    strongSelf.isMutedPromise.set(strongSelf.isMutedValue)
+                                    strongSelf.callContext?.setIsMuted(true)
                                }
                                strongSelf.stateValue.muteState = muteState
                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
                                strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                strongSelf.isMutedPromise.set(strongSelf.isMutedValue)
                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
                                strongSelf.callContext?.setIsMuted(true)
                            } else {

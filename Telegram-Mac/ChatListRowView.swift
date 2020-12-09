@@ -729,12 +729,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
             } else {
                 if animated {
-                    let groupActivityView = self.groupActivityView
-                    self.groupActivityView = nil
-                    groupActivityView?.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
-                    groupActivityView?.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak groupActivityView] completed in
-                        groupActivityView?.removeFromSuperview()
-                    })
+                    if let groupActivityView = self.groupActivityView {
+                        self.groupActivityView = nil
+                        groupActivityView.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
+                        groupActivityView.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak groupActivityView] completed in
+                            groupActivityView?.removeFromSuperview()
+                        })
+                    }
                 } else {
                     groupActivityView?.removeFromSuperview()
                     groupActivityView = nil
