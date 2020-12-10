@@ -8181,6 +8181,14 @@ internal final class L10n {
   internal static func voiceChatClickToUnmuteSecondaryPress(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Press", p1)
   }
+  /// Leave
+  internal static var voiceChatEndOK: String  { return L10n.tr("Localizable", "VoiceChat.End.OK") }
+  /// Are you sure you want to leave this voice chat?
+  internal static var voiceChatEndText: String  { return L10n.tr("Localizable", "VoiceChat.End.Text") }
+  /// End Voice Chat
+  internal static var voiceChatEndThird: String  { return L10n.tr("Localizable", "VoiceChat.End.Third") }
+  /// Leave voice chat
+  internal static var voiceChatEndTitle: String  { return L10n.tr("Localizable", "VoiceChat.End.Title") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
   /// Are you sure you want to remove %1$@ from the group chat?
@@ -8261,6 +8269,8 @@ internal final class L10n {
   }
   /// no participants
   internal static var voiceChatStatusMembersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Members_zero") }
+  /// Leave
+  internal static var voiceChatTitleEnd: String  { return L10n.tr("Localizable", "VoiceChat.Title.End") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

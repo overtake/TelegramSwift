@@ -743,6 +743,9 @@ final class GroupCallUIController : ViewController {
     private let pushToTalkDisposable = MetaDisposable()
     private let requestPermissionDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
+
+    private var canManageCall: Bool = false
+
     init(_ data: UIData) {
         self.data = data
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext)
@@ -763,7 +766,18 @@ final class GroupCallUIController : ViewController {
         let sharedContext = self.data.call.sharedContext
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
-            _ = self?.data.call.sharedContext.endGroupCall(terminate: false).start()
+
+            guard let `self` = self, let window = self.window else {
+                return
+            }
+            if self.canManageCall {
+                modernConfirm(for: window, account: account, peerId: nil, header: L10n.voiceChatEndTitle, information: L10n.voiceChatEndText, okTitle: L10n.voiceChatEndOK, thridTitle: L10n.voiceChatEndThird, thridAutoOn: false, successHandler: {
+                    [weak self] result in
+                    _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
+                })
+            } else {
+                _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
+            }
         }, settings: { [weak self] in
             guard let `self` = self else {
                 return
@@ -969,6 +983,7 @@ final class GroupCallUIController : ViewController {
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         self.genericView.applyUpdates(state, transition, animated: animated)
+        canManageCall = state.state.canManageCall
     }
     
     deinit {

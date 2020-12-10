@@ -84,6 +84,7 @@ final class VoiceBlobView: View {
             strongSelf.mediumBlob.level = strongSelf.presentationAudioLevel
             strongSelf.bigBlob.level = strongSelf.presentationAudioLevel
         })
+        layout()
     }
     
     required init?(coder: NSCoder) {
@@ -114,8 +115,8 @@ final class VoiceBlobView: View {
         guard !isAnimating else { return }
         isAnimating = true
         
-        mediumBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6, removeOnCompletion: false)
-        bigBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6, removeOnCompletion: false)
+        mediumBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6)
+        bigBlob.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.6)
         
         updateBlobsState()
         
@@ -271,9 +272,9 @@ final class BlobView: View {
     func updateSpeedLevel(to newSpeedLevel: CGFloat) {
         speedLevel = max(speedLevel, newSpeedLevel)
         
-        if abs(lastSpeedLevel - newSpeedLevel) > 0.5 {
-            animateToNewShape()
-        }
+//        if abs(lastSpeedLevel - newSpeedLevel) > 0.5 {
+//            animateToNewShape()
+//        }
     }
     
     func startAnimating() {
@@ -386,53 +387,61 @@ final class BlobView: View {
 }
 
 extension CGPath {
-    
-    static func smoothCurve(
-        through points: [CGPoint],
-        length: CGFloat,
-        smoothness: CGFloat
-        ) -> CGPath {
-        var smoothPoints = [SmoothPoint]()
-        for index in (0 ..< points.count) {
-            let prevIndex = index - 1
-            let prev = points[prevIndex >= 0 ? prevIndex : points.count + prevIndex]
-            let curr = points[index]
-            let next = points[(index + 1) % points.count]
-            
-            let angle: CGFloat = {
-                let dx = next.x - prev.x
-                let dy = -next.y + prev.y
-                let angle = atan2(dy, dx)
-                if angle < 0 {
-                    return abs(angle)
-                } else {
-                    return 2 * .pi - angle
-                }
-            }()
-            
-            smoothPoints.append(
-                SmoothPoint(
-                    point: curr,
-                    inAngle: angle + .pi,
-                    inLength: smoothness * distance(from: curr, to: prev),
-                    outAngle: angle,
-                    outLength: smoothness * distance(from: curr, to: next)
-                )
-            )
-        }
-        
-        let resultPath = CGMutablePath()
-        resultPath.move(to: smoothPoints[0].point)
-        for index in (0 ..< smoothPoints.count) {
-            let curr = smoothPoints[index]
-            let next = smoothPoints[(index + 1) % points.count]
-            let currSmoothOut = curr.smoothOut()
-            let nextSmoothIn = next.smoothIn()
-            resultPath.addCurve(to: next.point, control1: currSmoothOut, control2: nextSmoothIn)
-        }
-        resultPath.closeSubpath()
-        return resultPath
-    }
+
+
+    static func smoothCurve(through points: [CGPoint], length: CGFloat, smoothness: CGFloat, curve: Bool = false) -> CGPath {
+       var smoothPoints = [SmoothPoint]()
+       for index in (0 ..< points.count) {
+           let prevIndex = index - 1
+           let prev = points[prevIndex >= 0 ? prevIndex : points.count + prevIndex]
+           let curr = points[index]
+           let next = points[(index + 1) % points.count]
+
+           let angle: CGFloat = {
+               let dx = next.x - prev.x
+               let dy = -next.y + prev.y
+               let angle = atan2(dy, dx)
+               if angle < 0 {
+                   return abs(angle)
+               } else {
+                   return 2 * .pi - angle
+               }
+           }()
+
+           smoothPoints.append(
+               SmoothPoint(
+                   point: curr,
+                   inAngle: angle + .pi,
+                   inLength: smoothness * distance(from: curr, to: prev),
+                   outAngle: angle,
+                   outLength: smoothness * distance(from: curr, to: next)
+               )
+           )
+       }
+
+       let resultPath = CGMutablePath()
+       if curve {
+           resultPath.move(to: CGPoint())
+           resultPath.addLine(to: smoothPoints[0].point)
+       } else {
+           resultPath.move(to: smoothPoints[0].point)
+       }
+
+       let smoothCount = curve ? smoothPoints.count - 1 : smoothPoints.count
+       for index in (0 ..< smoothCount) {
+           let curr = smoothPoints[index]
+           let next = smoothPoints[(index + 1) % points.count]
+           let currSmoothOut = curr.smoothOut()
+           let nextSmoothIn = next.smoothIn()
+           resultPath.addCurve(to: next.point, control1: currSmoothOut, control2: nextSmoothIn)
+       }
+       if curve {
+           resultPath.addLine(to: CGPoint(x: length, y: 0.0))
+       }
+       resultPath.closeSubpath()
+       return resultPath
+   }
+
     
     static private func distance(from fromPoint: CGPoint, to toPoint: CGPoint) -> CGFloat {
         return sqrt((fromPoint.x - toPoint.x) * (fromPoint.x - toPoint.x) + (fromPoint.y - toPoint.y) * (fromPoint.y - toPoint.y))

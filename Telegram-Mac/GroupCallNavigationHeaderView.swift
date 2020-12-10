@@ -14,16 +14,16 @@ import SyncCore
 import TelegramCore
 
 
+
 private let blue = NSColor(rgb: 0x0078ff)
 private let lightBlue = NSColor(rgb: 0x59c7f8)
 private let green = NSColor(rgb: 0x33c659)
 
 
 private class CallStatusBarBackgroundView: View {
-    private let foregroundView: NSView
+    private let foregroundView: View
     private let foregroundGradientLayer: CAGradientLayer
     private let maskCurveView: VoiceCurveView
-
     var audioLevel: Float = 0.0  {
         didSet {
             self.maskCurveView.updateLevel(CGFloat(audioLevel))
@@ -48,15 +48,13 @@ private class CallStatusBarBackgroundView: View {
 
 
     override init() {
-        self.foregroundView = NSView()
+        self.foregroundView = View()
         self.foregroundGradientLayer = CAGradientLayer()
         self.maskCurveView = VoiceCurveView(frame: CGRect(), maxLevel: 2.5, smallCurveRange: (0.0, 0.0), mediumCurveRange: (0.1, 0.55), bigCurveRange: (0.1, 1.0))
         self.maskCurveView.setColor(NSColor(rgb: 0xffffff))
 
 
         super.init()
-
-        self.foregroundView.wantsLayer = true
 
         self.addSubview(self.foregroundView)
         self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
@@ -65,8 +63,6 @@ private class CallStatusBarBackgroundView: View {
         self.foregroundGradientLayer.colors = [blue.cgColor, lightBlue.cgColor]
         self.foregroundGradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
         self.foregroundGradientLayer.endPoint = CGPoint(x: 2.0, y: 0.5)
-
-        self.foregroundView.layer?.mask = self.maskCurveView.layer?.mask
 
 
         self.updateAnimations()
@@ -87,48 +83,17 @@ private class CallStatusBarBackgroundView: View {
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        if self.maskCurveView.frame != self.bounds {
-            self.foregroundView.frame = self.bounds
-            self.foregroundGradientLayer.frame = self.bounds
-            self.maskCurveView.frame = self.bounds
-            maskCurveView.layout()
-        }
+        self.foregroundView.frame = NSMakeRect(0, 0, frame.width, frame.height)
+        self.foregroundGradientLayer.frame = foregroundView.bounds
+        self.maskCurveView.frame = NSMakeRect(0, 0, frame.width, frame.height)
         CATransaction.commit()
-    }
-
-    private func setupGradientAnimations() {
-       // return
-        if let _ = self.foregroundGradientLayer.animation(forKey: "movement") {
-        } else {
-            let previousValue = self.foregroundGradientLayer.startPoint
-            let newValue: CGPoint
-            if self.maskCurveView.presentationAudioLevel > 0.1 {
-                newValue = CGPoint(x: CGFloat.random(in: 1.0 ..< 1.3), y: 0.5)
-            } else {
-                newValue = CGPoint(x: CGFloat.random(in: 0.85 ..< 1.2), y: 0.5)
-            }
-            self.foregroundGradientLayer.startPoint = newValue
-
-            CATransaction.begin()
-
-            let animation = CABasicAnimation(keyPath: "endPoint")
-            animation.duration = Double.random(in: 0.8 ..< 1.4)
-            animation.fromValue = previousValue
-            animation.toValue = newValue
-
-            CATransaction.setCompletionBlock { [weak self] in
-                self?.setupGradientAnimations()
-            }
-
-            self.foregroundGradientLayer.add(animation, forKey: "movement")
-            CATransaction.commit()
-        }
     }
 
     private var isCurrentlyInHierarchy: Bool = false
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         isCurrentlyInHierarchy = window != nil
+        updateAnimations()
     }
 
     func updateAnimations() {
@@ -137,7 +102,6 @@ private class CallStatusBarBackgroundView: View {
             self.maskCurveView.stopAnimating()
             return
         }
-        self.setupGradientAnimations()
         self.maskCurveView.startAnimating()
     }
 }
@@ -147,17 +111,21 @@ private class CallStatusBarBackgroundView: View {
 class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
 
-    private var _backgroundView: CallStatusBarBackgroundView?
+    private let _backgroundView: CallStatusBarBackgroundView = CallStatusBarBackgroundView()
+
     override var backgroundView: NSView {
-        if _backgroundView == nil {
-            _backgroundView = CallStatusBarBackgroundView()
-        }
-        return _backgroundView!
+        return _backgroundView
     }
 
-    private var effectiveBackgroundView: CallStatusBarBackgroundView {
-        return self.backgroundView as! CallStatusBarBackgroundView
+    override init(_ header: NavigationHeader) {
+        super.init(header)
+        addSubview(_backgroundView)
     }
+
+    override func layout() {
+        super.layout()
+    }
+
 
     private let audioLevelDisposable = MetaDisposable()
 
@@ -187,16 +155,19 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     }
 
     override func hide(_ animated: Bool) {
+        context?.call.sharedContext.updateCurrentGroupCallValue(nil)
         super.hide(true)
         audioLevelDisposable.set(nil)
-        context?.call.sharedContext.updateCurrentGroupCallValue(nil)
     }
 
     override func update(with contextObject: Any) {
         super.update(with: contextObject)
 
+
         let context = contextObject as! GroupCallContext
         let peerId = context.call.peerId
+
+        context.call.sharedContext.updateCurrentGroupCallValue(context)
 
         let data = context.call.summaryState
         |> filter { $0 != nil }
@@ -239,18 +210,18 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             }
         }))
 
-        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels))
-           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels in
-               guard let strongSelf = self else {
-                   return
-               }
-//               var effectiveLevel: Float = 0.0
-//               if !strongSelf.currentIsMuted {
-//                   effectiveLevel = myAudioLevel
-//               } else {
-//                   effectiveLevel = audioLevels.map { $0.1 }.max() ?? 0.0
-//               }
-               strongSelf.effectiveBackgroundView.audioLevel = myAudioLevel
+        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted)
+           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels, isMuted in
+                guard let strongSelf = self else {
+                    return
+                }
+                var effectiveLevel: Float = 0.0
+                if !isMuted {
+                    effectiveLevel = myAudioLevel
+                } else {
+                    effectiveLevel = audioLevels.map { $0.1 }.max() ?? 0.0
+                }
+                strongSelf._backgroundView.audioLevel = effectiveLevel
            }))
     }
 
@@ -270,7 +241,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             isConnected = true
         }
 
-        self.effectiveBackgroundView.speaking = isConnected && !isMuted
+        self._backgroundView.speaking = isConnected && !isMuted
 
 
         setMicroIcon(isMuted ? theme.icons.callInlineMuted : theme.icons.callInlineUnmuted)
@@ -286,9 +257,10 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override init(_ header: NavigationHeader) {
-        super.init(header)
+    override func getEndText() -> String {
+        return L10n.voiceChatTitleEnd
     }
+
 
 }
 
@@ -298,6 +270,7 @@ private final class VoiceCurveView: View {
     private let smallCurve: CurveView
     private let mediumCurve: CurveView
     private let bigCurve: CurveView
+
 
     private let maxLevel: CGFloat
 
@@ -477,7 +450,7 @@ final class CurveView: View {
         didSet {
             guard let currentPoints = currentPoints else { return }
 
-            shapeLayer.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness)
+            shapeLayer.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness, curve: true)
         }
     }
 
@@ -545,9 +518,6 @@ final class CurveView: View {
     func updateSpeedLevel(to newSpeedLevel: CGFloat) {
         speedLevel = max(speedLevel, newSpeedLevel)
 
-        if abs(lastSpeedLevel - newSpeedLevel) > 0.45 {
-            animateToNewShape()
-        }
     }
 
     func startAnimating() {

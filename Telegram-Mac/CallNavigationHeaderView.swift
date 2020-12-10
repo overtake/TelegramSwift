@@ -24,7 +24,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         return _backgroundView!
     }
     fileprivate let callInfo:TitleButton = TitleButton()
-    fileprivate let endCall:TitleButton = TitleButton()
+    fileprivate let endCall:ImageButton = ImageButton()
     fileprivate let statusTextView:NSTextField = NSTextField()
     fileprivate let muteControl:ImageButton = ImageButton()
 
@@ -90,8 +90,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         backgroundView.wantsLayer = true
         addSubview(backgroundView)
         
-        endCall.direction = .right
-        
+
         statusTextView.font = .normal(.text)
         statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
@@ -101,16 +100,15 @@ class CallHeaderBasicView : NavigationHeaderView {
         statusTextView.focusRingType = .none
         statusTextView.maximumNumberOfLines = 1
 
-        addSubview(statusTextView)
+        backgroundView.addSubview(statusTextView)
         
         callInfo.set(font: .medium(.text), for: .Normal)
         callInfo.disableActions()
-        addSubview(callInfo)
+        backgroundView.addSubview(callInfo)
         callInfo.userInteractionEnabled = false
         
-        endCall.set(font: .medium(.text), for: .Normal)
         endCall.disableActions()
-        addSubview(endCall)
+        backgroundView.addSubview(endCall)
         
         endCall.scaleOnClick = true
         muteControl.scaleOnClick = true
@@ -126,7 +124,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         
         
         muteControl.autohighlight = false
-        addSubview(muteControl)
+        backgroundView.addSubview(muteControl)
         
         muteControl.set(handler: { [weak self] _ in
             self?.toggleMute()
@@ -174,12 +172,14 @@ class CallHeaderBasicView : NavigationHeaderView {
         return theme.colors.grayText
     }
 
-    
+    func getEndText() -> String {
+        return L10n.callHeaderEndCall
+    }
     
     override func layout() {
         super.layout()
         
-        backgroundView.frame = bounds
+        backgroundView.frame = NSMakeRect(0, 0, frame.width, height)
         muteControl.centerY(x:23)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         callInfo.center()
@@ -191,14 +191,11 @@ class CallHeaderBasicView : NavigationHeaderView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        endCall.set(text: L10n.callHeaderEndCall, for: .Normal)
-        endCall.set(text: L10n.callHeaderEndCall, for: .Highlight)
         endCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         endCall.set(image: theme.icons.callInlineDecline, for: .Highlight)
-        _ = endCall.sizeToFit(NSZeroSize, NSMakeSize(100, 20), thatFit: true)
+        _ = endCall.sizeToFit(NSMakeSize(10, 10), thatFit: false)
         statusTextView.textColor = .white
         callInfo.set(color: .white, for: .Normal)
-        endCall.set(color: .white, for: .Normal)
 
         needsLayout = true
 

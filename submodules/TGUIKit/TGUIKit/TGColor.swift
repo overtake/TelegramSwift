@@ -94,6 +94,27 @@ public extension NSColor {
         return NSColor(hue: max(0.0, min(1.0, hueValue * hue)), saturation: max(0.0, min(1.0, saturationValue * saturation)), brightness: max(0.0, min(1.0, brightnessValue * brightness)), alpha: alphaValue)
     }
 
+    func interpolateTo(_ color: NSColor, fraction: CGFloat) -> NSColor? {
+           let f = min(max(0, fraction), 1)
+
+           var r1: CGFloat = 0.0
+           var r2: CGFloat = 0.0
+           var g1: CGFloat = 0.0
+           var g2: CGFloat = 0.0
+           var b1: CGFloat = 0.0
+           var b2: CGFloat = 0.0
+           var a1: CGFloat = 0.0
+           var a2: CGFloat = 0.0
+           self.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+           color.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+           let r: CGFloat = CGFloat(r1 + (r2 - r1) * f)
+           let g: CGFloat = CGFloat(g1 + (g2 - g1) * f)
+           let b: CGFloat = CGFloat(b1 + (b2 - b1) * f)
+           let a: CGFloat = CGFloat(a1 + (a2 - a1) * f)
+           return NSColor(red: r, green: g, blue: b, alpha: a)
+       }
+
+
     
     static var link:NSColor {
         return .colorFromRGB(rgbValue: 0x2481cc)

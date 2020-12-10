@@ -19,8 +19,11 @@ public enum ViewControllerStyle {
 open class NavigationHeaderView : View {
     public private(set) weak var header:NavigationHeader?
     public let ready:Promise<Bool> = Promise()
+
+    public private(set) var height: CGFloat
     public init(_ header:NavigationHeader) {
         self.header = header
+        self.height = header.height
         super.init(frame: NSMakeRect(0, 0, 0, header.height))
         self.autoresizingMask = [.width]
     }
@@ -57,15 +60,14 @@ open class NavigationHeader {
 
 
     public let height:CGFloat
-    public let realHeight: CGFloat
-    let initializer:(NavigationHeader, Any, NavigationHeaderView?)->NavigationHeaderView
+    fileprivate var realHeight: CGFloat = 0
+    let initializer:(NavigationHeader, Any, NavigationHeaderView?)->(NavigationHeaderView, CGFloat)
     weak var navigation:NavigationViewController?
     fileprivate let disposable:MetaDisposable = MetaDisposable()
     fileprivate var isShown:Bool = false
     public var needShown:Bool = false
-    public init(_ height:CGFloat, realHeight: CGFloat, initializer:@escaping(NavigationHeader, Any, NavigationHeaderView?)->NavigationHeaderView) {
+    public init(_ height:CGFloat, initializer:@escaping(NavigationHeader, Any, NavigationHeaderView?)->(NavigationHeaderView, CGFloat)) {
         self.height = height
-        self.realHeight = realHeight
         self.initializer = initializer
     }
     fileprivate var _view:NavigationHeaderView?
@@ -86,7 +88,9 @@ open class NavigationHeader {
         
         isShown = true
         if let navigation = navigation {
-            self._view = initializer(self, contextObject, self._view)
+            let initialized = initializer(self, contextObject, self._view)
+            self._view = initialized.0
+            self.realHeight = initialized.1
             let view = self.view
             let realHeight = self.realHeight
             let height = self.height
@@ -171,11 +175,15 @@ public class CallNavigationHeader : NavigationHeader {
         }
         isShown = true
         if let navigation = navigation {
-            self._view = initializer(self, contextObject, self._view)
+            let initialized = initializer(self, contextObject, self._view)
+            self._view = initialized.0
+            self.realHeight = initialized.1
+            self._view = initialized.0
+            self.realHeight = initialized.1
             let view = self.view
             let realHeight = self.realHeight
             let height = self.height
-            view.frame = NSMakeRect(0, 0, navigation.containerView.frame.width, realHeight)
+            view.frame = NSMakeRect(0, -realHeight, navigation.containerView.frame.width, realHeight)
             
             disposable.set((view.ready.get() |> take(1)).start(next: { [weak navigation, weak view, weak self] (ready) in
                 if let navigation = navigation, let view = view {
@@ -727,8 +735,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             if let call = callHeader, call.needShown {
                 barRelative = call.view
             }
-            containerView.addSubview(navigationBar, positioned: .below, relativeTo: barRelative)
-            
+            if let barRelative = barRelative {
+                containerView.addSubview(navigationBar, positioned: .below, relativeTo: barRelative)
+            } else {
+                containerView.addSubview(navigationBar)
+            }
+
 
             
             reloadHeaders()

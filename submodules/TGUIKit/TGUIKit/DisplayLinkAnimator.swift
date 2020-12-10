@@ -79,6 +79,7 @@ public final class ConstantDisplayLinkAnimator {
     private let update: () -> Void
     private var completed = false
     private let fps: TimeInterval
+
     
     public var isPaused: Bool = true {
         didSet {
