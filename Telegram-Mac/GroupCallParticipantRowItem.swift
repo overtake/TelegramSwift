@@ -149,8 +149,7 @@ private final class GroupCallParticipantRowView : TableRowView {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
-        let scale = self.photoView.frame.width / photoSize.width
-        self.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (scale - 1)), (item.height - (photoSize.width * scale)) / 2, photoSize.width * scale, photoSize.height * scale)
+        self.photoView.centerY(x: item.inset.left)
 
         titleView.setFrameOrigin(NSMakePoint(item.inset.left + photoSize.width + item.inset.left, 6))
         if let statusView = statusView {
@@ -253,20 +252,29 @@ private final class GroupCallParticipantRowView : TableRowView {
 
             
             let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
-            let scale = self.photoView.frame.width / photoSize.width
-            
+
+            let t = photoView.layer!.transform
+            let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+
+
             if animated {
-                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self, weak item] value in
-                    guard let item = item else {
+                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                    guard let `self` = self else {
                         return
                     }
-                    self?.photoView.frame = NSMakeRect(item.inset.left - (item.inset.left * (value - 1)), (item.height - (photoSize.width * value)) / 2, photoSize.width * value, photoSize.height * value)
+
+                    let rect = self.photoView.bounds
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                    fr = CATransform3DScale(fr, value, value, 1)
+                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                    self.photoView.layer?.transform = fr
                 }, completion: {
 
                 })
             } else {
                 self.scaleAnimator = nil
-                self.photoView.setFrameSize(NSMakeSize(photoSize.width * value, photoSize.height * value))
+                self.photoView.layer?.transform = CATransform3DIdentity
             }
         } else {
             self.scaleAnimator = nil

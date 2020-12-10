@@ -494,30 +494,31 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func updateHeader(_ interfaceState:ChatPresentationInterfaceState, _ animated:Bool, _ animateOnlyHeader: Bool = false) {
-                
+
+
+        let voiceChat = interfaceState.groupCall?.data?.groupCall == nil ? interfaceState.groupCall : nil
+
         var state:ChatHeaderState
         if interfaceState.isSearchMode.0 {
-            state = .search(searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
-        } else if let groupCall = interfaceState.groupCall, groupCall.data?.groupCall == nil {
-            state = .groupCall(groupCall)
+            state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
-            state = .promo(kind)
+            state = .promo(voiceChat, kind)
         } else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
             if peerStatus.canAddContact && settings.contains(.canAddContact) {
-                state = .addContact(block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
+                state = .addContact(voiceChat, block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
-                state = .report(autoArchived: settings.contains(.autoArchived))
+                state = .report(voiceChat, autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canShareContact) {
-                state = .shareInfo
+                state = .shareInfo(voiceChat)
             } else {
-                state = .none
+                state = .none(voiceChat)
             }
         } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
-            state = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
+            state = .pinned(voiceChat, pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
         } else if let canAdd = interfaceState.canAddContact, canAdd {
-           state = .none
+           state = .none(voiceChat)
         } else {
-            state = .none
+            state = .none(voiceChat)
         }
         
         header.updateState(state, animated: animated, for: self)
