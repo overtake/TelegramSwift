@@ -70,7 +70,7 @@ open class NavigationHeader {
         self.height = height
         self.initializer = initializer
     }
-    fileprivate var _view:NavigationHeaderView?
+    fileprivate weak var _view:NavigationHeaderView?
     public var view:NavigationHeaderView {
         return _view!
     }
@@ -136,7 +136,8 @@ open class NavigationHeader {
         needShown = false
         isShown = false
         
-        if let navigation = navigation {
+        if let navigation = navigation, let view = _view {
+            _view = nil
             CATransaction.begin()
             let completion = navigation.controller.navigationHeaderDidNoticeAnimation(0, height, animated)
             if animated {
@@ -144,14 +145,12 @@ open class NavigationHeader {
                     let animator = animated ? view.animator() : view
                     animator.setFrameOrigin(NSMakePoint(0, navigation.controller.bar.height - height))
                     
-                }, completionHandler: { [weak view, weak self] in
+                }, completionHandler: { [weak view] in
                     view?.removeFromSuperview()
-                    self?._view = nil
                     completion()
                 })
             } else {
                 view.removeFromSuperview()
-                _view = nil
             }
             CATransaction.commit()
             var inset:CGFloat = navigation.controller.bar.height

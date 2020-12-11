@@ -26,9 +26,10 @@ final class AvatarContentView: View {
     let peerId: PeerId
 
     private var scaleAnimator: DisplayLinkAnimator?
-
-    init(context: AccountContext, peer: Peer, message: Message?, synchronousLoad: Bool, size: NSSize) {
+    private let inset: CGFloat
+    init(context: AccountContext, peer: Peer, message: Message?, synchronousLoad: Bool, size: NSSize, inset: CGFloat = 3) {
         self.peerId = peer.id
+        self.inset = inset
         self.unclippedView = ImageView()
         self.clippedView = ImageView()
         
@@ -134,7 +135,7 @@ final class AvatarContentView: View {
             
             context.setBlendMode(.copy)
             context.setFillColor(NSColor.clear.cgColor)
-            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size).insetBy(dx: -3, dy: -3).offsetBy(dx: -(frameSize.width - 6), dy: 0.0))
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size).insetBy(dx: -(inset / 2), dy: -(inset / 2)).offsetBy(dx: -(frameSize.width - inset), dy: 0.0))
         })
     }
     
