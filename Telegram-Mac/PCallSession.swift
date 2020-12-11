@@ -1166,12 +1166,13 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
             }
             return confirmation |> filter { $0 } |> map { _ in
                 sharedContext.bindings.callSession()?.hangUpCurrentCall()
-                } |> mapToSignal { _ in
-                    return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
-                }
-                |> deliverOn(callQueue)
-                |> map { id in
-                    return .success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
+                sharedContext.bindings.groupCall()?.leave()
+            } |> mapToSignal { _ in
+                return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
+            }
+            |> deliverOn(callQueue)
+            |> map { id in
+                return .success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
             }
         } else {
             confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in

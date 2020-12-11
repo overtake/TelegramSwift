@@ -187,7 +187,7 @@ class ChatHeaderController {
             self.seconderyView = secondary
 
             var removed: [View] = []
-            var added:[(View, NSPoint, View?)] = []
+            var added:[(View, NSPoint, NSPoint, View?)] = []
             var updated:[(View, NSPoint)] = []
 
             if previousSecondary == nil || previousSecondary != secondary {
@@ -195,7 +195,7 @@ class ChatHeaderController {
                     removed.append(previousSecondary)
                 }
                 if let secondary = secondary {
-                    added.append((secondary, NSMakePoint(0, 0), nil))
+                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), nil))
                 }
             }
             if previousPrimary == nil || previousPrimary != primary {
@@ -203,7 +203,7 @@ class ChatHeaderController {
                     removed.append(previousPrimary)
                 }
                 if let primary = primary {
-                    added.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
+                    added.append((primary, NSMakePoint(0, -(state.height - state.secondaryHeight)), NSMakePoint(0, state.secondaryHeight), secondary))
                 }
             }
 
@@ -240,10 +240,12 @@ class ChatHeaderController {
                         view.removeFromSuperview()
                     }
                 }
-                for (view, point, below) in added {
+                for (view, from, to, below) in added {
                     current.addSubview(view, positioned: .below, relativeTo: below)
-                    view.change(pos: point, animated: animated)
+                    view.setFrameOrigin(to)
+                    
                     if animated {
+                        view.layer?.animatePosition(from: from, to: to, duration: 0.2)
                         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
@@ -290,6 +292,7 @@ class ChatHeaderController {
             case .none:
                 primary = nil
             }
+            primary?.autoresizingMask = [.width]
         } else {
             primary = p_v
             (primary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -297,6 +300,7 @@ class ChatHeaderController {
         if let _ = self._headerState.voiceChat {
             if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass ?? NSView.self) {
                 secondary = ChatGroupCallView(chatInteraction, state: _headerState, frame: secondaryRect)
+                secondary?.autoresizingMask = [.width]
             } else {
                 secondary = s_v
                 (secondary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
@@ -1053,7 +1057,7 @@ struct SearchMessagesResultState : Equatable {
     }
 }
 
-class ChatSearchHeader : View, Notifable {
+class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     private let searchView:ChatSearchView = ChatSearchView(frame: NSZeroRect)
     private let cancel:ImageButton = ImageButton()
@@ -1128,13 +1132,17 @@ class ChatSearchHeader : View, Notifable {
         case let .search(_, _, initialPeer, _):
             if let initialPeer = initialPeer {
                 self.chatInteraction.movePeerToInput(initialPeer)
-                Queue.mainQueue().justDispatch { [weak self] in
-                    self?.searchView.change(state: .Focus, false)
-                }
             }
         default:
             break
         }
+        Queue.mainQueue().justDispatch { [weak self] in
+            self?.applySearchResponder(false)
+        }
+    }
+    
+    func update(with state: ChatHeaderState, animated: Bool) {
+        
     }
 
     
@@ -1161,7 +1169,7 @@ class ChatSearchHeader : View, Notifable {
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         let context = chatInteraction.context
-        if let value = value as? CSearchContextState, let oldValue = oldValue as? CSearchContextState, let view = superview {
+        if let value = value as? CSearchContextState, let oldValue = oldValue as? CSearchContextState, let superview = superview, let view = superview.superview {
             
             let stateValue = self.query
             
@@ -1174,7 +1182,7 @@ class ChatSearchHeader : View, Notifable {
             
             if let peer = chatInteraction.presentation.peer {
                 if value.inputQueryResult != oldValue.inputQueryResult {
-                    inputContextHelper.context(with: value.inputQueryResult, for: view, relativeView: self, position: .below, selectIndex: value.selectedIndex != -1 ? value.selectedIndex : nil, animated: animated)
+                    inputContextHelper.context(with: value.inputQueryResult, for: view, relativeView: superview, position: .below, selectIndex: value.selectedIndex != -1 ? value.selectedIndex : nil, animated: animated)
                 }
                 switch value.tokenState {
                 case .none:
@@ -1712,7 +1720,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             }
         }
         for inserted in inserted {
-            let control = AvatarContentView(context: context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: avatarSize)
+            let control = AvatarContentView(context: context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: avatarSize, inset: 6)
             control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: inserted.0 != 0, animated: animated)
             control.userInteractionEnabled = false
             control.setFrameSize(avatarSize)
@@ -1801,9 +1809,9 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         let avatars = avatarsContainer.subviews.compactMap { $0 as? AvatarContentView }
         for avatar in avatars {
             if let level = levels[avatar.peerId] {
-                avatar.updateAudioLevel(color: GroupCallTheme.speakActiveColor, value: level)
+                avatar.updateAudioLevel(color: theme.colors.accent, value: level)
             } else {
-                avatar.updateAudioLevel(color: GroupCallTheme.speakActiveColor, value: 0)
+                avatar.updateAudioLevel(color: theme.colors.accent, value: 0)
             }
         }
     }
