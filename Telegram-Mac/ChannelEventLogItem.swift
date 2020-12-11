@@ -614,6 +614,31 @@ class ServiceEventLogItem: TableRowItem {
                 
                 message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                 self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
+            case .startGroupCall:
+                let text = L10n.channelAdminLogStartedVoiceChat(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case .endGroupCall:
+                let text = L10n.channelAdminLogEndedVoiceChat(peer.displayTitle)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .groupCallUpdateParticipantMuteStatus(peerId, isMuted):
+                if let secondary = result.peers[peerId] {
+                    let secondaryLink = (range: secondary.displayTitle, link: inAppLink.peerInfo(link: "", peerId: secondary.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
+                    let text: String
+                    if isMuted {
+                        text = L10n.channelAdminLogMutedParticipant(peer.displayTitle, secondary.displayTitle)
+                    } else {
+                        text = L10n.channelAdminLogUnmutedMutedParticipant(peer.displayTitle, secondary.displayTitle)
+                    }
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
+                }
+            case let .updateGroupCallSettings(joinMuted):
+                let text: String
+                if joinMuted {
+                    text = L10n.channelAdminLogMutedNewMembers(peer.displayTitle)
+                } else {
+                    text = L10n.channelAdminLogAllowedNewMembersToSpeak(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }

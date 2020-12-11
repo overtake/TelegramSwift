@@ -224,12 +224,12 @@ private final class GroupCallParticipantRowView : TableRowView {
 
         playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
 
-        if item.data.isSpeaking && item.data.isKeyWindow {
+        if item.data.audioLevel != nil && item.data.isKeyWindow {
             playbackAudioLevelView.startAnimating()
         } else {
             playbackAudioLevelView.stopAnimating()
         }
-        playbackAudioLevelView.change(opacity: item.data.isSpeaking ? 1 : 0, animated: animated)
+        playbackAudioLevelView.change(opacity: item.data.audioLevel != nil ? 1 : 0, animated: animated)
 
         playbackAudioLevelView.updateLevel(CGFloat(item.data.audioLevel ?? 0))
 

@@ -1116,10 +1116,10 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
         } else {
             var confirmation:Signal<Bool, NoError> = .single(true)
             if sharedContext.hasActiveCall {
-                confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
+                confirmation = confirmSignal(for: context.window, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
             }
-            return confirmation |> filter { $0 } |> map { _ in
-                sharedContext.endCurrentCall()
+            return confirmation |> filter { $0 } |> mapToSignal { _ in
+                return sharedContext.endCurrentCall()
             } |> map { _ in
                 return .success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer))
             }

@@ -227,7 +227,15 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
 
         if let permission = uiState.hasPermission {
             if !permission {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown(L10n.voiceChatSettingsPushToTalkAccess, linkColor: GroupCallTheme.speakLockedColor, linkFont: .bold(11.5), linkHandler: { _ in
+
+                let text: String
+                if #available(macOS 10.15, *) {
+                    text = L10n.voiceChatSettingsPushToTalkAccess
+                } else {
+                    text = L10n.voiceChatSettingsPushToTalkAccessOld
+                }
+
+                entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown(text, linkColor: GroupCallTheme.speakLockedColor, linkFont: .bold(11.5), linkHandler: { permission in
                     PermissionsManager.openInputMonitoringPrefs()
                 }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
                 index += 1

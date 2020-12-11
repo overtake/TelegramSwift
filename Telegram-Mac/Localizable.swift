@@ -827,6 +827,30 @@ internal final class L10n {
   internal static var channelAdminTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Password.Desc") }
   /// Two-Step Verification
   internal static var channelAdminTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Channel.Admin.TransferOwnership.Password.Title") }
+  /// %1$@ allowed new members to speak
+  internal static func channelAdminLogAllowedNewMembersToSpeak(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.AllowedNewMembersToSpeak", p1)
+  }
+  /// %1$@ ended voice chat
+  internal static func channelAdminLogEndedVoiceChat(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.EndedVoiceChat", p1)
+  }
+  /// %1$@ muted new members
+  internal static func channelAdminLogMutedNewMembers(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.MutedNewMembers", p1)
+  }
+  /// %1$@ muted %2$@
+  internal static func channelAdminLogMutedParticipant(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.MutedParticipant", p1, p2)
+  }
+  /// %1$@ started voice chat
+  internal static func channelAdminLogStartedVoiceChat(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.StartedVoiceChat", p1)
+  }
+  /// %1$@ unmuted %2$@
+  internal static func channelAdminLogUnmutedMutedParticipant(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.UnmutedMutedParticipant", p1, p2)
+  }
   /// Sorry, you're not allowed to promote this user to become an admin.
   internal static var channelAdminsAddAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.AddAdminError") }
   /// promoted by %@
@@ -1197,6 +1221,8 @@ internal final class L10n {
   internal static var channelBlacklistEmptyDescrpition: String  { return L10n.tr("Localizable", "ChannelBlacklist.EmptyDescrpition") }
   /// RESTRICTED
   internal static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
+  /// Calls
+  internal static var channelEventFilterCalls: String  { return L10n.tr("Localizable", "ChannelEventFilter.Calls") }
   /// Channel Info
   internal static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -8227,7 +8253,7 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
   /// Output Device
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
-  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor]()
+  /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
   /// Change Key
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }
@@ -8239,6 +8265,8 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Title") }
   /// Undefined
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
+  /// Please allow Accessibility for Telegram in [Privacy Settings.](access)\n\nApp restart may be required.
+  internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
   /// Connecting...
   internal static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// connecting...
