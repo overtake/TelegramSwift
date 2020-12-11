@@ -708,7 +708,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         if let session = callSession {
-            context.sharedContext.showCallHeader(with: session)
+            context.sharedContext.showCall(with: session)
         }
         
         if let groupCallContext = groupCallContext {

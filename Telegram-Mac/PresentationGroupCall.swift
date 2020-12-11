@@ -239,60 +239,63 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
            }
        }
        
-       private let audioLevelsPromise = Promise<[(PeerId, Float)]>()
-       
+       private let audioLevelsPromise = Promise<[(PeerId, Float, Bool)]>()
+
        init() {
        }
        
-       func update(levels: [(PeerId, Float)]) {
-           let timestamp = Int32(CFAbsoluteTimeGetCurrent())
-           let currentParticipants: [PeerId: Participant] = self.participants
-           
-           var validSpeakers: [PeerId: Participant] = [:]
-           var silentParticipants = Set<PeerId>()
-           var speakingParticipants = Set<PeerId>()
-           for (peerId, level) in levels {
-               if level > speakingLevelThreshold {
-                   validSpeakers[peerId] = Participant(timestamp: timestamp, level: level)
-                   speakingParticipants.insert(peerId)
-               } else {
-                   silentParticipants.insert(peerId)
-               }
-           }
-           
-           for (peerId, participant) in currentParticipants {
-               if let _ = validSpeakers[peerId] {
-               } else {
-                   let delta = timestamp - participant.timestamp
-                   if silentParticipants.contains(peerId) {
-                       if delta < silentTimeout {
-                           validSpeakers[peerId] = participant
-                           speakingParticipants.insert(peerId)
-                       }
-                   } else if delta < cutoffTimeout {
-                       validSpeakers[peerId] = participant
-                       speakingParticipants.insert(peerId)
-                   }
-               }
-           }
-           
-           var audioLevels: [(PeerId, Float)] = []
-           for (peerId, speaker) in validSpeakers {
-               audioLevels.append((peerId, speaker.level))
-           }
-           
-           self.participants = validSpeakers
-           self.speakingParticipants = speakingParticipants
-           self.audioLevelsPromise.set(.single(audioLevels))
-       }
+        func update(levels: [(PeerId, Float, Bool)]) {
+            let timestamp = Int32(CFAbsoluteTimeGetCurrent())
+            let currentParticipants: [PeerId: Participant] = self.participants
+
+            var validSpeakers: [PeerId: Participant] = [:]
+            var silentParticipants = Set<PeerId>()
+            var speakingParticipants = Set<PeerId>()
+            for (peerId, level, hasVoice) in levels {
+                if level > speakingLevelThreshold && hasVoice {
+                    validSpeakers[peerId] = Participant(timestamp: timestamp, level: level)
+                    speakingParticipants.insert(peerId)
+                } else {
+                    silentParticipants.insert(peerId)
+                }
+            }
+
+            for (peerId, participant) in currentParticipants {
+                if let _ = validSpeakers[peerId] {
+                } else {
+                    let delta = timestamp - participant.timestamp
+                    if silentParticipants.contains(peerId) {
+                        if delta < silentTimeout {
+                            validSpeakers[peerId] = participant
+                            speakingParticipants.insert(peerId)
+                        }
+                    } else if delta < cutoffTimeout {
+                        validSpeakers[peerId] = participant
+                        speakingParticipants.insert(peerId)
+                    }
+                }
+            }
+
+            var audioLevels: [(PeerId, Float, Bool)] = []
+            for (peerId, level, hasVoice) in levels {
+                if level > 0.1 {
+                    audioLevels.append((peerId, level, hasVoice))
+                }
+            }
+
+            self.participants = validSpeakers
+            self.speakingParticipants = speakingParticipants
+            self.audioLevelsPromise.set(.single(audioLevels))
+        }
+
        
        func get() -> Signal<Set<PeerId>, NoError> {
            return self.speakingParticipantsPromise.get() |> distinctUntilChanged
        }
        
-       func getAudioLevels() -> Signal<[(PeerId, Float)], NoError> {
-           return self.audioLevelsPromise.get()
-       }
+        func getAudioLevels() -> Signal<[(PeerId, Float, Bool)], NoError> {
+            return self.audioLevelsPromise.get()
+        }
    }
 
 
@@ -346,9 +349,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     private let speakingParticipantsContext = SpeakingParticipantsContext()
     private var speakingParticipantsReportTimestamp: [PeerId: Double] = [:]
-    public var audioLevels: Signal<[(PeerId, Float)], NoError> {
+    public var audioLevels: Signal<[(PeerId, Float, Bool)], NoError> {
         return self.speakingParticipantsContext.getAudioLevels()
     }
+
 
 
     
@@ -637,35 +641,38 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     guard let strongSelf = self else {
                         return
                     }
-                    var result: [(PeerId, Float)] = []
+                    var result: [(PeerId, Float, Bool)] = []
                     var myLevel: Float = 0.0
-                    for (ssrcKey, level) in levels {
-                        var peerId: PeerId?
-                        switch ssrcKey {
-                        case .local:
-                            peerId = strongSelf.account.peerId
-                        case let .source(ssrc):
-                            peerId = strongSelf.ssrcMapping[ssrc]
-                        }
-                        if let peerId = peerId {
-                            if case .local = ssrcKey {
-                                myLevel = level
-                            }
-                            result.append((peerId, Float(truncate(double: Double(level), places: 2))))
-                        }
-                    }
+                    var myLevelHasVoice: Bool = false
+                    for (ssrcKey, level, hasVoice) in levels {
+                           var peerId: PeerId?
+                           switch ssrcKey {
+                           case .local:
+                               peerId = strongSelf.account.peerId
+                           case let .source(ssrc):
+                               peerId = strongSelf.ssrcMapping[ssrc]
+                           }
+                           if let peerId = peerId {
+                               if case .local = ssrcKey {
+                                   if !strongSelf.isMutedValue.isEffectivelyMuted {
+                                       myLevel = level
+                                       myLevelHasVoice = hasVoice
+                                   }
+                               }
+                               result.append((peerId, level, hasVoice))
+                           }
+                       }
+
 
                     let mappedLevel = Float(truncate(double: Double((myLevel * 1.5)), places: 2))
 
-                    //result.append((strongSelf.account.peerId, mappedLevel))
+                    result.removeAll(where: { $0.0 == strongSelf.account.peerId})
+                    result.append((strongSelf.account.peerId, mappedLevel, myLevelHasVoice))
 
                     strongSelf.speakingParticipantsContext.update(levels: result)
 
                     strongSelf.myAudioLevelPipe.putNext(mappedLevel)
-                    strongSelf.processMyAudioLevel(level: mappedLevel)
-                    if !strongSelf.isMutedValue.isEffectivelyMuted {
-                        strongSelf.speakingParticipantsContext.update(levels: [(strongSelf.account.peerId, mappedLevel)])
-                    }
+                    strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice)
                 }))
             }
         }
@@ -1080,17 +1087,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
           myAudioLevelTimer.start()
       }
       
-      private func processMyAudioLevel(level: Float) {
-          self.currentMyAudioLevel = level
-          
-          if level > 0.01 {
-              self.currentMyAudioLevelTimestamp = CACurrentMediaTime()
-              
-              if self.myAudioLevelTimer == nil {
-                  self.restartMyAudioLevelTimer()
-              }
-          }
-      }
+    private func processMyAudioLevel(level: Float, hasVoice: Bool) {
+        self.currentMyAudioLevel = level
+
+        if level > 0.01 && hasVoice {
+            self.currentMyAudioLevelTimestamp = CACurrentMediaTime()
+
+            if self.myAudioLevelTimer == nil {
+                self.restartMyAudioLevelTimer()
+            }
+        }
+    }
+
     func updateDefaultParticipantsAreMuted(isMuted: Bool) {
         self.participantsContext?.updateDefaultParticipantsAreMuted(isMuted: isMuted)
         self.stateValue.defaultParticipantMuteState = isMuted ? .muted : .unmuted
@@ -1111,8 +1119,7 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
                 confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
             }
             return confirmation |> filter { $0 } |> map { _ in
-                sharedContext.bindings.groupCall()?.close()
-                sharedContext.bindings.callSession()?.hangUpCurrentCall()
+                sharedContext.endCurrentCall()
             } |> map { _ in
                 return .success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer))
             }

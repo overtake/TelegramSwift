@@ -165,6 +165,9 @@ final class GroupCallContext {
     func leave() {
         _ = call.sharedContext.endGroupCall(terminate: false).start()
     }
+    func leaveSignal() -> Signal<Bool, NoError> {
+        return call.sharedContext.endGroupCall(terminate: false)
+    }
     
     @objc private func _readyPresent() {
         window.alphaValue = 1

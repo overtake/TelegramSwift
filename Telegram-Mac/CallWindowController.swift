@@ -1095,7 +1095,7 @@ class PhoneCallWindowController {
                         self?.session.setToRemovableState()
                     }
                 default:
-                    self?.session.hangUpCurrentCall()
+                    self?.session.hangUpCurrentCall().start()
                 }
             } else {
                 self?.session.setToRemovableState()
@@ -1212,7 +1212,7 @@ class PhoneCallWindowController {
     private func applyState(_ state:CallState, session: PCallSession, outgoingCameraInitialized: CameraState, incomingCameraInitialized: CameraState, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         self.state = state
         view.updateState(state, session: session, outgoingCameraInitialized: outgoingCameraInitialized, incomingCameraInitialized: incomingCameraInitialized, accountPeer: accountPeer, peer: peer, animated: animated)
-        session.sharedContext.showCallHeader(with: session)
+        session.sharedContext.showCall(with: session)
         switch state.state {
         case .ringing:
             break
@@ -1339,7 +1339,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 func showCallWindow(_ session:PCallSession) {
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
-            controller?.session.hangUpCurrentCall()
+            controller?.session.hangUpCurrentCall().start()
             if let controller = controller {
                 controller.session = session
                 return controller

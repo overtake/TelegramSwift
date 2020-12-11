@@ -623,13 +623,16 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow))
     }
+
+
     
     for value in activeParticipants {
         var audioLevel = audioLevels[value.peer.id]
         if accountPeerId == value.peer.id, isMuted {
             audioLevel = nil
         }
-        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: audioLevel != nil, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id), isKeyWindow: isKeyWindow))
+
+        memberDatas.append(PeerGroupCallData(peer: value.peer, presence: nil, state: value, isSpeaking: peerStates?.speakingParticipants.contains(value.peer.id) ?? false, audioLevel: audioLevel?.value, isInvited: invitedPeers.contains(value.peer.id), isKeyWindow: isKeyWindow))
     }
     
     
@@ -813,18 +816,13 @@ final class GroupCallUIController : ViewController {
         
         let members: Signal<PresentationGroupCallMembers?, NoError> = self.data.call.members
 
-
-
         let cachedAudioValues:Atomic<[PeerId: PeerGroupCallData.AudioLevel]> = Atomic(value: [:])
-
-
 
         let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(.single([]) |> then(self.data.call.audioLevels) |> map { values in
             return cachedAudioValues.modify { list in
                 var list = list.filter { level in
                     return values.contains(where: { $0.0 == level.key })
                 }
-
                 for value in values {
                     var updated: Bool = true
                     if let listValue = list[value.0] {
