@@ -114,7 +114,7 @@ protocol PresentationGroupCall: class {
     var canBeRemoved: Signal<Bool, NoError> { get }
     var state: Signal<PresentationGroupCallState, NoError> { get }
     var members: Signal<PresentationGroupCallMembers?, NoError> { get }
-    var audioLevels: Signal<[(PeerId, Float)], NoError> { get }
+    var audioLevels: Signal<[(PeerId, Float, Bool)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
     var invitedPeers: Signal<Set<PeerId>, NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }

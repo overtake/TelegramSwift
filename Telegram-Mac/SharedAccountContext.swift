@@ -590,8 +590,17 @@ class SharedAccountContext {
     var hasActiveCall:Bool {
         return bindings.callSession() != nil || bindings.groupCall() != nil
     }
+
+    func endCurrentCall() -> Signal<Bool, NoError> {
+        if let groupCall = bindings.groupCall() {
+            return groupCall.leaveSignal()
+        } else if let callSession = bindings.callSession() {
+            return callSession.hangUpCurrentCall()
+        }
+        return .single(true)
+    }
     
-    func showCallHeader(with session:PCallSession) {
+    func showCall(with session:PCallSession) {
         let callHeader = bindings.rootNavigation().callHeader
         callHeader?.show(true, contextObject: session)
     }

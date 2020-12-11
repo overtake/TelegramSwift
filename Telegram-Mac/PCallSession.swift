@@ -980,11 +980,11 @@ class PCallSession {
     }
 
   
-    func hangUpCurrentCall() {
-        hangUpCurrentCall(false)
+    @discardableResult func hangUpCurrentCall() -> Signal<Bool, NoError> {
+        return hangUpCurrentCall(false)
     }
     
-    func hangUpCurrentCall(_ external: Bool) {
+    func hangUpCurrentCall(_ external: Bool) -> Signal<Bool, NoError> {
         completed = external
         var reason:CallSessionTerminationReason = .ended(.hungUp)
         if let session = sessionState {
@@ -998,6 +998,7 @@ class PCallSession {
             self.didSetCanBeRemoved = true
             self.canBeRemovedPromise.set(.single(true))
         }
+        return canBeRemovedPromise.get()
     }
     
     func setToRemovableState() {
@@ -1165,8 +1166,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                 confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
             }
             return confirmation |> filter { $0 } |> map { _ in
-                sharedContext.bindings.callSession()?.hangUpCurrentCall()
-                sharedContext.bindings.groupCall()?.leave()
+                return sharedContext.endCurrentCall()
             } |> mapToSignal { _ in
                 return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
             }

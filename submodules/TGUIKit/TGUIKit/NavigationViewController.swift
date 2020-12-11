@@ -70,7 +70,7 @@ open class NavigationHeader {
         self.height = height
         self.initializer = initializer
     }
-    fileprivate weak var _view:NavigationHeaderView?
+    fileprivate var _view:NavigationHeaderView? 
     public var view:NavigationHeaderView {
         return _view!
     }
@@ -218,17 +218,16 @@ public class CallNavigationHeader : NavigationHeader {
         needShown = false
         isShown = false
         
-        if let navigation = navigation {
+        if let navigation = navigation, let view = _view {
+            _view = nil
             if animated {
                 NSAnimationContext.runAnimationGroup({ ctx in
                     view.animator().setFrameOrigin(NSMakePoint(0, -height))
                 }, completionHandler: { [weak view, weak self] in
                     view?.removeFromSuperview()
-                    self?._view = nil
                 })
             } else {
                 view.removeFromSuperview()
-                _view = nil
             }
             
             if let header = simpleHeader, header.needShown {
