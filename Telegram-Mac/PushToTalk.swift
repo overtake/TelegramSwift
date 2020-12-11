@@ -37,6 +37,10 @@ final class KeyboardGlobalHandler {
     static func requestPermission() -> Void {
         if #available(macOS 10.15, *) {
             _ = PermissionsManager.checkInputMonitoring(withPrompt: true)
+        } else if #available(macOS 10.14, *) {
+            _ = PermissionsManager.checkAccessibility(withPrompt: true)
+        } else {
+            
         }
     }
     

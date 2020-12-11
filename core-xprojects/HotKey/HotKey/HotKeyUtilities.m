@@ -179,7 +179,7 @@ static NSString *const PrefsHasRequestedAccessibilityPermission=@"HasRequestedAc
         }
     }
     else {
-        return YES;
+        return [PermissionsManager checkAccessibilityWithPrompt:prompt];
     }
 }
 
@@ -195,7 +195,11 @@ static NSString *const PrefsHasRequestedAccessibilityPermission=@"HasRequestedAc
 
 + (void)openInputMonitoringPrefs
 {
-    [[NSWorkspace sharedWorkspace] openURL:[PermissionsManager securitySettingsUrlForKey:@"Privacy_ListenEvent"]];
+    if (@available(macOS 10.15, *)) {
+        [[NSWorkspace sharedWorkspace] openURL:[PermissionsManager securitySettingsUrlForKey:@"Privacy_ListenEvent"]];
+    } else {
+        [self openAccessibilityPrefs];
+    }
 }
 
 

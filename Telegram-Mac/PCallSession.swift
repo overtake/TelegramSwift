@@ -1165,7 +1165,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                 }
                 confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
             }
-            return confirmation |> filter { $0 } |> map { _ in
+            return confirmation |> filter { $0 } |> mapToSignal { _ in
                 return sharedContext.endCurrentCall()
             } |> mapToSignal { _ in
                 return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)

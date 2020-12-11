@@ -610,12 +610,9 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
     activeParticipants = peerStates?.participants ?? []
     activeParticipants = activeParticipants.sorted(by: { lhs, rhs in
 
-        let lhsLevel = audioLevels[lhs.peer.id]?.timestamp != nil ? Double(audioLevels[lhs.peer.id]!.timestamp) : nil
-        let rhsLevel = audioLevels[rhs.peer.id]?.timestamp != nil ? Double(audioLevels[rhs.peer.id]!.timestamp) : nil
-
-        let lhsValue = (lhsLevel ?? lhs.activityTimestamp
+        let lhsValue = (lhs.activityTimestamp
                             ?? Double(lhs.joinTimestamp))
-        let rhsValue = (rhsLevel ?? rhs.activityTimestamp
+        let rhsValue = (rhs.activityTimestamp
                             ?? Double(rhs.joinTimestamp))
         return lhsValue > rhsValue
     })
