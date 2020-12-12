@@ -416,14 +416,13 @@ class ChatControllerView : View, ChatInputDelegate {
         super.layout()
         updateFrame(frame, animated: false)
     }
-    
     func updateFrame(_ frame: NSRect, animated: Bool) {
+        
         if let view = inputContextHelper.accessoryView {
             (animated ? view.animator() : view).frame = NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height)
         }
         if let currentView = header.currentView {
             (animated ? currentView.animator() : currentView).frame = NSMakeRect(0, 0, frame.width, currentView.frame.height)
-            currentView.needsDisplay = true
         }
         
         let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight

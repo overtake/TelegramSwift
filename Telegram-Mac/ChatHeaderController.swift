@@ -531,7 +531,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         addSubview(container)
 
         
-        particleList.frame = NSMakeRect(20, 5, 3, 34)
+        particleList.frame = NSMakeRect(22, 5, 2, 34)
         
         addSubview(particleList)
 
@@ -569,7 +569,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let width = frame.width - (40 + (dismiss.isHidden ? 0 : 30))
             newNode.measureSize(width)
             newContainer.setFrameSize(width, newNode.size.height)
-            newContainer.centerY(x: 23)
+            newContainer.centerY(x: 24)
             
             if animated {
                 let oldFrom = oldContainer.frame.origin
@@ -623,7 +623,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
             container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
         }
-        container.centerY(x: 23)
+        container.centerY(x: 24)
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         node?.setNeedDisplay()
     }
@@ -1868,8 +1868,8 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         headerView.update(headerView.layout)
 
         
-        headerView.setFrameOrigin(.init(x: 23, y: frame.midY - headerView.frame.height))
-        membersCountView.setFrameOrigin(.init(x: 23, y: frame.midY))
+        headerView.setFrameOrigin(.init(x: 22, y: frame.midY - headerView.frame.height))
+        membersCountView.setFrameOrigin(.init(x: 22, y: frame.midY))
                 
         button.frame = bounds
     }

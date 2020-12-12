@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
+		274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
@@ -990,6 +991,7 @@
 /* Begin PBXFileReference section */
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -4433,6 +4435,7 @@
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
 				27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */,
 				A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */,
+				274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5040,6 +5043,7 @@
 				C2E8BA071FB5EF4C00DEB5E2 /* GalleryThumbsControl.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
 				D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */,
+				274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */,
 				C271EB901EB8E6A40034792D /* SelectivePrivacySettingsPeersController.swift in Sources */,
 				C209C3731F262537009231FE /* emoji_suggestions_data.cpp in Sources */,
 				D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */,

@@ -459,32 +459,33 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
            }
            if case let .estabilished(callInfo, _, _, _) = strongSelf.internalState {
                var removedSsrc: [UInt32] = []
-               for (callId, update) in updates {
-                   if callId == callInfo.id {
-                       switch update {
-                       case let .state(update):
-                           for participantUpdate in update.participantUpdates {
-                               if participantUpdate.isRemoved {
-                                   removedSsrc.append(participantUpdate.ssrc)
-                                   
-                                   if participantUpdate.peerId == strongSelf.account.peerId {
-                                       if case let .estabilished(_, _, ssrc, _) = strongSelf.internalState, ssrc == participantUpdate.ssrc {
-                                           strongSelf._canBeRemoved.set(.single(true))
-                                       }
-                                   }
-                               } else if participantUpdate.peerId == strongSelf.account.peerId {
-                                   if case let .estabilished(_, _, ssrc, _) = strongSelf.internalState, ssrc != participantUpdate.ssrc {
-                                       strongSelf._canBeRemoved.set(.single(true))
-                                   }
-                               }
-                           }
-                       case let .call(isTerminated, _):
-                           if isTerminated {
-                               strongSelf._canBeRemoved.set(.single(true))
-                           }
-                       }
-                   }
-               }
+                for (callId, update) in updates {
+                    if callId == callInfo.id {
+                        switch update {
+                        case let .state(update):
+                            for participantUpdate in update.participantUpdates {
+                                if case .left = participantUpdate.participationStatusChange {
+                                    removedSsrc.append(participantUpdate.ssrc)
+                                    
+                                    if participantUpdate.peerId == strongSelf.account.peerId {
+                                        if case let .estabilished(_, _, ssrc, _) = strongSelf.internalState, ssrc == participantUpdate.ssrc {
+                                            strongSelf._canBeRemoved.set(.single(true))
+                                        }
+                                    }
+                                } else if participantUpdate.peerId == strongSelf.account.peerId {
+                                    if case let .estabilished(_, _, ssrc, _) = strongSelf.internalState, ssrc != participantUpdate.ssrc {
+                                        strongSelf._canBeRemoved.set(.single(true))
+                                    }
+                                } else if case .joined = participantUpdate.participationStatusChange {
+                                }
+                            }
+                        case let .call(isTerminated, _):
+                            if isTerminated {
+                                strongSelf._canBeRemoved.set(.single(true))
+                            }
+                        }
+                    }
+                }
                if !removedSsrc.isEmpty {
                    strongSelf.callContext?.removeSsrcs(ssrcs: removedSsrc)
                }

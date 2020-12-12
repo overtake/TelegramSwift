@@ -180,9 +180,9 @@ class CallHeaderBasicView : NavigationHeaderView {
         super.layout()
         
         backgroundView.frame = NSMakeRect(0, 0, frame.width, height)
-        muteControl.centerY(x:23)
+        muteControl.centerY(x:18)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
-        endCall.centerY(x: frame.width - endCall.frame.width - 25)
+        endCall.centerY(x: frame.width - endCall.frame.width - 20)
         _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - statusTextView.frame.width - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
         callInfo.center()
     }

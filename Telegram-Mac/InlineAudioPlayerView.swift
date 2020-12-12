@@ -243,7 +243,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         _ = playingSpeed.sizeToFit()
         _ = volumeControl.sizeToFit()
         
-        previous.centerY(x: 20)
+        previous.centerY(x: 17)
         playOrPause.centerY(x: previous.frame.maxX + 5)
         next.centerY(x: playOrPause.frame.maxX + 5)
         
