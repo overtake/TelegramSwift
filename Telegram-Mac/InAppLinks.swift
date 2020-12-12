@@ -444,7 +444,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .inviteBotToGroup(_, username, context, action, callback):
         let _ = showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
-            let selectedPeer = selectModalPeers(context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let selectedPeer = selectModalPeers(window: context.window, account: context.account, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))

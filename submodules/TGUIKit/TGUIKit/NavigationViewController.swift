@@ -817,8 +817,16 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             shadowView.layer?.opacity = shadowDirection == .left ? 1.0 : 0.0
         }
         shadowView.layer?.removeAllAnimations()
+        
+        
+        var shadowInset: CGFloat = 0
+        
+        if let callHeader = callHeader, callHeader.isShown {
+            shadowInset += callHeader.height
+        }
+        
         shadowView.direction = shadowDirection
-        shadowView.frame = NSMakeRect(updateOrigin ? (shadowDirection == .left ? -shadowView.frame.width : containerView.frame.width) : shadowView.frame.minX, 0, shadowView.frame.width, containerView.frame.height)
+        shadowView.frame = NSMakeRect(updateOrigin ? (shadowDirection == .left ? -shadowView.frame.width : containerView.frame.width) : shadowView.frame.minX, shadowInset, shadowView.frame.width, containerView.frame.height - shadowInset)
         containerView.addSubview(shadowView, positioned: .below, relativeTo: navigationBar)
     }
     
@@ -1016,7 +1024,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
                     
-                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
+                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.containerView)
                     
                     
                     let prevBackgroundView = self.containerView.copy() as! NSView
@@ -1065,9 +1073,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     //   CATransaction.begin()
                     let animationStyle = previous.animationStyle
                     self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[1]._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), self.containerView.subviews[1].frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
+                    
+                    
+                    previous.view._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), previous.view.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
                         if completed {
-                            self?.containerView.subviews[1].removeFromSuperview()
+                            previous?.view.removeFromSuperview()
                             self?.controller.removeBackgroundCap()
                             previous?.removeBackgroundCap()
                         }

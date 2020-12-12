@@ -329,9 +329,9 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         }, openInfo: { [weak self] peerId in
             self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
         }, addMember: {
-            let behavior = SelectChannelMembersBehavior(peerId: peerId, limit: 1)
+            let behavior = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1)
             
-            _ = (selectModalPeers(context: context, title: L10n.channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(window: context.window, account: context.account, title: L10n.channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {

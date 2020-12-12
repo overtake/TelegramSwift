@@ -864,6 +864,23 @@ public struct ModalHeaderData {
 
 open class ModalViewController : ViewController {
     
+    public struct Theme {
+        let text: NSColor
+        let grayText: NSColor
+        let background: NSColor
+        let border: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border) {
+            self.text = text
+            self.grayText = grayText
+            self.background = background
+            self.border = border
+        }
+    }
+    
+    open var modalTheme:Theme {
+        return Theme()
+    }
+    
     open var closable:Bool {
         return true
     }
@@ -922,6 +939,9 @@ open class ModalViewController : ViewController {
     }
     open var headerBackground: NSColor {
         return presentation.colors.background
+    }
+    open var headerBorderColor: NSColor {
+        return presentation.colors.border
     }
     
     open var dynamicSize:Bool {

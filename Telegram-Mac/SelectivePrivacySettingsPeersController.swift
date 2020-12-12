@@ -261,7 +261,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
 
         }, addPeer: {
 
-            addPeerDisposable.set(selectModalPeers(context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectUsersAndGroupsBehavior(), confirmation: {_ in return .single(true)}).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, account: context.account, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectUsersAndGroupsBehavior(), confirmation: {_ in return .single(true)}).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in

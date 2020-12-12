@@ -247,22 +247,32 @@ private class ModalInteractionsContainer : View {
 
 
 private final class ModalHeaderView: View {
+    
+    
     let titleView: TextView = TextView()
     private var  subtitleView: TextView?
     var leftButton: ImageButton?
     var rightButton: ImageButton?
     weak var controller:ModalViewController?
-    required init(frame frameRect: NSRect, data: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)) {
+    fileprivate var customTheme: ()->ModalViewController.Theme
+    required init(frame frameRect: NSRect, data: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?), customTheme: @escaping()->ModalViewController.Theme) {
+        self.customTheme = customTheme
         super.init(frame: frameRect)
         
-        titleView.update(TextViewLayout(.initialize(string: data.center?.title, color: presentation.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+        self.customTheme = customTheme
+        
+        
+        titleView.update(TextViewLayout(.initialize(string: data.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 1))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
+        
+        backgroundColor = customTheme().background
+        borderColor = customTheme().border
         border = [.Bottom]
         
         if let subtitle = data.center?.subtitle {
             subtitleView = TextView()
-            subtitleView!.update(TextViewLayout(.initialize(string: subtitle, color: presentation.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+            subtitleView!.update(TextViewLayout(.initialize(string: subtitle, color: customTheme().grayText, font: .normal(.text)), maximumNumberOfLines: 1))
             subtitleView!.userInteractionEnabled = false
             subtitleView!.isSelectable = false
             addSubview(subtitleView!)
@@ -293,6 +303,13 @@ private final class ModalHeaderView: View {
             _ = leftButton?.sizeToFit()
             addSubview(leftButton!)
         }
+        
+        leftButton?.autohighlight = false
+        leftButton?.scaleOnClick = true
+
+        rightButton?.autohighlight = false
+        rightButton?.scaleOnClick = true
+
         
         addSubview(titleView)
     }
@@ -333,13 +350,13 @@ private final class ModalHeaderView: View {
             return
         }
         
-        background = theme.colors.background
-        borderColor = theme.colors.border
+        background = customTheme().background
+        borderColor = customTheme().border
 
         let header = controller.modalHeader
         if let header = header {
-            titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
-            subtitleView?.update(TextViewLayout(.initialize(string: header.center?.subtitle, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+            titleView.update(TextViewLayout(.initialize(string: header.center?.title, color: customTheme().text, font: .medium(.title)), maximumNumberOfLines: 1))
+            subtitleView?.update(TextViewLayout(.initialize(string: header.center?.subtitle, color: customTheme().grayText, font: .normal(.text)), maximumNumberOfLines: 1))
 
             if let image = header.right?.image {
                 rightButton?.set(image: image, for: .Normal)
@@ -430,8 +447,9 @@ public class Modal: NSObject {
             interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
         }
         if let header = controller.modalHeader {
-            headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header)
-            headerView?.backgroundColor = controller.headerBackground
+            headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header, customTheme: { [weak controller] in
+                return controller?.modalTheme ?? ModalViewController.Theme()
+            })
             headerView?.controller = controller
         }
        

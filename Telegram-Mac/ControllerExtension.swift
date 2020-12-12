@@ -44,6 +44,8 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
     }
 }
 
+
+
 class TelegramViewController: TelegramGenericViewController<View> {
     
 }

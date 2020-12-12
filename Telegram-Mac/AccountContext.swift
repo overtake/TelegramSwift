@@ -460,15 +460,16 @@ final class AccountContext {
     }
     func composeCreateSecretChat() {
         let account = self.account
+        let window = self.window
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: mainWindow, information: L10n.composeConfirmStartSecretChat(peer.displayTitle))
+                    return confirmSignal(for: window, information: L10n.composeConfirmStartSecretChat(peer.displayTitle))
                 }
             }
-            return confirmSignal(for: mainWindow, information: L10n.peerInfoConfirmAddMembers1Countable(peerIds.count))
+            return confirmSignal(for: window, information: L10n.peerInfoConfirmAddMembers1Countable(peerIds.count))
         }
-        let select = selectModalPeers(context: self, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
+        let select = selectModalPeers(window: window, account: self.account, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
         let create = select |> map { $0.first! } |> mapToSignal { peerId in
             return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}

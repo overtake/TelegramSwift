@@ -13,6 +13,8 @@
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
+		27BC96A42585706500BCEC1B /* call down.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27BC96A22585706500BCEC1B /* call down.wav */; };
+		27BC96A52585706500BCEC1B /* call up.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27BC96A32585706500BCEC1B /* call up.wav */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -995,6 +997,8 @@
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
+		27BC96A22585706500BCEC1B /* call down.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "call down.wav"; sourceTree = "<group>"; };
+		27BC96A32585706500BCEC1B /* call up.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "call up.wav"; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -2326,6 +2330,8 @@
 		A778DC2C23C77ACB00DD307B /* sounds */ = {
 			isa = PBXGroup;
 			children = (
+				27BC96A22585706500BCEC1B /* call down.wav */,
+				27BC96A32585706500BCEC1B /* call up.wav */,
 				A738843725810601002E8424 /* interface call down.wav */,
 				A738843825810602002E8424 /* interface call up.wav */,
 				27A9904C257A8044009044DB /* Pop.wav */,
@@ -4604,6 +4610,7 @@
 				D07450EB233D61B800769D7F /* fly_dollar.tgs in Resources */,
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
+				27BC96A42585706500BCEC1B /* call down.wav in Resources */,
 				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
 				A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
@@ -4644,6 +4651,7 @@
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
+				27BC96A52585706500BCEC1B /* call up.wav in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */,

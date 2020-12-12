@@ -16,7 +16,7 @@ import TGUIKit
 
 func createGroup(with context: AccountContext) {
     
-    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true) }
+    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), account: context.account, settings: [.contacts, .remote], isNewGroup: true) }
     let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
     let signal = execute(context: context, select, chooseName) |> mapError { _ in return CreateGroupError.generic } |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), CreateGroupError> in
         let signal = showModalProgress(signal: createGroup(account: context.account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
@@ -158,7 +158,7 @@ func createChannel(with context: AccountContext) {
 }
 
 
-private func execute<T1, I1, T2, V1, V2>(context: AccountContext, _ c1: @escaping() -> EmptyComposeController<I1,T1,V1>, _ c2: @escaping() -> EmptyComposeController<T1, T2, V2>) -> Signal<(T1,T2), NoError> {
+private func execute<T1, I1, T2, V1, V2>(context: AccountContext, _ c1: @escaping() -> SelectPeersMainController<T1,I1,V1>, _ c2: @escaping() -> EmptyComposeController<T1, T2, V2>) -> Signal<(T1,T2), NoError> {
     
     let c1Controller = c1()
     context.sharedContext.bindings.rootNavigation().push(c1Controller)
