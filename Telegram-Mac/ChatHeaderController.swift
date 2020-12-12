@@ -188,7 +188,7 @@ class ChatHeaderController {
 
             var removed: [View] = []
             var added:[(View, NSPoint, NSPoint, View?)] = []
-            var updated:[(View, NSPoint)] = []
+            var updated:[(View, NSPoint, View?)] = []
 
             if previousSecondary == nil || previousSecondary != secondary {
                 if let previousSecondary = previousSecondary {
@@ -209,12 +209,12 @@ class ChatHeaderController {
 
             if (previousSecondary == nil && secondary != nil) || previousSecondary != nil && secondary == nil {
                 if let primary = primary, previousPrimary == primary {
-                    updated.append((primary, NSMakePoint(0, state.secondaryHeight)))
+                    updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
                 }
             }
             if (previousPrimary == nil && primary != nil) || previousPrimary != nil && primary == nil {
                 if let secondary = secondary, previousSecondary == secondary {
-                    updated.append((secondary, NSMakePoint(0, 0)))
+                    updated.append((secondary, NSMakePoint(0, 0), nil))
                 }
             }
 
@@ -232,10 +232,12 @@ class ChatHeaderController {
                 }
                 for view in removed {
                     if animated {
-                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+//                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+//                            view?.removeFromSuperview()
+//                        })
+                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
-                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), removeOnCompletion: false)
                     } else {
                         view.removeFromSuperview()
                     }
@@ -246,10 +248,11 @@ class ChatHeaderController {
                     
                     if animated {
                         view.layer?.animatePosition(from: from, to: to, duration: 0.2)
-                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                      //  view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-                for (view, point) in updated {
+                for (view, point, above) in updated {
+                    current.addSubview(view, positioned: .below, relativeTo: above)
                     view.change(pos: point, animated: animated)
                 }
             } else {
@@ -859,7 +862,9 @@ class AddContactView : Control, ChatHeaderProtocol {
         
         addSubview(buttonsContainer)
         addSubview(dismiss)
-        updateLocalizationAndTheme(theme: theme)
+       
+        update(with: state, animated: false)
+        
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1693,6 +1698,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         var topPeers: [Avatar] = []
         if let participants = data.data?.topParticipants {
             var index:Int = 0
+            let participants = participants.filter { $0.peer.id != context.peerId }
             for participant in participants {
                 topPeers.append(Avatar(peer: participant.peer, index: index))
                 index += 1

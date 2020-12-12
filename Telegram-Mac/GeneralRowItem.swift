@@ -308,6 +308,10 @@ class GeneralRowItem: TableRowItem {
         return success
     }
     
+    var hasBorder: Bool {
+        return viewType.hasBorder
+    }
+    
     override var instantlyResize: Bool {
         return true
     }

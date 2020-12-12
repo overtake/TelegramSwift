@@ -56,7 +56,7 @@ final class AvatarContentView: View {
 
     func updateAudioLevel(color: NSColor, value: Float) {
         if self.audioLevelView == nil, value > 0.0 {
-            let blobFrame = NSMakeRect(0, 0, frame.width + 6, frame.height + 6)
+            let blobFrame = NSMakeRect(0, 0, frame.width + 8, frame.height + 8)
 
             let audioLevelView = VoiceBlobView(
                 frame: blobFrame,

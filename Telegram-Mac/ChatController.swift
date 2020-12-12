@@ -521,6 +521,7 @@ class ChatControllerView : View, ChatInputDelegate {
             state = .none(voiceChat)
         }
         
+
         header.updateState(state, animated: animated, for: self)
         
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
@@ -3641,17 +3642,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return context.sharedContext.groupCallContext |> mapToSignal { groupCall in
                                         if let context = groupCall, context.call.peerId == peerId {
                                             return context.call.summaryState
-                                                |> filter { $0 != nil }
-                                                |> map { $0! }
                                                 |> map { summary -> GroupCallPanelData in
-                                                    return GroupCallPanelData(
-                                                        peerId: peerId,
-                                                        info: summary.info,
-                                                        topParticipants: summary.topParticipants,
-                                                        participantCount: summary.participantCount,
-                                                        activeSpeakers: summary.activeSpeakers,
-                                                        groupCall: context
-                                                    )
+                                                    if let summary = summary {
+                                                        return GroupCallPanelData(
+                                                            peerId: peerId,
+                                                            info: summary.info,
+                                                            topParticipants: summary.topParticipants,
+                                                            participantCount: summary.participantCount,
+                                                            activeSpeakers: summary.activeSpeakers,
+                                                            groupCall: context
+                                                        )
+                                                    } else {
+                                                        return GroupCallPanelData(peerId: peerId, info: nil, topParticipants: [], participantCount: 0, activeSpeakers: [], groupCall: context)
+                                                    }
                                                 }
                                         } else {
                                             return Signal { subscriber in

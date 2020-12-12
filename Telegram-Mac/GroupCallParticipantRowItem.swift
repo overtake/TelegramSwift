@@ -28,7 +28,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let invite:(PeerId)->Void
     fileprivate let mute:(PeerId, Bool)->Void
     fileprivate let canManageCall:Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
         self.data = data
         self.account = account
         self.mute = mute
@@ -41,10 +41,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self.isLastItem = isLastItem
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
-        if let presence = data.presence {
-            let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            (string, _, _) = stringAndActivityForUserPresence(presence, timeDifference: 0, relativeTo: Int32(timestamp))
-        }
         if let _ = data.state {
             if data.isSpeaking {
                 string = L10n.voiceChatSpeaking
@@ -56,9 +52,15 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         } else if data.peer.id == account.peerId {
             string = L10n.voiceChatListening
             color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
+        } else if isInvited {
+            string = translate(key: "VoiceChat.Title.Invited", [])
         }
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
-        super.init(initialSize, height: 48, stableId: stableId, type: .none, viewType: .legacy, action: action, inset: NSEdgeInsetsMake(0, 12, 0, 12), enabled: true)
+        super.init(initialSize, height: 48, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsetsMake(0, 0, 0, 0), enabled: true)
+    }
+    
+    var itemInset: NSEdgeInsets {
+        return NSEdgeInsetsMake(0, 12, 0, 12)
     }
     
     var isActivePeer: Bool {
@@ -69,10 +71,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return data.peer
     }
     
+    override var hasBorder: Bool {
+        return false
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-        titleLayout.measure(width: width - 40 - inset.left - inset.left - inset.right - 24 - inset.right)
-        statusLayout.measure(width: width - 40 - inset.left - inset.left - inset.right - 24 - inset.right)
+        titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
 
         return true
     }
@@ -92,7 +98,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
 }
 
 
-private final class GroupCallParticipantRowView : TableRowView {
+private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(15))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
@@ -149,18 +155,17 @@ private final class GroupCallParticipantRowView : TableRowView {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
-        self.photoView.centerY(x: item.inset.left)
+        
+        let frame = containerView.frame
+        
+        self.photoView.centerY(x: item.itemInset.left)
 
-        titleView.setFrameOrigin(NSMakePoint(item.inset.left + photoSize.width + item.inset.left, 6))
+        titleView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6))
         if let statusView = statusView {
-            statusView.setFrameOrigin(NSMakePoint(item.inset.left + photoSize.width + item.inset.left, frame.height - statusView.frame.height - 6))
+            statusView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6))
         }
         if item.drawLine {
-            if item.isLastItem {
-                separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-            } else {
-                separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
-            }
+            separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
         } else {
             separator.frame = .zero
         }
@@ -177,6 +182,7 @@ private final class GroupCallParticipantRowView : TableRowView {
         self.statusView?.backgroundColor = backdorColor
         self.separator.backgroundColor = GroupCallTheme.memberSeparatorColor
     }
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -224,12 +230,12 @@ private final class GroupCallParticipantRowView : TableRowView {
 
         playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
 
-        if item.data.audioLevel != nil && item.data.isKeyWindow {
+        if (item.data.audioLevel != nil || item.data.isSpeaking) && item.data.isKeyWindow {
             playbackAudioLevelView.startAnimating()
         } else {
             playbackAudioLevelView.stopAnimating()
         }
-        playbackAudioLevelView.change(opacity: item.data.audioLevel != nil ? 1 : 0, animated: animated)
+        playbackAudioLevelView.change(opacity: (item.data.audioLevel != nil || item.data.isSpeaking) ? 1 : 0, animated: animated)
 
         playbackAudioLevelView.updateLevel(CGFloat(item.data.audioLevel ?? 0))
 
@@ -278,6 +284,7 @@ private final class GroupCallParticipantRowView : TableRowView {
             }
         } else {
             self.scaleAnimator = nil
+            self.photoView.layer?.transform = CATransform3DIdentity
             self.photoView.setFrameSize(photoSize)
         }
         
