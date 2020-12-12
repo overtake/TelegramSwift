@@ -40,7 +40,7 @@ struct GroupCallTheme {
     
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
-    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white, flipVertical: true)
     static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
 
     static let small_speaking = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: .clear)
@@ -121,7 +121,7 @@ final class GroupCallContext {
         self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
-                self?.readyClose()
+                self?.readyClose(last: value)
             }
         }))
 
@@ -137,6 +137,7 @@ final class GroupCallContext {
     }
     
     func present() {
+
         presentDisposable.set((self.controller.ready.get() |> take(1)).start(completed: { [weak self] in
             guard let `self` = self else {
                 return
@@ -145,7 +146,10 @@ final class GroupCallContext {
         }))
     }
     
-    private func readyClose() {
+    private func readyClose(last: Bool = false) {
+        if last {
+            call.sharedContext.updateCurrentGroupCallValue(nil)
+        }
         self.navigation.viewWillDisappear(false)
         let window: Window = self.window
         if window.isVisible {
@@ -170,6 +174,7 @@ final class GroupCallContext {
     }
     
     @objc private func _readyPresent() {
+        call.sharedContext.updateCurrentGroupCallValue(self)
         window.alphaValue = 1
         self.window.makeKeyAndOrderFront(nil)
         self.window.orderFrontRegardless()

@@ -155,7 +155,6 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     }
 
     override func hide(_ animated: Bool) {
-        context?.call.sharedContext.updateCurrentGroupCallValue(nil)
         super.hide(true)
         audioLevelDisposable.set(nil)
     }
@@ -167,7 +166,6 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         let context = contextObject as! GroupCallContext
         let peerId = context.call.peerId
 
-        context.call.sharedContext.updateCurrentGroupCallValue(context)
 
         let data = context.call.summaryState
         |> filter { $0 != nil }

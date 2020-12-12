@@ -424,12 +424,12 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     }
     
     func stopAndHide(_ animated:Bool) -> Void {
-        self.hide(animated)
         controller?.remove(listener: self)
         controller?.stop()
         controller?.cleanup()
         instantVideoPip?.hide()
         instantVideoPip = nil
+        self.hide(animated)
     }
     
     required init(frame frameRect: NSRect) {

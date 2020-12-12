@@ -72,7 +72,7 @@ class GeneralContainableRowView : TableRowView {
             return
         }
         
-        borderView.isHidden = !item.viewType.hasBorder
+        borderView.isHidden = !item.hasBorder
     }
     
     required init?(coder: NSCoder) {

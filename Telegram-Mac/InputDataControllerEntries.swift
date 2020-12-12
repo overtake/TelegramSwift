@@ -215,8 +215,30 @@ final class InputDataGeneralData : Equatable {
         let textColor: NSColor
         let appearance: NSAppearance
         
-        let generalCheck: CGImage
-        let switchAppearance: SwitchViewAppearance
+        let generalCheck: CGImage?
+        let switchAppearance: SwitchViewAppearance?
+        
+        init(backgroundColor: NSColor = presentation.colors.background,
+             highlightColor: NSColor  = presentation.colors.accentSelect,
+             borderColor: NSColor = presentation.colors.border,
+             accentColor: NSColor = presentation.colors.accent,
+             secondaryColor: NSColor = presentation.colors.grayUI,
+             textColor: NSColor = presentation.colors.text,
+             appearance: NSAppearance = presentation.colors.appearance,
+             generalCheck: CGImage? = nil,
+             switchAppearance: SwitchViewAppearance? = nil) {
+            
+            
+            self.backgroundColor = backgroundColor
+            self.highlightColor = highlightColor
+            self.borderColor = borderColor
+            self.accentColor = accentColor
+            self.secondaryColor = secondaryColor
+            self.textColor = textColor
+            self.appearance = appearance
+            self.generalCheck = generalCheck
+            self.switchAppearance = switchAppearance
+        }
     }
 
     
