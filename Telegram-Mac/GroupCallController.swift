@@ -835,11 +835,12 @@ final class GroupCallUIController : ViewController {
         }, openInfo: { peerId in
             appDelegate?.navigateProfile(peerId, account: account)
         }, inviteMembers: { [weak self] in
-            guard let window = self?.window else {
+            guard let window = self?.window, let data = self?.data else {
                 return
             }
             alert(for: window, info: "If you see this message probably you are going to report this bug to chat but please, take a breath and relax i'm already on it")
-            //selectModalPeers(context: <#T##AccountContext#>, title: <#T##String#>, settings: <#T##SelectPeerSettings#>, excludePeerIds: <#T##[PeerId]#>, limit: <#T##Int32#>, behavior: <#T##SelectPeersBehavior?#>, confirmation: <#T##([PeerId]) -> Signal<Bool, NoError>#>, linkInvation: <#T##(() -> Void)?##(() -> Void)?##() -> Void#>)
+            
+          //  showModal(with: GroupCallInvitation(data), for: window)
         })
         
         genericView.arguments = arguments
