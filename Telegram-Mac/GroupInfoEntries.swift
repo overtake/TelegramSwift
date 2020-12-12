@@ -516,7 +516,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
             
             
-            return selectModalPeers(context: context, title: L10n.peerInfoAddMember, settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
+            return selectModalPeers(window: context.window, account: context.account, title: L10n.peerInfoAddMember, settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
                 |> deliverOnMainQueue
                 |> mapToSignal { memberIds -> Signal<Void, NoError> in
                     return context.account.postbox.multiplePeersView(memberIds + [peerId])

@@ -27,6 +27,20 @@ public class InputDataModalController : ModalViewController {
         super.init(frame: controller._frameRect)
     }
     
+    
+    var getHeaderColor: (()->NSColor)? = nil
+    public override var headerBackground: NSColor {
+        return getHeaderColor?() ?? super.headerBackground
+    }
+    var getHeaderBorderColor: (()->NSColor)? = nil
+    public override var headerBorderColor: NSColor {
+        return getHeaderBorderColor?() ?? super.headerBackground
+    }
+    var getModalTheme: (()->ModalViewController.Theme)? = nil
+    public override var modalTheme: ModalViewController.Theme {
+        return getModalTheme?() ?? super.modalTheme
+    }
+    
     var isFullScreenImpl: (()->Bool)? = nil
     
     public override var isFullScreen: Bool {

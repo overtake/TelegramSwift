@@ -838,9 +838,13 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window, let data = self?.data else {
                 return
             }
-            alert(for: window, info: "If you see this message probably you are going to report this bug to chat but please, take a breath and relax i'm already on it")
             
-          //  showModal(with: GroupCallInvitation(data), for: window)
+            _ = GroupCallAddmembers(data, window: window).start(next: { peerId in
+                if let peerId = peerId.first {
+                    self?.data.call.invitePeer(peerId)
+                }
+            })
+                
         })
         
         genericView.arguments = arguments
@@ -927,11 +931,11 @@ final class GroupCallUIController : ViewController {
             switch state.networkState {
             case .connected:
                 if !connectedMusicPlayed {
-                    SoundEffectPlay.play(postbox: account.postbox, name: "interface call up")
+                    SoundEffectPlay.play(postbox: account.postbox, name: "call up")
                     connectedMusicPlayed = true
                 }
                 if canBeRemoved, connectedMusicPlayed {
-                    SoundEffectPlay.play(postbox: account.postbox, name: "interface call down")
+                    SoundEffectPlay.play(postbox: account.postbox, name: "call down")
                 }
             default:
                 break

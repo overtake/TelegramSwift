@@ -228,7 +228,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
             button.userInteractionEnabled = false
         }
 
-        playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
 
         if (item.data.audioLevel != nil || item.data.isSpeaking) && item.data.isKeyWindow {
             playbackAudioLevelView.startAnimating()
@@ -241,9 +240,12 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
         button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
 
+        
+        playbackAudioLevelView.setColor(item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor)
+
 
         titleView.update(item.titleLayout)
-        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(35 * 1.3, 35 * 1.3))
+        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.3), floor(photoSize.height * 1.3)))
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
 
@@ -285,7 +287,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         } else {
             self.scaleAnimator = nil
             self.photoView.layer?.transform = CATransform3DIdentity
-            self.photoView.setFrameSize(photoSize)
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {

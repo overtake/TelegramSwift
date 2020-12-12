@@ -311,7 +311,7 @@ private func profileSearchableItems(context: AccountContext, canAddAccount: Bool
         presentProfileSettings(context, present, .bio)
     }))
     items.append(SettingsSearchableItem(id: .profile(2), title: L10n.editAccountChangeNumber, alternate: synonyms(L10n.settingsSearchSynonymsEditProfilePhoneNumber), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
-        present(.push, PhoneNumberIntroController.init(context))
+        present(.push, PhoneNumberIntroController(context))
     }))
     items.append(SettingsSearchableItem(id: .profile(3), title: L10n.editAccountUsername, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileUsername), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
         present(.push, UsernameSettingsViewController(context))
