@@ -282,7 +282,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         let requestCall = createGroupCall(account: context.account, peerId: peerId) |> mapToSignal { call in
-            return requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: CachedChannelData.ActiveCall.init(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
+            return requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
         }
         
         _ = showModalProgress(signal: requestCall, for: context.window).start(next: { result in
