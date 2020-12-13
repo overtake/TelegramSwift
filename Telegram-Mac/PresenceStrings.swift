@@ -83,24 +83,24 @@ func relativeUserPresenceStatus(_ presence: TelegramUserPresence, timeDifference
     }
 }
 
-func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32, expanded: Bool = false) -> (String, Bool, NSColor) {
+func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDifference: TimeInterval, relativeTo timestamp: Int32, expanded: Bool = false, customTheme: GeneralRowItem.Theme? = nil) -> (String, Bool, NSColor) {
     
     switch presence.status {
     case .none:
-        return (L10n.peerStatusLongTimeAgo, false, theme.colors.grayText)
+        return (L10n.peerStatusLongTimeAgo, false, customTheme?.grayTextColor ?? theme.colors.grayText)
     case let .present(statusTimestamp):
         let statusTimestampInt: Int = Int(statusTimestamp)
         let statusTimestamp = Int32(min(statusTimestampInt - Int(timeDifference), Int(INT32_MAX)))
         if statusTimestamp > timestamp {
-            return (L10n.peerStatusOnline, true, theme.colors.accent)
+            return (L10n.peerStatusOnline, true, customTheme?.accentColor ?? theme.colors.accent)
         } else {
             let difference = timestamp - statusTimestamp
             if difference < 59 {
-                return (tr(L10n.peerStatusJustNow), false, theme.colors.grayText)
+                return (tr(L10n.peerStatusJustNow), false, customTheme?.grayTextColor ?? theme.colors.grayText)
             } else if difference < 60 * 60 && !expanded {
                 let minutes = max(difference / 60, 1)
                 
-                return (L10n.peerStatusMinAgoCountable(Int(minutes)), false, theme.colors.grayText)
+                return (L10n.peerStatusMinAgoCountable(Int(minutes)), false, customTheme?.grayTextColor ?? theme.colors.grayText)
             } else {
                 var t: time_t = time_t(statusTimestamp)
                 var timeinfo: tm = tm()
@@ -111,7 +111,7 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
                 localtime_r(&now, &timeinfoNow)
                 
                 if timeinfo.tm_year != timeinfoNow.tm_year {
-                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, customTheme?.grayTextColor ?? theme.colors.grayText)
                 }
                 
                 let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
@@ -123,28 +123,28 @@ func stringAndActivityForUserPresence(_ presence: TelegramUserPresence, timeDiff
                         } else {
                             let minutes = difference / (60 * 60)
                             
-                            return (L10n.lastSeenHoursAgoCountable(Int(minutes)), false, theme.colors.grayText)
+                            return (L10n.lastSeenHoursAgoCountable(Int(minutes)), false, customTheme?.grayTextColor ?? theme.colors.grayText)
                         }
                     } else {
                         day = .yesterday
                     }
-                    return (stringForUserPresence(day: day, hours: timeinfo.tm_hour, minutes: timeinfo.tm_min), false, theme.colors.grayText)
+                    return (stringForUserPresence(day: day, hours: timeinfo.tm_hour, minutes: timeinfo.tm_min), false, customTheme?.grayTextColor ?? theme.colors.grayText)
                 } else {
-                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, theme.colors.grayText)
+                    return ("\(L10n.timeLastSeen) \(stringForTimestamp(day: timeinfo.tm_mday, month: timeinfo.tm_mon + 1, year: timeinfo.tm_year))", false, customTheme?.grayTextColor ?? theme.colors.grayText)
                 }
             }
         }
     case .recently:
         let activeUntil = presence.lastActivity - Int32(timeDifference) + 30
         if activeUntil >= timestamp {
-            return (L10n.peerStatusOnline, true, theme.colors.accent)
+            return (L10n.peerStatusOnline, true, customTheme?.accentColor ?? theme.colors.accent)
         } else {
-            return (L10n.peerStatusRecently, false, theme.colors.grayText)
+            return (L10n.peerStatusRecently, false, customTheme?.grayTextColor ?? theme.colors.grayText)
         }
     case .lastWeek:
-        return (L10n.peerStatusLastWeek, false, theme.colors.grayText)
+        return (L10n.peerStatusLastWeek, false, customTheme?.grayTextColor ?? theme.colors.grayText)
     case .lastMonth:
-        return (L10n.peerStatusLastMonth, false, theme.colors.grayText)
+        return (L10n.peerStatusLastMonth, false, customTheme?.grayTextColor ?? theme.colors.grayText)
     }
 }
 

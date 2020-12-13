@@ -253,14 +253,15 @@ class ShareObject {
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
+                                    k += 1
                                 } else if let data = coding as? Data, let string = String(data: data, encoding: .utf8), let url = URL(string: string) {
                                     if !url.isFileURL {
                                         signals.append(self.sendText(url.absoluteString, to:peerId))
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
+                                    k += 1
                                 }
-                                k += 1
                                 requestIfNeeded()
                             })
                             if k != total {

@@ -206,40 +206,7 @@ struct InputDataInputPlaceholder : Equatable {
 
 final class InputDataGeneralData : Equatable {
     
-    struct Theme : Equatable {
-        let backgroundColor: NSColor
-        let highlightColor: NSColor
-        let borderColor: NSColor
-        let accentColor: NSColor
-        let secondaryColor: NSColor
-        let textColor: NSColor
-        let appearance: NSAppearance
-        
-        let generalCheck: CGImage?
-        let switchAppearance: SwitchViewAppearance?
-        
-        init(backgroundColor: NSColor = presentation.colors.background,
-             highlightColor: NSColor  = presentation.colors.accentSelect,
-             borderColor: NSColor = presentation.colors.border,
-             accentColor: NSColor = presentation.colors.accent,
-             secondaryColor: NSColor = presentation.colors.grayUI,
-             textColor: NSColor = presentation.colors.text,
-             appearance: NSAppearance = presentation.colors.appearance,
-             generalCheck: CGImage? = nil,
-             switchAppearance: SwitchViewAppearance? = nil) {
-            
-            
-            self.backgroundColor = backgroundColor
-            self.highlightColor = highlightColor
-            self.borderColor = borderColor
-            self.accentColor = accentColor
-            self.secondaryColor = secondaryColor
-            self.textColor = textColor
-            self.appearance = appearance
-            self.generalCheck = generalCheck
-            self.switchAppearance = switchAppearance
-        }
-    }
+    
 
     
     let name: String
@@ -253,8 +220,8 @@ final class InputDataGeneralData : Equatable {
     let enabled: Bool
     let justUpdate: Int64?
     let menuItems:(()->[ContextMenuItem])?
-    let theme: Theme?
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, theme: Theme? = nil) {
+    let theme: GeneralRowItem.Theme?
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, theme: GeneralRowItem.Theme? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -473,7 +440,7 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .general(_, _, value, error, identifier, data):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, theme: data.theme)
+            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, customTheme: data.theme)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

@@ -8169,6 +8169,12 @@ internal final class L10n {
   internal static var voiceChatConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Connecting") }
   /// group members
   internal static var voiceChatGroupMembers: String  { return L10n.tr("Localizable", "VoiceChat.GroupMembers") }
+  /// Add
+  internal static var voiceChatInviteMemberToGroupFirstAdd: String  { return L10n.tr("Localizable", "VoiceChat.InviteMemberToGroupFirstAdd") }
+  /// %1$@ isn't a member of "%2$@" yet. Add them to the group?
+  internal static func voiceChatInviteMemberToGroupFirstText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.InviteMemberToGroupFirstText", p1, p2)
+  }
   /// Leave
   internal static var voiceChatLeave: String  { return L10n.tr("Localizable", "VoiceChat.Leave") }
   /// Leave
@@ -8215,6 +8221,16 @@ internal final class L10n {
   internal static var voiceChatEndThird: String  { return L10n.tr("Localizable", "VoiceChat.End.Third") }
   /// Leave voice chat
   internal static var voiceChatEndTitle: String  { return L10n.tr("Localizable", "VoiceChat.End.Title") }
+  /// contacts
+  internal static var voiceChatInviteContacts: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Contacts") }
+  /// Copy Invite Link
+  internal static var voiceChatInviteCopyInviteLink: String  { return L10n.tr("Localizable", "VoiceChat.Invite.CopyInviteLink") }
+  /// group members
+  internal static var voiceChatInviteGroupMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GroupMembers") }
+  /// Invite members
+  internal static var voiceChatInviteInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.InviteMembers") }
+  /// Add Members
+  internal static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
   /// Are you sure you want to remove %1$@ from the group chat?
@@ -8299,6 +8315,10 @@ internal final class L10n {
   internal static var voiceChatStatusMembersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Members_zero") }
   /// Leave
   internal static var voiceChatTitleEnd: String  { return L10n.tr("Localizable", "VoiceChat.Title.End") }
+  /// invited
+  internal static var voiceChatTitleInvited: String  { return L10n.tr("Localizable", "VoiceChat.Title.Invited") }
+  /// Invite Members
+  internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

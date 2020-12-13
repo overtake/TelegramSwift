@@ -90,7 +90,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
-                nextView.image = item.customTheme?.generalCheck ?? theme.icons.generalCheck
+                nextView.image = #imageLiteral(resourceName: "Icon_Check").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
                 nextView.sizeToFit()
             }
             

@@ -92,17 +92,9 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
-    let switchAppearance = SwitchViewAppearance.init(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
+   
     
-    let theme = InputDataGeneralData.Theme(backgroundColor: GroupCallTheme.membersColor,
-                                           highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
-                                           borderColor: GroupCallTheme.memberSeparatorColor,
-                                           accentColor: GroupCallTheme.blueStatusColor,
-                                           secondaryColor: GroupCallTheme.grayStatusColor,
-                                           textColor: .white,
-                                           appearance: darkPalette.appearance,
-                                           generalCheck: NSImage(named: "Icon_Check")!.precomposed(GroupCallTheme.blueStatusColor),
-                                           switchAppearance: switchAppearance)
+    let theme = GroupCallTheme.customTheme
     
     if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState {
         let isMuted = defaultParticipantMuteState == .muted
@@ -141,7 +133,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     if let microDevice = microDevice {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: microDevice, viewType: .lastItem, theme: theme)
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: microDevice, viewType: .lastItem, customTheme: theme)
         }))
         index += 1
     }

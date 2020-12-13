@@ -168,7 +168,7 @@ class ShortPeerRowItem: GeneralRowItem {
     let alwaysHighlight: Bool
     private let contextMenuItems:()->Signal<[ContextMenuItem], NoError>
     fileprivate let _peerId: PeerId?
-    init(_ initialSize:NSSize, peer: Peer, account:Account, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false) {
+    init(_ initialSize:NSSize, peer: Peer, account:Account, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil) {
         self.peer = peer
         self.contextMenuItems = contextMenuItems
         self.account = account
@@ -214,13 +214,13 @@ class ShortPeerRowItem: GeneralRowItem {
             self.photo = generateEmptyPhoto(photoSize, type: emptyAvatar) |> map {($0, false)}
         }
         
-        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? L10n.peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
+        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? L10n.peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.titleStyle.font)
         
         if let titleAddition = titleAddition {
-            _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : theme.colors.grayText, font: self.titleStyle.font)
+            _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.titleStyle.font)
         }
         
-        tAttr.addAttribute(.selectedColor, value: theme.colors.underSelectedColor, range: tAttr.range)
+        tAttr.addAttribute(.selectedColor, value: customTheme?.underSelectedColor ?? theme.colors.underSelectedColor, range: tAttr.range)
 
         
         titleAttr = tAttr.copy() as? NSAttributedString
@@ -228,12 +228,12 @@ class ShortPeerRowItem: GeneralRowItem {
         
         if let status = status {
             let sAttr:NSMutableAttributedString = NSMutableAttributedString()
-            let _ = sAttr.append(string: status, color: enabled ? self.statusStyle.foregroundColor : theme.colors.grayText, font: self.statusStyle.font, coreText: true)
-            sAttr.addAttribute(.selectedColor, value: theme.colors.underSelectedColor, range: sAttr.range)
+            let _ = sAttr.append(string: status, color: enabled ? self.statusStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.statusStyle.font, coreText: true)
+            sAttr.addAttribute(.selectedColor, value: customTheme?.underSelectedColor ?? theme.colors.underSelectedColor, range: sAttr.range)
             statusAttr = sAttr.copy() as? NSAttributedString
         }
         
-        super.init(initialSize, height: height, stableId: stableId ?? AnyHashable(peerId ?? peer.id), type:generalType, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:borderType,inset:inset, enabled: enabled)
+        super.init(initialSize, height: height, stableId: stableId ?? AnyHashable(peerId ?? peer.id), type:generalType, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:borderType,inset:inset, enabled: enabled, customTheme: customTheme)
         
     }
     

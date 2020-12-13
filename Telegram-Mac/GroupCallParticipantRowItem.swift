@@ -53,7 +53,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             string = L10n.voiceChatListening
             color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
         } else if isInvited {
-            string = translate(key: "VoiceChat.Title.Invited", [])
+            string = L10n.voiceChatTitleInvited
         }
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 48, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsetsMake(0, 0, 0, 0), enabled: true)
