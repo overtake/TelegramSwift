@@ -43,7 +43,7 @@ private class CallStatusBarBackgroundView: View {
                         targetColors = [blue.cgColor, lightBlue.cgColor]
                     }
                 } else {
-                    targetColors = [theme.colors.grayBackground.cgColor, theme.colors.grayBackground.lighter().cgColor]
+                    targetColors = [theme.colors.grayIcon.cgColor, theme.colors.grayIcon.lighter().cgColor]
                 }
                 
                 self.foregroundGradientLayer.colors = targetColors
@@ -66,7 +66,7 @@ private class CallStatusBarBackgroundView: View {
         self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
 
 
-        self.foregroundGradientLayer.colors = [theme.colors.grayBackground.cgColor, theme.colors.grayBackground.lighter().cgColor]
+        self.foregroundGradientLayer.colors = [theme.colors.grayIcon.cgColor, theme.colors.grayIcon.lighter().cgColor]
         self.foregroundGradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
         self.foregroundGradientLayer.endPoint = CGPoint(x: 2.0, y: 0.5)
 

@@ -3537,6 +3537,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .history:
                         self.chatInteraction.update(animated:false,{ present in
                             var present = present
+                            if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
+                                present = present.updatedGroupCall({ currentValue in
+                                    if let call = cachedData.activeCall {
+                                        return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data)
+                                    } else {
+                                        return nil
+                                    }
+                                })
+                            }
                             if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
@@ -3552,7 +3561,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             return nil
                                         }
                                     })
-//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                                 if let peer = present.peer as? TelegramChannel {
                                     switch peer.info {
                                     case let .group(info):
@@ -3574,26 +3582,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         present = present.updateSlowMode { _ in return nil }
                                     }
                                 }
-                                
-                                
                             }
-                            
-//                            var pinnedMessageId: MessageId?
-//                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
-//                                pinnedMessageId = cachedData.pinnedMessageId
-//                            } else if let _ = combinedInitialData.cachedData as? CachedSecretChatData {
-//                            }
-                            
-//                            var pinnedMessage: ChatPinnedMessage?
-//                            if let pinnedMessageId = pinnedMessageId {
-//                                pinnedMessage = ChatPinnedMessage(messageId: pinnedMessageId, message: combinedInitialData.cachedDataMessages?[pinnedMessageId]?.first, others: [pinnedMessageId], isLatest: true)
-//                            }
-//                            present = present.withUpdatedPinnedMessageId(pinnedMessage)
-                            
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
                     case .scheduled:
@@ -3625,15 +3614,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         var availableGroupCall: Signal<GroupCallPanelData?, NoError>
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
+        if peerId.namespace == Namespaces.Peer.CloudChannel || peerId.namespace == Namespaces.Peer.CloudGroup {
             availableGroupCall = context.account.viewTracker.peerView(peerId)
-                               |> map { peerView -> CachedChannelData.ActiveCall? in
-                                   guard let cachedData = peerView.cachedData as? CachedChannelData else {
-                                       return nil
-                                   }
-                                   return cachedData.activeCall
-                               }
-                               |> distinctUntilChanged
+                            |> map { peerView -> CachedChannelData.ActiveCall? in
+                                if let cachedData = peerView.cachedData as? CachedChannelData {
+                                    return cachedData.activeCall
+                                }
+                                if let cachedData = peerView.cachedData as? CachedGroupData {
+                                    return cachedData.activeCall
+                                }
+                                return nil
+                            }
+                            |> distinctUntilChanged
                                |> mapToSignal { activeCall -> Signal<GroupCallPanelData?, NoError> in
                                    guard let activeCall = activeCall else {
                                        return .single(nil)
@@ -3806,7 +3798,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                //                                        .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
+                                    .updatedGroupCall({ _ in
+                                        if let call = cachedData.activeCall {
+                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData)
+                                        } else {
+                                            return nil
+                                        }
+                                    })
                             } else if let _ = peerView.cachedData as? CachedSecretChatData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)

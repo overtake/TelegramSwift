@@ -38,6 +38,7 @@ extension Peer {
             if case .creator = group.role {
                 isCreator = true
                 canReport = false
+                canMakeVoiceChat = true
             }
             highlightAdmins = true
             switch group.role {
@@ -46,6 +47,7 @@ extension Peer {
                 canEditMembers = true
                 canAddMembers = true
                 canReport = false
+                canMakeVoiceChat = true
             case .member:
                 break
             }
