@@ -771,7 +771,7 @@ final class GroupCallUIController : ViewController {
     private let pushToTalkDisposable = MetaDisposable()
     private let requestPermissionDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
-
+    private let actionsDisposable = DisposableSet()
     private var canManageCall: Bool = false
 
     init(_ data: UIData) {
@@ -783,6 +783,8 @@ final class GroupCallUIController : ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let actionsDisposable = self.actionsDisposable
         
         let peerId = self.data.call.peerId
         let account = self.data.call.account
@@ -831,12 +833,12 @@ final class GroupCallUIController : ViewController {
                 return
             }
             
-            _ = GroupCallAddmembers(data, window: window).start(next: { [weak window, weak data] peerId in
+            actionsDisposable.add(GroupCallAddmembers(data, window: window).start(next: { [weak window, weak self] peerId in
                 if let peerId = peerId.first, let window = window {
-                    data?.call.invitePeer(peerId)
+                    self?.data.call.invitePeer(peerId)
                     _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
                 }
-            })
+            }))
                 
         })
         
@@ -1030,6 +1032,7 @@ final class GroupCallUIController : ViewController {
         disposable.dispose()
         pushToTalkDisposable.dispose()
         requestPermissionDisposable.dispose()
+        actionsDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {

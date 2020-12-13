@@ -306,7 +306,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         
         for view in contentView.subviews {
-            if let view = view as? View {
+            if let view = view as? View, !view.isDynamicColorUpdateLocked {
                 view.backgroundColor = contentColor
             }
         }

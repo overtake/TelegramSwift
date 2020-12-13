@@ -572,6 +572,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        selectionBackground.isDynamicColorUpdateLocked = true
         selectionBackground.didChangeSuperview = { [weak self] in
             self?.forceClearContentBackground = self?.selectionBackground.superview != nil
             self?.updateColors()
