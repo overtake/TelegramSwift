@@ -114,6 +114,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     
     override var backdorColor: NSColor {
+        if let item = item as? ShortPeerRowItem, let theme = item.customTheme {
+            return item.isHighlighted || item.isSelected ? theme.highlightColor : theme.backgroundColor
+        }
         if let item = item as? ShortPeerRowItem, item.alwaysHighlight {
             return item.isSelected ? theme.colors.grayForeground : theme.colors.background
         }
@@ -201,18 +204,21 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     override func updateColors() {
         
+        guard let item = item as? ShortPeerRowItem else {
+            return
+        }
+        
         let highlighted = backdorColor
 
+        let customTheme = item.customTheme
         
         self.containerView.background = backdorColor
-        self.separator.backgroundColor = theme.colors.border
+        self.separator.backgroundColor = customTheme?.borderColor ?? theme.colors.border
         self.contextLabel?.background = backdorColor
         containerView.set(background: backdorColor, for: .Normal)
         containerView.set(background: highlighted, for: .Highlight)
 
-        guard let item = item as? ShortPeerRowItem else {
-            return
-        }
+       
         self.background = item.viewType.rowBackground
         needsDisplay = true
     }
@@ -507,7 +513,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             
             let inputActivites: (PeerId, [(Peer, PeerInputActivity)]) = (item.peerId, [(item.peer, activity)])
             
-            activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background), layout: { [weak self] show in
+            activities.update(with: inputActivites, for: max(frame.width - 60, 160), theme:theme.activity(key: 4, foregroundColor: item.customTheme?.accentColor ?? theme.colors.accent, backgroundColor: backdorColor), layout: { [weak self] show in
                 self?.needsLayout = true
                 self?.hiddenStatus = !show
                 self?.needsDisplay = true
@@ -535,7 +541,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             let canSeparate: Bool = item.index != item.table!.count - 1
             separator.isHidden = !(!isRowSelected && item.drawCustomSeparator && (canSeparate || item.drawLastSeparator))
         case let .modern(position, _):
-            separator.isHidden = !position.border
+            separator.isHidden = !position.border || !item.drawCustomSeparator
         }
         
         image.setFrameSize(item.photoSize)
@@ -570,7 +576,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     contextLabel = TextViewLabel()
                     containerView.addSubview(contextLabel!)
                 }
-                contextLabel?.attributedString = .initialize(string: label, color: theme.colors.grayText, font: item.statusStyle.font)
+                contextLabel?.attributedString = .initialize(string: label, color: item.customTheme?.secondaryColor ?? theme.colors.grayText, font: item.statusStyle.font)
                 contextLabel?.sizeToFit()
             } else {
                 contextLabel?.removeFromSuperview()
@@ -591,6 +597,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             contextLabel = nil
             break
         }
+        self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
         rightSeparatorView.backgroundColor = theme.colors.border
         contextLabel?.backgroundColor = backdorColor
         needsLayout = true

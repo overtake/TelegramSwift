@@ -29,17 +29,23 @@ private class CallStatusBarBackgroundView: View {
             self.maskCurveView.updateLevel(CGFloat(audioLevel))
         }
     }
+    
 
-    var speaking = false {
+    var speaking:(Bool, Bool)? = nil {
         didSet {
-            if self.speaking != oldValue {
+            if let speaking = self.speaking, (speaking.0 != oldValue?.0 || speaking.1 != oldValue?.1) {
                 let initialColors = self.foregroundGradientLayer.colors
                 let targetColors: [CGColor]
-                if speaking {
-                    targetColors = [green.cgColor, blue.cgColor]
+                if speaking.1 {
+                    if speaking.0 {
+                        targetColors = [green.cgColor, blue.cgColor]
+                    } else {
+                        targetColors = [blue.cgColor, lightBlue.cgColor]
+                    }
                 } else {
-                    targetColors = [blue.cgColor, lightBlue.cgColor]
+                    targetColors = [theme.colors.grayBackground.cgColor, theme.colors.grayBackground.lighter().cgColor]
                 }
+                
                 self.foregroundGradientLayer.colors = targetColors
                 self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
             }
@@ -60,7 +66,7 @@ private class CallStatusBarBackgroundView: View {
         self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
 
 
-        self.foregroundGradientLayer.colors = [blue.cgColor, lightBlue.cgColor]
+        self.foregroundGradientLayer.colors = [theme.colors.grayBackground.cgColor, theme.colors.grayBackground.lighter().cgColor]
         self.foregroundGradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
         self.foregroundGradientLayer.endPoint = CGPoint(x: 2.0, y: 0.5)
 
@@ -239,7 +245,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             isConnected = true
         }
 
-        self._backgroundView.speaking = isConnected && !isMuted
+        self._backgroundView.speaking = (isConnected && !isMuted, isConnected)
 
 
         setMicroIcon(isMuted ? theme.icons.callInlineMuted : theme.icons.callInlineUnmuted)

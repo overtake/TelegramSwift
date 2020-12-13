@@ -1615,9 +1615,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         return dict
                     }
-                    if apply {
+                    if apply, let window = self.window {
                         let peerId = self.chatLocation.peerId
-                        if !hasModals() {
+                        if !hasModals(window) {
                             clearNotifies(peerId, maxId: messageIndex.id)
                             
                             context.applyMaxReadIndex(for: self.chatLocation, contextHolder: self.chatLocationContextHolder, messageIndex: messageIndex)
@@ -4738,7 +4738,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func backKeyAction() -> KeyHandlerResult {
         
-        if hasModals() {
+        if let window = window, hasModals(window) {
             return .invokeNext
         }
         if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
@@ -4764,7 +4764,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func nextKeyAction() -> KeyHandlerResult {
         
-        if hasModals() {
+        if let window = window, hasModals(window) {
             return .invokeNext
         }
         
@@ -4944,7 +4944,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if let strongSelf = self, !hasModals() {
+            if let strongSelf = self, let window = strongSelf.window, !hasModals(window) {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty && strongSelf.chatInteraction.presentation.state == .normal ? .invoked : .rejected
                 
                 if result == .invoked {
@@ -4965,7 +4965,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if let strongSelf = self, !hasModals() {
+            if let strongSelf = self, let window = strongSelf.window, !hasModals(window) {
                 let result:KeyHandlerResult = strongSelf.chatInteraction.presentation.effectiveInput.inputText.isEmpty ? .invoked : .invokeNext
                 
                 
@@ -4979,7 +4979,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .DownArrow, priority: .low)
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
+            if let `self` = self, let window = self.window, !hasModals(window), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
                 var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
                 self.genericView.tableView.enumerateItems(with: { item in
                     if let item = item as? ChatRowItem, let message = item.message {
@@ -5001,7 +5001,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .UpArrow, priority: .low, modifierFlags: [.command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if let `self` = self, !hasModals(), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
+            if let `self` = self, let window = self.window, !hasModals(window), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
                 var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
                 self.genericView.tableView.enumerateItems(reversed: true, with: { item in
                     if let item = item as? ChatRowItem, let message = item.message {
@@ -5024,7 +5024,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            guard let `self` = self, !hasModals() else {return .rejected}
+            guard let `self` = self, let window = self.window, !hasModals(window) else {return .rejected}
             
             if let selectionState = self.chatInteraction.presentation.selectionState, !selectionState.selectedIds.isEmpty {
                 self.chatInteraction.deleteSelectedMessages()
@@ -5606,7 +5606,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func draggingItems(for pasteboard:NSPasteboard) -> [DragItem] {
         
-        if hasModals() {
+        if let window = self.window, hasModals(window) {
             return []
         }
         

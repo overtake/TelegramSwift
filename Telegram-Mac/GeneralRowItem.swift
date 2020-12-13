@@ -227,6 +227,55 @@ enum GeneralViewType : Equatable {
 
 class GeneralRowItem: TableRowItem {
 
+    
+    struct Theme : Equatable {
+        let backgroundColor: NSColor
+        let grayBackground: NSColor
+        let highlightColor: NSColor
+        let borderColor: NSColor
+        let accentColor: NSColor
+        let secondaryColor: NSColor
+        let textColor: NSColor
+        let grayTextColor: NSColor
+        let underSelectedColor: NSColor
+        let accentSelectColor: NSColor
+        let redColor: NSColor
+        
+        let appearance: NSAppearance
+        
+        let switchAppearance: SwitchViewAppearance?
+        
+        init(backgroundColor: NSColor = presentation.colors.background,
+             grayBackground: NSColor = presentation.colors.grayBackground,
+             highlightColor: NSColor  = presentation.colors.accentSelect,
+             borderColor: NSColor = presentation.colors.border,
+             accentColor: NSColor = presentation.colors.accent,
+             secondaryColor: NSColor = presentation.colors.grayUI,
+             textColor: NSColor = presentation.colors.text,
+             grayTextColor: NSColor = presentation.colors.grayText,
+             underSelectedColor: NSColor = presentation.colors.underSelectedColor,
+             accentSelectColor: NSColor = presentation.colors.accentSelect,
+             redColor: NSColor = presentation.colors.redUI,
+             appearance: NSAppearance = presentation.colors.appearance,
+             switchAppearance: SwitchViewAppearance? = nil) {
+            
+            
+            self.backgroundColor = backgroundColor
+            self.grayBackground = grayBackground
+            self.highlightColor = highlightColor
+            self.borderColor = borderColor
+            self.accentColor = accentColor
+            self.secondaryColor = secondaryColor
+            self.textColor = textColor
+            self.grayTextColor = grayTextColor
+            self.underSelectedColor = underSelectedColor
+            self.redColor = redColor
+            self.accentSelectColor = accentSelectColor
+            self.appearance = appearance
+            self.switchAppearance = switchAppearance
+        }
+    }
+    
     let border:BorderType
     let enabled: Bool
     let _height:CGFloat
@@ -272,14 +321,15 @@ class GeneralRowItem: TableRowItem {
     func updateViewType(_ viewType: GeneralViewType) {
         self.viewType = viewType
     }
+    let customTheme: Theme?
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil) {
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
         self._inset = inset
-        
+        self.customTheme = customTheme
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         } else {

@@ -24,6 +24,8 @@ public func ==(lhs:SearchToken, rhs: SearchToken) -> Bool {
 }
 
 private class TokenView : Control {
+    
+    
     fileprivate let token:SearchToken
     private var isFailed: Bool = false
     private let dismiss: ImageButton = ImageButton()
@@ -34,12 +36,13 @@ private class TokenView : Control {
             updateLocalizationAndTheme(theme: presentation)
         }
     }
-
-    init(_ token: SearchToken, maxSize: NSSize, onDismiss:@escaping()->Void, onSelect: @escaping()->Void) {
+    private let customTheme: ()->TokenizedView.Theme
+    init(_ token: SearchToken, maxSize: NSSize, onDismiss:@escaping()->Void, onSelect: @escaping()->Void, customTheme:@escaping()->TokenizedView.Theme) {
         self.token = token
+        self.customTheme = customTheme
         super.init()
         self.layer?.cornerRadius = 6
-        let layout = TextViewLayout(.initialize(string: token.name, color: .white, font: .normal(.title)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: token.name, color: customTheme().underSelectColor, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: maxSize.width - 30)
         self.nameView.update(layout)
         
@@ -96,18 +99,18 @@ private class TokenView : Control {
         
         var r:CGFloat = 0, g:CGFloat = 0, b:CGFloat = 0, a:CGFloat = 0
         
-        var redSelected = presentation.colors.redUI
+        var redSelected = customTheme().redColor
 
         redSelected.getRed(&r, green: &g, blue: &b, alpha: &a)
         redSelected =  NSColor(red: min(r + 0.1, 1.0), green: min(g + 0.1, 1.0), blue: min(b + 0.1, 1.0), alpha: a)
         
-        return isSelected ? (isFailed ? redSelected : presentation.colors.accentSelect) : (isFailed ? presentation.colors.redUI : presentation.colors.accent)
+        return isSelected ? (isFailed ? redSelected : customTheme().accentSelectColor) : (isFailed ? customTheme().redColor : customTheme().accentColor)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white.withAlphaComponent(0.7)), for: .Normal)
-        dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(NSColor.white), for: .Highlight)
+        dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(customTheme().underSelectColor.withAlphaComponent(0.7)), for: .Normal)
+        dismiss.set(image: #imageLiteral(resourceName: "Icon_SearchClear").precomposed(customTheme().underSelectColor), for: .Highlight)
         _ = dismiss.sizeToFit()
         
         nameView.backgroundColor = .clear
@@ -128,6 +131,36 @@ public protocol TokenizedProtocol : class {
 }
 
 public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelegate {
+    
+    public struct Theme {
+        let background: NSColor
+        let grayBackground: NSColor
+        let textColor: NSColor
+        let grayTextColor: NSColor
+        let underSelectColor: NSColor
+        let accentColor: NSColor
+        let accentSelectColor: NSColor
+        let redColor: NSColor
+        
+        public init(background: NSColor = presentation.colors.background,
+             grayBackground: NSColor = presentation.colors.grayBackground,
+             textColor: NSColor = presentation.colors.text,
+             grayTextColor: NSColor = presentation.colors.grayText,
+             underSelectColor: NSColor = presentation.colors.underSelectedColor,
+             accentColor: NSColor = presentation.colors.accent,
+             accentSelectColor: NSColor = presentation.colors.accentSelect,
+             redColor: NSColor = presentation.colors.redUI) {
+            self.background = background
+            self.textColor = textColor
+            self.grayBackground = grayBackground
+            self.grayTextColor = grayTextColor
+            self.underSelectColor = underSelectColor
+            self.accentColor = accentColor
+            self.accentSelectColor = accentSelectColor
+            self.redColor = redColor
+        }
+    }
+    
     private var tokens:[SearchToken] = []
     private var failedTokens:[Int64] = []
     private let container: View = View()
@@ -170,7 +203,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
                 self?.removeTokens(uniqueIds: [token.uniqueId], animated: true)
             }, onSelect: { [weak self] in
                 self?.selectedIndex = self?.tokens.firstIndex(of: token)
-            })
+            }, customTheme: self.customTheme)
             container.addSubview(view)
         }
         _tokensUpdater.set(.single(self.tokens))
@@ -353,9 +386,11 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     
     private let localizationFunc: (String)->String
     private let placeholderKey: String
-    required public init(frame frameRect: NSRect, localizationFunc: @escaping(String)->String, placeholderKey:String) {
+    private let customTheme: ()->TokenizedView.Theme
+    required public init(frame frameRect: NSRect, localizationFunc: @escaping(String)->String, placeholderKey:String, customTheme: @escaping()->TokenizedView.Theme = { TokenizedView.Theme() }) {
         self.localizationFunc = localizationFunc
         self.placeholderKey = placeholderKey
+        self.customTheme = customTheme
         super.init(frame: frameRect)
         
         hasVerticalScroller = true
@@ -441,15 +476,15 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     }
     
     public func updateLocalizationAndTheme(theme: PresentationTheme) {
-        background = presentation.colors.background
-        contentView.background = presentation.colors.background
-        self.container.backgroundColor = presentation.colors.grayBackground
-        input.textColor = presentation.colors.text
-        input.insertionPointColor = presentation.search.textColor
-        let placeholderLayout = TextViewLayout(.initialize(string: localizedString(placeholderKey), color: presentation.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+        background = customTheme().background
+        contentView.background = customTheme().background
+        self.container.backgroundColor = customTheme().grayBackground
+        input.textColor = customTheme().textColor
+        input.insertionPointColor = customTheme().textColor
+        let placeholderLayout = TextViewLayout(.initialize(string: localizedString(placeholderKey), color: customTheme().grayTextColor, font: .normal(.title)), maximumNumberOfLines: 1)
         placeholderLayout.measure(width: .greatestFiniteMagnitude)
         placeholder.update(placeholderLayout)
-        placeholder.backgroundColor = presentation.colors.grayBackground
+        placeholder.backgroundColor = customTheme().grayBackground
         placeholder.isSelectable = false
         layoutContainer(animated: false)
     }

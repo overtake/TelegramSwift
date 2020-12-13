@@ -38,13 +38,13 @@ enum SelectPeerEntryStableId : Hashable {
 enum SelectPeerEntry : Comparable, Identifiable {
     case peer(SelectPeerValue, Int32, Bool)
     case searchEmpty
-    case separator(Int32, String)
-    case inviteLink(()->Void)
+    case separator(Int32, GeneralRowItem.Theme, String)
+    case inviteLink(String, GeneralRowItem.Theme, ()->Void)
     var stableId: SelectPeerEntryStableId {
         switch self {
         case .searchEmpty:
             return .searchEmpty
-        case .separator(let index, _):
+        case .separator(let index, _, _):
             return .separator(index)
         case let .peer(peer, index, _):
             return .peerId(peer.peer.id, index)
@@ -61,14 +61,14 @@ enum SelectPeerEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case .separator(let index, let text):
-            if case .separator(index, text) = rhs {
+        case let .separator(index, customTheme, text):
+            if case .separator(index, customTheme, text) = rhs {
                 return true
             } else {
                 return false
             }
-        case .inviteLink:
-            if case .inviteLink = rhs {
+        case let .inviteLink(text, customTheme, _):
+            if case .inviteLink(text, customTheme, _) = rhs {
                 return true
             } else {
                 return false
@@ -89,7 +89,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
             return 1
         case .inviteLink:
             return -1
-        case .separator(let index, _):
+        case .separator(let index, _, _):
             return index
         case .peer(_, let index, _):
             return index
@@ -163,10 +163,12 @@ struct SelectPeerValue : Equatable {
     let peer: Peer
     let presence: PeerPresence?
     let subscribers: Int?
-    init(peer: Peer, presence: PeerPresence?, subscribers: Int?) {
+    let customTheme: GeneralRowItem.Theme?
+    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil) {
         self.peer = peer
         self.presence = presence
         self.subscribers = subscribers
+        self.customTheme = customTheme
     }
     
     static func == (lhs: SelectPeerValue, rhs: SelectPeerValue) -> Bool {
@@ -184,6 +186,9 @@ struct SelectPeerValue : Equatable {
         if lhs.subscribers != rhs.subscribers {
             return false
         }
+        if lhs.customTheme != rhs.customTheme {
+            return false
+        }
         
         return true
     }
@@ -197,7 +202,7 @@ struct SelectPeerValue : Equatable {
             difference = 0
         }
         
-        var color:NSColor = theme.colors.grayText
+        var color:NSColor = customTheme?.grayTextColor ?? theme.colors.grayText
         var string:String = L10n.peerStatusLongTimeAgo
         
         if let count = subscribers, peer.isGroup || peer.isSupergroup {
@@ -207,10 +212,10 @@ struct SelectPeerValue : Equatable {
             return (nil, color)
         } else if let presence = presence as? TelegramUserPresence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-            (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: difference, relativeTo: Int32(timestamp))
+            (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: difference, relativeTo: Int32(timestamp), customTheme: customTheme)
         } else {
             if let addressName = peer.addressName {
-                color = theme.colors.accent
+                color = customTheme?.accentColor ?? theme.colors.accent
                 string = "@\(addressName)"
             }
         }
@@ -225,7 +230,7 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
     var entries: [SelectPeerEntry] = []
 
     if let linkInvation = linkInvation {
-        entries.append(SelectPeerEntry.inviteLink(linkInvation))
+        entries.append(SelectPeerEntry.inviteLink(L10n.peerSelectInviteViaLink, GeneralRowItem.Theme(), linkInvation))
     }
     
     //entries.append(.search(false))
@@ -311,7 +316,7 @@ private func searchEntriesForPeers(_ peers:[SelectPeerValue], _ global: [SelectP
         }
         
         if !global.isEmpty {
-            entries.append(.separator(index, L10n.searchSeparatorGlobalPeers))
+            entries.append(.separator(index, GeneralRowItem.Theme(), L10n.searchSeparatorGlobalPeers))
             index += 1
             
         }
@@ -351,20 +356,21 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                 
                 let (status, color) = peer.status(account)
                 
-                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: account, stableId: entry.stableId, enabled: enabled, statusStyle: ControlStyle(foregroundColor: color), status: status, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
+                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: account, stableId: entry.stableId, enabled: enabled, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.grayText, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
                     }
-                })
+                }, customTheme: peer.customTheme)
             case .searchEmpty:
                 return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
-            case .separator(_, let text):
-                return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased())
-            case let .inviteLink(action):
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.peerSelectInviteViaLink, nameStyle: blueActionButton, type: .none, action: {
+            case let .separator(_, customTheme, text):
+                return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased(), customTheme: customTheme)
+            case let .inviteLink(text, customTheme, action):
+                let style = ControlStyle(font: .normal(.title), foregroundColor: customTheme.accentColor)
+                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: text, nameStyle: style, type: .none, action: {
                     action()
                     interactions.close()
-                }, thumb: GeneralThumbAdditional(thumb: theme.icons.group_invite_via_link, textInset: 39), inset: NSEdgeInsetsMake(0, 16, 0, 10))
+                }, thumb: GeneralThumbAdditional(thumb: NSImage(named: "Icon_InviteViaLink")!.precomposed(customTheme.accentColor), textInset: 39), inset: NSEdgeInsetsMake(0, 16, 0, 10), customTheme: customTheme)
             }
             
             let _ = item.makeSize(initialSize.width)
@@ -480,11 +486,12 @@ class SelectPeersBehavior {
     fileprivate let settings:SelectPeerSettings
     fileprivate let excludePeerIds:[PeerId]
     fileprivate let limit:Int32
-    
-    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX) {
+    let customTheme:()->GeneralRowItem.Theme
+    init(settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping()->GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
         self.settings = settings
         self.excludePeerIds = excludePeerIds
         self.limit = limit
+        self.customTheme = customTheme
     }
     
     
@@ -741,7 +748,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
         }
     }
     if let users = users, !users.isEmpty {
-        entries.append(.separator(index, tr(L10n.channelSelectPeersContacts)))
+        entries.append(.separator(index, GeneralRowItem.Theme(), tr(L10n.channelSelectPeersContacts)))
         index += 1
         for peer in users {
             if account.peerId != peer.peer.id {
@@ -753,7 +760,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     }
     
     if !remote.isEmpty {
-        entries.append(.separator(index, tr(L10n.channelSelectPeersGlobal)))
+        entries.append(.separator(index, GeneralRowItem.Theme(), tr(L10n.channelSelectPeersGlobal)))
         index += 1
         for peer in remote {
             if account.peerId != peer.peer.id {
@@ -1341,24 +1348,56 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
     let tableView:TableView = TableView()
     let tokenView: TokenizedView
     let separatorView: View = View()
+    
+    var customTheme: (()->GeneralRowItem.Theme)? = nil {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
     required init(frame frameRect: NSRect) {
+        
+        var makeTheme:()->TokenizedView.Theme = { TokenizedView.Theme() }
+        
         tokenView = TokenizedView(frame: NSMakeRect(0, 0, frameRect.width - 20, 30), localizationFunc: { key in
             return translate(key: key, [])
-        }, placeholderKey: "SearchField.Search")
+        }, placeholderKey: "SearchField.Search", customTheme: {
+            return makeTheme()
+        })
         super.init(frame: frameRect)
         addSubview(tokenView)
         addSubview(tableView)
         addSubview(separatorView)
         tokenView.delegate = self
-        backgroundColor = theme.colors.background
-       
+        
+        makeTheme = { [weak self] in
+            if let custom = self?.customTheme?() {
+                return TokenizedView.Theme(background: custom.backgroundColor,
+                                           grayBackground: custom.grayBackground,
+                                           textColor: custom.textColor,
+                                           grayTextColor: custom.grayTextColor,
+                                           underSelectColor: custom.underSelectedColor, accentColor: custom.accentColor,
+                                           accentSelectColor: custom.accentSelectColor,
+                                           redColor: custom.redColor)
+            } else {
+                return TokenizedView.Theme()
+            }
+        }
+               
+        tableView.getBackgroundColor = { [weak self] in
+            return self?.customTheme?().backgroundColor ?? theme.colors.background
+        }
+        
         updateLocalizationAndTheme(theme: theme)
         layout()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        separatorView.backgroundColor = theme.colors.border
+        separatorView.backgroundColor = customTheme?().backgroundColor ?? theme.colors.border
+        backgroundColor = customTheme?().backgroundColor ?? theme.colors.background
+        
+        
     }
     
     
@@ -1473,6 +1512,9 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         let interactions = self.interactions
         let initialSize = atomicSize
         
+        genericView.customTheme = behavior.customTheme
+        
+         
         interactions.close = { [weak self] in
             self?.close()
         }
@@ -1559,9 +1601,14 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: {  [weak self] in
+        return (left: ModalHeaderData(image: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(behavior.customTheme().accentColor), handler: {  [weak self] in
             self?.close()
         }), center: ModalHeaderData(title: self.defaultTitle), right: nil)
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        let customTheme = behavior.customTheme()
+        return .init(text: customTheme.textColor, grayText: customTheme.grayTextColor, background: customTheme.backgroundColor, border: customTheme.borderColor)
     }
     
     override var modalInteractions: ModalInteractions? {

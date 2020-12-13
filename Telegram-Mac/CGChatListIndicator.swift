@@ -48,7 +48,7 @@ final class GCChatListIndicator : View {
         } else {
             startAnimation()
             if let window = window as? Window {
-                keyDispose.set(window.keyWindowUpdater.start(next: { [weak self] value in
+                keyDispose.set(window.visibility.start(next: { [weak self] value in
                     if value {
                         self?.startAnimation()
                     } else {

@@ -33,10 +33,8 @@ class MicrophonePreviewRowItem: GeneralRowItem {
             }
         }
     }
-    fileprivate let customTheme: InputDataGeneralData.Theme?
-    init(_ initialSize: NSSize, stableId: AnyHashable, device: AVCaptureDevice, viewType: GeneralViewType, theme: InputDataGeneralData.Theme? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, device: AVCaptureDevice, viewType: GeneralViewType, customTheme: GeneralRowItem.Theme? = nil) {
         self.device = device
-        self.customTheme = theme
         self.session = AVCaptureSession()
         let input = try? AVCaptureDeviceInput(device: device)
         if let input = input {
@@ -56,7 +54,7 @@ class MicrophonePreviewRowItem: GeneralRowItem {
             self.powerLevel = 0
         }
         
-        super.init(initialSize, height: 40, stableId: stableId, viewType: viewType)
+        super.init(initialSize, height: 40, stableId: stableId, viewType: viewType, customTheme: customTheme)
         
         if let channel = channel {
             let signal: Signal<Void, NoError> = .single(Void()) |> delay(0.1, queue: .mainQueue()) |> restart
@@ -82,7 +80,7 @@ class MicrophonePreviewRowItem: GeneralRowItem {
 
 private final class PreviewView : View {
     
-    fileprivate var customTheme: InputDataGeneralData.Theme?
+    fileprivate var customTheme: GeneralRowItem.Theme?
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)

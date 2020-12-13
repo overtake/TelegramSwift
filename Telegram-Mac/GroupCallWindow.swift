@@ -57,7 +57,24 @@ struct GroupCallTheme {
     static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
     static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
 
+    private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
+    static var customTheme: GeneralRowItem.Theme {
+        return GeneralRowItem.Theme(backgroundColor: GroupCallTheme.membersColor,
+                                    grayBackground: GroupCallTheme.windowBackground,
+                                               highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
+                                               borderColor: GroupCallTheme.memberSeparatorColor,
+                                               accentColor: GroupCallTheme.blueStatusColor,
+                                               secondaryColor: GroupCallTheme.grayStatusColor,
+                                               textColor: NSColor(rgb: 0xffffff),
+                                               grayTextColor: GroupCallTheme.grayStatusColor,
+                                               underSelectedColor: NSColor(rgb: 0xffffff),
+                                               accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
+                                               redColor: GroupCallTheme.speakLockedColor,
+                                               appearance: darkPalette.appearance,
+                                               switchAppearance: switchAppearance)
+        
+    }
 
 }
 

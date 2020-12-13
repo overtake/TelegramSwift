@@ -454,10 +454,11 @@ private final class GroupCallView : View {
     }
     
     private func substrateRect() -> NSRect {
-        var h = min(self.peersTable.listHeight, self.peersTable.frame.height)
+        var h = self.peersTable.listHeight
         if peersTable.documentOffset.y < 0 {
             h -= peersTable.documentOffset.y
         }
+        h = min(h, self.peersTable.frame.height)
         return .init(origin: self.peersTable.frame.origin, size: NSMakeSize(self.peersTable.frame.width, h))
 
     }
@@ -682,21 +683,13 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     
     entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: nil, item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Invite members", nameStyle: nameStyle, type: .none, viewType: GeneralViewType.firstItem.withUpdatedInsets(NSEdgeInsetsMake(12, 16, 12, 0)), action: {
+        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.voiceChatInviteInviteMembers, nameStyle: nameStyle, type: .none, viewType: GeneralViewType.firstItem.withUpdatedInsets(NSEdgeInsetsMake(12, 16, 12, 0)), action: {
             arguments.inviteMembers()
-        }, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: GroupCallTheme.inviteIcon, textInset: 44, thumbInset: 1), border: [.Bottom], inset: NSEdgeInsets(), theme: .init(backgroundColor: GroupCallTheme.membersColor, highlightColor: GroupCallTheme.membersColor.lighter(), borderColor: GroupCallTheme.memberSeparatorColor))
+        }, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: GroupCallTheme.inviteIcon, textInset: 44, thumbInset: 1), border: [.Bottom], inset: NSEdgeInsets(), customTheme: GroupCallTheme.customTheme)
     }))
     
-//    var addedSeparator: Bool = false
     for (i, data) in state.memberDatas.enumerated() {
-        
-//        if data.state == nil, !addedSeparator && data.peer.id != account.peerId {
-//            entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: .init("separator"), equatable: nil, item: { initialSize, stableId in
-//                return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatGroupMembers, height: 20, backgroundColor: GroupCallTheme.memberSeparatorColor, leftInset: 12, border: [])
-//            }))
-//            addedSeparator = true
-//
-//        }
+
         let drawLine = i != state.memberDatas.count - 1
         
         var viewType: GeneralViewType = bestGeneralViewType(state.memberDatas, for: i)
@@ -775,7 +768,6 @@ final class GroupCallUIController : ViewController {
     }
     private let data: UIData
     private let disposable = MetaDisposable()
-    private let actionsDisposable = DisposableSet()
     private let pushToTalkDisposable = MetaDisposable()
     private let requestPermissionDisposable = MetaDisposable()
     private let pushToTalk: PushToTalk
@@ -839,9 +831,10 @@ final class GroupCallUIController : ViewController {
                 return
             }
             
-            _ = GroupCallAddmembers(data, window: window).start(next: { peerId in
-                if let peerId = peerId.first {
-                    self?.data.call.invitePeer(peerId)
+            _ = GroupCallAddmembers(data, window: window).start(next: { [weak window, weak data] peerId in
+                if let peerId = peerId.first, let window = window {
+                    data?.call.invitePeer(peerId)
+                    _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
                 }
             })
                 
@@ -1036,7 +1029,6 @@ final class GroupCallUIController : ViewController {
     deinit {
         disposable.dispose()
         pushToTalkDisposable.dispose()
-        actionsDisposable.dispose()
         requestPermissionDisposable.dispose()
     }
     
