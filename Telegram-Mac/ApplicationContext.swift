@@ -235,7 +235,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("not supported")
             }
             newView.update(with: contextObject)
-            return (newView, 35)
+            return (newView, contextObject is GroupCallContext ? 35 + 18 : 35)
         }))
         
         window.rootViewController = rightController

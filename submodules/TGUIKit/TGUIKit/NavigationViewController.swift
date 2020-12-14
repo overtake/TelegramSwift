@@ -208,7 +208,7 @@ public class CallNavigationHeader : NavigationHeader {
             _view = nil
             if animated {
                 NSAnimationContext.runAnimationGroup({ ctx in
-                    view.animator().setFrameOrigin(NSMakePoint(0, -height))
+                    view.animator().setFrameOrigin(NSMakePoint(0, -realHeight))
                 }, completionHandler: { [weak view] in
                     view?.removeFromSuperview()
                 })
@@ -632,7 +632,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             
             if let header = self?.callHeader, header.needShown {
                 header.view.removeFromSuperview()
-                self?.containerView.addSubview(header.view, positioned: .below, relativeTo: self?.navigationBar)
+                self?.containerView.addSubview(header.view, positioned: .above, relativeTo: self?.navigationBar)
             }
         }
         
@@ -717,18 +717,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             navigationBar.removeFromSuperview()
             navigationBar.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
 
-            var barRelative: NSView? = nil
-            if let call = callHeader, call.needShown {
-                barRelative = call.view
-            }
-            if let barRelative = barRelative {
-                containerView.addSubview(navigationBar, positioned: .below, relativeTo: barRelative)
-            } else {
-                containerView.addSubview(navigationBar)
-            }
+            navigationBar.removeFromSuperview()
+            containerView.addSubview(navigationBar)
 
 
-            
             reloadHeaders()
             
             navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
@@ -759,6 +751,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         navigationBar.removeFromSuperview()
         containerView.addSubview(navigationBar)
+
         reloadHeaders()
         
        

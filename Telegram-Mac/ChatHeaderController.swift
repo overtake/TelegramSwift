@@ -1698,7 +1698,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         var topPeers: [Avatar] = []
         if let participants = data.data?.topParticipants {
             var index:Int = 0
-            let participants = participants.filter { $0.peer.id != context.peerId }
+            let participants = participants
             for participant in participants {
                 topPeers.append(Avatar(peer: participant.peer, index: index))
                 index += 1

@@ -48,35 +48,22 @@ private final class GroupCallControlsView : View {
     private let end: CallControl = CallControl(frame: .zero)
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
-    private let playbackAudioLevelView: VoiceBlobView
 
-    private let foregroundView = View()
-    private let foregroundGradientLayer = CAGradientLayer()
-
-    private let maskView = View()
-    private let maskGradientLayer = CAGradientLayer()
-    private let maskCircleLayer = CAShapeLayer()
-
-
-
+    private let backgroundView = VoiceChatActionButtonBackgroundView()
 
     required init(frame frameRect: NSRect) {
-        playbackAudioLevelView = VoiceBlobView(
-            frame: NSMakeRect(0, 0, 220, 220),
-            maxLevel: 0.3,
-            smallBlobRange: (0, 0),
-            mediumBlobRange: (0.7, 0.8),
-            bigBlobRange: (0.8, 0.9)
-        )
+
 
         super.init(frame: frameRect)
-     //   addSubview(foregroundView)
-        addSubview(playbackAudioLevelView)
-        addSubview(speak)
+
+        addSubview(backgroundView)
+
         addSubview(settings)
         addSubview(end)
 
-        
+        addSubview(speak)
+
+
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
         }, for: .Click)
@@ -88,40 +75,6 @@ private final class GroupCallControlsView : View {
         speak.set(handler: { [weak self] _ in
             self?.arguments?.toggleSpeaker()
         }, for: .Click)
-        
-
-//
-//        self.foregroundGradientLayer.type = .radial
-//        self.foregroundGradientLayer.colors = [lightBlue.cgColor, blue.cgColor]
-//        self.foregroundGradientLayer.startPoint = CGPoint(x: 1.0, y: 0.0)
-//        self.foregroundGradientLayer.endPoint = CGPoint(x: 0.0, y: 1.0)
-//
-//        self.maskView.backgroundColor = .clear
-//
-//
-//
-//        self.maskGradientLayer.type = .radial
-//        self.maskGradientLayer.colors = [NSColor(rgb: 0xffffff, alpha: 0.4).cgColor, NSColor(rgb: 0xffffff, alpha: 0.0).cgColor]
-//        self.maskGradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
-//        self.maskGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
-//        self.maskGradientLayer.transform = CATransform3DMakeScale(0.3, 0.3, 1.0)
-//        self.maskGradientLayer.isHidden = false
-//
-//        let largerCirclePath = CGMutablePath()
-//        largerCirclePath.addEllipse(in: NSMakeRect(0, 0, bounds.height - 20, bounds.height - 20))
-//        self.maskCircleLayer.fillColor = NSColor.white.cgColor
-//        self.maskCircleLayer.path = largerCirclePath
-//        self.maskCircleLayer.isHidden = false
-//
-//
-//
-//        self.foregroundView.layer?.mask = self.maskView.layer
-//        self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
-//
-//
-//        self.maskView.layer?.addSublayer(self.maskGradientLayer)
-//        self.maskView.layer?.addSublayer(self.maskCircleLayer)
-
 
     }
     
@@ -132,49 +85,66 @@ private final class GroupCallControlsView : View {
         let state = callState.state
         speak.update(with: state, isMuted: callState.isMuted, audioLevel: audioLevel, animated: animated)
         
+//        switch state.networkState {
+//        case .connecting:
+//            playbackAudioLevelView.change(opacity: 0, animated: animated)
+//            playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
+//            playbackAudioLevelView.stopAnimating()
+//        case .connected:
+//            if callState.isMuted {
+//                if let muteState = state.muteState {
+//                    if muteState.canUnmute {
+//                        playbackAudioLevelView.setColor(GroupCallTheme.speakInactiveColor)
+//                    } else {
+//                        playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
+//                    }
+//                } else {
+//                    playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
+//                    playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
+//                }
+//            } else {
+//                playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
+//                playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
+//            }
+//            if callState.isMuted {
+//                if let muteState = state.muteState {
+//                    if muteState.canUnmute {
+//                        playbackAudioLevelView.change(opacity: 1, animated: animated)
+//                    } else {
+//                        playbackAudioLevelView.change(opacity: 0, animated: animated)
+//                    }
+//                } else {
+//                    playbackAudioLevelView.change(opacity: 1, animated: animated)
+//                }
+//            } else {
+//                playbackAudioLevelView.change(opacity: 1, animated: animated)
+//            }
+//
+//        }
+
+        var backgroundState: VoiceChatActionButtonBackgroundView.State
         switch state.networkState {
-        case .connecting:
-            playbackAudioLevelView.change(opacity: 0, animated: animated)
-            playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
-            playbackAudioLevelView.stopAnimating()
-        case .connected:
-            if callState.isMuted {
-                if let muteState = state.muteState {
-                    if muteState.canUnmute {
-                        playbackAudioLevelView.setColor(GroupCallTheme.speakInactiveColor)
-                    } else {
-                        playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
-                    }
+            case .connected:
+                if callState.isMuted {
+                    backgroundState = .blob(false)
                 } else {
-                    playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
-                    playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
+                    backgroundState = .blob(true)
                 }
-            } else {
-                playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
-                playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
-            }
-            if callState.isMuted {
-                if let muteState = state.muteState {
-                    if muteState.canUnmute {
-                        playbackAudioLevelView.change(opacity: 1, animated: animated)
-                    } else {
-                        playbackAudioLevelView.change(opacity: 0, animated: animated)
-                    }
-                } else {
-                    playbackAudioLevelView.change(opacity: 1, animated: animated)
-                }
-            } else {
-                playbackAudioLevelView.change(opacity: 1, animated: animated)
-            }
-            
+            case .connecting:
+                backgroundState = .connecting
         }
+
+        self.backgroundView.isDark = false
+        self.backgroundView.update(state: backgroundState, animated: animated)
+
+        self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
         
-        if callState.isKeyWindow {
-            playbackAudioLevelView.startAnimating()
-        } else {
-            playbackAudioLevelView.stopAnimating()
-            playbackAudioLevelView.change(opacity: 0, animated: animated)
-        }
+//        if callState.isKeyWindow {
+//            self.backgroundView.startAnimating()
+//        } else {
+//            playbackAudioLevelView.stopAnimating()
+//            playbackAudioLevelView.change(opacity: 0, animated: animated)
+//        }
         
         if state != preiousState {
             
@@ -254,42 +224,12 @@ private final class GroupCallControlsView : View {
 
         self.preiousState = state
         needsLayout = true
-
-        //updateGlowAndGradientAnimations(active: nil)
-
     }
     
     override var mouseDownCanMoveWindow: Bool {
         return true
     }
 
-    private func setupGradientAnimations() {
-        if let _ = self.foregroundGradientLayer.animation(forKey: "movement") {
-        } else {
-            let previousValue = self.foregroundGradientLayer.startPoint
-            let newValue: CGPoint
-//            if self.maskBlobView.presentationAudioLevel > 0.15 {
-//                newValue = CGPoint(x: CGFloat.random(in: 0.8 ..< 1.0), y: CGFloat.random(in: 0.1 ..< 0.45))
-//            } else {
-                newValue = CGPoint(x: CGFloat.random(in: 0.6 ..< 0.8), y: CGFloat.random(in: 0.1 ..< 0.45))
-//            }
-            self.foregroundGradientLayer.startPoint = newValue
-
-            CATransaction.begin()
-
-            let animation = CABasicAnimation(keyPath: "startPoint")
-            animation.duration = Double.random(in: 0.8 ..< 1.4)
-            animation.fromValue = previousValue
-            animation.toValue = newValue
-
-            CATransaction.setCompletionBlock { [weak self] in
-                self?.setupGradientAnimations()
-            }
-
-            self.foregroundGradientLayer.add(animation, forKey: "movement")
-            CATransaction.commit()
-        }
-    }
 
     private var blue:NSColor {
         return GroupCallTheme.speakInactiveColor
@@ -303,57 +243,19 @@ private final class GroupCallControlsView : View {
         return GroupCallTheme.speakActiveColor
     }
 
-
-    func updateGlowAndGradientAnimations(active: Bool?, previousActive: Bool? = nil) {
-        let effectivePreviousActive = previousActive ?? false
-
-        let initialScale: CGFloat = ((self.maskGradientLayer.value(forKeyPath: "presentationLayer.transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (((self.maskGradientLayer.value(forKeyPath: "transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (effectivePreviousActive ? 0.95 : 0.8))
-        let initialColors = self.foregroundGradientLayer.colors
-
-        let outerColor: NSColor?
-        let targetColors: [CGColor]
-        let targetScale: CGFloat
-        if let active = active {
-            if active {
-                targetColors = [blue.cgColor, green.cgColor]
-                targetScale = 0.89
-                outerColor = NSColor(rgb: 0x005720)
-            } else {
-                targetColors = [lightBlue.cgColor, blue.cgColor]
-                targetScale = 0.85
-                outerColor = NSColor(rgb: 0x00274d)
-            }
-        } else {
-            targetColors = [lightBlue.cgColor, blue.cgColor]
-            targetScale = 0.3
-            outerColor = nil
-        }
-
-        self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
-        if let _ = previousActive {
-            self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
-        } else {
-            self.maskGradientLayer.animateSpring(from: initialScale as NSNumber, to: targetScale as NSNumber, keyPath: "transform.scale", duration: 0.45)
-        }
-
-        self.foregroundGradientLayer.colors = targetColors
-        self.foregroundGradientLayer.animate(from: initialColors as AnyObject, to: targetColors as AnyObject, keyPath: "colors", timingFunction: .linear, duration: 0.3)
-    }
-
-
     
     override func layout() {
         super.layout()
         speak.center()
-        speak.setFrameOrigin(NSMakePoint(speak.frame.minX, speak.frame.minY - 10))
-        playbackAudioLevelView.center()
-        playbackAudioLevelView.setFrameOrigin(NSMakePoint(playbackAudioLevelView.frame.minX, playbackAudioLevelView.frame.minY - 10))
 
-        settings.centerY(x: 60)
-        end.centerY(x: frame.width - end.frame.width - 60)
+        settings.centerY(x: 20)
+        end.centerY(x: frame.width - end.frame.width - 20)
         if let speakText = speakText {
-            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 30))
         }
+
+        self.backgroundView.frame = focus(.init(width: 360, height: 360))
+       // self.backgroundView.layer?.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
 
     }
     
@@ -416,10 +318,10 @@ private final class GroupCallTitleView : View {
 }
 
 private final class GroupCallView : View {
-    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 440, 360))
+    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 440, 329))
     let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 480, 54))
-    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 440, 360))
-    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 480, height: 640 - 360 - 54))
+    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 440, 329))
+    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 440, height: 400))
     
     fileprivate var arguments: GroupCallUIArguments? {
         didSet {
@@ -478,7 +380,7 @@ private final class GroupCallView : View {
         super.layout()
         peersTable.centerX(y: 54)
         peersTableContainer.frame = substrateRect()
-        controlsContainer.centerX(y: peersTable.frame.maxY)
+        controlsContainer.centerX(y: frame.height - controlsContainer.frame.height + 60)
     }
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {

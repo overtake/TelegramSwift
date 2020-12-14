@@ -190,7 +190,7 @@ final class BlobView: View {
         }
     }
     
-    private var blobAnimation: ConstantDisplayLinkAnimator?
+    private var blobAnimation: DisplayLinkAnimator?
     
     private var speedLevel: CGFloat = 0
     private var scaleLevel: CGFloat = 0
@@ -303,37 +303,27 @@ final class BlobView: View {
             toPoints = generateNextBlob(for: bounds.size)
         }
         
-        
         let duration = CGFloat(1 / (minSpeed + (maxSpeed - minSpeed) * speedLevel))
         let fromValue: CGFloat = 0
         let toValue: CGFloat = 1
-        let tickValue = (toValue - fromValue) / (60 * duration)
-        
-        var currentValue: CGFloat = 0
-        
-        let animation = ConstantDisplayLinkAnimator(update: { [weak self] in
+
+        let animation = DisplayLinkAnimator(duration: Double(duration), from: fromValue, to: toValue, update: { [weak self] value in
+            self?.transition = value
+        }, completion: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            currentValue += tickValue
-            self.transition = max(min(currentValue, toValue), fromValue)
-            let finished = currentValue >= toValue
-            if finished {
-                self.fromPoints = self.currentPoints
-                self.toPoints = nil
-                self.blobAnimation = nil
-                self.animateToNewShape()
-            }
+            self.fromPoints = self.currentPoints
+            self.toPoints = nil
+            self.blobAnimation = nil
+            self.animateToNewShape()
         })
-        animation.isPaused = false
         self.blobAnimation = animation
         
         lastSpeedLevel = speedLevel
         speedLevel = 0
     }
-    
-    // MARK: Helpers
-    
+
     private func generateNextBlob(for size: CGSize) -> [CGPoint] {
         let randomness = minRandomness + (maxRandomness - minRandomness) * speedLevel
         return blob(pointsCount: pointsCount, randomness: randomness)

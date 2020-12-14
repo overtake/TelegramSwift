@@ -23,10 +23,10 @@ private let green = NSColor(rgb: 0x33c659)
 private class CallStatusBarBackgroundView: View {
     private let foregroundView: View
     private let foregroundGradientLayer: CAGradientLayer
-    private let maskCurveView: VoiceCurveView
+    private let maskCurveLayer: VoiceCurveLayer
     var audioLevel: Float = 0.0  {
         didSet {
-            self.maskCurveView.updateLevel(CGFloat(audioLevel))
+            self.maskCurveLayer.updateLevel(CGFloat(audioLevel))
         }
     }
     
@@ -53,14 +53,16 @@ private class CallStatusBarBackgroundView: View {
     }
 
 
+
     override init() {
         self.foregroundView = View()
         self.foregroundGradientLayer = CAGradientLayer()
-        self.maskCurveView = VoiceCurveView(frame: CGRect(), maxLevel: 2.5, smallCurveRange: (0.0, 0.0), mediumCurveRange: (0.1, 0.55), bigCurveRange: (0.1, 1.0))
-        self.maskCurveView.setColor(NSColor(rgb: 0xffffff))
+        self.maskCurveLayer = VoiceCurveLayer(frame: CGRect(), maxLevel: 2.5, smallCurveRange: (0.0, 0.0), mediumCurveRange: (0.1, 0.55), bigCurveRange: (0.1, 1.0))
+        self.maskCurveLayer.setColor(NSColor(rgb: 0xffffff))
 
 
         super.init()
+
 
         self.addSubview(self.foregroundView)
         self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
@@ -70,6 +72,8 @@ private class CallStatusBarBackgroundView: View {
         self.foregroundGradientLayer.startPoint = CGPoint(x: 0.0, y: 0.5)
         self.foregroundGradientLayer.endPoint = CGPoint(x: 2.0, y: 0.5)
 
+        self.foregroundView.layer?.mask = maskCurveLayer
+        //layer?.addSublayer(maskCurveLayer)
 
         self.updateAnimations()
 
@@ -91,7 +95,7 @@ private class CallStatusBarBackgroundView: View {
         CATransaction.setDisableActions(true)
         self.foregroundView.frame = NSMakeRect(0, 0, frame.width, frame.height)
         self.foregroundGradientLayer.frame = foregroundView.bounds
-        self.maskCurveView.frame = NSMakeRect(0, 0, frame.width, frame.height)
+        self.maskCurveLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         CATransaction.commit()
     }
 
@@ -105,10 +109,10 @@ private class CallStatusBarBackgroundView: View {
     func updateAnimations() {
         if !isCurrentlyInHierarchy {
             self.foregroundGradientLayer.removeAllAnimations()
-            self.maskCurveView.stopAnimating()
+            self.maskCurveLayer.stopAnimating()
             return
         }
-        self.maskCurveView.startAnimating()
+        self.maskCurveLayer.startAnimating()
     }
 }
 
@@ -130,6 +134,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
     override func layout() {
         super.layout()
+        _backgroundView.frame = bounds
     }
 
 
@@ -214,16 +219,21 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             }
         }))
 
-        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted)
-           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels, isMuted in
+        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
+           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels, isMuted, state in
                 guard let strongSelf = self else {
                     return
                 }
                 var effectiveLevel: Float = 0.0
-                if !isMuted {
-                    effectiveLevel = myAudioLevel
-                } else {
-                    effectiveLevel = audioLevels.map { $0.1 }.max() ?? 0.0
+                switch state.networkState {
+                case .connected:
+                    if !isMuted {
+                        effectiveLevel = myAudioLevel
+                    } else {
+                        effectiveLevel = audioLevels.map { $0.1 }.max() ?? 0.0
+                    }
+                case .connecting:
+                    effectiveLevel = 0
                 }
                 strongSelf._backgroundView.audioLevel = effectiveLevel
            }))
@@ -270,10 +280,10 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
 
 
 
-private final class VoiceCurveView: View {
-    private let smallCurve: CurveView
-    private let mediumCurve: CurveView
-    private let bigCurve: CurveView
+private final class VoiceCurveLayer: CALayer {
+    private let smallCurve: CurveLayer
+    private let mediumCurve: CurveLayer
+    private let bigCurve: CurveLayer
 
 
     private let maxLevel: CGFloat
@@ -296,7 +306,7 @@ private final class VoiceCurveView: View {
     ) {
         self.maxLevel = maxLevel
 
-        self.smallCurve = CurveView(
+        self.smallCurve = CurveLayer(
             pointsCount: 7,
             minRandomness: 1,
             maxRandomness: 1.3,
@@ -305,7 +315,7 @@ private final class VoiceCurveView: View {
             minOffset: smallCurveRange.min,
             maxOffset: smallCurveRange.max
         )
-        self.mediumCurve = CurveView(
+        self.mediumCurve = CurveLayer(
             pointsCount: 7,
             minRandomness: 1.2,
             maxRandomness: 1.5,
@@ -314,7 +324,7 @@ private final class VoiceCurveView: View {
             minOffset: mediumCurveRange.min,
             maxOffset: mediumCurveRange.max
         )
-        self.bigCurve = CurveView(
+        self.bigCurve = CurveLayer(
             pointsCount: 7,
             minRandomness: 1.2,
             maxRandomness: 1.7,
@@ -324,11 +334,11 @@ private final class VoiceCurveView: View {
             maxOffset: bigCurveRange.max
         )
 
-        super.init(frame: frame)
+        super.init()
 
-        addSubview(bigCurve)
-        addSubview(mediumCurve)
-        addSubview(smallCurve)
+        self.addSublayer(bigCurve)
+        self.addSublayer(mediumCurve)
+        self.addSublayer(smallCurve)
 
         displayLinkAnimator = ConstantDisplayLinkAnimator() { [weak self] in
             guard let strongSelf = self else { return }
@@ -401,18 +411,20 @@ private final class VoiceCurveView: View {
         }
     }
 
-    override func layout() {
-        super.layout()
+    override var frame: NSRect {
+        didSet {
+            if oldValue != frame {
+                smallCurve.frame = bounds
+                mediumCurve.frame = bounds
+                bigCurve.frame = bounds
 
-        smallCurve.frame = bounds
-        mediumCurve.frame = bounds
-        bigCurve.frame = bounds
-        
-        updateCurvesState()
+                updateCurvesState()
+            }
+        }
     }
 }
 
-final class CurveView: View {
+final class CurveLayer: CAShapeLayer {
     let pointsCount: Int
     let smoothness: CGFloat
 
@@ -433,33 +445,37 @@ final class CurveView: View {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             let lv = minOffset + (maxOffset - minOffset) * level
-            shapeLayer.transform = CATransform3DMakeTranslation(0.0, lv * 16.0, 0.0)
+            self.transform = CATransform3DMakeTranslation(0.0, lv * 16.0, 0.0)
             CATransaction.commit()
         }
     }
 
-    private var curveAnimation: ConstantDisplayLinkAnimator?
+    private var curveAnimation: DisplayLinkAnimator?
 
 
     private var speedLevel: CGFloat = 0
     private var lastSpeedLevel: CGFloat = 0
 
-    private let shapeLayer: CAShapeLayer = {
-        let layer = CAShapeLayer()
-        layer.strokeColor = nil
-        return layer
-    }()
+
 
     private var transition: CGFloat = 0 {
         didSet {
             guard let currentPoints = currentPoints else { return }
-
-            shapeLayer.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness, curve: true)
+            self.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness, curve: true)
         }
     }
 
     override var frame: CGRect {
         didSet {
+
+            if oldValue != frame {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.position = CGPoint(x: self.bounds.width / 2.0, y: self.bounds.height / 2.0)
+                self.bounds = self.bounds
+                CATransaction.commit()
+            }
+
             if self.frame.size != oldValue.size {
                 self.fromPoints = nil
                 self.toPoints = nil
@@ -502,9 +518,7 @@ final class CurveView: View {
 
         self.smoothness = 0.35
 
-        super.init(frame: .zero)
-
-        layer?.addSublayer(shapeLayer)
+        super.init()
     }
 
     required init?(coder: NSCoder) {
@@ -516,7 +530,7 @@ final class CurveView: View {
     }
 
     func setColor(_ color: NSColor) {
-        shapeLayer.fillColor = color.cgColor
+        self.fillColor = color.cgColor
     }
 
     func updateSpeedLevel(to newSpeedLevel: CGFloat) {
@@ -553,25 +567,18 @@ final class CurveView: View {
         let duration = CGFloat(1 / (minSpeed + (maxSpeed - minSpeed) * speedLevel))
         let fromValue: CGFloat = 0
         let toValue: CGFloat = 1
-        let tickValue = (toValue - fromValue) / (60 * duration)
 
-        var currentValue: CGFloat = 0
-
-        let animation = ConstantDisplayLinkAnimator(update: { [weak self] in
+        let animation = DisplayLinkAnimator(duration: Double(duration), from: fromValue, to: toValue, update: { [weak self] value in
+            self?.transition = value
+        }, completion: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            currentValue += tickValue
-            self.transition = max(min(currentValue, toValue), fromValue)
-            let finished = currentValue >= toValue
-            if finished {
-                self.fromPoints = self.currentPoints
-                self.toPoints = nil
-                self.curveAnimation = nil
-                self.animateToNewShape()
-            }
+            self.fromPoints = self.currentPoints
+            self.toPoints = nil
+            self.curveAnimation = nil
+            self.animateToNewShape()
         })
-        animation.isPaused = false
         self.curveAnimation = animation
 
         lastSpeedLevel = speedLevel
@@ -622,13 +629,4 @@ final class CurveView: View {
         return points
     }
 
-    override func layout() {
-        super.layout()
-
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        shapeLayer.position = CGPoint(x: self.bounds.width / 2.0, y: self.bounds.height / 2.0)
-        shapeLayer.bounds = self.bounds
-        CATransaction.commit()
-    }
 }
