@@ -22,7 +22,7 @@ class LAnimationButton: Button {
         }
     }
     private let offset: NSSize
-    
+    var updateIfWindowChanged: Bool = true
     var played = false
     var completion: (() -> Void)?
 
@@ -73,10 +73,12 @@ class LAnimationButton: Button {
     
     
     override func viewDidMoveToWindow() {
-        if window == nil {
-            animationView.set(nil)
-        } else {
-            animationView.set(self.firstFrame)
+        if updateIfWindowChanged {
+            if window == nil {
+                animationView.set(nil)
+            } else {
+                animationView.set(self.firstFrame)
+            }
         }
     }
     

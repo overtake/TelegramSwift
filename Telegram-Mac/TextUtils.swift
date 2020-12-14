@@ -421,9 +421,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             let text: String
             if let duration = duration {
                 if authorId == account.peerId {
-                    text = L10n.chatServiceVoiceChatFinishedYou(String.durationTransformed(elapsed: Int(duration)))
+                    text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                 } else {
-                    text = L10n.chatServiceVoiceChatFinished(authorName, String.durationTransformed(elapsed: Int(duration)))
+                    text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                 }
             } else {
                 if authorId == account.peerId {

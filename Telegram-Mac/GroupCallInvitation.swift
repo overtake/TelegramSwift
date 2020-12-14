@@ -112,7 +112,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     if participants.participants.contains(where: { $0.peer.id == value.peer.id }) {
                         return false
                     }
-                    return true
+                    return !value.peer.isBot
                 }.map {
                     InvitationPeer(peer: $0.peer, presence: $0.presences[$0.peer.id], contact: false, enabled: !invited.contains($0.peer.id))
                 }

@@ -234,6 +234,7 @@
 		A7918DB424093505002011CA /* GraphUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7918DB324093505002011CA /* GraphUI.framework */; };
 		A7919135240D0869002011CA /* MurMurHash32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919134240D0869002011CA /* MurMurHash32.framework */; };
 		A7919138240D1077002011CA /* ChatListFilterPredicate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7919137240D1077002011CA /* ChatListFilterPredicate.swift */; };
+		A7ADC47A2587B3750069737A /* VoiceChatActionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */; };
 		A7B5031023B62E0400C9838E /* nanosvg.c in Sources */ = {isa = PBXBuildFile; fileRef = A7B5030E23B62E0000C9838E /* nanosvg.c */; };
 		A7B5031323B62E1A00C9838E /* Svg.m in Sources */ = {isa = PBXBuildFile; fileRef = A7B5031123B62E1700C9838E /* Svg.m */; };
 		A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A7B6DDD623ED8FDF00B8E01C /* think_spectacular.tgs */; };
@@ -1225,6 +1226,7 @@
 		A7918DB324093505002011CA /* GraphUI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = GraphUI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919134240D0869002011CA /* MurMurHash32.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MurMurHash32.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919137240D1077002011CA /* ChatListFilterPredicate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListFilterPredicate.swift; sourceTree = "<group>"; };
+		A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatActionButton.swift; sourceTree = "<group>"; };
 		A7B5030E23B62E0000C9838E /* nanosvg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nanosvg.c; sourceTree = "<group>"; };
 		A7B5030F23B62E0400C9838E /* nanosvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = nanosvg.h; sourceTree = "<group>"; };
 		A7B5031123B62E1700C9838E /* Svg.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Svg.m; sourceTree = "<group>"; };
@@ -4442,6 +4444,7 @@
 				27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */,
 				A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */,
 				274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */,
+				A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5413,6 +5416,7 @@
 				A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */,
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */,
+				A7ADC47A2587B3750069737A /* VoiceChatActionButton.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
 				A71DC82D23858356000EEDE2 /* Spotlight.swift in Sources */,
 				C205DB9D1EE88765003711DF /* Views.swift in Sources */,
