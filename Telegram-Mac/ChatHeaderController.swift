@@ -1636,7 +1636,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false
         membersCountView.userInteractionEnabled = false
-        
+
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
                 self.chatInteraction.joinGroupCall(data.activeCall)
@@ -1800,7 +1800,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             self.avatarsContainer.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY))
         }
 
-        let participantsCount = self.data?.data?.participantCount ?? 0
+        let participantsCount = data.data?.participantCount ?? 0
 
 
         var text = L10n.chatGroupCallMembersCountable(participantsCount)
