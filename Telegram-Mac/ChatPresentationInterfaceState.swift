@@ -131,7 +131,7 @@ enum ChatPresentationInputQuery: Equatable {
 
 
 struct ChatActiveGroupCallInfo: Equatable {
-    var activeCall: CachedChannelData.ActiveCall
+    let activeCall: CachedChannelData.ActiveCall
     let data: GroupCallPanelData?
     
     func withUpdatedData(_ data: GroupCallPanelData?) -> ChatActiveGroupCallInfo {
