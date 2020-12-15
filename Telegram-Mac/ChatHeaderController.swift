@@ -1843,6 +1843,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         backgroundColor = theme.colors.background
         border = [.Bottom]
         borderColor = theme.colors.border
+        joinButton.set(font: .medium(.text), for: .Normal)
         joinButton.set(text: L10n.chatGroupCallJoin, for: .Normal)
         joinButton.sizeToFit(NSMakeSize(14, 8), .zero, thatFit: false)
         joinButton.layer?.cornerRadius = joinButton.frame.height / 2

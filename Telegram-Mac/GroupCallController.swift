@@ -646,13 +646,12 @@ final class GroupCallUIController : ViewController {
     private let disposable = MetaDisposable()
     private let pushToTalkDisposable = MetaDisposable()
     private let requestPermissionDisposable = MetaDisposable()
-    private let pushToTalk: PushToTalk
+    private var pushToTalk: PushToTalk?
     private let actionsDisposable = DisposableSet()
     private var canManageCall: Bool = false
 
     init(_ data: UIData) {
         self.data = data
-        self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext)
         super.init()
         bar = .init(height: 0)
     }
@@ -668,6 +667,8 @@ final class GroupCallUIController : ViewController {
         guard let window = self.navigationController?.window else {
             fatalError()
         }
+        
+        self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext, window: window)
 
         let sharedContext = self.data.call.sharedContext
         
@@ -812,7 +813,7 @@ final class GroupCallUIController : ViewController {
                 break
             }
 
-            self?.pushToTalk.update = { [weak self] mode in
+            self?.pushToTalk?.update = { [weak self] mode in
                 switch state.networkState {
                 case .connected:
                     switch mode {

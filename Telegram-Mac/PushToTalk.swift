@@ -84,11 +84,22 @@ final class KeyboardGlobalHandler {
     
     private let disposable = MetaDisposable()
     
-    init() {
-        disposable.set(KeyboardGlobalHandler.getPermission().start(next: { [weak self] value in
-            self?.runListener(hasPermission: value)
-        }))
-
+    enum Mode {
+        case local(Window)
+        case global
+    }
+    private let mode: Mode
+    
+    init(mode: Mode) {
+        self.mode = mode
+        switch mode {
+        case .global:
+            self.disposable.set(KeyboardGlobalHandler.getPermission().start(next: { [weak self] value in
+                self?.runListener(hasPermission: value)
+            }))
+        case .local:
+            self.runListener(hasPermission: false)
+        }
     }
     
     private func runListener(hasPermission: Bool) {
@@ -186,6 +197,15 @@ final class KeyboardGlobalHandler {
     }
     
     @discardableResult private func process(_ event: NSEvent) -> Bool {
+        
+        switch mode {
+        case .global:
+            break
+        case let .local(window):
+            if window.windowNumber != event.windowNumber {
+                return false
+            }
+        }
         
         let oldActiveCount = self.activeCount
 
@@ -362,14 +382,25 @@ final class PushToTalk {
     private let disposable = MetaDisposable()
     private let actionDisposable = MetaDisposable()
     
-    private let monitor: KeyboardGlobalHandler = KeyboardGlobalHandler()
+    private let monitor: KeyboardGlobalHandler
+    private let spaceMonitor: KeyboardGlobalHandler
 
-    init(sharedContext: SharedAccountContext) {
+    init(sharedContext: SharedAccountContext, window: Window) {
+        self.monitor = KeyboardGlobalHandler(mode: .global)
+        self.spaceMonitor = KeyboardGlobalHandler(mode: .local(window))
         let settings = voiceCallSettings(sharedContext.accountManager) |> deliverOnMainQueue
         
         disposable.set(settings.start(next: { [weak self] settings in
             self?.updateSettings(settings)
         }))
+        
+        
+        self.spaceMonitor.setKeyDownHandler(.init(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: ""), success: { [weak self] result in
+            self?.proccess(result.eventType, false)
+        })
+        self.spaceMonitor.setKeyUpHandler(.init(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: ""), success: { [weak self] result in
+            self?.proccess(result.eventType, false)
+        })
     
     }
     
@@ -379,7 +410,7 @@ final class PushToTalk {
         case .always:
             if let event = settings.pushToTalk {
                 self.monitor.setKeyUpHandler(event, success: { [weak self] result in
-                    self?.update(.toggle(activate: performSound ? "Purr" : nil, deactivate: performSound ? "Pop" : nil))
+                    self?.update(.toggle(activate: nil, deactivate: nil))
                 })
                 self.monitor.setKeyDownHandler(event, success: {_ in
                     
