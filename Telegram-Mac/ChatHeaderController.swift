@@ -1672,6 +1672,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         self.avatarsContainer.center()
 
         self.update(with: state, animated: false)
+        updateLocalizationAndTheme(theme: theme)
     }
     
 
@@ -1796,8 +1797,12 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             self.avatarsContainer.setFrameOrigin(self.focus(self.avatarsContainer.frame.size).origin)
         } else {
             let count = CGFloat(subviews.count)
-            let avatarSize: CGFloat = subviews.map { $0.frame.maxX }.max() ?? 0
-            self.avatarsContainer.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY))
+            if count != 0 {
+                let animated = animated && self.data?.data?.activeSpeakers.count != 0
+                let avatarSize: CGFloat = subviews.map { $0.frame.maxX }.max() ?? 0
+                let pos = NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY)
+                self.avatarsContainer.change(pos: pos, animated: animated)
+            }
         }
 
         let participantsCount = data.data?.participantCount ?? 0
@@ -1815,7 +1820,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         self.topPeers = topPeers
         self.data = data
 
-        updateLocalizationAndTheme(theme: theme)
     }
 
     private func sampleAudioGenerators() {

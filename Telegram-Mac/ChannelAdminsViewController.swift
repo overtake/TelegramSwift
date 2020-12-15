@@ -234,38 +234,39 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
         }
         
         var index: Int32 = 0
-        for participant in combinedParticipants.sorted(by: <) {
-            if !state.removedPeerIds.contains(participant.peer.id) {
-                var editable = true
-                switch participant.participant {
-                case .creator:
+        let participants = combinedParticipants.sorted(by: <).filter {
+            state.removedPeerIds.contains($0.peer.id)
+        }
+        for (i, participant) in participants.enumerated() {
+            var editable = true
+            switch participant.participant {
+            case .creator:
+                editable = false
+            case let .member(id, _, adminInfo, _, _):
+                if id == accountPeerId {
                     editable = false
-                case let .member(id, _, adminInfo, _, _):
-                    if id == accountPeerId {
-                        editable = false
-                    } else if let adminInfo = adminInfo {
-                        var creator: Bool = false
-                        if case .creator = peer.role {
-                            creator = true
-                        }
-                        if creator || adminInfo.promotedBy == accountPeerId {
-                            editable = true
-                        } else {
-                            editable = false
-                        }
+                } else if let adminInfo = adminInfo {
+                    var creator: Bool = false
+                    if case .creator = peer.role {
+                        creator = true
+                    }
+                    if creator || adminInfo.promotedBy == accountPeerId {
+                        editable = true
                     } else {
                         editable = false
                     }
-                }
-                let editing:ShortPeerDeleting?
-                if state.editing {
-                    editing = ShortPeerDeleting(editable: editable)
                 } else {
-                    editing = nil
+                    editable = false
                 }
-                entries.append(.adminPeerItem(sectionId: sectionId, index, participant, editing, .singleItem))
-                index += 1
             }
+            let editing:ShortPeerDeleting?
+            if state.editing {
+                editing = ShortPeerDeleting(editable: editable)
+            } else {
+                editing = nil
+            }
+            entries.append(.adminPeerItem(sectionId: sectionId, index, participant, editing, bestGeneralViewType(participants, for: i)))
+            index += 1
         }
         if index > 0 {
             entries.append(.section(sectionId))
