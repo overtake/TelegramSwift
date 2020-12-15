@@ -25,7 +25,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     }
     fileprivate let callInfo:TitleButton = TitleButton()
     fileprivate let endCall:ImageButton = ImageButton()
-    fileprivate let statusTextView:NSTextField = NSTextField()
+    fileprivate let statusTextView:DynamicCounterTextView = DynamicCounterTextView()
     fileprivate let muteControl:ImageButton = ImageButton()
 
     let disposable = MetaDisposable()
@@ -58,7 +58,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         }
     }
     
-    private func updateStatus() {
+    private func updateStatus(animated: Bool = true) {
         var statusText: String = ""
         switch self.status {
         case let .text(text, _):
@@ -73,8 +73,10 @@ class CallHeaderBasicView : NavigationHeaderView {
             }
             statusText = durationString
         }
-        statusTextView.stringValue = statusText
-        statusTextView.sizeToFit()
+        let dynamicResult = DynamicCounterTextView.make(for: statusText, count: statusText.trimmingCharacters(in: CharacterSet.decimalDigits.inverted), font: .normal(.text), textColor: .white, width: frame.width - 140)
+        self.statusTextView.update(dynamicResult.values, animated: animated)
+        self.statusTextView.change(size: dynamicResult.size, animated: animated)
+
         needsLayout = true
     }
     
@@ -90,18 +92,9 @@ class CallHeaderBasicView : NavigationHeaderView {
         backgroundView.wantsLayer = true
         addSubview(backgroundView)
         
-
-        statusTextView.font = .normal(.text)
-        statusTextView.drawsBackground = false
         statusTextView.backgroundColor = .clear
-        statusTextView.isSelectable = false
-        statusTextView.isEditable = false
-        statusTextView.isBordered = false
-        statusTextView.focusRingType = .none
-        statusTextView.maximumNumberOfLines = 1
 
-        backgroundView.addSubview(statusTextView)
-        
+
         callInfo.set(font: .medium(.text), for: .Normal)
         callInfo.disableActions()
         backgroundView.addSubview(callInfo)
@@ -112,7 +105,9 @@ class CallHeaderBasicView : NavigationHeaderView {
         
         endCall.scaleOnClick = true
         muteControl.scaleOnClick = true
-        
+
+        backgroundView.addSubview(statusTextView)
+
         callInfo.set(handler: { [weak self] _ in
             self?.showInfoWindow()
         }, for: .Click)
@@ -183,7 +178,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         muteControl.centerY(x:18)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         endCall.centerY(x: frame.width - endCall.frame.width - 20)
-        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - statusTextView.frame.width - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
+        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 100 - 30 - endCall.frame.width - 90, callInfo.frame.height), thatFit: true)
         callInfo.center()
     }
     
@@ -193,7 +188,6 @@ class CallHeaderBasicView : NavigationHeaderView {
         endCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         endCall.set(image: theme.icons.callInlineDecline, for: .Highlight)
         _ = endCall.sizeToFit(NSMakeSize(10, 10), thatFit: false)
-        statusTextView.textColor = .white
         callInfo.set(color: .white, for: .Normal)
 
         needsLayout = true

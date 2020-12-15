@@ -245,12 +245,14 @@ final class NavigationShadowView : View {
             needsDisplay = true
         }
     }
+
+    var getColor:()->NSColor = { presentation.colors.background }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
         ctx.clear(NSMakeRect(0, 0, frame.width, frame.height))
-        ctx.setStrokeColor(presentation.colors.background.cgColor)
+        ctx.setStrokeColor(getColor().cgColor)
         ctx.setShadow(offset: CGSize.zero, blur: 8, color: .black)
         ctx.setBlendMode(.multiply)
         ctx.strokeLineSegments(between: [CGPoint(x: bounds.width, y: 0), CGPoint(x: bounds.width, y: bounds.height)])
@@ -503,6 +505,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         super.init()
         bar = .init(height: 0)
+        shadowView.getColor = { [weak self] in
+            self?.controller.backgroundColor ?? presentation.colors.background
+        }
     }
     
     public var stackCount:Int {

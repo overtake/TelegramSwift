@@ -9,26 +9,31 @@
 import Foundation
 
 public final class DynamicCounterTextView : View {
-    public static func make(for text: String, count: Int, font: NSFont, textColor: NSColor, width: CGFloat) -> (values: [(TextViewLayout, DynamicCounterTextView.Text)], size: NSSize) {
+    public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat) -> (values: [(TextViewLayout, DynamicCounterTextView.Text)], size: NSSize) {
         var title: [(String, DynamicCounterTextView.Text.Animation, Int)] = []
-        if count == 0 {
+        if count.isEmpty {
             title = [(text, .crossFade, 0)]
         } else {
             var text = text
-            let pretty = "\(Int(count).formattedWithSeparator)"
-            text = text.replacingOccurrences(of: "\(count)", with: pretty)
-            let range = text.nsstring.range(of: pretty)
+            let range = text.nsstring.range(of: count)
             if range.location != NSNotFound {
                 title.append((text.nsstring.substring(to: range.location), .crossFade, 0))
                 var index: Int = 0
                 for _ in range.lowerBound ..< range.upperBound {
                     let symbol = text.nsstring.substring(with: NSMakeRange(range.location + index, 1))
-                    title.append((symbol, .numeric, index + 1))
+                    let animation: Text.Animation
+                    if Int(symbol) != nil {
+                        animation = .numeric
+                    } else {
+                        animation = .crossFade
+                    }
+                    title.append((symbol, animation, index + 1))
                     index += 1
                 }
                 title.append((text.nsstring.substring(from: range.upperBound), .crossFade, range.length + 1))
             } else {
                 title.append((text, .crossFade, 0))
+                text = ""
             }
         }
         title = title.filter { !$0.0.isEmpty }
@@ -47,7 +52,11 @@ public final class DynamicCounterTextView : View {
         
         let size = layouts.reduce(NSZeroSize, { current, value in
             var current = current
-            current.width += value.0.layoutSize.width
+            if value.0.attributedString.string == " " {
+                current.width += 4
+            } else {
+                current.width += value.0.layoutSize.width
+            }
             current.height = max(current.height, value.0.layoutSize.height)
             return current
         })
@@ -174,7 +183,11 @@ public final class DynamicCounterTextView : View {
                     }
                 }
             }
-            pos.x += max(layout.0.layoutSize.width, 4)
+            if layout.0.attributedString.string == " " {
+                pos.x += 4
+            } else {
+                pos.x += layout.0.layoutSize.width
+            }
         }
         
     }

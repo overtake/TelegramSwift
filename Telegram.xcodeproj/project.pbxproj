@@ -212,6 +212,7 @@
 		A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */; };
 		A742CE45241A517800C6B69B /* ChannelRecentPostRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */; };
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
+		A76157F62588E00400B7FCFD /* VoiceChatMicrophoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
@@ -1206,6 +1207,7 @@
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
+		A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatMicrophoneView.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
 		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
@@ -4445,6 +4447,7 @@
 				A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */,
 				274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */,
 				A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */,
+				A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5409,6 +5412,7 @@
 				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
 				C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */,
 				A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */,
+				A76157F62588E00400B7FCFD /* VoiceChatMicrophoneView.swift in Sources */,
 				C2DE5D361F3CACCF0081EC1E /* InstantPageLayoutSpacings.swift in Sources */,
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,

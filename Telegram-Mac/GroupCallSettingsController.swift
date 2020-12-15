@@ -51,7 +51,7 @@ final class GroupCallSettingsView : View {
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
+      //  super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = GroupCallTheme.windowBackground
         titleContainer.backgroundColor = GroupCallTheme.windowBackground
         title.backgroundColor = GroupCallTheme.windowBackground
@@ -363,6 +363,10 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             self?.readyOnce()
         }))
         
+    }
+
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        backgroundColor = GroupCallTheme.windowBackground
     }
     
 }

@@ -12,19 +12,15 @@ import TelegramCore
 
 
 final class GroupCallSpeakButton : Control {
-    private let button: LAnimationButton = LAnimationButton(animation: "group_call_speaker_mute", size: NSMakeSize(50, 50))
-    private let lockedView = ImageView()
+    private let button: VoiceChatMicrophoneView = VoiceChatMicrophoneView()
     required init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
         addSubview(button)
-        addSubview(lockedView)
 
-        button.updateIfWindowChanged = false
-        lockedView.isEventLess = true
-        lockedView.image = GroupCallTheme.big_muted
-        lockedView.sizeToFit()
         button.userInteractionEnabled = false
+
+
     }
 
     override var mouseDownCanMoveWindow: Bool {
@@ -33,77 +29,37 @@ final class GroupCallSpeakButton : Control {
     
     override func layout() {
         super.layout()
-        button.center()
-        lockedView.center()
+        button.frame = focus(NSMakeSize(90, 90))
     }
     
-    private var muteState: (GroupCallParticipantsContext.Participant.MuteState?, Bool) = (nil, true)
     func update(with state: PresentationGroupCallState, isMuted: Bool, audioLevel: Float?, animated: Bool) {
-        var lock = false
+        let color: NSColor
+        let white = NSColor(rgb: 0xffffff)
         switch state.networkState {
         case .connecting:
             userInteractionEnabled = false
+            color = white
         case .connected:
             if isMuted {
                 if let muteState = state.muteState {
                     if muteState.canUnmute {
+                        color = white
                     } else {
-                        lock = true
+                        color = GroupCallTheme.speakLockedColor
                     }
                     userInteractionEnabled = muteState.canUnmute
                 } else {
                     userInteractionEnabled = true
+                    color = white
                 }
             } else {
                 userInteractionEnabled = true
+                color = white
             }
         }
 
-        let animated = animated && ((muteState.0 != state.muteState && (isMuted || state.muteState == nil)) || muteState.1 != isMuted)
+        button.update(state: .init(muted: isMuted || state.muteState != nil, color: color), animated: animated)
 
-        if ((muteState.0 != state.muteState && (isMuted || state.muteState == nil)) || muteState.1 != isMuted) {
-            if animated {
-                if isMuted {
-                    if let muteState = state.muteState {
-                        if muteState.canUnmute {
-                            button.setAnimationName("group_call_speaker_mute")
-                        } else {
-                            button.setAnimationName("group_call_speaker_mute")
-                        }
-                    } else {
-                        button.setAnimationName("group_call_speaker_unmute")
-                    }
-                } else {
-                    button.setAnimationName("group_call_speaker_unmute")
-                }
-
-
-                button.loop()
-            }
-            if !animated {
-                if isMuted {
-                    if let muteState = state.muteState {
-                        if muteState.canUnmute {
-                            button.setAnimationName("group_call_speaker_unmute")
-                        } else {
-                            button.setAnimationName("group_call_speaker_unmute")
-                        }
-                    } else {
-                        button.setAnimationName("group_call_speaker_mute")
-                    }
-                } else {
-                    button.setAnimationName("group_call_speaker_mute")
-                }
-            }
-        }
-
-        
-        lockedView.change(opacity: lock ? 1 : 0, animated: animated)
-        button.change(opacity: lock ? 0 : 1, animated: animated)
-
-        muteState = (state.muteState, isMuted)
-        
-        
     }
     
     private var previousState: ControlState?

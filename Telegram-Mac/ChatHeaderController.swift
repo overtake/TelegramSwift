@@ -1614,7 +1614,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private var data: ChatActiveGroupCallInfo?
     private let chatInteraction: ChatInteraction
     private let headerView = TextView()
-    private let membersCountView = TextView()
+    private let membersCountView = DynamicCounterTextView()
     private let button = Control()
 
 
@@ -1636,7 +1636,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false
         membersCountView.userInteractionEnabled = false
-        membersCountView.isSelectable = false
         
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
@@ -1800,7 +1799,19 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             let avatarSize: CGFloat = subviews.map { $0.frame.maxX }.max() ?? 0
             self.avatarsContainer.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY))
         }
-        
+
+        let participantsCount = self.data?.data?.participantCount ?? 0
+
+
+        var text = L10n.chatGroupCallMembersCountable(participantsCount)
+        let pretty = "\(Int(participantsCount).formattedWithSeparator)"
+        text = text.replacingOccurrences(of: "\(participantsCount)", with: pretty)
+        let dynamicValues = DynamicCounterTextView.make(for: text, count: pretty, font: .normal(.short), textColor: theme.colors.grayText, width: frame.midX)
+
+        self.membersCountView.update(dynamicValues.values, animated: animated)
+        self.membersCountView.change(size: dynamicValues.size, animated: animated)
+
+
         self.topPeers = topPeers
         self.data = data
 
@@ -1838,13 +1849,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         let headerLayout = TextViewLayout(.initialize(string: L10n.chatGroupCallTitle, color: theme.colors.text, font: .medium(.text)))
         headerLayout.measure(width: frame.width - 100)
         headerView.update(headerLayout)
-        
-        let membersCountLayout = TextViewLayout(.initialize(string: L10n.chatGroupCallMembersCountable(self.data?.data?.participantCount ?? 0), color: theme.colors.grayText, font: .normal(.short)))
-        membersCountLayout.measure(width: frame.width - 100)
-        membersCountView.update(membersCountLayout)
-        
-      
-        
+
         needsLayout = true
     }
     
@@ -1863,8 +1868,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         }
         
         headerView.layout?.measure(width: frame.width - 100)
-        membersCountView.layout?.measure(width: frame.width - 100)
-        membersCountView.update(membersCountView.layout)
         headerView.update(headerView.layout)
 
         
