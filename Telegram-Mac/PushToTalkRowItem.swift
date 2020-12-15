@@ -93,7 +93,7 @@ private final class PushToTalkRowView: GeneralContainableRowView {
         
         switch mode {
         case .editing:
-            let recorder = KeyboardGlobalHandler()
+            let recorder = KeyboardGlobalHandler(mode: .global)
             self.recorder = recorder
             recorder.setKeyUpHandler(nil, success: { [weak item, weak self] result in
                 guard let item = item else {

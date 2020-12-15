@@ -230,7 +230,12 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                     if !isMuted {
                         effectiveLevel = myAudioLevel
                     } else {
-                        effectiveLevel = audioLevels.map { $0.1 }.max() ?? 0.0
+                        effectiveLevel = audioLevels.reduce(0, { current, value in
+                            return current + value.1
+                        })
+                        if !audioLevels.isEmpty {
+                            effectiveLevel = effectiveLevel / Float(audioLevels.count)
+                        }
                     }
                 case .connecting:
                     effectiveLevel = 0
