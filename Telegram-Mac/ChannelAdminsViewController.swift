@@ -235,7 +235,7 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
         
         var index: Int32 = 0
         let participants = combinedParticipants.sorted(by: <).filter {
-            state.removedPeerIds.contains($0.peer.id)
+            !state.removedPeerIds.contains($0.peer.id)
         }
         for (i, participant) in participants.enumerated() {
             var editable = true
