@@ -419,7 +419,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 } else if let adminRights = channel.adminRights {
                     currentRightsFlags = adminRights.flags
                 } else {
-                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins])
+                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
                 }
                 
                 if accountUserRightsFlags.contains(.canAddAdmins) {
@@ -551,7 +551,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                 currentRightsFlags = adminRights.rights.flags.subtracting(.canAddAdmins)
             } else {
-                currentRightsFlags = accountUserRightsFlags.subtracting(.canAddAdmins)
+                currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
             }
             
             var index = 0
@@ -926,9 +926,9 @@ class ChannelAdminController: TableModalViewController {
                                     }
                                     
                                     if channel.flags.contains(.isCreator) {
-                                        updateFlags = maskRightsFlags.subtracting(.canAddAdmins)
+                                        updateFlags = maskRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
                                     } else if let adminRights = channel.adminRights {
-                                        updateFlags = maskRightsFlags.intersection(adminRights.flags).subtracting(.canAddAdmins)
+                                        updateFlags = maskRightsFlags.intersection(adminRights.flags).subtracting([.canAddAdmins, .canBeAnonymous])
                                     } else {
                                         updateFlags = []
                                     }
