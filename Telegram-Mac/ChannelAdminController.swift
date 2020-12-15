@@ -537,6 +537,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 .canDeleteMessages,
                 .canBanUsers,
                 .canInviteUsers,
+                .canManageCalls,
                 .canPinMessages,
                 .canBeAnonymous,
                 .canAddAdmins

@@ -80,8 +80,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 let layout = item.isSelected ? nil : TextViewLayout(.initialize(string: value, color: isSelect ? theme.colors.underSelectedColor : theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
                 
                 textView?.set(layout: layout)
-                
-                nextView.isHidden = false
+                var nextVisible: Bool = true
+                if case let .contextSelector(_, items) = item.type {
+                    nextVisible = !items.isEmpty
+                }
+                nextView.isHidden = !nextVisible
             default:
                 textView?.removeFromSuperview()
                 textView = nil
@@ -104,8 +107,8 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .nextContext = item.type {
                 needNextImage = true
             }
-            if case .contextSelector = item.type {
-                needNextImage = true
+            if case let .contextSelector(_, items) = item.type {
+                needNextImage = !items.isEmpty
             }
             if needNextImage {
                 nextView.isHidden = false

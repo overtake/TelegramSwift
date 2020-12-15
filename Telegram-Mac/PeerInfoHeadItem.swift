@@ -232,9 +232,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_call, action: arguments.makeVoiceChat))
-            }
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
                 items.append(ActionItem(text: L10n.peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
                     arguments.stats(cachedData.statsDatacenterId)

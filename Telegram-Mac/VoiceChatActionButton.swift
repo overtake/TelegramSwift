@@ -312,9 +312,12 @@ final class VoiceChatActionButtonBackgroundView: View {
     private func playConnectionDisappearanceAnimation() {
         let initialRotation: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.transform.rotation.z") as? NSNumber)?.floatValue ?? 0.0)
         let initialStrokeEnd: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.strokeEnd") as? NSNumber)?.floatValue ?? 1.0)
+        CATransaction.begin()
 
-        self.maskProgressLayer.removeAnimation(forKey: "progressGrowth")
-        self.maskProgressLayer.removeAnimation(forKey: "progressRotation")
+        let maskProgressLayer = self.maskProgressLayer
+
+        maskProgressLayer.removeAnimation(forKey: "progressGrowth")
+        maskProgressLayer.removeAnimation(forKey: "progressRotation")
 
         let duration: Double = (1.0 - Double(initialStrokeEnd)) * 0.6
 
@@ -322,26 +325,27 @@ final class VoiceChatActionButtonBackgroundView: View {
         growthAnimation.fromValue = initialStrokeEnd
         growthAnimation.toValue = 0.0
         growthAnimation.duration = duration
-        growthAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeIn)
+        growthAnimation.isRemovedOnCompletion = false
+        growthAnimation.timingFunction = CAMediaTimingFunction(name: .easeIn)
 
         let rotateAnimation = CABasicAnimation(keyPath: "transform.rotation.z")
         rotateAnimation.fromValue = initialRotation
         rotateAnimation.toValue = initialRotation + CGFloat.pi * 2
         rotateAnimation.isAdditive = true
         rotateAnimation.duration = duration
-        rotateAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeIn)
+        rotateAnimation.isRemovedOnCompletion = false
+        rotateAnimation.timingFunction = CAMediaTimingFunction(name: .easeIn)
 
         let groupAnimation = CAAnimationGroup()
         groupAnimation.animations = [growthAnimation, rotateAnimation]
         groupAnimation.duration = duration
+        groupAnimation.isRemovedOnCompletion = false
 
-        CATransaction.setCompletionBlock {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            self.maskProgressLayer.isHidden = true
-            self.maskProgressLayer.removeAllAnimations()
-            CATransaction.commit()
-        }
+
+        self.maskProgressLayer.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak maskProgressLayer] _ in
+            maskProgressLayer?.isHidden = true
+            maskProgressLayer?.removeAllAnimations()
+        })
 
         self.maskProgressLayer.add(groupAnimation, forKey: "progressDisappearance")
         CATransaction.commit()
@@ -363,7 +367,7 @@ final class VoiceChatActionButtonBackgroundView: View {
         self.updateGlowAndGradientAnimations(active: nil, previousActive: nil)
 
         self.maskBlobLayer.startAnimating()
-        self.maskBlobLayer.animateScale(from: 1.0, to: 0.0, duration: 0.15, removeOnCompletion: false, completion: { [weak self] _ in
+        self.maskBlobLayer.animateScale(from: 1.0, to: 0, duration: 0.15, removeOnCompletion: false, completion: { [weak self] _ in
             self?.maskBlobLayer.isHidden = true
             self?.maskBlobLayer.stopAnimating()
             self?.maskBlobLayer.removeAllAnimations()
@@ -389,7 +393,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             CATransaction.commit()
         }
 
-        self.growingForegroundCircleLayer.add(growthAnimation, forKey: "insideGrowth")
+      //  self.growingForegroundCircleLayer.add(growthAnimation, forKey: "insideGrowth")
         CATransaction.commit()
     }
 
@@ -613,9 +617,10 @@ final class VoiceChatActionButtonBackgroundView: View {
                 self.transition = self.state
             }
             self.state = state
+
+            self.updateAnimations()
         }
 
-        self.updateAnimations()
     }
 
     override func layout() {

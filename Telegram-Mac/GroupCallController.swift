@@ -84,49 +84,22 @@ private final class GroupCallControlsView : View {
         
         let state = callState.state
         speak.update(with: state, isMuted: callState.isMuted, audioLevel: audioLevel, animated: animated)
-        
-//        switch state.networkState {
-//        case .connecting:
-//            playbackAudioLevelView.change(opacity: 0, animated: animated)
-//            playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
-//            playbackAudioLevelView.stopAnimating()
-//        case .connected:
-//            if callState.isMuted {
-//                if let muteState = state.muteState {
-//                    if muteState.canUnmute {
-//                        playbackAudioLevelView.setColor(GroupCallTheme.speakInactiveColor)
-//                    } else {
-//                        playbackAudioLevelView.setColor(GroupCallTheme.speakDisabledColor)
-//                    }
-//                } else {
-//                    playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
-//                    playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
-//                }
-//            } else {
-//                playbackAudioLevelView.updateLevel(CGFloat(audioLevel ?? 0))
-//                playbackAudioLevelView.setColor(GroupCallTheme.speakActiveColor)
-//            }
-//            if callState.isMuted {
-//                if let muteState = state.muteState {
-//                    if muteState.canUnmute {
-//                        playbackAudioLevelView.change(opacity: 1, animated: animated)
-//                    } else {
-//                        playbackAudioLevelView.change(opacity: 0, animated: animated)
-//                    }
-//                } else {
-//                    playbackAudioLevelView.change(opacity: 1, animated: animated)
-//                }
-//            } else {
-//                playbackAudioLevelView.change(opacity: 1, animated: animated)
-//            }
-//
-//        }
+
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
+        
         switch state.networkState {
             case .connected:
                 if callState.isMuted {
-                    backgroundState = .blob(false)
+                    if let muteState = callState.state.muteState {
+                        if muteState.canUnmute {
+                            backgroundState = .blob(false)
+                        } else {
+                            backgroundState = .disabled
+                        }
+                    } else {
+                        backgroundState = .blob(true)
+                    }
                 } else {
                     backgroundState = .blob(true)
                 }
@@ -134,17 +107,10 @@ private final class GroupCallControlsView : View {
                 backgroundState = .connecting
         }
 
-        self.backgroundView.isDark = false
         self.backgroundView.update(state: backgroundState, animated: animated)
 
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
-        
-//        if callState.isKeyWindow {
-//            self.backgroundView.startAnimating()
-//        } else {
-//            playbackAudioLevelView.stopAnimating()
-//            playbackAudioLevelView.change(opacity: 0, animated: animated)
-//        }
+
         
         if state != preiousState {
             
@@ -266,13 +232,12 @@ private final class GroupCallControlsView : View {
 
 private final class GroupCallTitleView : View {
     fileprivate let titleView: TextView = TextView()
-    fileprivate let statusView: TextView = TextView()
+    fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
         addSubview(statusView)
         titleView.isSelectable = false
-        statusView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
     }
@@ -295,20 +260,29 @@ private final class GroupCallTitleView : View {
     }
     
     
-    func update(_ peer: Peer, _ state: GroupCallUIState) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, animated: Bool) {
         let layout = TextViewLayout(.initialize(string: peer.displayTitle, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 100)
+        layout.measure(width: frame.width - 140)
         titleView.update(layout)
 
+
         let status: String
+        let count: Int
         if let summaryState = state.summaryState {
             status = L10n.voiceChatStatusMembersCountable(summaryState.participantCount)
+            count = summaryState.participantCount
         } else {
             status = L10n.voiceChatStatusLoading
+            count = 0
         }
-        let statusLayout = TextViewLayout.init(.initialize(string: status, color: GroupCallTheme.grayStatusColor, font: .normal(.text)), maximumNumberOfLines: 1)
-        statusLayout.measure(width: frame.width - 100)
-        statusView.update(statusLayout)
+
+        let dynamicResult = DynamicCounterTextView.make(for: status, count: "\(count)", font: .normal(.text), textColor: GroupCallTheme.grayStatusColor, width: frame.width - 140)
+
+        self.statusView.update(dynamicResult.values, animated: animated)
+
+        self.statusView.change(size: dynamicResult.size, animated: animated)
+        self.statusView.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - dynamicResult.size.width) / 2), frame.midY), animated: animated)
+
         needsLayout = true
     }
     
@@ -318,10 +292,10 @@ private final class GroupCallTitleView : View {
 }
 
 private final class GroupCallView : View {
-    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 440, 329))
-    let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 480, 54))
-    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 440, 329))
-    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 440, height: 400))
+    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 400, 281))
+    let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 440, 54))
+    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 400, 281))
+    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 400, height: 400))
     
     fileprivate var arguments: GroupCallUIArguments? {
         didSet {
@@ -385,7 +359,7 @@ private final class GroupCallView : View {
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
         peersTable.merge(with: transition)
-        titleView.update(state.peer, state)
+        titleView.update(state.peer, state, animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
         peersTableContainer.change(size: substrateRect().size, animated: animated)
@@ -794,7 +768,7 @@ final class GroupCallUIController : ViewController {
         } |> distinctUntilChanged
         
         
-        let initialSize = NSMakeSize(440, 360)
+        let initialSize = NSMakeSize(400, 360)
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let animated: Atomic<Bool> = Atomic(value: false)
         let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {})
