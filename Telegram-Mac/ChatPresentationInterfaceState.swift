@@ -110,6 +110,9 @@ struct GroupCallPanelData : Equatable {
         if (lhs.groupCall != nil) != (rhs.groupCall != nil) {
             return false
         }
+        if lhs.participantCount != rhs.participantCount {
+            return false
+        }
         return true
     }
 }
