@@ -224,7 +224,7 @@ class StickerPackPreviewModalController: ModalViewController {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
                 } else {
-                    interactions.sendAppFile(media, false)
+                    interactions.sendAppFile(media, false, nil)
                     self?.close()
                 }
             }

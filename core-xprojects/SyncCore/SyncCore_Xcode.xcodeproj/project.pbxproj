@@ -153,6 +153,7 @@
 		A701F92A236C1AF7002ABF81 /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F929236C1AF7002ABF81 /* SwiftSignalKit.framework */; };
 		A7393D2D2407A14800CE44CA /* TelegramMediaDice.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */; };
 		A754972623A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */; };
+		A76157FC258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76157FB258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift */; };
 		A7D28201236C379D0000A9BF /* PixelDimensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D28200236C379D0000A9BF /* PixelDimensions.swift */; };
 		D006030724D0172D00206226 /* ForwardCountMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */; };
 		D048EDD524FCFBEC00977606 /* ReplyThreadMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */; };
@@ -310,6 +311,7 @@
 		A701F929236C1AF7002ABF81 /* SwiftSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SwiftSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7393D2C2407A14800CE44CA /* TelegramMediaDice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramMediaDice.swift; sourceTree = "<group>"; };
 		A754972523A3A5860091F293 /* EmbeddedMediaStickersMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmbeddedMediaStickersMessageAttribute.swift; sourceTree = "<group>"; };
+		A76157FB258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiSearchQueryMessageAttribute.swift; sourceTree = "<group>"; };
 		A7D28200236C379D0000A9BF /* PixelDimensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelDimensions.swift; sourceTree = "<group>"; };
 		D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardCountMessageAttribute.swift; sourceTree = "<group>"; };
 		D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReplyThreadMessageAttribute.swift; sourceTree = "<group>"; };
@@ -359,6 +361,7 @@
 		A701F7C8236B2A11002ABF81 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				A76157FB258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift */,
 				D0D1391E25223790005FCF35 /* ValidationMessageAttribute.swift */,
 				D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */,
 				D006030624D0172D00206226 /* ForwardCountMessageAttribute.swift */,
@@ -670,6 +673,7 @@
 				A701F86E236B2A11002ABF81 /* TelegramDeviceContactImportedData.swift in Sources */,
 				A701F8C7236B2A12002ABF81 /* SynchronizePinnedChatsOperation.swift in Sources */,
 				A701F8A0236B2A11002ABF81 /* LocalizationListState.swift in Sources */,
+				A76157FC258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift in Sources */,
 				A701F8D4236B2A12002ABF81 /* AppChangelogState.swift in Sources */,
 				A701F896236B2A11002ABF81 /* TelegramTheme.swift in Sources */,
 				A701F860236B2A11002ABF81 /* CachedStickerQueryResult.swift in Sources */,

@@ -223,11 +223,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_call, action: arguments.makeVoiceChat))
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
             }
         } else if let cachedData = item.peerView.cachedData as? CachedGroupData {
             if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_call, action: arguments.makeVoiceChat))
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
             }
         }
         

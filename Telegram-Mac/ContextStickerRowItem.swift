@@ -78,7 +78,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
-                    item?.chatInteraction.sendAppFile(file, true)
+                    item?.chatInteraction.sendAppFile(file, true, nil)
                     item?.chatInteraction.clearInput()
                 }))
             }
@@ -128,7 +128,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                             showSlowModeTimeoutTooltip(slowMode, for: control)
                         } else {
-                            item?.chatInteraction.sendAppFile(data.file, false)
+                            item?.chatInteraction.sendAppFile(data.file, false, nil)
                             item?.chatInteraction.clearInput()
                         }
                     }, for: .Click)

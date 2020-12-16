@@ -450,7 +450,7 @@ class Sender: NSObject {
         return enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil)])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -460,6 +460,9 @@ class Sender: NSObject {
         }
         if let date = atDate {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+        }
+        if let query = query, !query.isEmpty {
+            attributes.append(EmojiSearchQueryMessageAttribute(query: query))
         }
         
         let replyId = chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId
@@ -484,11 +487,11 @@ class Sender: NSObject {
         }
     }
     
-    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate: Date? = nil) ->Signal<[MessageId?],NoError> {
-        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, chatInteraction: chatInteraction, silent: silent, atDate: atDate)
+    public static func enqueue(media:Media, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate: Date? = nil, query: String? = nil) ->Signal<[MessageId?],NoError> {
+        return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, chatInteraction: chatInteraction, silent: silent, atDate: atDate, query: query)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, query: String? = nil) ->Signal<[MessageId?],NoError> {
         
         
         let parsingUrlType: ParsingType
@@ -505,6 +508,9 @@ class Sender: NSObject {
         }
         if let date = atDate {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+        }
+        if let query = query, !query.isEmpty {
+            attributes.append(EmojiSearchQueryMessageAttribute(query: query))
         }
         
         let replyId = chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId

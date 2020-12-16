@@ -1158,14 +1158,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
             }
         }
         if microAccess {
-            var confirmation:Signal<Bool, NoError> = .single(true)
-            if sharedContext.hasActiveCall {
-                if let session = sharedContext.bindings.callSession(), session.peerId == peerId, !ignoreSame {
-                    return .single(.samePeer(session))
-                }
-                confirmation = confirmSignal(for: mainWindow, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
-            }
-            return confirmation |> filter { $0 } |> mapToSignal { _ in
+            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call) |> mapToSignal { _ in
                 return sharedContext.endCurrentCall()
             } |> mapToSignal { _ in
                 return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
@@ -1188,5 +1181,63 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
     }
 }
 
+enum CallConfirmationType {
+    case call
+    case voiceChat
+}
 
-
+func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType) -> Signal<Bool, NoError> {
+    if sharedContext.hasActiveCall {
+        let currentCallType: CallConfirmationType
+        let currentPeerId: PeerId
+        let currentAccount: Account
+        if let session = sharedContext.bindings.callSession() {
+            currentPeerId = session.peerId
+            currentAccount = session.account
+            currentCallType = .call
+        } else if let groupCall = sharedContext.bindings.groupCall()?.call {
+            currentPeerId = groupCall.peerId
+            currentAccount = groupCall.account
+            currentCallType = .voiceChat
+        } else {
+            fatalError("wtf")
+        }
+        let from = currentAccount.postbox.transaction {
+            return $0.getPeer(currentPeerId)
+        }
+        let to = account.postbox.transaction {
+            return $0.getPeer(newPeerId)
+        }
+        return combineLatest(from, to) |> map { (from: $0, to: $1) }
+        |> deliverOnMainQueue
+        |> mapToSignal { values in
+            let header: String
+            let text: String
+            switch currentCallType {
+            case .call:
+                header = L10n.callConfirmDiscardCallHeader
+            case .voiceChat:
+                header = L10n.callConfirmDiscardVoiceHeader
+            }
+            switch newCallType {
+            case .call:
+                switch currentCallType {
+                case .call:
+                    text = L10n.callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                case .voiceChat:
+                    text = L10n.callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                }
+            case .voiceChat:
+                switch currentCallType {
+                case .call:
+                    text = L10n.callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                case .voiceChat:
+                    text = L10n.callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                }
+            }
+            return confirmSignal(for: mainWindow, header: header, information: text, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel) |> filter { $0 }
+        }
+    } else {
+        return .single(true)
+    }
+}

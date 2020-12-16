@@ -651,11 +651,11 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             self?.closePopover()
         }
         interactions.sendSticker = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent)
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query)
             self?.closePopover()
         }
         interactions.sendGIF = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent)
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query)
             self?.closePopover()
         }
         interactions.sendEmoji = { [weak self] emoji in

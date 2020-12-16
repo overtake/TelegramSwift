@@ -249,41 +249,34 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
 
-        if let value = item.data.audioLevel {
-            let level = min(1.0, max(0.0, CGFloat(value)))
-            let avatarScale: CGFloat
-            if value > 0.0 {
-                avatarScale = 1.03 + level * 0.07
-            } else {
-                avatarScale = 1.0
-            }
+        let audioLevel = item.data.audioLevel ?? 0
+        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+        let avatarScale: CGFloat
+        if audioLevel > 0.0 {
+            avatarScale = 1.03 + level * 0.07
+        } else {
+            avatarScale = 1.0
+        }
 
-            
-            let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
 
-            let t = photoView.layer!.transform
-            let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+        let t = photoView.layer!.transform
+        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
 
+        if animated {
+            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                guard let `self` = self else {
+                    return
+                }
+                let rect = self.photoView.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                fr = CATransform3DScale(fr, value, value, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                self.photoView.layer?.transform = fr
+            }, completion: {
 
-            if animated {
-                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
-                    guard let `self` = self else {
-                        return
-                    }
-
-                    let rect = self.photoView.bounds
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
-                    fr = CATransform3DScale(fr, value, value, 1)
-                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                    self.photoView.layer?.transform = fr
-                }, completion: {
-
-                })
-            } else {
-                self.scaleAnimator = nil
-                self.photoView.layer?.transform = CATransform3DIdentity
-            }
+            })
         } else {
             self.scaleAnimator = nil
             self.photoView.layer?.transform = CATransform3DIdentity

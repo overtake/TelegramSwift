@@ -106,7 +106,7 @@ private final class GroupCallControlsView : View {
             case .connecting:
                 backgroundState = .connecting
         }
-
+        self.backgroundView.isDark = false
         self.backgroundView.update(state: backgroundState, animated: animated)
 
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
@@ -128,18 +128,29 @@ private final class GroupCallControlsView : View {
                 if let muteState = state.muteState {
                     if muteState.canUnmute {
                         statusText = L10n.voiceChatClickToUnmute
-                        if let pushToTalk = voiceSettings.pushToTalk {
-                            switch voiceSettings.mode {
-                            case .always:
+
+                        switch voiceSettings.mode {
+                        case .always:
+                            if let pushToTalk = voiceSettings.pushToTalk {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
-                            case .pushToTalk:
-                                secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
-                            case .none:
-                                secondary = nil
+                            } else {
+                                secondary = L10n.voiceChatClickToUnmuteSecondaryPressDefault
                             }
+                        case .pushToTalk:
+                            if let pushToTalk = voiceSettings.pushToTalk {
+                                secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
+                            } else {
+                                secondary = L10n.voiceChatClickToUnmuteSecondaryHoldDefault
+                            }
+                        case .none:
+                            secondary = nil
+                            
                         }
+
+
                     } else {
-                        statusText = L10n.voiceChatListenMode
+                        statusText = L10n.voiceChatMutedByAdmin
+                        secondary = L10n.voiceChatListenMode
                     }
                 } else {
                     statusText = L10n.voiceChatYouLive
@@ -845,7 +856,7 @@ final class GroupCallUIController : ViewController {
                         }
                     }
                 case .connecting:
-                    NSSound.beep()
+                    break
                 }
             }
         }))

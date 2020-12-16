@@ -484,10 +484,12 @@ final class CurveLayer: CAShapeLayer {
             if self.frame.size != oldValue.size {
                 self.fromPoints = nil
                 self.toPoints = nil
+                self.curveAnimation = nil
                 self.animateToNewShape()
             }
         }
     }
+    
 
     private var fromPoints: [CGPoint]?
     private var toPoints: [CGPoint]?

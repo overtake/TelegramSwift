@@ -614,6 +614,8 @@ func initialize() -> [String] {
     array.append("chat_voicechat_cant_unmute")
     array.append("chat_voicechat_unmuted")
 
+    array.append("profile_voice_chat")
+
     return array
 }
 //swift ./tools/generate-images.swift
