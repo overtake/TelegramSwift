@@ -157,7 +157,10 @@ class CallHeaderBasicView : NavigationHeaderView {
 
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
-        showInfoWindow()
+        let point = self.convert(event.locationInWindow, from: nil)
+        if let header = header, point.y <= header.height {
+            showInfoWindow()
+        }
     }
     
     var blueColor:NSColor {
