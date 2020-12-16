@@ -385,6 +385,8 @@ final class PushToTalk {
     private let monitor: KeyboardGlobalHandler
     private let spaceMonitor: KeyboardGlobalHandler
 
+    private let spaceEvent = PushToTalkValue(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: "⎵")
+
     init(sharedContext: SharedAccountContext, window: Window) {
         self.monitor = KeyboardGlobalHandler(mode: .global)
         self.spaceMonitor = KeyboardGlobalHandler(mode: .local(window))
@@ -393,15 +395,19 @@ final class PushToTalk {
         disposable.set(settings.start(next: { [weak self] settings in
             self?.updateSettings(settings)
         }))
-        
-        
-        self.spaceMonitor.setKeyDownHandler(.init(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: ""), success: { [weak self] result in
+        installSpaceMonitor()
+    }
+
+    private func installSpaceMonitor() {
+        self.spaceMonitor.setKeyDownHandler(spaceEvent, success: { [weak self] result in
             self?.proccess(result.eventType, false)
         })
-        self.spaceMonitor.setKeyUpHandler(.init(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: ""), success: { [weak self] result in
+        self.spaceMonitor.setKeyUpHandler(spaceEvent, success: { [weak self] result in
             self?.proccess(result.eventType, false)
         })
-    
+    }
+    private func deinstallSpaceMonitor() {
+        self.spaceMonitor.removeHandlers()
     }
     
     private func updateSettings(_ settings: VoiceCallSettings) {
@@ -415,8 +421,14 @@ final class PushToTalk {
                 self.monitor.setKeyDownHandler(event, success: {_ in
                     
                 })
+                if event == spaceEvent {
+                    deinstallSpaceMonitor()
+                } else {
+                    installSpaceMonitor()
+                }
             } else {
                 self.monitor.removeHandlers()
+                installSpaceMonitor()
             }
         case .pushToTalk:
             if let event = settings.pushToTalk {
@@ -426,11 +438,18 @@ final class PushToTalk {
                 self.monitor.setKeyDownHandler(event, success: { [weak self] result in
                     self?.proccess(result.eventType, performSound)
                 })
+                if event == spaceEvent {
+                    deinstallSpaceMonitor()
+                } else {
+                    installSpaceMonitor()
+                }
             } else {
                 self.monitor.removeHandlers()
+                installSpaceMonitor()
             }
         case .none:
             self.monitor.removeHandlers()
+            installSpaceMonitor()
         }
     }
     

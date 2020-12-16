@@ -51,7 +51,7 @@ final class VoiceChatActionButtonBackgroundView: View {
     private let foregroundCircleLayer = CAShapeLayer()
     private let growingForegroundCircleLayer = CAShapeLayer()
 
-    private let foregroundView = View()
+    private let foregroundLayer = CALayer()
     private let foregroundGradientLayer = CAGradientLayer()
 
     private let maskLayer = CALayer()
@@ -134,12 +134,12 @@ final class VoiceChatActionButtonBackgroundView: View {
 
         self.layer?.addSublayer(self.backgroundCircleLayer)
 
-        self.addSubview(self.foregroundView)
+        self.layer?.addSublayer(self.foregroundLayer)
         self.layer?.addSublayer(self.foregroundCircleLayer)
         self.layer?.addSublayer(self.growingForegroundCircleLayer)
 
-        self.foregroundView.layer?.addSublayer(self.foregroundGradientLayer)
-        self.foregroundView.layer?.mask = self.maskLayer
+        self.foregroundLayer.addSublayer(self.foregroundGradientLayer)
+        self.foregroundLayer.mask = self.maskLayer
 
         self.maskLayer.addSublayer(self.maskGradientLayer)
         self.maskLayer.addSublayer(self.maskProgressLayer)
@@ -393,7 +393,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             CATransaction.commit()
         }
 
-      //  self.growingForegroundCircleLayer.add(growthAnimation, forKey: "insideGrowth")
+        self.growingForegroundCircleLayer.add(growthAnimation, forKey: "insideGrowth")
         CATransaction.commit()
     }
 
@@ -635,7 +635,7 @@ final class VoiceChatActionButtonBackgroundView: View {
         self.growingForegroundCircleLayer.bounds = self.foregroundCircleLayer.bounds
         self.maskCircleLayer.frame = circleFrame.insetBy(dx: -progressLineWidth / 2.0, dy: -progressLineWidth / 2.0)
         self.maskProgressLayer.frame = circleFrame.insetBy(dx: -3.0, dy: -3.0)
-        self.foregroundView.frame = self.bounds
+        self.foregroundLayer.frame = self.bounds
         self.foregroundGradientLayer.frame = self.bounds
         self.maskGradientLayer.position = center
         self.maskGradientLayer.bounds = self.bounds

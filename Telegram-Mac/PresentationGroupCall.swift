@@ -1112,14 +1112,11 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
     let accounts = context.sharedContext.activeAccounts |> take(1)
     let account = context.account
     return combineLatest(queue: .mainQueue(), accounts, account.postbox.loadedPeerWithId(peerId)) |> mapToSignal { accounts, peer in
-        if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId {
+        if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId, context.call.account.id == account.id {
             return .single(.samePeer(context))
         } else {
-            var confirmation:Signal<Bool, NoError> = .single(true)
-            if sharedContext.hasActiveCall {
-                confirmation = confirmSignal(for: context.window, header: L10n.callConfirmDiscardCurrentHeader1, information: L10n.callConfirmDiscardCurrentDescription1, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel)
-            }
-            return confirmation |> filter { $0 } |> mapToSignal { _ in
+            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .voiceChat)
+            |> mapToSignal { _ in
                 return sharedContext.endCurrentCall()
             } |> map { _ in
                 return .success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer))

@@ -464,7 +464,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
             if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else {
-                self?.chatInteraction?.sendAppFile(file, silent)
+                self?.chatInteraction?.sendAppFile(file, silent, self?.searchState.request)
                 self?.makeSearchCommand?(.close)
                 self?.context.sharedContext.bindings.entertainment().closePopover()
             }

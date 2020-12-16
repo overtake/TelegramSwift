@@ -465,10 +465,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
         
         if let header = callHeader, header.needShown {
-            header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
+            header.view.setFrameSize(NSMakeSize(containerSize.width, header.realHeight))
         }
         if let header = header, header.needShown {
-            header.view.setFrameSize(NSMakeSize(containerSize.width, header.height))
+            header.view.setFrameSize(NSMakeSize(containerSize.width, header.realHeight))
         }
         
         if controller.isLoaded() {
@@ -612,7 +612,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         
         if let header = header, header.needShown {
-            header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.height)
+            header.view.frame = NSMakeRect(0, contentInset, containerView.frame.width, header.realHeight)
             containerView.addSubview(header.view, positioned: .below, relativeTo: self.navigationBar)
             contentInset += header.height
         }

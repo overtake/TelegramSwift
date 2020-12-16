@@ -2832,10 +2832,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             showModal(with: LocationModalController(self.chatInteraction), for: context.window)
         }
         
-        chatInteraction.sendAppFile = { [weak self] file, silent in
+        chatInteraction.sendAppFile = { [weak self] file, silent, query in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 func apply(_ controller: ChatController, atDate: Date?) {
-                    let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate, query: query) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
                 }
                 switch strongSelf.mode {
@@ -3610,7 +3610,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let first:Atomic<Bool> = Atomic(value: true)
-        
+        let account = self.context.account
         
         
         var availableGroupCall: Signal<GroupCallPanelData?, NoError>
@@ -3631,7 +3631,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                        return .single(nil)
                                    }
                                     return context.sharedContext.groupCallContext |> mapToSignal { groupCall in
-                                        if let context = groupCall, context.call.peerId == peerId {
+                                        if let context = groupCall, context.call.peerId == peerId && context.call.account.id == account.id {
                                             return context.call.summaryState
                                                 |> map { summary -> GroupCallPanelData in
                                                     if let summary = summary {

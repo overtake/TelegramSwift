@@ -231,6 +231,9 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
                     PermissionsManager.openInputMonitoringPrefs()
                 }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
                 index += 1
+            } else {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalkDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+                index += 1
             }
         }
     }

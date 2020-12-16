@@ -599,10 +599,26 @@ internal final class L10n {
   }
   /// Telegram needs access to camera for Video Call.
   internal static var callCameraError: String  { return L10n.tr("Localizable", "Call.Camera.Error") }
-  /// Finish the call and start a new one?
-  internal static var callConfirmDiscardCurrentDescription1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Description1") }
   /// Call in Progress
-  internal static var callConfirmDiscardCurrentHeader1: String  { return L10n.tr("Localizable", "Call.Confirm.DiscardCurrent.Header1") }
+  internal static var callConfirmDiscardCallHeader: String  { return L10n.tr("Localizable", "Call.Confirm.Discard.Call.Header") }
+  /// Finish call with "%1$@" and start a new one with "%2$@"?
+  internal static func callConfirmDiscardCallToCallText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Call.Confirm.Discard.Call.ToCall.Text", p1, p2)
+  }
+  /// Finish call with "%1$@" and start a voice chat with "%2$@"?
+  internal static func callConfirmDiscardCallToVoiceText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Call.Confirm.Discard.Call.ToVoice.Text", p1, p2)
+  }
+  /// Voice Chat in Progress
+  internal static var callConfirmDiscardVoiceHeader: String  { return L10n.tr("Localizable", "Call.Confirm.Discard.Voice.Header") }
+  /// Leave voice chat in "%1$@" and start a call with "%2$@?"
+  internal static func callConfirmDiscardVoiceToCallText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Call.Confirm.Discard.Voice.ToCall.Text", p1, p2)
+  }
+  /// Leave voice chat in "%1$@" and start a new one with "%2$@"
+  internal static func callConfirmDiscardVoiceToVoiceText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Call.Confirm.Discard.Voice.ToVoice.Text", p1, p2)
+  }
   /// Rate This Call
   internal static var callContextRate: String  { return L10n.tr("Localizable", "Call.Context.Rate") }
   /// Not Now
@@ -8183,6 +8199,8 @@ internal final class L10n {
   internal static var voiceChatListening: String  { return L10n.tr("Localizable", "VoiceChat.Listening") }
   /// You are in Listen Mode Only
   internal static var voiceChatListenMode: String  { return L10n.tr("Localizable", "VoiceChat.ListenMode") }
+  /// Muted By Admin
+  internal static var voiceChatMutedByAdmin: String  { return L10n.tr("Localizable", "VoiceChat.MutedByAdmin") }
   /// Mute
   internal static var voiceChatMutePeer: String  { return L10n.tr("Localizable", "VoiceChat.MutePeer") }
   /// Open Profile
@@ -8205,14 +8223,18 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
-  /// or hold %@
+  /// hold ⎵ or %@
   internal static func voiceChatClickToUnmuteSecondaryHold(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Hold", p1)
   }
-  /// or press %@
+  /// hold ⎵
+  internal static var voiceChatClickToUnmuteSecondaryHoldDefault: String  { return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.HoldDefault") }
+  /// press ⎵ or %@
   internal static func voiceChatClickToUnmuteSecondaryPress(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Press", p1)
   }
+  /// press ⎵
+  internal static var voiceChatClickToUnmuteSecondaryPressDefault: String  { return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.PressDefault") }
   /// Leave
   internal static var voiceChatEndOK: String  { return L10n.tr("Localizable", "VoiceChat.End.OK") }
   /// Are you sure you want to leave this voice chat?
@@ -8271,6 +8293,8 @@ internal final class L10n {
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
   /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
+  /// if voice chat window in focus you are able to use ⎵ as shortcut.
+  internal static var voiceChatSettingsPushToTalkDesc: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Desc") }
   /// Change Key
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }
   /// Enabled
