@@ -25,10 +25,11 @@ class SeparatorRowItem: GeneralRowItem {
     let state:SeparatorBlockState
     
     let leftInset: CGFloat?
-    
-    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: @escaping()->Void = {}, leftInset: CGFloat? = nil, border:BorderType = [], customTheme: GeneralRowItem.Theme = GeneralRowItem.Theme()) {
+    let itemAction: (()->Void)?
+    init(_ initialSize:NSSize, _ stableId:AnyHashable, string:String, right:String? = nil, state: SeparatorBlockState = .none, height:CGFloat = 20.0, action: (()->Void)? = nil, leftInset: CGFloat? = nil, border:BorderType = [], customTheme: GeneralRowItem.Theme = GeneralRowItem.Theme()) {
         self.leftInset = leftInset
         self.state = state
+        self.itemAction = action
         text = .initialize(string: string, color: customTheme.grayTextColor, font:.normal(.short))
         if let right = right {
             self.rightText = .initialize(string: right, color: customTheme.grayTextColor, font:.normal(.short))
@@ -37,7 +38,7 @@ class SeparatorRowItem: GeneralRowItem {
         }
         
         
-        super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: .legacy, action: action, border: border, error: nil, customTheme: customTheme)
+        super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: .legacy, border: border, error: nil, customTheme: customTheme)
     }
     override var instantlyResize: Bool {
         return true
@@ -83,7 +84,11 @@ class SeparatorRowView: TableRowView {
 
             let rect = NSMakeRect(frame.width - 10 - layout.size.width, round((frame.height - layout.size.height)/2.0), layout.size.width, frame.height)
             if NSPointInRect(point, rect) {
-                item.action()
+                if let itemAction = item.itemAction {
+                    itemAction()
+                } else {
+                    super.mouseDown(with: event)
+                }
             }
         } else {
             super.mouseDown(with: event)
