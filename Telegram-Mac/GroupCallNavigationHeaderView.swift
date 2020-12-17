@@ -19,6 +19,10 @@ private let blue = NSColor(rgb: 0x0078ff)
 private let lightBlue = NSColor(rgb: 0x59c7f8)
 private let green = NSColor(rgb: 0x33c659)
 
+private let purple =  NSColor(rgb: 0x766EE9)
+private let lightPurple =  NSColor(rgb: 0xF05459)
+
+
 
 private class CallStatusBarBackgroundView: View {
     private let foregroundView: View
@@ -31,17 +35,22 @@ private class CallStatusBarBackgroundView: View {
     }
     
 
-    var speaking:(Bool, Bool)? = nil {
+    var speaking:(Bool, Bool, Bool)? = nil {
         didSet {
-            if let speaking = self.speaking, (speaking.0 != oldValue?.0 || speaking.1 != oldValue?.1) {
+            if let speaking = self.speaking, (speaking.0 != oldValue?.0 || speaking.1 != oldValue?.1 || speaking.2 != oldValue?.2) {
                 let initialColors = self.foregroundGradientLayer.colors
                 let targetColors: [CGColor]
                 if speaking.1 {
-                    if speaking.0 {
-                        targetColors = [green.cgColor, blue.cgColor]
+                    if speaking.2 {
+                        if speaking.0 {
+                            targetColors = [green.cgColor, blue.cgColor]
+                        } else {
+                            targetColors = [blue.cgColor, lightBlue.cgColor]
+                        }
                     } else {
-                        targetColors = [blue.cgColor, lightBlue.cgColor]
+                        targetColors = [purple.cgColor, lightPurple.cgColor]
                     }
+
                 } else {
                     targetColors = [theme.colors.grayIcon.cgColor, theme.colors.grayIcon.lighter().cgColor]
                 }
@@ -260,7 +269,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             isConnected = true
         }
 
-        self._backgroundView.speaking = (isConnected && !isMuted, isConnected)
+        self._backgroundView.speaking = (isConnected && !isMuted, isConnected, state.muteState?.canUnmute ?? true)
 
 
         setMicroIcon(isMuted ? theme.icons.callInlineMuted : theme.icons.callInlineUnmuted)

@@ -76,6 +76,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         let cachedContacts = self.cachedContacts
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
+        let peer = data.call.peer
         return search |> mapToSignal { search in
             var contacts:Signal<([Peer], [PeerId : PeerPresence]), NoError>
             if search.request.isEmpty {
@@ -100,21 +101,48 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             let globalSearch: Signal<[Peer], NoError>
             if search.request.isEmpty {
                 globalSearch = .single([])
-            } else {
+            } else if let peer = peer, peer.groupAccess.canAddMembers {
                 globalSearch = searchPeers(account: account, query: search.request) |> map {
                     return $0.1.map {
                         $0.peer
                     }
                 }
+            } else {
+                globalSearch = .single([])
             }
-            
-            let groupMembers:Signal<[RenderedChannelParticipant], NoError> = Signal { subscriber in
-                let (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
-                    if case .ready = state.loadingState {
-                        subscriber.putNext(state.list)
-                        subscriber.putCompletion()
+
+            struct Participant {
+                let peer: Peer
+                let presence: PeerPresence?
+            }
+
+            let groupMembers:Signal<[Participant], NoError> = Signal { subscriber in
+                let disposable: Disposable
+                if peerId.namespace == Namespaces.Peer.CloudChannel {
+                    (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
+                        if case .ready = state.loadingState {
+                            subscriber.putNext(state.list.map {
+                                return Participant(peer: $0.peer, presence: $0.presences[$0.peer.id])
+                            })
+                            subscriber.putCompletion()
+                        }
+                    })
+                } else {
+                    let signal: Signal<[Participant], NoError> = account.postbox.peerView(id: peerId) |> map { peerView in
+                        let participants = (peerView.cachedData as? CachedGroupData)?.participants
+                        let list:[Participant] = participants?.participants.compactMap { value in
+                            if let peer = peerView.peers[value.peerId] {
+                                return Participant(peer: peer, presence: peerView.peerPresences[value.peerId])
+                            } else {
+                                return nil
+                            }
+                        } ?? []
+                        return list
                     }
-                })
+                    disposable = signal.start(next: { list in
+                        subscriber.putNext(list)
+                    })
+                }
                 return disposable
             }
             
@@ -126,7 +154,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     }
                     return !value.peer.isBot
                 }.map {
-                    InvitationPeer(peer: $0.peer, presence: $0.presences[$0.peer.id], contact: false, enabled: !invited.contains($0.peer.id))
+                    InvitationPeer(peer: $0.peer, presence: $0.presence, contact: false, enabled: !invited.contains($0.peer.id))
                 }
                 var contactList:[InvitationPeer] = []
                 for contact in contacts.0 {
@@ -160,6 +188,12 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     } else if let privateLink = cachedData.exportedInvitation {
                         return privateLink.link
                     }
+                } else if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedGroupData {
+                    if let addressName = peer.addressName, !addressName.isEmpty {
+                        return "https://t.me/@\(addressName)"
+                    } else if let privateLink = cachedData.exportedInvitation {
+                        return privateLink.link
+                    }
                 }
                 return nil
             }
@@ -180,7 +214,6 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     index += 1
                 }
                 
-                var ids:Set<PeerId> = Set()
                 
                 for member in members.0 {
                     entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
@@ -213,7 +246,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 let updatedSearch = previousSearch.swap(search.request) != search.request
                 
                 if entries.isEmpty {
-                    entries.append(.searchEmpty)
+                    entries.append(.searchEmpty(customTheme(), NSImage(named: "Icon_EmptySearchResults")!.precomposed(customTheme().grayTextColor)))
                 }
                 
                 return (entries, updatedSearch)
@@ -233,7 +266,6 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager
 
-    
     return selectModalPeers(window: window, account: data.call.account, title: L10n.voiceChatInviteTitle, settings: [], excludePeerIds: [], limit: 1, behavior: behaviour, confirmation: { [weak behaviour, weak window] peerIds in
         
         guard let peerId = peerIds.first, let behaviour = behaviour, let window = window else {
@@ -246,10 +278,20 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                 return confirmSignal(for: window, information: L10n.voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: L10n.voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
                     |> take(1)
                 |> mapToSignal { _ in
-                    return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
-                        return true
+                    if peerId.namespace == Namespaces.Peer.CloudChannel {
+                        return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
+                            return true
+                        }
+                    } else {
+                        return addGroupMember(account: account, peerId: callPeerId, memberId: peerId)
+                        |> map {
+                            return true
+                        } |> `catch` { _ in
+                            return .single(false)
+                        }
                     }
-                }
+
+                } |> deliverOnMainQueue
                 
             }
         } else {
