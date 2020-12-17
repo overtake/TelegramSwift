@@ -96,13 +96,39 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     return ([], [:])
                 }
             }
-            let groupMembers:Signal<[RenderedChannelParticipant], NoError> = Signal { subscriber in
-                let (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
-                    if case .ready = state.loadingState {
-                        subscriber.putNext(state.list)
-                        subscriber.putCompletion()
+
+            struct Participant {
+                let peer: Peer
+                let presence: PeerPresence?
+            }
+
+            let groupMembers:Signal<[Participant], NoError> = Signal { subscriber in
+                let disposable: Disposable
+                if peerId.namespace == Namespaces.Peer.CloudChannel {
+                    (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
+                        if case .ready = state.loadingState {
+                            subscriber.putNext(state.list.map {
+                                return Participant(peer: $0.peer, presence: $0.presences[$0.peer.id])
+                            })
+                            subscriber.putCompletion()
+                        }
+                    })
+                } else {
+                    let signal: Signal<[Participant], NoError> = account.postbox.peerView(id: peerId) |> map { peerView in
+                        let participants = (peerView.cachedData as? CachedGroupData)?.participants
+                        let list:[Participant] = participants?.participants.compactMap { value in
+                            if let peer = peerView.peers[value.peerId] {
+                                return Participant(peer: peer, presence: peerView.peerPresences[value.peerId])
+                            } else {
+                                return nil
+                            }
+                        } ?? []
+                        return list
                     }
-                })
+                    disposable = signal.start(next: { list in
+                        subscriber.putNext(list)
+                    })
+                }
                 return disposable
             }
             
@@ -114,7 +140,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     }
                     return !value.peer.isBot
                 }.map {
-                    InvitationPeer(peer: $0.peer, presence: $0.presences[$0.peer.id], contact: false, enabled: !invited.contains($0.peer.id))
+                    InvitationPeer(peer: $0.peer, presence: $0.presence, contact: false, enabled: !invited.contains($0.peer.id))
                 }
                 var contactList:[InvitationPeer] = []
                 for contact in contacts.0 {
@@ -130,6 +156,12 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             
             let inviteLink: Signal<String?, NoError> = account.viewTracker.peerView(peerId) |> map { peerView in
                 if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedChannelData {
+                    if let addressName = peer.addressName, !addressName.isEmpty {
+                        return "https://t.me/@\(addressName)"
+                    } else if let privateLink = cachedData.exportedInvitation {
+                        return privateLink.link
+                    }
+                } else if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedGroupData {
                     if let addressName = peer.addressName, !addressName.isEmpty {
                         return "https://t.me/@\(addressName)"
                     } else if let privateLink = cachedData.exportedInvitation {
@@ -206,10 +238,20 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                 return confirmSignal(for: window, information: L10n.voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: L10n.voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
                     |> take(1)
                 |> mapToSignal { _ in
-                    return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
-                        return true
+                    if peerId.namespace == Namespaces.Peer.CloudChannel {
+                        return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
+                            return true
+                        }
+                    } else {
+                        return addGroupMember(account: account, peerId: callPeerId, memberId: peerId)
+                        |> map {
+                            return true
+                        } |> `catch` { _ in
+                            return .single(false)
+                        }
                     }
-                }
+
+                } |> deliverOnMainQueue
                 
             }
         } else {

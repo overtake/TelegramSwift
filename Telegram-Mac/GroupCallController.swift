@@ -319,6 +319,8 @@ private final class GroupCallView : View {
         peersTableContainer.layer?.cornerRadius = 10
         peersTable.layer?.cornerRadius = 10
         updateLocalizationAndTheme(theme: theme)
+
+        peersTable._mouseDownCanMoveWindow = true
         
         peersTable.getBackgroundColor = {
             .clear
@@ -707,8 +709,14 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { _ in
-                _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
+            modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
+
+                if peerId.namespace == Namespaces.Peer.CloudChannel {
+                    _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
+                } else if let window = window {
+                    _ = showModalProgress(signal: removePeerMember(account: account, peerId: peerId, memberId: peer.id), for: window).start()
+                }
+
             }, appearance: darkPalette.appearance)
         }, openInfo: { peerId in
             appDelegate?.navigateProfile(peerId, account: account)
