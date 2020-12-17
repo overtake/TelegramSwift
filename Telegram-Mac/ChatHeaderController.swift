@@ -1639,13 +1639,13 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall)
+                self.chatInteraction.joinGroupCall(data.activeCall, false)
             }
         }, for: .SingleClick)
         
         button.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall)
+                self.chatInteraction.joinGroupCall(data.activeCall, false)
             }
         }, for: .SingleClick)
         
@@ -1791,15 +1791,15 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             }
         }
 
-        let subviews = avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }
+        let subviewsCount = max(avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }.count, 1)
 
-        if subviews.count == 3 {
+        if subviewsCount == 3 {
             self.avatarsContainer.setFrameOrigin(self.focus(self.avatarsContainer.frame.size).origin)
         } else {
-            let count = CGFloat(subviews.count)
+            let count = CGFloat(subviewsCount)
             if count != 0 {
                 let animated = animated && self.data?.data?.activeSpeakers.count != 0
-                let avatarSize: CGFloat = subviews.map { $0.frame.maxX }.max() ?? 0
+                let avatarSize: CGFloat = avatarsContainer.subviews.map { $0.frame.maxX }.max() ?? 0
                 let pos = NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2), self.avatarsContainer.frame.minY)
                 self.avatarsContainer.change(pos: pos, animated: animated)
             }
@@ -1862,12 +1862,12 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         super.layout()
         joinButton.centerY(x: frame.width - joinButton.frame.width - 23)
         
-        let subviews = avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }
+        let subviewsCount = max(avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }.count, 1)
         
-        if subviews.count == 3 || subviews.count == 0 {
+        if subviewsCount == 3 || subviewsCount == 0 {
             self.avatarsContainer.center()
         } else {
-            let count = CGFloat(subviews.count)
+            let count = CGFloat(subviewsCount)
             let avatarSize: CGFloat = (count * 30) - ((count - 1) * 3)
             self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
         }

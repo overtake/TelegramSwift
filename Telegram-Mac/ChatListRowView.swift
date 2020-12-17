@@ -385,6 +385,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
     }
     
+    
+    
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
             if item.isCollapsed {
@@ -402,7 +404,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isFixedItem && !item.isSelected {
                 return theme.chatList.pinnedBackgroundColor
             }
-            
             return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
         }
         return theme.colors.background
@@ -722,7 +723,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
                 
-                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: item.isSelected ? .white : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: item.isSelected ? theme.colors.accentSelect : theme.colors.underSelectedColor)
+                let isActive = item.context.sharedContext.layout != .single && item.isSelected
+                
+                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
                 if animated && animate {
                     groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
                     groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)

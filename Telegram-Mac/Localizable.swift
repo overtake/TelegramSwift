@@ -847,6 +847,8 @@ internal final class L10n {
   internal static func channelAdminLogAllowedNewMembersToSpeak(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.AllowedNewMembersToSpeak", p1)
   }
+  /// Manage Voice Chats
+  internal static var channelAdminLogCanManageCalls: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanManageCalls") }
   /// %1$@ ended voice chat
   internal static func channelAdminLogEndedVoiceChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.EndedVoiceChat", p1)
@@ -2175,11 +2177,11 @@ internal final class L10n {
   internal static func chatServiceVoiceChatInvitationForYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatInvitationForYou", p1)
   }
-  /// %1$@ started [voice chat](open)
+  /// %1$@ started a [voice chat](open)
   internal static func chatServiceVoiceChatStarted(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted", p1)
   }
-  /// You started [voice chat](open)
+  /// You started a [voice chat](open)
   internal static var chatServiceVoiceChatStartedYou: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStartedYou") }
   /// You
   internal static var chatServiceYou: String  { return L10n.tr("Localizable", "Chat.Service.You") }
@@ -2895,11 +2897,11 @@ internal final class L10n {
   internal static func chatListServiceVoiceChatInvitationForYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VoiceChatInvitationForYou", p1)
   }
-  /// %1$@ started voice chat
+  /// %1$@ started a voice chat
   internal static func chatListServiceVoiceChatStarted(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted", p1)
   }
-  /// You started voice chat
+  /// You started a voice chat
   internal static var chatListServiceVoiceChatStartedYou: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStartedYou") }
   /// Cancelled Call
   internal static var chatListServiceCallCancelled: String  { return L10n.tr("Localizable", "ChatList.Service.Call.Cancelled") }
@@ -8223,6 +8225,12 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
+  /// Voice chat ended.
+  internal static var voiceChatChatEnded: String  { return L10n.tr("Localizable", "VoiceChat.Chat.Ended") }
+  /// Voice chat ended. Start a new one?
+  internal static var voiceChatChatStartNew: String  { return L10n.tr("Localizable", "VoiceChat.Chat.StartNew") }
+  /// Start
+  internal static var voiceChatChatStartNewOK: String  { return L10n.tr("Localizable", "VoiceChat.Chat.StartNew.OK") }
   /// hold ⎵ or %@
   internal static func voiceChatClickToUnmuteSecondaryHold(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.ClickToUnmute.Secondary.Hold", p1)
@@ -8293,7 +8301,7 @@ internal final class L10n {
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
   /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
-  /// if voice chat window in focus you are able to use ⎵ as shortcut.
+  /// When the Voice Chat window is in focus, you can also use ⎵ regardless of this setting.
   internal static var voiceChatSettingsPushToTalkDesc: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Desc") }
   /// Change Key
   internal static var voiceChatSettingsPushToTalkEditKeybind: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.EditKeybind") }

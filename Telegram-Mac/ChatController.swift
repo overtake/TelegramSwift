@@ -3055,15 +3055,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.joinGroupCall = { activeCall in
-            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: activeCall), for: context.window).start(next: { result in
-                switch result {
-                case let .success(callContext), let .samePeer(callContext):
-                    applyGroupCallResult(context.sharedContext, callContext)
-                default:
-                    alert(for: context.window, info: L10n.errorAnError)
+        chatInteraction.joinGroupCall = { [weak self] activeCall, serviceClick in
+            var currentActiveCall = self?.chatInteraction.presentation.groupCall?.activeCall
+            var activeCall: CachedChannelData.ActiveCall? = activeCall
+            if currentActiveCall == nil {
+                activeCall = nil
+            }
+            if activeCall != currentActiveCall {
+                currentActiveCall = activeCall
+            } 
+            if let activeCall = currentActiveCall {
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: activeCall), for: context.window).start(next: { result in
+                    switch result {
+                    case let .success(callContext), let .samePeer(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                    default:
+                        alert(for: context.window, info: L10n.errorAnError)
+                    }
+                })
+            } else if let peer = self?.chatInteraction.peer {
+                if peer.groupAccess.canMakeVoiceChat {
+                    confirm(for: context.window, information: L10n.voiceChatChatStartNew, okTitle: L10n.voiceChatChatStartNewOK, successHandler: { _ in
+                        createVoiceChat(context: context, peerId: peerId)
+                    })
+                } else {
+                    alert(for: context.window, info: L10n.voiceChatChatEnded)
                 }
-            })
+            }
         }
         
         chatInteraction.returnGroup = { [weak self] in
@@ -5106,16 +5124,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.genericView.inputView.makeMonospace()
             return .invoked
         }, with: self, for: .K, priority: .medium, modifierFlags: [.command, .shift])
-        
-        
-        #if DEBUG
-        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if let groupCall = self?.chatInteraction.presentation.groupCall {
-                self?.chatInteraction.joinGroupCall(groupCall.activeCall)
-            }
-            return .invoked
-        }, with: self, for: .Y, priority: .medium, modifierFlags: [.command])
-        #endif
         
         
         self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in

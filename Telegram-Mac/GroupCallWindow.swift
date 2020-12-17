@@ -187,6 +187,7 @@ final class GroupCallContext {
         _ = call.sharedContext.endGroupCall(terminate: false).start()
     }
     func leaveSignal() -> Signal<Bool, NoError> {
+        self.controller.disableSounds = true
         return call.sharedContext.endGroupCall(terminate: false)
     }
     
