@@ -96,6 +96,18 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     return ([], [:])
                 }
             }
+            
+            let globalSearch: Signal<[Peer], NoError>
+            if search.request.isEmpty {
+                globalSearch = .single([])
+            } else {
+                globalSearch = searchPeers(account: account, query: search.request) |> map {
+                    return $0.1.map {
+                        $0.peer
+                    }
+                }
+            }
+            
             let groupMembers:Signal<[RenderedChannelParticipant], NoError> = Signal { subscriber in
                 let (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
                     if case .ready = state.loadingState {
@@ -107,7 +119,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             }
             
             
-            let allMembers: Signal<([InvitationPeer], [InvitationPeer]), NoError> = combineLatest(groupMembers, members, contacts, invited) |> map { recent, participants, contacts, invited in
+            let allMembers: Signal<([InvitationPeer], [InvitationPeer], [InvitationPeer]), NoError> = combineLatest(groupMembers, members, contacts, globalSearch, invited) |> map { recent, participants, contacts, global, invited in
                 let membersList = recent.filter { value in
                     if participants.participants.contains(where: { $0.peer.id == value.peer.id }) {
                         return false
@@ -124,8 +136,21 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                         contactList.append(InvitationPeer(peer: contact, presence: contacts.1[contact.id], contact: true, enabled: !invited.contains(contact.id)))
                     }
                 }
+                
+                var globalList:[InvitationPeer] = []
+                
+                for peer in global {
+                    let containsInCall = participants.participants.contains(where: { $0.peer.id == peer.id })
+                    let containsInMembers = membersList.contains(where: { $0.peer.id == peer.id })
+                    let containsInContacts = !contactList.contains(where: { $0.peer.id == peer.id })
+                    
+                    if !containsInMembers && !containsInCall && !containsInContacts {
+                        globalList.append(.init(peer: peer, presence: nil, contact: false, enabled: !invited.contains(peer.id)))
+                    }
+                }
+                
                 _ = cachedContacts.swap(contactList.map { $0.peer.id })
-                return (membersList, contactList)
+                return (membersList, contactList, globalList)
             }
             
             let inviteLink: Signal<String?, NoError> = account.viewTracker.peerView(peerId) |> map { peerView in
@@ -155,6 +180,8 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     index += 1
                 }
                 
+                var ids:Set<PeerId> = Set()
+                
                 for member in members.0 {
                     entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
                     index += 1
@@ -169,6 +196,19 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
                     index += 1
                 }
+                
+                if !members.2.isEmpty {
+                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteGlobalSearch))
+                    index += 1
+                }
+                
+                
+                for member in members.2 {
+                    entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
+                    index += 1
+                }
+                
+                
                 
                 let updatedSearch = previousSearch.swap(search.request) != search.request
                 
