@@ -37,7 +37,7 @@ enum SelectPeerEntryStableId : Hashable {
 
 enum SelectPeerEntry : Comparable, Identifiable {
     case peer(SelectPeerValue, Int32, Bool)
-    case searchEmpty
+    case searchEmpty(GeneralRowItem.Theme, CGImage)
     case separator(Int32, GeneralRowItem.Theme, String)
     case inviteLink(String, GeneralRowItem.Theme, ()->Void)
     var stableId: SelectPeerEntryStableId {
@@ -55,8 +55,8 @@ enum SelectPeerEntry : Comparable, Identifiable {
     
     static func ==(lhs:SelectPeerEntry, rhs:SelectPeerEntry) -> Bool {
         switch lhs {
-        case .searchEmpty:
-            if case .searchEmpty = rhs {
+        case let .searchEmpty(theme, _):
+            if case .searchEmpty(theme, _) = rhs {
                 return true
             } else {
                 return false
@@ -273,7 +273,7 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
         }
         
         if entries.count == 1 {
-            entries.append(.searchEmpty)
+            entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
         }
     }
 
@@ -329,7 +329,7 @@ private func searchEntriesForPeers(_ peers:[SelectPeerValue], _ global: [SelectP
     }
     
     if entries.isEmpty && !isLoading {
-        entries.append(.searchEmpty)
+        entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
     }
     
     return entries
@@ -361,8 +361,8 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                         singleAction(peer.peer)
                     }
                 }, customTheme: peer.customTheme)
-            case .searchEmpty:
-                return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
+            case let .searchEmpty(theme, icon):
+                return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: icon, customTheme: theme)
             case let .separator(_, customTheme, text):
                 return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased(), customTheme: customTheme)
             case let .inviteLink(text, customTheme, action):
@@ -771,7 +771,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     }
     
     if entries.isEmpty && !isLoading {
-        entries.append(.searchEmpty)
+        entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
     }
     
     return entries
@@ -806,7 +806,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                     let updatedSearch = previousSearch.swap(search.request) != search.request
 
                     if entries.isEmpty {
-                        return .single(([.searchEmpty], updatedSearch))
+                        return .single(([.searchEmpty(.init(), theme.icons.emptySearch)], updatedSearch))
                     } else {
                         var common:[SelectPeerEntry] = []
                         var index:Int32 = 0
@@ -827,7 +827,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
 
                     
                     if entries.isEmpty {
-                        common.append(.searchEmpty)
+                        common.append(.searchEmpty(.init(), theme.icons.emptySearch))
                     } else {
                         var index:Int32 = 0
                         for peer in entries {

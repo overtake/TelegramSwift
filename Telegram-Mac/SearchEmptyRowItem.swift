@@ -16,16 +16,16 @@ class SearchEmptyRowItem: GeneralRowItem {
     let text:TextViewLayout?
 
     
-    init(_ initialSize: NSSize, stableId:AnyHashable, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy) {
+    init(_ initialSize: NSSize, stableId:AnyHashable, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil) {
         self.isLoading = isLoading
         self.icon = icon
         if let text = text {
-            self.text = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
+            self.text = TextViewLayout(.initialize(string: text, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.title)), alignment: .center)
             self.text?.measure(width: initialSize.width - 60)
         } else {
             self.text = nil
         }
-        super.init(initialSize, stableId: stableId, viewType: viewType, border: border)
+        super.init(initialSize, stableId: stableId, viewType: viewType, border: border, customTheme: customTheme)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -73,6 +73,9 @@ class SearchEmptyRowView : TableRowView {
 
     override var backdorColor: NSColor {
         if let item = item as? SearchEmptyRowItem {
+            if let customTheme = item.customTheme {
+                return customTheme.backgroundColor
+            }
             return item.viewType.rowBackground
         } else {
             return super.backdorColor
