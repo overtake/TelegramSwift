@@ -279,22 +279,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func makeVoiceChat() {
-        let context = self.context
-        let peerId = self.peerId
-        let requestCall = createGroupCall(account: context.account, peerId: peerId) |> mapToSignal { call in
-            return requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
-        }
-        
-        _ = showModalProgress(signal: requestCall, for: context.window).start(next: { result in
-            switch result {
-            case let .success(callContext), let .samePeer(callContext):
-                applyGroupCallResult(context.sharedContext, callContext)
-            default:
-                alert(for: context.window, info: L10n.errorAnError)
-            }
-        }, error: { error in
-            alert(for: context.window, info: L10n.errorAnError)
-        })
+        createVoiceChat(context: context, peerId: peerId)
     }
     
     func showMore() {

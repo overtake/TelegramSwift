@@ -151,7 +151,7 @@ final class ChatInteraction : InterfaceObserver  {
     var scrollToTheFirst: () -> Void = {}
     var openReplyThread:(MessageId, Bool, Bool, ReplyThreadMode)->Void = {  _, _, _, _ in }
     
-    var joinGroupCall:(CachedChannelData.ActiveCall)->Void = { _ in }
+    var joinGroupCall:(CachedChannelData.ActiveCall, Bool)->Void = { _, _ in }
 
     func chatLocationInput() -> ChatLocationInput {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())

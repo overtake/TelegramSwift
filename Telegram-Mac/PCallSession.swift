@@ -1225,12 +1225,12 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
                 case .call:
                     text = L10n.callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
-                    text = L10n.callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = L10n.callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             case .voiceChat:
                 switch currentCallType {
                 case .call:
-                    text = L10n.callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = L10n.callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
                     text = L10n.callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }

@@ -449,7 +449,7 @@ final class PushToTalk {
             }
         case .none:
             self.monitor.removeHandlers()
-            installSpaceMonitor()
+            deinstallSpaceMonitor()
         }
     }
     

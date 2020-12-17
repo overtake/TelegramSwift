@@ -5,6 +5,7 @@ import SyncCore
 import SwiftSignalKit
 import AVFoundation
 import TelegramVoip
+import TGUIKit
 
 protocol AccountGroupCallContext: class {
 }
@@ -1136,4 +1137,29 @@ private func startGroupCall(context: AccountContext, peerId: PeerId, initialCall
         peerId: peerId,
         peer: peer
     ), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
+}
+
+func createVoiceChat(context: AccountContext, peerId: PeerId) {
+    let confirmation = makeNewCallConfirmation(account: context.account, sharedContext: context.sharedContext, newPeerId: peerId, newCallType: .voiceChat) |> mapToSignalPromotingError { _ in
+        return createGroupCall(account: context.account, peerId: peerId)
+    }
+
+    let requestCall = confirmation |> mapToSignal { call in
+        return requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
+    }
+    
+    _ = showModalProgress(signal: requestCall, for: context.window).start(next: { result in
+        switch result {
+        case let .success(callContext), let .samePeer(callContext):
+            applyGroupCallResult(context.sharedContext, callContext)
+        default:
+            alert(for: context.window, info: L10n.errorAnError)
+        }
+    }, error: { error in
+        if case .anonymousNotAllowed = error {
+            alert(for: context.window, info: L10n.voiceChatAnonymousDisabledAlertText)
+        } else {
+            alert(for: context.window, info: L10n.errorAnError)
+        }
+    })
 }

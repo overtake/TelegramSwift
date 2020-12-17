@@ -71,6 +71,8 @@ extension TelegramChatAdminRightsFlags {
             return tr(L10n.eventLogServicePromotePostMessages)
         case TelegramChatAdminRightsFlags.canBeAnonymous:
             return tr(L10n.eventLogServicePromoteRemainAnonymous)
+        case TelegramChatAdminRightsFlags.canManageCalls:
+            return L10n.channelAdminLogCanManageCalls
         default:
             return "Undefined Promotion"
         }

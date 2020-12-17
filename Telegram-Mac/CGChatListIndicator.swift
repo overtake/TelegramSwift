@@ -14,7 +14,10 @@ final class GCChatListIndicator : View {
 
     var color: NSColor = NSColor.white {
         didSet {
-            needsDisplay = true
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            (self.layer as? CAShapeLayer)?.fillColor = color.cgColor
+            CATransaction.commit()
         }
     }
 
@@ -84,7 +87,6 @@ final class GCChatListIndicator : View {
                 innerProgress = 0
             }
             if visibleRect != .zero {
-                (self.layer as? CAShapeLayer)?.fillColor = color.cgColor
                 (self.layer as? CAShapeLayer)?.path = genPath()
             }
         }
@@ -130,50 +132,7 @@ final class GCChatListIndicator : View {
         
         return p1
     }
-    
-//    override func draw(_ layer: CALayer, in ctx: CGContext) {
-//        super.draw(layer, in: ctx)
-//
-//        let rect = self.bounds
-//
-//        var size1: CGFloat = 0;
-//        var size2: CGFloat = 0;
-//        if (progressStage == 0) {
-//            size1 = 2 + 8 * innerProgress
-//            size2 = 6 - 4 * innerProgress
-//        } else if (progressStage == 1) {
-//            size1 = 10 - 8 * innerProgress
-//            size2 = 2 + 8 * innerProgress
-//        } else if (progressStage == 2) {
-//            size1 = 2 + 4 * innerProgress
-//            size2 = 10 - 8 * innerProgress
-//        } else if (progressStage == 3) {
-//            size1 = 6 - 4 * innerProgress
-//            size2 = 2 + 4 * innerProgress
-//        } else if (progressStage == 4) {
-//            size1 = 2 + 8 * innerProgress
-//            size2 = 6 - 4 * innerProgress
-//        } else if (progressStage == 5) {
-//            size1 = 10 - 8 * innerProgress
-//            size2 = 2 + 8 * innerProgress
-//        } else if (progressStage == 6) {
-//            size1 = 2 + 8 * innerProgress
-//            size2 = 10 - 8 * innerProgress
-//        } else {
-//            size1 = 10 - 8 * innerProgress
-//            size2 = 2 + 4 * innerProgress
-//        }
-//
-//        ctx.setFillColor(color.cgColor)
-//
-//        let p1 = CGMutablePath()
-//        p1.addRoundedRect(in: .init(origin: NSMakePoint(0, rect.midY - size2 / 2), size: NSMakeSize(2, size2)), cornerWidth: 1, cornerHeight: 1)
-//        p1.addRoundedRect(in: .init(origin: NSMakePoint(4, rect.midY - size1 / 2), size: NSMakeSize(2, size1)), cornerWidth: 1, cornerHeight: 1)
-//        p1.addRoundedRect(in: .init(origin: NSMakePoint(8, rect.midY - size2 / 2), size: NSMakeSize(2, size2)), cornerWidth: 1, cornerHeight: 1)
-//        ctx.addPath(p1)
-//        ctx.fillPath()
-//
-//    }
+
 
 }
 

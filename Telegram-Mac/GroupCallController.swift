@@ -111,15 +111,11 @@ private final class GroupCallControlsView : View {
 
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
 
-        
         if state != preiousState {
-            
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
             settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
-
         }
-
         let statusText: String
         var secondary: String? = nil
         switch state.networkState {
@@ -128,26 +124,22 @@ private final class GroupCallControlsView : View {
                 if let muteState = state.muteState {
                     if muteState.canUnmute {
                         statusText = L10n.voiceChatClickToUnmute
-
                         switch voiceSettings.mode {
                         case .always:
-                            if let pushToTalk = voiceSettings.pushToTalk {
+                            if let pushToTalk = voiceSettings.pushToTalk, !pushToTalk.isSpace {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
                             } else {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryPressDefault
                             }
                         case .pushToTalk:
-                            if let pushToTalk = voiceSettings.pushToTalk {
+                            if let pushToTalk = voiceSettings.pushToTalk, !pushToTalk.isSpace {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
                             } else {
                                 secondary = L10n.voiceChatClickToUnmuteSecondaryHoldDefault
                             }
                         case .none:
                             secondary = nil
-                            
                         }
-
-
                     } else {
                         statusText = L10n.voiceChatMutedByAdmin
                         secondary = L10n.voiceChatListenMode
@@ -232,7 +224,6 @@ private final class GroupCallControlsView : View {
         }
 
         self.backgroundView.frame = focus(.init(width: 360, height: 360))
-       // self.backgroundView.layer?.position = CGPoint(x: size.width / 2.0, y: size.height / 2.0)
 
     }
     
@@ -273,7 +264,7 @@ private final class GroupCallTitleView : View {
     
     func update(_ peer: Peer, _ state: GroupCallUIState, animated: Bool) {
         let layout = TextViewLayout(.initialize(string: peer.displayTitle, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 140)
+        layout.measure(width: frame.width - 180)
         titleView.update(layout)
 
 
@@ -407,7 +398,7 @@ struct PeerGroupCallData : Equatable, Comparable {
         } else {
             if let presence = presence {
                 switch presence.status {
-                case let .present(until):
+                case .present:
                     weight += (1 << 28)
                 case .recently:
                     weight += (1 << 27)
@@ -599,38 +590,42 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 
             }, invite: arguments.invite, mute: arguments.mute, contextMenu: {
                 var items: [ContextMenuItem] = []
-                
-                if tuple.canManageCall, data.peer.id != account.peerId {
-                    if tuple.adminIds.contains(data.peer.id) {
-                        if data.state?.muteState == nil {
+                if data.state != nil {
+                    if tuple.canManageCall, data.peer.id != account.peerId {
+                        if tuple.adminIds.contains(data.peer.id) {
+                            if data.state?.muteState == nil {
+                                items.append(.init(L10n.voiceChatMutePeer, handler: {
+                                    arguments.mute(data.peer.id, true)
+                                }))
+                            } else if let muteState = data.state?.muteState, muteState.canUnmute {
+                                items.append(.init(L10n.voiceChatUnmutePeer, handler: {
+                                    arguments.mute(data.peer.id, false)
+                                }))
+                            }
+                        } else if let muteState = data.state?.muteState, !muteState.canUnmute {
+                            items.append(.init(L10n.voiceChatUnmutePeer, handler: {
+                                arguments.mute(data.peer.id, false)
+                            }))
+                        } else {
                             items.append(.init(L10n.voiceChatMutePeer, handler: {
                                 arguments.mute(data.peer.id, true)
                             }))
                         }
-                    } else if let muteState = data.state?.muteState, !muteState.canUnmute {
-                        items.append(.init(L10n.voiceChatUnmutePeer, handler: {
-                            arguments.mute(data.peer.id, false)
-                        }))
-                    } else {
-                        items.append(.init(L10n.voiceChatMutePeer, handler: {
-                            arguments.mute(data.peer.id, true)
-                        }))
+                        if !tuple.adminIds.contains(data.peer.id) {
+                            items.append(.init(L10n.voiceChatRemovePeer, handler: {
+                                arguments.remove(data.peer)
+                            }))
+                        }
+                        if !items.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
                     }
-                    if !tuple.adminIds.contains(data.peer.id) {
-                        items.append(.init(L10n.voiceChatRemovePeer, handler: {
-                            arguments.remove(data.peer)
+                    if data.peer.id != account.peerId {
+                        items.append(.init(L10n.voiceChatOpenProfile, handler: {
+                            arguments.openInfo(data.peer.id)
                         }))
-                    }
-                    if !items.isEmpty {
-                        items.append(ContextSeparatorItem())
                     }
                 }
-                if data.peer.id != account.peerId {
-                    items.append(.init(L10n.voiceChatOpenProfile, handler: {
-                        arguments.openInfo(data.peer.id)
-                    }))
-                }
-
                 return .single(items)
             })
         }))
@@ -660,7 +655,8 @@ final class GroupCallUIController : ViewController {
     private var pushToTalk: PushToTalk?
     private let actionsDisposable = DisposableSet()
     private var canManageCall: Bool = false
-
+    private let connecting = MetaDisposable()
+    var disableSounds: Bool = false
     init(_ data: UIData) {
         self.data = data
         super.init()
@@ -732,10 +728,8 @@ final class GroupCallUIController : ViewController {
         
         genericView.arguments = arguments
         
-    
         
         let members: Signal<PresentationGroupCallMembers?, NoError> = self.data.call.members
-
         let cachedAudioValues:Atomic<[PeerId: PeerGroupCallData.AudioLevel]> = Atomic(value: [:])
 
         let audioLevels: Signal<[PeerId : PeerGroupCallData.AudioLevel], NoError> = .single([:]) |> then(.single([]) |> then(self.data.call.audioLevels) |> map { values in
@@ -757,7 +751,6 @@ final class GroupCallUIController : ViewController {
                 return list
             }
         })
-
 
         let animate: Signal<Bool, NoError> = window.takeOcclusionState |> map {
             $0.contains(.visible)
@@ -809,19 +802,30 @@ final class GroupCallUIController : ViewController {
 
         var connectedMusicPlayed: Bool = false
         
+        let connecting = self.connecting
+                
         pushToTalkDisposable.set(combineLatest(queue: .mainQueue(), data.call.state, data.call.isMuted, data.call.canBeRemoved).start(next: { [weak self] state, isMuted, canBeRemoved in
-
+            
+            let disableSounds = self?.disableSounds ?? true
+            
             switch state.networkState {
             case .connected:
-                if !connectedMusicPlayed {
+                if !connectedMusicPlayed && !disableSounds {
                     SoundEffectPlay.play(postbox: account.postbox, name: "call up")
                     connectedMusicPlayed = true
                 }
-                if canBeRemoved, connectedMusicPlayed {
+                if canBeRemoved, connectedMusicPlayed  && !disableSounds {
                     SoundEffectPlay.play(postbox: account.postbox, name: "call down")
                 }
-            default:
-                break
+                connecting.set(nil)
+            case .connecting:
+                if connectedMusicPlayed {
+                    connecting.set((Signal<Void, NoError>.single(Void()) |> delay(3.0, queue: .mainQueue()) |> restart).start(next: {
+                        SoundEffectPlay.play(postbox: account.postbox, name: "reconnecting")
+                    }))
+                } else {
+                    connecting.set(nil)
+                }
             }
 
             self?.pushToTalk?.update = { [weak self] mode in
@@ -921,6 +925,7 @@ final class GroupCallUIController : ViewController {
         pushToTalkDisposable.dispose()
         requestPermissionDisposable.dispose()
         actionsDisposable.dispose()
+        connecting.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {

@@ -11,6 +11,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import SyncCore
+import TGUIKit
 
 enum VoiceCallDataSaving: Int32 {
     case never
@@ -36,6 +37,10 @@ struct PushToTalkValue : Equatable, PostboxCoding {
             self.flag = UInt(bitPattern: Int(decoder.decodeInt64ForKey("f", orElse: 0)))
         }
         
+    }
+    
+    var isSpace: Bool {
+        return keyCodes == [KeyboardKey.Space.rawValue] && modifierFlags.isEmpty
     }
     
     var keyCodes: [UInt16]
