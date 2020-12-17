@@ -225,7 +225,6 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager
 
-    
     return selectModalPeers(window: window, account: data.call.account, title: L10n.voiceChatInviteTitle, settings: [], excludePeerIds: [], limit: 1, behavior: behaviour, confirmation: { [weak behaviour, weak window] peerIds in
         
         guard let peerId = peerIds.first, let behaviour = behaviour, let window = window else {
