@@ -8255,6 +8255,8 @@ internal final class L10n {
   internal static var voiceChatInviteContacts: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Contacts") }
   /// Copy Invite Link
   internal static var voiceChatInviteCopyInviteLink: String  { return L10n.tr("Localizable", "VoiceChat.Invite.CopyInviteLink") }
+  /// global search
+  internal static var voiceChatInviteGlobalSearch: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GlobalSearch") }
   /// group members
   internal static var voiceChatInviteGroupMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GroupMembers") }
   /// Invite members
