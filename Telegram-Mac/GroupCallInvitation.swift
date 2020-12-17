@@ -103,7 +103,9 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 globalSearch = .single([])
             } else if let peer = peer, peer.groupAccess.canAddMembers {
                 globalSearch = searchPeers(account: account, query: search.request) |> map {
-                    return $0.1.map {
+                    return $0.0.map {
+                        $0.peer
+                    } + $0.1.map {
                         $0.peer
                     }
                 }
@@ -170,14 +172,16 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 for peer in global {
                     let containsInCall = participants.participants.contains(where: { $0.peer.id == peer.id })
                     let containsInMembers = membersList.contains(where: { $0.peer.id == peer.id })
-                    let containsInContacts = !contactList.contains(where: { $0.peer.id == peer.id })
+                    let containsInContacts = contactList.contains(where: { $0.peer.id == peer.id })
                     
                     if !containsInMembers && !containsInCall && !containsInContacts {
-                        globalList.append(.init(peer: peer, presence: nil, contact: false, enabled: !invited.contains(peer.id)))
+                        if !peer.isBot && peer.isUser {
+                            globalList.append(.init(peer: peer, presence: nil, contact: false, enabled: !invited.contains(peer.id)))
+                        }
                     }
                 }
                 
-                _ = cachedContacts.swap(contactList.map { $0.peer.id })
+                _ = cachedContacts.swap(contactList.map { $0.peer.id } + globalList.map { $0.peer.id })
                 return (membersList, contactList, globalList)
             }
             
