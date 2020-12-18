@@ -102,7 +102,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(15))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
-    private let control: LAnimationButton = LAnimationButton(animation: "group_call_member_mute", size: NSMakeSize(24, 24))
+    private let micro = VoiceChatMicrophoneView()
     private let button = ImageButton()
     private let separator: View = View()
     private let playbackAudioLevelView: VoiceBlobView
@@ -123,6 +123,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         addSubview(titleView)
         addSubview(separator)
         addSubview(button)
+        button.addSubview(micro)
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
 
@@ -170,8 +171,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
             separator.frame = .zero
         }
 
-        control.centerY(x: frame.width - 12 - control.frame.width)
-        button.centerY(x: frame.width - 12 - control.frame.width)
+        button.centerY(x: frame.width - 12 - button.frame.width)
 
         playbackAudioLevelView.centerY(x: 2, addition: 1)
     }

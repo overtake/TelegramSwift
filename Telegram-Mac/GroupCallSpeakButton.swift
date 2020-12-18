@@ -45,9 +45,9 @@ final class GroupCallSpeakButton : Control {
                     if muteState.canUnmute {
                         color = white
                     } else {
-                        color = GroupCallTheme.speakLockedColor
+                        color = white
                     }
-                    userInteractionEnabled = muteState.canUnmute
+                    userInteractionEnabled = true
                 } else {
                     userInteractionEnabled = true
                     color = white
@@ -61,6 +61,7 @@ final class GroupCallSpeakButton : Control {
         button.update(state: .init(muted: isMuted, color: color), animated: animated)
 
     }
+
     
     private var previousState: ControlState?
     

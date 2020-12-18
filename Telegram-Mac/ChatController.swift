@@ -3078,8 +3078,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     confirm(for: context.window, information: L10n.voiceChatChatStartNew, okTitle: L10n.voiceChatChatStartNewOK, successHandler: { _ in
                         createVoiceChat(context: context, peerId: peerId)
                     })
-                } else {
-                    alert(for: context.window, info: L10n.voiceChatChatEnded)
                 }
             }
         }
