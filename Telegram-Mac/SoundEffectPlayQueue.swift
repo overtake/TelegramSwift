@@ -18,8 +18,8 @@ final class SoundEffectPlay {
         if let name = name, let filePath = Bundle.main.path(forResource: name, ofType: "mp3") {
             let id = arc4random64()
             let resource = LocalFileReferenceMediaResource(localFilePath: filePath, randomId: id)
-            let player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, fetchAutomatically: true)
-            player.setVolume(0.6)
+            let player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, volume: 1.0, fetchAutomatically: true)
+         //   player.setVolume(0.6)
             queue[id] = player
             player.play()
             player.actionAtEnd = .action({
