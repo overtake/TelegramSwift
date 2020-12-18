@@ -395,16 +395,27 @@ final class PushToTalk {
         disposable.set(settings.start(next: { [weak self] settings in
             self?.updateSettings(settings)
         }))
-        installSpaceMonitor()
     }
 
-    private func installSpaceMonitor() {
-        self.spaceMonitor.setKeyDownHandler(spaceEvent, success: { [weak self] result in
-            self?.proccess(result.eventType, false)
-        })
-        self.spaceMonitor.setKeyUpHandler(spaceEvent, success: { [weak self] result in
-            self?.proccess(result.eventType, false)
-        })
+    private func installSpaceMonitor(settings: VoiceCallSettings) {
+        switch settings.mode {
+        case .pushToTalk:
+            self.spaceMonitor.setKeyDownHandler(spaceEvent, success: { [weak self] result in
+                self?.proccess(result.eventType, false)
+            })
+            self.spaceMonitor.setKeyUpHandler(spaceEvent, success: { [weak self] result in
+                self?.proccess(result.eventType, false)
+            })
+        case .always:
+            self.spaceMonitor.setKeyDownHandler(spaceEvent, success: { _ in
+            })
+            self.spaceMonitor.setKeyUpHandler(spaceEvent, success: { [weak self] result in
+                self?.update(.toggle(activate: nil, deactivate: nil))
+            })
+        case .none:
+            self.spaceMonitor.removeHandlers()
+        }
+       
     }
     private func deinstallSpaceMonitor() {
         self.spaceMonitor.removeHandlers()
@@ -424,11 +435,11 @@ final class PushToTalk {
                 if event == spaceEvent {
                     deinstallSpaceMonitor()
                 } else {
-                    installSpaceMonitor()
+                    installSpaceMonitor(settings: settings)
                 }
             } else {
                 self.monitor.removeHandlers()
-                installSpaceMonitor()
+                installSpaceMonitor(settings: settings)
             }
         case .pushToTalk:
             if let event = settings.pushToTalk {
@@ -441,11 +452,11 @@ final class PushToTalk {
                 if event == spaceEvent {
                     deinstallSpaceMonitor()
                 } else {
-                    installSpaceMonitor()
+                    installSpaceMonitor(settings: settings)
                 }
             } else {
                 self.monitor.removeHandlers()
-                installSpaceMonitor()
+                installSpaceMonitor(settings: settings)
             }
         case .none:
             self.monitor.removeHandlers()
