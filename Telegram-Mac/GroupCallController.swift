@@ -604,10 +604,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                                 items.append(.init(L10n.voiceChatMutePeer, handler: {
                                     arguments.mute(data.peer.id, true)
                                 }))
-                            } else if let muteState = data.state?.muteState, muteState.canUnmute {
-                                items.append(.init(L10n.voiceChatUnmutePeer, handler: {
-                                    arguments.mute(data.peer.id, false)
-                                }))
                             }
                         } else if let muteState = data.state?.muteState, !muteState.canUnmute {
                             items.append(.init(L10n.voiceChatUnmutePeer, handler: {
