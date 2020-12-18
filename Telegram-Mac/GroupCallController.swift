@@ -837,31 +837,27 @@ final class GroupCallUIController : ViewController {
                 switch state.networkState {
                 case .connected:
                     switch mode {
-                    case let .speaking(sound):
+                    case .speaking:
                         if isMuted {
                             if let muteState = state.muteState {
                                 if muteState.canUnmute {
                                     self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: true))
                                     self?.pushToTalkIsActive = true
-                                    SoundEffectPlay.play(postbox: account.postbox, name: sound)
                                 }
                             }
                         }
-                    case let .waiting(sound):
+                    case .waiting:
                         if !isMuted, self?.pushToTalkIsActive == true {
                             self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                            SoundEffectPlay.play(postbox: account.postbox, name: sound)
                         }
                         self?.pushToTalkIsActive = false
-                    case let .toggle(unmuteSound, muteSound):
+                    case .toggle:
                         if let muteState = state.muteState {
                             if muteState.canUnmute {
                                 self?.data.call.setIsMuted(action: .unmuted)
-                                SoundEffectPlay.play(postbox: account.postbox, name: unmuteSound)
                             }
                         } else {
                             self?.data.call.setIsMuted(action: .muted(isPushToTalkActive: false))
-                            SoundEffectPlay.play(postbox: account.postbox, name: muteSound)
                         }
                     }
                 case .connecting:
