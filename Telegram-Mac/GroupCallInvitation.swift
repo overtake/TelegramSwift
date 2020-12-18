@@ -54,8 +54,10 @@ private struct InvitationPeer : Equatable {
 final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
     fileprivate let data: GroupCallUIController.UIData
     private let disposable = MetaDisposable()
-    init(data: GroupCallUIController.UIData) {
+    private let window: Window
+    init(data: GroupCallUIController.UIData, window: Window) {
         self.data = data
+        self.window = window
         super.init(settings: [], excludePeerIds: [], limit: 1, customTheme: { GroupCallTheme.customTheme })
     }
     
@@ -77,7 +79,8 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
         let peer = data.call.peer
-        return search |> mapToSignal { search in
+        let window = self.window
+        return search |> mapToSignal { [weak window] search in
             var contacts:Signal<([Peer], [PeerId : PeerPresence]), NoError>
             if search.request.isEmpty {
                 contacts = account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true) |> map {
@@ -185,31 +188,46 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 return (membersList, contactList, globalList)
             }
             
-            let inviteLink: Signal<String?, NoError> = account.viewTracker.peerView(peerId) |> map { peerView in
+            let inviteLink: Signal<(String?, Bool), NoError> = account.viewTracker.peerView(peerId) |> map { peerView in
                 if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedChannelData {
                     if let addressName = peer.addressName, !addressName.isEmpty {
-                        return "https://t.me/@\(addressName)"
+                        return ("https://t.me/@\(addressName)", peer.groupAccess.canCreateInviteLink)
                     } else if let privateLink = cachedData.exportedInvitation {
-                        return privateLink.link
+                        return (privateLink.link, peer.groupAccess.canCreateInviteLink)
+                    } else {
+                        return (nil, peer.groupAccess.canCreateInviteLink)
                     }
                 } else if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedGroupData {
                     if let addressName = peer.addressName, !addressName.isEmpty {
-                        return "https://t.me/@\(addressName)"
+                        return ("https://t.me/@\(addressName)", peer.groupAccess.canCreateInviteLink)
                     } else if let privateLink = cachedData.exportedInvitation {
-                        return privateLink.link
+                        return (privateLink.link, peer.groupAccess.canCreateInviteLink)
+                    } else {
+                        return (nil, peer.groupAccess.canCreateInviteLink)
                     }
                 }
-                return nil
+                return (nil, false)
             }
             
             let previousSearch: Atomic<String> = Atomic<String>(value: "")
-            return combineLatest(allMembers, inviteLink) |> map { members, inviteLink in
+            return combineLatest(allMembers, inviteLink) |> map { [weak window] members, inviteLink in
                 var entries:[SelectPeerEntry] = []
                 var index:Int32 = 0
-                if let inviteLink = inviteLink, search.request.isEmpty {
+                if inviteLink.0 != nil || inviteLink.1, search.request.isEmpty {
                     entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, customTheme(), {
-                        copyToClipboard(inviteLink)
-                        linkInvation?()
+                        if let link = inviteLink.0 {
+                            copyToClipboard(link)
+                            linkInvation?()
+                        } else {
+                            if let window = window {
+                                _ = showModalProgress(signal: ensuredExistingPeerExportedInvitation(account: account, peerId: peerId), for: window).start(next: { link in
+                                    if let link = link {
+                                        copyToClipboard(link)
+                                        linkInvation?()
+                                    }
+                                })
+                            }
+                        }
                     }))
                 }
                 
@@ -265,7 +283,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
 
 func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -> Signal<[PeerId], NoError> {
     
-    let behaviour = GroupCallAddMembersBehaviour(data: data)
+    let behaviour = GroupCallAddMembersBehaviour(data: data, window: window)
     let account = data.call.account
     let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager

@@ -238,7 +238,7 @@ class LinkInvationController: TableViewController {
                 let signal = confirmSignal(for: mainWindow, information: info, okTitle: L10n.linkInvationConfirmOk)
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, NoError> in
-                        return ensuredExistingPeerExportedInvitation(account: context.account, peerId: peer.id, revokeExisted: true)
+                        return ensuredExistingPeerExportedInvitation(account: context.account, peerId: peer.id, revokeExisted: true) |> map { _ in return }
                     }
                 self?.revokeLinkDisposable.set(signal.start())
             }

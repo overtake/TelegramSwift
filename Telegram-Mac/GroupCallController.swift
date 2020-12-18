@@ -73,7 +73,12 @@ private final class GroupCallControlsView : View {
         }, for: .Click)
         
         speak.set(handler: { [weak self] _ in
-            self?.arguments?.toggleSpeaker()
+            if let muteState = self?.preiousState?.muteState, !muteState.canUnmute {
+                self?.speakText?.shake()
+                NSSound.beep()
+            } else {
+                self?.arguments?.toggleSpeaker()
+            }
         }, for: .Click)
 
     }
@@ -827,13 +832,9 @@ final class GroupCallUIController : ViewController {
                 }
                 connecting.set(nil)
             case .connecting:
-                if connectedMusicPlayed {
-                    connecting.set((Signal<Void, NoError>.single(Void()) |> delay(3.0, queue: .mainQueue()) |> restart).start(next: {
-                        SoundEffectPlay.play(postbox: account.postbox, name: "reconnecting")
-                    }))
-                } else {
-                    connecting.set(nil)
-                }
+                connecting.set((Signal<Void, NoError>.single(Void()) |> delay(3.0, queue: .mainQueue()) |> restart).start(next: {
+                    SoundEffectPlay.play(postbox: account.postbox, name: "reconnecting")
+                }))
             }
 
             self?.pushToTalk?.update = { [weak self] mode in

@@ -18,6 +18,10 @@ private let lightBlue = NSColor(rgb: 0x59c7f8)
 private let green = NSColor(rgb: 0x33c659)
 private let activeBlue = NSColor(rgb: 0x00a0b9)
 
+private let purple =  NSColor(rgb: 0x766EE9)
+private let lightPurple =  NSColor(rgb: 0xF05459)
+
+
 
 private let areaSize = CGSize(width: 360, height: 360)
 private let blobSize = CGSize(width: 244, height: 244)
@@ -292,7 +296,7 @@ final class VoiceChatActionButtonBackgroundView: View {
                 outerColor = NSColor(rgb: 0x1d588d)
             }
         } else {
-            targetColors = [lightBlue.cgColor, blue.cgColor]
+            targetColors = [purple.cgColor, lightPurple.cgColor]
             targetScale = 0.3
             outerColor = nil
         }
@@ -433,7 +437,7 @@ final class VoiceChatActionButtonBackgroundView: View {
         CATransaction.commit()
     }
 
-    private func playConnectionAnimation(active: Bool, completion: @escaping () -> Void) {
+    private func playConnectionAnimation(active: Bool?, completion: @escaping () -> Void) {
         CATransaction.begin()
         let initialRotation: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.transform.rotation.z") as? NSNumber)?.floatValue ?? 0.0)
         let initialStrokeEnd: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.strokeEnd") as? NSNumber)?.floatValue ?? 1.0)
@@ -531,7 +535,7 @@ final class VoiceChatActionButtonBackgroundView: View {
                             self?.isActive = newActive
                         }
                     } else if transition == .disabled {
-                        self.playBlobsAppearanceAnimation(active: newActive)
+                        updateGlowAndGradientAnimations(active: newActive, previousActive: nil)
                         self.transition = nil
                         self.isActive = newActive
                         self.updatedActive?(true)
@@ -547,13 +551,14 @@ final class VoiceChatActionButtonBackgroundView: View {
             case .disabled:
                 self.updatedActive?(true)
                 self.isActive = false
-                self.updateGlowScale(nil)
 
                 if let transition = self.transition {
                     if case .connecting = transition {
-                        playConnectionDisappearanceAnimation()
-                    } else if case .blob = transition {
-                        playBlobsDisappearanceAnimation()
+                        self.playConnectionAnimation(active: nil) { [weak self] in
+                            self?.isActive = false
+                        }
+                    } else if case let .blob(previousActive) = transition {
+                        updateGlowAndGradientAnimations(active: nil, previousActive: previousActive)
                     }
                     self.transition = nil
                 }
