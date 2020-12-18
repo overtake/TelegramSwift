@@ -191,7 +191,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             let inviteLink: Signal<(String?, Bool), NoError> = account.viewTracker.peerView(peerId) |> map { peerView in
                 if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedChannelData {
                     if let addressName = peer.addressName, !addressName.isEmpty {
-                        return ("https://t.me/@\(addressName)", peer.groupAccess.canCreateInviteLink)
+                        return ("https://t.me/\(addressName)", peer.groupAccess.canCreateInviteLink)
                     } else if let privateLink = cachedData.exportedInvitation {
                         return (privateLink.link, peer.groupAccess.canCreateInviteLink)
                     } else {
@@ -199,7 +199,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     }
                 } else if let peer = peerViewMainPeer(peerView), let cachedData = peerView.cachedData as? CachedGroupData {
                     if let addressName = peer.addressName, !addressName.isEmpty {
-                        return ("https://t.me/@\(addressName)", peer.groupAccess.canCreateInviteLink)
+                        return ("https://t.me/\(addressName)", peer.groupAccess.canCreateInviteLink)
                     } else if let privateLink = cachedData.exportedInvitation {
                         return (privateLink.link, peer.groupAccess.canCreateInviteLink)
                     } else {
