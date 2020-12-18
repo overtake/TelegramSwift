@@ -265,7 +265,12 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             self.status = .text(L10n.voiceChatStatusConnecting, nil)
             isConnected = false
         case .connected:
-            self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
+            
+            if let first = data.topParticipants.first(where: { data.activeSpeakers.contains($0.peer.id) }) {
+                self.status = .text(first.peer.compactDisplayTitle.prefixWithDots(12), nil)
+            } else {
+                self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
+            }
             isConnected = true
         }
 
@@ -288,7 +293,6 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     override func getEndText() -> String {
         return L10n.voiceChatTitleEnd
     }
-
 
 }
 
@@ -551,7 +555,6 @@ final class CurveLayer: CAShapeLayer {
 
     func updateSpeedLevel(to newSpeedLevel: CGFloat) {
         speedLevel = max(speedLevel, newSpeedLevel)
-
     }
 
     func startAnimating() {
