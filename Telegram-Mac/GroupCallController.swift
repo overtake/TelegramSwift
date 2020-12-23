@@ -402,21 +402,6 @@ struct PeerGroupCallData : Equatable, Comparable {
             } else {
                 weight += (1 << 29)
             }
-        } else {
-            if let presence = presence {
-                switch presence.status {
-                case .present:
-                    weight += (1 << 28)
-                case .recently:
-                    weight += (1 << 27)
-                case .lastWeek:
-                    weight += (1 << 26)
-                case .lastMonth:
-                    weight += (1 << 25)
-                case .none:
-                    weight += (1 << 24)
-                }
-            }
         }
         return weight
     }
@@ -539,9 +524,6 @@ private func makeState(_ peerView: PeerView, _ state: PresentationGroupCallState
         var audioLevel = audioLevels[value.peer.id]
         var isSpeaking = peerStates?.speakingParticipants.contains(value.peer.id) ?? false
         if accountPeerId == value.peer.id, isMuted {
-            audioLevel = nil
-            isSpeaking = false
-        } else if let _ = value.muteState, accountPeerId != value.peer.id {
             audioLevel = nil
             isSpeaking = false
         }

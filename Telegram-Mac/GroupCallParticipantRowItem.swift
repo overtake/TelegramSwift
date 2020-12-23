@@ -109,7 +109,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private var scaleAnimator: DisplayLinkAnimator?
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
-            frame: NSMakeRect(0, 0, 55, 55),
+            frame: NSMakeRect(0, 0, 56, 56),
             maxLevel: 0.3,
             smallBlobRange: (0, 0),
             mediumBlobRange: (0.7, 0.8),
@@ -173,7 +173,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
         button.centerY(x: frame.width - 12 - button.frame.width)
 
-        playbackAudioLevelView.centerY(x: 2, addition: 1)
+        playbackAudioLevelView.centerY(x: 1, addition: 1)
     }
     
     override func updateColors() {
@@ -245,7 +245,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
 
         titleView.update(item.titleLayout)
-        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.3), floor(photoSize.height * 1.3)))
+        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
 
@@ -253,7 +253,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         let level = min(1.0, max(0.0, CGFloat(audioLevel)))
         let avatarScale: CGFloat
         if audioLevel > 0.0 {
-            avatarScale = 1.03 + level * 0.07
+            avatarScale = 0.9 + level * 0.07
         } else {
             avatarScale = 1.0
         }
