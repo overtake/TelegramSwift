@@ -276,6 +276,10 @@ class PCallSession {
     var state:Signal<CallState, NoError> {
         return statePromise.get()
     }
+    private let audioLevelPromise: Promise<Float> = Promise(0)
+    var audioLevel:Signal<Float, NoError> {
+        return audioLevelPromise.get()
+    }
     
     private let canBeRemovedPromise = Promise<Bool>(false)
     private var didSetCanBeRemoved = false
@@ -727,6 +731,8 @@ class PCallSession {
                 
                 let ongoingContext = OngoingCallContext(account: account, callSessionManager: self.callSessionManager, internalId: self.internalId, proxyServer: proxyServer, initialNetworkType: self.currentNetworkType, updatedNetworkType: self.updatedNetworkType, serializedData: self.serializedData, dataSaving: dataSaving, derivedState: self.derivedState, key: key, isOutgoing: sessionState.isOutgoing, video: self.videoCapturer, connections: connections, maxLayer: maxLayer, version: version, allowP2P: allowsP2P, enableTCP: self.enableTCP, enableStunMarking: self.enableStunMarking, logName: logName, preferredVideoCodec: self.preferredVideoCodec, audioInputDeviceId: self.devicesContext.currentMicroId)
                 self.ongoingContext = ongoingContext
+                
+                self.audioLevelPromise.set(ongoingContext.audioLevel)
                 
                 if let requestedVideoAspect = self.requestedVideoAspect {
                     ongoingContext.setRequestedVideoAspect(requestedVideoAspect)
