@@ -212,12 +212,14 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 return account.postbox.loadedPeerWithId(account.peerId) |> map(Optional.init)
             }
         }
+        
+        
 
-        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _ in
+        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members in
             if let peer = peer {
                 self?.setInfo(peer.displayTitle)
             }
-            self?.updateState(state, isMuted: isMuted, data: data, accountPeer: accountPeer, animated: false)
+            self?.updateState(state, isMuted: isMuted, data: data, members: members, accountPeer: accountPeer, animated: false)
             self?.needsLayout = true
             self?.ready.set(.single(true))
         }))
@@ -258,7 +260,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     }
 
 
-    private func updateState(_ state: PresentationGroupCallState, isMuted: Bool, data: GroupCallPanelData, accountPeer: Peer?, animated: Bool) {
+    private func updateState(_ state: PresentationGroupCallState, isMuted: Bool, data: GroupCallPanelData, members: PresentationGroupCallMembers?, accountPeer: Peer?, animated: Bool) {
         let isConnected: Bool
         switch state.networkState {
         case .connecting:
@@ -266,7 +268,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             isConnected = false
         case .connected:
             
-            if let first = data.topParticipants.first(where: { data.activeSpeakers.contains($0.peer.id) }) {
+            if let first = data.topParticipants.first(where: { members?.speakingParticipants.contains($0.peer.id) ?? false }) {
                 self.status = .text(first.peer.compactDisplayTitle.prefixWithDots(12), nil)
             } else {
                 self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
