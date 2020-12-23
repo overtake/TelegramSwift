@@ -109,7 +109,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private var scaleAnimator: DisplayLinkAnimator?
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
-            frame: NSMakeRect(0, 0, 55, 55),
+            frame: NSMakeRect(0, 0, 58, 58),
             maxLevel: 0.3,
             smallBlobRange: (0, 0),
             mediumBlobRange: (0.7, 0.8),
@@ -173,7 +173,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
         button.centerY(x: frame.width - 12 - button.frame.width)
 
-        playbackAudioLevelView.centerY(x: 2, addition: 1)
+        playbackAudioLevelView.centerY(x: 1, addition: 1)
     }
     
     override func updateColors() {
