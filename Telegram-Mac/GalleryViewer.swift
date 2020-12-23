@@ -572,7 +572,7 @@ class GalleryViewer: NSResponder {
                         signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .pinned:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags?.union(.pinned), orderStatistics: [.combinedLocation], additionalData: [])
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: .pinned, orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
                 }
