@@ -189,7 +189,7 @@ private final class GroupCallControlsView : View {
 
             self.speakText = speakText
             addSubview(speakText)
-            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2) - 33)
             if animated {
                 speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
                 speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.5)
@@ -225,7 +225,7 @@ private final class GroupCallControlsView : View {
         settings.centerY(x: 25)
         end.centerY(x: frame.width - end.frame.width - 25)
         if let speakText = speakText {
-            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 30))
+            speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 33))
         }
 
         self.backgroundView.frame = focus(.init(width: 360, height: 360))
