@@ -140,7 +140,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 
         self.layer?.addSublayer(self.foregroundLayer)
         self.layer?.addSublayer(self.foregroundCircleLayer)
-        self.layer?.addSublayer(self.growingForegroundCircleLayer)
+       // self.layer?.addSublayer(self.growingForegroundCircleLayer)
 
         self.foregroundLayer.addSublayer(self.foregroundGradientLayer)
         self.foregroundLayer.mask = self.maskLayer
@@ -316,7 +316,6 @@ final class VoiceChatActionButtonBackgroundView: View {
     private func playConnectionDisappearanceAnimation() {
         let initialRotation: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.transform.rotation.z") as? NSNumber)?.floatValue ?? 0.0)
         let initialStrokeEnd: CGFloat = CGFloat((self.maskProgressLayer.value(forKeyPath: "presentationLayer.strokeEnd") as? NSNumber)?.floatValue ?? 1.0)
-        CATransaction.begin()
 
         let maskProgressLayer = self.maskProgressLayer
 
@@ -345,12 +344,15 @@ final class VoiceChatActionButtonBackgroundView: View {
         groupAnimation.duration = duration
         groupAnimation.isRemovedOnCompletion = false
 
-
-        self.maskProgressLayer.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak maskProgressLayer] _ in
-            maskProgressLayer?.isHidden = true
-            maskProgressLayer?.removeAllAnimations()
-        })
-
+        CATransaction.begin()
+        
+        self.maskProgressLayer.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false)
+        
+        CATransaction.setCompletionBlock {
+            maskProgressLayer.isHidden = true
+            maskProgressLayer.removeAllAnimations()
+        }
+        
         self.maskProgressLayer.add(groupAnimation, forKey: "progressDisappearance")
         CATransaction.commit()
     }
@@ -371,12 +373,14 @@ final class VoiceChatActionButtonBackgroundView: View {
         self.updateGlowAndGradientAnimations(active: wasActive, previousActive: nil)
 
         self.maskBlobLayer.startAnimating()
-        self.maskBlobLayer.animateScale(from: 1.0, to: 0, duration: 0.15, removeOnCompletion: false, completion: { [weak self] _ in
-            self?.maskBlobLayer.isHidden = true
-            self?.maskBlobLayer.stopAnimating()
-            self?.maskBlobLayer.removeAllAnimations()
-        })
-
+        CATransaction.begin()
+        self.maskBlobLayer.animateScale(from: 1.0, to: 0, duration: 0.15, removeOnCompletion: false)
+        CATransaction.setCompletionBlock {
+            self.maskBlobLayer.isHidden = true
+            self.maskBlobLayer.stopAnimating()
+            self.maskBlobLayer.removeAllAnimations()
+        }
+        CATransaction.commit()
         CATransaction.begin()
         let growthAnimation = CABasicAnimation(keyPath: "transform.scale")
         growthAnimation.fromValue = 0.0
@@ -474,6 +478,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             CATransaction.commit()
 
             completion()
+            
 
             self.updateGlowAndGradientAnimations(active: active, previousActive: nil)
 

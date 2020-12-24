@@ -85,6 +85,14 @@ private final class GroupCallControlsView : View {
     
     private var preiousState: PresentationGroupCallState?
     
+    var fakeConnecting: Bool? = nil {
+        didSet {
+            if let fakeConnecting = fakeConnecting {
+                self.backgroundView.update(state: !fakeConnecting ? .blob(false) : .connecting, animated: true)
+            }
+        }
+    }
+    
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
         
         let state = callState.state
@@ -364,6 +372,12 @@ private final class GroupCallView : View {
         peersTable.centerX(y: 54)
         peersTableContainer.frame = substrateRect()
         controlsContainer.centerX(y: frame.height - controlsContainer.frame.height + 50)
+    }
+    
+    var fakeConnecting: Bool? {
+        didSet {
+            controlsContainer.fakeConnecting = fakeConnecting
+        }
     }
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
@@ -659,6 +673,19 @@ final class GroupCallUIController : ViewController {
         guard let window = self.navigationController?.window else {
             fatalError()
         }
+        
+//        window.set(handler: { [weak self] event -> KeyHandlerResult in
+//            guard let `self` = self else {
+//                return .invoked
+//            }
+//            if let fakeConnecting = self.genericView.fakeConnecting {
+//                self.genericView.fakeConnecting = !fakeConnecting
+//            } else {
+//                self.genericView.fakeConnecting = true
+//            }
+//            return .invoked
+//
+//        }, with: self, for: .T)
         
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext, window: window)
 
