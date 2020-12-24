@@ -24,10 +24,10 @@ private let lightPurple =  NSColor(rgb: 0xF05459)
 
 
 private let areaSize = CGSize(width: 360, height: 360)
-private let blobSize = CGSize(width: 244, height: 244)
+private let blobSize = CGSize(width: 190, height: 190)
 
 private let progressLineWidth: CGFloat = 3.0 + 1
-private let buttonSize = CGSize(width: 144.0, height: 144.0)
+private let buttonSize = CGSize(width: 110, height: 110)
 private let radius = buttonSize.width / 2.0
 
 final class VoiceChatActionButtonBackgroundView: View {
@@ -356,7 +356,7 @@ final class VoiceChatActionButtonBackgroundView: View {
     }
 
     var animatingDisappearance = false
-    private func playBlobsDisappearanceAnimation() {
+    private func playBlobsDisappearanceAnimation(wasActive: Bool? = nil) {
         if self.animatingDisappearance {
             return
         }
@@ -368,7 +368,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 
         self.disableGlowAnimations = true
         self.maskGradientLayer.removeAllAnimations()
-        self.updateGlowAndGradientAnimations(active: nil, previousActive: nil)
+        self.updateGlowAndGradientAnimations(active: wasActive, previousActive: nil)
 
         self.maskBlobLayer.startAnimating()
         self.maskBlobLayer.animateScale(from: 1.0, to: 0, duration: 0.15, removeOnCompletion: false, completion: { [weak self] _ in
@@ -521,8 +521,8 @@ final class VoiceChatActionButtonBackgroundView: View {
                 self.updatedActive?(false)
                 if let transition = self.transition {
                     self.updateGlowScale(nil)
-                    if case .blob = transition {
-                        playBlobsDisappearanceAnimation()
+                    if case let .blob(active) = transition {
+                        playBlobsDisappearanceAnimation(wasActive: active)
                     }
                     self.transition = nil
                 }
@@ -643,7 +643,7 @@ final class VoiceChatActionButtonBackgroundView: View {
         self.foregroundLayer.frame = self.bounds
         self.foregroundGradientLayer.frame = self.bounds
         self.maskGradientLayer.position = center
-        self.maskGradientLayer.bounds = self.bounds
+        self.maskGradientLayer.bounds = NSMakeRect(0, 0, bounds.width - 80, bounds.height - 80)
         self.maskLayer.frame = self.bounds
 
 //        self.maskBlobLayer.bounds = .init(origin: <#T##CGPoint#>, size: <#T##CGSize#>)

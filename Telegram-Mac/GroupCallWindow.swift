@@ -80,7 +80,7 @@ struct GroupCallTheme {
 
 final class GroupCallWindow : Window {
     init() {
-        let size = NSMakeSize(440, 580)
+        let size = NSMakeSize(380, 600)
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
         if let screen = NSScreen.main {
             let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
@@ -89,8 +89,8 @@ final class GroupCallWindow : Window {
         }
 
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
-        self.minSize = NSMakeSize(440, 580)
-        self.name = "GroupCallWindow2"
+        self.minSize = NSMakeSize(380, 600)
+        self.name = "GroupCallWindow3"
         self.titlebarAppearsTransparent = true
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
