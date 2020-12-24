@@ -117,9 +117,9 @@ private final class GroupCallControlsView : View {
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
 
         if state != preiousState {
-            end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.declineColor), animated: animated)
+            end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(54, 54), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
-            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(60, 60), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(54, 54), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
         }
         let statusText: String
         var secondary: String? = nil
@@ -177,10 +177,10 @@ private final class GroupCallControlsView : View {
             if let speakText = self.speakText {
                 self.speakText = nil
                 if animated {
-                    speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakText] _ in
+                    speakText.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak speakText] _ in
                         speakText?.removeFromSuperview()
                     })
-                    speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.2)
+                    speakText.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.5)
                 } else {
                     speakText.removeFromSuperview()
                 }
@@ -191,8 +191,8 @@ private final class GroupCallControlsView : View {
             addSubview(speakText)
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2))
             if animated {
-                speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.2)
+                speakText.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.5)
             }
         }
 
@@ -222,8 +222,8 @@ private final class GroupCallControlsView : View {
         super.layout()
         speak.center()
 
-        settings.centerY(x: 20)
-        end.centerY(x: frame.width - end.frame.width - 20)
+        settings.centerY(x: 25)
+        end.centerY(x: frame.width - end.frame.width - 25)
         if let speakText = speakText {
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 30))
         }
@@ -299,10 +299,10 @@ private final class GroupCallTitleView : View {
 }
 
 private final class GroupCallView : View {
-    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 400, 281))
-    let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 440, 54))
-    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 400, 281))
-    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 400, height: 400))
+    let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 340, 329))
+    let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 380, 54))
+    private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 340, 329))
+    private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320))
     
     fileprivate var arguments: GroupCallUIArguments? {
         didSet {
@@ -363,7 +363,7 @@ private final class GroupCallView : View {
         super.layout()
         peersTable.centerX(y: 54)
         peersTableContainer.frame = substrateRect()
-        controlsContainer.centerX(y: frame.height - controlsContainer.frame.height + 60)
+        controlsContainer.centerX(y: frame.height - controlsContainer.frame.height + 50)
     }
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, animated: Bool) {
@@ -764,7 +764,7 @@ final class GroupCallUIController : ViewController {
         } |> distinctUntilChanged
         
         
-        let initialSize = NSMakeSize(400, 360)
+        let initialSize = NSMakeSize(340, 360)
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let animated: Atomic<Bool> = Atomic(value: false)
         let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {})
