@@ -360,8 +360,44 @@ final class ChatTextInputState: PostboxCoding, Equatable {
             
             var rawOffset:Int = 0
             var newText:[String] = []
-            while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
+            main: while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
                 let matchIndex = rawOffset + match.range.location
+                
+                
+                for attr in localAttributes {
+                    var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound))
+                    for offsetRange in offsetRanges {
+                        if offsetRange.location < newRange.location {
+                            newRange.location -= offsetRange.length
+                        }
+                    }
+
+                    var range: Range<Int>?
+                        
+                    var pre = match.range(at: 3)
+                    if pre.location != NSNotFound {
+                        range = (matchIndex + pre.lowerBound - match.range(at: 2).length) ..< (matchIndex + pre.upperBound + match.range(at: 4).length)
+                    } else {
+                        range = nil
+                    }
+                    
+                    pre = match.range(at: 8)
+                    if pre.location != NSNotFound {
+                        range = (matchIndex + pre.lowerBound - match.range(at: 7).length) ..< (matchIndex + pre.upperBound + match.range(at: 7).length)
+                    } else {
+                        range = nil
+                    }
+                  
+                    
+                    if let range = range {
+                        if newRange.intersection(NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound)) != nil {
+                            rawOffset += (range.upperBound - range.lowerBound)
+                            newText.append(raw.nsstring.substring(with: match.range))
+                            raw = raw.nsstring.substring(from: match.range.upperBound)
+                            continue main
+                        }
+                    }
+                }
                 
                 newText.append(raw.nsstring.substring(with: NSMakeRange(0, match.range.location)))
                 
@@ -382,7 +418,6 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                 pre = match.range(at: 8)
                 if pre.location != NSNotFound {
                     let text = raw.nsstring.substring(with: pre)
-                    
                     
                     let entity = raw.nsstring.substring(with: match.range(at: 7))
                     
@@ -419,30 +454,28 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         
         
         for attr in localAttributes {
-            var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound)) //Range<Int>(attr.range.lowerBound - range.location ..< attr.range.upperBound - range.location)
+            var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound))
             for offsetRange in offsetRanges {
                 if offsetRange.location < newRange.location {
                     newRange.location -= offsetRange.length
                 }
             }
-            //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
-                switch attr {
-                case .bold:
-                    attributes.append(.bold(newRange.min ..< newRange.max))
-                case .italic:
-                    attributes.append(.italic(newRange.min ..< newRange.max))
-                case .pre:
-                    attributes.append(.pre(newRange.min ..< newRange.max))
-                case .code:
-                    attributes.append(.code(newRange.min ..< newRange.max))
-                case .strikethrough:
-                    attributes.append(.strikethrough(newRange.min ..< newRange.max))
-                case let .uid(_, uid):
-                    attributes.append(.uid(newRange.min ..< newRange.max, uid))
-                case let .url(_, url):
-                    attributes.append(.url(newRange.min ..< newRange.max, url))
-                }
-          //  }
+            switch attr {
+            case .bold:
+                attributes.append(.bold(newRange.min ..< newRange.max))
+            case .italic:
+                attributes.append(.italic(newRange.min ..< newRange.max))
+            case .pre:
+                attributes.append(.pre(newRange.min ..< newRange.max))
+            case .code:
+                attributes.append(.code(newRange.min ..< newRange.max))
+            case .strikethrough:
+                attributes.append(.strikethrough(newRange.min ..< newRange.max))
+            case let .uid(_, uid):
+                attributes.append(.uid(newRange.min ..< newRange.max, uid))
+            case let .url(_, url):
+                attributes.append(.url(newRange.min ..< newRange.max, url))
+            }
         }
         
         return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)

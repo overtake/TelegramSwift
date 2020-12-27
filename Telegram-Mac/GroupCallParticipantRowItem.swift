@@ -149,6 +149,12 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 })
             }
         }, for: .SingleClick)
+        
+        containerView.set(handler: { [weak self] _ in
+            if let event = NSApp.currentEvent {
+                self?.showContextMenu(event)
+            }
+        }, for: .Click)
     }
     
     override func layout() {

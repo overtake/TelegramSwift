@@ -2460,7 +2460,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         }))
     }
     
-    if !message.isScheduledMessage, let peer = message.peers[message.id.peerId], !peer.isDeleted, message.id.namespace == Namespaces.Message.Cloud {
+    if !message.isScheduledMessage, let peer = message.peers[message.id.peerId], !peer.isDeleted, message.id.namespace == Namespaces.Message.Cloud, peerId == message.id.peerId {
         
         let needUnpin = chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true
         let pinAndOld: Bool

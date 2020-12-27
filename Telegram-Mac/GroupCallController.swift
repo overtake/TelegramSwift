@@ -125,9 +125,9 @@ private final class GroupCallControlsView : View {
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
 
         if state != preiousState {
-            end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(54, 54), backgroundColor: GroupCallTheme.declineColor), animated: animated)
+            end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
-            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(54, 54), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
         }
         let statusText: String
         var secondary: String? = nil
@@ -230,8 +230,8 @@ private final class GroupCallControlsView : View {
         super.layout()
         speak.center()
 
-        settings.centerY(x: 25)
-        end.centerY(x: frame.width - end.frame.width - 25)
+        settings.centerY(x: 30)
+        end.centerY(x: frame.width - end.frame.width - 30)
         if let speakText = speakText {
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 33))
         }
@@ -325,9 +325,9 @@ private final class GroupCallView : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(titleView)
         addSubview(peersTableContainer)
         addSubview(peersTable)
-        addSubview(titleView)
         addSubview(controlsContainer)
         peersTableContainer.layer?.cornerRadius = 10
         peersTable.layer?.cornerRadius = 10
@@ -369,7 +369,7 @@ private final class GroupCallView : View {
     
     override func layout() {
         super.layout()
-        peersTable.centerX(y: 54)
+        peersTable.centerX(y: 53)
         peersTableContainer.frame = substrateRect()
         controlsContainer.centerX(y: frame.height - controlsContainer.frame.height + 50)
     }

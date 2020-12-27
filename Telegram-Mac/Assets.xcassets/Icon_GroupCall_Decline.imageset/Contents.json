@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_decline.png",
+      "filename" : "ic_leave.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_decline@2x.png",
+      "filename" : "ic_leave@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
