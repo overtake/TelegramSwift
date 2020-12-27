@@ -92,9 +92,14 @@ final class GroupCallWindow : Window {
         self.minSize = NSMakeSize(380, 600)
         self.name = "GroupCallWindow3"
         self.titlebarAppearsTransparent = true
+        self.titleVisibility = .visible
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
+        
+        self.toolbar = NSToolbar(identifier: "window")
+        self.toolbar?.showsBaselineSeparator = false
+        
         initSaver()
     }
     
@@ -102,7 +107,7 @@ final class GroupCallWindow : Window {
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
         
-        var point: NSPoint = NSMakePoint(20, 0)
+        var point: NSPoint = NSMakePoint(20, 17)
         self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
         point.x += 20
         self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)

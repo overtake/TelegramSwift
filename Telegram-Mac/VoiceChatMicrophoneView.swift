@@ -158,12 +158,12 @@ final class VoiceChatMicrophoneView: View {
         context.setFillColor(parameters.color.cgColor)
 
         var clearLineWidth: CGFloat = 4.0
-        var lineWidth: CGFloat = 1.0
+        var lineWidth: CGFloat = 1.3
         if bounds.size.width > 36.0 {
             context.scaleBy(x: 2.5, y: 2.5)
         } else if bounds.size.width < 30.0 {
             clearLineWidth = 3.0
-            lineWidth = 1.0
+            lineWidth = 1.3
         }
 
         if bounds.width < 30.0 {
