@@ -197,7 +197,7 @@ class DeveloperViewController: TableViewController {
             filePanel(with: ["palette"], allowMultiple: false, for: mainWindow, completion: { list in
                 if let path = list?.first {
                     if let theme = importPalette(path) {
-                        let palettesDir = "~/Library/Group Containers/\(ApiEnvironment.group)/Palettes/".nsstring.expandingTildeInPath
+                        let palettesDir = ApiEnvironment.containerURL!.appendingPathComponent("Palettes").path
                         try? FileManager.default.createDirectory(atPath: palettesDir, withIntermediateDirectories: true, attributes: nil)
                         try? FileManager.default.removeItem(atPath: palettesDir + "/" + path.nsstring.lastPathComponent)
                         try? FileManager.default.copyItem(atPath: path, toPath: palettesDir + "/" + path.nsstring.lastPathComponent)
@@ -219,7 +219,7 @@ class DeveloperViewController: TableViewController {
             Logger.shared.logToConsole = false
             Logger.shared.logToFile = enabled
         }, navigateToLogs: {
-            NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: "~/Library/Group Containers/\(ApiEnvironment.group)/logs".nsstring.expandingTildeInPath)])
+            NSWorkspace.shared.activateFileViewerSelecting([ApiEnvironment.containerURL!.appendingPathComponent("logs")])
         }, addAccount: {
             let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)

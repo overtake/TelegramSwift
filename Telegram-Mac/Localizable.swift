@@ -3565,6 +3565,8 @@ internal final class L10n {
   internal static func galleryContextShareAllVideosZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Gallery.Context.Share.AllVideos_zero", p1)
   }
+  /// This File
+  internal static var galleryContextShareThisFile: String  { return L10n.tr("Localizable", "Gallery.Context.Share.ThisFile") }
   /// This Photo
   internal static var galleryContextShareThisPhoto: String  { return L10n.tr("Localizable", "Gallery.Context.Share.ThisPhoto") }
   /// This Video

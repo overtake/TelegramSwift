@@ -38,8 +38,7 @@ class ShareViewController: NSViewController {
         declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
 
         
-        let appGroupName = ApiEnvironment.group
-        guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
+        guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
         

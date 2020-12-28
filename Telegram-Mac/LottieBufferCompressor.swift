@@ -128,8 +128,7 @@ final class TRLotData {
     
     
     fileprivate static var directory: String {
-        let appGroupName = ApiEnvironment.group
-        let groupPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)!.path
+        let groupPath = ApiEnvironment.containerURL!.path
         
         let path = groupPath + "/trlottie-animations/"
         try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)

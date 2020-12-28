@@ -99,7 +99,7 @@ private final class PushToTalkRowView: GeneralContainableRowView {
                 guard let item = item else {
                     return
                 }
-                let settings = PushToTalkValue(keyCodes: result.keyCodes, modifierFlags: result.modifierFlags, string: result.string)
+                let settings = PushToTalkValue(keyCodes: result.keyCodes, otherMouse: result.otherMouse, modifierFlags: result.modifierFlags, string: result.string)
                 item.update(settings)
                 item.settings = settings
                 self?.set(item: item, animated: true)

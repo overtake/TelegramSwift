@@ -856,7 +856,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .aboutInput(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.channelDescriptionHolderDescrpiton, viewType: viewType)
         case let .signMessages(_, sign, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSignMessages, type: .switchable(sign), viewType: viewType, action: {
                 arguments.toggleSignatures(!sign)

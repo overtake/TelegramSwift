@@ -40,26 +40,31 @@ struct PushToTalkValue : Equatable, PostboxCoding {
     }
     
     var isSpace: Bool {
-        return keyCodes == [KeyboardKey.Space.rawValue] && modifierFlags.isEmpty
+        return keyCodes == [KeyboardKey.Space.rawValue] && modifierFlags.isEmpty && otherMouse.isEmpty
     }
     
     var keyCodes: [UInt16]
     var modifierFlags: [ModifierFlag]
     var string: String
-    init(keyCodes: [UInt16], modifierFlags: [ModifierFlag], string: String) {
+    var otherMouse: [Int]
+    init(keyCodes: [UInt16], otherMouse: [Int], modifierFlags: [ModifierFlag], string: String) {
         self.keyCodes = keyCodes
         self.modifierFlags = modifierFlags
         self.string = string
+        self.otherMouse = otherMouse
     }
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeObjectArray(self.modifierFlags, forKey: "mf")
         encoder.encodeInt32Array(self.keyCodes.map { Int32($0) }, forKey: "kc")
         encoder.encodeString(string, forKey: "s")
+        encoder.encodeInt64Array(self.otherMouse.map { Int64($0) }, forKey: "om")
+
     }
     init(decoder: PostboxDecoder) {
         self.keyCodes = decoder.decodeInt32ArrayForKey("kc").map { UInt16($0) }
         self.modifierFlags = decoder.decodeObjectArrayForKey("mf").compactMap { $0 as? ModifierFlag }
         self.string = decoder.decodeStringForKey("s", orElse: "")
+        self.otherMouse = decoder.decodeInt64ArrayForKey("om").map { Int($0) }
     }
 }
 

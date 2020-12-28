@@ -464,8 +464,7 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                 let unmanaged = convertFromWebP(data)
                 let image = unmanaged?.takeUnretainedValue()
                 unmanaged?.release()
-                let appGroupName = ApiEnvironment.group
-                if let image = image, let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) {
+                if let image = image, let containerUrl = ApiEnvironment.containerURL {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)
                     let directory = "\(containerUrl.path)/\(accountRecordIdPathName(account.id))/cached/"
