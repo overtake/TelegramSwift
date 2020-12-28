@@ -13,7 +13,7 @@ import TGUIKit
 
 extension PushToTalkValue {
     func isEqual(_ value: KeyboardGlobalHandler.Result) -> Bool {
-        return value.keyCodes == self.keyCodes && self.modifierFlags == value.modifierFlags
+        return value.keyCodes == self.keyCodes && self.modifierFlags == value.modifierFlags && value.otherMouse == self.otherMouse
     }
 }
 
@@ -57,6 +57,7 @@ final class KeyboardGlobalHandler {
     
     struct Result {
         let keyCodes: [UInt16]
+        let otherMouse:[Int]
         let modifierFlags: [PushToTalkValue.ModifierFlag]
         let string: String
         let eventType: NSEvent.EventTypeMask
@@ -115,15 +116,18 @@ final class KeyboardGlobalHandler {
                 
         if hasPermission {
             func callback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
-                if type == .keyDown || type == .keyUp || type == .flagsChanged {
-                    if let event = NSEvent(cgEvent: event) {
-                        let processor = Unmanaged<ProcessEvent>.fromOpaque(refcon!).takeUnretainedValue()
-                        processor.process(event)
-                    }
+                if let event = NSEvent(cgEvent: event) {
+                    let processor = Unmanaged<ProcessEvent>.fromOpaque(refcon!).takeUnretainedValue()
+                    processor.process(event)
                 }
                 return Unmanaged.passRetained(event)
             }
-            let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
+            let eventMask:Int32 = (1 << CGEventType.keyDown.rawValue) |
+                (1 << CGEventType.otherMouseDown.rawValue) |
+                (1 << CGEventType.otherMouseUp.rawValue) |
+                (1 << CGEventType.keyUp.rawValue) |
+                (1 << CGEventType.flagsChanged.rawValue)
+            
             self.eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                                   place: .headInsertEventTap,
                                                   options: .listenOnly,
@@ -138,22 +142,7 @@ final class KeyboardGlobalHandler {
                 self.runLoopSource = runLoopSource
             }
         } else {
-            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyUp, handler: { [weak self] event in
-                guard let `self` = self else {
-                    return event
-                }
-                self.process(event)
-                return event
-            }))
-            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] event in
-                guard let `self` = self else {
-                    return event
-                }
-                self.process(event)
-                return event
-            }))
-    
-            monitors.append(NSEvent.addLocalMonitorForEvents(matching: .flagsChanged, handler: { [weak self] event in
+            monitors.append(NSEvent.addLocalMonitorForEvents(matching: [.keyUp, .keyDown, .flagsChanged, .otherMouseUp, .otherMouseDown], handler: { [weak self] event in
                 guard let `self` = self else {
                     return event
                 }
@@ -179,9 +168,11 @@ final class KeyboardGlobalHandler {
     }
     
     private var downStake:[NSEvent] = []
+    private var otherMouseDownStake:[NSEvent] = []
     private var flagsStake:[NSEvent] = []
         
     private var currentDownStake:[NSEvent] = []
+    private var currentOtherMouseDownStake:[NSEvent] = []
     private var currentFlagsStake:[NSEvent] = []
 
 
@@ -192,6 +183,9 @@ final class KeyboardGlobalHandler {
         }
         if currentFlagsStake.count > 0 {
             total += currentFlagsStake.count
+        }
+        if currentOtherMouseDownStake.count > 0 {
+            total += currentOtherMouseDownStake.count
         }
         return total
     }
@@ -219,6 +213,15 @@ final class KeyboardGlobalHandler {
             if !currentDownStake.contains(where: { $0.keyCode == event.keyCode }) {
                 currentDownStake.append(event)
             }
+        case .otherMouseDown:
+            if !otherMouseDownStake.contains(where: { $0.buttonNumber == event.buttonNumber }) {
+                otherMouseDownStake.append(event)
+            }
+            if !currentOtherMouseDownStake.contains(where: { $0.buttonNumber == event.buttonNumber }) {
+                currentOtherMouseDownStake.append(event)
+            }
+        case .otherMouseUp:
+            currentOtherMouseDownStake.removeAll(where: { $0.buttonNumber == event.buttonNumber })
         case .flagsChanged:
             if !flagsStake.contains(where: { $0.keyCode == event.keyCode }) {
                 flagsStake.append(event)
@@ -240,6 +243,7 @@ final class KeyboardGlobalHandler {
         if self.activeCount == 0 {
             self.downStake.removeAll()
             self.flagsStake.removeAll()
+            self.otherMouseDownStake.removeAll()
         }
 
         return false
@@ -273,8 +277,20 @@ final class KeyboardGlobalHandler {
             _keyCodes.append(key.keyCode)
         }
         
+        var _otherMouse:[Int] = []
+        for key in otherMouseDownStake {
+            if !string.isEmpty {
+                string += " + "
+            }
+            string += "MOUSE\(key.buttonNumber)"
+            if key != otherMouseDownStake.last {
+                string += " + "
+            }
+            _otherMouse.append(key.buttonNumber)
+        }
         
-        let result = Result(keyCodes: _keyCodes, modifierFlags: _flags, string: string, eventType: isDown ? .keyDown : .keyUp)
+        
+        let result = Result(keyCodes: _keyCodes, otherMouse: _otherMouse, modifierFlags: _flags, string: string, eventType: isDown ? .keyDown : .keyUp)
         
         string = ""
         var flags: [PushToTalkValue.ModifierFlag] = []
@@ -285,11 +301,20 @@ final class KeyboardGlobalHandler {
         for key in currentDownStake {
             keyCodes.append(key.keyCode)
         }
+        var otherMouses:[Int] = []
+        for key in currentOtherMouseDownStake {
+            otherMouses.append(key.buttonNumber)
+        }
                 
         let invokeUp:(PushToTalkValue)->Bool = { ptt in
             var invoke: Bool = false
             for keyCode in ptt.keyCodes {
                 if !keyCodes.contains(keyCode) {
+                    invoke = true
+                }
+            }
+            for mouse in ptt.otherMouse {
+                if !otherMouses.contains(mouse) {
                     invoke = true
                 }
             }
@@ -305,6 +330,11 @@ final class KeyboardGlobalHandler {
             var invoke: Bool = true
             for keyCode in ptt.keyCodes {
                 if !keyCodes.contains(keyCode) {
+                    invoke = false
+                }
+            }
+            for buttonNumber in ptt.otherMouse {
+                if !otherMouses.contains(buttonNumber) {
                     invoke = false
                 }
             }
@@ -354,12 +384,12 @@ final class KeyboardGlobalHandler {
         return isHandled
     }
     
-    func setKeyDownHandler(_ PushToTalkValue: PushToTalkValue?, success: @escaping(Result)->Void) {
-        self.keyDownHandler = .init(PushToTalkValue: PushToTalkValue, success: success, eventType: .keyDown)
+    func setKeyDownHandler(_ pushToTalkValue: PushToTalkValue?, success: @escaping(Result)->Void) {
+        self.keyDownHandler = .init(PushToTalkValue: pushToTalkValue, success: success, eventType: .keyDown)
     }
     
-    func setKeyUpHandler(_ PushToTalkValue: PushToTalkValue?, success: @escaping(Result)->Void) {
-        self.keyUpHandler = .init(PushToTalkValue: PushToTalkValue, success: success, eventType: .keyUp)
+    func setKeyUpHandler(_ pushToTalkValue: PushToTalkValue?, success: @escaping(Result)->Void) {
+        self.keyUpHandler = .init(PushToTalkValue: pushToTalkValue, success: success, eventType: .keyUp)
     }
     
     func removeHandlers() {
@@ -385,7 +415,7 @@ final class PushToTalk {
     private let monitor: KeyboardGlobalHandler
     private let spaceMonitor: KeyboardGlobalHandler
 
-    private let spaceEvent = PushToTalkValue(keyCodes: [KeyboardKey.Space.rawValue], modifierFlags: [], string: "⎵")
+    private let spaceEvent = PushToTalkValue(keyCodes: [KeyboardKey.Space.rawValue], otherMouse: [], modifierFlags: [], string: "⎵")
 
     init(sharedContext: SharedAccountContext, window: Window) {
         self.monitor = KeyboardGlobalHandler(mode: .global)

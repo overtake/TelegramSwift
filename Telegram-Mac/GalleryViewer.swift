@@ -572,7 +572,7 @@ class GalleryViewer: NSResponder {
                         signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .pinned:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags?.union(.pinned), orderStatistics: [.combinedLocation], additionalData: [])
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: .pinned, orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
                     signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(message.id.peerId))
                 }
@@ -1029,8 +1029,6 @@ class GalleryViewer: NSResponder {
                         self.operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] path in
                             if let strongSelf = self {
                                 if fast {
-                                   // let attr = NSMutableAttributedString()
-                                   // attr.append(string: "File saved to your download folder", color: .white, font: .bold(18))
                                    
                                     let text: String
                                     if item is MGalleryVideoItem {
@@ -1122,8 +1120,12 @@ class GalleryViewer: NSResponder {
                 let thisTitle: String
                 if message.media.first is TelegramMediaImage {
                     thisTitle = L10n.galleryContextShareThisPhoto
-                } else {
+                } else if message.media.first!.isVideoFile {
                     thisTitle = L10n.galleryContextShareThisVideo
+                } else if message.media.first!.isGraphicFile {
+                    thisTitle = L10n.galleryContextShareThisPhoto
+                } else {
+                    thisTitle = L10n.galleryContextShareThisFile
                 }
                 
                 items.append(SPopoverItem(thisTitle, { [weak self] in
@@ -1135,8 +1137,10 @@ class GalleryViewer: NSResponder {
                 let allTitle: String
                 if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
                     allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
-                } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
+                } else if messages.filter({ $0.media.first!.isVideoFile }).count == messages.count {
                     allTitle = L10n.galleryContextShareAllVideosCountable(messages.count)
+                } else if messages.filter({ $0.media.first!.isGraphicFile }).count == messages.count {
+                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
                 } else {
                     allTitle = L10n.galleryContextShareAllItemsCountable(messages.count)
                 }

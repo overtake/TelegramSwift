@@ -13,6 +13,38 @@ final class ApiEnvironment {
         return "6N38VWS5BX"
     }
     
+    static var containerURL: URL? {
+        let appGroupName = ApiEnvironment.group
+        let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)?.appendingPathComponent(prefix)
+        if let containerUrl = containerUrl {
+            try? FileManager.default.createDirectory(at: containerUrl, withIntermediateDirectories: true, attributes: nil)
+            return containerUrl
+        }
+        return nil
+    }
+    
+    static func migrate() {
+        if let containerURL = containerURL, let legacy = legacyContainerURL, let sequence = FileManager.default.enumerator(atPath: legacy.path) {
+            let contents = try? FileManager.default.contentsOfDirectory(at: containerURL, includingPropertiesForKeys: nil, options: [])
+            if let contents = contents, !contents.isEmpty {
+                return
+            }
+            for value in sequence {
+                if let value = value as? String {
+                    if !prefixList.contains(value) {
+                        try? FileManager.default.moveItem(at: legacy.appendingPathComponent(value), to: containerURL.appendingPathComponent(value))
+                    }
+                }
+            }
+        }
+    }
+    
+    static var legacyContainerURL: URL? {
+        let appGroupName = ApiEnvironment.group
+        let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)
+        return containerUrl
+    }
+    
     static var group: String {
         return teamId + "." + bundleId
     }
@@ -25,6 +57,29 @@ final class ApiEnvironment {
     static var language: String {
         return "macos"
     }
+    
+    static var prefixList:[String] {
+        return ["debug", "stable", "appstore", "alpha", "github", "beta"]
+    }
+    
+    static var prefix: String {
+        var prefix: String = ""
+        #if DEBUG
+        prefix = "debug"
+        #elseif STABLE
+        prefix = "stable"
+        #elseif APP_STORE
+        prefix = "appstore"
+        #elseif ALPHA
+        prefix = "alpha"
+        #elseif GITHUB
+        prefix = "github"
+        #else
+        prefix = "beta"
+        #endif
+        return prefix
+    }
+    
     static var version: String {
         var suffix: String = ""
         #if STABLE

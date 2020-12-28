@@ -580,6 +580,12 @@ final class OngoingCallContext {
         return self.receptionPromise.get()
     }
     
+    private let audioLevelPromise = Promise<Float>(0.0)
+       public var audioLevel: Signal<Float, NoError> {
+           return self.audioLevelPromise.get()
+       }
+
+    
     private let audioSessionDisposable = MetaDisposable()
     private var networkTypeDisposable: Disposable?
     
@@ -712,9 +718,14 @@ final class OngoingCallContext {
 
                     }
                 }
+                self.receptionPromise.set(.single(4))
                 context.signalBarsChanged = { [weak self] signalBars in
                     self?.receptionPromise.set(.single(signalBars))
                 }
+                context.audioLevelUpdated = { [weak self] level in
+                    self?.audioLevelPromise.set(.single(level))
+                }
+
                 
                 self.networkTypeDisposable = (updatedNetworkType
                     |> deliverOn(queue)).start(next: { [weak self] networkType in

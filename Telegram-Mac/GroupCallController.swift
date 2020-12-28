@@ -674,6 +674,8 @@ final class GroupCallUIController : ViewController {
             fatalError()
         }
         
+
+        
 //        window.set(handler: { [weak self] event -> KeyHandlerResult in
 //            guard let `self` = self else {
 //                return .invoked

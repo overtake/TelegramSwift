@@ -119,6 +119,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         
         appDelegate = self
+        ApiEnvironment.migrate()
         
         initializeSelectManager()
         startLottieCacheCleaner()
@@ -127,10 +128,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
         }
         
-        let appGroupName = ApiEnvironment.group
-        guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
+        
+        guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
+        
+        
         
         self.containerUrl = containerUrl.path
         

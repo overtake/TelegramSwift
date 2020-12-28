@@ -11,20 +11,21 @@ import TGUIKit
 import SwiftSignalKit
 
 
-private final class SaveModalView : NSVisualEffectView {
+private final class SaveModalView : View {
     private let imageView:MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
     private let textView: TextView = TextView()
-    required override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(textView)
         self.wantsLayer = true
         self.layer?.cornerRadius = 10.0
         self.autoresizingMask = []
-        self.autoresizesSubviews = false
-        self.material = .ultraDark
-        self.blendingMode = .withinWindow
-        self.state = .active
+        backgroundColor = .blackTransparent
+//        self.autoresizesSubviews = false
+//        self.material = .ultraDark
+//        self.blendingMode = .withinWindow
+//        self.state = .active
     }
     
     override func viewDidMoveToSuperview() {
