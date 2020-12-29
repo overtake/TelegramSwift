@@ -1297,7 +1297,7 @@ class PhoneCallWindowController {
                 self.window.alphaValue = 0
                 
                 let fullReady: Signal<Bool, NoError>
-                if self.session.isVideo {
+                if self.session.isVideo, self.session.isVideoPossible {
                     fullReady = self.view.outgoingVideoView.cameraInitialized
                         |> timeout(5.0, queue: .mainQueue(), alternate: .single(.inited))
                         |> map { $0 == .inited }

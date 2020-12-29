@@ -13,6 +13,8 @@
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
+		27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */; };
+		27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -998,6 +1000,8 @@
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
+		27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListController.swift; sourceTree = "<group>"; };
+		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -2040,6 +2044,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		27B15D2D259B28C700C7F280 /* capturer */ = {
+			isa = PBXGroup;
+			children = (
+				27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */,
+				27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */,
+			);
+			name = capturer;
+			sourceTree = "<group>";
+		};
 		9F0367E622707B6400456348 /* lottie */ = {
 			isa = PBXGroup;
 			children = (
@@ -4431,6 +4444,7 @@
 		D0E7BD18256A7D1C0068644D /* group-calls */ = {
 			isa = PBXGroup;
 			children = (
+				27B15D2D259B28C700C7F280 /* capturer */,
 				D0E7BD19256A7D350068644D /* GroupCallWindow.swift */,
 				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
 				D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */,
@@ -5184,6 +5198,7 @@
 				D001E974243B1A0A009025F9 /* LeftSidebarController.swift in Sources */,
 				C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */,
 				C291942F1DCC6E2200359491 /* DeclareEncodables.swift in Sources */,
+				27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */,
 				A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */,
 				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
@@ -5442,6 +5457,7 @@
 				D0530D4024E693A5003273BC /* CameraViews.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
+				27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
 				C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,

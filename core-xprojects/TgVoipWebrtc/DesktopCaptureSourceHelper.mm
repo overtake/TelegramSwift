@@ -1,5 +1,12 @@
-#import "ScreenCapturer.h"
+//
+//  DesktopCaptureSourceHelper.m
+//  TgVoipWebrtc
+//
+//  Created by Mikhail Filimonov on 28.12.2020.
+//  Copyright © 2020 Mikhail Filimonov. All rights reserved.
+//
 
+#import "DesktopCaptureSourceHelper.h"
 #include "modules/desktop_capture/mac/screen_capturer_mac.h"
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
@@ -14,30 +21,16 @@
 #import "helpers/RTCDispatcher+Private.h"
 #import <QuartzCore/QuartzCore.h>
 
-static RTCVideoFrame *customToObjCVideoFrame(const webrtc::VideoFrame &frame, RTCVideoRotation &rotation) {
-    rotation = RTCVideoRotation(frame.rotation());
-    RTCVideoFrame *videoFrame =
-    [[RTCVideoFrame alloc] initWithBuffer:webrtc::ToObjCVideoFrameBuffer(frame.video_frame_buffer())
-                                 rotation:rotation
-                              timeStampNs:frame.timestamp_us() * rtc::kNumNanosecsPerMicrosec];
-    videoFrame.timeStamp = frame.timestamp();
-    
-    return videoFrame;
-}
 
-static webrtc::ObjCVideoTrackSource *getObjCVideoSource(const rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> nativeSource) {
-    webrtc::VideoTrackSourceProxy *proxy_source =
-    static_cast<webrtc::VideoTrackSourceProxy *>(nativeSource.get());
-    return static_cast<webrtc::ObjCVideoTrackSource *>(proxy_source->internal());
-}
 
-class DesktopFrameCallbackImpl : public webrtc::DesktopCapturer::Callback {
+
+
+class SourceFrameCallbackImpl : public webrtc::DesktopCapturer::Callback {
 private:
     int64_t next_timestamp_;
 public:
     std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>> _sink;
-    DesktopFrameCallbackImpl(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> source) {
-        _source = source;
+    SourceFrameCallbackImpl() {
         next_timestamp_ = 0;
     }
     virtual void OnCaptureResult(webrtc::DesktopCapturer::Result result,
@@ -70,34 +63,37 @@ public:
         
         
         assert(i420Result == 0);
-
         webrtc::VideoFrame nativeVideoFrame = webrtc::VideoFrame(i420_buffer_, webrtc::kVideoRotation_0, next_timestamp_ / rtc::kNumNanosecsPerMicrosec);
 
         if (_sink != NULL) {
             _sink->OnFrame(nativeVideoFrame);
         }
-        RTCVideoRotation rotation = RTCVideoRotation_0;
-        RTCVideoFrame* videoFrame = customToObjCVideoFrame(nativeVideoFrame, rotation);
-        getObjCVideoSource(_source)->OnCapturedFrame(videoFrame);
-        
         next_timestamp_ += rtc::kNumNanosecsPerSec / 30;
     }
 private:
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer_;
-    rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> _source;
 };
 
-@implementation AppScreenCapturer {
-    std::unique_ptr<webrtc::DesktopCapturer> _capturer;
-    std::shared_ptr<DesktopFrameCallbackImpl> _callback;
-    dispatch_queue_t _frameQueue;
 
+@interface DesktopCaptureSource ()
+- (webrtc::DesktopCapturer::Source)getSource;
+@end
+
+@interface DesktopCaptureSourceHelper ()
+@end
+
+@implementation DesktopCaptureSourceHelper
+{
+    std::unique_ptr<webrtc::DesktopCapturer> _capturer;
+    std::shared_ptr<SourceFrameCallbackImpl> _callback;
+    NSTimer *_timer;
 }
-- (instancetype)initWithSource:(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>)source {
-    self = [super init];
-    if (self != nil) {
+
+-(instancetype)initWithWindow:(DesktopCaptureSource *)window {
+    if (self = [super init]) {
         
-        _callback.reset(new DesktopFrameCallbackImpl(source));
+        
+        _callback.reset(new SourceFrameCallbackImpl());
         
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
         options.set_disable_effects(false);
@@ -105,65 +101,46 @@ private:
         options.set_detect_updated_region(true);
         _capturer.reset(new webrtc::DesktopAndCursorComposer(webrtc::DesktopCapturer::CreateWindowCapturer(options), options));
         
-        
-        
-        webrtc::DesktopCapturer::SourceList sources;
-        _capturer->GetSourceList(&sources);
-               
-        _capturer->SelectSource(sources[0].id);
-                
+        _capturer->SelectSource([window getSource].id);
         _capturer->Start(_callback.get());
         
-        
-        [self captureFrame];
     }
     return self;
 }
 
--(void)start {
-    
+-(void)setOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
+    _callback.get()->_sink = sink;
+    @autoreleasepool {
+        _capturer->CaptureFrame();
+    }
 }
--(void)stop {
-    
+
+-(void)start {
+    if (self->_timer == nil) {
+        __weak id weakSelf = self;
+        self->_timer = [NSTimer scheduledTimerWithTimeInterval:1000/30/1000
+            target:weakSelf
+            selector:@selector(captureFrame)
+            userInfo:nil
+            repeats:YES];
+    }
 }
 
 -(void)captureFrame {
-    __weak id value = self;
     @autoreleasepool {
-        self->_capturer->CaptureFrame();
+        _capturer->CaptureFrame();
     }
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (1 / 30) * NSEC_PER_SEC), self.frameQueue, ^{
-        [value captureFrame];
-    });
 }
 
--(void)setSink:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
-    dispatch_async(self.frameQueue, ^{
-        self->_callback->_sink = sink;
-    });
+- (void)dealloc
+{
+    [self->_timer invalidate];
+    self->_timer = nil;
 }
 
-- (dispatch_queue_t)frameQueue {
-    if (!_frameQueue) {
-        _frameQueue =
-        dispatch_queue_create("org.webrtc.desktopcapturer.video", DISPATCH_QUEUE_SERIAL);
-        dispatch_set_target_queue(_frameQueue,
-                                  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0));
-    }
-    return _frameQueue;
-}
-
--(void)dealloc {
-    _capturer.reset();
-    _callback.reset();
+-(void)stop {
+    [self->_timer invalidate];
+    self->_timer = nil;
 }
 
 @end
-
-
-
-
-
-
-
-

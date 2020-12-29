@@ -315,6 +315,14 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         statusView?.update(item.statusLayout)
         needsLayout = true
         
+        
+//        button.set(handler: { control in
+//            if control.popover == nil {
+//                showPopover(for: control, with: VolumeControllerPopover(initialValue: 0.5, updatedValue: { updatedVolume in
+//                    
+//                }), edge: .maxY, inset: NSMakePoint(-8, 126))
+//            }
+//        }, for: .Hover)
     }
     
     deinit {
