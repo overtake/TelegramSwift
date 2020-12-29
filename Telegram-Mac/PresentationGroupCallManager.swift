@@ -125,6 +125,7 @@ protocol PresentationGroupCall: class {
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
     
     func toggleIsMuted()
+    func setVolume(peerId: PeerId, volume: Double)
     func setIsMuted(action: PresentationGroupCallMuteAction)
     func updateMuteState(peerId: PeerId, isMuted: Bool)
     func invitePeer(_ peerId: PeerId)

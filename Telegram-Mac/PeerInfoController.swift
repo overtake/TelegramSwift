@@ -71,9 +71,11 @@ class PeerInfoArguments {
         
         let signal = context.account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
             return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)
-        }
+        } |> deliverOnMainQueue
         
-        deleteDisposable.set(signal.start())
+        deleteDisposable.set(signal.start(completed: { [weak self] in
+            self?.pullNavigation()?.close()
+        }))
     }
     
     func sharedMedia() {

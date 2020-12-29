@@ -1100,6 +1100,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         }
     }
+    func setVolume(peerId: PeerId, volume: Double) {
+        for (ssrc, id) in self.ssrcMapping {
+            if id == peerId {
+                self.callContext?.setVolume(ssrc: ssrc, volume: volume)
+                break
+            }
+        }
+    }
 
     func updateDefaultParticipantsAreMuted(isMuted: Bool) {
         self.participantsContext?.updateDefaultParticipantsAreMuted(isMuted: isMuted)
