@@ -430,7 +430,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             controller.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false)
+                    view.updateBackground(animated: false, item: view.item)
                 }
             })
         }))
@@ -441,7 +441,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             if let view = view as? ChatRowView {
                 let offset = controller.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(animated: false)
+                view.updateBackground(animated: false, item: view.item)
             }
         }
         

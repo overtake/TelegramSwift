@@ -251,6 +251,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chatCallActive: CGImage {
+      if let image = cached.with({ $0["chatCallActive"] }) {
+          return image
+      } else {
+          let image = _chatCallActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatCallActive"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatActions: CGImage {
       if let image = cached.with({ $0["chatActions"] }) {
           return image
@@ -7297,6 +7310,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_voice_chat: CGImage {
+      if let image = cached.with({ $0["chat_voice_chat"] }) {
+          return image
+      } else {
+          let image = _chat_voice_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_voice_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_voice_chat_active: CGImage {
+      if let image = cached.with({ $0["chat_voice_chat_active"] }) {
+          return image
+      } else {
+          let image = _chat_voice_chat_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_voice_chat_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7317,6 +7356,7 @@ final class TelegramIconsTheme {
   private let _chatSearch: ()->CGImage
   private let _chatSearchActive: ()->CGImage
   private let _chatCall: ()->CGImage
+  private let _chatCallActive: ()->CGImage
   private let _chatActions: ()->CGImage
   private let _chatFailedCall_incoming: ()->CGImage
   private let _chatFailedCall_outgoing: ()->CGImage
@@ -7859,6 +7899,8 @@ final class TelegramIconsTheme {
   private let _chat_voicechat_cant_unmute: ()->CGImage
   private let _chat_voicechat_unmuted: ()->CGImage
   private let _profile_voice_chat: ()->CGImage
+  private let _chat_voice_chat: ()->CGImage
+  private let _chat_voice_chat_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -7880,6 +7922,7 @@ final class TelegramIconsTheme {
       chatSearch: @escaping()->CGImage,
       chatSearchActive: @escaping()->CGImage,
       chatCall: @escaping()->CGImage,
+      chatCallActive: @escaping()->CGImage,
       chatActions: @escaping()->CGImage,
       chatFailedCall_incoming: @escaping()->CGImage,
       chatFailedCall_outgoing: @escaping()->CGImage,
@@ -8421,7 +8464,9 @@ final class TelegramIconsTheme {
       chat_voicechat_can_unmute: @escaping()->CGImage,
       chat_voicechat_cant_unmute: @escaping()->CGImage,
       chat_voicechat_unmuted: @escaping()->CGImage,
-      profile_voice_chat: @escaping()->CGImage
+      profile_voice_chat: @escaping()->CGImage,
+      chat_voice_chat: @escaping()->CGImage,
+      chat_voice_chat_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8442,6 +8487,7 @@ final class TelegramIconsTheme {
       self._chatSearch = chatSearch
       self._chatSearchActive = chatSearchActive
       self._chatCall = chatCall
+      self._chatCallActive = chatCallActive
       self._chatActions = chatActions
       self._chatFailedCall_incoming = chatFailedCall_incoming
       self._chatFailedCall_outgoing = chatFailedCall_outgoing
@@ -8984,5 +9030,7 @@ final class TelegramIconsTheme {
       self._chat_voicechat_cant_unmute = chat_voicechat_cant_unmute
       self._chat_voicechat_unmuted = chat_voicechat_unmuted
       self._profile_voice_chat = profile_voice_chat
+      self._chat_voice_chat = chat_voice_chat
+      self._chat_voice_chat_active = chat_voice_chat_active
   }
 }

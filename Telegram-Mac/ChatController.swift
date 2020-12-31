@@ -302,7 +302,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false)
+                    view.updateBackground(animated: false, item: view.item)
                 }
             })
         }))
@@ -385,7 +385,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: animated)
+                    view.updateBackground(animated: animated, item: view.item)
                 }
             })
         }
@@ -406,7 +406,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(animated: false)
+                view.updateBackground(animated: false, item: view.item)
             }
         })
     }
@@ -495,7 +495,16 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateHeader(_ interfaceState:ChatPresentationInterfaceState, _ animated:Bool, _ animateOnlyHeader: Bool = false) {
 
 
-        let voiceChat = interfaceState.groupCall?.data?.groupCall == nil ? interfaceState.groupCall : nil
+        var voiceChat: ChatActiveGroupCallInfo?
+        if interfaceState.groupCall?.data?.groupCall == nil {
+            if let data = interfaceState.groupCall?.data, data.participantCount == 0 || (data.topParticipants.count == 1 && data.topParticipants.contains(where: { $0.peer.id == chatInteraction.context.peerId })) {
+                voiceChat = nil
+            } else {
+                voiceChat = interfaceState.groupCall
+            }
+        } else {
+            voiceChat = nil
+        }
 
         var state:ChatHeaderState
         if interfaceState.isSearchMode.0 {
@@ -4449,7 +4458,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(animated: transition.animated)
+                view.updateBackground(animated: transition.animated, item: view.item)
             }
         })
         
@@ -5746,7 +5755,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func updateController() {
         genericView.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(animated: false)
+                view.updateBackground(animated: false, item: view.item)
             }
         }, force: true)
     }

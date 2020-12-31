@@ -233,8 +233,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private let revealRightView: View = View()
     private var titleText:TextNode = TextNode()
     private var messageText:TextNode = TextNode()
+    
+        
     private var badgeView:View?
     private var additionalBadgeView:View?
+    private var mentionsView: ImageView?
+    
     
     private var activeImage: ImageView?
     private var groupActivityView: GroupCallActivity?
@@ -485,15 +489,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + mutedInset, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
                     }
                     
-                    if let _ = item.mentionsCount {
-                        let icon: CGImage
-                        if item.associatedGroupId == .root {
-                            icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
-                        } else {
-                            icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
-                        }
-                        ctx.draw(icon, in: NSMakeRect(frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, frame.height - icon.backingSize.height - (item.margin + 1), icon.backingSize.width, icon.backingSize.height)) 
-                    }
+                   
                     
                     if let dateLayout = item.ctxDateLayout, !item.hasDraft {
                         let dateX = frame.width - dateLayout.0.size.width - item.margin
@@ -794,30 +790,157 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.archivedPhoto = nil
             }
             
-            if let badgeNode = item.ctxBadgeNode {
-                if badgeView == nil {
-                    badgeView = View()
-                    containerView.addSubview(badgeView!)
-                }
-                badgeView?.setFrameSize(badgeNode.size)
-                badgeNode.view = badgeView
-                badgeNode.setNeedDisplay()
-            } else {
-                badgeView?.removeFromSuperview()
-                badgeView = nil
-            }
+//            if let badge = item.ctxBadge {
+//                var presented: Bool = false
+//                if self.badge == nil {
+//                    self.badge = AnimatedBadgeView()
+//                    containerView.addSubview(self.badge!)
+//                    presented = true
+//                }
+//
+//                let origin = NSMakePoint(self.containerView.frame.width - badge.size.width - item.margin, self.containerView.frame.height - badge.size.height - (item.margin + 1))
+//
+//                self.badge?.update(dynamicValue: badge.dynamicValue, backgroundColor: badge.backgroundColor, animated: animated, frame: CGRect(origin: origin, size: badge.size))
+//
+//                if presented && animated {
+//                    self.badge?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
+//                }
+//            } else {
+//                if animated {
+//                    if let badge = self.badge {
+//                        self.badge = nil
+//                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+//                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
+//                            badge?.removeFromSuperview()
+//                        })
+//                    }
+//                } else {
+//                    self.badge?.removeFromSuperview()
+//                    self.badge = nil
+//                }
+//            }
+        
+            var additionBadgeOffset: CGFloat = 0
             
             if let badgeNode = item.ctxAdditionalBadgeNode {
+                var presented: Bool = false
                 if additionalBadgeView == nil {
                     additionalBadgeView = View()
                     containerView.addSubview(additionalBadgeView!)
+                    presented = true
                 }
                 additionalBadgeView?.setFrameSize(badgeNode.size)
                 badgeNode.view = additionalBadgeView
                 badgeNode.setNeedDisplay()
+                
+                let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                additionBadgeOffset += (badgeNode.size.width + item.margin)
+
+                if presented {
+                    self.additionalBadgeView?.setFrameOrigin(point)
+                    if animated {
+                        self.additionalBadgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                        self.additionalBadgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                } else {
+                    self.additionalBadgeView?.change(pos: point, animated: animated)
+                }
             } else {
-                additionalBadgeView?.removeFromSuperview()
-                additionalBadgeView = nil
+                if animated {
+                    if let badge = self.additionalBadgeView {
+                        self.additionalBadgeView = nil
+                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
+                            badge?.removeFromSuperview()
+                        })
+                    }
+                } else {
+                    self.additionalBadgeView?.removeFromSuperview()
+                    self.additionalBadgeView = nil
+                }
+            }
+            
+            if let badgeNode = item.ctxBadgeNode {
+                var presented: Bool = false
+                if badgeView == nil {
+                    badgeView = View()
+                    containerView.addSubview(badgeView!)
+                    presented = true
+                }
+                badgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = badgeView
+                badgeNode.setNeedDisplay()
+                
+                let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin - additionBadgeOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                
+                if presented {
+                    self.badgeView?.setFrameOrigin(point)
+                    if animated {
+                        self.badgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                        self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                } else {
+                    self.badgeView?.change(pos: point, animated: animated)
+                }
+                
+            } else {
+                if animated {
+                    if let badge = self.badgeView {
+                        self.badgeView = nil
+                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
+                            badge?.removeFromSuperview()
+                        })
+                    }
+                } else {
+                    self.badgeView?.removeFromSuperview()
+                    self.badgeView = nil
+                }
+            }
+            
+            if let _ = item.mentionsCount {
+                
+                let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                let icon: CGImage
+                if item.associatedGroupId == .root {
+                    icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
+                } else {
+                    icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
+                }
+                
+                var presented: Bool = false
+                if self.mentionsView == nil {
+                    self.mentionsView = ImageView()
+                    self.containerView.addSubview(self.mentionsView!)
+                    presented = true
+                }
+                
+                self.mentionsView?.image = icon
+                self.mentionsView?.sizeToFit()
+                
+                let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
+                
+                if presented {
+                    self.mentionsView?.setFrameOrigin(point)
+                    if animated {
+                        self.mentionsView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                        self.mentionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                } else {
+                    self.mentionsView?.change(pos: point, animated: animated)
+                }
+            } else {
+                if let mentionsView = self.mentionsView {
+                    self.mentionsView = nil
+                    if animated {
+                        mentionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                        mentionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak mentionsView] _ in
+                            mentionsView?.removeFromSuperview()
+                        })
+                    } else {
+                        mentionsView.removeFromSuperview()
+                    }
+                }
             }
             
             if let peerId = item.peerId {
@@ -851,6 +974,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if let badgeNode = item.ctxBadgeNode {
                     self.badgeView?.setFrameOrigin(self.containerView.frame.width - badgeNode.size.width - item.margin - additionalOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
                 }
+                
+                if let mentionsView = self.mentionsView {
+                    let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - mentionsView.frame.width - item.margin, self.containerView.frame.height - mentionsView.frame.height - (item.margin + 1))
+                    mentionsView.setFrameOrigin(point)
+                }
+                
                 if let activeImage = self.activeImage {
                     activeImage.setFrameOrigin(self.photo.frame.maxX - activeImage.frame.width - 3, self.photo.frame.maxY - 12)
                 }

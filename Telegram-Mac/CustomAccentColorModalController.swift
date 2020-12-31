@@ -77,7 +77,7 @@ private final class CustomAccentColorView : View {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false)
+                    view.updateBackground(animated: false, item: view.item)
                 }
             })
         }))

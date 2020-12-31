@@ -9,6 +9,8 @@
 import Foundation
 import TgVoipWebrtc
 import TGUIKit
+import SwiftSignalKit
+
 final class DesktopCapturePreviewItem : GeneralRowItem {
     fileprivate let sources: [DesktopCaptureSource]
     fileprivate let selectedSource: DesktopCaptureSource?
@@ -125,6 +127,9 @@ private final class DesktopCapturePreviewView : TableRowView {
     private let containerView: View = View()
     private let textViews: View = View()
     
+    
+    private let disposable = MetaDisposable()
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)
@@ -161,6 +166,7 @@ private final class DesktopCapturePreviewView : TableRowView {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+        disposable.dispose()
     }
     
     private func updateListeners() {
@@ -173,13 +179,21 @@ private final class DesktopCapturePreviewView : TableRowView {
             return
         }
         if let manager = item.manager {
-            for source in item.sources {
-                if visibleRect != .zero {
-                    manager.start(source)
-                } else {
+            if visibleRect != .zero {
+                disposable.set(delaySignal(0.2).start(completed: { [weak manager, weak item] in
+                    if let item = item {
+                        for source in item.sources {
+                            manager?.start(source)
+                        }
+                    }
+                }))
+            } else {
+                disposable.set(nil)
+                for source in item.sources {
                     manager.stop(source)
                 }
             }
+            
         }
     }
     

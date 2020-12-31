@@ -9,7 +9,13 @@
 import Foundation
 
 public final class DynamicCounterTextView : View {
-    public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat) -> (values: [(TextViewLayout, DynamicCounterTextView.Text)], size: NSSize) {
+    
+    public struct Value {
+        public let values: [(TextViewLayout, DynamicCounterTextView.Text)]
+        public let size: NSSize
+    }
+    
+    public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat) -> Value {
         var title: [(String, DynamicCounterTextView.Text.Animation, Int)] = []
         if count.isEmpty {
             title = [(text, .crossFade, 0)]
@@ -61,7 +67,7 @@ public final class DynamicCounterTextView : View {
             return current
         })
         
-        return (values: layouts, size: size)
+        return Value(values: layouts, size: size)
     }
     
     
@@ -125,11 +131,11 @@ public final class DynamicCounterTextView : View {
                 if animated {
                     switch updated.animation {
                     case .crossFade:
-                        field.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak field] _ in
+                        field.layer?.animateAlpha(from: 1, to: 0, duration: duration - 0.1, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak field] _ in
                             field?.removeFromSuperview()
                         })
                     case .numeric:
-                        field.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak field] _ in
+                        field.layer?.animateAlpha(from: 1, to: 0, duration: duration - 0.1, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak field] _ in
                             field?.removeFromSuperview()
                         })
                         

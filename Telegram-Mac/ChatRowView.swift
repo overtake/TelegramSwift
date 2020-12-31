@@ -98,22 +98,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.setFrameOrigin(newOrigin)
         
         if oldOrigin != newOrigin, oldOrigin == .zero {
-            updateBackground(animated: false)
+            updateBackground(animated: false, item: self.item)
         }
     }
     
-    func updateBackground(animated: Bool, rotated: Bool = false) -> Void {
+    func updateBackground(animated: Bool, item: TableRowItem?, rotated: Bool = false, clean: Bool = false) -> Void {
         
-        guard let item = self.item as? ChatRowItem else {
+        guard let item = item as? ChatRowItem else {
             return
         }
+        
         let gradientRect = item.chatInteraction.getGradientOffsetRect()
         let size = NSMakeSize(gradientRect.width, gradientRect.height + 60)
         
         let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame(item).maxY) - 30
-        if visibleRect.height > 0 {
-            bubbleView.update(rect: self.frame.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
-        }
+        let animated = animated && visibleRect.height > 0 && !clean && self.layer?.animation(forKey: "position") == nil
+        let rect = self.frame
+        bubbleView.update(rect: rect.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
     }
     
     var selectableTextViews: [TextView] {
@@ -1520,74 +1521,76 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
-        
-        if let item = self.item as? ChatRowItem {
+        let previousItem = self.item as? ChatRowItem
+                
+        if let item = previousItem {
             item.chatInteraction.remove(observer: self)
         }
     
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        
         
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
         }
         
-        let animated = animated && ((item as? ChatRowItem)?.isBubbled ?? false) && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil
+        let animated = animated && item.isBubbled && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id != item.message?.id && self.layer?.animation(forKey: "position") == nil
         
-        if let item = item as? ChatRowItem {
-            
-            renderLayoutType(item, animated: animated)
-            
-
-            item.chatInteraction.add(observer: self)
-            
-            updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
+        if previousItem?.message?.id != item.message?.id {
+            updateBackground(animated: false, item: item, clean: true)
         }
         
+        renderLayoutType(item, animated: animated)
         
-        
-        if let item = item as? ChatRowItem {
-            rightView.set(item:item, animated:animated)
-            fillReplyIfNeeded(item.replyModel, item)
-            fillName(item, animated: animated)
-            fillForward(item)
-            fillPhoto(item)
-            fillForward(item)
-            fillScamButton(item)
-            fillScamForwardButton(item)
-            fillPsaButton(item)
-            fillShareView(item, animated: animated)
-            fillLikeView(item, animated: animated)
-            fillReplyMarkup(item, animated: animated)
-            fillCaption(item, animated: animated)
-            fillChannelComments(item, animated: animated)
-            
-            super.set(item: item, animated: animated)
 
-            if animated {
-                
-                let bubbleFrame = self.bubbleFrame
-                let contentFrameModifier = self.contentFrameModifier
-                
-                nameView?.change(pos: namePoint(item), animated: animated)
-                
-                bubbleView.change(pos: bubbleFrame(item).origin, animated: animated)
-                bubbleView.change(size: bubbleFrame(item).size, animated: animated)
-                contentView.change(pos: contentFrameModifier(item).origin, animated: animated)
-                contentView.change(size: contentFrameModifier(item).size, animated: animated)
-                updateBackground(animated: animated)
-                
-                let rightFrame = self.rightFrame(item)
-                
-                if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
-                    rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
-                }
-                rightView.change(pos: rightFrame.origin, animated: animated)
-                replyView?._change(pos: replyFrame(item).origin, animated: animated)
-                replyMarkupView?.change(pos: replyMarkupFrame(item).origin, animated: animated)
-                for view in captionViews {
-                    if let caption = item.captionLayouts.first(where: { $0.id == view.id }) {
-                        view.view._change(pos: captionFrame(item, caption: caption).origin, animated: animated)
-                    }
+        item.chatInteraction.add(observer: self)
+        
+        updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
+        
+        rightView.set(item:item, animated:animated)
+        fillReplyIfNeeded(item.replyModel, item)
+        fillName(item, animated: animated)
+        fillForward(item)
+        fillPhoto(item)
+        fillForward(item)
+        fillScamButton(item)
+        fillScamForwardButton(item)
+        fillPsaButton(item)
+        fillShareView(item, animated: animated)
+        fillLikeView(item, animated: animated)
+        fillReplyMarkup(item, animated: animated)
+        fillCaption(item, animated: animated)
+        fillChannelComments(item, animated: animated)
+        
+        super.set(item: item, animated: animated)
+
+        if animated {
+            
+            let bubbleFrame = self.bubbleFrame
+            let contentFrameModifier = self.contentFrameModifier
+            
+            nameView?.change(pos: namePoint(item), animated: animated)
+            
+            bubbleView.change(pos: bubbleFrame(item).origin, animated: animated)
+            bubbleView.change(size: bubbleFrame(item).size, animated: animated)
+            contentView.change(pos: contentFrameModifier(item).origin, animated: animated)
+            contentView.change(size: contentFrameModifier(item).size, animated: animated)
+            updateBackground(animated: animated, item: item)
+            
+            let rightFrame = self.rightFrame(item)
+            
+            if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
+                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
+            }
+            rightView.change(pos: rightFrame.origin, animated: animated)
+            replyView?._change(pos: replyFrame(item).origin, animated: animated)
+            replyMarkupView?.change(pos: replyMarkupFrame(item).origin, animated: animated)
+            for view in captionViews {
+                if let caption = item.captionLayouts.first(where: { $0.id == view.id }) {
+                    view.view._change(pos: captionFrame(item, caption: caption).origin, animated: animated)
                 }
             }
         }

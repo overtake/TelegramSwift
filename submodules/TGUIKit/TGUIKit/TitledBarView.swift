@@ -87,11 +87,11 @@ private class TitledContainerView : View {
             
             if let (titleImage, side) = titleImage {
                 switch side {
-                case .left:
-                    ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4, titleImage.backingSize.width, titleImage.backingSize.height))
+                case let .left(topInset):
+                    ctx.draw(titleImage, in: NSMakeRect(textInset == nil ? textRect.minX - titleImage.backingSize.width : textInset!, tY + 4 + topInset, titleImage.backingSize.width, titleImage.backingSize.height))
                     textRect.origin.x += floorToScreenPixels(backingScaleFactor, titleImage.backingSize.width) + 4
-                case .right:
-                    ctx.draw(titleImage, in: NSMakeRect(textRect.maxX + 3, tY + 1, titleImage.backingSize.width, titleImage.backingSize.height))
+                case let .right(topInset):
+                    ctx.draw(titleImage, in: NSMakeRect(textRect.maxX + 3, tY + 1 + topInset, titleImage.backingSize.width, titleImage.backingSize.height))
                 }
             }
             
@@ -101,8 +101,8 @@ private class TitledContainerView : View {
 }
 
 public enum TitleBarImageSide {
-    case left
-    case right
+    case left(topInset: CGFloat)
+    case right(topInset: CGFloat)
 }
 
 open class TitledBarView: BarView {
