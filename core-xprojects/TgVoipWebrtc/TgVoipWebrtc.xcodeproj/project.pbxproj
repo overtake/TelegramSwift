@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2702A834259BD7F6007F1DDD /* SSignalKit.framework */; };
 		2771ADC22590E650000B29FF /* ScreenCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2771ADC02590E64D000B29FF /* ScreenCapturer.h */; };
 		2771ADC32590E650000B29FF /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2771ADC12590E650000B29FF /* ScreenCapturer.mm */; };
 		27B15CC2259A6D2400C7F280 /* DesktopCaptureSourceHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */; };
@@ -58,6 +59,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2702A834259BD7F6007F1DDD /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2771ADC02590E64D000B29FF /* ScreenCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScreenCapturer.h; sourceTree = "<group>"; };
 		2771ADC12590E650000B29FF /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScreenCapturer.mm; sourceTree = "<group>"; };
 		27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DesktopCaptureSourceHelper.h; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */,
 				D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */,
 				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
 				D0D751A424BE372F0037D73A /* AppKit.framework in Frameworks */,
@@ -219,6 +222,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2702A834259BD7F6007F1DDD /* SSignalKit.framework */,
 				D0076E3C25685056007EF588 /* webrtc.framework */,
 				D00B192124E5722A006CCB87 /* GLKit.framework */,
 				D0D751A324BE372F0037D73A /* AppKit.framework */,

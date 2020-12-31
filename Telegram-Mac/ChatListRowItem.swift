@@ -91,6 +91,19 @@ enum ChatListRowState : Equatable {
 
 class ChatListRowItem: TableRowItem {
 
+    struct Badge {
+        let dynamicValue: DynamicCounterTextView.Value
+        let backgroundColor: NSColor
+        let size: NSSize
+        init(dynamicValue: DynamicCounterTextView.Value, backgroundColor: NSColor, size: NSSize) {
+            self.dynamicValue = dynamicValue
+            self.backgroundColor = backgroundColor
+            var mapped = NSMakeSize(max(CGFloat(dynamicValue.values.count) * 10 - 10 + 7, size.width + 8), size.height + 7)
+            mapped = NSMakeSize(max(mapped.height,mapped.width), mapped.height)
+            self.size = mapped
+        }
+    }
+    
     public private(set) var messages:[Message]
     
     var message: Message? {
@@ -172,6 +185,12 @@ class ChatListRowItem: TableRowItem {
     
     private(set) var peerNotificationSettings:PeerNotificationSettings?
     private(set) var readState:CombinedPeerReadState?
+    
+    
+    
+//    private var badge: Badge? = nil
+//    private var badgeSelected: Badge? = nil
+
     
     private var badgeNode:BadgeNode? = nil
     private var badgeSelectedNode:BadgeNode? = nil
@@ -423,6 +442,14 @@ class ChatListRowItem: TableRowItem {
         _ = _animateArchive.swap(animateGroup)
         
         if mutedCount > 0  {
+            
+//            var dynamicValue = DynamicCounterTextView.make(for: "\(mutedCount)", count: "\(mutedCount)", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
+//            badge = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeMutedBackgroundColor, size: dynamicValue.size)
+//
+//            dynamicValue = DynamicCounterTextView.make(for: "\(mutedCount)", count: "\(mutedCount)", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
+//            badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size)
+
+            
             badgeNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
         }
@@ -634,9 +661,26 @@ class ChatListRowItem: TableRowItem {
         
         if showBadge {
             if let unreadCount = readState?.count, unreadCount > 0, mentionsCount == nil || (unreadCount > 1 || mentionsCount! != unreadCount)  {
+                
+//                var dynamicValue = DynamicCounterTextView.make(for: "\(unreadCount)", count: "\(unreadCount)", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
+//                badge = Badge(dynamicValue: dynamicValue, backgroundColor: isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor, size: dynamicValue.size)
+//                
+//                dynamicValue = DynamicCounterTextView.make(for: "\(unreadCount)", count: "\(unreadCount)", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
+//                badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size)
+
+                
+                
                 badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
                 badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
             } else if isUnreadMarked && mentionsCount == nil {
+                
+                
+//                var dynamicValue = DynamicCounterTextView.make(for: " ", count: " ", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
+//                badge = Badge(dynamicValue: dynamicValue, backgroundColor: isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor, size: dynamicValue.size + NSSize(width: 8, height: 7))
+//
+//                dynamicValue = DynamicCounterTextView.make(for: " ", count: " ", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
+//                badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size + NSSize(width: 8, height: 7))
+//
                 badgeNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
                 badgeSelectedNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
             }
@@ -1162,6 +1206,13 @@ class ChatListRowItem: TableRowItem {
         }
         return badgeNode
     }
+    
+//    var ctxBadge: Badge? {
+//        if isSelected && context.sharedContext.layout != .single {
+//            return badgeSelected
+//        }
+//        return badge
+//    }
     
     var ctxAdditionalBadgeNode:BadgeNode? {
         if isSelected && context.sharedContext.layout != .single {

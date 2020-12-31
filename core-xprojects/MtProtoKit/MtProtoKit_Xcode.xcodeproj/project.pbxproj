@@ -634,7 +634,6 @@
 			isa = PBXGroup;
 			children = (
 				D0179ECD250BCB7600599140 /* PublicHeaders */,
-				D05A84E718AFF0EE007F1076 /* Third Party */,
 				D05A849B18AFCA3D007F1076 /* MtProtoKit */,
 				D079AB981AF39B8000076F59 /* MtProtoKit */,
 				D05A831618AFB3F9007F1076 /* Frameworks */,
@@ -681,14 +680,6 @@
 			);
 			name = MtProtoKit;
 			path = "../../submodules/telegram-ios/submodules/MtProtoKit";
-			sourceTree = "<group>";
-		};
-		D05A84E718AFF0EE007F1076 /* Third Party */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Third Party";
-			path = "../../submodules/telegram-ios/submodules/MtProtoKit/thirdparty";
 			sourceTree = "<group>";
 		};
 		D079AB981AF39B8000076F59 /* MtProtoKit */ = {

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
+		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
@@ -995,6 +996,7 @@
 
 /* Begin PBXFileReference section */
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
+		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
@@ -2900,6 +2902,7 @@
 				9F0367F62273260A00456348 /* UndoTooltipController.swift */,
 				A7C1379D23DF21EA00803ED3 /* ChatListRevealItem.swift */,
 				A73884342580E501002E8424 /* CGChatListIndicator.swift */,
+				2725785A259CF987001558E8 /* AnimatedBadgeView.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -5298,6 +5301,7 @@
 				9F7B740F2229618E006610E4 /* SharedWakeupManager.swift in Sources */,
 				C24DABA31E083185005EE404 /* YTVimeoExtractorOperation.m in Sources */,
 				9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */,
+				2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */,
 				D071E8AC214BE6E7001B6024 /* TouchBarScrubberHeaderItemView.swift in Sources */,
 				C253E23E1DE61CB50022A29F /* ContextListRowItem.swift in Sources */,
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,

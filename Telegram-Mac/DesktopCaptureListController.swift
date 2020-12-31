@@ -27,12 +27,8 @@ private struct DesktopCaptureListState : Equatable {
     }
 }
 
-private let _id_input = InputDataIdentifier("frame")
-
 private func entries(_ state: DesktopCaptureListState, windows: DesktopCaptureSourceManager?, arguments: DesktopCaptureListArguments) -> [InputDataEntry] {
-    
-    
-    
+        
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0

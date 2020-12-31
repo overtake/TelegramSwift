@@ -177,13 +177,6 @@ class InputPasteboardParser: NSObject {
                         files.append(url)
                         image = nil
                     } else {
-                        if let rep = images[0].representations.first as? NSBitmapImageRep {
-                            let frames = rep.value(forProperty: .frameCount) as? Int
-                            if let frames = frames, frames > 1 {
-                                var bp:Int = 0
-                                bp += 1
-                            }
-                        }
                         image = images[0]
                     }
                 }

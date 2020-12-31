@@ -834,7 +834,7 @@ private func generateIVAudioPause(color: NSColor) -> CGImage {
 }
 
 private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
         ctx.setFillColor(backgroundColor.cgColor)
@@ -1807,7 +1807,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                errorImageSelected: { #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true) },
                                                chatSearch: { generateChatAction(#imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon), background: palette.background) },
                                                chatSearchActive: { generateChatAction( #imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
-                                               chatCall: { #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.accentIcon) },
+                                               chatCall: {  generateChatAction(#imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.accentIcon), background: palette.background)  },
+                                               chatCallActive: { generateChatAction( #imageLiteral(resourceName: "Icon_callNavigationHeader").precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
                                                chatActions: { generateChatAction(#imageLiteral(resourceName: "Icon_ChatActionsActive").precomposed(palette.accentIcon), background: palette.background) },
                                                chatFailedCall_incoming: { #imageLiteral(resourceName: "Icon_MessageCallIncoming").precomposed(palette.redUI) },
                                                chatFailedCall_outgoing:  { #imageLiteral(resourceName: "Icon_MessageCallOutgoing").precomposed(palette.redUI) },
@@ -2358,7 +2359,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_voicechat_can_unmute: { NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(.white) },
                                                chat_voicechat_cant_unmute: { NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(palette.redUI) },
                                                chat_voicechat_unmuted: { NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(.white) },
-                                               profile_voice_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_VoiceChat")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) }
+                                               profile_voice_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_VoiceChat")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               chat_voice_chat: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.background) },
+                                               chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) }
 
     )
 

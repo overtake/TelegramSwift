@@ -439,8 +439,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             self?.updateStatus()
         })
         
-        callButton.set(handler: { _ in
-           chatInteraction.call()
+        callButton.set(handler: { [weak self] _ in
+            guard let chatInteraction = self?.chatInteraction else {
+                return
+            }
+            if let groupCall = chatInteraction.presentation.groupCall {
+                chatInteraction.joinGroupCall(groupCall.activeCall, true)
+            } else {
+                chatInteraction.call()
+            }
         }, for: .Click)
         
         activities.view?.isHidden = true
@@ -731,15 +738,24 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             switch chatInteraction.mode {
             case .history:
                 if let peer = peerViewMainPeer(peerView) {
-                    callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId
+                    if peer.isGroup || peer.isSupergroup {
+                        if let groupCall = chatInteraction.presentation.groupCall {
+                            if let data = groupCall.data, data.participantCount == 0 {
+                                callButton.isHidden = false
+                            } else {
+                                callButton.isHidden = true
+                            }
+                        } else {
+                            callButton.isHidden = true
+                        }
+                    } else {
+                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId
+                    }
                 } else {
                     callButton.isHidden = true
                 }
-            case .scheduled:
-                callButton.isHidden = true
-            case .replyThread:
-                callButton.isHidden = true
-            case .pinned:
+                
+            default:
                 callButton.isHidden = true
             }
             
@@ -757,19 +773,32 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
             
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
+                titleImage = (theme.icons.chatSecretTitle, .left(topInset: 0))
+                callButton.set(image: theme.icons.chatCall, for: .Normal)
+                callButton.set(image: theme.icons.chatCallActive, for: .Highlight)
             } else if let peer = peerViewMainPeer(peerView), chatInteraction.mode == .history {
                 if peer.isVerified {
-                    titleImage = (theme.icons.verifiedImage, .right)
+                    titleImage = (theme.icons.verifiedImage, .right(topInset: 0))
                 } else if peer.isScam {
-                    titleImage = (theme.icons.scam, .right)
+                    titleImage = (theme.icons.scam, .right(topInset: 0))
+                } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
+                    titleImage = (theme.icons.dialogMuteImage, .right(topInset: 2))
                 } else {
                     titleImage = nil
+                }
+                
+                if peer.isGroup || peer.isSupergroup {
+                    callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)
+                    callButton.set(image: theme.icons.chat_voice_chat_active, for: .Highlight)
+                } else {
+                    callButton.set(image: theme.icons.chatCall, for: .Normal)
+                    callButton.set(image: theme.icons.chatCallActive, for: .Highlight)
                 }
             } else {
                 titleImage = nil
             }
-            
+            callButton.sizeToFit()
+
             updateTitle(force)
         } 
     }
@@ -829,34 +858,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         searchButton.set(image: theme.icons.chatSearch, for: .Normal)
         searchButton.set(image: theme.icons.chatSearchActive, for: .Highlight)
 
-        
         _ = searchButton.sizeToFit()
-        
-        callButton.set(image: theme.icons.chatCall, for: .Normal)
-        _ = callButton.sizeToFit()
         
         closeButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         
-        if let peerView = postboxView as? PeerView {
-            if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if peerView.peers[peerView.peerId] is TelegramSecretChat {
-                titleImage = (theme.icons.chatSecretTitle, .left)
-            } else if let peer = peerViewMainPeer(peerView) {
-                if peer.isVerified {
-                    titleImage = (theme.icons.verifiedImage, .right)
-                } else if peer.isScam {
-                    titleImage = (theme.icons.scam, .right)
-                } else {
-                    titleImage = nil
-                }
-            } else {
-                titleImage = nil
-            }
-        } else {
-            titleImage = nil
-        }
+        updateStatus(true)
     }
 }

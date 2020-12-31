@@ -20,9 +20,8 @@
 #include "third_party/libyuv/include/libyuv.h"
 #import "helpers/RTCDispatcher+Private.h"
 #import <QuartzCore/QuartzCore.h>
-
-
-
+#import <SSignalKit/STimer.h>
+#import <SSignalKit/SQueue.h>
 
 
 class SourceFrameCallbackImpl : public webrtc::DesktopCapturer::Callback {
@@ -68,7 +67,7 @@ public:
         if (_sink != NULL) {
             _sink->OnFrame(nativeVideoFrame);
         }
-        next_timestamp_ += rtc::kNumNanosecsPerSec / 30;
+        next_timestamp_ += rtc::kNumNanosecsPerSec / 15;
     }
 private:
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer_;
@@ -110,15 +109,20 @@ private:
 
 -(void)setOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
     _callback.get()->_sink = sink;
-    @autoreleasepool {
-        _capturer->CaptureFrame();
-    }
+    [self captureFrame];
 }
 
 -(void)start {
     if (self->_timer == nil) {
         __weak id weakSelf = self;
-        self->_timer = [NSTimer scheduledTimerWithTimeInterval:1000/30/1000
+//        _timer = [[STimer alloc] initWithTimeout:1000/30/1000 repeat:true completion:^{
+//            @autoreleasepool {
+//                [weakSelf captureFrame];
+//            }
+//        } nativeQueue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
+//
+//        [_timer start];
+        self->_timer = [NSTimer scheduledTimerWithTimeInterval:1000/15/1000
             target:weakSelf
             selector:@selector(captureFrame)
             userInfo:nil

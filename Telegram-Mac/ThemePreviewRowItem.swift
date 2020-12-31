@@ -139,7 +139,7 @@ private final class ThemePreviewRowView : TableRowView {
             self.backgroundView.addSubview(view)
             
             if let view = view as? ChatRowView {
-                view.updateBackground(animated: false, rotated: true)
+                view.updateBackground(animated: false, item: view.item, rotated: true)
             }
             
             y += item.height

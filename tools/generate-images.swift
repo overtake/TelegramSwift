@@ -21,6 +21,7 @@ func initialize() -> [String] {
     array.append("chatSearch")
     array.append("chatSearchActive")
     array.append("chatCall")
+    array.append("chatCallActive")
     array.append("chatActions")
     array.append("chatFailedCall_incoming")
     array.append("chatFailedCall_outgoing")
@@ -615,7 +616,9 @@ func initialize() -> [String] {
     array.append("chat_voicechat_unmuted")
 
     array.append("profile_voice_chat")
-
+    
+    array.append("chat_voice_chat")
+    array.append("chat_voice_chat_active")
     return array
 }
 //swift ./tools/generate-images.swift

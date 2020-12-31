@@ -349,12 +349,14 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
                 }
             }
         } catch {
-            let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
             subscriber.putError(.generic)
             subscriber.putCompletion()
         }
+        
+        let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
+        
         return EmptyDisposable
-        } |> runOn(cacheThreadPool)
+    } |> runOn(cacheThreadPool)
 }
 
 
