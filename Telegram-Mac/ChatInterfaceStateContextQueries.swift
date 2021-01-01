@@ -1,4 +1,4 @@
-//
+ //
 //  ChatInterfaceStateContextQueries.swift
 //  TelegramMac
 //
@@ -434,7 +434,18 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
             return uniquePeers(from: result)
         }
         
-        let result = participants |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        let peers = combineLatest(chatLocations.map { context.account.postbox.loadedPeerWithId($0.peerId) })
+        
+        let result = combineLatest(participants, peers) |> map { participants, peers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+            
+            var participants = participants
+            
+            for peer in peers {
+                if peer.isSupergroup {
+                    participants.append(peer)
+                }
+            }
+            
             let filteredParticipants = participants.filter { peer in
                 
                 switch filter {

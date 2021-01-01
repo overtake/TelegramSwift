@@ -1050,6 +1050,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let pollChannelDiscussionDisposable = MetaDisposable()
     private let peekDisposable = MetaDisposable()
     private let loadThreadDisposable = MetaDisposable()
+    private let recordActivityDisposable = MetaDisposable()
 
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
@@ -4856,6 +4857,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         loadSharedMediaDisposable.dispose()
         pollChannelDiscussionDisposable.dispose()
         loadThreadDisposable.dispose()
+        recordActivityDisposable.dispose()
         peekDisposable.dispose()
         _ = previousView.swap(nil)
         
@@ -5564,8 +5566,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let upgradedToPeerId = upgradedToPeerId {
                 let controller = ChatController(context: context, chatLocation: .peer(upgradedToPeerId))
                 navigationController?.removeAll()
-                navigationController?.push(controller, false, style: .none)
+                navigationController?.push(controller, false, style: ViewControllerStyle.none)
             }
+            
+            if value.recordingState != oldValue.recordingState {
+                if let state = value.recordingState {
+                    let activity: PeerInputActivity = state is ChatRecordingAudioState ? .recordingVoice : .recordingInstantVideo
+                    
+                    let recursive = (Signal<Void, NoError>.single(Void()) |> then(.single(Void()) |> suspendAwareDelay(4, queue: .mainQueue()))) |> restart
+                    
+                    recordActivityDisposable.set(recursive.start(next: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        self.context.account.updateLocalInputActivity(peerId: .init(peerId: self.chatLocation.peerId, category: self.mode.activityCategory), activity: activity, isPresent: true)
+                    }))
+                    
+                } else if let state = oldValue.recordingState {
+                    let activity: PeerInputActivity = state is ChatRecordingAudioState ? .recordingVoice : .recordingInstantVideo
+                    self.context.account.updateLocalInputActivity(peerId: .init(peerId: self.chatLocation.peerId, category: self.mode.activityCategory), activity: activity, isPresent: false)
+                    recordActivityDisposable.set(nil)
+                }
+            }
+            
             dismissedPinnedIds.set(ChatDismissedPins(ids: value.interfaceState.dismissedPinnedMessageId, tempMaxId: value.tempPinnedMaxId))
            
         }

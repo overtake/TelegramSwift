@@ -782,7 +782,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else if peer.isScam {
                     titleImage = (theme.icons.scam, .right(topInset: 0))
                 } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
-                    titleImage = (theme.icons.dialogMuteImage, .right(topInset: 2))
+                    titleImage = (theme.icons.dialogMuteImage, .right(topInset: 3))
                 } else {
                     titleImage = nil
                 }
