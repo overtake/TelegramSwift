@@ -30,6 +30,8 @@ extension Account {
 #endif
 
 
+
+
 private final class SharedApplicationContext {
     let sharedContext: SharedAccountContext
     let notificationManager: SharedNotificationManager
@@ -99,11 +101,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     var isActive: Signal<Bool, NoError> {
         return self.activeValue.get()
     }
-
+    private let encryptionValue:Promise<ValueBoxEncryptionParameters> = Promise()
+    
     private let handleEventContextDisposable = MetaDisposable()
     private let proxyDisposable = MetaDisposable()
     private var activity:Any?
     private var executeUrlAfterLogin: String? = nil
+    
+    private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
        
@@ -258,22 +263,84 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let rootPath = containerUrl!
         let window = self.window!
+        _ = System.scaleFactor.swap(window.backingScaleFactor)
+        window.minSize = NSMakeSize(380, 500)
+        
+        let appEncryption = AppEncryptionParameters(path: rootPath)
+
+        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata")
+
+        if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
+            let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
+            self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+        } else {
+            
+            
+            let themeSemaphore = DispatchSemaphore(value: 0)
+            var themeSettings: ThemePaletteSettings = ThemePaletteSettings.defaultTheme
+            _ = (themeSettingsView(accountManager: accountManager) |> take(1)).start(next: { settings in
+                themeSettings = settings
+                themeSemaphore.signal()
+            })
+            themeSemaphore.wait()
+            
+            var localization: LocalizationSettings? = nil
+            let localizationSemaphore = DispatchSemaphore(value: 0)
+            _ = (accountManager.transaction { transaction in
+                localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+                localizationSemaphore.signal()
+            }).start()
+            localizationSemaphore.wait()
+            
+            if let localization = localization {
+                applyUILocalization(localization)
+            }
+            
+            updateTheme(with: themeSettings, for: window)
+            
+            self.window.makeKeyAndOrderFront(self)
+            
+            showModal(with: ColdStartPasslockController(checkNextValue: { passcode in
+                appEncryption.applyPasscode(passcode)
+                if let params = appEncryption.decrypt() {
+                    let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
+                    self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+                    return true
+                } else {
+                    return false
+                }
+            }, logoutImpl: {
+                return Signal { subscriber in
+                    try? FileManager.default.removeItem(atPath: rootPath)
+                    subscriber.putCompletion()
+                    DispatchQueue.main.async {
+                        let appEncryption = AppEncryptionParameters(path: rootPath)
+                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata")
+                        if let params = appEncryption.decrypt() {
+                            let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
+                            self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+                        }
+                    }
+                    return EmptyDisposable
+                } |> runOn(prepareQueue)
+            }), for: window)
+        }
+    }
+    
+    private func launchApp(accountManager: AccountManager, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
+        
+        
+        self.appEncryption = appEncryption
+        
+        let rootPath = containerUrl!
+        let window = self.window!
+        _ = System.scaleFactor.swap(window.backingScaleFactor)
         
         
         window.minSize = NSMakeSize(380, 500)
-
-        
-        let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: baseAppBundleId)
-        let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
-        
-                
-        _ = System.scaleFactor.swap(window.backingScaleFactor)
-
         
         let networkDisposable = MetaDisposable()
         
-        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata")
-
         
         let displayUpgrade:(Float?) -> Void = { progress in
             if let progress = progress {
@@ -294,6 +361,28 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 displayUpgrade(nil)
             }
         }, completed: {
+            
+            
+            let passcodeSemaphore = DispatchSemaphore(value: 0)
+            
+            _ = accountManager.transaction { modifier -> Void in
+                let passcode = modifier.getAccessChallengeData()
+                
+                switch passcode {
+                case let .numericalPassword(value), let .plaintextPassword(value):
+                    if !value.isEmpty {
+                        appEncryption.change(value)
+                        modifier.setAccessChallengeData(.plaintextPassword(value: ""))
+                    }
+                default:
+                    break
+                }
+                passcodeSemaphore.signal()
+            }.start()
+            passcodeSemaphore.wait()
+
+           
+            
             let themeSemaphore = DispatchSemaphore(value: 0)
             var themeSettings: ThemePaletteSettings = ThemePaletteSettings.defaultTheme
             _ = (themeSettingsView(accountManager: accountManager) |> take(1)).start(next: { settings in
@@ -339,7 +428,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let autoNightSignal = viewDidChangedAppearance.get() |> mapToSignal { _ in
                 return combineLatest(autoNightSettings(accountManager: accountManager), Signal<Void, NoError>.single(Void()) |> then( Signal<Void, NoError>.single(Void()) |> delay(60, queue: Queue.mainQueue()) |> restart))
-            } |> deliverOnMainQueue
+                } |> deliverOnMainQueue
             
             
             _ = autoNightSignal.start(next: { preference, _ in
@@ -423,7 +512,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
             
-            let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: displayUpgrade)
+            let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
             
             self.hangKeybind(sharedContext)
             
@@ -473,10 +562,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     }
                     
                     let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
-
+                    
                     let currentInChat = navigation.controller is ChatController
                     let controller = navigation.controller as? ChatController
-
+                    
                     if controller?.chatInteraction.mode.threadId == threadId {
                         controller?.scrollup()
                     } else {
@@ -510,7 +599,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
             })
             
-            let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, accountManager: accountManager, window: window, bindings: notificationsBindings)
+            let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, appEncryption: appEncryption, accountManager: accountManager, window: window, bindings: notificationsBindings)
             let sharedWakeupManager = SharedWakeupManager(sharedContext: sharedContext, inForeground: self.presentAccountStatus.get())
             let sharedApplicationContext = SharedApplicationContext(sharedContext: sharedContext, notificationManager: sharedNotificationManager, sharedWakeupManager: sharedWakeupManager)
             
@@ -529,7 +618,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 Logger.shared.redactSensitiveData = true//loggingSettings.redactSensitiveData
                 return .single(sharedApplicationContext)
             })
-
             
             self.context.set(self.sharedContextPromise.get()
                 |> deliverOnMainQueue
@@ -557,8 +645,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                         }.start()
                                     semaphore.wait()
                                 }
-                              //  let tonContext = StoredTonContext(basePath: account.basePath, postbox: account.postbox, network: account.network, keychain: tonKeychain)
-
+                                //  let tonContext = StoredTonContext(basePath: account.basePath, postbox: account.postbox, network: account.network, keychain: tonKeychain)
+                                
                                 let context = AccountContext(sharedContext: sharedApplicationContext.sharedContext, window: window, account: account)
                                 return AuthorizedApplicationContext(window: window, context: context, launchSettings: settings ?? LaunchSettings.defaultSettings, callSession: sharedContext.getCrossAccountCallSession(), groupCallContext: sharedContext.getCrossAccountGroupCall())
                                 
@@ -655,8 +743,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     
                     (HackUtils.findElements(byClass: "Telegram.OpmizeDatabaseView", in: self.window.contentView!).first as? NSView)?.removeFromSuperview()
                     
-                    
-                    //closeAllModals()
+                    closeModal(ColdStartPasslockController.self)
                     closeAllPopovers(for: window)
                     
                     self.contextValue = context
@@ -761,7 +848,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                     #else
                                     updater_resetWithUpdaterSource(.external(context: self.contextValue?.context))
                                     #endif
-
+                                    
                                 }))
                                 #endif
                                 
