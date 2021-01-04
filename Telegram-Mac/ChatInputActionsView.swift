@@ -494,7 +494,7 @@ class ChatInputActionsView: View, Notifable {
                     break
                 case .replyThread:
                     break
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 

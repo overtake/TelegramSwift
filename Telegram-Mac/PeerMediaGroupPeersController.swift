@@ -19,12 +19,14 @@ private final class GroupPeersArguments {
     let promote:(ChannelParticipant)->Void
     let restrict:(ChannelParticipant)->Void
     let showMore:()->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void) {
+    let chatPreview:(PeerId)->Void
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void, chatPreview:@escaping(PeerId)->Void) {
         self.context = context
         self.removePeer = removePeer
         self.promote = promote
         self.restrict = restrict
         self.showMore = showMore
+        self.chatPreview = chatPreview
     }
     
     func peerInfo(_ peerId:PeerId) {
@@ -233,7 +235,15 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     }
                     
                     var menuItems: [ContextMenuItem] = []
-                    
+                    if sortedParticipants[i].peerId != arguments.context.peerId {
+                        menuItems.append(ContextMenuItem(L10n.chatListContextPreview, handler: {
+                            arguments.chatPreview(sortedParticipants[i].peerId)
+                        }))
+                        if canRestrict {
+                            menuItems.append(ContextSeparatorItem())
+                        }
+                    }
+                   
                     if canRestrict {
                         menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
                             arguments.removePeer(sortedParticipants[i].peerId)
@@ -354,6 +364,15 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 
                 var menuItems:[ContextMenuItem] = []
                 
+                
+                if sortedParticipants[i].participant.peerId != arguments.context.peerId {
+                    menuItems.append(ContextMenuItem(L10n.chatListContextPreview, handler: {
+                        arguments.chatPreview(sortedParticipants[i].participant.peerId)
+                    }))
+                    if canPromote || canRestrict {
+                        menuItems.append(ContextSeparatorItem())
+                    }
+                }
                 
                 if canPromote {
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuPromote, handler: {
@@ -528,6 +547,8 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
             _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
         }), for: context.window)
+    }, chatPreview: { peerId in
+        showModal(with: ChatModalPreviewController(location: .peer(peerId), context: context), for: context.window)
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), context.account.postbox.peerView(id: peerId), channelMembersPromise.get(), inputActivity, editing) |> map {

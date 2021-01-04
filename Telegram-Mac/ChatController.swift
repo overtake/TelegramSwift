@@ -31,6 +31,7 @@ enum ChatMode : Equatable {
     case history
     case scheduled
     case pinned
+    case preview
     case replyThread(data: ChatReplyThreadMessage, mode: ReplyThreadMode)
     
     var threadId: MessageId? {
@@ -1645,7 +1646,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else { return }
             
             switch self.mode {
-            case .scheduled, .pinned:
+            case .scheduled, .pinned, .preview:
                 return
             case .history:
                 break
@@ -1785,7 +1786,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             self?.chatInteraction.focusMessageId(nil, messageId, .top(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 30))
                         }
                     }))
-                case .pinned:
+                case .pinned, .preview:
                     break
                 case .scheduled:
                     var previousItem: ChatRowItem?
@@ -1969,7 +1970,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         })
                         apply(strongSelf, atDate: atDate)
-                    case .pinned:
+                    case .pinned, .preview:
                         break
                     }
                     
@@ -2374,7 +2375,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }), for: context.window)
                     }
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 
@@ -2538,7 +2539,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }))
                 case .scheduled:
                     break
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 
@@ -2675,7 +2676,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .scheduled:
                     strongSelf.navigationController?.back()
                     (strongSelf.navigationController?.controller as? ChatController)?.chatInteraction.focusMessageId(fromId, toId, state)
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2756,7 +2757,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .history, .replyThread:
                     let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: {})
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2885,7 +2886,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }), for: context.window)
                     }
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -2932,7 +2933,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 case .history, .replyThread:
                     apply(strongSelf, atDate: nil)
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
             }
@@ -3560,7 +3561,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             present = present.withUpdatedPinnedMessageId(pinnedMessage)
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
-                    case .history:
+                    case .history, .preview:
                         self.chatInteraction.update(animated:false,{ present in
                             var present = present
                             if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
@@ -3613,7 +3614,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         })
                     case .scheduled:
                         break
-                    case .pinned:
+                    case .pinned, .preview:
                         break
                     }
                     
@@ -3703,7 +3704,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let peerView = postboxView as? PeerView
                 
                 switch self.chatInteraction.mode {
-                case .history:
+                case .history, .preview:
                     
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
                         let onlineMemberCount:Signal<Int32?, NoError>
@@ -4684,6 +4685,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         items.append(SPopoverItem(L10n.chatContextEdit1,  { [weak self] in
                             self?.changeState()
                         }, theme.icons.chatActionEdit))
+                    case .preview:
+                        break
                     }
                     if !items.isEmpty {
                         if let popover = button.popover {

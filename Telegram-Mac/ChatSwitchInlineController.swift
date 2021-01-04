@@ -46,7 +46,7 @@ class ChatSwitchInlineController: ChatController {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
                                         let controller: ChatController
                                         switch self.fallbackMode {
-                                        case .history, .pinned:
+                                        case .history, .pinned, .preview:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         case let .replyThread(data, mode):
                                             controller = ChatController.init(context: context, chatLocation: .replyThread(data), mode: .replyThread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))

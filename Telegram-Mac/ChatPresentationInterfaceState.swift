@@ -487,6 +487,9 @@ struct ChatPresentationInterfaceState: Equatable {
             if self.interfaceState.editState != nil {
                 return .editing
             }
+            if self.chatMode == .preview {
+                return .block("")
+            }
             
             switch chatMode {
             case .pinned:
@@ -512,7 +515,7 @@ struct ChatPresentationInterfaceState: Equatable {
                     for rule in restrictionInfo.rules {
                         if rule.platform == "ios" || rule.platform == "all" {
                             return .action(L10n.chatInputClose, { chatInteraction in
-                                chatInteraction.context.sharedContext.bindings.rootNavigation().back()
+                                chatInteraction.back()
                             })
                         }
                     }

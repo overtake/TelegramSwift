@@ -539,6 +539,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         containerView.displayDelegate = self
         containerView.frame = bounds
         
+        
+        
     }
     
     required init?(coder: NSCoder) {
