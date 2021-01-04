@@ -552,7 +552,7 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     case .none:
         hasPasscode = false
     default:
-        hasPasscode = true
+        hasPasscode = context.sharedContext.appEncryptionValue.hasPasscode()
     }
     
     entries.append(.passcode(sectionId: sectionId, enabled: hasPasscode, viewType: .innerItem))

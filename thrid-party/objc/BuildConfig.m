@@ -3,8 +3,8 @@
 #import <Security/Security.h>
 #import <AppKit/AppKit.h>
 
-
-
+#import <MurMurHash32/MurMurHash32.h>
+#import <CryptoUtils/CryptoUtils.h>
 
 static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v7";
 
@@ -87,6 +87,192 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
 }
 
 @end
+
+
+@interface AppEncryptionParameters () {
+    NSString * _Nonnull _rootPath;
+    NSData * _Nonnull key;
+    NSData * _Nonnull iv;
+}
+
+@end
+
+@implementation AppEncryptionParameters
+
+-(id _Nonnull)initWithPath:(NSString * _Nonnull)path {
+    self = [super init];
+    if (self != nil) {
+        self->_rootPath = path;
+        if (![NSFileManager.defaultManager fileExistsAtPath:path]) {
+            [NSFileManager.defaultManager createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:nil];
+        }
+        [self applyPasscode:AppEncryptionParameters.defaultKey];
+        [self upgradeLegacyIfNeeded];
+        [self initializeIfNeeded];
+    }
+    return self;
+}
+
++(NSString * _Nonnull)defaultKey {
+    return @"no-matter-key";
+}
+
+-(void)applyPasscode:(NSString * _Nonnull)passcode {
+    NSData *keyData = [passcode dataUsingEncoding:NSUTF8StringEncoding];
+    NSData *sha512 = CryptoSHA512(keyData.bytes, keyData.length);
+    self->key = [sha512 subdataWithRange:NSMakeRange(0, 32)];
+    self->iv = [sha512 subdataWithRange:NSMakeRange(sha512.length - 16, 16)];
+}
+
+-(void)initializeIfNeeded {
+    NSData *currentData = [NSData dataWithContentsOfFile:self.path];
+    NSMutableData *resultData = nil;
+    if (currentData != nil && currentData.length == 64) {
+        resultData = [currentData mutableCopy];
+    }
+    if (resultData == nil) {
+        NSMutableData *randomData = [[NSMutableData alloc] initWithLength:32 + 16];
+        int result = SecRandomCopyBytes(kSecRandomDefault, randomData.length, [randomData mutableBytes]);
+        resultData = randomData;
+        
+        int hash = murMurHash32Data(resultData);
+        NSMutableData *hashData = [[NSMutableData alloc] initWithBytes:&hash length:4];
+        [resultData appendData:hashData];
+
+        while (resultData.length % 16 != 0) {
+            int zero = 0;
+            [resultData appendBytes:&zero length:1];
+        }
+        NSData *encrypted = CryptoAES(YES, self->key, self->iv, resultData);
+        [encrypted writeToFile:self.path atomically:true];
+    }
+}
+
+-(NSString *)path {
+    return [self->_rootPath stringByAppendingPathComponent:@".tempkeyEncrypted"];
+}
+
+-(NSString *)legacyPath {
+    return [self->_rootPath stringByAppendingPathComponent:@".tempkey"];
+}
+
+-(void)change:(NSString * _Nonnull)passcode {
+    DeviceSpecificEncryptionParameters *parameters = [self decrypt];
+    [self applyPasscode:passcode];
+    [self reencrypt: parameters];
+
+}
+-(void)remove {
+    DeviceSpecificEncryptionParameters *parameters = [self decrypt];
+    [self applyPasscode:[AppEncryptionParameters defaultKey]];
+    [self reencrypt: parameters];
+}
+
+-(NSData * _Nullable)encryptData:(NSData * _Nonnull)data {
+    return CryptoAES(YES, self->key, self->iv, data);
+}
+-(NSData * _Nullable)decryptData:(NSData * _Nonnull)data {
+    return CryptoAES(NO, self->key, self->iv, data);
+}
+
+-(void)upgradeLegacyIfNeeded {
+    NSData *currentData = [NSData dataWithContentsOfFile:self.legacyPath];
+    NSData *resultData = nil;
+    if (currentData != nil && currentData.length == 32 + 16) {
+        resultData = currentData;
+    }
+    if (resultData != nil) {
+        int hash = murMurHash32Data(resultData);
+        
+        NSMutableData *hashData = [[NSMutableData alloc] initWithBytes:&hash length:4];
+       
+        
+        NSData *key = [resultData subdataWithRange:NSMakeRange(0, 32)];
+        NSData *salt = [resultData subdataWithRange:NSMakeRange(32, 16)];
+
+        NSMutableData *finalData = [[NSMutableData alloc] init];
+        
+        [finalData appendData:key];
+        [finalData appendData:salt];
+        [finalData appendData:hashData];
+        
+        
+        while (finalData.length % 16 != 0) {
+            int zero = 0;
+            [finalData appendBytes:&zero length:1];
+        }
+        
+        NSData *encrypted = CryptoAES(YES, self->key, self->iv, finalData);
+        [encrypted writeToFile:self.path atomically:YES];
+        [[NSFileManager defaultManager] removeItemAtPath:self.legacyPath error:nil];
+    }
+}
+
+-(void)reencrypt:(DeviceSpecificEncryptionParameters * _Nullable)parameters {
+    
+    if (parameters == nil) {
+        [[NSFileManager defaultManager] removeItemAtPath:self.path error:nil];
+        [self initializeIfNeeded];
+    }
+    
+    NSMutableData *resultData = [[NSMutableData alloc] init];
+    [resultData appendData:parameters.key];
+    [resultData appendData:parameters.salt];
+    
+    int hash = murMurHash32Data(resultData);
+    
+    NSMutableData *hashData = [[NSMutableData alloc] initWithBytes:&hash length:4];
+    
+    
+    NSData *key = [resultData subdataWithRange:NSMakeRange(0, 32)];
+    NSData *salt = [resultData subdataWithRange:NSMakeRange(32, 16)];
+    
+    NSMutableData *finalData = [[NSMutableData alloc] init];
+    
+    [finalData appendData:key];
+    [finalData appendData:salt];
+    [finalData appendData:hashData];
+    
+    
+    while (finalData.length % 16 != 0) {
+        int zero = 0;
+        [finalData appendBytes:&zero length:1];
+    }
+    
+    NSData *encrypted = CryptoAES(YES, self->key, self->iv, finalData);
+    [encrypted writeToFile:self.path atomically:YES];
+}
+
+-(BOOL)hasPasscode {
+    AppEncryptionParameters *params = [[AppEncryptionParameters alloc] initWithPath:self->_rootPath];
+    return [params decrypt] == nil;
+}
+
+-(DeviceSpecificEncryptionParameters * _Nullable)decrypt {
+    NSData *currentData = [NSData dataWithContentsOfFile:self.path];
+    NSData *decrypted = CryptoAES(NO, self->key, self->iv, currentData);
+    if (decrypted == nil || decrypted.length < 32 + 16 + 4) {
+        return nil;
+    }
+    
+    NSData *key = [decrypted subdataWithRange:NSMakeRange(0, 32)];
+    NSData *salt = [decrypted subdataWithRange:NSMakeRange(32, 16)];;
+    
+    int innerHash = 0;
+    [decrypted getBytes:&innerHash range:NSMakeRange(32 + 16, 4)];
+    
+    int hash = murMurHash32Data([decrypted subdataWithRange:NSMakeRange(0, 32 + 16)]);
+    
+    if (innerHash == hash) {
+        return [[DeviceSpecificEncryptionParameters alloc] initWithKey:key salt:salt];
+    }
+    
+    return nil;
+    
+}
+
+@end
+
 
 @implementation BuildConfig
 + (NSString *)bundleId {
@@ -231,7 +417,6 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
     CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
     
     NSString *filePath = [rootPath stringByAppendingPathComponent:@".tempkey"];
-    NSString *encryptedPath = [rootPath stringByAppendingPathComponent:@".tempkeyEncrypted"];
     
     NSData *currentData = [NSData dataWithContentsOfFile:filePath];
     NSData *resultData = nil;
@@ -256,6 +441,8 @@ static NSString *telegramApplicationSecretKey = @"telegramApplicationSecretKey_v
     NSData *salt = [resultData subdataWithRange:NSMakeRange(32, 16)];
     return [[DeviceSpecificEncryptionParameters alloc] initWithKey:key salt:salt];
 }
+
+
     
 + (dispatch_queue_t)encryptionQueue {
     static dispatch_queue_t instance = nil;

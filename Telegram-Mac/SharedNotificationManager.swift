@@ -92,10 +92,12 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     
     private var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
     private let bindings: SharedNotificationBindings
-    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, accountManager: AccountManager, window: Window, bindings: SharedNotificationBindings) {
+    private let appEncryption: AppEncryptionParameters
+    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager, window: Window, bindings: SharedNotificationBindings) {
         self.accountManager = accountManager
         self.window = window
         self.bindings = bindings
+        self.appEncryption = appEncryption
         super.init()
         
      
@@ -183,19 +185,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             return .invoked
         }, with: self, for: .L, priority: .modal, modifierFlags: [.command])
 
-        
-        let showPasslock = passlock
-        
-        
-        var access: PostboxAccessChallengeData = .none
-        let accessSemaphore = DispatchSemaphore(value: 0)
-        _ = (accountManager.transaction { transaction in
-            access = transaction.getAccessChallengeData()
-            accessSemaphore.signal()
-        }).start()
-        accessSemaphore.wait()
-        
-        _passlock.set(.single(access != .none) |> then(showPasslock))
+        _passlock.set(passlock)
         
     }
     
@@ -203,6 +193,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     func logout() -> Signal<Never, NoError> {
         let accountManager = self.accountManager
         let signal = combineLatest(self.activeAccounts.accounts.map { logoutFromAccount(id: $0.0, accountManager: self.accountManager, alreadyLoggedOutRemotely: false) }) |> deliverOnMainQueue
+        appEncryption.remove()
         let removePasscode = accountManager.transaction { $0.setAccessChallengeData(.none) }  |> deliverOnMainQueue
         return combineLatest(removePasscode, signal) |> ignoreValues
     }
