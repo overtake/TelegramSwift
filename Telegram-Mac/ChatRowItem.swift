@@ -581,7 +581,21 @@ class ChatRowItem: TableRowItem {
     }
     
     override var isSelectable: Bool {
-        return chatInteraction.mode.threadId != effectiveCommentMessage?.id
+        switch chatInteraction.mode {
+        case .preview:
+            return false
+        default:
+            return chatInteraction.mode.threadId != effectiveCommentMessage?.id
+        }
+    }
+    
+    var disableInteractions: Bool {
+        switch chatInteraction.mode {
+        case .preview:
+            return true
+        default:
+            return false
+        }
     }
     
     
@@ -2348,6 +2362,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     let messageId = message.id
     if chatInteraction.isLogInteraction || chatInteraction.presentation.state == .selecting {
         return .single([])
+    }
+    switch chatInteraction.mode {
+    case .preview:
+        return .single([])
+    default:
+        break
     }
     
     var items:[ContextMenuItem] = []

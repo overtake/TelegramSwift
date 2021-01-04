@@ -269,7 +269,7 @@ fileprivate class PreviewSenderView : Control {
                     break
                 case .replyThread:
                     break
-                case .pinned:
+                case .pinned, .preview:
                     break
                 }
                 if !items.isEmpty {
@@ -862,7 +862,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         case .history, .replyThread:
             sendCurrentMedia?(silent, atDate)
-        case .pinned:
+        case .pinned, .preview:
             break
         }
     }

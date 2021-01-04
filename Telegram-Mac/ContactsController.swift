@@ -149,7 +149,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], contextMenuItems: {
+                    return .single([ContextMenuItem(L10n.chatListContextPreview, handler: {
+                        showModal(with: ChatModalPreviewController(location: .peer(peer.id), context: context), for: context.window)
+                    })])
+                })
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()

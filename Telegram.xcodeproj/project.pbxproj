@@ -856,6 +856,7 @@
 		D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D07C6D7F2346A42F00468B1A /* monkey_see.tgs */; };
 		D0830FC424127473006198E7 /* folder_new.tgs in Resources */ = {isa = PBXBuildFile; fileRef = D0830FC324127468006198E7 /* folder_new.tgs */; };
 		D08E5C9822C583CE007B1C09 /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08E5C9722C583CE007B1C09 /* Tuple.swift */; };
+		D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */; };
 		D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */; };
 		D0983E172568373E00467703 /* AppCenterAnalytics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E162568373E00467703 /* AppCenterAnalytics.framework */; };
 		D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983E182568373E00467703 /* AppCenterCrashes.framework */; };
@@ -1892,6 +1893,7 @@
 		D07C6D7F2346A42F00468B1A /* monkey_see.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey_see.tgs; sourceTree = "<group>"; };
 		D0830FC324127468006198E7 /* folder_new.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_new.tgs; sourceTree = "<group>"; };
 		D08E5C9722C583CE007B1C09 /* Tuple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
+		D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalPreviews.swift; sourceTree = "<group>"; };
 		D093474D242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerMediaGroupPeersController.swift; sourceTree = "<group>"; };
 		D0983E162568373E00467703 /* AppCenterAnalytics.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterAnalytics.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0983E182568373E00467703 /* AppCenterCrashes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AppCenterCrashes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2476,6 +2478,7 @@
 				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 				D00C73B52302C196004B1E2B /* ChatScheduleController.swift */,
 				D0BDD50023A38660002010A5 /* InactiveChannelsController.swift */,
+				D0906CFB254BFE1D000E6961 /* ModalPreviews.swift */,
 			);
 			name = chat;
 			sourceTree = "<group>";
@@ -5088,6 +5091,7 @@
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
 				D09D9DF4229C289F00378796 /* GZip.m in Sources */,
+				D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
 				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,
 				A7E83212255E8A8E0095A167 /* LinkHoverController.swift in Sources */,

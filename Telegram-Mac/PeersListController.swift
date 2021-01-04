@@ -826,6 +826,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
+    func longSelect(row: Int, item: TableRowItem) {
+        
+    }
+    
     func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         return true
     }

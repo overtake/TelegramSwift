@@ -54,7 +54,7 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         case 0:
             _ = showModalProgress(signal: createSecretChat(account: chatInteraction.context.account, peerId: chatInteraction.peerId) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] peerId in
                 if let strongSelf = self {
-                    strongSelf.chatInteraction.context.sharedContext.bindings.rootNavigation().push(ChatController(context: strongSelf.chatInteraction.context, chatLocation: .peer(peerId)))
+                    strongSelf.chatInteraction.push(ChatController(context: strongSelf.chatInteraction.context, chatLocation: .peer(peerId)))
                 }
             })
         case 1:
@@ -83,16 +83,16 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         dismiss()
     }
     @objc private func sharedMediaAction() {
-        chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+        chatInteraction.push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         dismiss()
     }
     @objc private func peerInfoActions(_ sender: Any?) {
         guard let segment = sender as? NSSegmentedControl else {return}
         switch segment.selectedSegment {
         case 0:
-            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+            chatInteraction.push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         case 1:
-            chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: chatInteraction.context, peerId: chatInteraction.peerId))
+            chatInteraction.push(PeerInfoController(context: chatInteraction.context, peerId: chatInteraction.peerId))
         default:
             break
         }

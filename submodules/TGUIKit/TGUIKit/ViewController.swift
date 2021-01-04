@@ -862,7 +862,11 @@ public struct ModalHeaderData {
     }
 }
 
-open class ModalViewController : ViewController {
+public protocol ModalControllerHelper {
+    var modalInteractions:ModalInteractions? { get }
+}
+
+open class ModalViewController : ViewController, ModalControllerHelper {
     
     public struct Theme {
         let text: NSColor
@@ -1009,12 +1013,27 @@ open class ModalController : ModalViewController {
         self.controller = controller
         super.init(frame: controller._frameRect)
     }
-    
+
     open override var handleEvents: Bool {
         return true
     }
     
+    open override var modalInteractions: ModalInteractions? {
+        return (self.controller.controller as? ModalControllerHelper)?.modalInteractions
+    }
     
+    open override func viewWillAppear(_ animated: Bool) {
+        self.controller.viewWillAppear(animated)
+    }
+    open override func viewWillDisappear(_ animated: Bool) {
+        self.controller.viewWillDisappear(animated)
+    }
+    open override func viewDidAppear(_ animated: Bool) {
+        self.controller.viewDidAppear(animated)
+    }
+    open override func viewDidDisappear(_ animated: Bool) {
+        self.controller.viewDidDisappear(animated)
+    }
     open override func firstResponder() -> NSResponder? {
         return controller.controller.firstResponder()
     }

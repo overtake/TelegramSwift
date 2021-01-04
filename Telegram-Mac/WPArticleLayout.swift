@@ -170,12 +170,12 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = max(min(320, width - 50), 230)
+            let maxw = min(320, width - 50)
             
             var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
             
             if let groupLayout = groupLayout {
-                groupLayout.measure(NSMakeSize(max(contentSize.width, 260), maxw))
+                groupLayout.measure(NSMakeSize(max(contentSize.width, maxw), maxw))
                 
                 contentSize.height += groupLayout.dimensions.height + 6
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)
@@ -212,14 +212,15 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize, isFullImageSize {
+                
                 if isTheme {
-                    contrainedImageSize = imageSize
+                    contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
                 }
               //  if presentation.renderType == .bubble {
                 if isColor {
-                    contrainedImageSize = imageSize
+                    contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else if !isTheme  {
                     contrainedImageSize.width = max(contrainedImageSize.width, maxw)
                 }
