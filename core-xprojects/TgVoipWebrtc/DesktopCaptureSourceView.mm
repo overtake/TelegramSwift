@@ -20,6 +20,7 @@
         _helper = helper;
         std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>> sink = [self getSink];
         [helper setOutput:sink];
+        [self setVideoContentMode:kCAGravityResizeAspectFill];
     }
     return self;
 }

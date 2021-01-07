@@ -10,9 +10,10 @@
 #import <AppKit/AppKit.h>
 #import "DesktopCaptureSourceHelper.h"
 #import "platform/darwin/VideoMetalViewMac.h"
+#import "platform/darwin/GLVideoViewMac.h"
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DesktopCaptureSourceView : VideoMetalView
+@interface DesktopCaptureSourceView : GLVideoView
 
 -(id)initWithHelper:(DesktopCaptureSourceHelper *)helper;
 

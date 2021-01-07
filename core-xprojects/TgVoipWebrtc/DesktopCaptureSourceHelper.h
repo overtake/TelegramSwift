@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DesktopCaptureSourceHelper : NSObject
 
--(instancetype)initWithWindow:(DesktopCaptureSource *)window;
+-(instancetype)initWithWindow:(DesktopCaptureSource *)window data: (DesktopCaptureSourceData *)data;
 
 -(void)setOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
 

@@ -39,7 +39,7 @@ open class HorizontalRowView: TableRowView {
     
     open override func layout() {
         super.layout()
-        container.frame = NSMakeRect(frame.size.width, 0, frame.size.width, frame.size.height)
+        container.frame = NSMakeRect(frame.size.width, 0, frame.size.height, frame.size.width)
     }
     
     open override func setFrameSize(_ newSize: NSSize) {

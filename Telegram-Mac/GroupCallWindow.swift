@@ -38,6 +38,13 @@ struct GroupCallTheme {
     static let declineColor = NSColor(hexString: "#FF3B30")!.withAlphaComponent(0.3)
     static let settingsColor = NSColor(hexString: "#333333")!
     
+    static var accent: NSColor {
+        return speakInactiveColor
+    }
+    static var secondary: NSColor {
+        return grayStatusColor
+    }
+    
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
     static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white, flipVertical: true)

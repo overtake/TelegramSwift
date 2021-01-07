@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2702A834259BD7F6007F1DDD /* SSignalKit.framework */; };
+		274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */; };
 		2771ADC22590E650000B29FF /* ScreenCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2771ADC02590E64D000B29FF /* ScreenCapturer.h */; };
 		2771ADC32590E650000B29FF /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2771ADC12590E650000B29FF /* ScreenCapturer.mm */; };
 		27B15CC2259A6D2400C7F280 /* DesktopCaptureSourceHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */; };
@@ -60,6 +61,7 @@
 
 /* Begin PBXFileReference section */
 		2702A834259BD7F6007F1DDD /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AudioDeviceHelper.cpp; path = ../../submodules/tgcalls/tgcalls/AudioDeviceHelper.cpp; sourceTree = "<group>"; };
 		2771ADC02590E64D000B29FF /* ScreenCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScreenCapturer.h; sourceTree = "<group>"; };
 		2771ADC12590E650000B29FF /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScreenCapturer.mm; sourceTree = "<group>"; };
 		27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DesktopCaptureSourceHelper.h; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				D0E7BD1C256A7E0D0068644D /* group */,
 				D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */,
 				D0D751BB24BE3AC70037D73A /* CodecSelectHelper.cpp */,
+				274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */,
 				D0D751C024BE3AC70037D73A /* Instance.cpp */,
 				D0D751BD24BE3AC70037D73A /* InstanceImpl.cpp */,
 				D0D751BC24BE3AC70037D73A /* Manager.cpp */,
@@ -347,6 +350,7 @@
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
 				27B15CD7259B244B00C7F280 /* DesktopCaptureSource.mm in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
+				274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */,
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
 				D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,

@@ -156,7 +156,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/webrtc/build.sh $PROJECT_DIR/../../submodules/telegram-ios/third-party/webrtc/webrtc-ios/src $PROJECT_DIR/../../submodules/telegram-ios/third-party/depot_tools $PROJECT_DIR/../OpenSSLEncryption/build/openssl\nfi\n";
+			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/webrtc/build.sh $PROJECT_DIR/../../submodules/tg_owt/  $PROJECT_DIR/../OpenSSLEncryption/build/openssl/include $PROJECT_DIR/../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg $PROJECT_DIR/../libopus/build/libopus/include/opus $PROJECT_DIR/../ffmpeg/build/ffmpeg/include\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

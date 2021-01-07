@@ -20,10 +20,10 @@ NS_ASSUME_NONNULL_BEGIN
 -(instancetype)init_w;
 -(NSArray<DesktopCaptureSource *> *)list;
 
--(NSView *)createForSource:(DesktopCaptureSource *)source;
+-(NSView *)createForScope:(DesktopCaptureSourceScope *)scope;
 
--(void)start:(DesktopCaptureSource *)source;
--(void)stop:(DesktopCaptureSource *)source;
+-(void)start:(DesktopCaptureSourceScope *)scope;
+-(void)stop:(DesktopCaptureSourceScope *)scope;
 
 @end
 
