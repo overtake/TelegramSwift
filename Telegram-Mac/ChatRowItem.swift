@@ -1546,7 +1546,11 @@ class ChatRowItem: TableRowItem {
                         if let psaType = message.forwardInfo?.psaType {
                             text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
                         } else {
-                            text = L10n.chatBubblesForwardedFrom(attr.string)
+                            var fullName = attr.string
+                            if let signature = message.forwardInfo?.authorSignature {
+                                fullName += " (\(signature))"
+                            }
+                            text = L10n.chatBubblesForwardedFrom(fullName)
                         }
                         
                         let newAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: forwardNameColor), link: MarkdownAttributeSet(font: hasBubble && info.author != nil ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { [weak attr] contents in

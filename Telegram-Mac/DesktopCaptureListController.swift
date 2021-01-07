@@ -12,139 +12,172 @@ import TgVoipWebrtc
 import SwiftSignalKit
 
 private final class DesktopCaptureListArguments {
-    let select:(DesktopCaptureSource)->Void
-    init(select:@escaping(DesktopCaptureSource)->Void) {
+    let select:(DesktopCaptureSource, DesktopCaptureSourceManager)->Void
+    init(select:@escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
         self.select = select
     }
 }
 
 private struct DesktopCaptureListState : Equatable {
+    var screens: [DesktopCaptureSource]
     var windows: [DesktopCaptureSource]
     var selected: DesktopCaptureSource?
-    init(windows: [DesktopCaptureSource], selected: DesktopCaptureSource?) {
+    init(screens: [DesktopCaptureSource], windows: [DesktopCaptureSource], selected: DesktopCaptureSource?) {
+        self.screens = screens
         self.windows = windows
         self.selected = selected
     }
 }
 
-private func entries(_ state: DesktopCaptureListState, windows: DesktopCaptureSourceManager?, arguments: DesktopCaptureListArguments) -> [InputDataEntry] {
+private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSourceManager?, windows: DesktopCaptureSourceManager?, excludeWindowNumber: Int = 0, arguments: DesktopCaptureListArguments) -> [InputDataEntry] {
         
     var entries:[InputDataEntry] = []
+    
+    struct Tuple : Equatable {
+        let source: DesktopCaptureSource
+        let selected: DesktopCaptureSource?
+    }
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 15, stableId: stableId, backgroundColor: .clear)
+    }))
     sectionId += 1
-  
     
-    let windowsList = state.windows.chunks(2)
-    for sources in windowsList {
-        let id: String = sources.reduce("", { current, value in
-            return current + value.uniqueKey()
-        })
-    
-        struct Tuple : Equatable {
-            let source: [DesktopCaptureSource]
-            let selected: DesktopCaptureSource?
-        }
-        
-        let selected = state.selected != nil && sources.contains(state.selected!) ? state.selected : nil
-        let tuple = Tuple(source: sources, selected: selected)
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak windows] initialSize, stableId in
-            return DesktopCapturePreviewItem(initialSize, stableId: stableId, sources: sources, selectedSource: selected, manager: windows, select: arguments.select)
+    for source in state.screens {
+        let id: String = source.uniqueKey()
+        let selected = source == state.selected ? state.selected : nil
+        let tuple = Tuple(source: source, selected: selected)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak screens] initialSize, stableId in
+            return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, selectedSource: tuple.selected, manager: screens, select: arguments.select)
         }))
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    for source in state.windows {
+        let id: String = source.uniqueKey()
+        if id != "\(excludeWindowNumber)" {
+            let selected = source == state.selected ? state.selected : nil
+            let tuple = Tuple(source: source, selected: selected)
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak windows] initialSize, stableId in
+                return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, selectedSource: tuple.selected, manager: windows, select: arguments.select)
+            }))
+            index += 1
+        }
+    }
+
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 15, stableId: stableId, backgroundColor: .clear)
+    }))
     sectionId += 1
     
     return entries
 }
 
-func desktopCapturerController(context: AccountContext) -> InputDataModalController {
+final class DesktopCapturerListController: GenericViewController<HorizontalTableView> {
     
-    
-    
-    let manager = DesktopCaptureSourceManager(_w: ())
+    private let windows = DesktopCaptureSourceManager(_w: ())
+    private let screens = DesktopCaptureSourceManager(_s: ())
 
-    let list = manager.list()
-    
-    let initialState = DesktopCaptureListState(windows: list, selected: nil)
-
-    
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
-    let stateValue = Atomic(value: initialState)
-    let updateState: ((DesktopCaptureListState) -> DesktopCaptureListState) -> Void = { f in
-        statePromise.set(stateValue.modify (f))
+    private var updateDisposable: Disposable?
+    private let disposable: MetaDisposable = MetaDisposable()
+    var updateSelected:((DesktopCaptureSource, DesktopCaptureSourceManager)->Void)? = nil
+    init(size: NSSize) {
+        super.init(frame: .init(origin: .zero, size: size))
+        self.bar = .init(height: 0)
     }
     
-    let updateSignal = Signal<NoValue, NoError> { [weak manager] subscriber in
+    var excludeWindowNumber: Int = 0
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
         
-        updateState { current in
-            var current = current
-            current.windows = manager?.list() ?? []
-            if let selected = current.selected, !current.windows.contains(selected) {
-                current.selected = nil
+        
+                        
+        let initialState = DesktopCaptureListState(screens: screens.list(), windows: windows.list(), selected: screens.list().first!)
+
+        if let selected = initialState.selected {
+            self.updateSelected?(selected, screens)
+        }
+        
+        
+        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((DesktopCaptureListState) -> DesktopCaptureListState) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
+        }
+        
+        let windows = self.windows
+        let screens = self.screens
+        
+        let updateSignal = Signal<NoValue, NoError> { [weak windows, weak screens] subscriber in
+            
+            updateState { current in
+                var current = current
+                current.screens = screens?.list() ?? []
+                current.windows = windows?.list() ?? []
+                if let selected = current.selected, !current.windows.contains(selected) && !current.screens.contains(selected) {
+                    current.selected = nil
+                }
+                return current
             }
-            return current
+            
+            subscriber.putCompletion()
+            
+            return EmptyDisposable
         }
         
-        subscriber.putCompletion()
+        self.updateDisposable = ((updateSignal |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart).start()
         
-        return EmptyDisposable
-    }
-    
-    let disposable = ((updateSignal |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart).start()
-    
-    let arguments = DesktopCaptureListArguments(select: { source in
-        updateState { current in
-            var current = current
-            current.selected = source
-            return current
+        let arguments = DesktopCaptureListArguments(select: { [weak self] source, manager in
+            updateState { current in
+                var current = current
+                current.selected = source
+                return current
+            }
+            self?.updateSelected?(source, manager)
+        })
+        
+        let excludeWindowNumber = self.excludeWindowNumber
+
+        
+        let signal = statePromise.get() |> map { [weak windows, weak screens] state in
+            return InputDataSignalValue(entries: entries(state, screens: screens, windows: windows, excludeWindowNumber: excludeWindowNumber, arguments: arguments))
         }
-    })
-    
-    
-    let signal = statePromise.get() |> map { [weak manager] state in
-        return InputDataSignalValue(entries: entries(state, windows: manager, arguments: arguments))
+        
+        let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
+        
+        let initialSize = self.atomicSize
+        
+        let transaction: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal) |> mapToQueue { state, appearance in
+            
+            let entries = state.entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: nil, initialSize: initialSize.with { $0 }, arguments: InputDataArguments(select: {_, _ in }, dataUpdated: {}), onMainQueue: false)
+        } |> deliverOnMainQueue
+        
+        genericView.needUpdateVisibleAfterScroll = true
+        
+        genericView.getBackgroundColor = {
+            .clear
+        }
+        
+        disposable.set(transaction.start(next: { [weak self] transaction in
+            self?.genericView.merge(with: transaction)
+        }))
+
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Windows")
+    override func initializer() -> HorizontalTableView {
+        return HorizontalTableView(frame: bounds, isFlipped: true, bottomInset: 0, drawBorder: false)
+    }
     
-    controller.contextOject = manager
-    
-    controller.afterDisappear = {
+    deinit {
         disposable.dispose()
+        updateDisposable?.dispose()
     }
-    
-    var close: (()->Void)? = nil
-    
-    let modalInteractions = ModalInteractions(acceptTitle: "Share", accept: {
-        close?()
-    }, height: 50, singleButton: true)
-    
-    
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
-        close?()
-    })
-    
-    controller.updateDatas = { data in
-        return .none
-    }
-    
-    controller.didLoaded = { controller, _ in
-        controller.genericView.tableView.needUpdateVisibleAfterScroll = true
-    }
-    
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(300, 300))
-    
-    close = { [weak modalController] in
-        modalController?.close()
-    }
-        
-    return modalController
     
 }
+

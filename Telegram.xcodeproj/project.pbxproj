@@ -19,6 +19,7 @@
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
+		27F023D425A5C19F008F1C81 /* DesktopCapturerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -277,11 +278,10 @@
 		A7E831F1255040D60095A167 /* ChatPresentationInputQueryResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */; };
 		A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
 		A7E831F4255041020095A167 /* IsEqualMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F2255041020095A167 /* IsEqualMessages.swift */; };
+		A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */; };
 		A7E83212255E8A8E0095A167 /* LinkHoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E83211255E8A8E0095A167 /* LinkHoverController.swift */; };
 		A7E83214255E992D0095A167 /* WaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E83213255E992D0095A167 /* WaveView.swift */; };
 		A7E832192562CFC70095A167 /* VoiceBlobView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E832182562CFC70095A167 /* VoiceBlobView.swift */; };
-        A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */; };
-
 		A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7ED5DAE236C7CE100040372 /* RLottie.framework */; };
 		A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */; };
 		A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */; };
@@ -1010,6 +1010,7 @@
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
+		27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturerWindow.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -1263,10 +1264,10 @@
 		A7DF1B6B237415AD00ACC01F /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatPresentationInputQueryResult.swift; sourceTree = "<group>"; };
 		A7E831F2255041020095A167 /* IsEqualMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsEqualMessages.swift; sourceTree = "<group>"; };
+		A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColdStartPasslockController.swift; sourceTree = "<group>"; };
 		A7E83211255E8A8E0095A167 /* LinkHoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkHoverController.swift; sourceTree = "<group>"; };
 		A7E83213255E992D0095A167 /* WaveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveView.swift; sourceTree = "<group>"; };
 		A7E832182562CFC70095A167 /* VoiceBlobView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceBlobView.swift; sourceTree = "<group>"; };
-        A7E831F72551A85F0095A167 /* ColdStartPasslockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColdStartPasslockController.swift; sourceTree = "<group>"; };
 		A7ED5DAE236C7CE100040372 /* RLottie.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RLottie.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F282B1238D122900742C20 /* UnauthorizedConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnauthorizedConfiguration.swift; sourceTree = "<group>"; };
 		A7F282FF2395168300742C20 /* SettingsSearchRecentQueries.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSearchRecentQueries.swift; sourceTree = "<group>"; };
@@ -2056,6 +2057,7 @@
 			children = (
 				27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */,
 				27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */,
+				27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */,
 			);
 			name = capturer;
 			sourceTree = "<group>";
@@ -5100,6 +5102,7 @@
 				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,
 				A7E83212255E8A8E0095A167 /* LinkHoverController.swift in Sources */,
 				D001E976243B385E009025F9 /* FolderIcons.swift in Sources */,
+				27F023D425A5C19F008F1C81 /* DesktopCapturerWindow.swift in Sources */,
 				C2B648891EB0C48600BA574B /* PIPVideoWindow.swift in Sources */,
 				9F3EAB4B20A5F90B003FE7E3 /* TGPassportMRZ.m in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,

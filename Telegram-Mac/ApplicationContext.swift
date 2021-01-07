@@ -528,7 +528,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         window.set(handler: { _ -> KeyHandlerResult in
             
-            showModal(with: desktopCapturerController(context: context), for: context.window)
+            showDesktopCapturerWindow()
             
 //            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
 //                if let first = values?.first {

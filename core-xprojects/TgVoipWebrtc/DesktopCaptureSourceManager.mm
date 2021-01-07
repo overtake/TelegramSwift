@@ -18,9 +18,11 @@
 
 
 
+
+
 @interface DesktopCaptureSource ()
 
--(id)initWithSource:(webrtc::DesktopCapturer::Source)source;
+-(id)initWithSource:(webrtc::DesktopCapturer::Source)source isWindow:(BOOL)isWindow;
 @end
 
 @interface DesktopCaptureSourceManager ()
@@ -30,20 +32,23 @@
 @implementation DesktopCaptureSourceManager
 {
     std::unique_ptr<webrtc::DesktopCapturer> _capturer;
+    BOOL _isWindow;
 }
 -(instancetype)init_w {
     if (self = [super init]) {
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
-        _capturer = webrtc::ScreenCapturerMac::CreateWindowCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
+        _capturer = webrtc::DesktopCapturer::CreateWindowCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
         _cached = [[NSMutableDictionary alloc] init];
+        _isWindow = YES;
     }
     return self;
 }
 -(instancetype)init_s {
     if (self = [super init]) {
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
-        _capturer = webrtc::ScreenCapturerMac::CreateScreenCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
+        _capturer = webrtc::DesktopCapturer::CreateScreenCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
         _cached = [[NSMutableDictionary alloc] init];
+        _isWindow = NO;
     }
     return self;
 }
@@ -53,26 +58,26 @@
     webrtc::DesktopCapturer::SourceList sources;
     _capturer->GetSourceList(&sources);
     for (const auto& source : sources) {
-        [list addObject:[[DesktopCaptureSource alloc] initWithSource:source]];
+        [list addObject:[[DesktopCaptureSource alloc] initWithSource:source isWindow: _isWindow]];
     }
     return list;
 }
 
--(NSView *)createForSource:(DesktopCaptureSource *)source {
-    DesktopCaptureSourceHelper *helper = _cached[source.uniqueKey];
+-(NSView *)createForScope:(DesktopCaptureSourceScope *)scope {
+    DesktopCaptureSourceHelper *helper = _cached[scope.cachedKey];
     
     if (helper == nil) {
-        helper = [[DesktopCaptureSourceHelper alloc] initWithWindow:source];
-        _cached[source.uniqueKey] = helper;
+        helper = [[DesktopCaptureSourceHelper alloc] initWithWindow:scope.source data:scope.data];
+        _cached[scope.cachedKey] = helper;
     }
     return [[DesktopCaptureSourceView alloc] initWithHelper:helper];
 }
 
--(void)start:(DesktopCaptureSource *)source {
-    [_cached[source.uniqueKey] start];
+-(void)start:(DesktopCaptureSourceScope *)scope {
+    [_cached[scope.cachedKey] start];
 }
--(void)stop:(DesktopCaptureSource *)source {
-    [_cached[source.uniqueKey] stop];
+-(void)stop:(DesktopCaptureSourceScope *)scope {
+    [_cached[scope.cachedKey] stop];
 }
 
 -(void)dealloc {

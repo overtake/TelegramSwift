@@ -1905,8 +1905,6 @@ internal final class L10n {
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
   /// SHOW MESSAGE
   internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
-  /// Open Chat
-  internal static var chatModalPreviewOpenChat: String  { return L10n.tr("Localizable", "Chat.ModalPreview.OpenChat") }
   /// Don't Show Pinned Messages
   internal static var chatPinnedDontShow: String  { return L10n.tr("Localizable", "Chat.Pinned.DontShow") }
   /// %d
@@ -2613,7 +2611,7 @@ internal final class L10n {
   internal static var chatListContextPinError: String  { return L10n.tr("Localizable", "ChatList.Context.PinError") }
   /// Sorry, you can only pin 5 chats to the top in the main list. More chats can be pinned in Chat Folders and your Archive.
   internal static var chatListContextPinErrorNew2: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew2") }
-  /// Preview Chat
+  /// Preview
   internal static var chatListContextPreview: String  { return L10n.tr("Localizable", "ChatList.Context.Preview") }
   /// Return to Group
   internal static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
@@ -8359,6 +8357,8 @@ internal final class L10n {
   internal static var voiceChatTitleInvited: String  { return L10n.tr("Localizable", "VoiceChat.Title.Invited") }
   /// Invite Members
   internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
+  /// Video Source
+  internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply
