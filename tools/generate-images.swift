@@ -619,6 +619,10 @@ func initialize() -> [String] {
     
     array.append("chat_voice_chat")
     array.append("chat_voice_chat_active")
+    
+    
+    array.append("copy_to_clipboard")
+
     return array
 }
 //swift ./tools/generate-images.swift

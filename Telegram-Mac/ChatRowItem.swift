@@ -1509,7 +1509,11 @@ class ChatRowItem: TableRowItem {
                                 }
                             }
                             if linkAbility, let author = info.author {
-                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
+                                var openChat: Bool = author.isChannel
+                                if message.forwardInfo != nil {
+                                    openChat = !author.isUser
+                                }
+                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: openChat, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
                             } else if info.author == nil {
                                 attr.add(link: inAppLink.callback("hid", { _ in
                                     hiddenFwdTooltip?()
@@ -1547,9 +1551,9 @@ class ChatRowItem: TableRowItem {
                             text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
                         } else {
                             var fullName = attr.string
-                            if let signature = message.forwardInfo?.authorSignature {
-                                fullName += " (\(signature))"
-                            }
+//                            if let signature = message.forwardInfo?.authorSignature {
+//                                fullName += " (\(signature))"
+//                            }
                             text = L10n.chatBubblesForwardedFrom(fullName)
                         }
                         

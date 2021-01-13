@@ -7,6 +7,29 @@ import AVFoundation
 import TelegramVoip
 import TGUIKit
 
+
+private extension GroupCallParticipantsContext.Participant {
+    var allSsrcs: Set<UInt32> {
+        var participantSsrcs = Set<UInt32>()
+        participantSsrcs.insert(self.ssrc)
+        if let jsonParams = self.jsonParams, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
+            if let groups = json["ssrc-groups"] as? [Any] {
+                for group in groups {
+                    if let group = group as? [String: Any] {
+                        if let groupSources = group["sources"] as? [UInt32] {
+                            for source in groupSources {
+                                participantSsrcs.insert(source)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return participantSsrcs
+    }
+}
+
+
 protocol AccountGroupCallContext: class {
 }
 
@@ -40,6 +63,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
     var panelData: Signal<GroupCallPanelData, NoError> {
         return self.panelDataPromise.get()
     }
+
     
     init(account: Account, peerId: PeerId, call: CachedChannelData.ActiveCall) {
         self.panelDataPromise.set(.single(GroupCallPanelData(
@@ -172,7 +196,7 @@ private extension PresentationGroupCallState {
             networkState: .connecting,
             canManageCall: false,
             adminIds: Set(),
-            muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true),
+            muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
             defaultParticipantMuteState: nil
         )
     }
@@ -311,7 +335,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     let initialCall: CachedChannelData.ActiveCall?
     
     private var internalState: InternalState = .requesting
-    
+    private let temporaryJoinTimestamp: Int32
+
+
     private var callContext: OngoingGroupCallContext?
     private var ssrcMapping: [UInt32: PeerId] = [:]
     
@@ -434,6 +460,20 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 
     private let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     
+    private var videoCapturer: OngoingCallVideoCapturer?
+    public private(set) var isVideo: Bool
+
+
+    private let incomingVideoSourcePromise = Promise<[PeerId: UInt32]>([:])
+    public var incomingVideoSources: Signal<[PeerId: UInt32], NoError> {
+        return self.incomingVideoSourcePromise.get()
+    }
+
+    private var missingSsrcs = Set<UInt32>()
+    private var processedMissingSsrcs = Set<UInt32>()
+    private let missingSsrcsDisposable = MetaDisposable()
+    private var isRequestingMissingSsrcs: Bool = false
+
     
     init(
         account: Account,
@@ -449,17 +489,21 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.internalId = internalId
         self.peerId = peerId
         self.peer = peer
+        self.temporaryJoinTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
         self.initialCall = initialCall
         self.peerChannelMemberCategoriesContextsManager = peerChannelMemberCategoriesContextsManager
         self.devicesContext = sharedContext.devicesContext
-
+        self.isVideo = false
+        self.videoCapturer = OngoingCallVideoCapturer()
+        
         self.groupCallParticipantUpdatesDisposable = (self.account.stateManager.groupCallParticipantUpdates
         |> deliverOnMainQueue).start(next: { [weak self] updates in
            guard let strongSelf = self else {
                return
            }
            if case let .estabilished(callInfo, _, _, _) = strongSelf.internalState {
-               var removedSsrc: [UInt32] = []
+                var removedSsrc: [UInt32] = []
+                var addedParticipants: [(UInt32, String?)] = []
                 for (callId, update) in updates {
                     if callId == callInfo.id {
                         switch update {
@@ -478,8 +522,12 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                         strongSelf._canBeRemoved.set(.single(true))
                                     }
                                 } else if case .joined = participantUpdate.participationStatusChange {
+                                    addedParticipants.append((participantUpdate.ssrc, participantUpdate.jsonParams))
+                                } else if strongSelf.ssrcMapping[participantUpdate.ssrc] == nil {
+                                    addedParticipants.append((participantUpdate.ssrc, participantUpdate.jsonParams))
                                 }
                             }
+
                         case let .call(isTerminated, _):
                             if isTerminated {
                                 strongSelf._canBeRemoved.set(.single(true))
@@ -487,9 +535,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         }
                     }
                 }
-               if !removedSsrc.isEmpty {
-                   strongSelf.callContext?.removeSsrcs(ssrcs: removedSsrc)
-               }
+                if !removedSsrc.isEmpty {
+                    strongSelf.callContext?.removeSsrcs(ssrcs: removedSsrc)
+                }
+                strongSelf.callContext?.addParticipants(participants: addedParticipants)
            }
        })
 
@@ -569,7 +618,30 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             break
         default:
             if case let .active(callInfo) = internalState {
-                let callContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "")
+                let callContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "", video: videoCapturer, participantDescriptionsRequired: { [weak self] ssrcs in
+                      Queue.mainQueue().async {
+                          guard let strongSelf = self else {
+                              return
+                          }
+                          strongSelf.maybeRequestParticipants(ssrcs: ssrcs)
+                      }
+                  })
+                self.incomingVideoSourcePromise.set(callContext.videoSources
+                |> deliverOnMainQueue
+                |> map { [weak self] sources -> [PeerId: UInt32] in
+                    guard let strongSelf = self else {
+                        return [:]
+                    }
+                    var result: [PeerId: UInt32] = [:]
+                    for source in sources {
+                        if let peerId = strongSelf.ssrcMapping[source] {
+                            result[peerId] = source
+                        }
+                    }
+                    return result
+                })
+                                
+
                 self.callContext = callContext
                 self.requestDisposable.set((callContext.joinPayload
                 |> take(1)
@@ -693,13 +765,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 
                 
                 self.ssrcMapping.removeAll()
-                var ssrcs: [UInt32] = []
+                var addedParticipants: [(UInt32, String?)] = []
                 for participant in initialState.participants {
                     self.ssrcMapping[participant.ssrc] = participant.peer.id
-                    ssrcs.append(participant.ssrc)
+                    if participant.peer.id != self.account.peerId {
+                        addedParticipants.append((participant.ssrc, participant.jsonParams))
+                    }
                 }
-                self.callContext?.setJoinResponse(payload: clientParams, ssrcs: ssrcs)
-
+                self.callContext?.setJoinResponse(payload: clientParams, participants: addedParticipants)
                 let peerChannelMemberCategoriesContextsManager = self.peerChannelMemberCategoriesContextsManager
                 let peerId = self.peerId
                 let account = self.account
@@ -741,16 +814,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 self.participantsContext = participantsContext
                 self.participantsContextStateDisposable.set(combineLatest(queue: .mainQueue(),
                    participantsContext.state,
+                   account.postbox.loadedPeerWithId(account.peerId),
                    participantsContext.activeSpeakers,
                    self.speakingParticipantsContext.get(),
                    adminIds
-               ).start(next: { [weak self] state, activeSpeakers, speakingParticipants, adminIds in
-                   guard let strongSelf = self else {
-                       return
-                   }
-                   //id    Postbox.PeerId.Id    557531797
-                   var topParticipants: [GroupCallParticipantsContext.Participant] = []
-
+               ).start(next: { [weak self] state, accountPeer, activeSpeakers, speakingParticipants, adminIds in
+                    guard let strongSelf = self else {
+                        return
+                    }
+                    
+                    var topParticipants: [GroupCallParticipantsContext.Participant] = []
+                                   
                     var reportSpeakingParticipants: [PeerId] = []
                     let timestamp = CACurrentMediaTime()
                     for peerId in speakingParticipants {
@@ -765,48 +839,79 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             reportSpeakingParticipants.append(peerId)
                         }
                     }
-
+                   
                     if !reportSpeakingParticipants.isEmpty {
                         Queue.mainQueue().justDispatch {
                             self?.participantsContext?.reportSpeakingParticipants(ids: reportSpeakingParticipants)
                         }
                     }
-
-
-
-                   var members = PresentationGroupCallMembers(
-                       participants: [],
-                       speakingParticipants: speakingParticipants,
-                       totalCount: 0,
-                       loadMoreToken: nil
-                   )
-                   for participant in state.participants {
-                       members.participants.append(participant)
+                   
+                    var members = PresentationGroupCallMembers(
+                        participants: [],
+                        speakingParticipants: speakingParticipants,
+                        totalCount: 0,
+                        loadMoreToken: nil
+                    )
+                   
+                    var updatedInvitedPeers = strongSelf.invitedPeersValue
+                    var didUpdateInvitedPeers = false
+                   
+                    for participant in state.participants {
+                        members.participants.append(participant)
                        
+                        if topParticipants.count < 3 {
+                            topParticipants.append(participant)
+                        }
                        
-                       if topParticipants.count < 3 {
-                           topParticipants.append(participant)
-                       }
+                        strongSelf.ssrcMapping[participant.ssrc] = participant.peer.id
                        
-                       strongSelf.ssrcMapping[participant.ssrc] = participant.peer.id
+                        if participant.peer.id == strongSelf.account.peerId {
+                            if let muteState = participant.muteState {
+                                if muteState.canUnmute {
+                                    switch strongSelf.isMutedValue {
+                                    case let .muted(isPushToTalkActive):
+                                        if !isPushToTalkActive {
+                                            strongSelf.callContext?.setIsMuted(true)
+                                        }
+                                    case .unmuted:
+                                        strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                        strongSelf.callContext?.setIsMuted(true)
+                                    }
+                                } else {
+                                    strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                    strongSelf.callContext?.setIsMuted(true)
+                                }
+                                strongSelf.stateValue.muteState = muteState
+                            } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
+                                strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
+                                strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
+                                strongSelf.callContext?.setIsMuted(true)
+                            }
+                        }
+                       
+                        if let index = updatedInvitedPeers.firstIndex(of: participant.peer.id) {
+                            updatedInvitedPeers.remove(at: index)
+                            didUpdateInvitedPeers = true
+                        }
                    }
                    
                    members.totalCount = state.totalCount
                    members.loadMoreToken = state.nextParticipantsFetchOffset
-                   
-                   strongSelf.membersValue = members
-                   
-                   strongSelf.stateValue.adminIds = adminIds
-                   strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
-                   if (state.isCreator || adminIds.contains(strongSelf.account.peerId)) && state.defaultParticipantsAreMuted.canChange {
-                       strongSelf.stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
-                   }
 
-                   strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
-                       participantCount: state.totalCount,
-                       topParticipants: topParticipants,
-                       activeSpeakers: activeSpeakers
-                   )))
+                    
+                    strongSelf.membersValue = members
+                    
+                    strongSelf.stateValue.adminIds = state.adminIds
+                    
+                    strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
+                        participantCount: state.totalCount,
+                        topParticipants: topParticipants,
+                        activeSpeakers: activeSpeakers
+                    )))
+                    
+                    if didUpdateInvitedPeers {
+                        strongSelf.invitedPeersValue = updatedInvitedPeers
+                    }
                }))
 
 
@@ -836,7 +941,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.stateValue.muteState = muteState
                         } else if let currentMuteState = strongSelf.stateValue.muteState, !currentMuteState.canUnmute {
                             strongSelf.isMutedValue = .muted(isPushToTalkActive: false)
-                            strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
+                            strongSelf.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
                             strongSelf.isMutedPromise.set(strongSelf.isMutedValue)
                             strongSelf.callContext?.setIsMuted(true)
                         }
@@ -853,6 +958,76 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
 
     }
+    
+    
+    private func maybeRequestParticipants(ssrcs: Set<UInt32>) {
+        var missingSsrcs = ssrcs
+        missingSsrcs.subtract(self.processedMissingSsrcs)
+        if missingSsrcs.isEmpty {
+            return
+        }
+        self.processedMissingSsrcs.formUnion(ssrcs)
+        
+        var addedParticipants: [(UInt32, String?)] = []
+        
+        if let membersValue = self.membersValue {
+            for participant in membersValue.participants {
+                let participantSsrcs = participant.allSsrcs
+                
+                if !missingSsrcs.intersection(participantSsrcs).isEmpty {
+                    missingSsrcs.subtract(participantSsrcs)
+                    self.processedMissingSsrcs.formUnion(participantSsrcs)
+                    
+                    addedParticipants.append((participant.ssrc, participant.jsonParams))
+                }
+            }
+        }
+        
+        if !addedParticipants.isEmpty {
+            self.callContext?.addParticipants(participants: addedParticipants)
+        }
+        
+        if !missingSsrcs.isEmpty {
+            self.missingSsrcs.formUnion(missingSsrcs)
+            self.maybeRequestMissingSsrcs()
+        }
+    }
+    
+    private func maybeRequestMissingSsrcs() {
+        if self.isRequestingMissingSsrcs {
+            return
+        }
+        if self.missingSsrcs.isEmpty {
+            return
+        }
+        if case let .estabilished(callInfo, _, _, _) = self.internalState {
+            self.isRequestingMissingSsrcs = true
+            
+            let requestedSsrcs = self.missingSsrcs
+            self.missingSsrcsDisposable.set((getGroupCallParticipants(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, ssrcs: Array(requestedSsrcs), offset: "", limit: 100)
+            |> deliverOnMainQueue).start(next: { [weak self] state in
+                guard let strongSelf = self else {
+                    return
+                }
+                strongSelf.isRequestingMissingSsrcs = false
+                strongSelf.missingSsrcs.subtract(requestedSsrcs)
+                
+                var addedParticipants: [(UInt32, String?)] = []
+                
+                for participant in state.participants {
+                    addedParticipants.append((participant.ssrc, participant.jsonParams))
+                }
+                
+                if !addedParticipants.isEmpty {
+                    strongSelf.callContext?.addParticipants(participants: addedParticipants)
+                }
+                
+                strongSelf.maybeRequestMissingSsrcs()
+            }))
+        }
+    }
+    
+
     
     private func startCheckingCallIfNeeded() {
         if self.checkCallDisposable != nil {
@@ -932,55 +1107,68 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             self.isMutedValue = action
             self.isMutedPromise.set(self.isMutedValue)
             let isEffectivelyMuted: Bool
+            let isVisuallyMuted: Bool
             switch self.isMutedValue {
             case let .muted(isPushToTalkActive):
                 isEffectivelyMuted = !isPushToTalkActive
+                isVisuallyMuted = true
                 self.updateMuteState(peerId: self.account.peerId, isMuted: true)
             case .unmuted:
                 isEffectivelyMuted = false
+                isVisuallyMuted = false
                 self.updateMuteState(peerId: self.account.peerId, isMuted: false)
             }
             self.callContext?.setIsMuted(isEffectivelyMuted)
-
-            if isEffectivelyMuted {
-                self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true)
+           
+            if isVisuallyMuted {
+                self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
             } else {
                 self.stateValue.muteState = nil
             }
-
         })
     }
     
     
     func updateMuteState(peerId: PeerId, isMuted: Bool) {
-        let canThenUnmute: Bool
-        if isMuted {
-            if peerId == self.account.peerId {
-                canThenUnmute = true
-            } else if self.stateValue.canManageCall {
-                if self.stateValue.adminIds.contains(peerId) {
-                    canThenUnmute = true
-                } else {
-                    canThenUnmute = false
-                }
-            } else if self.stateValue.adminIds.contains(self.account.peerId) {
-                canThenUnmute = true
-            } else {
-                canThenUnmute = true
-            }
-            self.participantsContext?.updateMuteState(peerId: peerId, muteState: isMuted ? GroupCallParticipantsContext.Participant.MuteState(canUnmute: canThenUnmute) : nil)
-        } else {
-            if peerId == self.account.peerId {
-                self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil)
-            } else {
-                self.participantsContext?.updateMuteState(peerId: peerId, muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true))
-            }
-        }
-    }
+       let canThenUnmute: Bool
+       if isMuted {
+           var mutedByYou = false
+           if peerId == self.account.peerId {
+               canThenUnmute = true
+           } else if self.stateValue.canManageCall {
+               if self.stateValue.adminIds.contains(peerId) {
+                   canThenUnmute = true
+               } else {
+                   canThenUnmute = false
+               }
+           } else if self.stateValue.adminIds.contains(self.account.peerId) {
+               canThenUnmute = true
+           } else {
+               mutedByYou = true
+               canThenUnmute = true
+           }
+           self.participantsContext?.updateMuteState(peerId: peerId, muteState: isMuted ? GroupCallParticipantsContext.Participant.MuteState(canUnmute: canThenUnmute, mutedByYou: mutedByYou) : nil, volume: nil)
+       } else {
+           if peerId == self.account.peerId {
+               self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil, volume: nil)
+           } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.account.peerId) {
+               self.participantsContext?.updateMuteState(peerId: peerId, muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false), volume: nil)
+           } else {
+               self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil, volume: nil)
+           }
+       }
+   }
+
     
     private func requestCall() {
         self.callContext?.stop()
         self.callContext = nil
+        
+        self.missingSsrcsDisposable.set(nil)
+        self.missingSsrcs.removeAll()
+        self.processedMissingSsrcs.removeAll()
+               
+
         
         self.internalState = .requesting
         self.isCurrentlyConnecting = nil
@@ -988,6 +1176,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         enum CallError {
             case generic
         }
+        
         
         let account = self.account
         let peerId = self.peerId
@@ -1051,6 +1240,52 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         let _ = inviteToGroupCall(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, peerId: peerId).start()
     }
     
+    func requestVideo(deviceId: String) {
+        if self.videoCapturer == nil {
+            let videoCapturer = OngoingCallVideoCapturer(deviceId, keepLandscape: true)
+            self.videoCapturer = videoCapturer
+            self.callContext?.requestVideo(videoCapturer)
+        } else {
+            self.switchVideoInput(deviceId)
+        }
+        self.isVideo = true
+        
+    }
+       
+    func disableVideo() {
+       self.isVideo = false
+       if let _ = self.videoCapturer {
+           self.videoCapturer = nil
+           self.callContext?.disableVideo()
+       }
+   }
+       
+    func setVolume(peerId: PeerId, volume: Int32, sync: Bool, muteState: GroupCallParticipantsContext.Participant.MuteState?) {
+        for (ssrc, id) in self.ssrcMapping {
+            if id == peerId {
+                self.callContext?.setVolume(ssrc: ssrc, volume: Double(volume) / 100.0)
+                if sync {
+                    self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState, volume: volume)
+                }
+                break
+            }
+        }
+    }
+       
+    func setFullSizeVideo(peerId: PeerId?) {
+        var resolvedSsrc: UInt32?
+        if let peerId = peerId {
+            for (ssrc, id) in self.ssrcMapping {
+                if id == peerId {
+                    resolvedSsrc = ssrc
+                    break
+                }
+            }
+        }
+        self.callContext?.setFullSizeVideoSsrc(ssrc: resolvedSsrc)
+    }
+
+    
     private var currentMyAudioLevel: Float = 0.0
       private var currentMyAudioLevelTimestamp: Double = 0.0
       private var isSendingTyping: Bool = false
@@ -1112,8 +1347,79 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     func updateDefaultParticipantsAreMuted(isMuted: Bool) {
         self.participantsContext?.updateDefaultParticipantsAreMuted(isMuted: isMuted)
         self.stateValue.defaultParticipantMuteState = isMuted ? .muted : .unmuted
+        
     }
 
+    func switchVideoInput(_ deviceId: String) {
+        videoCapturer?.switchVideoInput(deviceId)
+    }
+    
+    func makeIncomingVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void) {
+        self.callContext?.makeIncomingVideoView(source: source, completion: { view in
+            if let view = view {
+                let setOnFirstFrameReceived = view.setOnFirstFrameReceived
+                let setOnOrientationUpdated = view.setOnOrientationUpdated
+                let setOnIsMirroredUpdated = view.setOnIsMirroredUpdated
+                completion(PresentationCallVideoView(
+                    holder: view,
+                    view: view.view,
+                    setOnFirstFrameReceived: { f in
+                        setOnFirstFrameReceived(f)
+                    },
+                    getOrientation: { [weak view] in
+                        if let view = view {
+                            let mappedValue: PresentationCallVideoView.Orientation
+                            switch view.getOrientation() {
+                            case .rotation0:
+                                mappedValue = .rotation0
+                            case .rotation90:
+                                mappedValue = .rotation90
+                            case .rotation180:
+                                mappedValue = .rotation180
+                            case .rotation270:
+                                mappedValue = .rotation270
+                            }
+                            return mappedValue
+                        } else {
+                            return .rotation0
+                        }
+                    },
+                    getAspect: { [weak view] in
+                        if let view = view {
+                            return view.getAspect()
+                        } else {
+                            return 0.0
+                        }
+                    },
+                    setOnOrientationUpdated: { f in
+                        setOnOrientationUpdated { value, aspect in
+                            let mappedValue: PresentationCallVideoView.Orientation
+                            switch value {
+                            case .rotation0:
+                                mappedValue = .rotation0
+                            case .rotation90:
+                                mappedValue = .rotation90
+                            case .rotation180:
+                                mappedValue = .rotation180
+                            case .rotation270:
+                                mappedValue = .rotation270
+                            }
+                            f?(mappedValue, aspect)
+                        }
+                    },
+                    setOnIsMirroredUpdated: { f in
+                        setOnIsMirroredUpdated { value in
+                            f?(value)
+                        }
+                    }
+                ))
+            } else {
+                completion(nil)
+            }
+        })
+    }
+
+    
 }
 
 func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall: CachedChannelData.ActiveCall?) -> Signal<RequestOrJoinGroupCallResult, NoError> {

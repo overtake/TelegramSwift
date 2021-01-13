@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27D0067525AEFD9E00EE3EB1 /* SQueueLocalObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067325AEFD9E00EE3EB1 /* SQueueLocalObject.m */; };
+		27D0067625AEFD9E00EE3EB1 /* SQueueLocalObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067425AEFD9E00EE3EB1 /* SQueueLocalObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A791908B240CFCE4002011CA /* STimer.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919055240CFCE1002011CA /* STimer.h */; };
 		A791908C240CFCE4002011CA /* SSignal+Pipe.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919056240CFCE1002011CA /* SSignal+Pipe.h */; };
 		A791908D240CFCE4002011CA /* SDisposableSet.h in Headers */ = {isa = PBXBuildFile; fileRef = A7919057240CFCE1002011CA /* SDisposableSet.h */; };
@@ -120,6 +122,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		27D0067325AEFD9E00EE3EB1 /* SQueueLocalObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SQueueLocalObject.m; path = Source/SSignalKit/SQueueLocalObject.m; sourceTree = "<group>"; };
+		27D0067425AEFD9E00EE3EB1 /* SQueueLocalObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SQueueLocalObject.h; path = Source/SSignalKit/SQueueLocalObject.h; sourceTree = "<group>"; };
 		A790A321236B17DF000451B5 /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A790A37C236B1C44000451B5 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		A7918E15240CF16A002011CA /* Signal_Dispatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Signal_Dispatch.swift; path = Source/Signal_Dispatch.swift; sourceTree = "<group>"; };
@@ -363,6 +367,8 @@
 				A791906D240CFCE2002011CA /* STimer.m */,
 				A791905D240CFCE1002011CA /* SVariable.h */,
 				A791905A240CFCE1002011CA /* SVariable.m */,
+				27D0067425AEFD9E00EE3EB1 /* SQueueLocalObject.h */,
+				27D0067325AEFD9E00EE3EB1 /* SQueueLocalObject.m */,
 				D0445DDB1A7C2CA500267924 /* Supporting Files */,
 			);
 			name = SSignalKit;
@@ -419,6 +425,7 @@
 				A7919126240CFD60002011CA /* SThreadPool.h in Headers */,
 				A7919127240CFD60002011CA /* SThreadPoolQueue.h in Headers */,
 				A7919128240CFD60002011CA /* SThreadPoolTask.h in Headers */,
+				27D0067625AEFD9E00EE3EB1 /* SQueueLocalObject.h in Headers */,
 				A7919129240CFD60002011CA /* STimer.h in Headers */,
 				A791912A240CFD60002011CA /* SVariable.h in Headers */,
 			);
@@ -588,6 +595,7 @@
 				A7919104240CFD22002011CA /* SSubscriber.m in Sources */,
 				A7919106240CFD22002011CA /* SThreadPool.m in Sources */,
 				A7919108240CFD22002011CA /* SThreadPoolQueue.m in Sources */,
+				27D0067525AEFD9E00EE3EB1 /* SQueueLocalObject.m in Sources */,
 				A791910A240CFD22002011CA /* SThreadPoolTask.m in Sources */,
 				A791910C240CFD22002011CA /* STimer.m in Sources */,
 				A791910E240CFD22002011CA /* SVariable.m in Sources */,

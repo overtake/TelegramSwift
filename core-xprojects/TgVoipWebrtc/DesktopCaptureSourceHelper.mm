@@ -7,11 +7,22 @@
 //
 
 #import "DesktopCaptureSourceHelper.h"
+#include <iostream>
+#include <memory>
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <vector>
+#include "api/scoped_refptr.h"
+#include "rtc_base/thread.h"
+
 #include "modules/desktop_capture/mac/screen_capturer_mac.h"
 #include "modules/desktop_capture/desktop_and_cursor_composer.h"
 #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
 #include "third_party/libyuv/include/libyuv.h"
 #include "api/video/i420_buffer.h"
+
+#include "rtc_base/weak_ptr.h"
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "rtc_base/checks.h"
@@ -21,6 +32,21 @@
 #import <QuartzCore/QuartzCore.h>
 #import <SSignalKit/STimer.h>
 #import <SSignalKit/SQueue.h>
+#import <SSignalKit/SQueueLocalObject.h>
+#include "ThreadLocalObject.h"
+
+
+rtc::Thread *makeDesktopThread() {
+    static std::unique_ptr<rtc::Thread> value = rtc::Thread::Create();
+    value->SetName("WebRTC-DesktopCapturer", nullptr);
+    value->Start();
+    return value.get();
+}
+
+rtc::Thread *getDesktopThread() {
+    static rtc::Thread *value = makeDesktopThread();
+    return value;
+}
 
 
 static CGSize aspectFitted(CGSize from, CGSize to) {
@@ -99,7 +125,6 @@ public:
 
         assert(i420Result == 0);
         webrtc::VideoFrame nativeVideoFrame = webrtc::VideoFrame(i420_buffer_, webrtc::kVideoRotation_0, next_timestamp_ / rtc::kNumNanosecsPerMicrosec);
-//
         if (_sink != NULL) {
             _sink->OnFrame(nativeVideoFrame);
         }
@@ -109,20 +134,106 @@ private:
     rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer_;
 };
 
-
-
-
 @interface DesktopCaptureSource ()
 - (webrtc::DesktopCapturer::Source)getSource;
 @end
+
+@interface DesktopSourceRenderer : NSObject
+-(id)initWithSource:(DesktopCaptureSource *)source data: (DesktopCaptureSourceData *)data;
+-(void)Stop;
+-(void)Start;
+-(void)SetOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
+@end
+
+@implementation DesktopSourceRenderer
+{
+    std::unique_ptr<webrtc::DesktopCapturer> _capturer;
+    std::shared_ptr<SourceFrameCallbackImpl> _callback;
+    rtc::Thread *_thread;
+    bool isRunning;
+    double delayMs;
+    STimer *timer;
+}
+-(id)initWithSource:(DesktopCaptureSource *)source data: (DesktopCaptureSourceData *)data {
+    if (self = [super init]) {
+        delayMs = 1000 / double(data.fps);
+        SourceFrameCallbackImpl *callback = new SourceFrameCallbackImpl(data.aspectSize, data.fps);
+        isRunning = false;
+        _thread = rtc::Thread::Current();
+        _callback.reset(callback);
+        
+        auto options = webrtc::DesktopCaptureOptions::CreateDefault();
+        options.set_disable_effects(true);
+        options.set_detect_updated_region(true);
+        options.set_allow_iosurface(true);
+        
+        if (data.captureMouse) {
+            if (source.isWindow) {
+                _capturer.reset(new webrtc::DesktopAndCursorComposer(webrtc::DesktopCapturer::CreateWindowCapturer(options), options));
+            } else {
+                _capturer.reset(new webrtc::DesktopAndCursorComposer(webrtc::DesktopCapturer::CreateScreenCapturer(options), options));
+            }
+        } else {
+            if (source.isWindow) {
+                std::unique_ptr<webrtc::DesktopCapturer> capturer = webrtc::DesktopCapturer::CreateWindowCapturer(options);
+                _capturer = std::move(capturer);
+            } else {
+                std::unique_ptr<webrtc::DesktopCapturer> capturer = webrtc::DesktopCapturer::CreateScreenCapturer(options);
+                _capturer = std::move(capturer);
+            }
+        }
+        
+        _capturer->SelectSource([source getSource].id);
+        _capturer->Start(callback);
+    }
+    return self;
+}
+
+-(void)Start {
+    if (isRunning) {
+        return;
+    }
+    isRunning = true;
+    [self Loop];
+}
+-(void)Stop {
+    isRunning = false;
+    [timer invalidate];
+}
+
+-(void)Loop {
+    if(!isRunning) {
+        return;
+    }
+
+    _capturer->CaptureFrame();
+    __weak id weakSelf = self;
+
+    timer = [[STimer alloc] initWithTimeout:delayMs / 1000 repeat:false completion:^{
+        [weakSelf Loop];
+    } queue:[SQueue mainQueue]];
+    
+    [timer start];
+}
+
+-(void)SetOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
+    _callback->_sink = sink;
+}
+
+-(void)dealloc {
+    int bp = 0;
+    bp += 1;
+}
+
+@end
+
 
 @interface DesktopCaptureSourceHelper ()
 @end
 
 @implementation DesktopCaptureSourceHelper
 {
-    std::unique_ptr<webrtc::DesktopCapturer> _capturer;
-    std::shared_ptr<SourceFrameCallbackImpl> _callback;
+    SQueueLocalObject * _manager;
     STimer *_timer;
     DesktopCaptureSourceData *_data;
 }
@@ -130,61 +241,30 @@ private:
 -(instancetype)initWithWindow:(DesktopCaptureSource *)source data: (DesktopCaptureSourceData *)data  {
     if (self = [super init]) {
         _data = data;
-        
-        _callback.reset(new SourceFrameCallbackImpl(_data.aspectSize, _data.fps));
-        
-        auto options = webrtc::DesktopCaptureOptions::CreateDefault();
-        options.set_disable_effects(false);
-        options.set_detect_updated_region(true);
-        if (source.isWindow) {
-            _capturer.reset(new webrtc::DesktopAndCursorComposer(webrtc::DesktopCapturer::CreateWindowCapturer(options), options));
-        } else {
-            _capturer.reset(new webrtc::DesktopAndCursorComposer(webrtc::DesktopCapturer::CreateScreenCapturer(options), options));
-        }
-        
-        _capturer->SelectSource([source getSource].id);
-        _capturer->Start(_callback.get());
-        
+        _manager = [[SQueueLocalObject alloc] initWithQueue:[SQueue mainQueue] generate:^id {
+            return [[DesktopSourceRenderer alloc] initWithSource:source data:data];
+        }];
     }
     return self;
 }
 
 -(void)setOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
-    _callback.get()->_sink = sink;
+    [_manager with:^(id  _Nonnull object) {
+        [((DesktopSourceRenderer *)object) SetOutput:sink];
+    }];
 }
 
 -(void)start {
-    if (self->_timer == nil) {
-        __weak id weakSelf = self;
-        double timeout = 1000.0/double(_data.fps)/1000.0;
-        _timer = [[STimer alloc] initWithTimeout:timeout repeat:true completion:^{
-            [weakSelf captureFrame];
-        } queue: queue];
-        
-        [_timer start];
-        
-        [queue dispatch:^{
-            [weakSelf captureFrame];
-        } synchronous:false];
-        
-    }
+    [_manager with:^(id  _Nonnull object) {
+        [((DesktopSourceRenderer *)object) Start];
+    }];
 }
 
--(void)captureFrame {
-    @autoreleasepool {
-        _capturer->CaptureFrame();
-    }
-}
-
-- (void)dealloc
-{
-    [self->_timer invalidate];
-    self->_timer = nil;
-}
 
 -(void)stop {
-    [self->_timer invalidate];
-    self->_timer = nil;
+    [_manager with:^(id  _Nonnull object) {
+        [((DesktopSourceRenderer *)object) Stop];
+    }];
 }
 
 @end

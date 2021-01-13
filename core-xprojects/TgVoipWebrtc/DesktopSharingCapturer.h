@@ -14,13 +14,12 @@
 #import "sdk/objc/native/src/objc_video_track_source.h"
 #import "sdk/objc/native/src/objc_frame_buffer.h"
 #import "api/video_track_source_proxy.h"
+#import "platform/darwin/VideoCameraCapturerMac.h"
 
-@interface AppScreenCapturer : NSObject
-- (instancetype)initWithSource:(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>)source;
--(void)setSink:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
 
--(void)start;
--(void)stop;
+@interface DesktopSharingCapturer : NSObject<CapturerInterface>
+- (instancetype)initWithSource:(rtc::scoped_refptr<webrtc::VideoTrackSourceInterface>)source capturerKey:(NSString *)capturerKey;
+
 @end
 
 

@@ -13,7 +13,7 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 import TgVoipWebrtc
-
+import TelegramVoip
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 
@@ -569,7 +569,12 @@ private class PhoneCallWindowView : View {
         default:
             break
         }
-        self.outgoingVideoView.videoView?.0?.setForceMirrored(!state.isScreenCapture)
+        
+//        let isMirrored = !state.isScreenCapture
+//        
+//        self.outgoingVideoView.videoView?.0?.setOnIsMirroredUpdated = { f in
+//            f(isMirrored)
+//        }
         
         let inputCameraIsActive: Bool
         switch state.videoState {

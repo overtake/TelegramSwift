@@ -11,16 +11,17 @@
 
 
 @implementation DesktopCaptureSourceData
--(id)initWithSize:(CGSize)size fps:(int)fps {
+-(id)initWithSize:(CGSize)size fps:(int)fps captureMouse:(bool)captureMouse {
     if (self = [super init]) {
         self.aspectSize = size;
         self.fps = fps;
+        self.captureMouse = captureMouse;
     }
     return self;
 }
 
 -(NSString *)cachedKey {
-    return [[NSString alloc] initWithFormat:@"%@:%d", NSStringFromSize(self.aspectSize), self.fps];
+    return [[NSString alloc] initWithFormat:@"%@:%d:%d", NSStringFromSize(self.aspectSize), self.fps, self.captureMouse];
 }
 @end
 
@@ -44,7 +45,7 @@
     if (_isWindow)
         return [[NSString alloc] initWithCString:_source.title.c_str() encoding:NSUTF8StringEncoding];
     else
-        return [[NSString alloc] initWithFormat:@"Screen %@", self.uniqueKey];
+        return [[NSString alloc] initWithFormat:@"Screen %ld", self.uniqueId];
 }
 
 -(long)uniqueId {
@@ -54,14 +55,18 @@
     return _isWindow;
 }
 -(NSString *)uniqueKey {
-    return [[NSString alloc] initWithFormat:@"%ld", self.uniqueId];
+    return [[NSString alloc] initWithFormat:@"%ld:%@", self.uniqueId, _isWindow ? @"Window" : @"Screen"];
+}
+
+-(NSString *)deviceIdKey {
+    return [[NSString alloc] initWithFormat:@"desktop_capturer_%@_%ld", _isWindow ? @"window" : @"screen", self.uniqueId];
 }
 
 -(BOOL)isEqual:(id)object {
-    return [((DesktopCaptureSource *)object) uniqueId] == [self uniqueId];
+    return [[((DesktopCaptureSource *)object) uniqueKey] isEqualToString:[self uniqueKey]];
 }
 - (BOOL)isEqualTo:(id)object {
-    return [((DesktopCaptureSource *)object) uniqueId] == [self uniqueId];
+    return [[((DesktopCaptureSource *)object) uniqueKey] isEqualToString:[self uniqueKey]];
 }
 
 -(id)initWithSource:(webrtc::DesktopCapturer::Source)source isWindow:(BOOL)isWindow {
