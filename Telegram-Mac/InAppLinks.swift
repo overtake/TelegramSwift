@@ -246,7 +246,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         let urlValue = url
         let escaped = escape(with:url)
         if let urlQueryAllowed = Optional(escaped), let url = URL(string: urlQueryAllowed) {
-            let needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
+            var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
+            
+            if needConfirm {
+                let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe"]
+                if let url = URL(string: urlValue) {
+                    if let host = url.host, allowed.contains(host) {
+                        needConfirm = false
+                    }
+                }
+            }
+            
             let removePecentEncoding = url.host == URL(string: urlValue)?.host
             let success:()->Void = {
                 

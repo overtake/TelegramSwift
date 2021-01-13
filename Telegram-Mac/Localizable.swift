@@ -8211,6 +8211,8 @@ internal final class L10n {
   internal static var voiceChatMutePeer: String  { return L10n.tr("Localizable", "VoiceChat.MutePeer") }
   /// Open Profile
   internal static var voiceChatOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.OpenProfile") }
+  /// Pin Video
+  internal static var voiceChatPinVideo: String  { return L10n.tr("Localizable", "VoiceChat.PinVideo") }
   /// Remove
   internal static var voiceChatRemovePeer: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer") }
   /// Remove
@@ -8223,6 +8225,8 @@ internal final class L10n {
   internal static var voiceChatSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Speaking") }
   /// Allow To Speak
   internal static var voiceChatUnmutePeer: String  { return L10n.tr("Localizable", "VoiceChat.UnmutePeer") }
+  /// Unpin Video
+  internal static var voiceChatUnpinVideo: String  { return L10n.tr("Localizable", "VoiceChat.UnpinVideo") }
   /// You invited **%@** to the voice chat
   internal static func voiceChatUserInvited(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.UserInvited", p1)
@@ -8359,6 +8363,10 @@ internal final class L10n {
   internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
   /// Video Source
   internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
+  /// Cancel
+  internal static var voiceChatVideoVideoSourceCancel: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Cancel") }
+  /// Share
+  internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

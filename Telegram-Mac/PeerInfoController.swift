@@ -43,6 +43,11 @@ class PeerInfoArguments {
         _statePromise.set(.single(value.modify(f)))
     }
     
+    func copy(_ string: String) {
+        copyToClipboard(string)
+        pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+    }
+    
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         return true
     }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		272899F725A72C5500831C79 /* OngoingCallVideoCapturer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272899F625A72C5500831C79 /* OngoingCallVideoCapturer.swift */; };
 		D0E7BD4D256AA3380068644D /* TelegramVoip.h in Headers */ = {isa = PBXBuildFile; fileRef = D0E7BD4B256AA3380068644D /* TelegramVoip.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		D0E7BD61256AA5040068644D /* GroupCallContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD5F256AA5040068644D /* GroupCallContext.swift */; };
 		D0E7BD68256AA5300068644D /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0E7BD67256AA5300068644D /* SwiftSignalKit.framework */; };
@@ -14,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		272899F625A72C5500831C79 /* OngoingCallVideoCapturer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngoingCallVideoCapturer.swift; sourceTree = "<group>"; };
 		D0E7BD48256AA3380068644D /* TelegramVoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = TelegramVoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0E7BD4B256AA3380068644D /* TelegramVoip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TelegramVoip.h; sourceTree = "<group>"; };
 		D0E7BD4C256AA3380068644D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -35,6 +37,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		272899F525A72C3A00831C79 /* camera */ = {
+			isa = PBXGroup;
+			children = (
+				272899F625A72C5500831C79 /* OngoingCallVideoCapturer.swift */,
+			);
+			path = camera;
+			sourceTree = "<group>";
+		};
 		D0E7BD3E256AA3380068644D = {
 			isa = PBXGroup;
 			children = (
@@ -55,6 +65,7 @@
 		D0E7BD4A256AA3380068644D /* TelegramVoip */ = {
 			isa = PBXGroup;
 			children = (
+				272899F525A72C3A00831C79 /* camera */,
 				D0E7BD5E256AA5040068644D /* Sources */,
 				D0E7BD4B256AA3380068644D /* TelegramVoip.h */,
 				D0E7BD4C256AA3380068644D /* Info.plist */,
@@ -159,6 +170,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0E7BD61256AA5040068644D /* GroupCallContext.swift in Sources */,
+				272899F725A72C5500831C79 /* OngoingCallVideoCapturer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,6 +309,11 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					WEBRTC_MAC,
+				);
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -324,6 +341,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = WEBRTC_MAC;
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -408,6 +426,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = WEBRTC_MAC;
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -492,6 +511,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = WEBRTC_MAC;
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -576,6 +596,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = WEBRTC_MAC;
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -667,6 +688,11 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					WEBRTC_MAC,
+				);
 				INFOPLIST_FILE = TelegramVoip/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (

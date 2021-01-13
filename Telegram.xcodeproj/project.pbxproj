@@ -16,6 +16,8 @@
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */; };
 		27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */; };
+		27C1C42F25ACB5A500189E90 /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */; };
+		27C1C43325ACDFB600189E90 /* VolumeMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -1007,6 +1009,8 @@
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListController.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
+		27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
+		27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMenuItemView.swift; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -2060,6 +2064,15 @@
 				27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */,
 			);
 			name = capturer;
+			sourceTree = "<group>";
+		};
+		27C1C42D25ACB59B00189E90 /* video */ = {
+			isa = PBXGroup;
+			children = (
+				27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */,
+				27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */,
+			);
+			name = video;
 			sourceTree = "<group>";
 		};
 		9F0367E622707B6400456348 /* lottie */ = {
@@ -4456,6 +4469,7 @@
 		D0E7BD18256A7D1C0068644D /* group-calls */ = {
 			isa = PBXGroup;
 			children = (
+				27C1C42D25ACB59B00189E90 /* video */,
 				27B15D2D259B28C700C7F280 /* capturer */,
 				D0E7BD19256A7D350068644D /* GroupCallWindow.swift */,
 				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
@@ -4975,6 +4989,7 @@
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
 				9FA0E52D20519FCC001E5649 /* LiveUploadingHelper.m in Sources */,
 				C22EE61E1E67506800334C38 /* ChannelMembersViewController.swift in Sources */,
+				27C1C42F25ACB5A500189E90 /* GroupVideoView.swift in Sources */,
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
 				D02BD7C3232D14E800D1814A /* ThemePreviewRowItem.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
@@ -5227,6 +5242,7 @@
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				C209C3771F26271B009231FE /* EmojiSuggestionBridge.mm in Sources */,
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
+				27C1C43325ACDFB600189E90 /* VolumeMenuItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
 				D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */,

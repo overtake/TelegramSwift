@@ -49,7 +49,8 @@ class TextAndLabelItem: GeneralRowItem {
     
     let moreLayout: TextViewLayout
     let copyMenuText: String
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, text:String, context: AccountContext, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true) {
+    let _copyToClipboard:(()->Void)?
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, text:String, context: AccountContext, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil) {
         self.callback = callback
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
@@ -62,7 +63,7 @@ class TextAndLabelItem: GeneralRowItem {
             })
         }
         self.canCopy = canCopy
-        
+        self._copyToClipboard = _copyToClipboard
         
         textLayout = TextViewLayout(attr, maximumNumberOfLines: 3, alwaysStaticItems: !detectLinks)
         textLayout.interactions = globalLinkExecutor
@@ -170,6 +171,7 @@ class TextAndLabelRowView: GeneralRowView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private var labelView:TextView = TextView()
     private let moreView: TextView = TextView()
+    private let copyView: ImageButton = ImageButton()
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
         if let item = item as? TextAndLabelItem, let label = item.labelLayout, layer == containerView.layer {
@@ -226,6 +228,16 @@ class TextAndLabelRowView: GeneralRowView {
                 item.action()
             }
         }, for: .Click)
+        
+        copyView.autohighlight = true
+        
+        copyView.set(handler: { [weak self] _ in
+            if let item = self?.item as? TextAndLabelItem {
+                item._copyToClipboard?()
+            }
+        }, for: .Click)
+        
+        containerView.addSubview(copyView)
     }
     
     override func layout() {
@@ -240,6 +252,7 @@ class TextAndLabelRowView: GeneralRowView {
                 } else {
                     labelView.centerY(x:item.inset.left)
                 }
+                copyView.centerY(x: containerView.frame.width - copyView.frame.width - item.inset.left)
             case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
 
@@ -249,6 +262,8 @@ class TextAndLabelRowView: GeneralRowView {
                     labelView.centerY(x: innerInsets.left)
                 }
                 
+                copyView.centerY(x: containerView.frame.width - copyView.frame.width - innerInsets.right)
+
                 moreView.setFrameOrigin(NSMakePoint(containerView.frame.width - moreView.frame.width - innerInsets.right, containerView.frame.height - innerInsets.bottom - moreView.frame.height + 2))
             }
             self.containerView.setCorners(item.viewType.corners)
@@ -269,6 +284,11 @@ class TextAndLabelRowView: GeneralRowView {
             
             moreView.isHidden = item.hasMore != true
             moreView.update(item.moreLayout)
+            
+            copyView.set(image: theme.icons.copy_to_clipboard, for: .Normal)
+            copyView.sizeToFit()
+            copyView.scaleOnClick = true
+            copyView.isHidden = item._copyToClipboard == nil
         }
         containerView.needsDisplay = true
         needsLayout = true

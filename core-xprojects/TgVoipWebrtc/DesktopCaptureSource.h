@@ -11,19 +11,25 @@
 NS_ASSUME_NONNULL_BEGIN
 
 
+@protocol VideoSource
+-(NSString *)deviceIdKey;
+-(NSString *)title;
+-(NSString *)uniqueKey;
+-(BOOL)isEqual:(id)another;
+@end
+
 @interface DesktopCaptureSourceData : NSObject
 @property CGSize aspectSize;
 @property int fps;
--(id)initWithSize:(CGSize)size fps:(int)fps;
+@property bool captureMouse;
+-(id)initWithSize:(CGSize)size fps:(int)fps captureMouse:(bool)captureMouse;
 
 -(NSString *)cachedKey;
 @end
 
-@interface DesktopCaptureSource : NSObject
--(NSString *)title;
+@interface DesktopCaptureSource : NSObject<VideoSource>
 -(long)uniqueId;
 -(BOOL)isWindow;
--(NSString *)uniqueKey;
 @end
 
 

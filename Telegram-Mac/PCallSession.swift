@@ -14,6 +14,7 @@ import Postbox
 import TGUIKit
 import TgVoipWebrtc
 import CoreGraphics
+import TelegramVoip
 
 enum CallTone {
     case undefined
@@ -925,7 +926,7 @@ class PCallSession {
             self.ongoingContext?.requestVideo(videoCapturer)
         }
         if !requestVideo {
-            self.videoCapturer?.enableScreenCapture()
+            self.videoCapturer?.switchVideoInput("screen_capture")
         }
 //        setRequestedVideoAspect(Float(System.aspectRatio))
         
@@ -1099,11 +1100,11 @@ class PCallSession {
         player = nil
     }
     
-    func makeIncomingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.ongoingContext?.makeIncomingVideoView(completion: completion)
     }
     
-    func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+    func makeOutgoingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.videoCapturer?.makeOutgoingVideoView(completion: completion)
     }
     

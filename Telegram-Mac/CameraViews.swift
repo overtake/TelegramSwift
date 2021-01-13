@@ -10,6 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import SyncCore
+import TelegramVoip
 
 enum CameraState : Equatable {
     case notInited
@@ -33,7 +34,7 @@ final class OutgoingVideoView : Control {
     
     var firstFrameHandler:(()->Void)? = nil
     
-    var videoView: (OngoingCallContextVideoView?, Bool)? {
+    var videoView: (OngoingCallContextPresentationCallVideoView?, Bool)? {
         didSet {
             self._cameraInitialized.set(.initializing)
             if let value = videoView, let videoView = value.0 {
@@ -268,7 +269,7 @@ final class IncomingVideoView : Control {
     var firstFrameHandler:(()->Void)? = nil
     
     private var disabledView: NSVisualEffectView?
-    var videoView: OngoingCallContextVideoView? {
+    var videoView: OngoingCallContextPresentationCallVideoView? {
         didSet {
             _cameraInitialized.set(.initializing)
             

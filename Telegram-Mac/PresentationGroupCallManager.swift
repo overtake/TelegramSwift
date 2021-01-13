@@ -4,6 +4,44 @@ import TelegramCore
 import SyncCore
 import SwiftSignalKit
 
+
+final class PresentationCallVideoView {
+    public enum Orientation {
+        case rotation0
+        case rotation90
+        case rotation180
+        case rotation270
+    }
+    
+    public let holder: AnyObject
+    public let view: NSView
+    public let setOnFirstFrameReceived: (((Float) -> Void)?) -> Void
+    
+    public let getOrientation: () -> Orientation
+    public let getAspect: () -> CGFloat
+    public let setOnOrientationUpdated: (((Orientation, CGFloat) -> Void)?) -> Void
+    public let setOnIsMirroredUpdated: (((Bool) -> Void)?) -> Void
+    
+    public init(
+        holder: AnyObject,
+        view: NSView,
+        setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
+        getOrientation: @escaping () -> Orientation,
+        getAspect: @escaping () -> CGFloat,
+        setOnOrientationUpdated: @escaping (((Orientation, CGFloat) -> Void)?) -> Void,
+        setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void
+    ) {
+        self.holder = holder
+        self.view = view
+        self.setOnFirstFrameReceived = setOnFirstFrameReceived
+        self.getOrientation = getOrientation
+        self.getAspect = getAspect
+        self.setOnOrientationUpdated = setOnOrientationUpdated
+        self.setOnIsMirroredUpdated = setOnIsMirroredUpdated
+    }
+}
+
+
 struct PresentationGroupCallSummaryState: Equatable {
     var info: GroupCallInfo
     var participantCount: Int
@@ -130,4 +168,12 @@ protocol PresentationGroupCall: class {
     func updateMuteState(peerId: PeerId, isMuted: Bool)
     func invitePeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
+    
+    func setFullSizeVideo(peerId: PeerId?)
+    func makeIncomingVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void)
+    var incomingVideoSources: Signal<[PeerId: UInt32], NoError> { get }
+    
+    func requestVideo(deviceId: String)
+    func disableVideo()
+    func setVolume(peerId: PeerId, volume: Int32, sync: Bool, muteState: GroupCallParticipantsContext.Participant.MuteState?)
 }

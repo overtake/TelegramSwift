@@ -2361,7 +2361,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_voicechat_unmuted: { NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(.white) },
                                                profile_voice_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_VoiceChat")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                chat_voice_chat: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.background) },
-                                               chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) }
+                                               chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
+                                               copy_to_clipboard: { NSImage(named: "Icon_CopyLink")!.precomposed(palette.accent) }
 
     )
 

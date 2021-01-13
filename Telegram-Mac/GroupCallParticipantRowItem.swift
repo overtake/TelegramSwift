@@ -28,7 +28,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let invite:(PeerId)->Void
     fileprivate let mute:(PeerId, Bool)->Void
     fileprivate let canManageCall:Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>) {
+    fileprivate let takeVideo:()->NSView?
+    fileprivate let volume: TextViewLayout?
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, mute:@escaping(PeerId, Bool)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping()->NSView?) {
         self.data = data
         self.account = account
         self.mute = mute
@@ -37,6 +39,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self._contextMenu = contextMenu
         self.isInvited = isInvited
         self.drawLine = drawLine
+        self.takeVideo = takeVideo
         self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil || data.audioLevel != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         self.isLastItem = isLastItem
         var string:String = L10n.peerStatusRecently
@@ -55,6 +58,17 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         } else if isInvited {
             string = L10n.voiceChatTitleInvited
         }
+        
+        if let volume = data.state?.volume, volume != 100 {
+            if volume == 0 {
+                color = GroupCallTheme.grayStatusColor
+            }
+            
+            self.volume = TextViewLayout(.initialize(string: "\(volume)%", color: color, font: .normal(.short)))
+        } else {
+            self.volume = nil
+        }
+        
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 48, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsetsMake(0, 0, 0, 0), enabled: true)
     }
@@ -77,9 +91,13 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-        titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
-        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+        
+        self.volume?.measure(width: .greatestFiniteMagnitude)
 
+        let inset: CGFloat = self.volume?.layoutSize.width ?? 0
+                
+        titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset - 30)
         return true
     }
     
@@ -107,6 +125,9 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private let separator: View = View()
     private let playbackAudioLevelView: VoiceBlobView
     private var scaleAnimator: DisplayLinkAnimator?
+    private let videoContainer: View = View()
+    private var volumeView: TextView?
+    private var statusImageView: ImageView?
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 55, 55),
@@ -128,6 +149,9 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         titleView.isSelectable = false
 
                 
+        photoView.addSubview(videoContainer)
+        videoContainer.frame = .init(origin: .zero, size: photoSize)
+        photoView.layer?.cornerRadius = photoSize.height / 2
         
         button.animates = true
 
@@ -168,9 +192,11 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         self.photoView.centerY(x: item.itemInset.left)
 
         titleView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6))
-        if let statusView = statusView {
-            statusView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6))
-        }
+        
+        statusView?.setFrameOrigin(statusViewPoint)
+        volumeView?.setFrameOrigin(volumeViewPoint)
+        statusImageView?.setFrameOrigin(statusImageViewViewPoint)
+        
         if item.drawLine {
             separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
         } else {
@@ -196,12 +222,44 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
+        
+        let videoView = item.takeVideo()
+        
+        if let videoView = videoView {
+            let previous = self.videoContainer.subviews.first
+            var isPresented: Bool = false
+            if previous != videoView, let previous = previous {
+                if animated {
+                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
+                        previous?.removeFromSuperview()
+                    })
+                } else {
+                    previous.removeFromSuperview()
+                }
+                isPresented = true
+            }
+            videoView.frame = self.videoContainer.bounds
+            self.videoContainer.addSubview(videoView)
+            
+            if animated && isPresented {
+                videoView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        } else {
+            if let first = self.videoContainer.subviews.first {
+                if animated {
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
+                        first?.removeFromSuperview()
+                    })
+                } else {
+                    first.removeFromSuperview()
+                }
+            }
+        }
 
         if item.isActivePeer {
             if item.data.isSpeaking {
                 button.set(image: GroupCallTheme.small_speaking, for: .Normal)
                 button.set(image: GroupCallTheme.small_speaking_active, for: .Highlight)
-
             } else {
                 if let muteState = item.data.state?.muteState {
                     if muteState.canUnmute {
@@ -247,7 +305,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
 
         
-        playbackAudioLevelView.setColor(item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor)
+        playbackAudioLevelView.setColor(item.data.state?.volume == 0 ? GroupCallTheme.grayStatusColor : (item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor))
 
 
         titleView.update(item.titleLayout)
@@ -304,7 +362,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
             statusView.isSelectable = false
             statusView.update(item.statusLayout)
             addSubview(statusView)
-            statusView.setFrameOrigin(NSMakePoint(photoView.frame.maxX + item.inset.left, frame.height - statusView.frame.height - 6))
+            statusView.setFrameOrigin(statusViewPoint)
             
             statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
             statusView.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.4)
@@ -313,16 +371,153 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         }
         
         statusView?.update(item.statusLayout)
+        
+        if videoView != nil || item.volume != nil, let state = item.data.state {
+            var statusImage: CGImage
+            if videoView != nil {
+                if state.volume == 0 {
+                    statusImage = GroupCallTheme.status_video_gray
+                } else {
+                    if item.data.isSpeaking {
+                        statusImage = GroupCallTheme.status_video_green
+                    } else {
+                        statusImage = GroupCallTheme.status_video_accent
+                    }
+                }
+            } else {
+                if state.volume == 0 {
+                    statusImage = GroupCallTheme.status_muted
+                } else {
+                    if item.data.isSpeaking {
+                        statusImage = GroupCallTheme.status_unmuted_green
+                    } else {
+                        statusImage = GroupCallTheme.status_unmuted_accent
+                    }
+                }
+            }
+            var isPresented = false
+            if statusImageView == nil {
+                statusImageView = ImageView()
+                addSubview(statusImageView!)
+                isPresented = true
+            }
+            guard let statusImageView = statusImageView else {
+                return
+            }
+            statusImageView.image = statusImage
+            statusImageView.sizeToFit()
+            if isPresented {
+                statusImageView.setFrameOrigin(statusImageViewViewPoint)
+            }
+            if isPresented && animated {
+                
+            }
+        } else {
+            if let statusImageView = self.statusImageView {
+                self.statusImageView = nil
+                if animated {
+                    statusImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak statusImageView] _ in
+                        statusImageView?.removeFromSuperview()
+                    })
+                    statusImageView.layer?.animatePosition(from: statusImageView.frame.origin, to: NSMakePoint(statusImageView.frame.minX - statusImageView.frame.width, statusImageView.frame.minY))
+                } else {
+                    statusImageView.removeFromSuperview()
+                }
+                
+            }
+        }
+        
+        
+        if let volume = item.volume {
+            var isPresented: Bool = false
+            if volumeView == nil {
+                self.volumeView = TextView()
+                self.volumeView?.userInteractionEnabled = false
+                self.volumeView?.isSelectable = false
+                addSubview(volumeView!)
+                isPresented = true
+            }
+            guard let volumeView = volumeView else {
+                return
+            }
+            volumeView.update(volume)
+
+            if isPresented {
+                volumeView.setFrameOrigin(volumeViewPoint)
+            }
+            if isPresented && animated {
+                volumeView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                volumeView.layer?.animatePosition(from: NSMakePoint(volumeView.frame.minX - volumeView.frame.width, volumeView.frame.minY), to: volumeView.frame.origin)
+                
+                if let statusView = statusView {
+                    statusView.change(pos: statusViewPoint, animated: animated)
+                }
+            }
+        } else {
+            if let volumeView = volumeView {
+                self.volumeView = nil
+                if animated {
+                    volumeView.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak volumeView] _ in
+                        volumeView?.removeFromSuperview()
+                    })
+                    volumeView.layer?.animatePosition(from: volumeView.frame.origin, to: NSMakePoint(volumeView.frame.minX - volumeView.frame.width, volumeView.frame.minY))
+                } else {
+                    volumeView.removeFromSuperview()
+                }
+                if let statusView = statusView {
+                    statusView.change(pos: statusViewPoint, animated: animated)
+                }
+            }
+        }
+        
+        
+        
         needsLayout = true
+    }
+    
+    var statusViewPoint: NSPoint {
+        guard let item = item as? GroupCallParticipantRowItem else {
+            return .zero
+        }
+        var point: NSPoint = .zero
         
+        if let statusView = statusView {
+            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6)
+        }
+        if let volume = item.volume {
+            point.x += volume.layoutSize.width + 3
+        }
+        if let statusImageView = statusImageView {
+            point.x += statusImageView.frame.width + 3
+        }
         
-//        button.set(handler: { control in
-//            if control.popover == nil {
-//                showPopover(for: control, with: VolumeControllerPopover(initialValue: 0.5, updatedValue: { updatedVolume in
-//                    
-//                }), edge: .maxY, inset: NSMakePoint(-8, 126))
-//            }
-//        }, for: .Hover)
+        return point
+    }
+    var volumeViewPoint: NSPoint {
+        guard let item = item as? GroupCallParticipantRowItem else {
+            return .zero
+        }
+        var point: NSPoint = .zero
+        
+        if let volumeView = volumeView {
+            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
+        }
+        if let statusImageView = statusImageView {
+            point.x += statusImageView.frame.width + 3
+        }
+        return point
+    }
+    
+    var statusImageViewViewPoint: NSPoint {
+        guard let item = item as? GroupCallParticipantRowItem else {
+            return .zero
+        }
+        var point: NSPoint = .zero
+        
+        if let statusImageView = statusImageView {
+            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusImageView.frame.height - 6)
+        }
+        return point
     }
     
     deinit {

@@ -37,6 +37,8 @@
 -(instancetype)init_w {
     if (self = [super init]) {
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
+        options.set_allow_iosurface(false);
+        options.set_detect_updated_region(true);
         _capturer = webrtc::DesktopCapturer::CreateWindowCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
         _cached = [[NSMutableDictionary alloc] init];
         _isWindow = YES;
@@ -46,6 +48,8 @@
 -(instancetype)init_s {
     if (self = [super init]) {
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
+        options.set_allow_iosurface(true);
+        options.set_detect_updated_region(true);
         _capturer = webrtc::DesktopCapturer::CreateScreenCapturer(webrtc::DesktopCaptureOptions::CreateDefault());
         _cached = [[NSMutableDictionary alloc] init];
         _isWindow = NO;

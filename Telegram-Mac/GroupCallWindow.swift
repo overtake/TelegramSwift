@@ -63,7 +63,17 @@ struct GroupCallTheme {
     
     static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
     static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
+    
+    static let status_video_accent = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let status_video_green = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let status_video_gray = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
 
+    static let status_muted = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    
+    static let status_unmuted_accent = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let status_unmuted_green = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
+
+    
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
     static var customTheme: GeneralRowItem.Theme {
@@ -96,14 +106,14 @@ final class GroupCallWindow : Window {
         }
 
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
-        self.minSize = NSMakeSize(380, 600)
-        self.name = "GroupCallWindow3"
+        self.minSize = NSMakeSize(380, 670)
+        self.name = "GroupCallWindow4"
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .visible
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
-        
+        self.level = .normal
         self.toolbar = NSToolbar(identifier: "window")
         self.toolbar?.showsBaselineSeparator = false
         
@@ -133,6 +143,8 @@ final class GroupCallContext {
     private let navigation: MajorNavigationController
 
     let window: GroupCallWindow
+    
+    
     let call: PresentationGroupCall
     let peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager
     private let presentDisposable = MetaDisposable()
@@ -163,6 +175,7 @@ final class GroupCallContext {
     deinit {
         presentDisposable.dispose()
         removeDisposable.dispose()
+        self.window.removeObserver(for: window)
     }
     
     func present() {

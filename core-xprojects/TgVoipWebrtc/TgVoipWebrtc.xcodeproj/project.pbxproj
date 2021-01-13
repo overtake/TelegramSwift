@@ -9,8 +9,10 @@
 /* Begin PBXBuildFile section */
 		2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2702A834259BD7F6007F1DDD /* SSignalKit.framework */; };
 		274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */; };
-		2771ADC22590E650000B29FF /* ScreenCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2771ADC02590E64D000B29FF /* ScreenCapturer.h */; };
-		2771ADC32590E650000B29FF /* ScreenCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2771ADC12590E650000B29FF /* ScreenCapturer.mm */; };
+		2771ADC22590E650000B29FF /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2771ADC02590E64D000B29FF /* DesktopSharingCapturer.h */; };
+		2771ADC32590E650000B29FF /* DesktopSharingCapturer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2771ADC12590E650000B29FF /* DesktopSharingCapturer.mm */; };
+		27941B7B25A7367500D00D36 /* GroupInstanceCustomImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27941B7925A7367500D00D36 /* GroupInstanceCustomImpl.cpp */; };
+		27941B7C25A7367500D00D36 /* GroupInstanceCustomImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27941B7A25A7367500D00D36 /* GroupInstanceCustomImpl.h */; };
 		27B15CC2259A6D2400C7F280 /* DesktopCaptureSourceHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */; };
 		27B15CC3259A6D2400C7F280 /* DesktopCaptureSourceHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27B15CC1259A6D2400C7F280 /* DesktopCaptureSourceHelper.mm */; };
 		27B15CC8259A78B800C7F280 /* DesktopCaptureSourceView.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B15CC6259A78B800C7F280 /* DesktopCaptureSourceView.h */; };
@@ -19,6 +21,9 @@
 		27B15CCF259A7AC000C7F280 /* DesktopCaptureSourceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27B15CCD259A7AC000C7F280 /* DesktopCaptureSourceManager.mm */; };
 		27B15CD6259B244B00C7F280 /* DesktopCaptureSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B15CD4259B244B00C7F280 /* DesktopCaptureSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27B15CD7259B244B00C7F280 /* DesktopCaptureSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27B15CD5259B244B00C7F280 /* DesktopCaptureSource.mm */; };
+		27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */; };
+		27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */; };
+		27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */; };
 		D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */; };
 		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
@@ -62,8 +67,10 @@
 /* Begin PBXFileReference section */
 		2702A834259BD7F6007F1DDD /* SSignalKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SSignalKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AudioDeviceHelper.cpp; path = ../../submodules/tgcalls/tgcalls/AudioDeviceHelper.cpp; sourceTree = "<group>"; };
-		2771ADC02590E64D000B29FF /* ScreenCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScreenCapturer.h; sourceTree = "<group>"; };
-		2771ADC12590E650000B29FF /* ScreenCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScreenCapturer.mm; sourceTree = "<group>"; };
+		2771ADC02590E64D000B29FF /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DesktopSharingCapturer.h; sourceTree = "<group>"; };
+		2771ADC12590E650000B29FF /* DesktopSharingCapturer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DesktopSharingCapturer.mm; sourceTree = "<group>"; };
+		27941B7925A7367500D00D36 /* GroupInstanceCustomImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GroupInstanceCustomImpl.cpp; path = "../../../telegram-ios/submodules/TgVoipWebrtc/tgcalls/tgcalls/group/GroupInstanceCustomImpl.cpp"; sourceTree = "<group>"; };
+		27941B7A25A7367500D00D36 /* GroupInstanceCustomImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GroupInstanceCustomImpl.h; path = "../../../telegram-ios/submodules/TgVoipWebrtc/tgcalls/tgcalls/group/GroupInstanceCustomImpl.h"; sourceTree = "<group>"; };
 		27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DesktopCaptureSourceHelper.h; sourceTree = "<group>"; };
 		27B15CC1259A6D2400C7F280 /* DesktopCaptureSourceHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = DesktopCaptureSourceHelper.mm; sourceTree = "<group>"; };
 		27B15CC6259A78B800C7F280 /* DesktopCaptureSourceView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DesktopCaptureSourceView.h; sourceTree = "<group>"; };
@@ -72,6 +79,9 @@
 		27B15CCD259A7AC000C7F280 /* DesktopCaptureSourceManager.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = DesktopCaptureSourceManager.mm; sourceTree = "<group>"; };
 		27B15CD4259B244B00C7F280 /* DesktopCaptureSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DesktopCaptureSource.h; sourceTree = "<group>"; };
 		27B15CD5259B244B00C7F280 /* DesktopCaptureSource.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = DesktopCaptureSource.mm; sourceTree = "<group>"; };
+		27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupNetworkManager.cpp; sourceTree = "<group>"; };
+		27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupNetworkManager.h; sourceTree = "<group>"; };
+		27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StaticThreads.cpp; path = ../../submodules/tgcalls/tgcalls/StaticThreads.cpp; sourceTree = "<group>"; };
 		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
@@ -141,8 +151,8 @@
 		2771ADBF2590E63E000B29FF /* capturer */ = {
 			isa = PBXGroup;
 			children = (
-				2771ADC02590E64D000B29FF /* ScreenCapturer.h */,
-				2771ADC12590E650000B29FF /* ScreenCapturer.mm */,
+				2771ADC02590E64D000B29FF /* DesktopSharingCapturer.h */,
+				2771ADC12590E650000B29FF /* DesktopSharingCapturer.mm */,
 				27B15CC0259A6D2400C7F280 /* DesktopCaptureSourceHelper.h */,
 				27B15CC1259A6D2400C7F280 /* DesktopCaptureSourceHelper.mm */,
 				27B15CC6259A78B800C7F280 /* DesktopCaptureSourceView.h */,
@@ -187,6 +197,7 @@
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
 				D00602FC24CF3D6600206226 /* CryptoHelper.cpp */,
 				D00602FE24CF3D7500206226 /* Message.cpp */,
+				27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */,
 				D06E368B24A4FD4900C7D03A /* TgVoipWebrtc */,
 				D06E369624A4FD4A00C7D03A /* TgVoipWebrtcTests */,
 				D06E368A24A4FD4900C7D03A /* Products */,
@@ -243,6 +254,10 @@
 		D0E7BD1C256A7E0D0068644D /* group */ = {
 			isa = PBXGroup;
 			children = (
+				27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */,
+				27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */,
+				27941B7925A7367500D00D36 /* GroupInstanceCustomImpl.cpp */,
+				27941B7A25A7367500D00D36 /* GroupInstanceCustomImpl.h */,
 				D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */,
 				D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */,
 			);
@@ -260,11 +275,13 @@
 				27B15CD6259B244B00C7F280 /* DesktopCaptureSource.h in Headers */,
 				27B15CC2259A6D2400C7F280 /* DesktopCaptureSourceHelper.h in Headers */,
 				27B15CCE259A7AC000C7F280 /* DesktopCaptureSourceManager.h in Headers */,
-				2771ADC22590E650000B29FF /* ScreenCapturer.h in Headers */,
+				2771ADC22590E650000B29FF /* DesktopSharingCapturer.h in Headers */,
 				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
 				27B15CC8259A78B800C7F280 /* DesktopCaptureSourceView.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
+				27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
+				27941B7C25A7367500D00D36 /* GroupInstanceCustomImpl.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -336,6 +353,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */,
 				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
 				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,
 				D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */,
@@ -343,7 +361,7 @@
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
-				2771ADC32590E650000B29FF /* ScreenCapturer.mm in Sources */,
+				2771ADC32590E650000B29FF /* DesktopSharingCapturer.mm in Sources */,
 				27B15CC9259A78B800C7F280 /* DesktopCaptureSourceView.mm in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
@@ -354,6 +372,7 @@
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
 				D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
+				27941B7B25A7367500D00D36 /* GroupInstanceCustomImpl.cpp in Sources */,
 				27B15CC3259A6D2400C7F280 /* DesktopCaptureSourceHelper.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
 				D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */,
@@ -365,6 +384,7 @@
 				D0D751B424BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm in Sources */,
 				D0D751B524BE3A140037D73A /* VideoCameraCapturerMac.mm in Sources */,
 				D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */,
+				27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */,
 				D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */,
 				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
 				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
