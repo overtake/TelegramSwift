@@ -667,9 +667,9 @@ class ChatServiceRowView: TableRowView {
                 imageView?.removeFromSuperview()
                 imageView = nil
             }
-            self.needsLayout = true
-            updateListeners()
         }
+        self.needsLayout = true
+        updateListeners()
     }
     
 }

@@ -186,7 +186,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 _ = attributedString.append(string: text, color: theme.colors.grayText, font: .normal(.text))
                 attributedString.detectBoldColorInString(with: .medium(.text))
                 
-                return DiscussionHeaderItem(initialSize, stableId: stableId, context: arguments.context, text: attributedString)
+                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             index += 1
             
@@ -221,7 +221,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 
                 let attributedString = NSMutableAttributedString()
                 _ = attributedString.append(string: text, color: theme.colors.grayText, font: .normal(.text))
-                return DiscussionHeaderItem(initialSize, stableId: stableId, context: arguments.context, text: attributedString)
+                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             index += 1
             
@@ -252,7 +252,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 _ = attributedString.append(string: L10n.discussionControllerGroupSetHeader(associatedPeer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
                 attributedString.detectBoldColorInString(with: .medium(.text))
                 
-                return DiscussionHeaderItem(initialSize, stableId: stableId, context: arguments.context, text: attributedString)
+                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             
             index += 1

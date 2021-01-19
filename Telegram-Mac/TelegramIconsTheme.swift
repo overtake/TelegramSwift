@@ -7336,6 +7336,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var editor_draw: CGImage {
+      if let image = cached.with({ $0["editor_draw"] }) {
+          return image
+      } else {
+          let image = _editor_draw()
+          _ = cached.modify { current in 
+              var current = current
+              current["editor_draw"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var editor_delete: CGImage {
+      if let image = cached.with({ $0["editor_delete"] }) {
+          return image
+      } else {
+          let image = _editor_delete()
+          _ = cached.modify { current in 
+              var current = current
+              current["editor_delete"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var editor_crop: CGImage {
+      if let image = cached.with({ $0["editor_crop"] }) {
+          return image
+      } else {
+          let image = _editor_crop()
+          _ = cached.modify { current in 
+              var current = current
+              current["editor_crop"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7901,6 +7940,9 @@ final class TelegramIconsTheme {
   private let _profile_voice_chat: ()->CGImage
   private let _chat_voice_chat: ()->CGImage
   private let _chat_voice_chat_active: ()->CGImage
+  private let _editor_draw: ()->CGImage
+  private let _editor_delete: ()->CGImage
+  private let _editor_crop: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8466,7 +8508,10 @@ final class TelegramIconsTheme {
       chat_voicechat_unmuted: @escaping()->CGImage,
       profile_voice_chat: @escaping()->CGImage,
       chat_voice_chat: @escaping()->CGImage,
-      chat_voice_chat_active: @escaping()->CGImage
+      chat_voice_chat_active: @escaping()->CGImage,
+      editor_draw: @escaping()->CGImage,
+      editor_delete: @escaping()->CGImage,
+      editor_crop: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9032,5 +9077,8 @@ final class TelegramIconsTheme {
       self._profile_voice_chat = profile_voice_chat
       self._chat_voice_chat = chat_voice_chat
       self._chat_voice_chat_active = chat_voice_chat_active
+      self._editor_draw = editor_draw
+      self._editor_delete = editor_delete
+      self._editor_crop = editor_crop
   }
 }

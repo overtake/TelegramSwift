@@ -88,7 +88,19 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
     }
     
+    
     var loadMore: (()->Void)? = nil
+    
+    private var _linksManager:InviteLinkPeerManager?
+    var linksManager: InviteLinkPeerManager {
+        if let _linksManager = _linksManager {
+            return _linksManager
+        } else {
+            _linksManager = InviteLinkPeerManager(context: context, peerId: peerId)
+            _linksManager!.loadNext()
+            return _linksManager!
+        }
+    }
     
     override func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         
@@ -190,12 +202,16 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func visibilitySetup() {
-        let setup = ChannelVisibilityController(context, peerId: peerId, isChannel: false)
+        let setup = ChannelVisibilityController(context, peerId: peerId, isChannel: false, linksManager: linksManager)
         _ = (setup.onComplete.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] peerId in
             self?.changeControllers(peerId)
             self?.pullNavigation()?.back()
         })
         pushViewController(setup)
+    }
+    
+    func openInviteLinks() {
+        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     
     private func changeControllers(_ peerId: PeerId?) {
@@ -862,6 +878,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case usersHeader(section:Int, count:Int, viewType: GeneralViewType)
     case addMember(section:Int, inviteViaLink: Bool, viewType: GeneralViewType)
     case groupTypeSetup(section:Int, isPublic: Bool, viewType: GeneralViewType)
+    case inviteLinks(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
@@ -888,6 +905,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .usersHeader(section, count, _): return .usersHeader(section: section, count: count, viewType: viewType)
         case let .addMember(section, inviteViaLink, _): return .addMember(section: section, inviteViaLink: inviteViaLink, viewType: viewType)
         case let .groupTypeSetup(section, isPublic, _): return .groupTypeSetup(section: section, isPublic: isPublic, viewType: viewType)
+        case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
         case let .linkedChannel(section, channel, subscriber, _): return .linkedChannel(section: section, channel: channel, subscribers: subscriber, viewType: viewType)
         case let .groupDescriptionSetup(section, text, _): return .groupDescriptionSetup(section: section, text: text, viewType: viewType)
         case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
@@ -1034,6 +1052,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .inviteLinks(sectionId, count, viewType):
+            if case .inviteLinks(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .linkedChannel(sectionId, lhsChannel, subscribers, viewType):
             if case .linkedChannel(sectionId, let rhsChannel, subscribers, viewType) = entry {
                 return lhsChannel.isEqual(rhsChannel)
@@ -1176,30 +1200,32 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 8
         case .groupTypeSetup:
             return 9
-        case .linkedChannel:
+        case .inviteLinks:
             return 10
-        case .preHistory:
+        case .linkedChannel:
             return 11
-        case .groupStickerset:
+        case .preHistory:
             return 12
-        case .groupManagementInfoLabel:
+        case .groupStickerset:
             return 13
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 14
-        case .administrators:
+        case .permissions:
             return 15
-        case .usersHeader:
+        case .administrators:
             return 16
-        case .addMember:
+        case .usersHeader:
             return 17
+        case .addMember:
+            return 18
         case .member:
             fatalError("no stableIndex")
         case .showMore:
-            return 19
-        case .leave:
             return 20
-        case .media:
+        case .leave:
             return 21
+        case .media:
+            return 22
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1224,6 +1250,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .sharedMedia(sectionId, _):
             return sectionId
         case let .groupTypeSetup(sectionId, _, _):
+            return sectionId
+        case let .inviteLinks(sectionId, _, _):
             return sectionId
         case let .linkedChannel(sectionId, _, _, _):
             return sectionId
@@ -1276,6 +1304,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .groupTypeSetup(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
+        case let .inviteLinks(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
         case let .linkedChannel(sectionId, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .preHistory(sectionId, _, _):
@@ -1323,11 +1353,11 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .scam(_, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text: text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text: text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { [weak arguments] peerId, toChat, postId, _ in
                 if toChat {
-                    arguments.peerChat(peerId, postId: postId)
+                    arguments?.peerChat(peerId, postId: postId)
                 } else {
-                    arguments.peerInfo(peerId)
+                    arguments?.peerInfo(peerId)
                 }
         }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
         case let .addressName(_, value, viewType):
@@ -1338,27 +1368,22 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoGroupTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .notifications(_, settings, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {
-                arguments.toggleNotifications()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: arguments.toggleNotifications)
             
         case let .sharedMedia(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: { () in
-                arguments.sharedMedia()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: arguments.sharedMedia)
         case let .groupDescriptionSetup(section: _, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .preHistory(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPreHistory, type: .context(enabled ? L10n.peerInfoPreHistoryVisible : L10n.peerInfoPreHistoryHidden), viewType: viewType, action: {
-                arguments.preHistorySetup()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPreHistory, type: .context(enabled ? L10n.peerInfoPreHistoryVisible : L10n.peerInfoPreHistoryHidden), viewType: viewType, action: arguments.preHistorySetup)
         case let .groupAboutDescription(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription, viewType: viewType)
             
         case let .groupTypeSetup(section: _, isPublic: isPublic, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .nextContext(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), viewType: viewType, action: { () in
-                arguments.visibilitySetup()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .nextContext(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), viewType: viewType, action: arguments.visibilitySetup)
+        case let .inviteLinks(_, count, viewType):
+            //TODOLANG
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Invite Links", type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
         case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
@@ -1366,28 +1391,20 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 title = channel.displayTitle
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), viewType: viewType, action: { () in
-                arguments.setupDiscussion()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .groupStickerset(_, name, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, type: .nextContext(name), viewType: viewType, action: { () in
-                arguments.setGroupStickerset()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, type: .nextContext(name), viewType: viewType, action: arguments.setGroupStickerset)
         case let .permissions(section: _, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: { () in
-                arguments.blacklist()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: arguments.blacklist)
         case let .administrators(section: _, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count), viewType: viewType, action: { () in
-                arguments.admins()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count), viewType: viewType, action: arguments.admins)
         case let .usersHeader(section: _, count, viewType):
             var countValue = L10n.peerInfoMembersHeaderCountable(count)
             countValue = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: countValue, viewType: viewType)
         case let .addMember(_, inviteViaLink, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { () in
-                arguments.addMember(inviteViaLink)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { [weak arguments] in
+                arguments?.addMember(inviteViaLink)
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
         case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, menuItems, enabled, viewType):
             let label: String
@@ -1411,26 +1428,22 @@ enum GroupInfoEntry: PeerInfoEntry {
             let interactionType:ShortPeerItemInteractionType
             if let editing = editing {
                 
-                interactionType = .deletable(onRemove: { memberId in
-                    arguments.removePeer(memberId)
+                interactionType = .deletable(onRemove: { [weak arguments] memberId in
+                    arguments?.removePeer(memberId)
                 }, deletable: editing.editable)
             } else {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: {
-                arguments.peerInfo(peer!.id)
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
+                arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
             }, inputActivity: inputActivity)
         case let .showMore(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
-                arguments.showMore()
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.showMore, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
         case let .leave(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
-                arguments.delete()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: text, nameStyle: redActionButton, type: .none, viewType: viewType, action: arguments.delete)
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section:
@@ -1455,7 +1468,7 @@ enum GroupInfoSection : Int {
 }
 
 
-func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
+func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32) -> [PeerInfoEntry] {
     var entries: [GroupInfoEntry] = []
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         
@@ -1489,12 +1502,15 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
             
-            if let group = view.peers[view.peerId] as? TelegramGroup, let cachedGroupData = view.cachedData as? CachedGroupData {
+            if let group = view.peers[view.peerId] as? TelegramGroup {
                 if case .creator = group.role {
-                    if cachedGroupData.flags.contains(.canChangeUsername) {
-                        entries.append(GroupInfoEntry.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
-                        entries.append(GroupInfoEntry.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
-                    }
+                //    if cachedGroupData.flags.contains(.canChangeUsername) {
+                    entries.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
+                    #if DEBUG
+                    entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .innerItem))
+                    #endif
+                    entries.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
+                //    }
                     
                     var activePermissionCount: Int?
                     if let defaultBannedRights = group.defaultBannedRights {
@@ -1516,6 +1532,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 if access.isCreator {
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
+                    #if DEBUG
+                    actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
+                    #endif
                 }
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId.peerId, let peer = view.peers[linkedDiscussionPeerId] {
                     actionBlock.append(.linkedChannel(section: GroupInfoSection.type.rawValue, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount, viewType: .singleItem))

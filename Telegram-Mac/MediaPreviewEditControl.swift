@@ -11,41 +11,59 @@ import TGUIKit
 
 
 
-class MediaPreviewEditControl: Control {
+class MediaPreviewEditControl: View {
     private let crop = ImageButton()
+    private let paint = ImageButton()
     private let delete = ImageButton()
     override init() {
-        super.init(frame: NSMakeRect(0, 0, 60, 30))
+        super.init(frame: NSMakeRect(0, 0, 90, 30))
         addSubview(crop)
+        addSubview(paint)
         addSubview(delete)
-        crop.set(image: theme.icons.previewSenderCrop, for: .Normal)
-        delete.set(image: theme.icons.previewSenderDelete, for: .Normal)
+        crop.autohighlight = false
+        paint.autohighlight = false
+        delete.autohighlight = false
+        crop.scaleOnClick = true
+        paint.scaleOnClick = true
+        delete.scaleOnClick = true
+        crop.set(image: theme.icons.editor_crop, for: .Normal)
+        paint.set(image: theme.icons.editor_draw, for: .Normal)
+        delete.set(image: theme.icons.editor_delete, for: .Normal)
         _ = crop.sizeToFit(NSZeroSize, NSMakeSize(27, frame.height), thatFit: true)
         _ = delete.sizeToFit(NSZeroSize, NSMakeSize(27, frame.height), thatFit: true)
-        
+        _ = paint.sizeToFit(NSZeroSize, NSMakeSize(27, frame.height), thatFit: true)
+
         backgroundColor = .blackTransparent
         layer?.cornerRadius = frame.height / 2
     }
     
-    func set(edit:@escaping()->Void, delete:@escaping()->Void, hasEditedData: Bool) {
+    func set(edit:@escaping()->Void, paint: @escaping()->Void, delete:@escaping()->Void, editedData: EditedImageData?) {
         self.crop.removeAllHandlers()
         self.delete.removeAllHandlers()
+        self.paint.removeAllHandlers()
         
-        self.crop.isSelected = hasEditedData
+
+
+//        self.crop.isSelected = editedData != nil
+//        self.paint.isSelected = !(editedData?.paintings.isEmpty ?? true)
         
         self.crop.set(handler: { _ in
             edit()
-        }, for: .Up)
+        }, for: .Click)
+        
+        self.paint.set(handler: { _ in
+            paint()
+        }, for: .Click)
         
         self.delete.set(handler: { _ in
             delete()
-        }, for: .Up)
+        }, for: .Click)
     }
     
     var canEdit: Bool = true {
         didSet {
             crop.isHidden = !canEdit
-            self.setFrameSize(canEdit ? 60 : 30, frame.height)
+            self.setFrameSize(canEdit ? 90 : 30, frame.height)
         }
     }
     var canDelete: Bool = true {
@@ -57,7 +75,7 @@ class MediaPreviewEditControl: Control {
     var isInteractiveMedia: Bool = true {
         didSet {
             backgroundColor = isInteractiveMedia ? .blackTransparent : .clear
-            delete.set(image: isInteractiveMedia ? theme.icons.previewSenderDelete : theme.icons.previewSenderDeleteFile, for: .Normal)
+            delete.set(image: isInteractiveMedia ? theme.icons.editor_delete : theme.icons.previewSenderDeleteFile, for: .Normal)
         }
     }
     
@@ -65,9 +83,17 @@ class MediaPreviewEditControl: Control {
         super.layout()
         if canEdit {
             crop.centerY(x: 3)
-            delete.centerY(x: crop.frame.maxX)
+            paint.centerY(x: crop.frame.maxX)
+            delete.centerY(x: paint.frame.maxX)
         } else {
             delete.center()
+        }
+    }
+    
+    override var isHidden: Bool {
+        didSet {
+            var bp:Int = 0
+            bp += 1
         }
     }
     

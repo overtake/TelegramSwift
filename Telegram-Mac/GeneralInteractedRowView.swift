@@ -172,6 +172,9 @@ class GeneralInteractedRowView: GeneralRowView {
         guard let item = item as? GeneralInteractedRowItem else {
             return theme.colors.border
         }
+        if item.disableBorder {
+            return .clear
+        }
         if let theme = item.customTheme {
             return theme.borderColor
         }

@@ -129,7 +129,10 @@ public extension String {
         str = str.replacingOccurrences(of: "◼", with: "◼️")
         str = str.replacingOccurrences(of: "➡", with: "➡️")
         str = str.replacingOccurrences(of: "⚰", with: "⚰️")
+        str = str.replacingOccurrences(of: "⚡", with: "⚡️")
+
         
+            
 
         return str
     }
@@ -2478,4 +2481,60 @@ extension NSImage {
 func truncate(double: Double, places : Int)-> Double
 {
     return Double(floor(pow(10.0, Double(places)) * double)/pow(10.0, Double(places)))
+}
+
+
+
+
+struct DateSelectorUtil {
+    
+    static var timeIntervals:[TimeInterval?]  {
+        var intervals:[TimeInterval?] = []
+        for i in 0 ... 23 {
+            let current = Double(i) * 60.0 * 60
+            intervals.append(current)
+    //        #if DEBUG
+            for i in 1 ... 59 {
+                intervals.append(current + Double(i) * 60.0)
+            }
+            if i < 23 {
+                intervals.append(nil)
+            }
+
+        }
+        return intervals
+    }
+
+    static var dayFormatter: DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: appAppearance.language.languageCode)
+        //dateFormatter.timeZone = TimeZone(abbreviation: "UTC")!
+        dateFormatter.dateFormat = "MMM d, yyyy"
+        return dateFormatter
+    }
+
+    static var dayFormatterRelative: DateFormatter {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: appAppearance.language.languageCode)
+       // dateFormatter.timeZone = TimeZone(abbreviation: "UTC")!
+
+        dateFormatter.dateStyle = .short
+        dateFormatter.doesRelativeDateFormatting = true
+        return dateFormatter
+    }
+
+    static func formatDay(_ date: Date) -> String {
+        if CalendarUtils.isSameDate(date, date: Date(), checkDay: true) {
+            return dayFormatterRelative.string(from: date)
+        } else {
+            return dayFormatter.string(from: date)
+        }
+    }
+
+    static func formatTime(_ date: Date) -> String {
+        let timeFormatter = DateFormatter()
+        timeFormatter.timeStyle = .medium
+       // timeFormatter.timeZone = TimeZone(abbreviation: "UTC")!
+        return timeFormatter.string(from: date)
+    }
 }

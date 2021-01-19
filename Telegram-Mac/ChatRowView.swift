@@ -1537,7 +1537,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = nil
         }
         
-        let animated = animated && item.isBubbled && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id != item.message?.id && self.layer?.animation(forKey: "position") == nil
+        let animated = animated && item.isBubbled && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id == item.message?.id && self.layer?.animation(forKey: "position") == nil
         
         if previousItem?.message?.id != item.message?.id {
             updateBackground(animated: false, item: item, clean: true)
