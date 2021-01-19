@@ -498,7 +498,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
         var voiceChat: ChatActiveGroupCallInfo?
         if interfaceState.groupCall?.data?.groupCall == nil {
-            if let data = interfaceState.groupCall?.data, data.participantCount == 0 || (data.topParticipants.count == 1 && data.topParticipants.contains(where: { $0.peer.id == chatInteraction.context.peerId })) {
+            if let data = interfaceState.groupCall?.data, data.participantCount == 0 {
                 voiceChat = nil
             } else {
                 voiceChat = interfaceState.groupCall
