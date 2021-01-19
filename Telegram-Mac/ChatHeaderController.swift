@@ -1849,7 +1849,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.layer?.cornerRadius = joinButton.frame.height / 2
         joinButton.set(color: theme.colors.underSelectedColor, for: .Normal)
         joinButton.set(background: theme.colors.accent, for: .Normal)
-        joinButton.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+        joinButton.set(background: theme.colors.accent.highlighted, for: .Highlight)
         
         let headerLayout = TextViewLayout(.initialize(string: L10n.chatGroupCallTitle, color: theme.colors.text, font: .medium(.text)))
         headerLayout.measure(width: frame.width - 100)

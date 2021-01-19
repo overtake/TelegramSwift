@@ -31,9 +31,18 @@ func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {
         return .single(photos.photos)
     } else {
-        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(requestPeerPhotos(postbox: account.postbox, network: account.network, peerId: peerId) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos in
+        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(requestPeerPhotos(postbox: account.postbox, network: account.network, peerId: peerId), account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
             return peerAvatars.modify { value in
                 var value = value
+                var photos = photos
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    if let photo = cachedData.photo {
+                        if photos.firstIndex(where: { $0.image.id == photo.id }) == nil {
+                            photos.insert(TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: photos.first?.totalCount ?? 0, messageId: nil), at: 0)
+                        }
+                    }
+                }
+                
                 value[peerId] = PeerPhotos(photos: photos, time: Date().timeIntervalSince1970 + 5 * 60)
                 return value
             }[peerId]?.photos ?? []

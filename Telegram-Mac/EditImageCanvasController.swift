@@ -282,10 +282,12 @@ final class EditImageCanvasController : ModalViewController {
     private let actions: [EditImageDrawTouch]
     private let updatedImage: ([EditImageDrawTouch])->Void
     private let closeHandler: ()->Void
-    init(image: CGImage, actions: [EditImageDrawTouch], updatedImage: @escaping([EditImageDrawTouch])->Void, closeHandler: @escaping() -> Void) {
+    private let alone: Bool
+    init(image: CGImage, actions: [EditImageDrawTouch], updatedImage: @escaping([EditImageDrawTouch])->Void, closeHandler: @escaping() -> Void, alone: Bool = false) {
         self.stateValue = Atomic(value: EditImageCanvasState.default(actions))
         self.state = ValuePromise(EditImageCanvasState.default(actions), ignoreRepeated: false)
         self.image = image
+        self.alone = alone
         self.actions = actions
         self.updatedImage = updatedImage
         self.closeHandler = closeHandler
@@ -300,7 +302,11 @@ final class EditImageCanvasController : ModalViewController {
         return .clear
     }
     override var isVisualEffectBackground: Bool {
-        return false
+        if alone {
+            return true
+        } else {
+            return false
+        }
     }
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {

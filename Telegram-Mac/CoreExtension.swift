@@ -2244,21 +2244,16 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         }
 
         
-        return modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false) |> mapToSignal { result -> Signal<Bool, NoError> in
-            
-//            context.sharedContext.bindings.mainController().chatList.addUndoAction(ChatUndoAction(peerId: peerId, type: type, action: { status in
-//                switch status {
-//                case .success:
-//                default:
-//                    break
-//                }
-//            }))
+        return combineLatest(modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get()) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
             context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
             if peer.isBot && result == .thrid {
                 _ = context.blockedPeersContext.add(peerId: peerId).start()
             }
 
+            if location?.peerId == peerId {
+                context.sharedContext.bindings.rootNavigation().close()
+            }
             
             return .single(true)
         }
@@ -3147,3 +3142,21 @@ extension CachedChannelData.LinkedDiscussionPeerId {
 }
 
 
+func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<ExportedInvitation?, NoError> {
+    return account.postbox.transaction { transaction -> ExportedInvitation? in
+        let cachedData = transaction.getPeerCachedData(peerId: peerId)
+        if let cachedData = cachedData as? CachedChannelData {
+            return cachedData.exportedInvitation
+        }
+        if let cachedData = cachedData as? CachedGroupData {
+            return cachedData.exportedInvitation
+        }
+        return nil
+    } |> mapToSignal { invitation in
+        if invitation == nil {
+            return revokePersistentPeerExportedInvitation(account: account, peerId: peerId)
+        } else {
+            return .single(invitation)
+        }
+    }
+}

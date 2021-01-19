@@ -9,11 +9,13 @@
 import TGUIKit
 
 
-class DiscussionHeaderItem: GeneralRowItem {
+class AnimtedStickerHeaderItem: GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, text: NSAttributedString) {
+    fileprivate let sticker: LocalAnimatedSticker
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString) {
         self.context = context
+        self.sticker = sticker
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
     }
@@ -24,7 +26,7 @@ class DiscussionHeaderItem: GeneralRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        return DiscussionHeaderView.self
+        return AnimtedStickerHeaderView.self
     }
     
     override var height: CGFloat {
@@ -33,7 +35,7 @@ class DiscussionHeaderItem: GeneralRowItem {
 }
 
 
-private final class DiscussionHeaderView : TableRowView {
+private final class AnimtedStickerHeaderView : TableRowView {
     private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: .zero)
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
@@ -57,9 +59,9 @@ private final class DiscussionHeaderView : TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         
-        guard let item = item as? DiscussionHeaderItem else { return }
+        guard let item = item as? AnimtedStickerHeaderItem else { return }
         
-        imageView.update(with: LocalAnimatedSticker.discussion.file, size: NSMakeSize(160, 160), context: item.context, parent: nil, table: item.table, parameters: LocalAnimatedSticker.discussion.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        imageView.update(with: item.sticker.file, size: NSMakeSize(160, 160), context: item.context, parent: nil, table: item.table, parameters: item.sticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
 //        self.imageView.image = item.icon
 //        self.imageView.sizeToFit()
@@ -71,7 +73,7 @@ private final class DiscussionHeaderView : TableRowView {
     
     override func layout() {
         super.layout()
-        guard let item = item as? DiscussionHeaderItem else { return }
+        guard let item = item as? AnimtedStickerHeaderItem else { return }
 
         self.imageView.centerX(y: item.inset.top)
         self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)

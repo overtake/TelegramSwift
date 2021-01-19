@@ -107,7 +107,7 @@ private final class VideoAvatarModalView : View {
         ok.set(background: .accent, for: .Normal)
         
         cancel.set(background: NSColor.grayText.withAlphaComponent(0.8), for: .Highlight)
-        ok.set(background: NSColor.accent.withAlphaComponent(0.8), for: .Highlight)
+        ok.set(background: NSColor.accent.highlighted, for: .Highlight)
 
         
         cancel.set(color: .white, for: .Normal)

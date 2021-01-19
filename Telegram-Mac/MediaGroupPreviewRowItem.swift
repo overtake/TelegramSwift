@@ -19,13 +19,15 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let layout: GroupedLayout
     fileprivate let reorder:(Int, Int)->Void
     fileprivate let urls: [URL]
-    fileprivate let hasEditedData: [URL: EditedImageData]
+    fileprivate let editedData: [URL: EditedImageData]
     fileprivate let edit:(URL)->Void
+    fileprivate let paint:(URL)->Void
     fileprivate let delete:(URL)->Void
-    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
-        self.hasEditedData = editedData
+        self.editedData = editedData
         self.edit = edit
+        self.paint = paint
         self.delete = delete
         self.urls = urls
         self.reorder = reorder
@@ -139,10 +141,13 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             control.set(edit: { [weak item] in
                 guard let item = item else {return}
                 item.edit(item.urls[i])
+            }, paint: { [weak item] in
+                guard let item = item else {return}
+                item.paint(item.urls[i])
             }, delete: { [weak item] in
-                    guard let item = item else {return}
-                    item.delete(item.urls[i])
-            }, hasEditedData: item.hasEditedData[item.urls[i]] != nil)
+                guard let item = item else {return}
+                item.delete(item.urls[i])
+            }, editedData: item.editedData[item.urls[i]])
             
         }
         

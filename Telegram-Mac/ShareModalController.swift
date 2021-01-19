@@ -354,15 +354,9 @@ class ShareLinkObject : ShareObject {
     
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
+            var link = self.link
             if let comment = comment, !comment.inputText.isEmpty {
-                let parsingUrlType: ParsingType
-                if peerId.namespace != Namespaces.Peer.SecretChat {
-                    parsingUrlType = [.Hashtags]
-                } else {
-                    parsingUrlType = [.Links, .Hashtags]
-                }
-                let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId).start()
+                link += "\n\(comment.inputText)"
             }
             
             var attributes:[MessageAttribute] = []
@@ -416,6 +410,13 @@ class ShareContactObject : ShareObject {
     
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
+            if let comment = comment, !comment.inputText.isEmpty {
+                var attributes:[MessageAttribute] = []
+                if FastSettings.isChannelMessagesMuted(peerId) {
+                    attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+                }
+                _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+            }
             _ = Sender.shareContact(context: context, peerId: peerId, contact: user).start()
         }
         return .complete()
@@ -1519,7 +1520,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 for (peer, cachedData) in peerAndData {
                     inner: switch peer.info {
                     case let .group(info):
-                        if info.flags.contains(.slowModeEnabled) && (peer.adminRights != nil || !peer.flags.contains(.isCreator)) {
+                        if info.flags.contains(.slowModeEnabled) && (peer.adminRights == nil && !peer.flags.contains(.isCreator)) {
                             if let cachedData = cachedData, let validUntil = cachedData.slowModeValidUntilTimestamp {
                                 if validUntil > share.context.timestamp {
                                     failed.append(ShareFailedReason(peerId: peer.id, reason: slowModeTooltipText(validUntil - share.context.timestamp), target: .token))

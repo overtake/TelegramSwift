@@ -414,7 +414,7 @@ class EditImageModalController: ModalViewController {
         }, rotate: { [weak self] in
             self?.rotate()
         }, draw: { [weak self] in
-                self?.loadCanvas()
+            self?.loadCanvas()
         }), stateValue: editValue.get())
 
         

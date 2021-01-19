@@ -22,6 +22,10 @@ public extension NSColor {
         return NSColor.init(srgbRed: ((CGFloat)((rgbValue & 0xFF0000) >> 16))/255.0, green: ((CGFloat)((rgbValue & 0xFF00) >> 8))/255.0, blue: ((CGFloat)(rgbValue & 0xFF))/255.0, alpha:alpha)
     }
     
+    var highlighted: NSColor {
+        return self.withAlphaComponent(0.8)
+    }
+    
     var alpha: CGFloat {
         var alpha: CGFloat = 0
         self.getHue(nil, saturation: nil, brightness: nil, alpha: &alpha)
