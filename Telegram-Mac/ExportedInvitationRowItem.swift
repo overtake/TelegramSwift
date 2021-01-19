@@ -82,7 +82,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
             usageColor = theme.colors.grayText
         }
         
-        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .centero)
+        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .center)
         
 
         usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
