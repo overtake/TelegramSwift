@@ -331,6 +331,9 @@ extension Media {
     }
     
     var canHaveCaption: Bool {
+        if supposeToBeSticker {
+            return false
+        }
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
@@ -1057,6 +1060,15 @@ extension Media {
                 default:
                     return false
                 }
+            }
+        }
+        return false
+    }
+    
+    var supposeToBeSticker:Bool {
+        if let media = self as? TelegramMediaFile {
+            if media.mimeType.hasPrefix("image/webp") {
+                return true
             }
         }
         return false
@@ -2177,7 +2189,15 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 
 
 func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
-    return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
+    return context.account.postbox.peerView(id: peerId)
+        |> take(1)
+        |> map { peerViewMainPeer($0) }
+        |> filter { $0 != nil }
+        |> map { $0! }
+        |> deliverOnMainQueue
+        |> mapToSignal { peer -> Signal<Bool, NoError> in
+        
+        
         let text:String
         var okTitle: String? = nil
         if let peer = peer as? TelegramChannel {
@@ -2236,11 +2256,19 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
                 canRemoveGlobally = true
             }
         }
+        if peerId.namespace == Namespaces.Peer.SecretChat {
+            canRemoveGlobally = true
+        }
         
         if canRemoveGlobally {
             thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
         } else if peer.isBot {
             thridTitle = L10n.peerInfoStopBot
+        }
+            
+        if peer.groupAccess.isCreator {
+            canRemoveGlobally = true
+            thridTitle = L10n.deleteChatDeleteGroupForAll
         }
 
         
@@ -2465,6 +2493,9 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
                     return false
                 }
             })
+            if mime == "image/webp", let size = fs(url.path), size < 64 * 1024 {
+                return false
+            }
             if isMusic {
                 musicCount += 1
             }

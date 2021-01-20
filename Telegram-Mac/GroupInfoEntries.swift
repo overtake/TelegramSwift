@@ -1368,7 +1368,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoGroupTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .notifications(_, settings, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: arguments.toggleNotifications)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(!((settings as? TelegramPeerNotificationSettings)?.isMuted ?? true)), viewType: viewType, action: {})
             
         case let .sharedMedia(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: arguments.sharedMedia)

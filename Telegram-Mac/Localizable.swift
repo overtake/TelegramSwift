@@ -3141,6 +3141,8 @@ internal final class L10n {
   internal static var dataAndStorageConfirmResetSettings: String  { return L10n.tr("Localizable", "DataAndStorage.Confirm.ResetSettings") }
   /// Today
   internal static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
+  /// Delete for all members
+  internal static var deleteChatDeleteGroupForAll: String  { return L10n.tr("Localizable", "DeleteChat.DeleteGroupForAll") }
   /// Link Group
   internal static var discussionSetModalOK: String  { return L10n.tr("Localizable", "Discussion.Set.Modal.OK") }
   /// Do you want make **%@** the discussion board for **%@**?\n\nAny member of this group will be able to see messages in the channel.
@@ -8007,6 +8009,10 @@ internal final class L10n {
   internal static func timerYearsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Timer.Years_zero", p1)
   }
+  /// Muted
+  internal static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
+  /// Unmuted
+  internal static var toastUnmuted: String  { return L10n.tr("Localizable", "Toast.Unmuted") }
   /// Attach
   internal static var touchBarAttach: String  { return L10n.tr("Localizable", "TouchBar.Attach") }
   /// Call

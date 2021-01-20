@@ -165,7 +165,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
         }
         let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
-        items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+        items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+            arguments.toggleNotifications(value)
+        }))
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: L10n.peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
@@ -217,7 +219,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }))
         }
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+                arguments.toggleNotifications(value)
+            }))
         }
         
         
@@ -255,7 +259,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: arguments.toggleNotifications))
+            items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+                arguments.toggleNotifications(value)
+            }))
         }
         
         
@@ -336,6 +342,8 @@ class PeerInfoHeadItem: GeneralRowItem {
     let peer:Peer?
     let isVerified: Bool
     let isScam: Bool
+    let isFake: Bool
+    let isMuted: Bool
     let peerView:PeerView
     var result:PeerStatusStringResult {
         didSet {
@@ -370,6 +378,8 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.arguments = arguments
         self.isVerified = peer?.isVerified ?? false
         self.isScam = peer?.isScam ?? false
+        self.isFake = false
+        self.isMuted = peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
         
@@ -459,10 +469,52 @@ class PeerInfoHeadItem: GeneralRowItem {
         return success
     }
     
+    fileprivate var iconSize: NSSize {
+        let image: CGImage?
+        if isScam {
+            image = theme.icons.chatScam
+        } else if isVerified {
+            image = theme.icons.peerInfoVerifyProfile
+        } else if isFake {
+            image = theme.icons.chatScam
+        } else if isMuted {
+            image = theme.icons.dialogMuteImage
+        } else {
+            image = nil
+        }
+        
+        if let image = image {
+            return NSMakeSize(image.backingSize.width + 5, image.backingSize.height)
+        }
+        return .zero
+    }
+    
     fileprivate var nameSize: NSSize {
-        let stateHeight = max((isScam ? theme.icons.chatScam.backingSize.height : 0), (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.height : 0))
-        let width = nameLayout.layoutSize.width + (isScam ? theme.icons.chatScam.backingSize.width + 5 : 0) + (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
-        return NSMakeSize(width, max(nameLayout.layoutSize.height, stateHeight))
+        
+        let image: CGImage?
+        if isScam {
+            image = theme.icons.chatScam
+        } else if isVerified {
+            image = theme.icons.peerInfoVerifyProfile
+        } else if isFake {
+            image = theme.icons.chatScam
+        } else if isMuted {
+            image = theme.icons.dialogMuteImage
+        } else {
+            image = nil
+        }
+        
+        var stateHeight: CGFloat = 0
+        if let image = image {
+            stateHeight = max(image.backingSize.height, nameLayout.layoutSize.height)
+        } else {
+            stateHeight = nameLayout.layoutSize.height
+        }
+        var width = nameLayout.layoutSize.width
+        if let image = image {
+            width += image.backingSize.width + 5
+        }
+        return NSMakeSize(width, stateHeight)
     }
     
 }
@@ -586,22 +638,40 @@ private final class NameContainer : View {
         addSubview(nameView)
     }
     
-    func update(_ item: PeerInfoHeadItem) {
+    func update(_ item: PeerInfoHeadItem, animated: Bool) {
         self.nameView.update(item.nameLayout)
         
-        if item.isScam || item.isVerified {
+        if item.isScam || item.isVerified || item.isMuted || item.isFake  {
             if stateImage == nil {
                 stateImage = ImageView()
                 addSubview(stateImage!)
             }
             
-            stateImage?.image = item.isScam ? theme.icons.chatScam : theme.icons.peerInfoVerifyProfile
+            let image: CGImage
+            if item.isScam {
+                image = theme.icons.chatScam
+            } else if item.isVerified {
+                image = theme.icons.peerInfoVerifyProfile
+            } else if item.isFake {
+                image = theme.icons.chatScam
+            } else {
+                image = theme.icons.dialogMuteImage
+            }
+            
+            stateImage?.image = image
             _ = stateImage?.sizeToFit()
         } else {
-            stateImage?.removeFromSuperview()
-            stateImage = nil
+            if let stateImage = stateImage {
+                self.stateImage = nil
+                if animated {
+                    stateImage.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak stateImage] _ in
+                        stateImage?.removeFromSuperview()
+                    })
+                    stateImage.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false, bounce: false)
+                }
+            }
         }
-        
+                
         needsLayout = true
     }
     
@@ -609,7 +679,7 @@ private final class NameContainer : View {
         super.layout()
         
         nameView.centerY(x: 0)
-        stateImage?.centerY(x: nameView.frame.maxX + 5)
+        stateImage?.centerY(x: nameView.frame.maxX + 5, addition: -1)
     }
     
     required init?(coder: NSCoder) {
@@ -889,8 +959,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             self.photoVideoView?.removeFromSuperview()
             self.photoVideoView = nil
         }
-        nameView.setFrameSize(item.nameSize)
-        nameView.update(item)
+        nameView.change(size: item.nameSize, animated: animated)
+        nameView.update(item, animated: animated)
+        nameView.change(pos: NSMakePoint(containerView.focus(item.nameSize).minX, nameView.frame.minY), animated: animated)
         
         statusView.update(item.statusLayout)
         
