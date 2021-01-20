@@ -460,9 +460,28 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
 }
 
 private func fetchCachedStickerAJpegRepresentation(account: Account, resource: MediaResource, representation: CachedStickerAJpegRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
-    return account.postbox.mediaBox.resourceData(resource) |> mapToSignal { resourceData in
+    
+    let signal: Signal<MediaResourceData?, NoError>
+    
+    if resource is LocalFileReferenceMediaResource {
+        signal = .single(nil)
+    } else {
+        signal = account.postbox.mediaBox.resourceData(resource) |> map(Optional.init)
+    }
+    
+    return signal |> mapToSignal { resourceData in
         return Signal { subscriber in
-            if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+            
+            let resourcePath: String?
+            if let resourceData = resourceData {
+                resourcePath = resourceData.path
+            } else if let resource = resource as? LocalFileReferenceMediaResource {
+                resourcePath = resource.localFilePath
+            } else {
+                resourcePath = nil
+            }
+            
+            if let resourcePath = resourcePath, let data = try? Data(contentsOf: URL(fileURLWithPath: resourcePath), options: [.mappedIfSafe]) {
                 let unmanaged = convertFromWebP(data)
                 let image = unmanaged?.takeUnretainedValue()
                 unmanaged?.release()
@@ -515,6 +534,8 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
                     } else {
                         subscriber.putCompletion()
                     }
+                } else {
+                    subscriber.putCompletion()
                 }
             }
             return EmptyDisposable

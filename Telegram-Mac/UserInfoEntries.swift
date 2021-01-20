@@ -921,9 +921,7 @@ enum UserInfoEntry: PeerInfoEntry {
             let settings = settings as? TelegramPeerNotificationSettings
             let enabled = !(settings?.isMuted ?? false)
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.toggleNotifications()
-            }, enabled: settings != nil)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {}, enabled: settings != nil)
         case let .encryptionKey(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()

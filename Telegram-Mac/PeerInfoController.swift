@@ -59,8 +59,10 @@ class PeerInfoArguments {
         pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId))
     }
     
-    func toggleNotifications() {
+    func toggleNotifications(_ currentlyMuted: Bool) {
         toggleNotificationsDisposable.set(togglePeerMuted(account: context.account, peerId: peerId).start())
+        
+        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? L10n.toastUnmuted : L10n.toastMuted))
     }
     
     func delete() {

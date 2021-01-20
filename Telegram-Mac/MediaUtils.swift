@@ -700,7 +700,10 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                 
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: true)
+                var thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: true) |> map(Optional.init)
+                if resource is LocalFileReferenceMediaResource {
+                    thumbnailData = .single(nil)
+                } 
                 let fullSizeData:Signal<ImageRenderData, NoError> = .single(ImageRenderData(nil, nil, false)) |> then(postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedStickerAJpegRepresentation(size: small ? CGSize(width: 120.0, height: 120.0) : nil), complete: true)
                     |> map { next in
                         return ImageRenderData(nil, !next.complete ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: .mappedIfSafe), next.complete)
@@ -719,7 +722,11 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                     }
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
                         |> map { thumbnailData, fullSizeData -> ImageRenderData in
-                            return ImageRenderData(thumbnailData.complete && !fullSizeData.fullSizeComplete ? try? Data(contentsOf: URL(fileURLWithPath: thumbnailData.path)) : nil, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                            if let thumbnailData = thumbnailData {
+                                return ImageRenderData(thumbnailData.complete && !fullSizeData.fullSizeComplete ? try? Data(contentsOf: URL(fileURLWithPath: thumbnailData.path)) : nil, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                            } else {
+                                return fullSizeData
+                            }
                         }).start(next: { next in
                             subscriber.putNext(next)
                         }, error: { error in
