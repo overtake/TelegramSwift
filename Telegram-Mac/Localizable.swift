@@ -6173,6 +6173,16 @@ internal final class L10n {
   internal static var quickSwitcherRecently: String  { return L10n.tr("Localizable", "QuickSwitcher.Recently") }
   /// Zoom
   internal static var r4oN2Eq4Title: String  { return L10n.tr("Localizable", "R4o-n2-Eq4.title") }
+  /// Delete
+  internal static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
+  /// Are you sure you want to delete call?
+  internal static var recentCallsDeleteCalls: String  { return L10n.tr("Localizable", "RecentCalls.DeleteCalls") }
+  /// Delete for me and %@
+  internal static func recentCallsDeleteForMeAnd(_ p1: String) -> String {
+    return L10n.tr("Localizable", "RecentCalls.DeleteForMeAnd", p1)
+  }
+  /// Delete
+  internal static var recentCallsDeleteHeader: String  { return L10n.tr("Localizable", "RecentCalls.DeleteHeader") }
   /// Your recent calls will appear here
   internal static var recentCallsEmpty: String  { return L10n.tr("Localizable", "RecentCalls.Empty") }
   /// These devices have no access to your account. The code was entered correctly, but no correct password was given.
