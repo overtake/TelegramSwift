@@ -35,7 +35,6 @@ private func entries(_ state: NumberValueState, placeholder: String) -> [InputDa
     } else {
         formatted = ""
     }
-    //TODOLANG
     entries.append(.input(sectionId: sectionId, index: index, value: .string(formatted), error: nil, identifier: _id_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: placeholder, filter: { value in
         return value.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890, .").inverted)
     }, limit: 10))

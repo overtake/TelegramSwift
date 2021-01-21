@@ -257,6 +257,7 @@ class ChatListRowItem: TableRowItem {
     
     let isVerified: Bool
     let isScam: Bool
+    let isFake: Bool
 
     
     var isOutMessage:Bool {
@@ -369,6 +370,7 @@ class ChatListRowItem: TableRowItem {
         self.groupLatestPeers = peers
         self.isVerified = false
         self.isScam = false
+        self.isFake = false
         self.filter = filter
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
@@ -527,9 +529,11 @@ class ChatListRowItem: TableRowItem {
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isScam = peer.isScam
+            self.isFake = peer.isFake
         } else {
             self.isVerified = false
             self.isScam = false
+            self.isFake = false
         }
         
        
@@ -752,13 +756,31 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    var badIcon: CGImage {
+        return isScam ? theme.icons.scam : theme.icons.fake
+    }
+    var badHighlightIcon: CGImage {
+        return isScam ? theme.icons.scamActive : theme.icons.fakeActive
+    }
     var titleWidth:CGFloat {
         var dateSize:CGFloat = 0
         if let dateLayout = dateLayout {
             dateSize = dateLayout.0.size.width
         }
-        
-        return max(300, size.width) - 50 - margin * 4 - dateSize - (isMuted ? theme.icons.dialogMuteImage.backingSize.width + 4 : 0) - (isOutMessage ? isRead ? 14 : 8 : 0) - (isVerified ? 20 : 0) - (isSecret ? 10 : 0) - (isScam ? theme.icons.scam.backingSize.width : 0)
+        var offset: CGFloat = 0
+        if isScam || isFake {
+            offset += badIcon.backingSize.width + 4
+        }
+        if isMuted {
+            offset += theme.icons.dialogMuteImage.backingSize.width + 4
+        }
+        if isVerified {
+            offset += 20
+        }
+        if isSecret {
+            offset += 10
+        }
+        return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {

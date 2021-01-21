@@ -5191,6 +5191,45 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var fake: CGImage {
+      if let image = cached.with({ $0["fake"] }) {
+          return image
+      } else {
+          let image = _fake()
+          _ = cached.modify { current in 
+              var current = current
+              current["fake"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var fakeActive: CGImage {
+      if let image = cached.with({ $0["fakeActive"] }) {
+          return image
+      } else {
+          let image = _fakeActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["fakeActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chatFake: CGImage {
+      if let image = cached.with({ $0["chatFake"] }) {
+          return image
+      } else {
+          let image = _chatFake()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatFake"] = image
+              return current
+          }
+          return image
+      }
+  }
   var chatUnarchive: CGImage {
       if let image = cached.with({ $0["chatUnarchive"] }) {
           return image
@@ -7775,6 +7814,9 @@ final class TelegramIconsTheme {
   private let _scam: ()->CGImage
   private let _scamActive: ()->CGImage
   private let _chatScam: ()->CGImage
+  private let _fake: ()->CGImage
+  private let _fakeActive: ()->CGImage
+  private let _chatFake: ()->CGImage
   private let _chatUnarchive: ()->CGImage
   private let _chatArchive: ()->CGImage
   private let _privacySettings_blocked: ()->CGImage
@@ -8344,6 +8386,9 @@ final class TelegramIconsTheme {
       scam: @escaping()->CGImage,
       scamActive: @escaping()->CGImage,
       chatScam: @escaping()->CGImage,
+      fake: @escaping()->CGImage,
+      fakeActive: @escaping()->CGImage,
+      chatFake: @escaping()->CGImage,
       chatUnarchive: @escaping()->CGImage,
       chatArchive: @escaping()->CGImage,
       privacySettings_blocked: @escaping()->CGImage,
@@ -8912,6 +8957,9 @@ final class TelegramIconsTheme {
       self._scam = scam
       self._scamActive = scamActive
       self._chatScam = chatScam
+      self._fake = fake
+      self._fakeActive = fakeActive
+      self._chatFake = chatFake
       self._chatUnarchive = chatUnarchive
       self._chatArchive = chatArchive
       self._privacySettings_blocked = privacySettings_blocked

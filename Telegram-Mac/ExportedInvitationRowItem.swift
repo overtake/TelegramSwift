@@ -67,18 +67,21 @@ class ExportedInvitationRowItem: GeneralRowItem {
         if let exportedLink = exportedLink {
             text = exportedLink.link.replacingOccurrences(of: "https://", with: "")
             color = theme.colors.text
-            //TODOLANG
-            if let count = exportedLink.count, count > 0 {
-                usageText = "\(count) people joined"
-                usageColor = theme.colors.link
+            if let count = exportedLink.count {
+                usageText = L10n.inviteLinkPeopleJoinedCountable(Int(count))
+                if count > 0 {
+                    usageColor = theme.colors.link
+                } else {
+                    usageColor = theme.colors.grayText
+                }
             } else {
-                usageText = "no one joined yet"
+                usageText = L10n.inviteLinkPeopleJoinedZero
                 usageColor = theme.colors.grayText
             }
         } else {
             text = L10n.channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = "no one joined yet"
+            usageText = L10n.inviteLinkPeopleJoinedZero
             usageColor = theme.colors.grayText
         }
         
@@ -91,7 +94,12 @@ class ExportedInvitationRowItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        var height: CGFloat = viewType.innerInset.top + 40 + viewType.innerInset.top + 40 + viewType.innerInset.top
+        var height: CGFloat = viewType.innerInset.top + 40 + viewType.innerInset.top
+        
+        if let link = exportedLink, !link.isExpired && !link.isRevoked {
+            height += 40 + viewType.innerInset.top
+        }
+        
         switch mode {
         case .normal:
             height += 30 + viewType.innerInset.bottom
@@ -232,41 +240,13 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         
         let link = item.exportedLink
         
-        let shareBackground:()->NSColor = {
-            let backgroundColor: NSColor
-            if let link = link {
-                if link.isRevoked {
-                    backgroundColor = theme.colors.grayForeground.darker()
-                } else if let expireDate = link.expireDate {
-                    
-                    let timeout = expireDate - (link.startDate ?? link.date)
-                    
-                    let current = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-                    if link.isExpired || link.isLimitReached {
-                        backgroundColor = theme.colors.redUI.darker()
-                    } else {
-                        let dif = expireDate - current
-                        if dif > timeout / 2 {
-                            backgroundColor = theme.colors.greenUI.darker()
-                        } else {
-                            backgroundColor = theme.colors.peerAvatarOrangeBottom
-                        }
-                    }
-                } else {
-                    backgroundColor = theme.colors.accent.lighter()
-                }
-            } else {
-                return theme.colors.grayIcon
-            }
-            
-            return backgroundColor
-        }
+        
         
         
         linkContainer.backgroundColor = theme.colors.grayBackground
         linkView.backgroundColor = theme.colors.grayBackground
-        share.set(background: shareBackground(), for: .Normal)
-        share.set(background: shareBackground().highlighted, for: .Highlight)
+        share.set(background: theme.colors.accent, for: .Normal)
+        share.set(background: theme.colors.accent.highlighted, for: .Highlight)
         share.set(color: theme.colors.underSelectedColor, for: .Normal)
         actions.set(image: menuIcon, for: .Normal)
         actions.set(image: menuIconActive, for: .Highlight)
@@ -350,8 +330,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         }
                 
         share.set(font: .medium(.text), for: .Normal)
-        //TOLANG
-        share.set(text: "Share Link", for: .Normal)
+        share.set(text: L10n.inviteLinkShareLink, for: .Normal)
         if let link = item.exportedLink {
             share.userInteractionEnabled = !link.isExpired && !link.isRevoked
         } else {

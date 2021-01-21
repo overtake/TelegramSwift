@@ -59,7 +59,7 @@ class InviteLinkRowItem: GeneralRowItem {
         if links.count == 1 {
             frames = [CGRect(origin: .init(x: viewType.innerInset.left, y: viewType.innerInset.top), size: innerBlockSize)]
         } else {
-            frames.append(CGRect(origin: .init(x: viewType.innerInset.left, y: viewType.innerInset.top), size: .init(width: innerBlockSize.width / 2 - 5, height: innerBlockSize.height)))
+            frames.append(CGRect(origin: .init(x: viewType.innerInset.left, y: viewType.innerInset.top), size: .init(width: floorToScreenPixels(System.backingScale, innerBlockSize.width / 2) - 5, height: innerBlockSize.height)))
             frames.append(CGRect(origin: .init(x: frames[0].maxX + 10, y: viewType.innerInset.top), size: .init(width: frames[0].width, height: innerBlockSize.height)))
         }
         
@@ -151,6 +151,17 @@ private final class InviteLinkTokenView : Control {
         imageView.image = link.expireDate != nil ? expiredIcon : linkIcon
         imageView.sizeToFit()
         
+        
+        
+        let color:(NSColor, NSColor, CGFloat) -> NSColor = { from, to, progress in
+            let newRed = (1.0 - progress) * from.redComponent + progress * to.redComponent
+            let newGreen = (1.0 - progress) * from.greenComponent + progress * to.greenComponent
+            let newBlue = (1.0 - progress) * from.blueComponent + progress * to.blueComponent
+            let newAlpha = (1.0 - progress) * from.alphaComponent + progress * to.alphaComponent
+            
+            return NSColor(deviceRed: newRed, green: newGreen, blue: newBlue, alpha: newAlpha)
+        }
+                
         let updateBackgroundColor = { [weak self] in
             guard let `self` = self else {
                 return
@@ -163,26 +174,43 @@ private final class InviteLinkTokenView : Control {
                 let timeout = expireDate - (link.startDate ?? link.date)
                 
                 let current = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                
+                let from: NSColor?
+                let to: NSColor
+                            
+                var progress: CGFloat = 1
+                
                 if link.isExpired || link.isLimitReached {
-                    backgroundColor = theme.colors.redUI.darker()
+                    to = theme.colors.redUI.darker()
+                    from = nil
                 } else {
                     let dif = expireDate - current
-                    if dif > timeout / 2 {
-                        backgroundColor = theme.colors.greenUI.darker()
+                    progress = 1 - (CGFloat(dif) / CGFloat(timeout))
+                    
+                    if progress <= 0.5 {
+                        progress /= 0.5
+                        to = theme.colors.peerAvatarOrangeBottom
+                        from = theme.colors.greenUI.darker()
                     } else {
-                        backgroundColor = theme.colors.peerAvatarOrangeBottom
+                        progress = (progress - 0.5) / 0.5
+                        to = theme.colors.redUI.darker()
+                        from = theme.colors.peerAvatarOrangeBottom
                     }
                 }
+                if let from = from {
+                    
+                    backgroundColor = color(from, to, progress)
+                } else {
+                    backgroundColor = to
+                }
+                                
             } else {
                 backgroundColor = theme.colors.accent.lighter()
             }
-            self.backgroundColor = backgroundColor
+            self.backgroundColor = backgroundColor.withAlphaComponent(0.8)
             self.progressView.isHidden = link.isExpired || link.isRevoked
             self.imageView.isHidden = !self.progressView.isHidden
             
-            if animated {
-                self.layer?.animateBackground()
-            }
         }
         
         if let expiryDate = link.expireDate, !link.isExpired {
@@ -190,8 +218,16 @@ private final class InviteLinkTokenView : Control {
             let timeout = expiryDate - startDate
             progressView.update(color: .white, timeout: timeout, deadlineTimestamp: expiryDate)
             
-            progressView.reachedTimeout = updateBackgroundColor
-            progressView.reachedHalf = updateBackgroundColor
+            progressView.reachedTimeout = {
+                updateBackgroundColor()
+            }
+            progressView.reachedHalf = {
+                updateBackgroundColor()
+            }
+            
+            progressView.updateValue = { value in
+                updateBackgroundColor()
+            }
         }
         
         
@@ -209,17 +245,23 @@ private final class InviteLinkTokenView : Control {
         
         titleView.update(titleLayout)
 
-        //TODOLANG
-        var countText = link.count == nil ? "no one joined yet" : "\(Int(link.count!).prettyNumber) people joined"
+        var text: String = ""
+        if let count = link.count {
+            text = L10n.inviteLinkPeopleJoinedCountable(Int(count))
+            text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
+        } else {
+            text = L10n.inviteLinkPeopleJoinedZero
+        }
+        var countText = text
         
         if link.isRevoked {
-            countText += " • revoked"
+            countText += " " + L10n.inviteLinkStickerRevoked
         } else {
             if link.isLimitReached {
-                countText += " • limit reached"
+                countText += " " + L10n.inviteLinkStickerLimit
             }
             if link.isExpired {
-                countText += " • expired"
+                countText += " " + L10n.inviteLinkStickerExpired
             }
         }
         

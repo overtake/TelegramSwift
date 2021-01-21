@@ -275,24 +275,18 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, menuItems: {
                 
                 var items:[ContextMenuItem] = []
-                //TODOLANG
                 if let link = link {
-                    items.append(ContextMenuItem("Copy", handler: {
+                    items.append(ContextMenuItem(L10n.channelVisibiltiyContextCopy, handler: {
                         arguments.copy(link.link)
                     }))
-                    items.append(ContextMenuItem("Revoke", handler: {
+                    items.append(ContextMenuItem(L10n.channelVisibiltiyContextRevoke, handler: {
                         arguments.revokeLink()
                     }))
                 }
                 
                 return .single(items)
             }, share: arguments.share)
-//            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: link?.link ?? L10n.channelVisibilityLoading, nameStyle: ControlStyle(font: .normal(.text), foregroundColor: color), type: .none, viewType: viewType, action: {
-//                if let link = link {
-//                    arguments.context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
-//                    copyToClipboard(link.link)
-//                }
-//            })
+
         case let .editablePublicLink(_, currentText, text, status, viewType):
             var rightItem: InputDataRightItem? = nil
             if let status = status {
@@ -339,8 +333,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
-            //TODOLANG
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Manage Links", icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelVisibiltiyManageLinks, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.manageLinks()
             })
         case .section:
@@ -492,8 +485,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelUsernameAboutGroup : L10n.channelUsernameAboutChannel, .textBottomItem))
             }
         case .privateChannel:
-            //TODOLANG
-            entries.append(.privateLinkHeader(sectionId: sectionId, "PERMANENT LINK", .textTopItem))
+            entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
             
@@ -583,16 +575,13 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelUsernameAboutGroup, .textBottomItem))
             }
         case .privateChannel:
-            //TODOLANG
-            entries.append(.privateLinkHeader(sectionId: sectionId, "PERMANENT LINK", .textTopItem))
+            entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup, .textBottomItem))
             
-            #if DEBUG
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
             entries.append(.manageLinks(sectionId: sectionId, .singleItem))
-            #endif
         }
     }
     entries.append(.section(sectionId: sectionId))

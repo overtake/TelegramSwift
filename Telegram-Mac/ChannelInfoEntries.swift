@@ -458,7 +458,7 @@ class ChannelInfoArguments : PeerInfoArguments {
 
 enum ChannelInfoEntry: PeerInfoEntry {
     case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
-    case scam(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
+    case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
@@ -481,7 +481,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     func withUpdatedViewType(_ viewType: GeneralViewType) -> ChannelInfoEntry {
         switch self {
         case let .info(sectionId, peerView, editable, updatingPhotoState, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, viewType: viewType)
-        case let .scam(sectionId, text, _): return .scam(sectionId: sectionId, text: text, viewType: viewType)
+        case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
         case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
@@ -548,9 +548,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case  let .scam(sectionId, text, viewType):
+        case  let .scam(sectionId, title, text, viewType):
             switch entry {
-            case .scam(sectionId, text, viewType):
+            case .scam(sectionId, title, text, viewType):
                 return true
             default:
                 return false
@@ -721,7 +721,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .setTitle(sectionId, _, _):
             return sectionId.rawValue
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return sectionId.rawValue
         case let .about(sectionId, _, _):
             return sectionId.rawValue
@@ -764,7 +764,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .setTitle(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -813,8 +813,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
             return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
-        case let .scam(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+        case let .scam(_, title, text, viewType):
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
             return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
@@ -916,7 +916,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 infoBlock.append(.setTitle(sectionId: .header, text: editingState.editingName ?? "", viewType: .singleItem))
             }
             
-            if channel.hasPermission(.changeInfo) && !channel.isScam {
+            if channel.hasPermission(.changeInfo) && !channel.isScam && !channel.isFake {
                 infoBlock.append(.aboutInput(sectionId: .header, description: editingState.editingDescriptionText, viewType: .singleItem))
             }
             applyBlock(infoBlock)
@@ -958,10 +958,12 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             
             var aboutBlock:[ChannelInfoEntry] = []
             if channel.isScam {
-                aboutBlock.append(.scam(sectionId: .desc, text: L10n.channelInfoScamWarning, viewType: .singleItem))
+                aboutBlock.append(.scam(sectionId: .desc, title: L10n.peerInfoScam, text: L10n.channelInfoScamWarning, viewType: .singleItem))
+            } else if channel.isFake {
+                aboutBlock.append(.scam(sectionId: .desc, title: L10n.peerInfoFake, text: L10n.channelInfoFakeWarning, viewType: .singleItem))
             }
             if let cachedData = view.cachedData as? CachedChannelData {
-                if let about = cachedData.about, !about.isEmpty, !channel.isScam {
+                if let about = cachedData.about, !about.isEmpty, !channel.isScam && !channel.isFake {
                     aboutBlock.append(.about(sectionId: .desc, text: about, viewType: .singleItem))
                 }
             }

@@ -311,16 +311,14 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
-        //TODOLANG
-        let text:String = "Anyone who has Telegram installed will be able to join your group by following this group"
+        let text:String = L10n.manageLinksHeaderDesc
         return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
     }))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    //TODOLANG
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PERMANENT LINK"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksPermanent), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
@@ -330,12 +328,11 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, lastPeers: peers, viewType: .singleItem, menuItems: {
             
             var items:[ContextMenuItem] = []
-            //TODOLANG
             if let permanent = state.permanent {
-                items.append(ContextMenuItem("Copy", handler: {
+                items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
                     arguments.copyLink(permanent.link)
                 }))
-                items.append(ContextMenuItem("Revoke", handler: {
+                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
                     arguments.revokeLink(permanent)
                 }))
             }
@@ -349,14 +346,12 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     sectionId += 1
     
     
-    //TODOLANG
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("ADDITION LINKS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     
     let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
-    //TODOLANG
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: "Create a New Link", color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink, disableBorder: true)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink, disableBorder: true)))
     index += 1
     if let list = state.list {
         let chunks = list.chunks(2)
@@ -384,21 +379,20 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                 return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, links: tuple.links, action: arguments.open, menuItems: { link in
                     
                     var items:[ContextMenuItem] = []
-                    //TODOLANG
-                    items.append(ContextMenuItem.init("Copy", handler: {
+                    items.append(ContextMenuItem.init(L10n.manageLinksContextCopy, handler: {
                         arguments.copyLink(link.link)
                     }))
                     if !link.isRevoked {
                         if !link.isExpired {
-                            items.append(ContextMenuItem("Share", handler: {
+                            items.append(ContextMenuItem(L10n.manageLinksContextShare, handler: {
                                 arguments.shareLink(link.link)
                             }))
                         }
                         
-                        items.append(ContextMenuItem.init("Edit", handler: {
+                        items.append(ContextMenuItem.init(L10n.manageLinksContextEdit, handler: {
                             arguments.editLink(link)
                         }))
-                        items.append(ContextMenuItem("Revoke", handler: {
+                        items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
                             arguments.revokeLink(link)
                         }))
                     }
@@ -414,10 +408,10 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("REVOKED LINKS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: "Delete All", color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll, disableBorder: true)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: L10n.manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll, disableBorder: true)))
             index += 1
             
             let chunks = list.chunks(2)
@@ -445,8 +439,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, links: tuple.links, action: arguments.open, menuItems: { link in
                         
                         var items:[ContextMenuItem] = []
-                        //TODOLANG
-                        items.append(ContextMenuItem("Delete", handler: {
+                        items.append(ContextMenuItem(L10n.manageLinksDelete, handler: {
                             arguments.deleteLink(link)
                         }))
                         return .single(items)
@@ -513,8 +506,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             _ = showModalProgress(signal: manager.deletePeerExportedInvitation(link: link), for: context.window).start()
         }
     }, deleteAll: { [weak manager] in
-        //TODOLANG
-        confirm(for: context.window, header: "Delete All", information: "Are you sure you want to delete all revoked links?", okTitle: "Delete All", cancelTitle: L10n.modalCancel, successHandler: { [weak manager] _ in
+        confirm(for: context.window, header: L10n.manageLinksDeleteAll, information: L10n.manageLinksDeleteAllConfirm, okTitle: L10n.manageLinksDeleteAll, cancelTitle: L10n.modalCancel, successHandler: { [weak manager] _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start()
             }
@@ -563,8 +555,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         return InputDataSignalValue(entries: entries($0, arguments: arguments), animated: true)
     }
     
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Invite Links", removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: L10n.manageLinksTitle, removeAfterDisappear: false, hasDone: false)
         
     controller.onDeinit = {
         actionsDisposable.dispose()

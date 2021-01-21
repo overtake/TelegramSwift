@@ -776,7 +776,9 @@ class ChatRowItem: TableRowItem {
     }
     
     let isScam: Bool
+    let isFake: Bool
     private(set) var isForwardScam: Bool
+    private(set) var isForwardFake: Bool
 
     var isFailed: Bool {
         for message in messages {
@@ -1330,6 +1332,8 @@ class ChatRowItem: TableRowItem {
         
         var isForwardScam: Bool = false
         var isScam = false
+        var isForwardFake: Bool = false
+        var isFake = false
         if let message = message, let peer = messageMainPeer(message) {
             if peer.isGroup || peer.isSupergroup {
                 if let author = message.forwardInfo?.author {
@@ -1338,11 +1342,20 @@ class ChatRowItem: TableRowItem {
                 if let author = message.author, case .Full = itemType {
                     isScam = author.isScam
                 }
+                if let author = message.forwardInfo?.author {
+                    isForwardFake = author.isFake
+                }
+                if let author = message.author, case .Full = itemType {
+                    isFake = author.isFake
+                }
             }
         }
         self.isScam = isScam
         self.isForwardScam = isForwardScam
-                
+            
+        self.isFake = isFake
+        self.isForwardFake = isForwardFake
+        
         if let message = message {
             let isBubbled = renderType == .bubble
             let hasBubble = ChatRowItem.hasBubble(captionMessage ?? message, entry: entry, type: itemType, sharedContext: context.sharedContext)
@@ -1824,6 +1837,8 @@ class ChatRowItem: TableRowItem {
         self.hasBubble = false
         self.isScam = false
         self.isForwardScam = false
+        self.isFake = false
+        self.isForwardFake = false
         super.init(initialSize)
     }
     
@@ -2163,27 +2178,42 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
+
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
+    var additionBad: CGFloat {
+        return (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    }
+    var additionForwardBad: CGFloat {
+        return (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isForwardFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    }
+    
+    var badIcon: CGImage {
+        return isScam ? theme.icons.chatScam : theme.icons.chatFake
+    }
+    var forwardBadIcon: CGImage {
+        return isForwardScam ? theme.icons.chatScam : theme.icons.chatFake
+    }
+    
     var bubbleFrame: NSRect {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad
         } else {
             nameWidth = 0
         }
         //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)

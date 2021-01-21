@@ -378,7 +378,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.arguments = arguments
         self.isVerified = peer?.isVerified ?? false
         self.isScam = peer?.isScam ?? false
-        self.isFake = false
+        self.isFake = peer?.isFake ?? false
         self.isMuted = peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
@@ -462,56 +462,45 @@ class PeerInfoHeadItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         
         self.items = editing ? [] : actionItems(item: self, width: blockWidth, theme: theme)
-        let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (isScam ? theme.icons.chatScam.backingSize.width + 5 : 0) - (isVerified ? theme.icons.peerInfoVerifyProfile.backingSize.width + 5 : 0)
+        let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (stateImage?.backingSize.width ?? 0) - 10
         nameLayout.measure(width: textWidth)
         statusLayout.measure(width: textWidth)
 
         return success
     }
     
-    fileprivate var iconSize: NSSize {
+    var stateImage: CGImage? {
         let image: CGImage?
         if isScam {
             image = theme.icons.chatScam
         } else if isVerified {
             image = theme.icons.peerInfoVerifyProfile
         } else if isFake {
-            image = theme.icons.chatScam
+            image = theme.icons.chatFake
         } else if isMuted {
             image = theme.icons.dialogMuteImage
         } else {
             image = nil
         }
-        
-        if let image = image {
+        return image
+    }
+    
+    fileprivate var iconSize: NSSize {        
+        if let image = stateImage {
             return NSMakeSize(image.backingSize.width + 5, image.backingSize.height)
         }
         return .zero
     }
     
     fileprivate var nameSize: NSSize {
-        
-        let image: CGImage?
-        if isScam {
-            image = theme.icons.chatScam
-        } else if isVerified {
-            image = theme.icons.peerInfoVerifyProfile
-        } else if isFake {
-            image = theme.icons.chatScam
-        } else if isMuted {
-            image = theme.icons.dialogMuteImage
-        } else {
-            image = nil
-        }
-        
         var stateHeight: CGFloat = 0
-        if let image = image {
+        if let image = stateImage {
             stateHeight = max(image.backingSize.height, nameLayout.layoutSize.height)
         } else {
             stateHeight = nameLayout.layoutSize.height
         }
         var width = nameLayout.layoutSize.width
-        if let image = image {
+        if let image = stateImage {
             width += image.backingSize.width + 5
         }
         return NSMakeSize(width, stateHeight)
@@ -641,23 +630,11 @@ private final class NameContainer : View {
     func update(_ item: PeerInfoHeadItem, animated: Bool) {
         self.nameView.update(item.nameLayout)
         
-        if item.isScam || item.isVerified || item.isMuted || item.isFake  {
+        if let image = item.stateImage  {
             if stateImage == nil {
                 stateImage = ImageView()
                 addSubview(stateImage!)
             }
-            
-            let image: CGImage
-            if item.isScam {
-                image = theme.icons.chatScam
-            } else if item.isVerified {
-                image = theme.icons.peerInfoVerifyProfile
-            } else if item.isFake {
-                image = theme.icons.chatScam
-            } else {
-                image = theme.icons.dialogMuteImage
-            }
-            
             stateImage?.image = image
             _ = stateImage?.sizeToFit()
         } else {
