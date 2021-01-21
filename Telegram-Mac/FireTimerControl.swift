@@ -61,6 +61,7 @@ class FireTimerControl: Control {
     
     var reachedTimeout: (() -> Void)?
     var reachedHalf: (() -> Void)?
+    var updateValue: ((CGFloat) -> Void)?
 
     private var reachedHalfNotified: Bool = false
     
@@ -107,6 +108,8 @@ class FireTimerControl: Control {
             fraction = CGFloat(fractionalTimeout) / CGFloat(params.timeout)
             fraction = max(0.0, min(0.99, fraction))
             contentState = .timeout(color, 1.0 - fraction)
+            
+            self.updateValue?(fraction)
         } else {
             contentState = .clock(color)
         }
@@ -147,6 +150,7 @@ class FireTimerControl: Control {
                     context.strokePath()
                 })
             case let .timeout(color, fraction):
+                
                 let timestamp = CACurrentMediaTime()
                 
                 let center = CGPoint(x: (diameter + inset) / 2.0, y: (diameter + inset) / 2.0)

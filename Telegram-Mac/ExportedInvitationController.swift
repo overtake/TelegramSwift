@@ -51,8 +51,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link, equatable: InputDataEquatable(invitation), item: { initialSize, stableId in
         return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.accountContext, exportedLink: invitation, lastPeers: [], viewType: .singleItem, mode: .short, menuItems: {
-            //TODOLANG
-            return .single([ContextMenuItem("Copy", handler: {
+            return .single([ContextMenuItem(L10n.exportedInvitationContextCopy, handler: {
                 arguments.copyLink(invitation.link)
             })])
         }, share: arguments.shareLink)
@@ -68,8 +67,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("LINK CREATED BY"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.exportedInvitationLinkCreatedBy), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         
@@ -86,8 +84,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(state.count) PEOPLE JOINED"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.exportedInvitationPeopleJoinedCountable(Int(state.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         for importer in state.importers {
@@ -102,8 +99,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
                 return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
                     arguments.openProfile(tuple.importer.peer.peerId)
                 }, contextMenuItems: {
-                    //TODOLANG
-                    let items = [ContextMenuItem("Open Profile", handler: {
+                    let items = [ContextMenuItem(L10n.exportedInvitationContextOpenProfile, handler: {
                         arguments.openProfile(tuple.importer.peer.peerId)
                     })]
                     
@@ -143,8 +139,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
     }
     
 
-    //TODOLANG
-    let controller = InputDataController(dataSignal: dataSignal, title: "Invite Link")
+    let controller = InputDataController(dataSignal: dataSignal, title: L10n.exportedInvitationTitle)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         getModalController?()?.close()
@@ -156,16 +151,19 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
     dateFormatter.timeStyle = .short
     
     var subtitle: String? = nil
-    if let expireDate = invitation.expireDate {
-        if expireDate > Int32(Date().timeIntervalSince1970) {
-            subtitle = "expires in \(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(expireDate))))"
-        } else {
-            //TODOLANG
-            subtitle = "expired"
+    if invitation.isRevoked {
+        subtitle = L10n.exportedInvitationStatusRevoked
+    } else {
+        if let expireDate = invitation.expireDate {
+            if expireDate > Int32(Date().timeIntervalSince1970) {
+                subtitle = L10n.exportedInvitationStatusExpiresIn(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(expireDate))))
+            } else {
+                subtitle = L10n.exportedInvitationStatusExpired
+            }
         }
     }
-    //TODOLANG
-    controller.centerModalHeader = ModalHeaderData(title: "Invite Link", subtitle: subtitle)
+   
+    controller.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: subtitle)
     
     getController = { [weak controller] in
         return controller
@@ -176,8 +174,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
         return .none
     }
     
-    //TODOLANG
-    let modalInteractions = ModalInteractions(acceptTitle: "Done", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: L10n.exportedInvitationDone, accept: { [weak controller] in
           controller?.validateInputValues()
     }, drawBorder: true, singleButton: true)
     

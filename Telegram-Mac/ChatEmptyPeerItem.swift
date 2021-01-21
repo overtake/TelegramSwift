@@ -129,6 +129,9 @@ class ChatEmptyPeerItem: TableRowItem {
                     if user.isScam {
                         about = L10n.peerInfoScamWarning
                     }
+                    if user.isFake {
+                        about = L10n.peerInfoFakeWarning
+                    }
                     guard let `self` = self else {return}
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))

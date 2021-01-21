@@ -946,17 +946,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillScamButton(_ item: ChatRowItem) -> Void {
-        if item.isScam, item.canFillAuthorName {
+        if item.isScam || item.isFake, item.canFillAuthorName {
             if scamButton == nil {
+                let text: String = !item.isScam ? L10n.peerInfoFakeWarning : L10n.peerInfoScamWarning
                 scamButton = ImageButton()
                 scamButton?.autohighlight = false
-                scamButton?.setFrameSize(item.presentation.icons.chatScam.backingSize)
+                scamButton?.setFrameSize(item.badIcon.backingSize)
                 rowView.addSubview(scamButton!)
                 scamButton?.set(handler: { control in
-                    tooltip(for: control, text: L10n.peerInfoScamWarning)
+                    tooltip(for: control, text: text)
                 }, for: .Click)
             }
-            scamButton?.set(image: item.presentation.icons.chatScam, for: .Normal)
+            scamButton?.set(image: item.badIcon, for: .Normal)
             
         } else {
             scamButton?.removeFromSuperview()
@@ -965,17 +966,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillScamForwardButton(_ item: ChatRowItem) -> Void {
-        if item.isForwardScam {
+        if item.isForwardScam || item.isForwardFake {
             if scamForwardButton == nil {
+                let text: String = !item.isForwardScam ? L10n.peerInfoFakeWarning : L10n.peerInfoScamWarning
                 scamForwardButton = ImageButton()
                 scamForwardButton?.autohighlight = false
-                scamForwardButton?.setFrameSize(item.presentation.icons.chatScam.backingSize)
+                scamForwardButton?.setFrameSize(item.forwardBadIcon.backingSize)
                 rowView.addSubview(scamForwardButton!)
                 scamForwardButton?.set(handler: { control in
-                    tooltip(for: control, text: L10n.peerInfoScamWarning)
+                    tooltip(for: control, text: text)
                 }, for: .Click)
             }
-            scamForwardButton?.set(image: item.presentation.icons.chatScam, for: .Normal)
+            scamForwardButton?.set(image: item.forwardBadIcon, for: .Normal)
             
         } else {
             scamForwardButton?.removeFromSuperview()

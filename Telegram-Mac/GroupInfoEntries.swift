@@ -870,7 +870,7 @@ private struct GroupPeerEntryStableId: PeerInfoEntryStableId {
 enum GroupInfoEntry: PeerInfoEntry {
     case info(section:Int, view: PeerView, editingState: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
     case setTitle(section:Int, text: String, viewType: GeneralViewType)
-    case scam(section:Int, text: String, viewType: GeneralViewType)
+    case scam(section:Int, title: String, text: String, viewType: GeneralViewType)
     case about(section:Int, text: String, viewType: GeneralViewType)
     case addressName(section:Int, name:String, viewType: GeneralViewType)
     case sharedMedia(section:Int, viewType: GeneralViewType)
@@ -897,7 +897,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(section, view, editingState, updatingPhotoState, _): return .info(section: section, view: view, editingState: editingState, updatingPhotoState: updatingPhotoState, viewType: viewType)
         case let .setTitle(section, text, _): return .setTitle(section: section, text: text, viewType: viewType)
-        case let .scam(section, text, _): return .scam(section: section, text: text, viewType: viewType)
+        case let .scam(section, title, text, _): return .scam(section: section, title: title, text: text, viewType: viewType)
         case let .about(section, text, _): return .about(section: section, text: text, viewType: viewType)
         case let .addressName(section, name, _): return .addressName(section: section, name: name, viewType: viewType)
         case let .sharedMedia(section, _): return .sharedMedia(section: section, viewType: viewType)
@@ -991,8 +991,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .scam(section, text, viewType):
-            if case .scam(section, text, viewType) = entry {
+        case let .scam(section, title, text, viewType):
+            if case .scam(section, title, text, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1235,7 +1235,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(sectionId, _, _, _, _):
             return sectionId
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return sectionId
         case let .about(sectionId, _, _):
             return sectionId
@@ -1288,7 +1288,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(sectionId, _, _, _, _):
             return (sectionId * 100000) + stableIndex
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1350,8 +1350,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
             return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateGroupPhoto)
-        case let .scam(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+        case let .scam(_, title, text, viewType):
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
             return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text: text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { [weak arguments] peerId, toChat, postId, _ in
                 if toChat {
@@ -1382,8 +1382,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupTypeSetup(section: _, isPublic: isPublic, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupType, type: .nextContext(isPublic ? L10n.peerInfoGroupTypePublic : L10n.peerInfoGroupTypePrivate), viewType: viewType, action: arguments.visibilitySetup)
         case let .inviteLinks(_, count, viewType):
-            //TODOLANG
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: "Invite Links", type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
         case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
@@ -1504,13 +1503,11 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             
             if let group = view.peers[view.peerId] as? TelegramGroup {
                 if case .creator = group.role {
-                //    if cachedGroupData.flags.contains(.canChangeUsername) {
                     entries.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
-                    #if DEBUG
-                    entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .innerItem))
-                    #endif
+                    if inviteLinksCount > 1 {
+                        entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .innerItem))
+                    }
                     entries.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
-                //    }
                     
                     var activePermissionCount: Int?
                     if let defaultBannedRights = group.defaultBannedRights {
@@ -1532,9 +1529,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 if access.isCreator {
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
-                    #if DEBUG
-                    actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
-                    #endif
+                    if inviteLinksCount > 1 {
+                        actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
+                    }
                 }
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId.peerId, let peer = view.peers[linkedDiscussionPeerId] {
                     actionBlock.append(.linkedChannel(section: GroupInfoSection.type.rawValue, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount, viewType: .singleItem))
@@ -1587,11 +1584,13 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             var aboutBlock:[GroupInfoEntry] = []
             
             if group.isScam {
-                aboutBlock.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, text: L10n.groupInfoScamWarning, viewType: .singleItem))
+                aboutBlock.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, title: L10n.peerInfoScam, text: L10n.groupInfoScamWarning, viewType: .singleItem))
+            } else if group.isFake {
+                aboutBlock.append(GroupInfoEntry.scam(section: GroupInfoSection.desc.rawValue, title: L10n.peerInfoFake, text: L10n.groupInfoFakeWarning, viewType: .singleItem))
             }
             
             if let cachedChannelData = view.cachedData as? CachedChannelData {
-                if let about = cachedChannelData.about, !about.isEmpty, !group.isScam {
+                if let about = cachedChannelData.about, !about.isEmpty, !group.isScam && !group.isFake {
                     aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
@@ -1607,10 +1606,6 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
             
             applyBlock(aboutBlock)
-            
-//
-//            entries.append(GroupInfoEntry.notifications(section: GroupInfoSection.addition.rawValue, settings: view.notificationSettings, viewType: .firstItem))
-//            entries.append(GroupInfoEntry.sharedMedia(section: GroupInfoSection.addition.rawValue, viewType: .lastItem))
             
 
         }

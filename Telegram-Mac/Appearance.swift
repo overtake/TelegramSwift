@@ -494,11 +494,10 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
-private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
+    let textNode = TextNode.layoutText(.initialize(string: text, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
-    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
-    
-    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), contextGenerator: { size, ctx in
+    let draw: (CGSize, CGContext) -> Void = { size, ctx in
         ctx.interpolationQuality = .high
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         
@@ -511,28 +510,23 @@ private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor
         
         let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
         textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
-        
-    })!
+    }
+    if !isReversed {
+        return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), contextGenerator: draw)!
+    } else {
+        return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), rotatedContext: draw)!
+    }
 }
 
 private func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
-    
-    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
-    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), rotatedContext: { size, ctx in
-        ctx.interpolationQuality = .high
-        ctx.clear(CGRect(origin: CGPoint(), size: size))
-        
-        let borderPath = NSBezierPath(roundedRect: NSMakeRect(1, 1, size.width - 2, size.height - 2), xRadius: 2, yRadius: 2)
-        
-        ctx.setStrokeColor(foregroundColor.cgColor)
-        ctx.addPath(borderPath.cgPath)
-        ctx.closePath()
-        ctx.strokePath()
-        
-        let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
-        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
-        
-    })!
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, isReversed: true)
+}
+
+private func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: isReversed)
+}
+private func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: true)
 }
 
 private func generateVideoMessageChatCap(backgroundColor: NSColor) -> CGImage {
@@ -2191,6 +2185,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                scam: { generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                scamActive: { generateScamIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
                                                chatScam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               fake: { generateFakeIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               fakeActive: { generateFakeIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
+                                               chatFake: { generateFakeIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                chatUnarchive: { NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.accentIcon) },
                                                chatArchive: { NSImage(named: "Icon_ChatArchive")!.precomposed(palette.accentIcon) },
                                                privacySettings_blocked: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)) },

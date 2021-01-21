@@ -290,7 +290,9 @@ class ShortPeerRowItem: GeneralRowItem {
         if self.peer.isScam {
             addition += 20
         }
-        
+        if self.peer.isFake {
+            addition += 20
+        }
         switch viewType {
         case .legacy:
             if let titleAttr = titleAttr {

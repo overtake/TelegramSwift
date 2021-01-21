@@ -472,9 +472,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         mutedInset += 15 + 3
                     }
                     
-                    if item.isScam {
-                        ctx.draw(highlighted ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        mutedInset += theme.icons.scam.backingSize.width + 3
+                    if item.isScam || item.isFake {
+                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        mutedInset += item.badIcon.backingSize.width + 3
                     }
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
