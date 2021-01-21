@@ -42,8 +42,9 @@ class ShareViewController: NSViewController {
         }
         initializeAccountManagement()
 
-        let rootPath = containerUrl.path
         
+        
+        let rootPath = containerUrl.path
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
 
         
@@ -102,11 +103,7 @@ class ShareViewController: NSViewController {
         
         let extensionContext = self.extensionContext!
 
-        let appGroupName = ApiEnvironment.group
-
-        guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
-            return
-        }
+        let containerUrl = ApiEnvironment.containerURL!
         
         let rootPath = containerUrl.path
 
