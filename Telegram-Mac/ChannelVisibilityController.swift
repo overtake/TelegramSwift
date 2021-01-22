@@ -29,7 +29,8 @@ private final class ChannelVisibilityControllerArguments {
     let revokeLink: ()->Void
     let share:(String)->Void
     let manageLinks:()->Void
-    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void) {
+    let open:(ExportedInvitation)->Void
+    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void, open:@escaping(ExportedInvitation)->Void) {
         self.context = context
         self.updateCurrentType = updateCurrentType
         self.updatePublicLinkText = updatePublicLinkText
@@ -39,6 +40,7 @@ private final class ChannelVisibilityControllerArguments {
         self.copy = copy
         self.share = share
         self.manageLinks = manageLinks
+        self.open = open
     }
 }
 
@@ -285,7 +287,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 }
                 
                 return .single(items)
-            }, share: arguments.share)
+            }, share: arguments.share, open: arguments.open)
 
         case let .editablePublicLink(_, currentText, text, status, viewType):
             var rightItem: InputDataRightItem? = nil
@@ -806,6 +808,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             showModal(with: ShareModalController(ShareLinkObject.init(context, link: link)), for: context.window)
         }, manageLinks: { [weak self] in
             self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: self?.linksManager))
+        }, open: { [weak self] invitation in
+            if let manager = self?.linksManager {
+                showModal(with: ExportedInvitationController(invitation: invitation, accountContext: context, context: manager.importer(for: invitation)), for: context.window)
+            }
         })
         
         let peerView = context.account.viewTracker.peerView(peerId)

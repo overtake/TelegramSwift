@@ -338,7 +338,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             }
             
             return .single(items)
-        }, share: arguments.shareLink)
+        }, share: arguments.shareLink, open: arguments.open)
     }))
     
     
@@ -468,7 +468,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
     
     let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil)
     
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise = ValuePromise<InviteLinksState>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((InviteLinksState) -> InviteLinksState) -> Void = { f in
         statePromise.set(stateValue.modify (f))

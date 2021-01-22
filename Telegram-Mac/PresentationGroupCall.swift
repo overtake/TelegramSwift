@@ -951,31 +951,39 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         })
     }
     
-    
-    func updateMuteState(peerId: PeerId, isMuted: Bool) {
+    private func muteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState? {
         let canThenUnmute: Bool
-        if isMuted {
-            if peerId == self.account.peerId {
-                canThenUnmute = true
-            } else if self.stateValue.canManageCall {
-                if self.stateValue.adminIds.contains(peerId) {
-                    canThenUnmute = true
-                } else {
-                    canThenUnmute = false
-                }
-            } else if self.stateValue.adminIds.contains(self.account.peerId) {
-                canThenUnmute = true
-            } else {
-                canThenUnmute = true
-            }
-            self.participantsContext?.updateMuteState(peerId: peerId, muteState: isMuted ? GroupCallParticipantsContext.Participant.MuteState(canUnmute: canThenUnmute, mutedByYou: false) : nil, volume: nil)
-        } else {
-            if peerId == self.account.peerId {
-                self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil, volume: nil)
-            } else {
-                self.participantsContext?.updateMuteState(peerId: peerId, muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false), volume: nil)
-            }
-        }
+          if isMuted {
+              var mutedByYou = false
+              if peerId == self.account.peerId {
+                  canThenUnmute = true
+              } else if self.stateValue.canManageCall {
+                  if self.stateValue.adminIds.contains(peerId) {
+                      canThenUnmute = true
+                  } else {
+                      canThenUnmute = false
+                  }
+              } else if self.stateValue.adminIds.contains(self.account.peerId) {
+                  canThenUnmute = true
+              } else {
+                  mutedByYou = true
+                  canThenUnmute = true
+              }
+            return isMuted ? GroupCallParticipantsContext.Participant.MuteState(canUnmute: canThenUnmute, mutedByYou: mutedByYou) : nil
+          } else {
+              if peerId == self.account.peerId {
+                  return nil
+              } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.account.peerId) {
+                return GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
+              } else {
+                  return nil
+              }
+          }
+    }
+    
+    
+    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32? = nil) {
+        self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: isMuted), volume: volume)
     }
     
     private func requestCall() {
@@ -1100,14 +1108,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         }
     }
-    func setVolume(peerId: PeerId, volume: Double) {
+    func setVolume(peerId: PeerId, volume: Int32, sync: Bool) {
         for (ssrc, id) in self.ssrcMapping {
             if id == peerId {
-                self.callContext?.setVolume(ssrc: ssrc, volume: volume)
+                self.callContext?.setVolume(ssrc: ssrc, volume: Double(volume) / 10000)
+                if sync {
+                    self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: volume == 0), volume: volume)
+                }
                 break
             }
         }
     }
+
 
     func updateDefaultParticipantsAreMuted(isMuted: Bool) {
         self.participantsContext?.updateDefaultParticipantsAreMuted(isMuted: isMuted)

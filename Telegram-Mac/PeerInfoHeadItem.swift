@@ -76,6 +76,30 @@ fileprivate final class ActionButton : Control {
     }
 }
 
+extension TelegramPeerPhoto : Equatable {
+    public static func ==(lhs: TelegramPeerPhoto, rhs: TelegramPeerPhoto) -> Bool {
+        if lhs.date != rhs.date {
+            return false
+        }
+        if !lhs.image.isEqual(to: rhs.image) {
+            return false
+        }
+        if lhs.index != rhs.index {
+            return false
+        }
+        if lhs.messageId != rhs.messageId {
+            return false
+        }
+        if lhs.reference != rhs.reference {
+            return false
+        }
+        if lhs.totalCount != rhs.totalCount {
+            return false
+        }
+        return true
+    }
+}
+
 fileprivate let photoDimension:CGFloat = 120
 fileprivate let actionItemWidth: CGFloat = 135
 fileprivate let actionItemInsetWidth: CGFloat = 19
@@ -429,9 +453,12 @@ class PeerInfoHeadItem: GeneralRowItem {
                 guard let `self` = self else {
                     return
                 }
-                self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
-                _ = self.makeSize(self.width, oldWidth: 0)
-                self.redraw()
+                let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
+                if result != self.result {
+                    self.result = result
+                    _ = self.makeSize(self.width, oldWidth: 0)
+                    self.redraw(animated: true, options: .effectFade)
+                }
             }))
         }
         
@@ -441,9 +468,15 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let peer = peer {
             self.photos = syncPeerPhotos(peerId: peer.id)
             let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
+            var first: Bool = true
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
-                self?.photos = photos
-                self?.redraw()
+                if self?.photos != photos {
+                    self?.photos = photos
+                    if !first {
+                        self?.redraw(animated: true, options: .effectFade)
+                    }
+                    first = false
+                }
             }))
         }
         
