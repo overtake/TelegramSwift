@@ -7414,6 +7414,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var fast_copy_link: CGImage {
+      if let image = cached.with({ $0["fast_copy_link"] }) {
+          return image
+      } else {
+          let image = _fast_copy_link()
+          _ = cached.modify { current in 
+              var current = current
+              current["fast_copy_link"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7985,6 +7998,7 @@ final class TelegramIconsTheme {
   private let _editor_draw: ()->CGImage
   private let _editor_delete: ()->CGImage
   private let _editor_crop: ()->CGImage
+  private let _fast_copy_link: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8556,7 +8570,8 @@ final class TelegramIconsTheme {
       chat_voice_chat_active: @escaping()->CGImage,
       editor_draw: @escaping()->CGImage,
       editor_delete: @escaping()->CGImage,
-      editor_crop: @escaping()->CGImage
+      editor_crop: @escaping()->CGImage,
+      fast_copy_link: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9128,5 +9143,6 @@ final class TelegramIconsTheme {
       self._editor_draw = editor_draw
       self._editor_delete = editor_delete
       self._editor_crop = editor_crop
+      self._fast_copy_link = fast_copy_link
   }
 }

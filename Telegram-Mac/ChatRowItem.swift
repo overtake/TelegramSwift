@@ -1560,9 +1560,9 @@ class ChatRowItem: TableRowItem {
                             text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
                         } else {
                             var fullName = attr.string
-                            if let signature = message.forwardInfo?.authorSignature {
-                                fullName += " (\(signature))"
-                            }
+//                            if let signature = message.forwardInfo?.authorSignature {
+//                                fullName += " (\(signature))"
+//                            }
                             text = L10n.chatBubblesForwardedFrom(fullName)
                         }
                         

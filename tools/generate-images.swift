@@ -627,6 +627,7 @@ func initialize() -> [String] {
     array.append("editor_delete")
     array.append("editor_crop")
 
+    array.append("fast_copy_link")
     
     return array
 }

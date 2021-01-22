@@ -2361,7 +2361,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_VoiceChat_Title")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
                                                editor_draw: { NSImage(named: "Icon_Editor_Paint")!.precomposed(.white) },
                                                editor_delete: { NSImage(named: "Icon_Editor_Delete")!.precomposed(.white) },
-                                               editor_crop: { NSImage(named: "Icon_Editor_Crop")!.precomposed(.white) }
+                                               editor_crop: { NSImage(named: "Icon_Editor_Crop")!.precomposed(.white) },
+                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent)}
 
     )
 

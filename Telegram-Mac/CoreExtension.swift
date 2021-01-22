@@ -2266,7 +2266,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             thridTitle = L10n.peerInfoStopBot
         }
             
-        if peer.groupAccess.isCreator {
+        if peer.groupAccess.isCreator, deleteGroup {
             canRemoveGlobally = true
             thridTitle = L10n.deleteChatDeleteGroupForAll
         }

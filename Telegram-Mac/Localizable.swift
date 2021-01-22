@@ -1261,7 +1261,7 @@ internal final class L10n {
   internal static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
   /// Sorry, if a person left a channel, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
   internal static var channelInfoAddUserLeftError: String  { return L10n.tr("Localizable", "ChannelInfo.AddUserLeftError") }
-  /// ⚠️ Warning: This is trap.
+  /// ⚠️ Warning: ⚠️ Warning: Many users reported that this channel impersonates a famous person or organization.
   internal static var channelInfoFakeWarning: String  { return L10n.tr("Localizable", "ChannelInfo.FakeWarning") }
   /// ⚠️ Warning: Many users reported this channel as a scam. Please be careful, especially if it asks you for money.
   internal static var channelInfoScamWarning: String  { return L10n.tr("Localizable", "ChannelInfo.ScamWarning") }
@@ -3825,7 +3825,7 @@ internal final class L10n {
   internal static var groupInfoAddUserLeftError: String  { return L10n.tr("Localizable", "GroupInfo.AddUserLeftError") }
   /// Administrators
   internal static var groupInfoAdministrators: String  { return L10n.tr("Localizable", "GroupInfo.Administrators") }
-  /// ⚠️ Warning: This is trap.
+  /// ⚠️ Warning: Many users reported that this group impersonates a famous person or organization.
   internal static var groupInfoFakeWarning: String  { return L10n.tr("Localizable", "GroupInfo.FakeWarning") }
   /// ⚠️ Warning: Many users reported this group as a scam. Please be careful, especially if it asks you for money.
   internal static var groupInfoScamWarning: String  { return L10n.tr("Localizable", "GroupInfo.ScamWarning") }
@@ -5271,7 +5271,7 @@ internal final class L10n {
   internal static var peerInfoEncryptionKey: String  { return L10n.tr("Localizable", "PeerInfo.EncryptionKey") }
   /// fake
   internal static var peerInfoFake: String  { return L10n.tr("Localizable", "PeerInfo.fake") }
-  /// ⚠️ Warning: This is trap.
+  /// ⚠️ Warning: ⚠️ Warning: Many users reported that this account impersonates a famous person or organization.
   internal static var peerInfoFakeWarning: String  { return L10n.tr("Localizable", "PeerInfo.FakeWarning") }
   /// Groups In Common
   internal static var peerInfoGroupsInCommon: String  { return L10n.tr("Localizable", "PeerInfo.GroupsInCommon") }
@@ -8371,12 +8371,12 @@ internal final class L10n {
   internal static var voiceChatLeave: String  { return L10n.tr("Localizable", "VoiceChat.Leave") }
   /// Leave
   internal static var voiceChatLeaveCall: String  { return L10n.tr("Localizable", "VoiceChat.LeaveCall") }
-  /// listening
-  internal static var voiceChatListening: String  { return L10n.tr("Localizable", "VoiceChat.Listening") }
   /// You are in Listen Mode Only
   internal static var voiceChatListenMode: String  { return L10n.tr("Localizable", "VoiceChat.ListenMode") }
   /// Muted By Admin
   internal static var voiceChatMutedByAdmin: String  { return L10n.tr("Localizable", "VoiceChat.MutedByAdmin") }
+  /// Mute For Me
+  internal static var voiceChatMuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.MuteForMe") }
   /// Mute
   internal static var voiceChatMutePeer: String  { return L10n.tr("Localizable", "VoiceChat.MutePeer") }
   /// Open Profile
@@ -8389,8 +8389,8 @@ internal final class L10n {
   internal static var voiceChatRequestAccess: String  { return L10n.tr("Localizable", "VoiceChat.RequestAccess") }
   /// Settings
   internal static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
-  /// speaking
-  internal static var voiceChatSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Speaking") }
+  /// Unmute For Me
+  internal static var voiceChatUnmuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.UnmuteForMe") }
   /// Allow To Speak
   internal static var voiceChatUnmutePeer: String  { return L10n.tr("Localizable", "VoiceChat.UnmutePeer") }
   /// You invited **%@** to the voice chat
@@ -8493,6 +8493,10 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
   /// Connecting...
   internal static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
+  /// invited
+  internal static var voiceChatStatusInvited: String  { return L10n.tr("Localizable", "VoiceChat.Status.Invited") }
+  /// listening
+  internal static var voiceChatStatusListening: String  { return L10n.tr("Localizable", "VoiceChat.Status.Listening") }
   /// connecting...
   internal static var voiceChatStatusLoading: String  { return L10n.tr("Localizable", "VoiceChat.Status.Loading") }
   /// %d
@@ -8521,6 +8525,12 @@ internal final class L10n {
   }
   /// no participants
   internal static var voiceChatStatusMembersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Members_zero") }
+  /// muted
+  internal static var voiceChatStatusMuted: String  { return L10n.tr("Localizable", "VoiceChat.Status.Muted") }
+  /// muted for you
+  internal static var voiceChatStatusMutedForYou: String  { return L10n.tr("Localizable", "VoiceChat.Status.MutedForYou") }
+  /// speaking
+  internal static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
   /// Leave
   internal static var voiceChatTitleEnd: String  { return L10n.tr("Localizable", "VoiceChat.Title.End") }
   /// invited

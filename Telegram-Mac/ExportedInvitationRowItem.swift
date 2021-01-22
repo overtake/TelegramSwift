@@ -53,12 +53,14 @@ class ExportedInvitationRowItem: GeneralRowItem {
     fileprivate let usageTextLayout: TextViewLayout
     fileprivate let lastPeers: [RenderedPeer]
     fileprivate let mode: Mode
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void) {
+    fileprivate let open:(ExportedInvitation)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems
         self.lastPeers = lastPeers
         self.shareLink = share
+        self.open = open
         self.mode = mode
         let text: String
         let color: NSColor
@@ -158,7 +160,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
     private let share: TitleButton = TitleButton()
     private let actions: ImageButton = ImageButton()
     private let usageTextView = TextView()
-    private let usageContainer = View()
+    private let usageContainer = Control()
     
     
     private var topPeers: [Avatar] = []
@@ -177,11 +179,17 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         linkView.userInteractionEnabled = false
         linkView.isSelectable = false
         
-        usageTextView.isSelectable = false
         
         linkContainer.addSubview(actions)
         
         addSubview(usageContainer)
+        
+        usageTextView.userInteractionEnabled = false
+        usageTextView.isSelectable = false
+        usageTextView.isEventLess = true
+        avatarsContainer.isEventLess = true
+        
+        
         usageContainer.addSubview(usageTextView)
         
         usageContainer.addSubview(avatarsContainer)
@@ -200,6 +208,15 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
             }
             if let link = item.exportedLink {
                 item.shareLink(link.link)
+            }
+        }, for: .Click)
+        
+        usageContainer.set(handler: { [weak self] _ in
+            guard let item = self?.item as? ExportedInvitationRowItem else {
+                return
+            }
+            if let exportedLink = item.exportedLink {
+                item.open(exportedLink)
             }
         }, for: .Click)
     }
@@ -237,10 +254,6 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         guard let item = item as? ExportedInvitationRowItem else {
             return
         }
-        
-        let link = item.exportedLink
-        
-        
         
         
         linkContainer.backgroundColor = theme.colors.grayBackground
