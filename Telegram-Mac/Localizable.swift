@@ -1261,7 +1261,7 @@ internal final class L10n {
   internal static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
   /// Sorry, if a person left a channel, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
   internal static var channelInfoAddUserLeftError: String  { return L10n.tr("Localizable", "ChannelInfo.AddUserLeftError") }
-  /// ⚠️ Warning: ⚠️ Warning: Many users reported that this channel impersonates a famous person or organization.
+  /// ⚠️ Warning: Many users reported that this channel impersonates a famous person or organization.
   internal static var channelInfoFakeWarning: String  { return L10n.tr("Localizable", "ChannelInfo.FakeWarning") }
   /// ⚠️ Warning: Many users reported this channel as a scam. Please be careful, especially if it asks you for money.
   internal static var channelInfoScamWarning: String  { return L10n.tr("Localizable", "ChannelInfo.ScamWarning") }
@@ -1887,6 +1887,10 @@ internal final class L10n {
   }
   /// edited
   internal static var chatMessageEdited: String  { return L10n.tr("Localizable", "Chat.Message.edited") }
+  /// %@ imported
+  internal static func chatMessageImported(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Message.Imported", p1)
+  }
   /// %d
   internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
@@ -1909,6 +1913,8 @@ internal final class L10n {
   internal static var chatMessageUnsupportedNew: String  { return L10n.tr("Localizable", "Chat.Message.UnsupportedNew") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
+  /// This message was imported from another app. We can't guarantee it's real.
+  internal static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// MTProxy Configuration
   internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
   /// SOCKS5 Configuration
@@ -5271,7 +5277,7 @@ internal final class L10n {
   internal static var peerInfoEncryptionKey: String  { return L10n.tr("Localizable", "PeerInfo.EncryptionKey") }
   /// fake
   internal static var peerInfoFake: String  { return L10n.tr("Localizable", "PeerInfo.fake") }
-  /// ⚠️ Warning: ⚠️ Warning: Many users reported that this account impersonates a famous person or organization.
+  /// ⚠️ Warning: Many users reported that this account impersonates a famous person or organization.
   internal static var peerInfoFakeWarning: String  { return L10n.tr("Localizable", "PeerInfo.FakeWarning") }
   /// Groups In Common
   internal static var peerInfoGroupsInCommon: String  { return L10n.tr("Localizable", "PeerInfo.GroupsInCommon") }

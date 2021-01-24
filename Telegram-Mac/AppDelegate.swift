@@ -19,6 +19,8 @@ import AppCenterCrashes
 #endif
 
 
+let enableBetaFeatures = false
+
 private(set) var appDelegate: AppDelegate?
 
 #if !SHARE

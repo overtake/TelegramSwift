@@ -1506,7 +1506,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             if let group = view.peers[view.peerId] as? TelegramGroup {
                 if case .creator = group.role {
                     entries.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
-                    if inviteLinksCount > 1 {
+                    if inviteLinksCount > 1 && enableBetaFeatures {
                         entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .innerItem))
                     }
                     entries.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
@@ -1531,7 +1531,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 if access.isCreator {
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
-                    if inviteLinksCount > 1 {
+                    if inviteLinksCount > 1 && enableBetaFeatures {
                         actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
                     }
                 }
