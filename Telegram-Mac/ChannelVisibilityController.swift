@@ -491,9 +491,11 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
             
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
-            entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            if enableBetaFeatures {
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            }
         }
     } else if let peer = view.peers[view.peerId] as? TelegramGroup {
 
@@ -581,9 +583,12 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup, .textBottomItem))
             
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
-            entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            if enableBetaFeatures {
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            }
+           
         }
     }
     entries.append(.section(sectionId: sectionId))

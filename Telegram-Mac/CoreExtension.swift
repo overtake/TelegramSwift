@@ -480,6 +480,13 @@ public extension Message {
         return nil
     }
     
+    var isImported: Bool {
+        if let forwardInfo = self.forwardInfo, forwardInfo.flags.contains(.isImported) {
+            return true
+        }
+        return false
+    }
+    
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? TextEntitiesMessageAttribute {

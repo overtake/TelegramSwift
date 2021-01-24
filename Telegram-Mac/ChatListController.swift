@@ -353,7 +353,7 @@ class ChatListController : PeersListController {
         var scroll:TableScrollState? = nil
 
         let initialState = ChatListState(activities: ChatListPeerInputActivities(activities: [:]))
-        let statePromise:ValuePromise<ChatListState> = ValuePromise(initialState)
+        let statePromise:ValuePromise<ChatListState> = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue: Atomic<ChatListState> = Atomic(value: initialState)
         
         let updateState:((ChatListState)->ChatListState)->Void = { f in
