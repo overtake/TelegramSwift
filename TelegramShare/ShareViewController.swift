@@ -47,7 +47,10 @@ class ShareViewController: NSViewController {
         let rootPath = containerUrl.path
         let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
 
-        
+        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
+        logger.logToConsole = false
+        logger.logToFile = false
+        Logger.setSharedLogger(logger)
         
         let themeSemaphore = DispatchSemaphore(value: 0)
         var themeSettings: ThemePaletteSettings = ThemePaletteSettings.defaultTheme
@@ -79,7 +82,8 @@ class ShareViewController: NSViewController {
             launchExtension(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
         } else {
             let extensionContext = self.extensionContext!
-            let passlock = SEPasslockController(checkNextValue: { passcode in
+            
+            self.passlock = SEPasslockController(checkNextValue: { passcode in
                 appEncryption.applyPasscode(passcode)
                 if let params = appEncryption.decrypt() {
                     let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
@@ -93,8 +97,8 @@ class ShareViewController: NSViewController {
                 extensionContext.cancelRequest(withError: cancelError)
             })
             
-            passlock.view.frame = self.view.bounds
-            self.view.addSubview(passlock.view)
+            self.passlock!.view.frame = self.view.bounds
+            self.view.addSubview(self.passlock!.view)
         }
     }
 
@@ -112,10 +116,7 @@ class ShareViewController: NSViewController {
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: { _ in })
         
-        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/sharelogs")
-        logger.logToConsole = false
-        logger.logToFile = false
-        Logger.setSharedLogger(logger)
+      
 
         
         let rawAccounts = sharedContext.activeAccounts
@@ -145,6 +146,9 @@ class ShareViewController: NSViewController {
                             contextValue.rootController.view.removeFromSuperview()
                         }
                         self.contextValue = context
+                        if let passlock = self.passlock, passlock.isLoaded() {
+                            self.passlock?.view.removeFromSuperview()
+                        }
                         self.view.addSubview(context.rootController.view, positioned: .below, relativeTo: self.view.subviews.first)
                         
                     }))
