@@ -63,6 +63,7 @@ class MediaPreviewEditControl: View {
     var canEdit: Bool = true {
         didSet {
             crop.isHidden = !canEdit
+            paint.isHidden = !canEdit
             self.setFrameSize(canEdit ? 90 : 30, frame.height)
         }
     }

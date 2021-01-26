@@ -153,7 +153,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         mutableAttributedText.setSelected(color: theme.colors.underSelectedColor, range: mutableAttributedText.range)
         return mutableAttributedText
     }
-    
+        
     if let renderedPeer = renderedPeer {
         if let peer = renderedPeer.peers[renderedPeer.peerId] as? TelegramSecretChat {
             let subAttr = NSMutableAttributedString()
@@ -183,6 +183,9 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
 
     if let message = message {
     
+        
+           
+        
         if message.text.isEmpty && message.media.isEmpty {
             let attr = NSMutableAttributedString()
             _ = attr.append(string: L10n.chatListUnsupportedMessage, color: theme.chatList.grayTextColor, font: .normal(.text))
@@ -190,7 +193,9 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             return attr
         }
         
-        let peer = messageMainPeer(message)
+        var peer = messageMainPeer(message)
+        
+        
         
         var mediaViewType: MessageTextMediaViewType = .emoji
         if !message.containsSecretMedia {
@@ -216,6 +221,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
+        
         if messageText.length > 0 {
             
             if folder, let peer = peer {
