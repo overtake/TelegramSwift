@@ -119,7 +119,7 @@ enum LocalAnimatedSticker {
         case .write_words:
             playPolicy = .once
         case .chiken_born:
-            playPolicy = .onceEnd
+            playPolicy = .loop
         case .sad:
             playPolicy = .once
         case .success:
@@ -137,13 +137,10 @@ enum LocalAnimatedSticker {
             playPolicy = .once
         case .folder:
             playPolicy = .once
-            hidePlayer = false
         case .new_folder:
             playPolicy = .loop
-            hidePlayer = false
         case .folder_empty:
-            playPolicy = .once
-            hidePlayer = false
+            playPolicy = .loop
         case .graph_loading:
             playPolicy = .loop
             hidePlayer = false
