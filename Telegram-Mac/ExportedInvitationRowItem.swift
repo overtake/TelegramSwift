@@ -54,7 +54,8 @@ class ExportedInvitationRowItem: GeneralRowItem {
     fileprivate let lastPeers: [RenderedPeer]
     fileprivate let mode: Mode
     fileprivate let open:(ExportedInvitation)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }) {
+    fileprivate let copyLink:(String)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems
@@ -62,6 +63,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
         self.shareLink = share
         self.open = open
         self.mode = mode
+        self.copyLink = copyLink
         let text: String
         let color: NSColor
         let usageText: String
@@ -155,7 +157,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
     }
     
     
-    private let linkContainer: View = View()
+    private let linkContainer: Control = Control()
     private let linkView: TextView = TextView()
     private let share: TitleButton = TitleButton()
     private let actions: ImageButton = ImageButton()
@@ -194,6 +196,15 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         
         usageContainer.addSubview(avatarsContainer)
 
+        
+        linkContainer.set(handler: { [weak self] _ in
+            guard let item = self?.item as? ExportedInvitationRowItem else {
+                return
+            }
+            if let link = item.exportedLink {
+                item.copyLink(link.link)
+            }
+        }, for: .Click)
         
         actions.set(handler: { [weak self] control in
             guard let event = NSApp.currentEvent else {

@@ -287,7 +287,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 }
                 
                 return .single(items)
-            }, share: arguments.share, open: arguments.open)
+            }, share: arguments.share, open: arguments.open, copyLink: arguments.copy)
 
         case let .editablePublicLink(_, currentText, text, status, viewType):
             var rightItem: InputDataRightItem? = nil

@@ -573,7 +573,16 @@ class ChatListRowItem: TableRowItem {
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
             
             
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
+            var author: Peer?
+            if message.isImported, let info = message.forwardInfo {
+                if let peer = info.author {
+                    author = peer
+                } else if let signature = info.authorSignature {
+                    author = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                }
+            }
+            
+            if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
                 let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
                 
                 let attr = NSMutableAttributedString()

@@ -338,7 +338,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             }
             
             return .single(items)
-        }, share: arguments.shareLink, open: arguments.open)
+        }, share: arguments.shareLink, open: arguments.open, copyLink: arguments.copyLink)
     }))
     
     

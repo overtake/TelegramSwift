@@ -730,9 +730,20 @@ func urlVars(with url:String) -> [String:String] {
     
     let hashes = ns.components(separatedBy: "&")
     for hash in hashes {
+       
         let param = hash.components(separatedBy: "=")
         if param.count > 1 {
-            vars[param[0]] = param[1]
+            if hashes.count == 1 {
+                var value: String = param[1]
+                for (i, p) in param.enumerated() {
+                    if i > 1 {
+                        value += "=\(p)"
+                    }
+                }
+                vars[param[0]] = value
+            } else {
+                vars[param[0]] = param[1]
+            }
         }
     }
     return vars
