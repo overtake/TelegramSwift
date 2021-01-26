@@ -75,10 +75,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
-        accept = parameters?.alwaysAccept ?? accept
+        accept = parameters?.alwaysAccept ?? accept 
+        
+        if NSIsEmptyRect(self.visibleRect) || self.window == nil {
+            accept = false
+        }
         
         var signal = Signal<Void, NoError>.single(Void())
-        if accept && !nextForceAccept {
+        if accept && !nextForceAccept && self.sticker != nil {
             signal = signal |> delay(accept ? 0.1 : 0, queue: .mainQueue())
         }
         if accept && self.sticker != nil {
@@ -87,7 +91,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         if let sticker = self.sticker, previousAccept {
             switch sticker.playPolicy {
-            case .once:
+            case .once, .onceEnd:
                 return
             default:
                 break
