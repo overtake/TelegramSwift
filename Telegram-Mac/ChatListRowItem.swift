@@ -580,6 +580,8 @@ class ChatListRowItem: TableRowItem {
                 } else if let signature = info.authorSignature {
                     author = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 }
+            } else {
+                author = message.author
             }
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {

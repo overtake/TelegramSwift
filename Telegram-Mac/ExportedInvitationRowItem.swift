@@ -62,7 +62,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
         self.lastPeers = lastPeers
         self.shareLink = share
         self.open = open
-        self.mode = mode
+        self.mode = enableBetaFeatures ? mode : .short
         self.copyLink = copyLink
         let text: String
         let color: NSColor
@@ -196,6 +196,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         
         usageContainer.addSubview(avatarsContainer)
 
+        linkContainer.scaleOnClick = true
         
         linkContainer.set(handler: { [weak self] _ in
             guard let item = self?.item as? ExportedInvitationRowItem else {
