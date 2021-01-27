@@ -1504,13 +1504,24 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             
             
             if let group = view.peers[view.peerId] as? TelegramGroup {
+                let hasAccess: Bool
+                switch group.role {
+                case .admin:
+                    hasAccess = true
+                case .creator:
+                    hasAccess = true
+                default:
+                    hasAccess = false
+                }
                 if case .creator = group.role {
                     entries.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .firstItem))
                     if inviteLinksCount > 1 && enableBetaFeatures {
                         entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .innerItem))
                     }
                     entries.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .lastItem))
-                    
+                }
+
+                if hasAccess {
                     var activePermissionCount: Int?
                     if let defaultBannedRights = group.defaultBannedRights {
                         var count = 0
@@ -1521,7 +1532,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         }
                         activePermissionCount = count
                     }
-                    
+
                     entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .firstItem))
                     entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: "", viewType: .lastItem))
                 }

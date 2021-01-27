@@ -57,7 +57,7 @@ enum PackEntry: Comparable, Identifiable {
     case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
     case recent
     case saved
-    case featured
+    case featured(hasUnread: Bool)
     case specificPack(data: SpecificPackData)
     
     var stableId: StickerPackCollectionId {
@@ -68,8 +68,8 @@ enum PackEntry: Comparable, Identifiable {
             return .recent
         case .saved:
             return .saved
-        case .featured:
-            return .featured
+        case let .featured(hasUnread):
+            return .featured(hasUnred: hasUnread)
         case let .specificPack(data):
             return .specificPack(data.info.id)
             
@@ -111,13 +111,13 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case speficicPack(ItemCollectionId)
     case recent(Int)
     case saved(Int)
-    case featured(Int)
+    case featured(Int, Bool)
     case emojiRelated(Int)
     var packIndex:ItemCollectionViewEntryIndex {
         switch self {
         case let .sticker(index):
             return index
-        case let .saved(index), let .recent(index), let .featured(index), let .emojiRelated(index):
+        case let .saved(index), let .recent(index), let .featured(index, _), let .emojiRelated(index):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
@@ -134,8 +134,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .saved
         case let .speficicPack(id):
             return .specificPack(id)
-        case .featured:
-            return .featured
+        case let .featured(_, hasUnread):
+            return .featured(hasUnred: hasUnread)
         case .emojiRelated:
             return .emojiRelated
         }
@@ -224,11 +224,17 @@ private struct StickerPacksUpdateData {
     let update: StickerPacksUpdate
     let specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?
     let searchData: StickerPacksSearchData?
-    init(_ view: ItemCollectionsView?, _ update: StickerPacksUpdate, _ specificPack: Tuple2<PeerSpecificStickerPackData, Peer>?, searchData: StickerPacksSearchData? = nil) {
+    let hasUnread: Bool
+    init(view: ItemCollectionsView?, update: StickerPacksUpdate, specificPack: Tuple2<PeerSpecificStickerPackData, Peer>?, searchData: StickerPacksSearchData? = nil, hasUnread: Bool) {
         self.view = view
         self.update = update
         self.specificPack = specificPack
         self.searchData = searchData
+        self.hasUnread = hasUnread
+    }
+
+    func withUpdatedHasUnread(_ hasUnread: Bool) -> StickerPacksUpdateData {
+        return .init(view: self.view, update: self.update, specificPack: self.specificPack, searchData: self.searchData, hasUnread: hasUnread)
     }
 }
 enum StickerPackInfo : Equatable {
@@ -259,7 +265,7 @@ enum StickerPackInfo : Equatable {
 enum StickerPackCollectionId : Hashable {
     case pack(ItemCollectionId)
     case recent
-    case featured
+    case featured(hasUnred: Bool)
     case specificPack(ItemCollectionId)
     case saved
     case emojiRelated
@@ -469,12 +475,12 @@ private func stickersEntries(view: ItemCollectionsView?, searchData: StickerPack
     return entries
 }
 
-private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?) -> [PackEntry] {
+private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, hasUnread: Bool) -> [PackEntry] {
     var entries:[PackEntry] = []
     var index: Int = 0
     
     if let view = view {
-        entries.append(.featured)
+        entries.append(.featured(hasUnread: hasUnread))
         
         if !view.orderedItemListsViews[1].items.isEmpty {
             entries.append(.saved)
@@ -902,7 +908,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                             return specificPackData |> map { specificPack in
                                 let scrollToTop = firstTime
                                 firstTime = false
-                                return StickerPacksUpdateData(view, .generic(animated: scrollToTop, scrollToTop: scrollToTop), specificPack)
+                                return StickerPacksUpdateData(view: view, update: .generic(animated: scrollToTop, scrollToTop: scrollToTop), specificPack: specificPack, hasUnread: false)
                             }
                     }
                 case let .scroll(aroundIndex):
@@ -917,7 +923,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 } else {
                                     update = .generic(animated: false, scrollToTop: false)
                                 }
-                                return StickerPacksUpdateData(view, update, specificPack)
+                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false)
                             }
                     }
                 case let .navigate(index):
@@ -932,9 +938,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 } else {
                                     update = .generic(animated: false, scrollToTop: false)
                                 }
-                                return StickerPacksUpdateData(view, update, specificPack)
+                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false)
                             }
-                    }
+                    } 
                 case .loadFeaturedMore:
                     fatalError("load featured for basic packs is not possible")
                 }
@@ -966,7 +972,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 }
                             }
                             let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count, emojiRelated: [])
-                            return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: true), nil, searchData: searchData)
+                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: true), specificPack: nil, searchData: searchData, hasUnread: false)
                         }
                     case let .loadFeaturedMore(current):
                         return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { values, view in
@@ -1001,7 +1007,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 }
                             }
                             let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount, emojiRelated: [])
-                            return StickerPacksUpdateData(nil, .generic(animated: false, scrollToTop: nil), nil, searchData: searchData)
+                            return StickerPacksUpdateData(view: nil, update: .generic(animated: false, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false)
                         }
                     default:
                         fatalError()
@@ -1033,13 +1039,21 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         }
                         
                         let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated)
-                        return StickerPacksUpdateData(nil, .generic(animated: true, scrollToTop: nil), nil, searchData: searchData)
+                        return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false)
                     }
                 }
                 
             }
             
         } |> deliverOnPrepareQueue
+        |> mapToSignal { data -> Signal<StickerPacksUpdateData, NoError> in
+            let hasUnread = context.account.viewTracker.featuredStickerPacks() |> map { featured in
+                return featured.contains(where: { $0.unread })
+            }
+            return hasUnread |> map {
+                return data.withUpdatedHasUnread($0)
+            }
+        }
         
         let transition = combineLatest(queue: prepareQueue, appearanceSignal, signal)
              |> map { appearance, data -> (TableUpdateTransition, TableUpdateTransition, [AppearanceWrapperEntry<PackEntry>]) in
@@ -1049,7 +1063,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let entries = stickersEntries(view: data.view, searchData: data.searchData, specificPack: data.specificPack).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let from = previous.swap(entries)
                 
-                let entriesPack = packEntries(view: data.view, specificPack: data.specificPack).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+                let entriesPack = packEntries(view: data.view, specificPack: data.specificPack, hasUnread: data.hasUnread).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let fromPacks = previousPacks.swap(entriesPack)
                 
                 let transition = prepareStickersTransition(from: from, to: entries, initialSize: initialSize.with { $0 }, arguments: arguments, update: data.update)

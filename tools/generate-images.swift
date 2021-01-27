@@ -537,7 +537,8 @@ func initialize() -> [String] {
     
     
     array.append("stickers_add_featured")
-    
+    array.append("stickers_add_featured_unread")
+
     array.append("channel_info_promo")
     array.append("channel_info_promo_bubble_incoming")
     array.append("channel_info_promo_bubble_outgoing")

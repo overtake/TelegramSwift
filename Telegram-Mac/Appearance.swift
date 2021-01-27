@@ -568,6 +568,20 @@ private func generateEditMessageMediaIcon(_ icon: CGImage, background: NSColor) 
     })!
 }
 
+private func generateUnreadFeaturedStickers(_ icon: CGImage, _ color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(icon.systemSize.width, icon.systemSize.height), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(size.width - 11, size.height - 12, 6, 6))
+
+    }, scale: System.backingScale)!
+}
+
+
 private func generatePlayerListAlbumPlaceholder(_ icon: CGImage?, background: NSColor, radius: CGFloat) -> CGImage {
     return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -628,6 +642,8 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
         ctx.fillPath()
     })!
 }
+
+
 
 private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(40, 46), contextGenerator: { size, ctx in
@@ -2302,6 +2318,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
                                                stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon) },
+                                               stickers_add_featured_unread: { generateUnreadFeaturedStickers(NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon), palette.redUI) },
                                                channel_info_promo: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayIcon) },
                                                channel_info_promo_bubble_incoming: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_incoming) },
                                                channel_info_promo_bubble_outgoing: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_outgoing) },

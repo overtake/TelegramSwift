@@ -552,7 +552,7 @@ open class Control: View {
     }
  
     
-    open override var mouseDownCanMoveWindow: Bool {
-        return !self.userInteractionEnabled
-    }
+//    open override var mouseDownCanMoveWindow: Bool {
+//        return !self.userInteractionEnabled
+//    }
 }

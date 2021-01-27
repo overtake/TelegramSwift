@@ -6647,6 +6647,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var stickers_add_featured_unread: CGImage {
+      if let image = cached.with({ $0["stickers_add_featured_unread"] }) {
+          return image
+      } else {
+          let image = _stickers_add_featured_unread()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_add_featured_unread"] = image
+              return current
+          }
+          return image
+      }
+  }
   var channel_info_promo: CGImage {
       if let image = cached.with({ $0["channel_info_promo"] }) {
           return image
@@ -7939,6 +7952,7 @@ final class TelegramIconsTheme {
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
   private let _stickers_add_featured: ()->CGImage
+  private let _stickers_add_featured_unread: ()->CGImage
   private let _channel_info_promo: ()->CGImage
   private let _channel_info_promo_bubble_incoming: ()->CGImage
   private let _channel_info_promo_bubble_outgoing: ()->CGImage
@@ -8512,6 +8526,7 @@ final class TelegramIconsTheme {
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
       stickers_add_featured: @escaping()->CGImage,
+      stickers_add_featured_unread: @escaping()->CGImage,
       channel_info_promo: @escaping()->CGImage,
       channel_info_promo_bubble_incoming: @escaping()->CGImage,
       channel_info_promo_bubble_outgoing: @escaping()->CGImage,
@@ -9084,6 +9099,7 @@ final class TelegramIconsTheme {
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
       self._stickers_add_featured = stickers_add_featured
+      self._stickers_add_featured_unread = stickers_add_featured_unread
       self._channel_info_promo = channel_info_promo
       self._channel_info_promo_bubble_incoming = channel_info_promo_bubble_incoming
       self._channel_info_promo_bubble_outgoing = channel_info_promo_bubble_outgoing
