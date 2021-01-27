@@ -429,6 +429,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         addSubview(activities.view!)
 
+        searchButton.isHidden = chatInteraction.mode == .preview
         
         searchButton.set(handler: { [weak self] _ in
             self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})

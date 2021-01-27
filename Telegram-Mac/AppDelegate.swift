@@ -261,7 +261,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchInterface() {
         initializeAccountManagement()
-        
+
+        let indexes = stringIndexTokens("new moon", transliteration: .none)
+
         
         let rootPath = containerUrl!
         let window = self.window!
