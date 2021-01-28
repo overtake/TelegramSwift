@@ -12,7 +12,7 @@
 		<key>Github.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>27</integer>
+			<integer>28</integer>
 		</dict>
 		<key>Hockeyapp.xcscheme_^#shared#^_</key>
 		<dict>
@@ -51,12 +51,12 @@
 			<key>isShown</key>
 			<true/>
 			<key>orderHint</key>
-			<integer>40</integer>
+			<integer>63</integer>
 		</dict>
 		<key>store.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>33</integer>
+			<integer>31</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
