@@ -12,7 +12,7 @@
 		<key>Github.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>28</integer>
+			<integer>24</integer>
 		</dict>
 		<key>Hockeyapp.xcscheme_^#shared#^_</key>
 		<dict>
@@ -44,19 +44,19 @@
 		<key>Telegram.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>34</integer>
+			<integer>30</integer>
 		</dict>
 		<key>TelegramShare.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>isShown</key>
 			<true/>
 			<key>orderHint</key>
-			<integer>63</integer>
+			<integer>59</integer>
 		</dict>
 		<key>store.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>31</integer>
+			<integer>27</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
