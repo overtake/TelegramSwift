@@ -358,76 +358,92 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         var offsetRanges:[NSRange] = []
         if let regex = markdownRegex {
 
+            var skipIndexes:Set<Int> = Set()
+            if !localAttributes.isEmpty {
+                var index: Int = 0
+                let matches = regex.matches(in: subText.string, range: NSMakeRange(0, subText.string.length))
+                for match in matches {
+                    for attr in localAttributes {
+                        let range = match.range
+                        let attrRange = NSMakeRange(attr.range.lowerBound, attr.range.upperBound - attr.range.lowerBound)
+                        if attrRange.intersection(range) != nil {
+                            skipIndexes.insert(index)
+                        }
+                    }
+                    index += 1
+                }
+            }
+
+
             var rawOffset:Int = 0
             var newText:[String] = []
-            loop: while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
+            var index: Int = 0
+            while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
                 
                
                 
                 let matchIndex = rawOffset + match.range.location
 
-                for attr in localAttributes {
-                    let range = NSMakeRange(matchIndex, match.range.length)
-                    let attrRange = NSMakeRange(attr.range.lowerBound, attr.range.upperBound - attr.range.lowerBound)
-                    if attrRange.intersection(range) != nil {
-                        newText.append(raw)
-                        
-                        newText.append(raw.nsstring.substring(with: range))
 
-                        
-                        raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
-                        
-                        continue loop
-                    }
-                }
-                
+
                 newText.append(raw.nsstring.substring(with: NSMakeRange(0, match.range.location)))
 
                 var pre = match.range(at: 3)
 
 
                 if pre.location != NSNotFound {
-                    let text = raw.nsstring.substring(with: pre).trimmed
+                    if !skipIndexes.contains(index) {
+                        let text = raw.nsstring.substring(with: pre)
 
-                    rawOffset -= match.range(at: 2).length + match.range(at: 4).length
-                    newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
-                    attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
-
+                        rawOffset -= match.range(at: 2).length + match.range(at: 4).length
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
+                        attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
+                    } else {
+                        let text = raw.nsstring.substring(with: pre)
+                        let entity = raw.nsstring.substring(with: match.range(at: 2))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 5)))
+                    }
                 }
 
                 pre = match.range(at: 8)
                 if pre.location != NSNotFound {
                     let text = raw.nsstring.substring(with: pre)
+                    if !skipIndexes.contains(index) {
+
+                        let left = match.range(at: 6)
+
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: left) + text + raw.nsstring.substring(with: match.range(at: 9)))
 
 
-                    let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        switch entity {
+                        case "`":
+                            attributes.append(.code(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "**":
+                            attributes.append(.bold(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "~~":
+                            attributes.append(.strikethrough(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "__":
+                            attributes.append(.italic(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        default:
+                            break
+                        }
 
-                    newText.append(raw.nsstring.substring(with: match.range(at: 6)) + text + raw.nsstring.substring(with: match.range(at: 9)))
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length, entity.length))
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length + text.length, entity.length))
 
-                    switch entity {
-                    case "`":
-                        attributes.append(.code(matchIndex + entity.length ..< matchIndex + entity.length + text.length))
-                    case "**":
-                        attributes.append(.bold(matchIndex + entity.length ..< matchIndex + entity.length + text.length))
-                    case "~~":
-                        attributes.append(.strikethrough(matchIndex + entity.length ..< matchIndex + entity.length + text.length))
-                    case "__":
-                        attributes.append(.italic(matchIndex + entity.length ..< matchIndex + entity.length + text.length))
-                    default:
-                        break
+                        rawOffset -= match.range(at: 7).length * 2
+                    } else {
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 6)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 9)))
                     }
-
-                    offsetRanges.append(NSMakeRange(matchIndex + entity.length, entity.length))
-                    offsetRanges.append(NSMakeRange(matchIndex + entity.length + text.length, entity.length))
-
-                    rawOffset -= match.range(at: 7).length * 2
                 }
-
                 raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
                 rawOffset += match.range.location + match.range(at: 0).length
 
+                index += 1
             }
 
             newText.append(raw)
