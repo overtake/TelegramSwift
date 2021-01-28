@@ -285,7 +285,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             
-            for (message, media, _) in self.currentMediaPreviewSpecs {
+            for (message, _, _) in self.currentMediaPreviewSpecs {
                 if let previewView = self.mediaPreviewViews[message.id] {
                     previewView.isHidden = inputActivities != nil && !inputActivities!.1.isEmpty
                 }
@@ -317,8 +317,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else if item.isFixedItem {
                     activity = theme.activity(key: 12 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
-                } else if contextMenu != nil {
-                    activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityContextMenuColor, backgroundColor: theme.chatList.contextMenuBackgroundColor)
                 } else {
                     activity = theme.activity(key: 14 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
                 }
