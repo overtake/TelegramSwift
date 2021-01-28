@@ -43,7 +43,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
         if let state = data.state {
-            if let muteState = state.muteState, !muteState.canUnmute || muteState.mutedByYou {
+            if let muteState = state.muteState, muteState.mutedByYou {
                 string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
                 color = GroupCallTheme.speakLockedColor
             } else if data.isSpeaking {
@@ -308,8 +308,14 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
         button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
 
-        
-        playbackAudioLevelView.setColor(item.data.state?.volume == 0 ? GroupCallTheme.grayStatusColor : (item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor))
+        let activityColor: NSColor
+        if  let muteState = item.data.state?.muteState, muteState.mutedByYou {
+            activityColor = GroupCallTheme.speakLockedColor
+        } else {
+            activityColor = item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor
+        }
+
+        playbackAudioLevelView.setColor(activityColor)
 
 
         titleView.update(item.titleLayout)
@@ -379,8 +385,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         if videoView != nil || item.volume != nil, let state = item.data.state {
             var statusImage: CGImage
             if videoView != nil {
-                if state.volume == 0 {
-                    statusImage = GroupCallTheme.status_video_gray
+                if let muteState = state.muteState, muteState.mutedByYou {
+                    statusImage = GroupCallTheme.status_video_red
                 } else {
                     if item.data.isSpeaking {
                         statusImage = GroupCallTheme.status_video_green
@@ -389,7 +395,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                     }
                 }
             } else {
-                if state.volume == 0 {
+                if let muteState = state.muteState, muteState.mutedByYou {
                     statusImage = GroupCallTheme.status_muted
                 } else {
                     if item.data.isSpeaking {

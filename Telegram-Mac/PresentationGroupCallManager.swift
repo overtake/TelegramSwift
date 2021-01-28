@@ -130,4 +130,6 @@ protocol PresentationGroupCall: class {
     func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?)
     func invitePeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
+
+    func loadMore()
 }
