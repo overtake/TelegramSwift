@@ -603,27 +603,23 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 if data.state != nil {
                     
                     if data.peer.id != account.peerId {
-                        if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
-                            
-                        } else {
-                            let volume: ContextMenuItem = .init("Volume", handler: {
-                               
-                            })
-                            
-                            let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 160, 26))
-                            volumeControl.stateImages = (on: NSImage(named: "Icon_VolumeMenu_On")!.precomposed(.white),
-                                                         off: NSImage(named: "Icon_VolumeMenu_Off")!.precomposed(.white))
-                            volumeControl.value = CGFloat((data.state?.volume ?? 10000)) / 10000.0
-                            volumeControl.lineColor = GroupCallTheme.memberSeparatorColor.lighter()
-                            volume.view = volumeControl
-                            
-                            volumeControl.didUpdateValue = { value, sync in
-                                arguments.setVolume(data.peer.id, Double(value), sync)
-                            }
-                            
-                            items.append(volume)
-                            items.append(ContextSeparatorItem())
+                        let volume: ContextMenuItem = .init("Volume", handler: {
+
+                        })
+
+                        let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 160, 26))
+                        volumeControl.stateImages = (on: NSImage(named: "Icon_VolumeMenu_On")!.precomposed(.white),
+                                                     off: NSImage(named: "Icon_VolumeMenu_Off")!.precomposed(.white))
+                        volumeControl.value = CGFloat((data.state?.volume ?? 10000)) / 10000.0
+                        volumeControl.lineColor = GroupCallTheme.memberSeparatorColor.lighter()
+                        volume.view = volumeControl
+
+                        volumeControl.didUpdateValue = { value, sync in
+                            arguments.setVolume(data.peer.id, Double(value), sync)
                         }
+
+                        items.append(volume)
+                        items.append(ContextSeparatorItem())
                     }
                     
                     if !tuple.canManageCall, data.peer.id != account.peerId {
@@ -893,7 +889,7 @@ final class GroupCallUIController : ViewController {
         genericView.peersTable.setScrollHandler { [weak self] position in
             switch position.direction {
             case .bottom:
-                break
+                self?.data.call.loadMore()
             default:
                 break
             }

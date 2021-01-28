@@ -3542,6 +3542,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                     if let timeout = cachedData.slowModeValidUntilTimestamp {
                                                         if timeout > context.timestamp {
                                                             value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                        } else {
+                                                            value = value.withUpdatedTimeout(nil)
                                                         }
                                                     }
                                                 return value
@@ -3598,6 +3600,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
                                                     if timeout > context.timestamp {
                                                         value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
                                                     }
                                                 }
                                                 return value
@@ -3811,7 +3815,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 var value = value ?? SlowMode()
                                                 value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    if timeout > context.timestamp {
+                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
+                                                    }
                                                 }
                                                 return value
                                             })
@@ -3884,7 +3892,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 var value = value ?? SlowMode()
                                                 value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    if timeout > context.timestamp {
+                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
+                                                    }
                                                 }
                                                 return value
                                             })
