@@ -691,7 +691,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 index += 1
             }
             recent = true
-
         }
 
         if recent == nil, i < state.memberDatas.count - 2, state.memberDatas[i + 1].isRecentActive {
