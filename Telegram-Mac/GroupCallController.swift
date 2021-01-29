@@ -674,30 +674,31 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         }
         let separatorTheme = GeneralRowItem.Theme(grayBackground: GroupCallTheme.membersColor.darker(), grayTextColor: GroupCallTheme.grayStatusColor)
         
-        
-        if recent == nil, data.isRecentActive && state.memberDatas.count > 50 {
-            if i < state.memberDatas.count - 2, i > 0 {
-                entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("recent_active"), equatable: nil, item: { initialSize, stableId in
-                    return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatBlockRecentActive, state: .none, height: 20, leftInset: 10, border: [], customTheme: separatorTheme)
-                }))
-                index += 1
+        if state.memberDatas.count > 50 {
+            if recent == nil, data.isRecentActive {
+                if i < state.memberDatas.count - 2, i > 0 {
+                    entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("recent_active"), equatable: nil, item: { initialSize, stableId in
+                        return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatBlockRecentActive, state: .none, height: 20, leftInset: 10, border: [], customTheme: separatorTheme)
+                    }))
+                    index += 1
+                }
+                recent = false
+            } else if !data.isRecentActive, recent == false {
+                if i < state.memberDatas.count - 2, i > 0 {
+                    entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("listening"), equatable: nil, item: { initialSize, stableId in
+                        return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatBlockListening, state: .none, height: 20, leftInset: 10, border: [], customTheme: separatorTheme)
+                    }))
+                    index += 1
+                }
+                recent = true
             }
-            recent = false
-        } else if !data.isRecentActive, recent == false && state.memberDatas.count > 50 {
-            if i < state.memberDatas.count - 2, i > 0 {
-                entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("listening"), equatable: nil, item: { initialSize, stableId in
-                    return SeparatorRowItem(initialSize, stableId, string: L10n.voiceChatBlockListening, state: .none, height: 20, leftInset: 10, border: [], customTheme: separatorTheme)
-                }))
-                index += 1
+            if recent == nil, i < state.memberDatas.count - 2, state.memberDatas[i + 1].isRecentActive {
+                drawLine = false
+            } else if recent == false, i < state.memberDatas.count - 2, !state.memberDatas[i + 1].isRecentActive {
+                drawLine = false
             }
-            recent = true
         }
-
-        if recent == nil, i < state.memberDatas.count - 2, state.memberDatas[i + 1].isRecentActive {
-            drawLine = false
-        } else if recent == false, i < state.memberDatas.count - 2, !state.memberDatas[i + 1].isRecentActive {
-            drawLine = false
-        }
+       
 
         struct Tuple : Equatable {
             let drawLine: Bool
