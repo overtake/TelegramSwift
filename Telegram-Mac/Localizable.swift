@@ -8405,6 +8405,10 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
+  /// listening
+  internal static var voiceChatBlockListening: String  { return L10n.tr("Localizable", "VoiceChat.Block.Listening") }
+  /// recent active
+  internal static var voiceChatBlockRecentActive: String  { return L10n.tr("Localizable", "VoiceChat.Block.RecentActive") }
   /// Voice chat ended.
   internal static var voiceChatChatEnded: String  { return L10n.tr("Localizable", "VoiceChat.Chat.Ended") }
   /// Voice chat ended. Start a new one?

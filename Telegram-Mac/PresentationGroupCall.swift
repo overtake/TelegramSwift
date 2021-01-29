@@ -647,6 +647,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     var result: [(PeerId, UInt32, Float, Bool)] = []
                     var myLevel: Float = 0.0
                     var myLevelHasVoice: Bool = false
+                    var missingSsrcs = Set<UInt32>()
                     for (ssrcKey, level, hasVoice) in levels {
                         var peerId: PeerId?
                         let ssrcValue: UInt32
@@ -666,6 +667,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 }
                             }
                             result.append((peerId, ssrcValue, level, hasVoice))
+                        } else if ssrcValue != 0 {
+                            missingSsrcs.insert(ssrcValue)
                         }
                     }
 
@@ -679,6 +682,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 
                     strongSelf.myAudioLevelPipe.putNext(mappedLevel)
                     strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice)
+
+                    if !missingSsrcs.isEmpty {
+                        strongSelf.participantsContext?.ensureHaveParticipants(ssrcs: missingSsrcs)
+                    }
+
                 }))
             }
         }
