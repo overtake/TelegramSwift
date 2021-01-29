@@ -880,7 +880,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 } else {
-                    self.badgeView?.change(pos: point, animated: animated)
+                    self.badgeView?.change(pos: point, animated: false)
                 }
                 
             } else {
