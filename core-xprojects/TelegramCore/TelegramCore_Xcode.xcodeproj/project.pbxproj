@@ -386,6 +386,7 @@
 		A71DC83E2387CE10000EEDE2 /* AuthTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthTransfer.swift; sourceTree = "<group>"; };
 		A754972723A3A8C80091F293 /* InactiveChannels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InactiveChannels.swift; sourceTree = "<group>"; };
 		A767DD4623F2FBCF00366F76 /* ChatListFiltering.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListFiltering.swift; sourceTree = "<group>"; };
+		A76D02EE25C4048500FCE1B5 /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919033240CF9C7002011CA /* Reachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Reachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919035240CF9CC002011CA /* CryptoUtils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CryptoUtils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919037240CF9D1002011CA /* NetworkLogging.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = NetworkLogging.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1216,6 +1217,7 @@
 		D06706631D512ADA00DED3E3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				A76D02EE25C4048500FCE1B5 /* LegacyReachability.framework */,
 				A7919037240CF9D1002011CA /* NetworkLogging.framework */,
 				A7919035240CF9CC002011CA /* CryptoUtils.framework */,
 				A7919033240CF9C7002011CA /* Reachability.framework */,
