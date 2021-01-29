@@ -1054,7 +1054,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             let leaveGroup = {
-                modernConfirm(for: mainWindow, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
+                modernConfirm(for: context.window, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
                     _ = leftGroup(account: context.account, peerId: peerId).start()
                 })
             }
