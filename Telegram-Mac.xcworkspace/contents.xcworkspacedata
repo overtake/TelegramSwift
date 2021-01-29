@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/Reachability/Reachability.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/HotKey/HotKey.xcodeproj">
    </FileRef>
    <FileRef
@@ -44,7 +47,7 @@
       location = "group:core-xprojects/TgVoipWebrtc/TgVoipWebrtc.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:core-xprojects/Reachability/Reachability.xcodeproj">
+      location = "group:core-xprojects/LegacyReachability/LegacyReachability.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:core-xprojects/NetworkLogging/NetworkLogging.xcodeproj">
