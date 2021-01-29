@@ -975,7 +975,11 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             }
         }))
         
-        exportedLinkDisposable.set(context.account.viewTracker.peerView(peerId).start())
+        if enableBetaFeatures {
+            exportedLinkDisposable.set(context.account.viewTracker.peerView(peerId).start())
+        } else {
+            exportedLinkDisposable.set(ensuredExistingPeerExportedInvitation(account: context.account, peerId: peerId).start())
+        }
     }
     
     private func updateState (_ f:@escaping (ChannelVisibilityControllerState) -> ChannelVisibilityControllerState) -> Void {
