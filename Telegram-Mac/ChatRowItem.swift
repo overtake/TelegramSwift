@@ -776,7 +776,9 @@ class ChatRowItem: TableRowItem {
     }
     
     let isScam: Bool
+    let isFake: Bool
     private(set) var isForwardScam: Bool
+    private(set) var isForwardFake: Bool
 
     var isFailed: Bool {
         for message in messages {
@@ -838,6 +840,9 @@ class ChatRowItem: TableRowItem {
                 if media is TelegramMediaMap {
                     return false
                 }
+            }
+            if message.isImported {
+                return true
             }
         }
         
@@ -1330,6 +1335,8 @@ class ChatRowItem: TableRowItem {
         
         var isForwardScam: Bool = false
         var isScam = false
+        var isForwardFake: Bool = false
+        var isFake = false
         if let message = message, let peer = messageMainPeer(message) {
             if peer.isGroup || peer.isSupergroup {
                 if let author = message.forwardInfo?.author {
@@ -1338,11 +1345,20 @@ class ChatRowItem: TableRowItem {
                 if let author = message.author, case .Full = itemType {
                     isScam = author.isScam
                 }
+                if let author = message.forwardInfo?.author {
+                    isForwardFake = author.isFake
+                }
+                if let author = message.author, case .Full = itemType {
+                    isFake = author.isFake
+                }
             }
         }
         self.isScam = isScam
         self.isForwardScam = isForwardScam
-                
+            
+        self.isFake = isFake
+        self.isForwardFake = isForwardFake
+        
         if let message = message {
             let isBubbled = renderType == .bubble
             let hasBubble = ChatRowItem.hasBubble(captionMessage ?? message, entry: entry, type: itemType, sharedContext: context.sharedContext)
@@ -1375,7 +1391,15 @@ class ChatRowItem: TableRowItem {
             self.itemType = itemType
             self.isRead = isRead
             
-            if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
+            if let info = message.forwardInfo, message.isImported {
+                if let author = info.author {
+                    self.peer = author
+                } else if let signature = info.authorSignature {
+                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                } else {
+                    self.peer = message.chatPeer(context.peerId)
+                }
+            } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
                     self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
@@ -1431,7 +1455,7 @@ class ChatRowItem: TableRowItem {
                 self.isRead = true
             }
             
-            if let info = message.forwardInfo {
+            if let info = message.forwardInfo, !message.isImported {
                 
                 
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
@@ -1509,11 +1533,7 @@ class ChatRowItem: TableRowItem {
                                 }
                             }
                             if linkAbility, let author = info.author {
-                                var openChat: Bool = author.isChannel
-                                if message.forwardInfo != nil {
-                                    openChat = !author.isUser
-                                }
-                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: openChat, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
+                                attr.add(link: inAppLink.peerInfo(link: "", peerId: author.id, action:nil, openChat: author.isChannel, postId: info.sourceMessageId?.id, callback:chatInteraction.openInfo), for: range)
                             } else if info.author == nil {
                                 attr.add(link: inAppLink.callback("hid", { _ in
                                     hiddenFwdTooltip?()
@@ -1551,9 +1571,9 @@ class ChatRowItem: TableRowItem {
                             text = localizedPsa("psa.title.bubbles", type: psaType, args: [attr.string])
                         } else {
                             var fullName = attr.string
-//                            if let signature = message.forwardInfo?.authorSignature {
-//                                fullName += " (\(signature))"
-//                            }
+                            if let signature = message.forwardInfo?.authorSignature, message.isAnonymousMessage {
+                                fullName += " (\(signature))"
+                            }
                             text = L10n.chatBubblesForwardedFrom(fullName)
                         }
                         
@@ -1719,7 +1739,7 @@ class ChatRowItem: TableRowItem {
             
             if let attribute = editedAttribute {
                 if isEditMarkVisible {
-                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: tr(L10n.chatMessageEdited), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: L10n.chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 }
                 
                 let formatterEdited = DateFormatter()
@@ -1727,6 +1747,16 @@ class ChatRowItem: TableRowItem {
                 formatterEdited.timeStyle = .medium
                 formatterEdited.timeZone = NSTimeZone.local
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
+            } else if message.isImported, let forwardInfo = message.forwardInfo  {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                formatter.timeStyle = .short
+                formatter.timeZone = NSTimeZone.local
+                formatter.doesRelativeDateFormatting = true
+                let text = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                
+                fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
             }
             
             for attribute in message.attributes {
@@ -1828,6 +1858,8 @@ class ChatRowItem: TableRowItem {
         self.hasBubble = false
         self.isScam = false
         self.isForwardScam = false
+        self.isFake = false
+        self.isForwardFake = false
         super.init(initialSize)
     }
     
@@ -2167,27 +2199,41 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
+
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
+    var additionBad: CGFloat {
+        return (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    }
+    var additionForwardBad: CGFloat {
+        return (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isForwardFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    }
+    
+    var badIcon: CGImage {
+        return isScam ? theme.icons.chatScam : theme.icons.chatFake
+    }
+    var forwardBadIcon: CGImage {
+        return isForwardScam ? theme.icons.chatScam : theme.icons.chatFake
+    }
+    
     var bubbleFrame: NSRect {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
-        //hasBubble ? ((authorText?.layoutSize.width ?? 0) + (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (adminBadge?.layoutSize.width ?? 0)) : 0
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
@@ -2414,7 +2460,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             _ = sendScheduledMessageNowInteractively(postbox: account.postbox, messageId: message.id).start()
         }))
         items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
-            showModal(with: ScheduledMessageModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), peerId: peer.id, scheduleAt: { date in
+            showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
                 _ = showModalProgress(signal: requestEditMessage(account: account, messageId: message.id, text: message.text, media: .keep, entities: message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start(next: { result in
                     
                 }, error: { error in

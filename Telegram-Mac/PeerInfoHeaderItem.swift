@@ -51,6 +51,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     let peer:Peer?
     let isVerified: Bool
     let isScam: Bool
+    let isFake: Bool
     let peerView:PeerView
     let result:PeerStatusStringResult
     let editable:Bool
@@ -72,6 +73,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
         
         self.isVerified = peer?.isVerified ?? false
         self.isScam = peer?.isScam ?? false
+        self.isFake = peer?.isFake ?? false
         if let peer = peer {
             photo = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }

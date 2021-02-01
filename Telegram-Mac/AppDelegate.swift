@@ -19,6 +19,8 @@ import AppCenterCrashes
 #endif
 
 
+let enableBetaFeatures = false
+
 private(set) var appDelegate: AppDelegate?
 
 #if !SHARE
@@ -211,17 +213,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #endif
         
         
-        
-      //  Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
-        
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
-        
-        
-//        let test = View()
-//        test.backgroundColor = NSColor.black.withAlphaComponent(0.87)
-//        test.frame = NSMakeRect(0, 0, leftSidebarWidth, Window.statusBarHeight)
-//        window.titleView?.addSubview(test, positioned: .below, relativeTo: window.titleView?.subviews.first)
-        
+
         telegramUIDeclareEncodables()
         
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
@@ -259,7 +252,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchInterface() {
         initializeAccountManagement()
-        
         
         let rootPath = containerUrl!
         let window = self.window!

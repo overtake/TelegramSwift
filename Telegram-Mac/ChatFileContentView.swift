@@ -195,8 +195,12 @@ class ChatFileContentView: ChatMediaContentView {
     override func update(with media: Media, size:NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         let file:TelegramMediaFile = media as! TelegramMediaFile
-        let semanticMedia = self.parent?.stableId == parent?.stableId
+        var semanticMedia = self.parent?.stableId == parent?.stableId
         
+        
+        if parent == nil {
+            semanticMedia = file.id == self.media?.id
+        }
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
@@ -252,10 +256,8 @@ class ChatFileContentView: ChatMediaContentView {
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-            thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { [weak file] result in
-                if let media = file {
-                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
-                }
+            thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
+                cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
             })
             
             

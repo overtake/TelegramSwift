@@ -353,7 +353,7 @@ class ChatListController : PeersListController {
         var scroll:TableScrollState? = nil
 
         let initialState = ChatListState(activities: ChatListPeerInputActivities(activities: [:]))
-        let statePromise:ValuePromise<ChatListState> = ValuePromise(initialState)
+        let statePromise:ValuePromise<ChatListState> = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue: Atomic<ChatListState> = Atomic(value: initialState)
         
         let updateState:((ChatListState)->ChatListState)->Void = { f in
@@ -527,8 +527,10 @@ class ChatListController : PeersListController {
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.sharedContext.layout)
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager), foldersTopBarUpdate) |> mapToQueue { value, appearance, state, undoStatuses, hiddenItems, inAppSettings, filtersCounter, filterData -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
+            let filterData = value.3
+            
             let removeNextAnimation = value.2
             
             let previous = first.swap((value.0.earlierIndex, value.0.laterIndex))

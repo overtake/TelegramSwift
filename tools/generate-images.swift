@@ -401,6 +401,9 @@ func initialize() -> [String] {
     array.append("scam")
     array.append("scamActive")
     array.append("chatScam")
+    array.append("fake")
+    array.append("fakeActive")
+    array.append("chatFake")
     array.append("chatUnarchive")
     array.append("chatArchive")
     array.append("privacySettings_blocked")
@@ -534,7 +537,8 @@ func initialize() -> [String] {
     
     
     array.append("stickers_add_featured")
-    
+    array.append("stickers_add_featured_unread")
+
     array.append("channel_info_promo")
     array.append("channel_info_promo_bubble_incoming")
     array.append("channel_info_promo_bubble_outgoing")
@@ -620,9 +624,12 @@ func initialize() -> [String] {
     array.append("chat_voice_chat")
     array.append("chat_voice_chat_active")
     
-    
-    array.append("copy_to_clipboard")
+    array.append("editor_draw")
+    array.append("editor_delete")
+    array.append("editor_crop")
 
+    array.append("fast_copy_link")
+    
     return array
 }
 //swift ./tools/generate-images.swift

@@ -498,7 +498,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
         var voiceChat: ChatActiveGroupCallInfo?
         if interfaceState.groupCall?.data?.groupCall == nil {
-            if let data = interfaceState.groupCall?.data, data.participantCount == 0 || (data.topParticipants.count == 1 && data.topParticipants.contains(where: { $0.peer.id == chatInteraction.context.peerId })) {
+            if let data = interfaceState.groupCall?.data, data.participantCount == 0 {
                 voiceChat = nil
             } else {
                 voiceChat = interfaceState.groupCall
@@ -1954,7 +1954,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             apply(strongSelf, atDate: atDate)
                         } else if presentation.state != .editing, let peer = chatInteraction.peer {
                             DispatchQueue.main.async {
-                                showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                                showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                                     if let strongSelf = strongSelf {
                                         apply(strongSelf, atDate: date)
                                     }
@@ -2369,7 +2369,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     apply(strongSelf, atDate: nil)
                 case .scheduled:
                     if let peer = strongSelf.chatInteraction.peer {
-                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: Int32(date.timeIntervalSince1970))
                             }
@@ -2748,7 +2748,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: strongSelf.context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: DateSelectorModalController(context: strongSelf.context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
                             let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction, atDate: date) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             strongSelf.nextTransaction.set(handler: {})
@@ -2851,7 +2851,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 switch strongSelf.mode {
                 case .scheduled:
-                    showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                    showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let controller = strongSelf {
                             apply(controller, atDate: date)
                         }
@@ -2880,7 +2880,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let atDate = atDate {
                         apply(strongSelf, atDate: atDate)
                     } else {
-                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }
@@ -2925,7 +2925,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 switch strongSelf.mode {
                 case .scheduled:
                     DispatchQueue.main.async {
-                        showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak strongSelf] date in
+                        showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                             if let strongSelf = strongSelf {
                                 apply(strongSelf, atDate: date)
                             }
@@ -3542,6 +3542,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                     if let timeout = cachedData.slowModeValidUntilTimestamp {
                                                         if timeout > context.timestamp {
                                                             value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                        } else {
+                                                            value = value.withUpdatedTimeout(nil)
                                                         }
                                                     }
                                                 return value
@@ -3598,6 +3600,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
                                                     if timeout > context.timestamp {
                                                         value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
                                                     }
                                                 }
                                                 return value
@@ -3811,7 +3815,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 var value = value ?? SlowMode()
                                                 value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    if timeout > context.timestamp {
+                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
+                                                    }
                                                 }
                                                 return value
                                             })
@@ -3884,7 +3892,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 var value = value ?? SlowMode()
                                                 value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
                                                 if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    if timeout > context.timestamp {
+                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                    } else {
+                                                        value = value.withUpdatedTimeout(nil)
+                                                    }
                                                 }
                                                 return value
                                             })
@@ -5508,8 +5520,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                     }
                     
+                    var disableEditingPreview:((String)->Void)? = nil
+                    if oldValue.interfaceState.editState == nil, value.interfaceState.editState != nil {
+                        disableEditingPreview = { [weak self] value in
+                            self?.chatInteraction.update({ $0.updatedInterfaceState{
+                                $0.withUpdatedComposeDisableUrlPreview(value)
+                            }})
+                        }
+                    }
                     
-                    let updateUrl = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, context: context, currentQuery: self.urlPreviewQueryState?.0) |> delay(value.effectiveInput.inputText.isEmpty ? 0.0 : 0.1, queue: .mainQueue()) |> deliverOnMainQueue
+                    let updateUrl = urlPreviewStateForChatInterfacePresentationState(chatInteraction.presentation, context: context, currentQuery: self.urlPreviewQueryState?.0, disableEditingPreview: disableEditingPreview) |> delay(value.effectiveInput.inputText.isEmpty ? 0.0 : 0.1, queue: .mainQueue()) |> deliverOnMainQueue
                     
                     updateUrlDisposable.set(updateUrl.start(next: { [weak self] result in
                         if let `self` = self, let (updatedUrlPreviewUrl, updatedUrlPreviewSignal) = result {

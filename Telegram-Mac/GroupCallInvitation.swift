@@ -220,9 +220,9 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                             linkInvation?()
                         } else {
                             if let window = window {
-                                _ = showModalProgress(signal: ensuredExistingPeerExportedInvitation(account: account, peerId: peerId), for: window).start(next: { link in
-                                    if let link = link {
-                                        copyToClipboard(link)
+                                _ = showModalProgress(signal: permanentExportedInvitation(account: account, peerId: peerId), for: window).start(next: { link in
+                                    if let link = link  {
+                                        copyToClipboard(link.link)
                                         linkInvation?()
                                     }
                                 })

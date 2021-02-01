@@ -160,9 +160,10 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         
                         if item.peer.isVerified && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY - 3, 24, 24))
-                        }
-                        if item.peer.isScam && item.highlightVerified {
+                        } else if item.peer.isScam && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        } else if item.peer.isFake && item.highlightVerified {
+                            ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
                         }
                     }
                 case .modern:

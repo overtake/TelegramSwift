@@ -24,14 +24,16 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let parameters: ChatMediaLayoutParameters?
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let edit:()->Void
+    fileprivate let paint:()->Void
     fileprivate let delete: (()->Void)?
-    fileprivate let hasEditedData: Bool
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, hasEditedData: Bool = false, edit:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    fileprivate let editedData: EditedImageData?
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
+        self.paint = paint
         self.delete = delete
         self.media = media
         self.context = context
-        self.hasEditedData = hasEditedData
+        self.editedData = editedData
         self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context)
         if let media = media as? TelegramMediaFile {
             parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
@@ -162,6 +164,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         contentNode?.shake()
     }
     
+    
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
         guard let item = item as? MediaPreviewRowItem else { return }
@@ -181,9 +184,11 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         editControl.canDelete = item.delete != nil
         editControl.set(edit: { [weak item] in
             item?.edit()
+        }, paint: { [weak item] in
+            item?.paint()
         }, delete: { [weak item] in
             item?.delete?()
-        }, hasEditedData: item.hasEditedData)
+        }, editedData: item.editedData)
         
         self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent: nil, table: item.table, parameters: item.parameters, animated: animated)
         

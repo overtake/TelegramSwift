@@ -285,7 +285,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
             
-            for (message, media, _) in self.currentMediaPreviewSpecs {
+            for (message, _, _) in self.currentMediaPreviewSpecs {
                 if let previewView = self.mediaPreviewViews[message.id] {
                     previewView.isHidden = inputActivities != nil && !inputActivities!.1.isEmpty
                 }
@@ -310,17 +310,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 let activity:ActivitiesTheme
                 if item.isSelected && item.context.sharedContext.layout != .single {
-                    activity = theme.activity(key: 10 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
+                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
                 } else if item.isSelected {
-                    activity = theme.activity(key: 11 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
+                    activity = theme.activity(key: 11, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
                 } else if self.containerView.activeDragging || item.isHighlighted {
-                    activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
+                    activity = theme.activity(key: 13, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else if item.isFixedItem {
-                    activity = theme.activity(key: 12 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
-                } else if contextMenu != nil {
-                    activity = theme.activity(key: 13 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityContextMenuColor, backgroundColor: theme.chatList.contextMenuBackgroundColor)
+                    activity = theme.activity(key: 12, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
                 } else {
-                    activity = theme.activity(key: 14 + (theme.dark ? 10 : 20), foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
+                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
                     activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
@@ -472,9 +470,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         mutedInset += 15 + 3
                     }
                     
-                    if item.isScam {
-                        ctx.draw(highlighted ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        mutedInset += theme.icons.scam.backingSize.width + 3
+                    if item.isScam || item.isFake {
+                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        mutedInset += item.badIcon.backingSize.width + 3
                     }
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
@@ -882,7 +880,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 } else {
-                    self.badgeView?.change(pos: point, animated: animated)
+                    self.badgeView?.change(pos: point, animated: false)
                 }
                 
             } else {

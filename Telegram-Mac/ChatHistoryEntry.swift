@@ -599,7 +599,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         
-        if message.forwardInfo != nil {
+        if message.forwardInfo != nil, !message.isImported {
             if case .Short = itemType {
                 if let prev = prev {
                     if prev.message.forwardInfo != nil, message.timestamp - prev.message.timestamp < simpleDif  {

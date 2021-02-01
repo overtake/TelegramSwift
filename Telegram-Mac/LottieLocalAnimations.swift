@@ -36,6 +36,7 @@ enum LocalAnimatedSticker {
     case dart_idle
     case discussion
     case group_call_chatlist_typing
+    case invitations
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -87,7 +88,8 @@ enum LocalAnimatedSticker {
             resource = LocalBundleResource(name: "discussion", ext: "tgs")
         case .group_call_chatlist_typing:
             resource = LocalBundleResource(name: "group_call_chatlist_typing", ext: "json")
-            
+        case .invitations:
+            resource = LocalBundleResource(name: "invitations", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -117,7 +119,7 @@ enum LocalAnimatedSticker {
         case .write_words:
             playPolicy = .once
         case .chiken_born:
-            playPolicy = .onceEnd
+            playPolicy = .loop
         case .sad:
             playPolicy = .once
         case .success:
@@ -135,13 +137,10 @@ enum LocalAnimatedSticker {
             playPolicy = .once
         case .folder:
             playPolicy = .once
-            hidePlayer = false
         case .new_folder:
             playPolicy = .loop
-            hidePlayer = false
         case .folder_empty:
-            playPolicy = .once
-            hidePlayer = false
+            playPolicy = .loop
         case .graph_loading:
             playPolicy = .loop
             hidePlayer = false
@@ -153,7 +152,10 @@ enum LocalAnimatedSticker {
         case .group_call_chatlist_typing:
             playPolicy = .loop
             hidePlayer = false
+        case .invitations:
+            playPolicy = .loop
+            hidePlayer = false
         }
-        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: alwaysAccept, cache: .temporaryLZ4(.thumb), hidePlayer: hidePlayer, media: self.file)
+        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: true, cache: .temporaryLZ4(.thumb), hidePlayer: hidePlayer, media: self.file)
     }
 }
