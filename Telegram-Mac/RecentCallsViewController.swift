@@ -15,9 +15,9 @@ import SwiftSignalKit
 
 private final class RecentCallsArguments {
     let call:(PeerId)->Void
-    let removeCalls:([MessageId]) -> Void
+    let removeCalls:([MessageId], Peer) -> Void
     let context:AccountContext
-    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId]) ->Void ) {
+    init(context: AccountContext, call:@escaping(PeerId)->Void, removeCalls:@escaping([MessageId], Peer) ->Void ) {
         self.context = context
         self.removeCalls = removeCalls
         self.call = call
@@ -94,17 +94,17 @@ private enum RecentCallEntry : TableItemListNodeEntry {
     func item(_ arguments: RecentCallsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .calls(message, messages, editing, failed):
-            
+            let peer = messageMainPeer(message)!
+
             let interactionType:ShortPeerItemInteractionType
             if editing {
                 interactionType = .deletable(onRemove: { peerId in
-                    arguments.removeCalls(messages.map{$0.id})
+                    arguments.removeCalls(messages.map{ $0.id }, peer)
                 }, deletable: true)
             } else {
                 interactionType = .plain
             }
             
-            let peer = messageMainPeer(message)!
             
             let titleStyle = ControlStyle(font: .medium(.title), foregroundColor: failed ? theme.colors.redUI : theme.colors.text)
             
@@ -145,6 +145,10 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 if !editing {
                     arguments.call(peer.id)
                 }
+            }, contextMenuItems: {
+                return .single([ContextMenuItem(L10n.recentCallsDelete, handler: {
+                    arguments.removeCalls(messages.map{ $0.id }, peer)
+                })])
             })
         case .empty(let loading):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(L10n.recentCallsEmpty), border: [.Right])
@@ -337,16 +341,23 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
             self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
                 applyUIPCallResult(context.sharedContext, result)
             }))
-            }, removeCalls: { [weak self] messageIds in
-                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forLocalPeer).start()
+        }, removeCalls: { [weak self] messageIds, peer in
+            modernConfirm(for: context.window, account: context.account, peerId: nil, header: L10n.recentCallsDeleteHeader, information: L10n.recentCallsDeleteCalls, okTitle: L10n.recentCallsDelete, cancelTitle: L10n.modalCancel, thridTitle: L10n.recentCallsDeleteForMeAnd(peer.compactDisplayTitle), thridAutoOn: true, successHandler: { [weak self] result in
+                
+                let type: InteractiveMessagesDeletionType
+                switch result {
+                case .thrid:
+                    type = .forEveryone
+                default:
+                    type = .forLocalPeer
+                }
+                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: type).start()
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
-                if let strongSelf = self {
-                    strongSelf.againDisposable.set((Signal<()->Void, NoError>.single({ [weak strongSelf] in
-                        strongSelf?.viewWillAppear(false)
-                    }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
-                }
-                self?.viewWillAppear(false)
+                self?.againDisposable.set((Signal<()->Void, NoError>.single({ [weak self] in
+                    self?.viewWillAppear(false)
+                }) |> delay(1.5, queue: Queue.mainQueue())).start(next: {value in value()}))
+            })
         })
         
         

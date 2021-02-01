@@ -188,6 +188,7 @@ final class SoftwareVideoLayerFrameManager {
                                 strongSelf.rotationAngle = rotationAngle
                                 strongSelf.aspect = aspect
                             }
+                            var noFrame = false
                             if let frame = frameAndLoop?.0 {
                                 if strongSelf.minPts == nil || CMTimeCompare(strongSelf.minPts!, frame.position) < 0 {
                                     var position = CMTimeAdd(frame.position, frame.duration)
@@ -208,6 +209,7 @@ final class SoftwareVideoLayerFrameManager {
                                 //let positions = strongSelf.frames.map { CMTimeGetSeconds($0.position) }
                                 //print("frames: \(positions)")
                             } else {
+                                noFrame = true
                                 //print("not adding frames")
                             }
                             if hadLoop {
@@ -215,7 +217,7 @@ final class SoftwareVideoLayerFrameManager {
                                 strongSelf.minPts = nil
                                 //print("loop at \(strongSelf.minPts)")
                             }
-                            if strongSelf.source.with ({ $0 == nil }) {
+                            if strongSelf.source.with ({ $0 == nil }) || noFrame {
                                 delay(0.2, onQueue: applyQueue.queue, closure: { [weak strongSelf] in
                                     strongSelf?.poll()
                                 })

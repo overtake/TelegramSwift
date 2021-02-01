@@ -394,7 +394,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case setLastName(sectionId:Int, text: String, viewType: GeneralViewType)
     case about(sectionId:Int, text: String, viewType: GeneralViewType)
     case bio(sectionId:Int, text: String, viewType: GeneralViewType)
-    case scam(sectionId:Int, text: String, viewType: GeneralViewType)
+    case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case userName(sectionId:Int, value: String, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
@@ -424,7 +424,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setLastName(sectionId, text, _): return .setLastName(sectionId: sectionId, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .bio(sectionId, text, _): return .bio(sectionId: sectionId, text: text, viewType: viewType)
-        case let .scam(sectionId, text, _): return .scam(sectionId: sectionId, text: text, viewType: viewType)
+        case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value: String, _): return .userName(sectionId: sectionId, value: String, viewType: viewType)
         case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
@@ -536,9 +536,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .scam(sectionId, text, viewType):
+        case let .scam(sectionId, title, text, viewType):
             switch entry {
-            case .scam(sectionId, text, viewType):
+            case .scam(sectionId, title, text, viewType):
                 return true
             default:
                 return false
@@ -773,7 +773,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .sendMessage(sectionId, _):
             return (sectionId * 1000) + stableIndex
@@ -864,9 +864,12 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .phoneNumber(_, _, value, canCopy, viewType):
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: L10n.textCopyLabelPhoneNumber, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
         case let .userName(_, value, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, copyMenuText: L10n.textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType)
-        case let .scam(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+            let link = "https://t.me/\(value)"
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, copyMenuText: L10n.textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
+                arguments.copy(link)
+            })
+        case let .scam(_, title, text, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .sendMessage(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.peerChat(arguments.peerId)
@@ -921,9 +924,7 @@ enum UserInfoEntry: PeerInfoEntry {
             let settings = settings as? TelegramPeerNotificationSettings
             let enabled = !(settings?.isMuted ?? false)
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.toggleNotifications()
-            }, enabled: settings != nil)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {}, enabled: settings != nil)
         case let .encryptionKey(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()
@@ -997,10 +998,13 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             
             if state.editingState == nil {
                 if user.isScam {
-                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, text: L10n.peerInfoScamWarning, viewType: .singleItem))
+                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: L10n.peerInfoScam, text: L10n.peerInfoScamWarning, viewType: .singleItem))
+                } else if user.isFake {
+                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: L10n.peerInfoFake, text: L10n.peerInfoFakeWarning, viewType: .singleItem))
                 }
+                
                 if let cachedUserData = view.cachedData as? CachedUserData {
-                    if let about = cachedUserData.about, !about.isEmpty, !user.isScam {
+                    if let about = cachedUserData.about, !about.isEmpty, !user.isScam && !user.isFake {
                         if peer.isBot {
                             infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
                         } else {

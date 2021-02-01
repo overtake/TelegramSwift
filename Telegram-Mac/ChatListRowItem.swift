@@ -257,6 +257,7 @@ class ChatListRowItem: TableRowItem {
     
     let isVerified: Bool
     let isScam: Bool
+    let isFake: Bool
 
     
     var isOutMessage:Bool {
@@ -369,6 +370,7 @@ class ChatListRowItem: TableRowItem {
         self.groupLatestPeers = peers
         self.isVerified = false
         self.isScam = false
+        self.isFake = false
         self.filter = filter
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
@@ -527,9 +529,11 @@ class ChatListRowItem: TableRowItem {
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isScam = peer.isScam
+            self.isFake = peer.isFake
         } else {
             self.isVerified = false
             self.isScam = false
+            self.isFake = false
         }
         
        
@@ -569,7 +573,18 @@ class ChatListRowItem: TableRowItem {
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
             
             
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
+            var author: Peer?
+            if message.isImported, let info = message.forwardInfo {
+                if let peer = info.author {
+                    author = peer
+                } else if let signature = info.authorSignature {
+                    author = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                }
+            } else {
+                author = message.author
+            }
+            
+            if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
                 let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
                 
                 let attr = NSMutableAttributedString()
@@ -752,13 +767,31 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    var badIcon: CGImage {
+        return isScam ? theme.icons.scam : theme.icons.fake
+    }
+    var badHighlightIcon: CGImage {
+        return isScam ? theme.icons.scamActive : theme.icons.fakeActive
+    }
     var titleWidth:CGFloat {
         var dateSize:CGFloat = 0
         if let dateLayout = dateLayout {
             dateSize = dateLayout.0.size.width
         }
-        
-        return max(300, size.width) - 50 - margin * 4 - dateSize - (isMuted ? theme.icons.dialogMuteImage.backingSize.width + 4 : 0) - (isOutMessage ? isRead ? 14 : 8 : 0) - (isVerified ? 20 : 0) - (isSecret ? 10 : 0) - (isScam ? theme.icons.scam.backingSize.width : 0)
+        var offset: CGFloat = 0
+        if isScam || isFake {
+            offset += badIcon.backingSize.width + 4
+        }
+        if isMuted {
+            offset += theme.icons.dialogMuteImage.backingSize.width + 4
+        }
+        if isVerified {
+            offset += 20
+        }
+        if isSecret {
+            offset += 10
+        }
+        return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
@@ -1021,7 +1054,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             let leaveGroup = {
-                modernConfirm(for: mainWindow, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
+                modernConfirm(for: context.window, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
                     _ = leftGroup(account: context.account, peerId: peerId).start()
                 })
             }

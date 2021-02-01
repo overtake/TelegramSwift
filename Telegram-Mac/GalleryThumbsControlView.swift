@@ -29,14 +29,14 @@ private class GalleryThumb {
     var selected: Bool = false
     var isEnabled: Bool = true
     private let callback:(MGalleryItem)->Void
-    private let item: MGalleryItem
+    let item: MGalleryItem
     
     var frame: NSRect = .zero
     
     init(_ item: MGalleryItem, callback:@escaping(MGalleryItem)->Void) {
         self.callback = callback
         self.item = item
-        
+
         if let item = item as? MGalleryPhotoItem {
             item.fetch()
         } else if let item = item as? MGalleryPeerPhotoItem {
@@ -100,8 +100,18 @@ class GalleryThumbContainer : Control {
         super.init(frame: NSZeroRect)
         backgroundColor = .clear
         if let signal = item.signal, let size = item.size {
-            imageView.setSignal(signal)
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(80, 80)), boundingSize: NSMakeSize(80, 80), intrinsicInsets: NSEdgeInsets())
+            let media = item.item.entry.message?.media.first
+
+            if let media = media {
+                imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: true)
+            }
+
+            imageView.setSignal(signal, cacheImage: { result in
+                if let media = media {
+                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                }
+            })
             imageView.set(arguments: arguments)
         }
         overlay.layer?.opacity = 0.35
@@ -138,7 +148,7 @@ class GalleryThumbsControlView: View {
 
     private let scrollView: HorizontalScrollView = HorizontalScrollView()
     private let documentView: View = View()
-    private var selectedView: View?
+    private var selectedView: GalleryThumbContainer?
     
     private var items: [GalleryThumb] = []
     
@@ -242,6 +252,10 @@ class GalleryThumbsControlView: View {
     
     var documentSize: NSSize {
         return NSMakeSize(min(documentView.frame.width, frame.width), documentView.frame.height)
+    }
+
+    func updateHighlight() {
+
     }
     
     func layoutItems(selectedIndex: Int? = nil, animated: Bool) {

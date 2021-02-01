@@ -59,6 +59,8 @@ class ChatStickerContentView: ChatMediaContentView {
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
       
+        let previous = self.parent
+        
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
         if let file = media as? TelegramMediaFile {
@@ -71,7 +73,8 @@ class ChatStickerContentView: ChatMediaContentView {
             
             self.image.animatesAlphaOnFirstTransition = false
            
-            self.image.setSignal(signal: cachedMedia(media: reference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+            
+            self.image.setSignal(signal: cachedMedia(media: reference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: parent?.stableId != previous?.stableId)
             
             let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.image.image == nil
             

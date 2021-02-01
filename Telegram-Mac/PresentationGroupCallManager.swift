@@ -103,7 +103,7 @@ public struct PresentationGroupCallState: Equatable {
     public var adminIds: Set<PeerId>
     public var muteState: GroupCallParticipantsContext.Participant.MuteState?
     public var defaultParticipantMuteState: DefaultParticipantMuteState?
-
+    
     public init(
         networkState: NetworkState,
         canManageCall: Bool,
@@ -163,9 +163,9 @@ protocol PresentationGroupCall: class {
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
     
     func toggleIsMuted()
-    func setVolume(peerId: PeerId, volume: Double)
+    func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)
-    func updateMuteState(peerId: PeerId, isMuted: Bool)
+    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?)
     func invitePeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
@@ -175,5 +175,6 @@ protocol PresentationGroupCall: class {
     
     func requestVideo(deviceId: String)
     func disableVideo()
-    func setVolume(peerId: PeerId, volume: Int32, sync: Bool, muteState: GroupCallParticipantsContext.Participant.MuteState?)
+    func loadMore()
+
 }

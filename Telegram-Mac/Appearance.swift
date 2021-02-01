@@ -494,11 +494,10 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
-private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
+    let textNode = TextNode.layoutText(.initialize(string: text, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
-    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
-    
-    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), contextGenerator: { size, ctx in
+    let draw: (CGSize, CGContext) -> Void = { size, ctx in
         ctx.interpolationQuality = .high
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         
@@ -511,28 +510,23 @@ private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor
         
         let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
         textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
-        
-    })!
+    }
+    if !isReversed {
+        return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), contextGenerator: draw)!
+    } else {
+        return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), rotatedContext: draw)!
+    }
 }
 
 private func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
-    
-    let textNode = TextNode.layoutText(NSAttributedString.initialize(string: L10n.markScam, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
-    return generateImage(NSMakeSize(textNode.0.size.width + 8, 16), rotatedContext: { size, ctx in
-        ctx.interpolationQuality = .high
-        ctx.clear(CGRect(origin: CGPoint(), size: size))
-        
-        let borderPath = NSBezierPath(roundedRect: NSMakeRect(1, 1, size.width - 2, size.height - 2), xRadius: 2, yRadius: 2)
-        
-        ctx.setStrokeColor(foregroundColor.cgColor)
-        ctx.addPath(borderPath.cgPath)
-        ctx.closePath()
-        ctx.strokePath()
-        
-        let textRect = NSMakeRect((size.width - textNode.0.size.width) / 2, (size.height - textNode.0.size.height) / 2 + 1, textNode.0.size.width, textNode.0.size.height)
-        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: backgroundColor)
-        
-    })!
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, isReversed: true)
+}
+
+private func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: isReversed)
+}
+private func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: true)
 }
 
 private func generateVideoMessageChatCap(backgroundColor: NSColor) -> CGImage {
@@ -573,6 +567,20 @@ private func generateEditMessageMediaIcon(_ icon: CGImage, background: NSColor) 
         
     })!
 }
+
+private func generateUnreadFeaturedStickers(_ icon: CGImage, _ color: NSColor) -> CGImage {
+    return generateImage(NSMakeSize(icon.systemSize.width, icon.systemSize.height), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        ctx.draw(icon, in: imageRect)
+
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(size.width - 11, size.height - 12, 6, 6))
+
+    }, scale: System.backingScale)!
+}
+
 
 private func generatePlayerListAlbumPlaceholder(_ icon: CGImage?, background: NSColor, radius: CGFloat) -> CGImage {
     return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
@@ -634,6 +642,8 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
         ctx.fillPath()
     })!
 }
+
+
 
 private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(40, 46), contextGenerator: { size, ctx in
@@ -2191,6 +2201,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                scam: { generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                scamActive: { generateScamIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
                                                chatScam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               fake: { generateFakeIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               fakeActive: { generateFakeIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
+                                               chatFake: { generateFakeIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                chatUnarchive: { NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.accentIcon) },
                                                chatArchive: { NSImage(named: "Icon_ChatArchive")!.precomposed(palette.accentIcon) },
                                                privacySettings_blocked: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_Blocked")!.precomposed(flipVertical: true)) },
@@ -2305,6 +2318,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
                                                stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon) },
+                                               stickers_add_featured_unread: { generateUnreadFeaturedStickers(NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon), palette.redUI) },
                                                channel_info_promo: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayIcon) },
                                                channel_info_promo_bubble_incoming: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_incoming) },
                                                channel_info_promo_bubble_outgoing: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_outgoing) },
@@ -2360,9 +2374,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_voicechat_cant_unmute: { NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(palette.redUI) },
                                                chat_voicechat_unmuted: { NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(.white) },
                                                profile_voice_chat: { generateProfileIcon(NSImage(named: "Icon_Profile_VoiceChat")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
-                                               chat_voice_chat: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.background) },
-                                               chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_ChatVoiceChat")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
-                                               copy_to_clipboard: { NSImage(named: "Icon_CopyLink")!.precomposed(palette.accent) }
+                                               chat_voice_chat: { generateChatAction(NSImage(named: "Icon_VoiceChat_Title")!.precomposed(palette.accentIcon), background: palette.background) },
+                                               chat_voice_chat_active: { generateChatAction(NSImage(named: "Icon_VoiceChat_Title")!.precomposed(palette.accentIcon), background: palette.grayIcon.withAlphaComponent(0.1)) },
+                                               editor_draw: { NSImage(named: "Icon_Editor_Paint")!.precomposed(.white) },
+                                               editor_delete: { NSImage(named: "Icon_Editor_Delete")!.precomposed(.white) },
+                                               editor_crop: { NSImage(named: "Icon_Editor_Crop")!.precomposed(.white) },
+                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent)}
 
     )
 

@@ -119,6 +119,8 @@ class GalleryThumbsControl: ViewController {
                 break
             }
         }
+
+        genericView.updateHighlight()
         
         if self.items.count <= 1 {
             genericView.change(opacity: 0, animated: animated, completion: { [weak self] completed in

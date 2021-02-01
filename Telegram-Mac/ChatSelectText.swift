@@ -457,7 +457,7 @@ class ChatSelectText : NSObject {
         if  let view = table.item(at: beginRow).view as? ChatRowView, let item = view.item as? ChatRowItem, selectingText, table._mouseInside() {
             let rowPoint = view.convert(beginInnerLocation, from: table.documentView)
             if (!NSPointInRect(rowPoint, view.bubbleFrame(item)) && theme.bubbled) {
-                if startIndex != endIndex {
+                if startIndex != endIndex || abs(beginInnerLocation.y - endInnerLocation.y) > 10 {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
                         let item = table.item(at: i) as? ChatRowItem
                         if let view = item?.view as? ChatRowView {

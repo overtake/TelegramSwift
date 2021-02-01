@@ -358,46 +358,33 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         var offsetRanges:[NSRange] = []
         if let regex = markdownRegex {
 
+            var skipIndexes:Set<Int> = Set()
+            if !localAttributes.isEmpty {
+                var index: Int = 0
+                let matches = regex.matches(in: subText.string, range: NSMakeRange(0, subText.string.length))
+                for match in matches {
+                    for attr in localAttributes {
+                        let range = match.range
+                        let attrRange = NSMakeRange(attr.range.lowerBound, attr.range.upperBound - attr.range.lowerBound)
+                        if attrRange.intersection(range) != nil {
+                            skipIndexes.insert(index)
+                        }
+                    }
+                    index += 1
+                }
+            }
+
+
             var rawOffset:Int = 0
             var newText:[String] = []
-            main: while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
+            var index: Int = 0
+            while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
+                
+               
+                
                 let matchIndex = rawOffset + match.range.location
 
 
-                for attr in localAttributes {
-                    var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound))
-                    for offsetRange in offsetRanges {
-                        if offsetRange.location < newRange.location {
-                            newRange.location -= offsetRange.length
-                        }
-                    }
-
-                    var range: Range<Int>?
-
-                    var pre = match.range(at: 3)
-                    if pre.location != NSNotFound {
-                        range = (matchIndex + pre.lowerBound - match.range(at: 2).length) ..< (matchIndex + pre.upperBound + match.range(at: 4).length)
-                    } else {
-                        range = nil
-                    }
-
-                    pre = match.range(at: 8)
-                    if pre.location != NSNotFound {
-                        range = (matchIndex + pre.lowerBound - match.range(at: 7).length) ..< (matchIndex + pre.upperBound + match.range(at: 7).length)
-                    } else {
-                        range = nil
-                    }
-
-
-                    if let range = range {
-                        if newRange.intersection(NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound)) != nil {
-                            rawOffset += (range.upperBound - range.lowerBound)
-                            newText.append(raw.nsstring.substring(with: match.range))
-                            raw = raw.nsstring.substring(from: match.range.upperBound)
-                            continue main
-                        }
-                    }
-                }
 
                 newText.append(raw.nsstring.substring(with: NSMakeRange(0, match.range.location)))
 
@@ -405,46 +392,58 @@ final class ChatTextInputState: PostboxCoding, Equatable {
 
 
                 if pre.location != NSNotFound {
-                    let text = raw.nsstring.substring(with: pre).trimmed
+                    if !skipIndexes.contains(index) {
+                        let text = raw.nsstring.substring(with: pre)
 
-                    rawOffset -= match.range(at: 2).length + match.range(at: 4).length
-                    newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
-                    attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
-
+                        rawOffset -= match.range(at: 2).length + match.range(at: 4).length
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
+                        attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
+                    } else {
+                        let text = raw.nsstring.substring(with: pre)
+                        let entity = raw.nsstring.substring(with: match.range(at: 2))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 5)))
+                    }
                 }
 
                 pre = match.range(at: 8)
                 if pre.location != NSNotFound {
                     let text = raw.nsstring.substring(with: pre)
+                    if !skipIndexes.contains(index) {
 
-                    let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        let left = match.range(at: 6)
 
-                    newText.append(raw.nsstring.substring(with: match.range(at: 6)) + text + raw.nsstring.substring(with: match.range(at: 9)))
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: left) + text + raw.nsstring.substring(with: match.range(at: 9)))
 
-                    switch entity {
-                    case "`":
-                        attributes.append(.code(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
-                    case "**":
-                        attributes.append(.bold(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
-                    case "~~":
-                        attributes.append(.strikethrough(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
-                    case "__":
-                        attributes.append(.italic(matchIndex + match.range(at: 6).length ..< matchIndex + match.range(at: 6).length + text.length))
-                    default:
-                        break
+
+                        switch entity {
+                        case "`":
+                            attributes.append(.code(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "**":
+                            attributes.append(.bold(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "~~":
+                            attributes.append(.strikethrough(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "__":
+                            attributes.append(.italic(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        default:
+                            break
+                        }
+
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length, entity.length))
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length + text.length, entity.length))
+
+                        rawOffset -= match.range(at: 7).length * 2
+                    } else {
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 6)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 9)))
                     }
-
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 6).length, match.range(at: 6).length))
-                    offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 6).length + match.range(at: 6).length  + text.length, match.range(at: 6).length))
-
-                    rawOffset -= match.range(at: 7).length * 2
                 }
-
                 raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
                 rawOffset += match.range.location + match.range(at: 0).length
 
+                index += 1
             }
 
             newText.append(raw)
@@ -459,25 +458,32 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                 if offsetRange.location < newRange.location {
                     newRange.location -= offsetRange.length
                 }
+                if newRange.intersection(offsetRange) != nil {
+                    newRange.length -= offsetRange.length
+                }
             }
-            switch attr {
-            case .bold:
-                attributes.append(.bold(newRange.min ..< newRange.max))
-            case .italic:
-                attributes.append(.italic(newRange.min ..< newRange.max))
-            case .pre:
-                attributes.append(.pre(newRange.min ..< newRange.max))
-            case .code:
-                attributes.append(.code(newRange.min ..< newRange.max))
-            case .strikethrough:
-                attributes.append(.strikethrough(newRange.min ..< newRange.max))
-            case let .uid(_, uid):
-                attributes.append(.uid(newRange.min ..< newRange.max, uid))
-            case let .url(_, url):
-                attributes.append(.url(newRange.min ..< newRange.max, url))
-            }
+            
+            
+            //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
+                switch attr {
+                case .bold:
+                    attributes.append(.bold(newRange.min ..< newRange.max))
+                case .italic:
+                    attributes.append(.italic(newRange.min ..< newRange.max))
+                case .pre:
+                    attributes.append(.pre(newRange.min ..< newRange.max))
+                case .code:
+                    attributes.append(.code(newRange.min ..< newRange.max))
+                case .strikethrough:
+                    attributes.append(.strikethrough(newRange.min ..< newRange.max))
+                case let .uid(_, uid):
+                    attributes.append(.uid(newRange.min ..< newRange.max, uid))
+                case let .url(_, url):
+                    attributes.append(.url(newRange.min ..< newRange.max, url))
+                }
+          //  }
         }
-
+        
         return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
     }
 
@@ -544,11 +550,6 @@ struct ChatInterfaceMessageActionsState: PostboxCoding, Equatable {
     init(closedButtonKeyboardMessageId: MessageId?, processedSetupReplyMessageId: MessageId?) {
         self.closedButtonKeyboardMessageId = closedButtonKeyboardMessageId
         self.processedSetupReplyMessageId = processedSetupReplyMessageId
-
-        if processedSetupReplyMessageId?.id == 349 {
-            var bp:Int = 0
-            bp += 1
-        }
     }
 
     init(decoder: PostboxDecoder) {

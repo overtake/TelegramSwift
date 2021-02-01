@@ -10,14 +10,23 @@
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
+		27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
+		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
+		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
 		274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */; };
+		2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2756EF1C25C463F10062303D /* LegacyReachability.framework */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */; };
 		27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */; };
-		27C1C42F25ACB5A500189E90 /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */; };
-		27C1C43325ACDFB600189E90 /* VolumeMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */; };
+		27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */; };
+		27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089025B068C300372302 /* InviteLinkRowItem.swift */; };
+		27C4089425B081B500372302 /* FireTimerControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089325B081B500372302 /* FireTimerControl.swift */; };
+		27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */; };
+		27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089925B0BD4E00372302 /* NumberSelectorController.swift */; };
+		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
+		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -806,7 +815,7 @@
 		D0558D7C215141CF006B403D /* ChatInfoTouchbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */; };
 		D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D842152B4D3006B403D /* GalleryTouchBar.swift */; };
 		D0558D872154047E006B403D /* GalleryTouchBarThumbItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */; };
-		D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */; };
+		D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05F392222FB45450040F341 /* DateSelectorModalController.swift */; };
 		D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0675D83217F1F27004900A7 /* ArchiverContext.swift */; };
 		D06ACAEF231AC265002DCD81 /* ChatMessageBubbleImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */; };
 		D06ACAF0231AC3E5002DCD81 /* ParseAppearanceColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = C21BE3B01FD14CDB00C1C849 /* ParseAppearanceColors.swift */; };
@@ -852,7 +861,7 @@
 		D076F86D22959958004F895A /* InlineLoginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86C22959958004F895A /* InlineLoginController.swift */; };
 		D076F8702295B24D004F895A /* InlineAuthOptionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */; };
 		D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F8862296CAB2004F895A /* ChannelDisscussionGroup.swift */; };
-		D076F88D2296FD18004F895A /* DiscussionHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F88C2296FD18004F895A /* DiscussionHeaderItem.swift */; };
+		D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F88C2296FD18004F895A /* AnimtedStickerHeaderItem.swift */; };
 		D076F88F2297285F004F895A /* DiscussionSetModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F88E2297285F004F895A /* DiscussionSetModalController.swift */; };
 		D076F891229823DA004F895A /* ChannelDiscussionInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */; };
 		D07C6D7D234698C600468B1A /* DynamicHeightRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07C6D7C234698C600468B1A /* DynamicHeightRowItem.swift */; };
@@ -1002,15 +1011,24 @@
 /* Begin PBXFileReference section */
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
+		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
+		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
+		2756EF1C25C463F10062303D /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListController.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
-		27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
-		27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMenuItemView.swift; sourceTree = "<group>"; };
+		27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLoadingRowItem.swift; sourceTree = "<group>"; };
+		27C4089025B068C300372302 /* InviteLinkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinkRowItem.swift; sourceTree = "<group>"; };
+		27C4089325B081B500372302 /* FireTimerControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTimerControl.swift; sourceTree = "<group>"; };
+		27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureInviteLinkController.swift; sourceTree = "<group>"; };
+		27C4089925B0BD4E00372302 /* NumberSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberSelectorController.swift; sourceTree = "<group>"; };
+		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
+		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -1849,7 +1867,7 @@
 		D0558D7B215141CF006B403D /* ChatInfoTouchbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoTouchbar.swift; sourceTree = "<group>"; };
 		D0558D842152B4D3006B403D /* GalleryTouchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBar.swift; sourceTree = "<group>"; };
 		D0558D862154047E006B403D /* GalleryTouchBarThumbItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryTouchBarThumbItemView.swift; sourceTree = "<group>"; };
-		D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledMessageModalController.swift; sourceTree = "<group>"; };
+		D05F392222FB45450040F341 /* DateSelectorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateSelectorModalController.swift; sourceTree = "<group>"; };
 		D0675D6A217E20B9004900A7 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0675D83217F1F27004900A7 /* ArchiverContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiverContext.swift; sourceTree = "<group>"; };
 		D06C694F253887F600DD9005 /* SlotMachineValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotMachineValue.swift; sourceTree = "<group>"; };
@@ -1893,7 +1911,7 @@
 		D076F86C22959958004F895A /* InlineLoginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineLoginController.swift; sourceTree = "<group>"; };
 		D076F86F2295B24D004F895A /* InlineAuthOptionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAuthOptionRowItem.swift; sourceTree = "<group>"; };
 		D076F8862296CAB2004F895A /* ChannelDisscussionGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDisscussionGroup.swift; sourceTree = "<group>"; };
-		D076F88C2296FD18004F895A /* DiscussionHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionHeaderItem.swift; sourceTree = "<group>"; };
+		D076F88C2296FD18004F895A /* AnimtedStickerHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimtedStickerHeaderItem.swift; sourceTree = "<group>"; };
 		D076F88E2297285F004F895A /* DiscussionSetModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscussionSetModalController.swift; sourceTree = "<group>"; };
 		D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelDiscussionInputView.swift; sourceTree = "<group>"; };
 		D07C6D7C234698C600468B1A /* DynamicHeightRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicHeightRowItem.swift; sourceTree = "<group>"; };
@@ -1990,6 +2008,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */,
 				27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */,
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				D0E7BD6C256AA5570068644D /* TelegramVoip.framework in Frameworks */,
@@ -2066,13 +2085,17 @@
 			name = capturer;
 			sourceTree = "<group>";
 		};
-		27C1C42D25ACB59B00189E90 /* video */ = {
+		27D006DD25AF3AD100EE3EB1 /* invitelinks */ = {
 			isa = PBXGroup;
 			children = (
-				27C1C42E25ACB5A500189E90 /* GroupVideoView.swift */,
-				27C1C43225ACDFB600189E90 /* VolumeMenuItemView.swift */,
+				C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */,
+				27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */,
+				27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */,
+				27C4089025B068C300372302 /* InviteLinkRowItem.swift */,
+				27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */,
+				2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */,
 			);
-			name = video;
+			name = invitelinks;
 			sourceTree = "<group>";
 		};
 		9F0367E622707B6400456348 /* lottie */ = {
@@ -2487,7 +2510,6 @@
 				C219E1E51D8AC83A0042F0C8 /* views */,
 				C20232A71D81D189007C9ADE /* ChatController.swift */,
 				C219E1DA1D8884290042F0C8 /* ChatHistoryEntry.swift */,
-				D05F392222FB45450040F341 /* ScheduledMessageModalController.swift */,
 				C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */,
 				C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */,
 				C295C65E1F75808600BA309D /* ChatAdditionController.swift */,
@@ -2505,6 +2527,7 @@
 			isa = PBXGroup;
 			children = (
 				C205DB9C1EE88762003711DF /* Views.swift */,
+				27C4089325B081B500372302 /* FireTimerControl.swift */,
 			);
 			name = "ui-controls";
 			sourceTree = "<group>";
@@ -2751,10 +2774,13 @@
 				9F10CE952061C98E002DD61A /* InputDataRowItem.swift */,
 				9F10CE99206284F8002DD61A /* InputDataDateRowItem.swift */,
 				9FC8AD992062A5610094F7B4 /* InputDataDataSelectorRowItem.swift */,
+				27C4089925B0BD4E00372302 /* NumberSelectorController.swift */,
 				9FC8AD9B2062AA630094F7B4 /* ValuesSelectorModalController.swift */,
 				D014193D22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift */,
 				D0C39EC4233A6077003CD402 /* GeneralBlockTextRowItem.swift */,
 				D07C6D7C234698C600468B1A /* DynamicHeightRowItem.swift */,
+				27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */,
+				D05F392222FB45450040F341 /* DateSelectorModalController.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -3751,13 +3777,13 @@
 		C2AF3B801E5CD77800DFDD81 /* controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27D006DD25AF3AD100EE3EB1 /* invitelinks */,
 				A7831B1A2403CFD00056AEAC /* stats */,
 				D076F88B2296FCE5004F895A /* discussion */,
 				C29340EF1F506BC80074991E /* groupstickers */,
 				C230BEB81EE9AE5B0029586C /* logs */,
 				C26A37EB1E5DE464006977AC /* ChannelAdminsViewController.swift */,
 				C26A37ED1E5DE48F006977AC /* ChannelBlocklistViewController.swift */,
-				C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */,
 				C20CB7281E60886E00C992AC /* LinkInvationController.swift */,
 				C22EE61D1E67506800334C38 /* ChannelMembersViewController.swift */,
 				C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */,
@@ -4234,6 +4260,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				2744AE7125B58E6C00E8849F /* invitations.tgs */,
 				D0D1391A2521F652005FCF35 /* discussion.tgs */,
 				D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */,
 				A76C8AA124221D2800FDB071 /* graph_loading.tgs */,
@@ -4281,7 +4308,7 @@
 			isa = PBXGroup;
 			children = (
 				D076F8862296CAB2004F895A /* ChannelDisscussionGroup.swift */,
-				D076F88C2296FD18004F895A /* DiscussionHeaderItem.swift */,
+				D076F88C2296FD18004F895A /* AnimtedStickerHeaderItem.swift */,
 				D076F88E2297285F004F895A /* DiscussionSetModalController.swift */,
 			);
 			name = discussion;
@@ -4335,6 +4362,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2756EF1C25C463F10062303D /* LegacyReachability.framework */,
 				273F9C0A257BC486004EC51B /* HotKey.framework */,
 				D00747002577A7D40000DF74 /* DDHotKey.framework */,
 				D0E7BD6B256AA5570068644D /* TelegramVoip.framework */,
@@ -4469,12 +4497,12 @@
 		D0E7BD18256A7D1C0068644D /* group-calls */ = {
 			isa = PBXGroup;
 			children = (
-				27C1C42D25ACB59B00189E90 /* video */,
 				27B15D2D259B28C700C7F280 /* capturer */,
 				D0E7BD19256A7D350068644D /* GroupCallWindow.swift */,
 				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
 				D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */,
 				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
+				27335F0225C8295100FD040C /* GroupVideoView.swift */,
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
@@ -4542,13 +4570,13 @@
 			isa = PBXProject;
 			attributes = {
 				DefaultBuildSystemTypeForWorkspace = Latest;
-				LastSwiftUpdateCheck = 1030;
+				LastSwiftUpdateCheck = 1220;
 				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = Telegram;
 				TargetAttributes = {
 					C232EA901E1D07E700C4D38C = {
 						CreatedOnToolsVersion = 8.2;
-						DevelopmentTeam = C67CF9S4VU;
+						DevelopmentTeam = N8RBWJ5X6J;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
@@ -4561,7 +4589,7 @@
 					};
 					D098C7141D7E175A007784E4 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = C67CF9S4VU;
+						DevelopmentTeam = N8RBWJ5X6J;
 						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -4657,6 +4685,7 @@
 				9F0AE6B52199904400A8B53A /* sound_a.caf in Resources */,
 				A778DC2E23C77AD800DD307B /* confetti.mp3 in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
+				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
@@ -4879,8 +4908,10 @@
 				9FFAE4F9205A8C89000C028E /* FFMpegAudioFrameDecoder.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
+				27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */,
 				9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */,
 				9F77B3A6221C1DAC003B65B8 /* LogoutViewController.swift in Sources */,
+				27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */,
 				C248BD211E6F09CC004B9106 /* ChatGameContentView.swift in Sources */,
 				A7F28337239A808500742C20 /* AudioAnimatedSticker.swift in Sources */,
 				A7F2830623954E1B00742C20 /* CachedFaqInstantPage.swift in Sources */,
@@ -4989,7 +5020,6 @@
 				C296AF861D8DB178001DBB59 /* MediaUtils.swift in Sources */,
 				9FA0E52D20519FCC001E5649 /* LiveUploadingHelper.m in Sources */,
 				C22EE61E1E67506800334C38 /* ChannelMembersViewController.swift in Sources */,
-				27C1C42F25ACB5A500189E90 /* GroupVideoView.swift in Sources */,
 				C26A719B1DC9FB3600F69385 /* InputPasteboardParser.swift in Sources */,
 				D02BD7C3232D14E800D1814A /* ThemePreviewRowItem.swift in Sources */,
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
@@ -5002,6 +5032,7 @@
 				D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */,
 				C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
+				27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,
 				C225524D1F7BE8E40007944D /* VideoRecorderModalView.swift in Sources */,
 				C2D1839D1E4DBF7E001CE25A /* MGalleryPeerPhotoItem.swift in Sources */,
@@ -5027,6 +5058,7 @@
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				D076F86D22959958004F895A /* InlineLoginController.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
+				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */,
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
@@ -5056,6 +5088,7 @@
 				C27A6F711ECF604A00C65577 /* TGCurrencyFormatter.m in Sources */,
 				A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
+				2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */,
 				D0BE207E24D032E400038A8B /* VolumeControllerPopover.swift in Sources */,
 				C20232AA1D81D19C007C9ADE /* ChatRowItem.swift in Sources */,
 				D0E7BD79256AE4B00068644D /* GroupCallController.swift in Sources */,
@@ -5198,7 +5231,7 @@
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
-				D076F88D2296FD18004F895A /* DiscussionHeaderItem.swift in Sources */,
+				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,
 				D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */,
 				C2CFCAC01EBB9C8100843F6A /* CallAudioPlayer.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
@@ -5242,7 +5275,6 @@
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				C209C3771F26271B009231FE /* EmojiSuggestionBridge.mm in Sources */,
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
-				27C1C43325ACDFB600189E90 /* VolumeMenuItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
 				D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */,
@@ -5297,7 +5329,7 @@
 				C28BAB2C1DF9C2790027CE3A /* DateUtils.mm in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				C2A8E1481F7D2612000FD5E3 /* TGVideoCameraGLRenderer.m in Sources */,
-				D05F392322FB45450040F341 /* ScheduledMessageModalController.swift in Sources */,
+				D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */,
 				D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,
 				C2777B601DCF4766008B69DD /* CoreExtension.swift in Sources */,
@@ -5362,6 +5394,7 @@
 				C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */,
 				D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
+				27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */,
 				D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */,
 				C2057FAA1EBC6A3C000423DC /* ChatCallRowItem.swift in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
@@ -5369,6 +5402,7 @@
 				9F10CE942061C8C8002DD61A /* InputDataControllerEntries.swift in Sources */,
 				A71DC82F2386AADF000EEDE2 /* Signature.swift in Sources */,
 				D02BD7C0232D0FB800D1814A /* AppAppearanceViewController.swift in Sources */,
+				27C4089425B081B500372302 /* FireTimerControl.swift in Sources */,
 				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
@@ -5397,6 +5431,7 @@
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
 				D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */,
 				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
+				27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
 				D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */,
@@ -5488,6 +5523,7 @@
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,
 				D0530D4024E693A5003273BC /* CameraViews.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
+				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
@@ -5681,7 +5717,7 @@
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5726,9 +5762,9 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D GITHUB";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -5751,19 +5787,18 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SHARE=1",
+					"BETA=1",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -5841,7 +5876,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -5886,9 +5921,9 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D APP_STORE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -5909,23 +5944,18 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
 					"SHARE=1",
+					"BETA=1",
 				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D BETA";
@@ -5945,22 +5975,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TelegramShare/TelegramShare.entitlements;
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SHARE=1",
+					"DEBUG=1",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -5982,19 +6011,18 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = s;
-				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SHARE=1",
+					"APPSTORE=1",
+				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D APP_STORE";
@@ -6071,7 +6099,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6115,9 +6143,9 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D STABLE";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -6138,18 +6166,17 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SHARE=1",
+					"STABLE=1",
 				);
-				GCC_PREPROCESSOR_DEFINITIONS = "SHARE=1";
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D STABLE";
@@ -6235,7 +6262,7 @@
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -6280,10 +6307,10 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D ALPHA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -6305,23 +6332,18 @@
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_HARDENED_RUNTIME = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/submodules/libtgvoip/build/Debug-iphoneos",
-					"$(PROJECT_DIR)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
 					"SHARE=1",
+					"ALPHA=1",
 				);
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D ALPHA";
@@ -6452,7 +6474,7 @@
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -6497,10 +6519,10 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D BETA";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;
@@ -6529,14 +6551,14 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = NO;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_ENTITLEMENTS = "Telegram-Mac/Telegram-Mac.entitlements";
-				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = C67CF9S4VU;
+				DEVELOPMENT_TEAM = N8RBWJ5X6J;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6580,9 +6602,9 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.3;
+				MARKETING_VERSION = 7.4;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CODE_SIGN_FLAGS = "--deep";
+				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
 				OTHER_SWIFT_FLAGS = "-Xfrontend -debug-time-function-bodies -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ru.keepcoder.Telegram;

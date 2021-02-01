@@ -285,7 +285,7 @@ class TextAndLabelRowView: GeneralRowView {
             moreView.isHidden = item.hasMore != true
             moreView.update(item.moreLayout)
             
-            copyView.set(image: theme.icons.copy_to_clipboard, for: .Normal)
+            copyView.set(image: theme.icons.fast_copy_link, for: .Normal)
             copyView.sizeToFit()
             copyView.scaleOnClick = true
             copyView.isHidden = item._copyToClipboard == nil

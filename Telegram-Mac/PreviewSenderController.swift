@@ -260,7 +260,7 @@ fileprivate class PreviewSenderView : Control {
                 case .history:
                     if !peer.isSecretChat {
                         items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                            showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak controller] date in
+                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
                                 controller?.send(false, atDate: date)
                             }), for: context.window)
                         }))
@@ -295,6 +295,7 @@ fileprivate class PreviewSenderView : Control {
         addSubview(separator)
         addSubview(draggingView)
         
+        draggingView.isEventLess = true
         layout()
     }
     
@@ -389,11 +390,13 @@ fileprivate class PreviewSenderView : Control {
 private final class SenderPreviewArguments {
     let context: AccountContext
     let edit:(URL)->Void
+    let paint: (URL)->Void
     let delete:(URL)->Void
     let reorder:(Int, Int) -> Void
-    init(context: AccountContext, edit: @escaping(URL)->Void, delete: @escaping(URL)->Void, reorder: @escaping(Int, Int) -> Void) {
+    init(context: AccountContext, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete: @escaping(URL)->Void, reorder: @escaping(Int, Int) -> Void) {
         self.context = context
         self.edit = edit
+        self.paint = paint
         self.delete = delete
         self.reorder = reorder
     }
@@ -519,13 +522,15 @@ private enum PreviewEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .media(_, _, url, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, hasEditedData: state.editedData[url] != nil, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: state.editedData[url], edit: {
                 arguments.edit(url)
+            }, paint: {
+                arguments.paint(url)
             }, delete: {
                 arguments.delete(url)
             })
         case let .archive(_, _, _, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, hasEditedData: false, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: nil, edit: {
               //  arguments.edit(url)
             }, delete: {
               // arguments.delete(url)
@@ -533,6 +538,8 @@ private enum PreviewEntry : Comparable, Identifiable {
         case let .mediaGroup(_, _, urls, messages):
             return MediaGroupPreviewRowItem(initialSize, messages: messages, urls: urls, editedData: state.editedData, edit: { url in
                 arguments.edit(url)
+            }, paint: { url in
+                arguments.paint(url)
             }, delete: { url in
                 arguments.delete(url)
             }, context: arguments.context, reorder: { from, to in
@@ -624,7 +631,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PreviewEntry>], 
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments: arguments, state: state, initialSize: initialSize)
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, grouping: false)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, grouping: true)
 }
 
 private enum PreviewMediaId : Hashable {
@@ -772,7 +779,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private var sendCurrentMedia:((Bool, Date?)->Void)? = nil
-    private var runEditor:((URL)->Void)? = nil
+    private var runEditor:((URL, Bool)->Void)? = nil
     private var insertAdditionUrls:(([URL]) -> Void)? = nil
     
     private let animated: Atomic<Bool> = Atomic(value: false)
@@ -856,7 +863,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         switch chatInteraction.mode {
         case .scheduled:
             if let peer = chatInteraction.peer {
-                showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak self] date in
+                showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak self] date in
                     self?.sendCurrentMedia?(silent, date)
                 }), for: context.window)
             }
@@ -939,7 +946,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let removeTransitionAnimation: Atomic<Bool> = Atomic(value: false)
         
         let arguments = SenderPreviewArguments(context: context, edit: { [weak self] url in
-            self?.runEditor?(url)
+            self?.runEditor?(url, false)
+        }, paint: { [weak self] url in
+            self?.runEditor?(url, true)
         }, delete: { [weak self] url in
             guard let `self` = self else { return }
             self.lockInteractiveChanges = true
@@ -1172,44 +1181,72 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 }
                 var additionalMessage: ChatTextInputState? = nil
                 
-                if (medias.count > 1  || (medias.count == 1 && !medias[0].canHaveCaption)) && !input.inputText.isEmpty {
+                if (medias.count > 1  || (medias.count == 1 && (!medias[0].canHaveCaption))) && !input.inputText.isEmpty  {
                     if !state.isCollage {
                         additionalMessage = input
                         input = ChatTextInputState()
-                        
                     }
                 }
-                var bp = 0
+                
                 self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate)
             }
             
             
         }
         
-        self.runEditor = { [weak self] url in
+        self.runEditor = { [weak self] url, paint in
             guard let `self` = self else { return }
             
             let editedData = stateValue.with { $0.editedData }
             
-            let data = editedData[url]
-            let editor = EditImageModalController(data?.originalUrl ?? url, defaultData: data)
-            showModal(with: editor, for: mainWindow, animationType: .scaleCenter)
-            self.editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
-                guard let `self` = self else {return}
-                if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
-                    updateState { $0.withUpdatedEditedData { data in
-                        var data = data
-                        if let editedData = editedData {
-                            data[new] = editedData
-                        } else {
-                            data.removeValue(forKey: new)
+            let data = editedData[url] ?? EditedImageData(originalUrl: url)
+            
+            if paint, let image = NSImage(contentsOf: data.originalUrl) {
+                var paintings:[EditImageDrawTouch] = data.paintings
+                let image = image._cgImage!
+                let editor = EditImageCanvasController(image: image, actions: data.paintings, updatedImage: { updated in
+                    paintings = updated
+                }, closeHandler: { [weak self] in
+                    guard let `self` = self else {return}
+                    let editedData = data.withUpdatedPaintings(paintings)
+                    let new = EditedImageData.generateNewUrl(data: editedData, selectedRect: CGRect(origin: .zero, size: image.size)) |> deliverOnMainQueue
+                    self.editorDisposable.set(new.start(next: { [weak self] new in
+                        if let index = self?.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
+                            updateState { $0.withUpdatedEditedData { data in
+                                var data = data
+                                data[new] = editedData
+                                if editedData.hasntData {
+                                    data.removeValue(forKey: new)
+                                }
+                                return data
+                            }}
+                            self?.urls[index] = new
+                            addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: AppLogEvents.imageEditor.rawValue, peerId: context.peerId, data: [:])
                         }
-                        return data
-                    }}
-                    self.urls[index] = new
-                    addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: AppLogEvents.imageEditor.rawValue, peerId: context.peerId, data: [:])
-                }
-            }))
+                    }))
+                }, alone: true)
+                showModal(with: editor, for: context.window, animationType: .scaleCenter)
+
+            } else {
+                let editor = EditImageModalController(data.originalUrl, defaultData: data)
+                showModal(with: editor, for: context.window, animationType: .scaleCenter)
+                self.editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
+                    guard let `self` = self else {return}
+                    if let index = self.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
+                        updateState { $0.withUpdatedEditedData { data in
+                            var data = data
+                            if let editedData = editedData {
+                                data[new] = editedData
+                            } else {
+                                data.removeValue(forKey: new)
+                            }
+                            return data
+                        }}
+                        self.urls[index] = new
+                        addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: AppLogEvents.imageEditor.rawValue, peerId: context.peerId, data: [:])
+                    }
+                }))
+            }
         }
         
         self.insertAdditionUrls = { [weak self] list in
@@ -1231,7 +1268,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             let medias = stateValue.with { $0.medias }
             
             if state.state == .media, medias.count == 1, medias.first is TelegramMediaImage {
-                self.runEditor?(self.urls[0])
+                self.runEditor?(self.urls[0], false)
             }
             return .invoked
         }, with: self, for: .E, priority: .high, modifierFlags: [.command])
@@ -1302,7 +1339,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .high)
         
-        
+
         
         context.window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else { return .rejected }

@@ -485,7 +485,7 @@ class ChatInputActionsView: View, Notifable {
                 case .history:
                     if !peer.isSecretChat {
                         items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
-                            showModal(with: ScheduledMessageModalController(context: context, peerId: peer.id, scheduleAt: { [weak chatInteraction] date in
+                            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
                         }))

@@ -304,6 +304,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                         if alsoNotified.contains(message.id) {
                             continue
                         }
+
+                        if message.isImported {
+                            continue
+                        }
                         
                         if message.author?.id != account.peerId || message.wasScheduled {
                             var title:String = message.author?.displayTitle ?? ""

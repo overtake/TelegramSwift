@@ -80,7 +80,7 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32) -> [PeerInfoEntry] {
     if peerViewMainPeer(view) is TelegramUser {
         return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
@@ -88,10 +88,10 @@ func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActiviti
         case .broadcast:
             return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount)
     }
     return []
 }

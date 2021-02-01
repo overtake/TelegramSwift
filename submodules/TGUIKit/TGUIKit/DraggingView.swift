@@ -185,6 +185,16 @@ public class DraggingView: SplitView {
         draggingExited(sender)
     }
     
+    public var _hitTest:((NSPoint)->NSView?)?
+    
+    public override func hitTest(_ point: NSPoint) -> NSView? {
+        if isEventLess {
+            return _hitTest?(point)
+        } else {
+            return super.hitTest(point)
+        }
+    }
+    
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

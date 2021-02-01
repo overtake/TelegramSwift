@@ -429,6 +429,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         addSubview(activities.view!)
 
+        searchButton.isHidden = chatInteraction.mode == .preview
         
         searchButton.set(handler: { [weak self] _ in
             self?.chatInteraction.update({$0.updatedSearchMode((!$0.isSearchMode.0, nil, nil))})
@@ -781,6 +782,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     titleImage = (theme.icons.verifiedImage, .right(topInset: 0))
                 } else if peer.isScam {
                     titleImage = (theme.icons.scam, .right(topInset: 0))
+                } else if peer.isFake {
+                    titleImage = (theme.icons.fake, .right(topInset: 0))
                 } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
                     titleImage = (theme.icons.dialogMuteImage, .right(topInset: 3))
                 } else {

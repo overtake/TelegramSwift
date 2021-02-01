@@ -126,7 +126,7 @@ class Sender: NSObject {
                     }
                 }
             }
-        } else if mimeType.hasPrefix("image") || mimeType.hasSuffix("pdf"), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+        } else if (mimeType.hasPrefix("image") || mimeType.hasSuffix("pdf") && !mimeType.hasPrefix("image/webp")), let thumbData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
             
             let options = NSMutableDictionary()
             options.setValue(320 as NSNumber, forKey: kCGImageDestinationImageMaxPixelSize as String)
@@ -403,6 +403,10 @@ class Sender: NSObject {
             }
             attrs.append(TelegramMediaFileAttribute.ImageSize(size: size.pixel))
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent))
+            
+            if mime.hasPrefix("image/webp") {
+                attrs.append(.Sticker(displayText: "", packReference: nil, maskData: nil))
+            }
         } else {
             let getname:(String)->String = { path in
                 var result: String = path.nsstring.lastPathComponent
