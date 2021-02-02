@@ -8401,7 +8401,7 @@ internal final class L10n {
   internal static var voiceChatUnmuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.UnmuteForMe") }
   /// Allow To Speak
   internal static var voiceChatUnmutePeer: String  { return L10n.tr("Localizable", "VoiceChat.UnmutePeer") }
-  /// Unpin Video
+  /// Pin Video
   internal static var voiceChatUnpinVideo: String  { return L10n.tr("Localizable", "VoiceChat.UnpinVideo") }
   /// You invited **%@** to the voice chat
   internal static func voiceChatUserInvited(_ p1: String) -> String {
@@ -8551,6 +8551,8 @@ internal final class L10n {
   internal static var voiceChatTitleInvited: String  { return L10n.tr("Localizable", "VoiceChat.Title.Invited") }
   /// Invite Members
   internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
+  /// stream
+  internal static var voiceChatVideoStream: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream") }
   /// Video Source
   internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
   /// Cancel

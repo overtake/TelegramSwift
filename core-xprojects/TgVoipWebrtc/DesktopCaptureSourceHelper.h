@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 -(instancetype)initWithWindow:(DesktopCaptureSource *)window data: (DesktopCaptureSourceData *)data;
 
 -(void)setOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
-
+-(void)setSecondaryOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
 -(void)start;
 -(void)stop;
 @end

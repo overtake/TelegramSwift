@@ -254,7 +254,7 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
         devicesDisposable.set((devices.signal |> deliverOnMainQueue).start(next: { devices in
             updateState { current in
                 var current = current
-                current.cameras = devices.camera.map { CameraCaptureDevice($0) }
+                current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected }.map { CameraCaptureDevice($0) }
                 return current
             }
             checkSelected()

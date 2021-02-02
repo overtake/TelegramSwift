@@ -131,7 +131,7 @@ private:
 
 
 - (void)setUncroppedSink:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame> >)sink {
-    
+    [renderer setSecondaryOutput:sink];
 }
 
 

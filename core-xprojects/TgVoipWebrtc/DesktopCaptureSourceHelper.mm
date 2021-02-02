@@ -63,6 +63,8 @@ private:
     int fps_;
 public:
     std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>> _sink;
+    std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>> _secondarySink;
+
     SourceFrameCallbackImpl(CGSize size,
                             int fps) {
         next_timestamp_ = 0;
@@ -128,6 +130,9 @@ public:
         if (_sink != NULL) {
             _sink->OnFrame(nativeVideoFrame);
         }
+        if (_secondarySink != NULL) {
+            _secondarySink->OnFrame(nativeVideoFrame);
+        }
         next_timestamp_ += rtc::kNumNanosecsPerSec / double(fps_);
     }
 private:
@@ -143,13 +148,13 @@ private:
 -(void)Stop;
 -(void)Start;
 -(void)SetOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
+-(void)SetSecondaryOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
 @end
 
 @implementation DesktopSourceRenderer
 {
     std::unique_ptr<webrtc::DesktopCapturer> _capturer;
     std::shared_ptr<SourceFrameCallbackImpl> _callback;
-    rtc::Thread *_thread;
     bool isRunning;
     double delayMs;
     STimer *timer;
@@ -159,7 +164,6 @@ private:
         delayMs = 1000 / double(data.fps);
         SourceFrameCallbackImpl *callback = new SourceFrameCallbackImpl(data.aspectSize, data.fps);
         isRunning = false;
-        _thread = rtc::Thread::Current();
         _callback.reset(callback);
         
         auto options = webrtc::DesktopCaptureOptions::CreateDefault();
@@ -219,6 +223,9 @@ private:
 -(void)SetOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
     _callback->_sink = sink;
 }
+-(void)SetSecondaryOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
+    _callback->_secondarySink = sink;
+}
 
 -(void)dealloc {
     int bp = 0;
@@ -254,6 +261,11 @@ private:
     }];
 }
 
+-(void)setSecondaryOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink {
+    [_manager with:^(id  _Nonnull object) {
+        [((DesktopSourceRenderer *)object) SetSecondaryOutput:sink];
+    }];
+}
 -(void)start {
     [_manager with:^(id  _Nonnull object) {
         [((DesktopSourceRenderer *)object) Start];
