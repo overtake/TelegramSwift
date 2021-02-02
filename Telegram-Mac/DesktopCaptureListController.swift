@@ -13,6 +13,21 @@ import SwiftSignalKit
 
 
 
+struct DesktopCapturerObjectWrapper : Equatable {
+    static func == (lhs: DesktopCapturerObjectWrapper, rhs: DesktopCapturerObjectWrapper) -> Bool {
+        if !lhs.source.isEqual(rhs.source) {
+            return false
+        }
+        if lhs.isAvailableToStream != rhs.isAvailableToStream {
+            return false
+        }
+        return true
+    }
+
+    let source: VideoSource
+    let isAvailableToStream: Bool
+}
+
 
 final class CameraCaptureDevice : VideoSource, Equatable {
     func isEqual(_ another: Any) -> Bool {
@@ -52,15 +67,23 @@ private final class DesktopCaptureListArguments {
 }
 
 private struct DesktopCaptureListState : Equatable {
+
+    struct Access : Equatable {
+        let sharing: Bool
+        let camera: Bool
+    }
+
     var cameras:[CameraCaptureDevice]
     var screens: [DesktopCaptureSource]
     var windows: [DesktopCaptureSource]
     var selected: VideoSource?
-    init(cameras: [CameraCaptureDevice], screens: [DesktopCaptureSource], windows: [DesktopCaptureSource], selected: VideoSource?) {
+    var access:Access
+    init(cameras: [CameraCaptureDevice], screens: [DesktopCaptureSource], windows: [DesktopCaptureSource], selected: VideoSource?, access: Access) {
         self.cameras = cameras
         self.screens = screens
         self.windows = windows
         self.selected = selected
+        self.access = access
     }
     static func ==(lhs: DesktopCaptureListState, rhs: DesktopCaptureListState) -> Bool {
         let listEquals = lhs.cameras == rhs.cameras && lhs.screens == rhs.screens && lhs.windows == rhs.windows
@@ -75,6 +98,9 @@ private struct DesktopCaptureListState : Equatable {
         } else if (lhs.selected != nil) != (rhs.selected != nil) {
             return false
         }
+        if lhs.access != rhs.access {
+            return false
+        }
         return true
     }
 }
@@ -86,10 +112,12 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     struct DesktopTuple : Equatable {
         let source: DesktopCaptureSource
         let selected: Bool
+        let isAvailable: Bool
     }
     struct CameraTuple : Equatable {
         let source: CameraCaptureDevice
         let selected: Bool
+        let isAvailable: Bool
     }
     
     var sectionId:Int32 = 0
@@ -104,9 +132,9 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     for source in state.cameras {
         let id: String = source.uniqueKey()
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
-        let tuple = CameraTuple(source: source, selected: selected)
+        let tuple = CameraTuple(source: source, selected: selected, isAvailable: state.access.camera)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
-            return DesktopCameraCapturerRowItem(initialSize, stableId: stableId, device: tuple.source, isSelected: tuple.selected, select: arguments.selectCamera)
+            return DesktopCameraCapturerRowItem(initialSize, stableId: stableId, device: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, select: arguments.selectCamera)
         }))
         index += 1
     }
@@ -114,9 +142,9 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     for source in state.screens {
         let id: String = source.uniqueKey()
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
-        let tuple = DesktopTuple(source: source, selected: selected)
+        let tuple = DesktopTuple(source: source, selected: selected, isAvailable: state.access.sharing)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak screens] initialSize, stableId in
-            return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isSelected: tuple.selected, manager: screens, select: arguments.selectDesktop)
+            return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, manager: screens, select: arguments.selectDesktop)
         }))
         index += 1
     }
@@ -124,10 +152,10 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     for source in state.windows {
         let id: String = source.uniqueKey()
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
-        let tuple = DesktopTuple(source: source, selected: selected)
+        let tuple = DesktopTuple(source: source, selected: selected, isAvailable: state.access.sharing)
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak windows] initialSize, stableId in
-            return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isSelected: tuple.selected, manager: windows, select: arguments.selectDesktop)
+            return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, manager: windows, select: arguments.selectDesktop)
         }))
         index += 1
     }
@@ -148,8 +176,8 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
     private var updateDisposable: Disposable?
     private let disposable: MetaDisposable = MetaDisposable()
     private let devicesDisposable = MetaDisposable()
-    var updateDesktopSelected:((DesktopCaptureSource, DesktopCaptureSourceManager)->Void)? = nil
-    var updateCameraSelected:((CameraCaptureDevice)->Void)? = nil
+    var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManager)->Void)? = nil
+    var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
 
     private let devices: DevicesContext
     init(size: NSSize, devices: DevicesContext) {
@@ -167,11 +195,28 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
     
     override func viewDidLoad() {
         super.viewDidLoad()
-                                
-        let initialState = DesktopCaptureListState(cameras: [], screens: screens.list(), windows: windows.list(), selected: nil)
-
         let actionsDisposable = DisposableSet()
-        
+
+        var hasCameraAccess = false
+        var requestCamera = false
+        if #available(OSX 10.14, *) {
+            let camera = AVCaptureDevice.authorizationStatus(for: .video)
+            switch camera {
+            case .authorized:
+                hasCameraAccess = true
+            case .notDetermined:
+                requestCamera = true
+            default:
+                break
+            }
+        } else {
+            hasCameraAccess = true
+        }
+
+        let initialState = DesktopCaptureListState(cameras: [], screens: screens.list(), windows: windows.list(), selected: nil, access: .init(sharing: requestScreenCaptureAccess(), camera: hasCameraAccess))
+
+
+
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
         let updateState: ((DesktopCaptureListState) -> DesktopCaptureListState) -> Void = { f in
@@ -191,6 +236,16 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
                 return current
             }
             actionsDisposable.dispose()
+        }
+
+        if requestCamera {
+            actionsDisposable.add(requestCameraPermission().start(next: { access in
+                updateState { state in
+                    var state = state
+                    state.access = DesktopCaptureListState.Access(sharing: state.access.sharing, camera: access)
+                    return state
+                }
+            }))
         }
         
         let windows = self.windows
@@ -243,11 +298,11 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
             return true
         })
         
-        actionsDisposable.add(updateSelected.start(next: { [weak self] selected in
-            if let selected = selected as? DesktopCaptureSource {
-                self?.updateDesktopSelected?(selected, screens)
+        actionsDisposable.add(updateSelected.start(next: { [weak self, weak screens] selected in
+            if let selected = selected as? DesktopCaptureSource, let screens = screens {
+                self?.updateDesktopSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.sharing }), screens)
             } else if let selected = selected as? CameraCaptureDevice {
-                self?.updateCameraSelected?(selected)
+                self?.updateCameraSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.camera }))
             }
         }))
         

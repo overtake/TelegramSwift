@@ -19,6 +19,7 @@ import AppCenterCrashes
 #endif
 
 
+
 let enableBetaFeatures = false
 
 private(set) var appDelegate: AppDelegate?
@@ -32,6 +33,41 @@ extension Account {
 #endif
 
 
+
+private struct AutologinToken : Equatable {
+
+
+    private let token: String
+    private let domains:[String]
+
+    fileprivate init(token: String, domains: [String]) {
+        self.token = token
+        self.domains = domains
+    }
+
+    static func with(appConfiguration: AppConfiguration) -> AutologinToken? {
+        if let data = appConfiguration.data, let value = data["autologin_token"] as? String {
+            let dict:[String] = data["autologin_domains"] as? [String] ?? []
+            return AutologinToken(token: value, domains: dict)
+        } else {
+            return nil
+        }
+    }
+
+    func applyTo(_ link: String, isTestServer: Bool) -> String? {
+        let url = URL(string: link)
+        if let url = url, let host = url.host, domains.contains(host) {
+            var queryItems = [URLQueryItem(name: "autologin_token", value: self.token)]
+            if isTestServer {
+                queryItems.append(URLQueryItem(name: "_test", value: "1"))
+            }
+            var urlComps = URLComponents(string: link)!
+            urlComps.queryItems = (urlComps.queryItems ?? []) + queryItems
+            return urlComps.url?.absoluteString
+        }
+        return nil
+    }
+}
 
 
 private final class SharedApplicationContext {
@@ -1032,7 +1068,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         updatePeerPresence()
     }
     
-
+    func tryApplyAutologinToken(_ url: String) -> String? {
+        if let config = contextValue?.context.appConfiguration {
+            if let value = AutologinToken.with(appConfiguration: config) {
+                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+            }
+        }
+        return nil
+    }
     
     func applicationDidHide(_ notification: Notification) {
         updatePeerPresence()

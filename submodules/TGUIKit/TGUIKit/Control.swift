@@ -387,6 +387,10 @@ open class Control: View {
                     }
                     send(event: .Click)
                 }
+            } else {
+                if mouseInside() && !longInvoked {
+                    NSSound.beep()
+                }
             }
             
             updateState()

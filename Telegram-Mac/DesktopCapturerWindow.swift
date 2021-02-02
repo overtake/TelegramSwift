@@ -11,6 +11,57 @@ import TGUIKit
 import TgVoipWebrtc
 
 
+private final class UnavailableToStreamView : View {
+    let text: TextView = TextView()
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(text)
+        backgroundColor = .black
+        self.text.isSelectable = false
+
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(isScreen: Bool) {
+        let text: String
+        //TODOLANG
+        if isScreen {
+            text = "Unavailable to share your screen, please grant access is [System Settings](screen)."
+        } else {
+            text = "Unavailable to share your camera, please grant access is [System Settings](camera)."
+        }
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.grayStatusColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: GroupCallTheme.grayStatusColor), link: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.accent), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
+        }))
+        let layout = TextViewLayout(attr)
+        let executor = globalLinkExecutor
+        executor.processURL = { value in
+            if let value = value as? inAppLink {
+                switch value.link {
+                case "screen":
+                    openSystemSettings(.sharing)
+                case "camera":
+                    openSystemSettings(.camera)
+                default:
+                    break
+                }
+            }
+        }
+        layout.interactions = executor
+        layout.measure(width: frame.width)
+        self.text.update(layout)
+    }
+
+    override func layout() {
+        super.layout()
+        self.text.center()
+    }
+}
+
 private final class DesktopCapturerView : View {
     private let listContainer = View()
     private let previewContainer = View()
@@ -64,30 +115,34 @@ private final class DesktopCapturerView : View {
     
     private var previousDesktop: (DesktopCaptureSourceScope, DesktopCaptureSourceManager)?
     
-    func updatePreview(_ source: DesktopCaptureSource, manager: DesktopCaptureSourceManager, animated: Bool) {
-        
+    func updatePreview(_ source: DesktopCaptureSource, isAvailable: Bool, manager: DesktopCaptureSourceManager, animated: Bool) {
         if let previous = previousDesktop {
             previous.1.stop(previous.0)
         }
-        
-        let size = NSMakeSize(previewContainer.frame.width * 3, previewContainer.frame.size.height * 3)
+        if isAvailable {
+            let size = NSMakeSize(previewContainer.frame.width * 2.5, previewContainer.frame.size.height * 2.5)
 
-        let scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: size, fps: 30, captureMouse: true))
-        
-        
-        let view = manager.create(for: scope)
+            let scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: size, fps: 24, captureMouse: true))
 
-        swapView(view, animated: animated)
-        manager.start(scope)
-        
-        self.previousDesktop = (scope, manager)
+            let view = manager.create(for: scope)
+            manager.start(scope)
+            self.previousDesktop = (scope, manager)
+            swapView(view, animated: animated)
+
+        } else {
+            let view = UnavailableToStreamView(frame: previewContainer.bounds)
+            view.update(isScreen: true)
+            swapView(view, animated: animated)
+        }
+
+        share.isEnabled = isAvailable
     }
     
     private func swapView(_ view: NSView, animated: Bool) {
         let previewView = previewContainer
         view.frame = previewView.bounds
 
-        if let previous = previewView.subviews.first {
+        for previous in previewView.subviews {
             if animated {
                 previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
                     previous?.removeFromSuperview()
@@ -96,7 +151,6 @@ private final class DesktopCapturerView : View {
                 previous.removeFromSuperview()
             }
         }
-        
         previewView.addSubview(view)
         if animated {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -104,30 +158,37 @@ private final class DesktopCapturerView : View {
 
     }
     
-    func updatePreview(_ source: CameraCaptureDevice, animated: Bool) {
+    func updatePreview(_ source: CameraCaptureDevice, isAvailable: Bool, animated: Bool) {
         if let previous = previousDesktop {
             previous.1.stop(previous.0)
         }
-        
-        let view: View = View()
-        let session: AVCaptureSession = AVCaptureSession()
-        let input = try? AVCaptureDeviceInput(device: source.device)
-        if let input = input {
-            session.addInput(input)
+
+        if isAvailable {
+            let view: View = View()
+            let session: AVCaptureSession = AVCaptureSession()
+            let input = try? AVCaptureDeviceInput(device: source.device)
+            if let input = input {
+                session.addInput(input)
+            }
+            let captureLayer = AVCaptureVideoPreviewLayer(session: session)
+            captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
+            captureLayer.connection?.isVideoMirrored = true
+            captureLayer.videoGravity = .resizeAspectFill
+            view.layer = captureLayer
+
+
+            swapView(view, animated: animated)
+
+            session.startRunning()
+
+        } else {
+            let view = UnavailableToStreamView(frame: previewContainer.bounds)
+            view.update(isScreen: false)
+            swapView(view, animated: animated)
+
         }
-        let captureLayer = AVCaptureVideoPreviewLayer(session: session)
-        captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
-        captureLayer.connection?.isVideoMirrored = true
-        captureLayer.videoGravity = .resizeAspectFill
-        view.layer = captureLayer
-        
-        
-        swapView(view, animated: animated)
-        
-        session.startRunning()
-        
         previousDesktop = nil
-                
+        share.isEnabled = isAvailable
     }
     
     required init?(coder: NSCoder) {
@@ -190,13 +251,13 @@ final class DesktopCapturerWindow : Window {
         self.toolbar?.showsBaselineSeparator = false
         
         var first: Bool = true
-        listController.updateDesktopSelected = { [weak self] source, manager in
-            self?.genericView.updatePreview(source, manager: manager, animated: !first)
+        listController.updateDesktopSelected = { [weak self] wrap, manager in
+            self?.genericView.updatePreview(wrap.source as! DesktopCaptureSource, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
             first = false
         }
         
-        listController.updateCameraSelected = { [weak self] source in
-            self?.genericView.updatePreview(source, animated: !first)
+        listController.updateCameraSelected = { [weak self] wrap in
+            self?.genericView.updatePreview(wrap.source as! CameraCaptureDevice, isAvailable: wrap.isAvailableToStream, animated: !first)
             first = false
         }
         

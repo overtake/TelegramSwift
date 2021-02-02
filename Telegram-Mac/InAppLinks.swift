@@ -21,6 +21,7 @@ private let tgme:String = "tg://"
 
 
 
+
 func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
     if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
         if let channelId = Int32(username[range.upperBound...]) {
@@ -81,6 +82,7 @@ enum ChatInitialAction : Equatable {
     case source(MessageId)
     case closeAfter(Int32)
 }
+
 
 
 var globalLinkExecutor:TextViewInteractions {
@@ -154,7 +156,6 @@ var globalLinkExecutor:TextViewInteractions {
                 pb.setString(string.string, forType: .string)
                 return true
             }
-            
             let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
             
             string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
@@ -227,7 +228,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     switch inapp {
     case let .external(link, needConfirm):
         var url:String = link.trimmed
-        
+
+
+
         var reversedUrl = String(url.reversed())
         while reversedUrl.components(separatedBy: "#").count > 2 {
             if let index = reversedUrl.range(of: "#") {
@@ -243,9 +246,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 url = "http://" + url
             }
         }
-        let urlValue = url
+        var urlValue = url
         let escaped = escape(with:url)
         if let urlQueryAllowed = Optional(escaped), let url = URL(string: urlQueryAllowed) {
+            var url = url
             var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
             
             if needConfirm {
@@ -255,6 +259,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         needConfirm = false
                     }
                 }
+            }
+
+            if let withToken = appDelegate?.tryApplyAutologinToken(url.absoluteString), let url = URL(string: withToken) {
+                NSWorkspace.shared.open(url)
+                afterComplete(true)
+                return
             }
             
             let removePecentEncoding = url.host == URL(string: urlValue)?.host

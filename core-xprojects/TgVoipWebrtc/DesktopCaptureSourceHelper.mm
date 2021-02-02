@@ -151,6 +151,8 @@ private:
 -(void)SetSecondaryOutput:(std::shared_ptr<rtc::VideoSinkInterface<webrtc::VideoFrame>>)sink;
 @end
 
+static int count = 0;
+
 @implementation DesktopSourceRenderer
 {
     std::unique_ptr<webrtc::DesktopCapturer> _capturer;
@@ -197,10 +199,17 @@ private:
     if (isRunning) {
         return;
     }
+    count++;
+    NSLog(@"current capture count: %d", count);
+
     isRunning = true;
     [self Loop];
 }
 -(void)Stop {
+    if (isRunning) {
+        count--;
+        NSLog(@"current capture count: %d", count);
+    }
     isRunning = false;
     [timer invalidate];
 }
